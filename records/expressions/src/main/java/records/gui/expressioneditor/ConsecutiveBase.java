@@ -842,6 +842,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             opD("/", "op.divide"),
             opD("&", "op.and"),
             opD("|", "op.or"),
+            opD(";", "op.stringConcat"),
             opD("<", "op.lessThan"),
             opD("<=", "op.lessThanOrEqual"),
             opD(">", "op.greaterThan"),
@@ -919,6 +920,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             else if (ops.stream().allMatch(op -> op.equals("|")))
             {
                 return errorDisplayers.record(displayer, new OrExpression(expressionExps));
+            }
+            else if (ops.stream().allMatch(op -> op.equals(";")))
+            {
+                return errorDisplayers.record(displayer, new StringConcatExpression(expressionExps));
             }
             else if (ops.stream().allMatch(op -> op.equals("/")))
             {

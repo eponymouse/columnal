@@ -1,4 +1,4 @@
-package test;
+package test.expressions;
 
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
+import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;

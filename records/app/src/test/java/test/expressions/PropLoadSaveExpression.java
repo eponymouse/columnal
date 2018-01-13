@@ -1,4 +1,4 @@
-package test;
+package test.expressions;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -17,6 +17,8 @@ import records.error.UserException;
 import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
+import test.DummyManager;
+import test.JavaFXThreadingRule;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;

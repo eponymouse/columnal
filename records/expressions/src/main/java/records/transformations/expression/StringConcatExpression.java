@@ -14,8 +14,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.types.TypeCons;
 import records.types.TypeExp;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -23,51 +24,49 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * Created by neil on 10/12/2016.
- */
-public class AndExpression extends NaryOpExpression
+public class StringConcatExpression extends NaryOpExpression
 {
-    public AndExpression(List<Expression> expressions)
+    public StringConcatExpression(List<Expression> operands)
     {
-        super(expressions);
+        super(operands);
+        
     }
 
     @Override
     public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
-        return new AndExpression(replacements);
+        return new StringConcatExpression(replacements);
     }
 
     @Override
     protected String saveOp(int index)
     {
-        return "&";
+        return ";";
     }
 
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        TypeExp bool = TypeExp.fromConcrete(this, DataType.BOOLEAN);
+        TypeExp text = TypeExp.fromConcrete(this, DataType.TEXT);
         for (Expression expression : expressions)
         {
             @Nullable TypeExp type = expression.check(data, state, onError);
-            if (type == null || onError.recordError(this, TypeExp.unifyTypes(bool, type)) == null)
+            if (type == null || onError.recordError(this, TypeExp.unifyTypes(text, type)) == null)
                 return null;
         }
-        return onError.recordType(this, bool);
+        return onError.recordType(this, text);
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
+        StringBuilder sb = new StringBuilder();
         for (Expression expression : expressions)
         {
-            Boolean b = Utility.cast(expression.getValue(rowIndex, state), Boolean.class);
-            if (b == false)
-                return DataTypeUtility.value(false);
+            String s = Utility.cast(expression.getValue(rowIndex, state), String.class);
+            sb.append(s);
         }
-        return DataTypeUtility.value(true);
+        return DataTypeUtility.value(sb.toString());
     }
 
     @Override
@@ -77,9 +76,8 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
-        int index = r.nextInt(expressions.size());
-        return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(new TypeCons(null, TypeExp.CONS_BOOLEAN))));
+        return null;
     }
 }

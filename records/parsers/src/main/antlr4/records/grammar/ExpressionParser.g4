@@ -39,7 +39,9 @@ ifThenElseExpression : IF expression THEN expression ELSE expression;
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | MATCHES | PLUS_MINUS | COMMA;
 invalidOpExpression : INVALIDOPS expression (STRING expression)+;
-compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | invalidOpExpression;
+fixTypeExpression : FIX_TYPE TYPE_BEGIN TYPE_CONTENT TYPE_END expression;
+stringConcatExpression : expression (STRING_CONCAT expression)+;
+compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
 
 constructor : CONSTRUCTOR typeName BACKSLASH constructorName | UNKNOWNCONSTRUCTOR constructorName;
 tagExpression : constructor (COLON expression)?;
@@ -66,8 +68,8 @@ match : MATCH expression matchClause+;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
-// tagExpression doesn't need brackets because the constructor means it's identifiable from its left token
-expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | tagExpression;
+// tagExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression
+expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | tagExpression | fixTypeExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;

@@ -14,6 +14,7 @@ import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.FixedTypeExpression;
 import utility.Either;
 import utility.TaggedValue;
@@ -95,6 +96,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
     // Easier than passing parameters around:
     private List<ExFunction<RecordSet, Column>> columns;
+    // The length of the column we are generating:
     private int targetSize;
 
     @Override
@@ -291,7 +293,21 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         @Value String value = TestUtil.makeStringV(r, gs);
                         return literal(value, new StringLiteral(value));
                     }
-                ), l(fix(maxLevels - 1, type)));
+                ), l(fix(maxLevels - 1, type), () -> {
+                    int numOperands = r.nextInt(2, 5);
+                    List<Expression> operands = new ArrayList<>();
+                    List<@Value Object> results = replicate("");
+                    for (int i = 0; i < numOperands; i++)
+                    {
+                        Pair<List<@Value Object>, Expression> item = make(DataType.TEXT, maxLevels - 1);
+                        operands.add(item.getSecond());
+                        for (int row = 0; row < targetSize; row++)
+                        {
+                            results.set(row, ((String)results.get(row)) + item.getFirst().get(row));
+                        }
+                    }
+                    return new Pair<>(results, new StringConcatExpression(operands));
+                }));
             }
 
             @Override
@@ -687,9 +703,9 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     }
 
     // Replicates an item targetSize times into a list:
-    private <T> List<T> replicate(T single)
+    private <T> ArrayList<T> replicate(T single)
     {
-        List<T> repeated = new ArrayList<>();
+        ArrayList<T> repeated = new ArrayList<>();
         for (int i = 0; i < targetSize; i++)
         {
             repeated.add(single);

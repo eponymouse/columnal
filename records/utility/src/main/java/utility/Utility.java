@@ -433,7 +433,7 @@ public class Utility
 
     public static void report(InternalException e)
     {
-        e.printStackTrace(); // TODO log and send back
+        Log.log(e); // TODO log and send back
     }
 
     public static Number parseNumber(String number) throws UserException

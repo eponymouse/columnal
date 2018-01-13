@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -32,6 +33,7 @@ import records.grammar.ExpressionParser.CallExpressionContext;
 import records.grammar.ExpressionParser.ColumnRefContext;
 import records.grammar.ExpressionParser.DivideExpressionContext;
 import records.grammar.ExpressionParser.ExpressionContext;
+import records.grammar.ExpressionParser.FixTypeExpressionContext;
 import records.grammar.ExpressionParser.GreaterThanExpressionContext;
 import records.grammar.ExpressionParser.IfThenElseExpressionContext;
 import records.grammar.ExpressionParser.InvalidOpExpressionContext;
@@ -43,6 +45,7 @@ import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.grammar.ExpressionParser.OrExpressionContext;
 import records.grammar.ExpressionParser.PatternContext;
 import records.grammar.ExpressionParser.RaisedExpressionContext;
+import records.grammar.ExpressionParser.StringConcatExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParser.TagExpressionContext;
@@ -295,6 +298,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
+        public Expression visitStringConcatExpression(StringConcatExpressionContext ctx)
+        {
+            return new StringConcatExpression(Utility.mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
         public Expression visitIfThenElseExpression(IfThenElseExpressionContext ctx)
         {
             return new IfThenElseExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)), visitExpression(ctx.expression(2)));
@@ -313,6 +322,21 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 String typeName = ctx.constructor().typeName().getText();
 
                 return new TagExpression(typeManager.lookupTag(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+            }
+        }
+
+        @Override
+        public Expression visitFixTypeExpression(FixTypeExpressionContext ctx)
+        {
+            String typeSrc = ctx.TYPE_CONTENT().getText();
+            try
+            {
+                return new FixedTypeExpression(typeManager.loadTypeUse(typeSrc), visitExpression(ctx.expression()));
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                throw new RuntimeException("Cannot parse type {{" + typeSrc + "}}", e);
             }
         }
 

@@ -128,6 +128,10 @@ public class TypeManager
         knownTypes.put(typeName, new TaggedTypeDefinition(typeName, typeParams, ImmutableList.copyOf(tags)));
     }
 
+    public DataType loadTypeUse(String type) throws InternalException, UserException
+    {
+        return Utility.parseAsOne(type, FormatLexer::new, FormatParser::new, p -> loadTypeUse(p.completeType().type()));
+    }
 
     public DataType loadTypeUse(TypeContext type) throws InternalException, UserException
     {

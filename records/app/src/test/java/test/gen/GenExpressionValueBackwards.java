@@ -22,6 +22,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.FixedTypeExpression;
+import records.transformations.expression.StringConcatExpression;
 import utility.Either;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -70,6 +71,7 @@ import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 
+import java.awt.AWTEventMulticaster;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
@@ -237,7 +239,26 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
                     () -> new StringLiteral((String)targetValue)
-                ), l(fixType(maxLevels - 1, type, targetValue)));
+                ), l(fixType(maxLevels - 1, type, targetValue), () -> {
+                    int numOperands = r.nextInt(2, 5);
+                    List<Integer> breakpoints = new ArrayList<>();
+                    int[] codepoints = ((String)targetValue).codePoints().toArray();
+                    for (int i = 0; i < numOperands - 1; i++)
+                    {
+                        breakpoints.add(r.nextInt(0, codepoints.length));
+                    }
+                    Collections.sort(breakpoints);
+                    //Simplify following code by adding start and end index to list:
+                    breakpoints.add(0, 0);
+                    breakpoints.add(codepoints.length);
+                    List<Expression> operands = new ArrayList<>();
+                    for (int i = 0; i < numOperands; i++)
+                    {
+                        Expression e = make(DataType.TEXT, new String(codepoints, breakpoints.get(i), breakpoints.get(i + 1) - breakpoints.get(i)), maxLevels - 1);
+                        operands.add(e);
+                    }
+                    return new StringConcatExpression(operands);
+                }));
             }
 
             @Override

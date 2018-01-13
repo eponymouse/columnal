@@ -15,10 +15,12 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,7 @@ public class FixedTypeExpression extends Expression
     private final DataType type;
     private final Expression inner;
     
-    private FixedTypeExpression(DataType type, Expression innerExpression)
+    public FixedTypeExpression(DataType type, Expression innerExpression)
     {
         this.type = type;
         this.inner = innerExpression;
@@ -75,7 +77,16 @@ public class FixedTypeExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        return "TODO";
+        try
+        {
+            return "@type {|" + type.save(new OutputBuilder()).toString() + "|} " + inner.save(false);
+        }
+        catch (InternalException e)
+        {
+            Utility.report(e);
+            // Not much else we can do:
+            return inner.save(false);
+        }
     }
     
     @Override

@@ -24,3 +24,5 @@ column : COLUMN columnName type (defaultValue | NEWLINE);
 typeName : ident;
 typeDecl : TYPE typeName taggedDecl NEWLINE;
 typeDecls : NEWLINE* (typeDecl NEWLINE*)*;
+
+completeType : type EOF;

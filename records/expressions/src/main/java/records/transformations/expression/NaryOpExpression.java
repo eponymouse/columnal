@@ -101,7 +101,7 @@ public abstract class NaryOpExpression extends Expression
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
+        
         NaryOpExpression that = (NaryOpExpression) o;
 
         if (!getOpList().equals(that.getOpList())) return false;

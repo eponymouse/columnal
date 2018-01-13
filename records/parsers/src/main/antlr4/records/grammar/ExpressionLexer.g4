@@ -8,7 +8,9 @@ CLOSE_BRACKET : ')';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 
-UNIT : '{' ~'}'* '}'
+TYPE_BEGIN : '{|' -> pushMode(TYPE_MODE);
+
+UNIT : '{' ~[|}]* '}'
   { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
 
 PLUS_MINUS: '+-';
@@ -40,15 +42,21 @@ UNFINISHED : '@unfinished';
 INVALIDOPS : '@invalidops';
 CONSTRUCTOR : '@tag';
 UNKNOWNCONSTRUCTOR : '@unknowntag';
+FIX_TYPE : '@type'; 
 RAISEDTO : '^';
 COMMA: ',';
+STRING_CONCAT : ';';
 
 NUMBER : [+\-]? [0-9]+ ('.' [0-9]+)?;
 
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()[\]@+\-/*&|=?:;~$!<>\\]+ {GrammarUtility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\]+ {GrammarUtility.validUnquoted(getText())}?;
 
 
+mode TYPE_MODE;
+TYPE_END: '|}' -> popMode;
+// Anything that isn't the closing:
+TYPE_CONTENT: ~'|'+;
 

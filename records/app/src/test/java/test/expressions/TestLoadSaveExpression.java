@@ -1,4 +1,4 @@
-package test;
+package test.expressions;
 
 import org.junit.Test;
 import records.data.ColumnId;
@@ -16,6 +16,7 @@ import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 import records.transformations.function.FunctionList;
+import test.DummyManager;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

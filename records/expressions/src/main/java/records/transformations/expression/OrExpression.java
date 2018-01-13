@@ -17,6 +17,7 @@ import records.error.UserException;
 import records.types.TypeCons;
 import records.types.TypeExp;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class OrExpression extends NaryOpExpression
     {
         for (Expression expression : expressions)
         {
-            Boolean b = (Boolean) expression.getValue(rowIndex, state);
+            Boolean b = Utility.cast(expression.getValue(rowIndex, state), Boolean.class);
             if (b == true)
                 return DataTypeUtility.value(true);
         }
