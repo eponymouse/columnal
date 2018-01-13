@@ -24,7 +24,8 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.SingleLoader;
+import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -41,7 +42,7 @@ import java.util.stream.Stream;
  * (head is function name), tag expressions (head is tag name).
  *
  */
-public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<Expression>, ErrorDisplayer, ExpressionNodeParent
+public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression>, ExpressionNodeParent
 {
     public static final double BRACKET_WIDTH = 0.0;
     private static final double aspectRatio = 0.2;
@@ -56,7 +57,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     // Only used if contents is null.  We don't make this nullable if contents is present,
     // mainly because it makes all the nullness checks a pain.
     private final ObservableList<Node> noInnerNodes;
-    private final ErrorDisplayer showError;
+    private final ErrorDisplayer<Expression> showError;
 
     @SuppressWarnings("initialization")
     public SurroundNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
@@ -81,7 +82,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         };
         head.setText(startingHead);
         this.cssClass = cssClass;
-        Pair<VBox, ErrorDisplayer> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getParentStyles());
+        Pair<VBox, ErrorDisplayer<Expression>> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getEditor(), e -> getParent().replaceLoad(this, e), getParentStyles());
         VBox vBox = vBoxAndErrorShow.getFirst();
         this.showError = vBoxAndErrorShow.getSecond();
         noInnerNodes = FXCollections.observableArrayList();
@@ -202,11 +203,11 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        Stream<Pair<ConsecutiveChild<? extends C>, Double>> stream = Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, Expression.class, head, loc, forType));
+        Stream<Pair<ConsecutiveChild<? extends C, ?>, Double>> stream = Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, Expression.class, head, loc, forType));
         if (contents != null)
-            return Stream.<Pair<ConsecutiveChild<? extends C>, Double>>concat(stream, Utility.<Pair<ConsecutiveChild<? extends C>, Double>>streamNullable(contents.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
+            return Stream.<Pair<ConsecutiveChild<? extends C, ?>, Double>>concat(stream, Utility.<Pair<ConsecutiveChild<? extends C, ?>, Double>>streamNullable(contents.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
         else
             return stream.findFirst().orElse(null);
     }
@@ -394,7 +395,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         showError.showError(error, quickFixes);
     }

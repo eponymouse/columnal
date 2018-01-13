@@ -62,7 +62,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
         BorderPane defaultValueEditorWrapper = new BorderPane(defaultValueEditor);
         contents.getChildren().addAll(
-                new Row(nameLabel, name),
+                new HBoxRow(nameLabel, name),
                 new Separator(),
                 typeSelectionPane.getNode(),
                 new Separator(),

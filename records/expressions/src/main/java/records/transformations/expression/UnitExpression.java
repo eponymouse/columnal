@@ -24,7 +24,7 @@ import utility.Utility;
 import java.util.List;
 import java.util.stream.Stream;
 
-public abstract class UnitExpression
+public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitNodeParent>
 {
     public static UnitExpression load(String text) throws InternalException, UserException
     {
@@ -97,7 +97,13 @@ public abstract class UnitExpression
     public abstract String save(boolean topLevel);
 
     @OnThread(Tag.FXPlatform)
-    public abstract OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel);
+    public abstract OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel);
+
+    @Override
+    public SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>> loadAsSingle()
+    {
+        return (p, s) -> edit(p, false);
+    }
 
     @Override
     public abstract int hashCode();

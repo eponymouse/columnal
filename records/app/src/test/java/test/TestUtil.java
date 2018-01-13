@@ -931,7 +931,7 @@ public class TestUtil
         return new ErrorAndTypeRecorder()
         {
             @Override
-            public void recordError(Expression src, String error, List<QuickFix> fixes)
+            public <E> void recordError(E src, String error, List<QuickFix<E>> fixes)
             {
                 throw new RuntimeException(error);
             }

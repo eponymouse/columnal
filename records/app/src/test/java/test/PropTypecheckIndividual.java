@@ -100,13 +100,13 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+        public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
         {
             throw new RuntimeException("Testing");
         }
 
         @Override
-        public SingleLoader<OperandNode<Expression>> loadAsSingle()
+        public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
         {
             throw new RuntimeException("Testing");
         }
@@ -414,7 +414,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public SingleLoader<OperandNode<Expression>> loadAsSingle()
+        public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
         {
             throw new RuntimeException("N/A");
         }

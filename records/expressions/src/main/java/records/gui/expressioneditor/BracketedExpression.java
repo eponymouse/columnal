@@ -9,6 +9,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
@@ -20,7 +21,7 @@ import java.util.List;
 /**
  * Created by neil on 20/12/2016.
  */
-public class BracketedExpression extends Consecutive<Expression, ExpressionNodeParent> implements OperandNode<Expression>, ExpressionNodeParent
+public class BracketedExpression extends Consecutive<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ExpressionNodeParent
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
 
@@ -73,7 +74,7 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     }
 
     @Override
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, operations.getOperandClass(), nodes().get(0), loc, forType), super.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
     }

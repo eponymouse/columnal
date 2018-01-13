@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
@@ -92,7 +93,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         return (p, s) -> new GeneralExpressionEntry(varName, false, Status.VARIABLE_DECL, p, s);
     }

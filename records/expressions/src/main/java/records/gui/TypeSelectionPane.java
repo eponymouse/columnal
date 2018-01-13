@@ -266,7 +266,7 @@ public class TypeSelectionPane
         RadioButton radioButton = new RadioButton(TranslationUtility.getString(typeKey));
         radioButton.getStyleClass().add("id-" + typeKey.replace(".", "-"));
         radioButton.setToggleGroup(typeGroup);
-        HBox hbox = new Row(radioButton);
+        HBox hbox = new HBoxRow(radioButton);
         hbox.getChildren().addAll(furtherDetails);
         contents.getChildren().add(hbox);
         types.put(radioButton, calculateType);

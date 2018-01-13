@@ -82,7 +82,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression extends ExpressionBase
+public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionNodeParent>
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
@@ -159,25 +159,10 @@ public abstract class Expression extends ExpressionBase
      * @param implicitlyRoundBracketed Is this implicitly in a round bracket?  True for function arguments and [round] bracketed expression, false elsewhere
      * @return
      */
-    public abstract Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed);
+    public abstract Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed);
 
-    public static interface SingleLoader<R>
-    {
-        @OnThread(Tag.FXPlatform)
-        public R load(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent);
-
-        @OnThread(Tag.FXPlatform)
-        public static ConsecutiveStartContent<Expression, ExpressionNodeParent>
-            withSemanticParent(Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> operandsAndOps, ExpressionNodeParent semanticParent)
-        {
-            return new ConsecutiveStartContent<>(
-                Utility.mapList(operandsAndOps.getFirst(), x -> c -> x.load(c, semanticParent)),
-                Utility.mapList(operandsAndOps.getSecond(), x -> c -> x.load(c, semanticParent))
-            );
-        }
-    }
-
-    public abstract SingleLoader<OperandNode<Expression>> loadAsSingle();
+    @Override
+    public abstract SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle();
 
     // Vaguely similar to getValue, but instead checks if the expression matches the given value
     // For many expressions, matching means equality, but if a new-variable item is involved

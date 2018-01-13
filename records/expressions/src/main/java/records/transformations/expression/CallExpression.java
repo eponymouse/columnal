@@ -16,6 +16,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
@@ -113,7 +114,7 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         // If successfully type-checked:
         if (definition != null)

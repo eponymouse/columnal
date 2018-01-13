@@ -8,14 +8,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
@@ -25,6 +22,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.FXPlatformFunction;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -87,7 +85,7 @@ public class ErrorableTextField<T>
             popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.concat(
                 Utility.streamNullable(result.getError()),
                 result.getWarnings().stream()
-            ).map(Text::new).toArray(Node[]::new)), new FixList(result.getFixes())));
+            ).map(Text::new).toArray(Node[]::new)), new FixList(ImmutableList.copyOf(Utility.mapList(result.getFixes(), f -> new Pair<>(f.fixDescription, () -> setText(f.fixedValue)))))));
 
             if (!popOver.isShowing())
             {
@@ -264,54 +262,4 @@ public class ErrorableTextField<T>
         return ConversionResult.success(makeResult.apply(src));
     }
 
-    private class FixList extends VBox
-    {
-        private final ImmutableList<FixRow> fixes;
-        private int selectedIndex; // TODO add support for keyboard selection
-
-        @OnThread(Tag.FXPlatform)
-        public FixList(ImmutableList<QuickFix> fixes)
-        {
-            selectedIndex = -1;
-
-            getStyleClass().add("errorable-text-field-quick-fix-list");
-
-            if (!fixes.isEmpty())
-            {
-                getChildren().add(GUI.label("error.fixes"));
-            }
-
-            ImmutableList.Builder<FixRow> rows = ImmutableList.builder();
-            for (QuickFix fix : fixes)
-            {
-                getChildren().add(new FixRow(fix));
-            }
-            this.fixes = rows.build();
-            getChildren().addAll(this.fixes);
-        }
-
-        private class FixRow extends BorderPane
-        {
-            private final QuickFix fix;
-
-            @OnThread(Tag.FXPlatform)
-            public FixRow(QuickFix fix)
-            {
-                this.fix = fix;
-                FixRow.this.getStyleClass().add("errorable-text-field-quick-fix-row");
-
-                setOnMouseClicked(e -> {
-                    doFix();
-                });
-            }
-
-            @OnThread(Tag.FXPlatform)
-            @RequiresNonNull("fix")
-            private void doFix(@UnknownInitialization(BorderPane.class) FixRow this)
-            {
-                ErrorableTextField<T> textField = ErrorableTextField.this;
-                textField.setText(fix.fixedValue);
-            }
-        }
-    }
 }

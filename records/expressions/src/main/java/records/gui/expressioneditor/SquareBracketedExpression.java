@@ -28,7 +28,7 @@ public class SquareBracketedExpression extends BracketedExpression
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull Expression> first, OperandNode<@NonNull Expression> last)
+    public Expression save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -48,7 +48,7 @@ public class SquareBracketedExpression extends BracketedExpression
             if (ops.stream().allMatch(s -> s.equals(",")))
             {
                 // Easy; just return this as an array:
-                return new ArrayExpression(ImmutableList.copyOf(Utility.<OperandNode<@NonNull Expression>, @NonNull Expression>mapList(operands, (OperandNode<@NonNull Expression> n) -> n.save(errorDisplayers, onError))));
+                return new ArrayExpression(ImmutableList.copyOf(Utility.<OperandNode<@NonNull Expression, ExpressionNodeParent>, @NonNull Expression>mapList(operands, (OperandNode<@NonNull Expression, ExpressionNodeParent> n) -> n.save(errorDisplayers, onError))));
             }
             else if (ops.stream().anyMatch(s -> s.equals(",")))
             {

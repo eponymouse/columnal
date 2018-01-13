@@ -14,6 +14,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ClauseNode;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
 import records.types.TypeExp;
@@ -322,7 +323,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         return (p, s) -> new PatternMatchNode(p, new Pair<>(expression, clauses));
     }

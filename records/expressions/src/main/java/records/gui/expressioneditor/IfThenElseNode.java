@@ -17,8 +17,9 @@ import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.IfThenElseExpression;
+import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -31,14 +32,14 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/02/2017.
  */
-public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expression>, EEDisplayNodeParent, ErrorDisplayer, ExpressionNodeParent
+public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expression, ExpressionNodeParent>, EEDisplayNodeParent, ErrorDisplayer<Expression>, ExpressionNodeParent
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> parent;
     private final ExpressionNodeParent semanticParent;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> condition;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> thenPart;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> elsePart;
-    private final Pair<VBox, ErrorDisplayer> ifLabel;
+    private final Pair<VBox, ErrorDisplayer<Expression>> ifLabel;
     private final VBox thenLabel;
     private final VBox elseLabel;
 
@@ -48,9 +49,9 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         this.parent = parent;
         this.semanticParent = semanticParent;
 
-        ifLabel = ExpressionEditorUtil.keyword("if", "if-keyword", this, getParentStyles());
-        thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles()).getFirst();
-        elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles()).getFirst();
+        ifLabel = ExpressionEditorUtil.<Expression, ExpressionNodeParent>keyword("if", "if-keyword", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles());
+        thenLabel = ExpressionEditorUtil.<Expression, ExpressionNodeParent>keyword("then", "if-keyword", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles()).getFirst();
+        elseLabel = ExpressionEditorUtil.<Expression, ExpressionNodeParent>keyword("else", "if-keyword", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles()).getFirst();
 
         condition = new SubConsecutive(ifLabel.getFirst(), "if-condition", startingCondition) {
             @Override
@@ -133,9 +134,9 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends LoadableExpression<C, ?>> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, ifLabel.getFirst(), loc, forType);
+        @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, ifLabel.getFirst(), loc, forType);
 
         return Utility.streamNullable(startDist, condition.findClosestDrop(loc, forType), thenPart.findClosestDrop(loc, forType), elsePart.findClosestDrop(loc, forType))
             .filter(x -> x != null).min(Comparator.comparing(p -> p.getSecond())).get();
@@ -263,7 +264,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         ifLabel.getSecond().showError(error, quickFixes);
     }

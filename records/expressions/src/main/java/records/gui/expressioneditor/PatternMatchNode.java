@@ -18,7 +18,8 @@ import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.SingleLoader;
+import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import utility.FXPlatformConsumer;
@@ -35,9 +36,9 @@ import java.util.stream.Stream;
 /**
  * The node representing the top-level of a pattern match expression.
  */
-public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression>, ExpressionNodeParent
+public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression, ExpressionNodeParent>, ExpressionNodeParent
 {
-    private final Pair<VBox, ErrorDisplayer> matchLabel;
+    private final Pair<VBox, ErrorDisplayer<Expression>> matchLabel;
     private final ConsecutiveBase<Expression, ExpressionNodeParent> source;
     private final ObservableList<ClauseNode> clauses;
     private ConsecutiveBase<Expression, ExpressionNodeParent> parent;
@@ -46,7 +47,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     public PatternMatchNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Pair<Expression, List<MatchClause>> sourceAndClauses)
     {
         this.parent = parent;
-        this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, getParentStyles());
+        this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles());
         this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel.getFirst(), null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(false), this), ')') {
             @Override
             public boolean isFocused()
@@ -268,11 +269,11 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends LoadableExpression<C, ?>> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel.getFirst(), loc, forType);
+        @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel.getFirst(), loc, forType);
 
-        return Stream.<Pair<ConsecutiveChild<? extends C>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.findClosestDrop(loc, forType))))
+        return Stream.<Pair<ConsecutiveChild<? extends C, ?>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.findClosestDrop(loc, forType))))
             .min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
@@ -293,7 +294,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         matchLabel.getSecond().showError(error, quickFixes);
     }

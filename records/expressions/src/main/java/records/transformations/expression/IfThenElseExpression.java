@@ -13,6 +13,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
 import records.types.TypeExp;
@@ -96,7 +97,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         return (p, s) -> new IfThenElseNode(p, s, condition, thenExpression, elseExpression);
     }

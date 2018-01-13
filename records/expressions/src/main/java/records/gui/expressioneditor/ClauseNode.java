@@ -20,7 +20,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.SingleLoader;
+import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
@@ -76,7 +77,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     public ClauseNode(PatternMatchNode parent, @Nullable Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome)
     {
         this.parent = parent;
-        this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, getParentStyles()).getFirst();
+        this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, parent.getEditor(), e -> {/*TODO*/}, getParentStyles()).getFirst();
         this.matches = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
         this.outcome = makeConsecutive(SubType.OUTCOME/*"\u2794"*/, patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond());
@@ -131,7 +132,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @SuppressWarnings("initialization") // Because of Consecutive
     private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, SubType subType, @Nullable Expression startingContent)
     {
-        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()).getFirst(), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), this)) {
+        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, parent.getEditor(), e -> {/*TODO*/}, getParentStyles()).getFirst(), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), this)) {
 
             @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
@@ -427,7 +428,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return parent.getEditor();
     }
 
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         // We don't actually want to allow general dropping to the left of us, because the
         // only thing that fits there is a case.  If we want to enable case dropping
@@ -437,7 +438,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             //Stream.of(new Pair<>(this, FXUtility.distanceToLeft(caseLabel, loc))),
             matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) ->
             {
-                @Nullable Pair<ConsecutiveChild<? extends C>, Double> firstDrop = p.getFirst().findClosestDrop(loc, forType);
+                @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> firstDrop = p.getFirst().findClosestDrop(loc, forType);
                 return p.getSecond() == null ? Utility.streamNullable(firstDrop) : Utility.streamNullable(firstDrop, p.getSecond().findClosestDrop(loc, forType));
             })
             //)

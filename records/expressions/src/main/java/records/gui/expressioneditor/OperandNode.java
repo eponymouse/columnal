@@ -5,6 +5,7 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.transformations.expression.LoadableExpression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 
@@ -16,7 +17,7 @@ import java.util.List;
  * next to operators.  (Depends on type: some operands, like tagged operands,
  * may not have a useful type available.)
  */
-public @Interned interface OperandNode<@NonNull EXPRESSION> extends EEDisplayNode, ConsecutiveChild<EXPRESSION>, ErrorDisplayer
+public @Interned interface OperandNode<@NonNull EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION>
 {
     /**
      * Gets the variables declared in this node.

@@ -21,7 +21,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
     private final List<String> errorMessages = new ArrayList<>();
 
     @Override
-    public void recordError(Expression src, String error, List<QuickFix> fixes)
+    public <E> void recordError(E src, String error, List<QuickFix<E>> fixes)
     {
         errorMessages.add(error);
     }

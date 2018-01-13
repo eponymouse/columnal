@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -17,15 +18,23 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Window;
 import javafx.util.Duration;
+import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
+import records.data.TableManager;
+import records.gui.FixList;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -48,9 +57,8 @@ public class ExpressionInfoDisplay
 {
     private final SimpleStringProperty type = new SimpleStringProperty("");
     private final SimpleStringProperty errorMessage = new SimpleStringProperty("");
-    private final ObservableList<QuickFix> quickFixes = FXCollections.observableArrayList();
     private final VBox expressionNode;
-    private @Nullable PopOver popup = null;
+    private @Nullable ErrorMessagePopup popup = null;
     private boolean focused = false;
     private boolean hoveringAttached = false;
     private boolean hoveringTopOfAttached = false;
@@ -75,7 +83,7 @@ public class ExpressionInfoDisplay
 
     private class ErrorMessagePopup extends PopOver
     {
-        private final BooleanBinding hasFixes;
+        private final FixList fixList;
 
         public ErrorMessagePopup()
         {
@@ -101,23 +109,8 @@ public class ExpressionInfoDisplay
             errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
-            ListView<QuickFix> fixList = new ListView<>(quickFixes);
-            fixList.setMaxHeight(150.0);
-            // Keep reference to prevent GC:
-            hasFixes = Bindings.isNotEmpty(quickFixes);
-            fixList.visibleProperty().bind(hasFixes);
-            fixList.managedProperty().bind(fixList.visibleProperty());
-
-            fixList.setCellFactory(lv -> new ListCell<QuickFix>() {
-                @Override
-                @OnThread(Tag.FX)
-                protected void updateItem(@Nullable QuickFix item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText("");
-                    setGraphic((empty || item == null) ? null : new TextFlow(new Text(item.getTitle())));
-                }
-            });
-
+            fixList = new FixList(ImmutableList.of());
+            
             Label typeLabel = new Label();
             typeLabel.getStyleClass().add("expression-info-type");
             typeLabel.textProperty().bind(type);
@@ -224,12 +217,11 @@ public class ExpressionInfoDisplay
         }
     }
 
-    public void setMessageAndFixes(@Nullable Pair<String, List<QuickFix>> newMsgAndFixes)
+    public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<String, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<EXPRESSION> replace)
     {
         if (newMsgAndFixes == null)
         {
             errorMessage.setValue("");
-            quickFixes.clear();
             // Hide the popup:
             if (popup != null)
             {
@@ -238,8 +230,13 @@ public class ExpressionInfoDisplay
         }
         else
         {
+            Log.debug("Message and fixes: " + newMsgAndFixes);
+            // The listener on this property should make the popup every time:
             errorMessage.set(newMsgAndFixes.getFirst());
-            quickFixes.setAll(newMsgAndFixes.getSecond());
+            if (popup != null)
+            {
+                popup.fixList.setFixes(newMsgAndFixes.getSecond().stream().map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> replace.consume(q.getFixedVersion(parentWindow, tableManager)))).collect(ImmutableList.toImmutableList()));
+            }
         }
     }
     

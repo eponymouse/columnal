@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION>
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 
@@ -74,7 +74,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * the expression is invalid without ther operand being filled in.  Same logic applies to:
      *    X* ? X
      */
-    protected final ObservableList<OperandNode<@NonNull EXPRESSION>> operands;
+    protected final ObservableList<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>> operands;
     protected final ObservableList<OperatorEntry<@NonNull EXPRESSION, SEMANTIC_PARENT>> operators;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
@@ -138,7 +138,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
     @NotNull
-    protected OperandNode<@NonNull EXPRESSION> makeBlankOperand()
+    protected OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> makeBlankOperand()
     {
         return operations.makeGeneral(this, getThisAsSemanticParent(), null);
     }
@@ -175,8 +175,19 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         else
             operands.get(operands.size() - 1).focus(side);
     }
+    
+    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull EXPRESSION newNode)
+    {
+        replace(oldNode, newNode.loadAsSingle().load(this, getThisAsSemanticParent()));
+    }
 
-    public void replace(OperandNode<@NonNull EXPRESSION> oldNode, @Nullable OperandNode<@NonNull EXPRESSION> newNode)
+    // Replaces the whole operator-expression that operator was part of, with the new expression
+    protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, EXPRESSION e)
+    {
+        
+    }
+
+    public void replace(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @Nullable OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> newNode)
     {
         int index = getOperandIndex(oldNode);
         //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
@@ -207,7 +218,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         {
             atomicEdit.set(true);
             operators.add(index+1, makeBlankOperator());
-            OperandNode<EXPRESSION> operandNode = operations.makeGeneral(this, getThisAsSemanticParent(), initialContent);
+            OperandNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, getThisAsSemanticParent(), initialContent);
             if (focus)
                 operandNode.focusWhenShown();
             operands.add(index+1, operandNode);
@@ -219,7 +230,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
 
-    public void setOperatorToRight(@UnknownInitialization OperandNode<@NonNull EXPRESSION> rightOf, String operator)
+    public void setOperatorToRight(@UnknownInitialization OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> rightOf, String operator)
     {
         int index = getOperandIndex(rightOf);
         if (index != -1)
@@ -229,14 +240,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 // Add new operator and new operand:
                 atomicEdit.set(true);
                 operators.add(index, new OperatorEntry<>(operations.getOperandClass(), operator, true, this));
-                OperandNode<@NonNull EXPRESSION> blankOperand = makeBlankOperand();
+                OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankOperand();
                 operands.add(index+1, blankOperand);
                 atomicEdit.set(false);
             }
         }
     }
 
-    private int getOperandIndex(@UnknownInitialization OperandNode<@NonNull EXPRESSION> operand)
+    private int getOperandIndex(@UnknownInitialization OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> operand)
     {
         int index = Utility.indexOfRef(operands, operand);
         if (index == -1)
@@ -260,9 +271,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
-        if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION>)child))
+        if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
         {
-            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION>)child);
+            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
             if (index >= operators.size())
             {
                 operators.add(makeBlankOperator());
@@ -285,9 +296,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     @Override
     public void focusLeftOf(@UnknownInitialization EEDisplayNode child)
     {
-        if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION>)child))
+        if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
         {
-            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION>) child);
+            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
             if (index > 0)
                 operators.get(index - 1).focus(Focus.RIGHT);
             else
@@ -313,7 +324,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     private void addBlankAtLeft()
     {
         atomicEdit.set(true);
-        OperandNode<@NonNull EXPRESSION> blankOperand = makeBlankOperand();
+        OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankOperand();
         blankOperand.focusWhenShown();
         operands.add(0, blankOperand);
         operators.add(0, makeBlankOperator());
@@ -372,7 +383,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return BracketedStatus.MISC;
     }
 
-    public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull EXPRESSION> first, OperandNode<@NonNull EXPRESSION> last)
+    public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -388,7 +399,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             bracketedStatus = getChildrenBracketedStatus();
         }
 
-        List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION> n) -> n.save(errorDisplayers, onError));
+        List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> n) -> n.save(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
         List<String> ops = opsValid.getSecond();
 
@@ -411,9 +422,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * if there any problems (start or end not found, or end before start)
      */
     @Pure
-    public List<ConsecutiveChild<EXPRESSION>> getChildrenFromTo(ConsecutiveChild<EXPRESSION> start, ConsecutiveChild<EXPRESSION> end)
+    public List<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> getChildrenFromTo(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
     {
-        List<ConsecutiveChild<@NonNull EXPRESSION>> allChildren = getAllChildren();
+        List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> allChildren = getAllChildren();
         int a = allChildren.indexOf(start);
         int b = allChildren.indexOf(end);
         if (a == -1 || b == -1 || a > b)
@@ -421,7 +432,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return allChildren.subList(a, b + 1);
     }
 
-    private List<ConsecutiveChild<@NonNull EXPRESSION>> getAllChildren()
+    private List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> getAllChildren()
     {
         return interleaveOperandsAndOperators(operands, operators);
     }
@@ -478,9 +489,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         };
     }
 
-    public void markSelection(ConsecutiveChild<EXPRESSION> from, ConsecutiveChild<EXPRESSION> to, boolean selected)
+    public void markSelection(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> from, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> to, boolean selected)
     {
-        for (ConsecutiveChild<EXPRESSION> n : getChildrenFromTo(from, to))
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> n : getChildrenFromTo(from, to))
         {
             n.setSelected(selected);
         }
@@ -492,15 +503,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      *
      * Returns the item before which you would insert, and the distance.
      */
-    protected <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    protected <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        return Utility.filterOutNulls(Stream.<ConsecutiveChild<EXPRESSION>>concat(operands.stream(), operators.stream()).<@Nullable Pair<ConsecutiveChild<? extends C>, Double>>map(n -> n.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).get();
+        return Utility.filterOutNulls(Stream.<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>>concat(operands.stream(), operators.stream()).<@Nullable Pair<ConsecutiveChild<? extends C, ?>, Double>>map(n -> n.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
     @SuppressWarnings("unchecked")
-    public @Nullable CopiedItems copyItems(ConsecutiveChild<EXPRESSION> start, ConsecutiveChild<EXPRESSION> end)
+    public @Nullable CopiedItems copyItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
     {
-        List<ConsecutiveChild<@NonNull EXPRESSION>> all = getAllChildren();
+        List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> all = getAllChildren();
         boolean startIsOperator = start instanceof OperatorEntry;
         int startIndex = all.indexOf(start);
         int endIndex = all.indexOf(end);
@@ -510,11 +521,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return null;
 
         return new CopiedItems(
-            Utility.<ConsecutiveChild<EXPRESSION>, String>mapList(all.subList(startIndex, endIndex + 1), child -> {
+            Utility.<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, String>mapList(all.subList(startIndex, endIndex + 1), child -> {
                 if (child instanceof OperatorEntry)
                     return ((OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child).get();
                 else
-                    return operations.save(((OperandNode<EXPRESSION>)child).save(new ErrorDisplayerRecord(), o -> {}));
+                    return operations.save(((OperandNode<EXPRESSION, SEMANTIC_PARENT>)child).save(new ErrorDisplayerRecord(), o -> {}));
             }), startIsOperator);
     }
 
@@ -525,10 +536,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         // In the case of a mismatch, we must insert a blank of the other type to get it right.
         atomicEdit.set(true);
 
-        @Nullable Pair<List<OperandNode<EXPRESSION>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loaded = loadItems(itemsToInsert);
+        @Nullable Pair<List<OperandNode<EXPRESSION, SEMANTIC_PARENT>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loaded = loadItems(itemsToInsert);
         if (loaded == null)
             return false;
-        List<OperandNode<EXPRESSION>> newOperands = loaded.getFirst();
+        List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> newOperands = loaded.getFirst();
         List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> newOperators = loaded.getSecond();
 
         boolean endsWithOperator;
@@ -591,9 +602,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return true;
     }
 
-    private @Nullable Pair<List<OperandNode<EXPRESSION>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loadItems(CopiedItems copiedItems)
+    private @Nullable Pair<List<OperandNode<EXPRESSION, SEMANTIC_PARENT>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loadItems(CopiedItems copiedItems)
     {
-        List<OperandNode<EXPRESSION>> operands = new ArrayList<>();
+        List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> operands = new ArrayList<>();
         List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators = new ArrayList<>();
         try
         {
@@ -619,12 +630,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return new Pair<>(operands, operators);
     }
 
-    public void removeItems(ConsecutiveChild<EXPRESSION> start, ConsecutiveChild<EXPRESSION> end)
+    public void removeItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
     {
         atomicEdit.set(true);
         int startIndex;
         int endIndex;
-        List<ConsecutiveChild<@NonNull EXPRESSION>> all = interleaveOperandsAndOperators(operands, operators);
+        List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> all = interleaveOperandsAndOperators(operands, operators);
         startIndex = all.indexOf(start);
         endIndex = all.indexOf(end);
         if (startIndex != -1 && endIndex != -1)
@@ -770,7 +781,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes)
     {
         operands.get(0).showError(error, quickFixes);
     }
@@ -801,9 +812,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
 
-    public static interface OperandOps<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT>
+    public static interface OperandOps<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
-        public OperandNode<EXPRESSION> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
+        public OperandNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
 
         public ImmutableList<Pair<String, @Localized String>> getValidOperators(SEMANTIC_PARENT semanticParent);
 
@@ -813,11 +824,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         @NonNull EXPRESSION makeUnfinished(String s);
 
-        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
+        EXPRESSION makeExpression(ErrorDisplayer<EXPRESSION> displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
 
         String save(EXPRESSION expression);
 
-        OperandNode<EXPRESSION> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
+        OperandNode<EXPRESSION, SEMANTIC_PARENT> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
     }
 
     private static class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
@@ -859,7 +870,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<Expression> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
+        public OperandNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
         {
             return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, true, Status.UNFINISHED, parent, semanticParent);
         }
@@ -877,7 +888,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+        public Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
         {
             // Make copy for editing:
             expressionExps = new ArrayList<>(expressionExps);
@@ -965,7 +976,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<Expression> loadOperand(String curItem, ConsecutiveBase<Expression, ExpressionNodeParent> consecutiveBase) throws UserException, InternalException
+        public OperandNode<Expression, ExpressionNodeParent> loadOperand(String curItem, ConsecutiveBase<Expression, ExpressionNodeParent> consecutiveBase) throws UserException, InternalException
         {
             return Expression.parse(null, curItem, consecutiveBase.getEditor().getTypeManager()).loadAsSingle().load(consecutiveBase, consecutiveBase.getThisAsSemanticParent());
         }
@@ -986,7 +997,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<UnitExpression> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
+        public OperandNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
         {
             return new UnitEntry(parent, initialContent == null ? "" : initialContent, true);
         }
@@ -1016,7 +1027,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, BracketedStatus bracketedStatus)
+        public UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, BracketedStatus bracketedStatus)
         {
             // Make copy for editing:
             operands = new ArrayList<>(operands);
@@ -1077,7 +1088,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<UnitExpression> loadOperand(String src, ConsecutiveBase<UnitExpression, UnitNodeParent> parent) throws UserException, InternalException
+        public OperandNode<UnitExpression, UnitNodeParent> loadOperand(String src, ConsecutiveBase<UnitExpression, UnitNodeParent> parent) throws UserException, InternalException
         {
             return UnitExpression.load(src).edit(parent, false);
         }

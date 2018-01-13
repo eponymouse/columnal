@@ -113,7 +113,7 @@ public class Transform extends TransformationEditable
                 ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
                 {
                     @Override
-                    public void recordError(Expression src, String s, List<QuickFix> fixes)
+                    public <E> void recordError(E src, String s, List<QuickFix<E>> fixes)
                     {
                         error = s;
                     }

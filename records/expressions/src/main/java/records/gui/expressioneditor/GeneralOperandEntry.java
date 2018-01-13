@@ -6,6 +6,8 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -16,7 +18,7 @@ import java.util.List;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION>, ErrorDisplayer
+abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION>, OperandNode<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * A label to the left of the text-field, used for displaying things like the
@@ -72,10 +74,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
     }
 
     @Override
-    public void showError(String error, List<QuickFix> quickFixes)
+    public void showError(String error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
-        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes));
+        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), e -> {
+            getParent().replaceLoad(this, e);
+        });
     }
 
     @Override

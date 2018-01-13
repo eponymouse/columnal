@@ -46,7 +46,7 @@ public class UnitDivideExpression extends UnitExpression
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
+    public OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
     {
         return new UnitCompound(parent, topLevel);
     }

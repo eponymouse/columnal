@@ -87,4 +87,10 @@ public class Log
     {
         logger.log(Level.ERROR, s);
     }
+
+    // This should only be used temporarily while debugging, and should not be left in:
+    public static void debug(String s)
+    {
+        logger.log(Level.DEBUG, s);
+    }
 }

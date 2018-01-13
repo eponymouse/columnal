@@ -12,6 +12,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.TypeManager.TagInfo;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.TagExpressionNode;
 import records.types.TypeExp;
 import utility.Either;
@@ -186,7 +187,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         return (p, s) -> new TagExpressionNode(p, s, tag, inner);
     }

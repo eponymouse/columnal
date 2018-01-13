@@ -10,6 +10,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * A helper class that shares code between various text-field based nodes.
  */
-public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION>
+public abstract class EntryNode<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent;
     private final Class<EXPRESSION> expressionClass;
@@ -32,9 +33,11 @@ public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PAR
         this.expressionClass = expressionClass;
         textField = new LeaveableTextField(this, parent);
     }
-
+    
+    // Don't understand why the checker doesn't see that this method is OK:
+    @SuppressWarnings("nullness")
     // Although we don't extend OperandNode, this deliberately implements a method from OperandNode:
-    public final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent()
+    public final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent(@UnknownInitialization(EntryNode.class) EntryNode<EXPRESSION, SEMANTIC_PARENT> this)
     {
         return parent;
     }
@@ -92,7 +95,7 @@ public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PAR
 
 
     @Override
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return ConsecutiveChild.closestDropSingle(this, expressionClass, calculateNodes().findFirst().get(), loc, forType);
     }

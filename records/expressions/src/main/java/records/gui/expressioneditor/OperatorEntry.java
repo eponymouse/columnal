@@ -21,6 +21,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
+import records.transformations.expression.LoadableExpression;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -33,12 +34,12 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION>
+public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * The outermost container for the whole thing:
      */
-    private final Pair<VBox, ErrorDisplayer> container;
+    private final Pair<VBox, ErrorDisplayer<EXPRESSION>> container;
     private final @MonotonicNonNull AutoComplete autoComplete;
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
@@ -58,7 +59,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
             initialContentEntered.set(true);
         }
         FXUtility.sizeToFit(textField, 5.0, 5.0);
-        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles());
+        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), e -> parent.replaceWholeLoad(FXUtility.mouse(this), e), parent.getParentStyles());
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
@@ -86,7 +87,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         return Stream.of(container.getFirst());
     }
 
-    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @Localized String>> validOperators, String s)
+    private static <EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @Localized String>> validOperators, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())

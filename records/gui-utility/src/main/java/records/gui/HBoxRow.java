@@ -8,9 +8,9 @@ import javafx.scene.layout.HBox;
 /**
  * Created by neil on 16/04/2017.
  */
-public class Row extends HBox
+public class HBoxRow extends HBox
 {
-    public Row(Node... contents)
+    public HBoxRow(Node... contents)
     {
         super(contents);
         getStyleClass().add("hbox-row");
