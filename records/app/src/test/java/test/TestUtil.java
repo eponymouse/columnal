@@ -85,6 +85,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -819,13 +820,14 @@ public class TestUtil
      * @throws InvocationTargetException
      */
     @OnThread(Tag.Simulation)
-    public static Runnable openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
+    public static Supplier<TableManager> openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
     {
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
         String saved = save(mgr);
         System.out.println("Saving: {{{" + saved + "}}}");
-        Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, new Pair<>(temp, saved))));
+        AtomicReference<TableManager> tableManagerAtomicReference = new AtomicReference<>();
+        Platform.runLater(() -> checkedToRuntime_(() -> tableManagerAtomicReference.set(MainWindow.show(windowToUse, temp, new Pair<>(temp, saved))._test_getTableManager())));
         return () -> {
             do
             {
@@ -833,6 +835,7 @@ public class TestUtil
                 sleep(1000);
             }
             while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);
+            return tableManagerAtomicReference.get();
         };
     }
 
@@ -849,7 +852,7 @@ public class TestUtil
     }*/
 
     @OnThread(Tag.Simulation)
-    public static void openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
+    public static TableManager openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
     {
         TableManager manager = new DummyManager();
         Table t = new ImmediateDataSource(manager, new EditableRecordSet(data));
@@ -858,7 +861,7 @@ public class TestUtil
         {
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         }
-        openDataAsTable(windowToUse, manager).run();
+        return openDataAsTable(windowToUse, manager).get();
     }
 
     // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.

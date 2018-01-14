@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
+import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.manager.ImporterManager;
@@ -49,6 +50,9 @@ public class MainWindow
     {
         @OnThread(Tag.FXPlatform)
         public void importFile(File file);
+        
+        @OnThread(Tag.FXPlatform)
+        public TableManager _test_getTableManager();
     }
 
     // If src is null, make new
@@ -150,6 +154,12 @@ public class MainWindow
                 {
                     FXUtility.logAndShowError("Error in file path", e);
                 }
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) TableManager _test_getTableManager()
+            {
+                return v.getManager();
             }
         };
     }

@@ -243,7 +243,11 @@ public class ExpressionInfoDisplay
             Log.debug("Message and fixes: " + newMsgAndFixes);
             // The listener on this property should make the popup every time:
             errorMessage.set(newMsgAndFixes.getFirst());
-            fixes.set(newMsgAndFixes.getSecond().stream().map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> replace.consume(q.getFixedVersion(parentWindow, tableManager)))).collect(ImmutableList.toImmutableList()));
+            fixes.set(newMsgAndFixes.getSecond().stream().map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> {
+                if (popup != null)
+                    hide(true);
+                replace.consume(q.getFixedVersion(parentWindow, tableManager));
+            })).collect(ImmutableList.toImmutableList()));
             if (popup != null)
             {
                 popup.fixList.setFixes(fixes.get());

@@ -114,7 +114,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         calculated.loadPosition(Either.left(new BoundingBox(250, 0, 200, 600)));
         manager.record(calculated);
 
-        TestUtil.openDataAsTable(windowToUse, manager).run();
+        TestUtil.openDataAsTable(windowToUse, manager).get();
 
         int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
@@ -190,7 +190,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             {
                 throw new RuntimeException(e);
             }
-        }).run();
+        }).get();
 
         int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
         int targetNewRow = r.nextInt(srcLength + 1);
