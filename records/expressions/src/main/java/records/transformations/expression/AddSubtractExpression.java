@@ -20,6 +20,7 @@ import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.MutUnitVar;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -81,24 +82,24 @@ public class AddSubtractExpression extends NaryOpExpression
     public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError, p -> {
+            StyledString err = StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers but found "), p.getFirst().toStyledString());
             try
             {
-
                 // Note: we don't unify here because we don't want to alter the type.  We could try a 
                 // "could this be string?" unification attempt, but really we're only interested in offering
                 // the quick fix if it is definitely a string, for which we can use equals:
-                if (p.getFirst().equals(TypeExp.fromConcrete(null, DataType.TEXT)))
+                if (p.getFirst().equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
                 {
-                    return new QuickFix<Expression>("Change to string concatenation", params -> {
+                    return new Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>(err, new QuickFix<Expression>("Change to string concatenation", params -> {
                         return new Pair<>(PARENT, new StringConcatExpression(expressions));
-                    });
+                    }));
                 }
             }
             catch (InternalException e)
             {
                 Utility.report(e);
             }
-            return null;
+            return new Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>(err, null);
         });
         return type;
     }

@@ -14,8 +14,10 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeCons;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
@@ -48,7 +50,9 @@ public class AndExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), data, state, onError, null);
+        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), data, state, onError, typeAndExpression -> {
+            return new Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>(StyledString.concat(StyledString.s("Operands to '&' must be boolean but found "), typeAndExpression.getFirst().toStyledString()), null);
+        });
     }
 
     @Override

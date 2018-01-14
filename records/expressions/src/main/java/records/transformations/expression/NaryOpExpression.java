@@ -14,6 +14,8 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
+import styled.StyledString;
+import utility.Either;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
@@ -157,7 +159,7 @@ public abstract class NaryOpExpression extends Expression
         return r;
     }
     
-    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, @Nullable Function<Pair<TypeExp, Expression>, @Nullable QuickFix<Expression>> fix) throws InternalException, UserException
+    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<Pair<TypeExp, Expression>, Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         for (Expression expression : expressions)
@@ -171,9 +173,14 @@ public abstract class NaryOpExpression extends Expression
             }
             else
             {
-                @Nullable QuickFix<Expression> quickFix = fix == null ? null : fix.apply(new Pair<>(type, expression));
-                ImmutableList<QuickFix<Expression>> quickFixes = quickFix == null ? ImmutableList.of() : ImmutableList.of(quickFix);
-                valid = onError.recordError(expression, TypeExp.unifyTypes(target, type), quickFixes) != null;
+                Pair<@Nullable StyledString, @Nullable QuickFix<Expression>> errorAndQuickFix = getCustomErrorAndFix.apply(new Pair<>(type, expression));
+                ImmutableList<QuickFix<Expression>> quickFixes = errorAndQuickFix.getSecond() == null ? ImmutableList.of() : ImmutableList.of(errorAndQuickFix.getSecond());
+                valid = onError.recordError(expression, TypeExp.unifyTypes(target, type).<Either<StyledString, TypeExp>>either(err -> {
+                    if (errorAndQuickFix.getFirst() != null)
+                        return Either.left(errorAndQuickFix.getFirst());
+                    else
+                        return Either.left(err);
+                }, t -> Either.right(t)), quickFixes) != null;
             }
             allValid &= valid;
         }

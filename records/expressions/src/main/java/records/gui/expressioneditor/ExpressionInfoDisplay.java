@@ -61,6 +61,7 @@ public class ExpressionInfoDisplay
 {
     private final SimpleStringProperty type = new SimpleStringProperty("");
     private final SimpleObjectProperty<StyledString> errorMessage = new SimpleObjectProperty<>(StyledString.s(""));
+    private final SimpleObjectProperty<ImmutableList<Pair<@Localized String, FXPlatformRunnable>>> fixes = new SimpleObjectProperty<>(ImmutableList.of());
     private final VBox expressionNode;
     private @Nullable ErrorMessagePopup popup = null;
     private boolean focused = false;
@@ -118,6 +119,7 @@ public class ExpressionInfoDisplay
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
             fixList = new FixList(ImmutableList.of());
+            fixList.setFixes(fixes.get());
             
             Label typeLabel = new Label();
             typeLabel.getStyleClass().add("expression-info-type");
@@ -224,7 +226,7 @@ public class ExpressionInfoDisplay
             popup.setOpacity(1.0);
         }
     }
-
+    
     public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, EXPRESSION>> replace)
     {
         if (newMsgAndFixes == null)
@@ -241,9 +243,10 @@ public class ExpressionInfoDisplay
             Log.debug("Message and fixes: " + newMsgAndFixes);
             // The listener on this property should make the popup every time:
             errorMessage.set(newMsgAndFixes.getFirst());
+            fixes.set(newMsgAndFixes.getSecond().stream().map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> replace.consume(q.getFixedVersion(parentWindow, tableManager)))).collect(ImmutableList.toImmutableList()));
             if (popup != null)
             {
-                popup.fixList.setFixes(newMsgAndFixes.getSecond().stream().map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> replace.consume(q.getFixedVersion(parentWindow, tableManager)))).collect(ImmutableList.toImmutableList()));
+                popup.fixList.setFixes(fixes.get());
             }
         }
     }

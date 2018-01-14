@@ -14,7 +14,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -47,7 +49,10 @@ public class StringConcatExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), data, state, onError, null);
+        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), data, state, onError, (typeAndExpression) -> {
+            // TODO offer a quick fix of wrapping to.string around operand
+            return new Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>(StyledString.concat(StyledString.s("Operands to ';' must be text but found "), typeAndExpression.getFirst().toStyledString()), null);
+        });
     }
 
     @Override
