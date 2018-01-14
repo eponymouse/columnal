@@ -9,11 +9,13 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.MutUnitVar;
@@ -29,6 +31,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import static records.transformations.expression.AddSubtractExpression.Op.ADD;
+import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.PARENT;
 
 /**
  * Created by neil on 10/12/2016.
@@ -77,7 +80,26 @@ public class AddSubtractExpression extends NaryOpExpression
     @Override
     public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError);
+        type = checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError, p -> {
+            try
+            {
+
+                // Note: we don't unify here because we don't want to alter the type.  We could try a 
+                // "could this be string?" unification attempt, but really we're only interested in offering
+                // the quick fix if it is definitely a string, for which we can use equals:
+                if (p.getFirst().equals(TypeExp.fromConcrete(null, DataType.TEXT)))
+                {
+                    return new QuickFix<Expression>("Change to string concatenation", params -> {
+                        return new Pair<>(PARENT, new StringConcatExpression(expressions));
+                    });
+                }
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+            }
+            return null;
+        });
         return type;
     }
 

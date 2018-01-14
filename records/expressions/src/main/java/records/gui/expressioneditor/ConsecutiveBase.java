@@ -23,7 +23,10 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledString;
+import threadchecker.OnThread;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -177,10 +180,29 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             operands.get(operands.size() - 1).focus(side);
     }
     
-    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull EXPRESSION newNode)
+    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, EXPRESSION> newNode)
     {
-        replace(oldNode, newNode.loadAsSingle().load(this, getThisAsSemanticParent()));
+        if (newNode.getFirst() == ReplacementTarget.CURRENT)
+        {
+            replace(oldNode, newNode.getSecond().loadAsSingle().load(this, getThisAsSemanticParent()));
+        }
+        else
+        {
+            Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> loaded = newNode.getSecond().loadAsConsecutive(hasImplicitRoundBrackets());
+
+            List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
+            List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> startingOperators = Utility.mapList(loaded.getSecond(), operator -> operator.load(this, getThisAsSemanticParent()));
+            
+            atomicEdit.set(true);
+            operands.setAll(startingOperands);
+            operators.setAll(startingOperators);
+            atomicEdit.set(false);
+            // Get rid of anything which would go if you got focus and lost it again:
+            focusChanged();
+        }
     }
+
+    protected abstract boolean hasImplicitRoundBrackets();
 
     // Replaces the whole operator-expression that operator was part of, with the new expression
     protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, EXPRESSION e)

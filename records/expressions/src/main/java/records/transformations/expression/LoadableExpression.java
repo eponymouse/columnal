@@ -3,6 +3,7 @@ package records.transformations.expression;
 import records.gui.expressioneditor.Consecutive;
 import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import threadchecker.OnThread;
@@ -14,6 +15,8 @@ import java.util.List;
 
 public interface LoadableExpression<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
 {
+    public abstract Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> loadAsConsecutive(boolean implicitlyRoundBracketed);
+    
     public abstract SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>> loadAsSingle();
 
     public static interface SingleLoader<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, R>

@@ -60,7 +60,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
             initialContentEntered.set(true);
         }
         FXUtility.sizeToFit(textField, 5.0, 5.0);
-        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), e -> parent.replaceWholeLoad(FXUtility.mouse(this), e), parent.getParentStyles());
+        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), e -> parent.replaceWholeLoad(FXUtility.mouse(this), e.getSecond()), parent.getParentStyles());
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 

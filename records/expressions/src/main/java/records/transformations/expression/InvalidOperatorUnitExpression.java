@@ -7,6 +7,7 @@ import records.data.unit.UnitManager;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
@@ -15,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
@@ -80,5 +82,19 @@ public class InvalidOperatorUnitExpression extends UnitExpression
         int result = operands.hashCode();
         result = 31 * result + operators.hashCode();
         return result;
+    }
+
+    @Override
+    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    {
+        return new Pair<>(Utility.mapList(operands, o -> o.loadAsSingle()), Utility.mapList(operators, o -> new SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>()
+        {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public OperatorEntry<UnitExpression, UnitNodeParent> load(ConsecutiveBase<UnitExpression, UnitNodeParent> p, UnitNodeParent s)
+            {
+                return new OperatorEntry<>(UnitExpression.class, o, false, p);
+            }
+        }));
     }
 }

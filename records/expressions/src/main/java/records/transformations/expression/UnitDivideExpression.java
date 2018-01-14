@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
@@ -12,7 +13,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class UnitDivideExpression extends UnitExpression
@@ -80,5 +84,11 @@ public class UnitDivideExpression extends UnitExpression
         int result = numerator.hashCode();
         result = 31 * result + denominator.hashCode();
         return result;
+    }
+
+    @Override
+    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    {
+        return new Pair<>(Utility.mapList(Arrays.asList(numerator, denominator), o -> o.loadAsSingle()), Collections.singletonList((p, s) -> new OperatorEntry<>(UnitExpression.class, "/", false, p)));
     }
 }

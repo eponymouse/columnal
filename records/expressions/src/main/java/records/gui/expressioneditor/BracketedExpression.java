@@ -100,4 +100,10 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
         // and generate an error later if it's not allowed:
         return consecParent.getThisAsSemanticParent().canDeclareVariable(this);
     }
+
+    @Override
+    protected boolean hasImplicitRoundBrackets()
+    {
+        return true;
+    }
 }

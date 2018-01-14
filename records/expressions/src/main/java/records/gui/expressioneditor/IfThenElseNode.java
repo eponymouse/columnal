@@ -308,5 +308,11 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         {
             return childIsFocused();
         }
+
+        @Override
+        protected boolean hasImplicitRoundBrackets()
+        {
+            return false;
+        }
     }
 }

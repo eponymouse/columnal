@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,7 +18,9 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunction;
 import utility.FXPlatformSupplier;
+import utility.Pair;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -27,13 +30,18 @@ import java.util.function.Consumer;
  */
 public interface ErrorAndTypeRecorder
 {
+    public default @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType)
+    {
+        return recordError(src, errorOrType, ImmutableList.of());
+    }
+    
     /**
      * Records an error source and error message, with no available quick fixes
      */
-    public default @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType)
+    public default @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType, ImmutableList<QuickFix<Expression>> quickFixes)
     {
         return errorOrType.<@Nullable TypeExp>either(err -> {
-            recordError(src, err, Collections.emptyList());
+            recordError(src, err, quickFixes);
             return null;
         }, val -> val);
     }
@@ -90,9 +98,9 @@ public interface ErrorAndTypeRecorder
     public final static class QuickFix<EXPRESSION>
     {
         private final @Localized String title;
-        private final FXPlatformFunction<QuickFixParams, EXPRESSION> fixedReplacement;
+        private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement;
 
-        public QuickFix(@Localized String title, FXPlatformFunction<QuickFixParams, EXPRESSION> fixedReplacement) {
+        public QuickFix(@Localized String title, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement) {
             this.title = title;
             this.fixedReplacement = fixedReplacement;
         }
@@ -102,9 +110,14 @@ public interface ErrorAndTypeRecorder
         }
         
         @OnThread(Tag.FXPlatform)
-        public EXPRESSION getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
+        public Pair<ReplacementTarget, EXPRESSION> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
         {
             return fixedReplacement.apply(new QuickFixParams(parentWindow, tableManager));
+        }
+        
+        public static enum ReplacementTarget
+        {
+            CURRENT, PARENT;
         }
         
         public final class QuickFixParams

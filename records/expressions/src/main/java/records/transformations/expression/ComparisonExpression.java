@@ -110,7 +110,7 @@ public class ComparisonExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(new MutVar(this), data, state, onError);
+        type = checkAllOperandsSameType(new MutVar(this), data, state, onError, null);
         if (type == null)
             return null;
         return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));

@@ -57,6 +57,12 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
             }
 
             @Override
+            protected boolean hasImplicitRoundBrackets()
+            {
+                return false;
+            }
+
+            @Override
             protected ExpressionNodeParent getThisAsSemanticParent()
             {
                 return PatternMatchNode.this;

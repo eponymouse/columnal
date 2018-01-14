@@ -41,4 +41,10 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     {
         // This shouldn't occur for units
     }
+
+    @Override
+    protected boolean hasImplicitRoundBrackets()
+    {
+        return true;
+    }
 }

@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.CURRENT;
+
 /**
  * Created by neil on 25/11/2016.
  */
@@ -51,7 +53,7 @@ public class NumericLiteral extends Literal
 
         Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {
-            onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix<>(TranslationUtility.getString("quick.fix.unit"), p -> new NumericLiteral(value, u))));
+            onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix<>(TranslationUtility.getString("quick.fix.unit"), p -> new Pair<>(CURRENT, new NumericLiteral(value, u)))));
             return null;
         }, u -> onError.recordType(this, new NumTypeExp(this, u)));
     }

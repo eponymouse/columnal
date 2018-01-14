@@ -354,6 +354,12 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         }
     }
 
+    @Override
+    protected boolean hasImplicitRoundBrackets()
+    {
+        return false;
+    }
+
     public TypeManager getTypeManager()
     {
         return tableManager.getTypeManager();

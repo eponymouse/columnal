@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -11,7 +12,9 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -153,15 +156,25 @@ public abstract class NaryOpExpression extends Expression
         }
         return r;
     }
-
-    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+    
+    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, @Nullable Function<Pair<TypeExp, Expression>, @Nullable QuickFix<Expression>> fix) throws InternalException, UserException
     {
         boolean allValid = true;
         for (Expression expression : expressions)
         {
             @Nullable TypeExp type = expression.check(data, state, onError);
             // Make sure to execute always (don't use short-circuit and with allValid):
-            boolean valid = type != null && onError.recordError(expression, TypeExp.unifyTypes(target, type)) != null;
+            boolean valid;
+            if (type == null)
+            {
+                valid = false;
+            }
+            else
+            {
+                @Nullable QuickFix<Expression> quickFix = fix == null ? null : fix.apply(new Pair<>(type, expression));
+                ImmutableList<QuickFix<Expression>> quickFixes = quickFix == null ? ImmutableList.of() : ImmutableList.of(quickFix);
+                valid = onError.recordError(expression, TypeExp.unifyTypes(target, type), quickFixes) != null;
+            }
             allValid &= valid;
         }
         return allValid ? onError.recordType(this, target) : null;

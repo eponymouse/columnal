@@ -135,6 +135,12 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, parent.getEditor(), e -> {/*TODO*/}, getParentStyles()).getFirst(), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), this)) {
 
             @Override
+            protected boolean hasImplicitRoundBrackets()
+            {
+                return false;
+            }
+
+            @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
             {
                 boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;

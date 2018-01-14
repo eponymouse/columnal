@@ -380,6 +380,13 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         {
             return childIsFocused();
         }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        protected boolean hasImplicitRoundBrackets()
+        {
+            return true;
+        }
     }
 
     @Override

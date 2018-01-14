@@ -6,6 +6,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledString;

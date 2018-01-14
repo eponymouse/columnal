@@ -67,4 +67,10 @@ public class SquareBracketedExpression extends BracketedExpression
             return super.save(errorDisplayers, onError, first, last);
         }
     }
+
+    @Override
+    protected boolean hasImplicitRoundBrackets()
+    {
+        return false;
+    }
 }

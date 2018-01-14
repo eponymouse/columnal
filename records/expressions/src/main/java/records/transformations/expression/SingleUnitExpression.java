@@ -8,6 +8,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
@@ -71,5 +72,11 @@ public class SingleUnitExpression extends UnitExpression
     public int hashCode()
     {
         return name.hashCode();
+    }
+
+    @Override
+    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    {
+        return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }
 }

@@ -31,6 +31,7 @@ import org.controlsfx.control.PopOver;
 import records.data.TableManager;
 import records.gui.FixList;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -221,7 +222,7 @@ public class ExpressionInfoDisplay
         }
     }
 
-    public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<EXPRESSION> replace)
+    public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, EXPRESSION>> replace)
     {
         if (newMsgAndFixes == null)
         {

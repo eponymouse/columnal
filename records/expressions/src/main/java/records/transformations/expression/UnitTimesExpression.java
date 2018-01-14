@@ -7,6 +7,7 @@ import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
@@ -15,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 
@@ -84,5 +86,11 @@ public class UnitTimesExpression extends UnitExpression
     public int hashCode()
     {
         return operands.hashCode();
+    }
+
+    @Override
+    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    {
+        return new Pair<>(Utility.mapList(operands, o -> o.loadAsSingle()), Utility.replicate(operands.size() - 1, (p, s) -> new OperatorEntry<>(UnitExpression.class, "*", false, p)));
     }
 }
