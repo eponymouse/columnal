@@ -2,6 +2,7 @@ package styled;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -11,6 +12,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class StyledString
@@ -101,6 +103,23 @@ public class StyledString
         }
         
         private static Style ITALIC = new Style(true, false, 1.0);
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Style style = (Style) o;
+            return italic == style.italic &&
+                bold == style.bold &&
+                Double.compare(style.size, size) == 0;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(italic, bold, size);
+        }
     }
     
     @Pure
@@ -113,5 +132,20 @@ public class StyledString
     public static StyledString s(String content)
     {
         return new StyledString(content);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StyledString that = (StyledString) o;
+        return Objects.equals(members, that.members);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(members);
     }
 }

@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -106,11 +107,13 @@ public class ExpressionInfoDisplay
             });
             
             
-            TextFlow errorLabel = new TextFlow();
+            TextFlow errorLabel = new TextFlow(errorMessage.get().toGUI().toArray(new Node[0]));
             errorLabel.getStyleClass().add("expression-info-error");
+            errorLabel.setVisible(!errorMessage.get().toPlain().isEmpty());
             FXUtility.addChangeListenerPlatformNN(errorMessage, err -> {
                 errorLabel.getChildren().setAll(err.toGUI());
                 errorLabel.setVisible(!err.toPlain().isEmpty());
+                updateShowHide(true);
             });
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
