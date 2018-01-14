@@ -9,6 +9,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -28,9 +29,9 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
-        Either<Pair<String, List<UnitExpression>>, UnitExp> lhs = unit.asUnit(unitManager);
+        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> lhs = unit.asUnit(unitManager);
 
         return lhs.map(u -> u.raisedTo(power));
     }

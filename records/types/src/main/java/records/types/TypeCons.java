@@ -8,6 +8,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import styled.StyledString;
 import utility.Either;
 import utility.Utility;
 
@@ -35,7 +36,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public Either<String, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
     {
         if (!(b instanceof TypeCons))
             return typeMismatch(b);
@@ -52,7 +53,7 @@ public class TypeCons extends TypeExp
         ImmutableList.Builder<TypeExp> unifiedOperands = ImmutableList.builder();
         for (int i = 0; i < operands.size(); i++)
         {
-            Either<String, TypeExp> sub = operands.get(i).unifyWith(bt.operands.get(i));
+            Either<StyledString, TypeExp> sub = operands.get(i).unifyWith(bt.operands.get(i));
             if (sub.isLeft())
                 return sub;
             unifiedOperands.add(sub.getRight());
@@ -101,16 +102,16 @@ public class TypeCons extends TypeExp
                     {
                         return Either.right(tagged);
                     }
-                    return Either.left(new TypeConcretisationError("Unknown type constructor: " + name));
+                    return Either.left(new TypeConcretisationError(StyledString.s("Unknown type constructor: " + name)));
                 });
                 
         }
     }
 
     @Override
-    public String toString()
+    public StyledString toStyledString()
     {
-        return name + (operands.isEmpty() ? "" : Utility.listToString(operands));
+        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.intercalate(StyledString.s(" "), operands.stream().map(t -> t.toStyledString()).collect(ImmutableList.toImmutableList())));
     }
 
     @Override

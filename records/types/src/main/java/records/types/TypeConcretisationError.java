@@ -2,6 +2,7 @@ package records.types;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import styled.StyledString;
 
 import java.util.Optional;
 
@@ -11,26 +12,26 @@ import java.util.Optional;
  */
 public class TypeConcretisationError
 {
-    private final String errorText;
+    private final StyledString errorText;
     private final boolean couldBeFixedByManuallySpecifyingType;
     // If non-null, a suggested type for the fix:
     private final @Nullable DataType suggestedTypeFix;
 
-    public TypeConcretisationError(String errorText)
+    public TypeConcretisationError(StyledString errorText)
     {
         this.errorText = errorText;
         this.couldBeFixedByManuallySpecifyingType = false;
         this.suggestedTypeFix = null;
     }
     
-    public TypeConcretisationError(String errorText, @Nullable DataType suggestedTypeFix)
+    public TypeConcretisationError(StyledString errorText, @Nullable DataType suggestedTypeFix)
     {
         this.errorText = errorText;
         this.couldBeFixedByManuallySpecifyingType = true;
         this.suggestedTypeFix = suggestedTypeFix;
     }
 
-    public String getErrorText()
+    public StyledString getErrorText()
     {
         return errorText;
     }

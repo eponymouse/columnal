@@ -17,10 +17,12 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -45,7 +47,7 @@ public class VarUseExpression extends NonOperatorExpression
         List<TypeExp> varType = state.findVarType(varName);
         if (varType == null)
         {
-            onError.recordError(this, "Undeclared variable: \"" + varName + "\"");
+            onError.recordError(this, StyledString.s("Undeclared variable: \"" + varName + "\""), Collections.emptyList());
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:

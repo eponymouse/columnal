@@ -7,6 +7,7 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,6 +32,7 @@ import records.data.TableManager;
 import records.gui.FixList;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.Expression;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -56,7 +58,7 @@ import java.util.List;
 public class ExpressionInfoDisplay
 {
     private final SimpleStringProperty type = new SimpleStringProperty("");
-    private final SimpleStringProperty errorMessage = new SimpleStringProperty("");
+    private final SimpleObjectProperty<StyledString> errorMessage = new SimpleObjectProperty<>(StyledString.s(""));
     private final VBox expressionNode;
     private @Nullable ErrorMessagePopup popup = null;
     private boolean focused = false;
@@ -103,10 +105,12 @@ public class ExpressionInfoDisplay
             });
             
             
-            Label errorLabel = new Label();
+            TextFlow errorLabel = new TextFlow();
             errorLabel.getStyleClass().add("expression-info-error");
-            errorLabel.textProperty().bind(errorMessage);
-            errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+            FXUtility.addChangeListenerPlatformNN(errorMessage, err -> {
+                errorLabel.getChildren().setAll(err.toGUI());
+                errorLabel.setVisible(!err.toPlain().isEmpty());
+            });
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
             fixList = new FixList(ImmutableList.of());
@@ -184,7 +188,7 @@ public class ExpressionInfoDisplay
 
     private void updateShowHide(boolean hideImmediately)
     {
-        if (hoveringPopup || hoveringTopOfAttached || ((hoveringAttached || focused) && !errorMessage.get().isEmpty()) || (popup != null && popup.isDetached()))
+        if (hoveringPopup || hoveringTopOfAttached || ((hoveringAttached || focused) && !errorMessage.get().toPlain().isEmpty()) || (popup != null && popup.isDetached()))
         {
             if (popup == null)
             {
@@ -217,11 +221,11 @@ public class ExpressionInfoDisplay
         }
     }
 
-    public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<String, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<EXPRESSION> replace)
+    public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<EXPRESSION> replace)
     {
         if (newMsgAndFixes == null)
         {
-            errorMessage.setValue("");
+            errorMessage.setValue(StyledString.s(""));
             // Hide the popup:
             if (popup != null)
             {
@@ -242,7 +246,7 @@ public class ExpressionInfoDisplay
     
     public boolean isShowingError()
     {
-        return !errorMessage.get().isEmpty();
+        return !errorMessage.get().toPlain().isEmpty();
     }
     
     public void setType(String type)

@@ -30,6 +30,7 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import records.types.TypeExp;
+import styled.StyledString;
 import test.gen.ExpressionValue;
 import test.gen.GenDataType;
 import test.gen.GenExpressionValueBackwards;
@@ -96,7 +97,7 @@ public class PropTypecheck
             assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), new ErrorAndTypeRecorder()
             {
                 @Override
-                public <E> void recordError(E src, String error, List<QuickFix<E>> fixes)
+                public <E> void recordError(E src, StyledString error, List<QuickFix<E>> fixes)
                 {
                     errorReported.set(true);
                 }
@@ -120,7 +121,7 @@ public class PropTypecheck
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
         @Nullable TypeExp checked = src.expression.check(src.recordSet, TestUtil.typeState(), storer);
         TypeExp srcTypeExp = TypeExp.fromConcrete(null, src.type);
-        assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
+        assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().map(StyledString::toPlain).collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try
             {
                 return c.getType().toString();

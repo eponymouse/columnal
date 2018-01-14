@@ -15,11 +15,13 @@ import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.MutUnitVar;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -49,7 +51,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.recordError(this, "Plus-minus cannot be declared outside pattern match");
+        onError.recordError(this, StyledString.s("Plus-minus cannot be declared outside pattern match"), Collections.emptyList());
         return null;
     }
 

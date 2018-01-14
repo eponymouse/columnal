@@ -44,6 +44,7 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionInstance;
 import records.types.TypeExp;
+import styled.StyledString;
 import test.gen.GenString;
 import utility.*;
 import records.data.Transformation;
@@ -931,9 +932,9 @@ public class TestUtil
         return new ErrorAndTypeRecorder()
         {
             @Override
-            public <E> void recordError(E src, String error, List<QuickFix<E>> fixes)
+            public <E> void recordError(E src, StyledString error, List<QuickFix<E>> fixes)
             {
-                throw new RuntimeException(error);
+                throw new RuntimeException(error.toPlain());
             }
 
             @SuppressWarnings("recorded")

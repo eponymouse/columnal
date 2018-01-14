@@ -27,7 +27,7 @@ public class FixList extends VBox
     {
         selectedIndex = -1;
 
-        getStyleClass().add("errorable-text-field-quick-fix-list");
+        getStyleClass().add("quick-fix-list");
 
         setFixes(fixes);
     }
@@ -53,7 +53,7 @@ public class FixList extends VBox
         public FixRow(String text, FXPlatformRunnable execute)
         {
             this.execute = execute;
-            FixRow.this.getStyleClass().add("errorable-text-field-quick-fix-row");
+            FixRow.this.getStyleClass().add("quick-fix-row");
             
             setCenter(new Label(text));
 

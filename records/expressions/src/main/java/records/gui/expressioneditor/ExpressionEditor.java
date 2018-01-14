@@ -30,6 +30,7 @@ import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -311,7 +312,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                     {
                         @Override
                         @SuppressWarnings("unchecked")
-                        public <E> void recordError(E e, String s, List<QuickFix<E>> q)
+                        public <E> void recordError(E e, StyledString s, List<QuickFix<E>> q)
                         {
                             if (e instanceof Expression)
                             {
@@ -324,7 +325,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                         }
 
                         @Override
-                        public @Nullable TypeExp recordError(Expression src, Either<String, TypeExp> errorOrType)
+                        public @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType)
                         {
                             return ErrorAndTypeRecorder.super.recordError(src, errorOrType);
                         }
@@ -339,6 +340,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                     };
                     @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorAndTypeRecorder);
                     latestType.set(dataType == null ? null : errorAndTypeRecorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }
             }
@@ -347,7 +349,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                 Log.log(e);
                 String msg = e.getLocalizedMessage();
                 if (msg != null)
-                    showError(msg, Collections.emptyList());
+                    showError(StyledString.s(msg), Collections.emptyList());
             }
         }
     }

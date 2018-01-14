@@ -14,7 +14,10 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.NumTypeExp;
 import records.types.TypeExp;
+import records.types.units.MutUnitVar;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -34,7 +37,7 @@ public class AddSubtractExpression extends NaryOpExpression
 {
     public static enum Op { ADD, SUBTRACT };
     private final List<Op> ops;
-    private @Nullable TypeExp type;
+    private @Nullable @Recorded TypeExp type;
 
     public AddSubtractExpression(List<Expression> expressions, List<Op> ops)
     {
@@ -74,8 +77,8 @@ public class AddSubtractExpression extends NaryOpExpression
     @Override
     public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(data, state, onError);
-        return onError.recordType(this, type);
+        type = checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError);
+        return type;
     }
 
     @Override

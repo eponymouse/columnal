@@ -31,6 +31,7 @@ public class Main extends Application
         
         FXUtility.ensureFontLoaded("DroidSansMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
+        FXUtility.ensureFontLoaded("NotoSans-Italic.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
         Log.normal("Loaded fonts");

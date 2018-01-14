@@ -52,6 +52,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
     public OperatorEntry(Class<EXPRESSION> operandClass, String content, boolean userEntered, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
         super(parent, operandClass);
+        textField.getStyleClass().add("operator-entry");
         FXUtility.setPseudoclass(textField, "op-empty", content.isEmpty());
         if (!userEntered)
         {

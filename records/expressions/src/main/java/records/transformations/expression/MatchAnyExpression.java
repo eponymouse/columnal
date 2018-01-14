@@ -18,10 +18,12 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.types.MutVar;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -37,7 +39,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.recordError(this, "Any cannot be declared outside pattern match");
+        onError.recordError(this, StyledString.s("Any cannot be declared outside pattern match"), Collections.emptyList());
         return null;
     }
 

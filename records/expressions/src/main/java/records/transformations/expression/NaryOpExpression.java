@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -119,19 +120,6 @@ public abstract class NaryOpExpression extends Expression
         return Collections.unmodifiableList(expressions);
     }
 
-    protected @Nullable TypeExp checkAllOperandsSameType(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        List<TypeExp> types = new ArrayList<>();
-        for (Expression expression : expressions)
-        {
-            @Nullable TypeExp expType = expression.check(data, state, onError);
-            if (expType == null)
-                return null;
-            types.add(expType);
-        }
-        return onError.recordError(this, TypeExp.unifyTypes(types));
-    }
-
     @Override
     public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
@@ -164,5 +152,18 @@ public abstract class NaryOpExpression extends Expression
             r.add(saveOp(i));
         }
         return r;
+    }
+
+    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+    {
+        boolean allValid = true;
+        for (Expression expression : expressions)
+        {
+            @Nullable TypeExp type = expression.check(data, state, onError);
+            // Make sure to execute always (don't use short-circuit and with allValid):
+            boolean valid = type != null && onError.recordError(expression, TypeExp.unifyTypes(target, type)) != null;
+            allValid &= valid;
+        }
+        return allValid ? onError.recordType(this, target) : null;
     }
 }

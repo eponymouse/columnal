@@ -41,6 +41,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -186,7 +187,7 @@ public class SummaryStatistics extends TransformationEditable
                 @Nullable TypeExp type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 @Nullable DataType concrete = type == null ? null : errors.recordLeftError(expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
-                    throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
+                    throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 @NonNull DataType typeFinal = concrete;
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(i, new EvaluateState())));
                 

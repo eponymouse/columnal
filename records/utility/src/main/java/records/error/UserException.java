@@ -2,6 +2,7 @@ package records.error;
 
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -9,16 +10,21 @@ import threadchecker.Tag;
  * Created by neil on 22/10/2016.
  */
 @OnThread(Tag.Any)
-public class UserException extends Exception
+public class UserException extends ExceptionWithStyle
 {
     public UserException(String message)
     {
-        super(message);
+        this(StyledString.s(message));
     }
 
     public UserException(String message, Throwable cause)
     {
-        super(message, cause);
+        super(StyledString.s(message), cause);
+    }
+
+    public UserException(StyledString styledString)
+    {
+        super(styledString);
     }
 
     @SuppressWarnings({"nullness", "i18n"}) // Given our constructors require non-null, this can't return null.

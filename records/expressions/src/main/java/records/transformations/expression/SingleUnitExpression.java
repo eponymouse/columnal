@@ -11,6 +11,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -29,7 +30,7 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
         try
         {
@@ -38,7 +39,7 @@ public class SingleUnitExpression extends UnitExpression
         catch (InternalException | UserException e)
         {
             // TODO add similarly spelt unit names:
-            return Either.left(new Pair<>(e.getLocalizedMessage(), Collections.emptyList()));
+            return Either.left(new Pair<>(StyledString.s(e.getLocalizedMessage()), Collections.emptyList()));
         }
     }
 

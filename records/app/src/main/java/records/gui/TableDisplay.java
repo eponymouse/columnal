@@ -33,6 +33,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -61,6 +62,7 @@ import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.transformations.HideColumnsPanel;
 import records.transformations.TransformationEditable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -100,7 +102,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
-    private final Either<String, RecordSet> recordSetOrError;
+    private final Either<StyledString, RecordSet> recordSetOrError;
     private final Table table;
     private final View parent;
     private @MonotonicNonNull TableDataDisplay tableDataDisplay;
@@ -400,14 +402,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         this.parent = parent;
         this.table = table;
-        Either<String, RecordSet> recordSetOrError;
+        Either<StyledString, RecordSet> recordSetOrError;
         try
         {
             recordSetOrError = Either.right(table.getData());
         }
         catch (UserException | InternalException e)
         {
-            recordSetOrError = Either.left(e.getLocalizedMessage());
+            recordSetOrError = Either.left(e.getStyledMessage());
         }
         this.recordSetOrError = recordSetOrError;
         StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> makeErrorDisplay(err),
@@ -578,12 +580,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @RequiresNonNull({"parent", "table"})
-    private Node makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, String err)
+    private Node makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, StyledString err)
     {
         if (table instanceof TransformationEditable)
-            return new VBox(new Label(err), GUI.button("transformation.edit", () -> parent.editTransform((TransformationEditable)table)));
+            return new VBox(new TextFlow(err.toGUI().toArray(new Node[0])), GUI.button("transformation.edit", () -> parent.editTransform((TransformationEditable)table)));
         else
-            return new Label(err);
+            return new TextFlow(err.toGUI().toArray(new Node[0]));
     }
 
     private List<TableDisplay> getDragGroup()

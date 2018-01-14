@@ -4,11 +4,14 @@ import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
+import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.FXUtility;
@@ -23,6 +26,8 @@ import java.util.stream.Stream;
 public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>
 {
     private final AutoComplete autoComplete;
+    private final VBox container;
+    private final ExpressionInfoDisplay expressionInfoDisplay;
 
     public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
@@ -62,13 +67,23 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);
+
+        // We don't put anything in the type label, because it's clearly a String:
+        Label typeLabel = new Label();
+        typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
+        ExpressionEditorUtil.enableSelection(typeLabel, this);
+        ExpressionEditorUtil.enableDragFrom(typeLabel, this);
+        container = new VBox(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
+        this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
+        ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
+        
         updateNodes();
     }
 
     @Override
     protected Stream<Node> calculateNodes()
     {
-        return Stream.of(new Label("\u201C"), textField, new Label("\u201D"));
+        return Stream.of(container);
     }
 
     @Override
@@ -84,22 +99,21 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        // TODO
+        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e));
     }
 
     @Override
     public boolean isShowingError()
     {
-        // TODO
-        return false;
+        return expressionInfoDisplay.isShowingError();
     }
 
     @Override
     public void showType(String type)
     {
-        // It's obviously a string.  Do we need to show the type?
+        expressionInfoDisplay.setType(type);
     }
 
     @Override

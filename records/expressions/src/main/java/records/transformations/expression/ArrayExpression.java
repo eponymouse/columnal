@@ -23,6 +23,7 @@ import records.gui.expressioneditor.SquareBracketedExpression;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -194,7 +195,7 @@ public class ArrayExpression extends Expression
             MutVar mut = new MutVar(null);
             TypeCons arrayOfMut = new TypeCons(null, TypeExp.CONS_LIST, mut);
 
-            Either<String, TypeExp> unifyResult = TypeExp.unifyTypes(_test_originalTypes.get(i), arrayOfMut);
+            Either<StyledString, TypeExp> unifyResult = TypeExp.unifyTypes(_test_originalTypes.get(i), arrayOfMut);
             // If it doesn't match, not an array:
             if (unifyResult.isLeft())
             {

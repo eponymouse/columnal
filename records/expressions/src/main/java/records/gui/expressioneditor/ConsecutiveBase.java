@@ -23,6 +23,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -781,7 +782,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes)
+    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes)
     {
         operands.get(0).showError(error, quickFixes);
     }

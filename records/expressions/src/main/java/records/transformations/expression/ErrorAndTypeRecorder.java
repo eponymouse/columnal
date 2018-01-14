@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -29,18 +30,10 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an error source and error message, with no available quick fixes
      */
-    public default void recordError(Expression src, String error)
-    {
-        recordError(src, error, Collections.emptyList());
-    }
-
-    /**
-     * Records an error source and error message, with no available quick fixes
-     */
-    public default @Nullable TypeExp recordError(Expression src, Either<String, TypeExp> errorOrType)
+    public default @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType)
     {
         return errorOrType.<@Nullable TypeExp>either(err -> {
-            recordError(src, err);
+            recordError(src, err, Collections.emptyList());
             return null;
         }, val -> val);
     }
@@ -72,18 +65,18 @@ public interface ErrorAndTypeRecorder
      * A curried version of the two-arg function of the same name.
      */
     @Pure
-    public default Consumer<String> recordError(Expression src)
+    public default Consumer<StyledString> recordError(Expression src)
     {
-        return errMsg -> recordError(src, errMsg);
+        return errMsg -> recordError(src, errMsg, Collections.emptyList());
     }
 
     /**
      * Records an error source and error message, and a list of possible quick fixes
      */
     // TODO make the String @Localized
-    public <EXPRESSION> void recordError(EXPRESSION src, String error, List<QuickFix<EXPRESSION>> fixes);
+    public <EXPRESSION> void recordError(EXPRESSION src, StyledString error, List<QuickFix<EXPRESSION>> fixes);
 
-    public default @Recorded @Nullable TypeExp recordTypeAndError(Expression expression, Either<String, TypeExp> typeOrError)
+    public default @Recorded @Nullable TypeExp recordTypeAndError(Expression expression, Either<StyledString, TypeExp> typeOrError)
     {
         return recordType(expression, recordError(expression, typeOrError));
     }

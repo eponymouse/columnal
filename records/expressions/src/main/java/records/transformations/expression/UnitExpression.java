@@ -15,6 +15,7 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -92,7 +93,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     }
 
     // Either gives back an error + (maybe empty) list of quick fixes, or a successful unit
-    public abstract Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager);
+    public abstract Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager);
 
     public abstract String save(boolean topLevel);
 

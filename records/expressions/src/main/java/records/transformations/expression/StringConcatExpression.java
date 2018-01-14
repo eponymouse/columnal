@@ -47,14 +47,7 @@ public class StringConcatExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        TypeExp text = TypeExp.fromConcrete(this, DataType.TEXT);
-        for (Expression expression : expressions)
-        {
-            @Nullable TypeExp type = expression.check(data, state, onError);
-            if (type == null || onError.recordError(this, TypeExp.unifyTypes(text, type)) == null)
-                return null;
-        }
-        return onError.recordType(this, text);
+        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), data, state, onError);
     }
 
     @Override

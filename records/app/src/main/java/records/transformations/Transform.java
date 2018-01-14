@@ -33,6 +33,8 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
+import styled.StyledString;
+import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -64,19 +66,19 @@ public class Transform extends TransformationEditable
     private final @Nullable Table src;
     private final @Nullable RecordSet recordSet;
     @OnThread(Tag.Any)
-    private String error = "";
+    private StyledString error = StyledString.s("");
 
     public Transform(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
-        this.error = "Unknown error with table \"" + thisTableId + "\"";
+        this.error = StyledString.s("Unknown error with table \"" + thisTableId + "\"");
         this.newColumns = toCalculate;
         if (this.src == null)
         {
             this.recordSet = null;
-            error = "Could not find source table: \"" + srcTableId + "\"";
+            error = StyledString.s("Could not find source table: \"" + srcTableId + "\"");
             return;
         }
 
@@ -113,7 +115,7 @@ public class Transform extends TransformationEditable
                 ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
                 {
                     @Override
-                    public <E> void recordError(E src, String s, List<QuickFix<E>> fixes)
+                    public <E> void recordError(E src, StyledString s, List<QuickFix<E>> fixes)
                     {
                         error = s;
                     }
@@ -151,9 +153,7 @@ public class Transform extends TransformationEditable
         }
         catch (UserException e)
         {
-            String msg = e.getLocalizedMessage();
-            if (msg != null)
-                this.error = msg;
+            this.error = e.getStyledMessage();
         }
 
         recordSet = theResult;
@@ -201,7 +201,7 @@ public class Transform extends TransformationEditable
     public @OnThread(Tag.Any) RecordSet getData() throws UserException, InternalException
     {
         if (recordSet == null)
-            throw new UserException(error == null ? "Unknown error" : error);
+            throw new UserException(error == null ? StyledString.s("Unknown error") : error);
         return recordSet;
     }
 

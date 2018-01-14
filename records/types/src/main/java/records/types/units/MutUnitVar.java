@@ -3,10 +3,13 @@ package records.types.units;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.unit.SingleUnit;
+import styled.StyledShowable;
+import styled.StyledString;
+import styled.StyledString.Style;
 
-public class MutUnitVar implements Comparable<MutUnitVar>
+public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
 {
-    // For Comparable purposes
+    // For Comparable and printing purposes
     private static long nextId = 0;
     private final long id = nextId++;
     
@@ -20,12 +23,12 @@ public class MutUnitVar implements Comparable<MutUnitVar>
     }
 
     @Override
-    public String toString()
+    public StyledString toStyledString()
     {
         String name = "_u" + id;
         if (pointer == null)
-            return name;
+            return StyledString.styled(name, Style.italic());
         else
-            return name + "[=" + pointer.toString() + "]";
+            return StyledString.italicise(StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]")));
     }
 }

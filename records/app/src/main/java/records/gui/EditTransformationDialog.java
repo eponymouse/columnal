@@ -136,6 +136,8 @@ public class EditTransformationDialog
         }};
         description.textProperty().bind(descriptionBinding);
         Hyperlink moreLessLink = new Hyperlink();
+        moreLessLink.setFocusTraversable(false);
+        // TODO add a key binding to expand this
         moreLessLink.textProperty().bind(Bindings.when(showingMoreDescription).then(TranslationUtility.getString("transformEditor.less")).otherwise(TranslationUtility.getString("transformEditor.more")));
         moreLessLink.setOnAction(e -> showingMoreDescription.set(!showingMoreDescription.get()));
         TextFlow textFlow = new TextFlow(description, moreLessLink);

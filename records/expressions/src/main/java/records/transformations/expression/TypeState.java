@@ -15,6 +15,7 @@ import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.types.MutVar;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Utility;
 
 import java.util.Collections;
@@ -66,12 +67,12 @@ public class TypeState
         this.unitManager = unitManager;
     }
 
-    public @Nullable TypeState add(String varName, MutVar type, Consumer<String> error)
+    public @Nullable TypeState add(String varName, MutVar type, Consumer<StyledString> error)
     {
         HashMap<String, List<TypeExp>> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
         {
-            error.accept("Duplicate variable name: " + varName);
+            error.accept(StyledString.s("Duplicate variable name: " + varName));
             return null;
         }
         copy.put(varName, Collections.singletonList(type));
@@ -186,7 +187,7 @@ public class TypeState
      * @return Null if there is a user-triggered problem (in which case onError will have been called)
      */
     @Pure
-    public static @Nullable TypeState union(TypeState original, Consumer<String> onError, TypeState... typeStates) throws InternalException
+    public static @Nullable TypeState union(TypeState original, Consumer<StyledString> onError, TypeState... typeStates) throws InternalException
     {
         if (typeStates.length == 0)
             throw new InternalException("Attempted to merge type states of zero size");
@@ -218,7 +219,7 @@ public class TypeState
             if (!diff.entriesDiffering().isEmpty() || !diff.entriesInCommon().isEmpty())
             {
                 // TODO ideally offer a quick fix to rename and add an equality check in guard
-                onError.accept("Duplicate variables in different parts of pattern: " + diff.entriesDiffering().keySet() + " " + diff.entriesInCommon().keySet());
+                onError.accept(StyledString.s("Duplicate variables in different parts of pattern: " + diff.entriesDiffering().keySet() + " " + diff.entriesInCommon().keySet()));
                 return null;
             }
             // Record the new vars (shouldn't overlap):

@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
+import styled.StyledString;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -41,7 +42,6 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
         super(parent, operandClass);
-        textField.getStyleClass().add("entry-field");
         parent.getEditor().registerFocusable(textField);
 
         FXUtility.sizeToFit(textField, null, null);
@@ -74,7 +74,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     }
 
     @Override
-    public void showError(String error, List<QuickFix<EXPRESSION>> quickFixes)
+    public void showError(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
         expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), e -> {

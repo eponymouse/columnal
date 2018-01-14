@@ -26,6 +26,7 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -395,7 +396,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         showError.showError(error, quickFixes);
     }

@@ -48,14 +48,7 @@ public class AndExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        TypeExp bool = TypeExp.fromConcrete(this, DataType.BOOLEAN);
-        for (Expression expression : expressions)
-        {
-            @Nullable TypeExp type = expression.check(data, state, onError);
-            if (type == null || onError.recordError(this, TypeExp.unifyTypes(bool, type)) == null)
-                return null;
-        }
-        return onError.recordType(this, bool);
+        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), data, state, onError);
     }
 
     @Override

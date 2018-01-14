@@ -4,6 +4,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import styled.StyledString;
+import styled.StyledString.Style;
 import utility.Either;
 
 /**
@@ -18,6 +20,10 @@ import utility.Either;
  */
 public class MutVar extends TypeExp
 {
+    // For Comparable and printing purposes
+    private static long nextId = 0;
+    private final long id = nextId++;
+    
     //package-visible:
     // mutable reference:
     @Nullable TypeExp pointer;
@@ -29,7 +35,7 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    public Either<String, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
     {
         // If the other item is a MutVar, we just unify ourselves to them:
         if (b instanceof MutVar)
@@ -44,7 +50,7 @@ public class MutVar extends TypeExp
             @Nullable TypeExp without = b.withoutMutVar(this);
             if (without == null)
             {
-                return Either.left("Cyclic type while attempting to match " + toString() + " with " + b.toString());
+                return Either.left(StyledString.concat(StyledString.s("Cyclic type while attempting to match "), toStyledString(), StyledString.s(" with "), b.toStyledString()));
             }
             else
             {
@@ -64,7 +70,7 @@ public class MutVar extends TypeExp
     protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager)
     {
         // Will have been pruned, so error here
-        return Either.left(new TypeConcretisationError("Error: cannot determine type (free variable remaining)", null));
+        return Either.left(new TypeConcretisationError(StyledString.s("Error: cannot determine type (free variable remaining)"), null));
     }
 
     @Override
@@ -76,5 +82,15 @@ public class MutVar extends TypeExp
             return pointer;
         }
         return this;
+    }
+
+    @Override
+    public StyledString toStyledString()
+    {
+        String name = "_t" + id;
+        if (pointer == null)
+            return StyledString.styled(name, Style.italic());
+        else
+            return StyledString.italicise(StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]")));
     }
 }

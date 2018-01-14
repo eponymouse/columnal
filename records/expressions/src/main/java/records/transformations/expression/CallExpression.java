@@ -23,6 +23,7 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionList;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -69,7 +70,7 @@ public class CallExpression extends NonOperatorExpression
     {
         if (definition == null)
         {
-            onError.recordError(this, "Unknown function: \"" + functionName + "\"");
+            onError.recordError(this, StyledString.s("Unknown function: \"" + functionName + "\""), Collections.emptyList());
             return null;
         }
 

@@ -18,10 +18,12 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -42,7 +44,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, "Incomplete expression: " + text);
+        onError.recordError(this, StyledString.s("Incomplete expression: " + text), Collections.emptyList());
         return null; // Unfinished expressions can't type check
     }
 

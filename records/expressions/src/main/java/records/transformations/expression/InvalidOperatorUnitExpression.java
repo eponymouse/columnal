@@ -10,6 +10,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -30,9 +31,9 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
-        return Either.left(new Pair<>("Invalid operator combination", Collections.emptyList()));
+        return Either.left(new Pair<>(StyledString.s("Invalid operator combination"), Collections.emptyList()));
     }
 
     @Override

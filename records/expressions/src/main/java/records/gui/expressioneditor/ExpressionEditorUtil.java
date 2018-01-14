@@ -14,6 +14,7 @@ import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.LoadableExpression;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -67,7 +68,7 @@ public class ExpressionEditorUtil
             }
 
             @Override
-            public void showError(String s, List<QuickFix<E>> q)
+            public void showError(StyledString s, List<QuickFix<E>> q)
             {
                 setError(vBox, s);
                 errorShower.setMessageAndFixes(new Pair<>(s, q), editor.getWindow(), editor.getTableManager(), replaceWithFixed);
@@ -86,7 +87,7 @@ public class ExpressionEditorUtil
         return new ExpressionInfoDisplay(vBox, topLabel, textField);
     }
 
-    public static void setError(VBox vBox, @Nullable String s)
+    public static void setError(VBox vBox, @Nullable StyledString s)
     {
         FXUtility.setPseudoclass(vBox, "exp-error", s != null);
     }

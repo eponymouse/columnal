@@ -1,17 +1,19 @@
 package records.error;
 
+import styled.StyledString;
+
 /**
  * Created by neil on 22/10/2016.
  */
-public class InternalException extends Exception
+public class InternalException extends ExceptionWithStyle
 {
     public InternalException(String message)
     {
-        super(message);
+        super(StyledString.s(message));
     }
 
     public InternalException(String message, Exception e)
     {
-        super(message, e);
+        super(StyledString.s(message), e);
     }
 }

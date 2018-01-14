@@ -20,6 +20,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -264,7 +265,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         ifLabel.getSecond().showError(error, quickFixes);
     }

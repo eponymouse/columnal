@@ -15,6 +15,7 @@ import records.data.datatype.TypeManager.TagInfo;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.TagExpressionNode;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Either;
 import utility.TaggedValue;
 import records.data.unit.UnitManager;
@@ -27,6 +28,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -82,12 +84,12 @@ public class TagExpression extends NonOperatorExpression
         // If inner expression is null, it's meant to be there:
         if (inner == null)
         {
-            onError.recordError(this, "Tag " + getQualifiedTagName() + " requires value, but none given");
+            onError.recordError(this, StyledString.s("Tag " + getQualifiedTagName() + " requires value, but none given"), Collections.emptyList());
             return null;
         }
         if (typeAndIndex.getTagInfo().getInner() == null)
         {
-            onError.recordError(this, "Tag " + getQualifiedTagName() + " has no inner value, but one was given");
+            onError.recordError(this, StyledString.s("Tag " + getQualifiedTagName() + " has no inner value, but one was given"), Collections.emptyList());
             return null;
         }
         if (innerDerivedType == null)

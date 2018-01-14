@@ -18,6 +18,7 @@ import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -48,7 +49,7 @@ public class NumericLiteral extends Literal
         if (unit == null)
             return onError.recordType(this, TypeExp.fromConcrete(this, DataType.NUMBER));
 
-        Either<Pair<String, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
+        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {
             onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix<>(TranslationUtility.getString("quick.fix.unit"), p -> new NumericLiteral(value, u))));
             return null;

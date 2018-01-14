@@ -6,6 +6,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import styled.StyledString;
 import utility.Either;
 import utility.Utility;
 
@@ -46,13 +47,13 @@ public class TupleTypeExp extends TypeExp
         if (!complete)
         {
             @Nullable DataType assumingComplete = Either.mapMEx(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts)).<@Nullable DataType>either(err -> null, t -> t);
-            return Either.left(new TypeConcretisationError("Error: tuple of indeterminate size", assumingComplete));
+            return Either.left(new TypeConcretisationError(StyledString.s("Error: tuple of indeterminate size"), assumingComplete));
         }
         return Either.mapMEx(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts));
     }
 
     @Override
-    public Either<String, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
     {
         if (!(b instanceof TupleTypeExp))
             return typeMismatch(b);
@@ -63,16 +64,16 @@ public class TupleTypeExp extends TypeExp
         // incomplete.  Check for the bad case (shorter is marked as complete)
         if (knownMembers.size() < bt.knownMembers.size() && complete)
         {
-            return Either.left("Mismatch: tuple of size at least " + bt.knownMembers.size() + " expected, vs tuple of size: " + knownMembers.size());
+            return Either.left(StyledString.s("Mismatch: tuple of size at least " + bt.knownMembers.size() + " expected, vs tuple of size: " + knownMembers.size()));
         }
         else if (knownMembers.size() > bt.knownMembers.size() && bt.complete)
         {
-            return Either.left("Mismatch: tuple of size at least " + knownMembers.size() + " expected, vs tuple of size: " + knownMembers.size());
+            return Either.left(StyledString.s("Mismatch: tuple of size at least " + knownMembers.size() + " expected, vs tuple of size: " + knownMembers.size()));
         }
         // Other bad case: both are complete, and different sizes:
         else if (knownMembers.size() != bt.knownMembers.size() && complete && bt.complete)
         {
-            return Either.left("Mismatch: tuple of size " + knownMembers.size() + " expected, vs tuple of size: " + bt.knownMembers.size());
+            return Either.left(StyledString.s("Mismatch: tuple of size " + knownMembers.size() + " expected, vs tuple of size: " + bt.knownMembers.size()));
         }
         
         // If we're still here, we can just unify along the length of the shortest.  Then we fill in remaining args from the longer side
@@ -82,7 +83,7 @@ public class TupleTypeExp extends TypeExp
         {
             if (i < knownMembers.size() && i < bt.knownMembers.size())
             {
-                Either<String, TypeExp> result = knownMembers.get(i).unifyWith(bt.knownMembers.get(i));
+                Either<StyledString, TypeExp> result = knownMembers.get(i).unifyWith(bt.knownMembers.get(i));
                 if (result.isLeft())
                     return result;
                 unified.add(result.getRight());
@@ -116,11 +117,11 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    public String toString()
+    public StyledString toStyledString()
     {
-        return "(" + 
-            knownMembers.stream().map(t -> t.toString()).collect(Collectors.joining(","))
-            + (complete ? ")" : ", ...)");
+        return StyledString.concat(StyledString.s("("), 
+            StyledString.intercalate(StyledString.s(", "), knownMembers.stream().map(t -> t.toStyledString()).collect(ImmutableList.toImmutableList())),
+            StyledString.s(complete ? ")" : ", ...)"));
     }
 }
 

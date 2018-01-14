@@ -18,12 +18,14 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -70,7 +72,7 @@ public class MatchExpression extends NonOperatorExpression
             if (patterns.isEmpty())
             {
                 // Probably a test generation error:
-                onError.recordError(MatchExpression.this, "Clause with no patterns");
+                onError.recordError(MatchExpression.this, StyledString.s("Clause with no patterns"), Collections.emptyList());
                 return null;
             }
             for (int i = 0; i < patterns.size(); i++)
@@ -294,7 +296,7 @@ public class MatchExpression extends NonOperatorExpression
 
         if (clauses.isEmpty())
         {
-            onError.recordError(this, "Must have at least one clause in a match");
+            onError.recordError(this, StyledString.s("Must have at least one clause in a match"), Collections.emptyList());
             return null;
         }
         

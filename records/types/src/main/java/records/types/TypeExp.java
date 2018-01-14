@@ -13,6 +13,8 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.units.UnitExp;
+import styled.StyledShowable;
+import styled.StyledString;
 import utility.Either;
 import utility.Utility;
 
@@ -96,7 +98,7 @@ import java.util.List;
  *   TCons :: TypeExp -> Tuple -> Tuple
  */
 
-public abstract class TypeExp
+public abstract class TypeExp implements StyledShowable
 {
     public static final String CONS_TEXT = "Text";
     public static final String CONS_BOOLEAN = "Boolean";
@@ -109,20 +111,20 @@ public abstract class TypeExp
         this.src = src;
     }
     
-    public static Either<String, TypeExp> unifyTypes(TypeExp... types) throws InternalException
+    public static Either<StyledString, TypeExp> unifyTypes(TypeExp... types) throws InternalException
     {
         return unifyTypes(Arrays.asList(types));
     }
     
-    public static Either<String, TypeExp> unifyTypes(List<TypeExp> types) throws InternalException
+    public static Either<StyledString, TypeExp> unifyTypes(List<TypeExp> types) throws InternalException
     {
         if (types.isEmpty())
-            return Either.left("Error: no types available");
+            return Either.left(StyledString.s("Error: no types available"));
         else if (types.size() == 1)
             return Either.right(types.get(0));
         else
         {
-            Either<String, TypeExp> r = types.get(0).unifyWith(types.get(1));
+            Either<StyledString, TypeExp> r = types.get(0).unifyWith(types.get(1));
             for (int i = 2; i < types.size(); i++)
             {
                 if (r.isLeft())
@@ -136,7 +138,7 @@ public abstract class TypeExp
     }
     
     // package-protected:
-    final Either<String, TypeExp> unifyWith(TypeExp b) throws InternalException
+    final Either<StyledString, TypeExp> unifyWith(TypeExp b) throws InternalException
     {
         TypeExp aPruned = prune();
         TypeExp bPruned = b.prune();
@@ -155,7 +157,7 @@ public abstract class TypeExp
      * You can assume that b is pruned, and is not a MutVar unless
      * this is also a MutVar.
      */
-    public abstract Either<String, TypeExp> _unify(TypeExp b) throws InternalException;
+    public abstract Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException;
     
     // Prunes any MutVars at the outermost level.
     public TypeExp prune()
@@ -170,9 +172,9 @@ public abstract class TypeExp
      */
     public abstract @Nullable TypeExp withoutMutVar(MutVar mutVar);
     
-    protected final Either<String, TypeExp> typeMismatch(TypeExp other)
+    protected final Either<StyledString, TypeExp> typeMismatch(TypeExp other)
     {
-        return Either.left("Type mismatch: " + toString() + " versus " + other.toString());
+        return Either.left(StyledString.concat(StyledString.s("Type mismatch: "), toStyledString(), StyledString.s(" versus "), other.toStyledString()));
     }
     
     public static TypeExp fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
@@ -235,4 +237,10 @@ public abstract class TypeExp
     }
 
     protected abstract Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException;
+
+    @Override
+    public final String toString()
+    {
+        return toStyledString().toPlain();
+    }
 }

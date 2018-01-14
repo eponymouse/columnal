@@ -1,14 +1,18 @@
 package records.types.units;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.math.IntMath;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
+import styled.StyledShowable;
+import styled.StyledString;
 import utility.ComparableEither;
 import utility.Either;
 import utility.Pair;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -27,7 +31,7 @@ import java.util.stream.Stream;
  * a map from units to non-zero integer powers, the difference here being simply that
  * a type can either be a concrete defined type, or a type variable awaiting inference.
  */
-public class UnitExp
+public final class UnitExp implements StyledShowable
 {
     // scalar if empty.  Maps single unit to power (can be negative, can't be zero)
     // A long is a type variable.
@@ -268,53 +272,77 @@ public class UnitExp
     }
 
     @Override
-    public String toString()
+    public StyledString toStyledString()
     {
-        StringJoiner top = new StringJoiner("*");
+        final ImmutableList.Builder<StyledString> topContent = ImmutableList.builder();
         // First add positives:
         int[] pos = new int[] {0};
+        int[] neg = new int[] {0};
         units.forEach((u, p) -> {
             if (p >= 1)
             {
                 if (p > 1)
-                    top.add(etoString(u) + "^" + p);
+                    topContent.add(StyledString.concat(etoString(u), StyledString.s("^" + p)));
                 else
-                    top.add(etoString(u));
+                    topContent.add(etoString(u));
                 pos[0] += 1;
             }
+            else if (p < 0)
+            {
+                neg[0] += 1;
+            }
         });
-        int neg = units.size() - pos[0];
-        String allUnits = pos[0] > 1 ? "(" + top.toString() + ")" : top.toString();
-        if (neg > 0)
+        
+        if (pos[0] == 0 && neg[0] == 0)
+            return StyledString.s("1");
+        
+        ArrayList<StyledString> content = new ArrayList<>();
+        content.add(StyledString.intercalate(StyledString.s("*"), topContent.build()));
+        
+        if (neg[0] == 0)
         {
-            StringJoiner bottom = new StringJoiner("*");
+            return StyledString.concat(content.toArray(new StyledString[0]));
+        }
+        else
+        {
+            if (pos[0] > 1)
+            {
+                // Need to bracket the top:
+                content.add(0, StyledString.s("("));
+                content.add(StyledString.s(")"));
+            }
+            
+            ImmutableList.Builder<StyledString> bottom = ImmutableList.builder();
 
-            boolean showAsNegative = allUnits.isEmpty();
+            boolean showAsNegative = pos[0] == 0;
 
             units.forEach((u, p) ->
             {
                 if (p < -1 || (p == -1 && showAsNegative))
-                    bottom.add(etoString(u) + "^" + (showAsNegative ? p : -p));
+                    bottom.add(StyledString.concat(etoString(u), StyledString.s("^" + (showAsNegative ? p : -p))));
                 else if (p == -1)
                     bottom.add(etoString(u));
             });
-            if (allUnits.isEmpty())
-                allUnits = bottom.toString();
-            else if (neg > 1)
-                allUnits += "/(" + bottom + ")";
+            if (showAsNegative)
+                return StyledString.intercalate(StyledString.s("*"), bottom.build());
+            else if (neg[0] > 1)
+            {
+                content.add(StyledString.s("/("));
+                content.addAll(bottom.build());
+                content.add(StyledString.s(")"));
+            }
             else
-                allUnits += "/" + bottom;
-
+            {
+                content.add(StyledString.s("/"));
+                content.addAll(bottom.build());
+            }
+            return StyledString.concat(content.toArray(new StyledString[0]));
         }
-        if (!allUnits.isEmpty())
-            return allUnits;
-        else
-            return "1";
     }
 
-    private String etoString(ComparableEither<MutUnitVar, SingleUnit> u)
+    private static StyledString etoString(ComparableEither<MutUnitVar, SingleUnit> u)
     {
-        return u.either(mut -> mut.toString(), singleUnit -> singleUnit.getName());
+        return u.either(mut -> mut.toStyledString(), singleUnit -> StyledString.s(singleUnit.getName()));
     }
 
     @Override
@@ -329,7 +357,6 @@ public class UnitExp
     @Override
     public int hashCode()
     {
-
         return Objects.hash(units);
     }
 }

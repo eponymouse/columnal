@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.ExConsumer;
 
 import java.util.ArrayList;
@@ -18,21 +19,21 @@ import java.util.stream.Stream;
  */
 public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
 {
-    private final List<String> errorMessages = new ArrayList<>();
+    private final List<StyledString> errorMessages = new ArrayList<>();
 
     @Override
-    public <E> void recordError(E src, String error, List<QuickFix<E>> fixes)
+    public <E> void recordError(E src, StyledString error, List<QuickFix<E>> fixes)
     {
         errorMessages.add(error);
     }
 
-    public Stream<@NonNull String> getAllErrors()
+    public Stream<@NonNull StyledString> getAllErrors()
     {
         return errorMessages.stream();
     }
 
     // If there are any errors, passes first to given action
-    public void withFirst(ExConsumer<String> consumer) throws InternalException, UserException
+    public void withFirst(ExConsumer<StyledString> consumer) throws InternalException, UserException
     {
         if (!errorMessages.isEmpty())
             consumer.accept(errorMessages.get(0));

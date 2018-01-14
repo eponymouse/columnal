@@ -32,6 +32,7 @@ public abstract class EntryNode<EXPRESSION extends LoadableExpression<EXPRESSION
         this.parent = parent;
         this.expressionClass = expressionClass;
         textField = new LeaveableTextField(this, parent);
+        textField.getStyleClass().add("entry-field");
     }
     
     // Don't understand why the checker doesn't see that this method is OK:

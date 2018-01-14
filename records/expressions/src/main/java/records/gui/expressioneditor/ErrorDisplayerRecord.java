@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -14,6 +15,7 @@ import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.UnitExpression;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Either;
 
 import java.util.ArrayList;
@@ -47,7 +49,7 @@ public class ErrorDisplayerRecord
         return e;
     }
 
-    public boolean showError(Expression e, String s, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public boolean showError(Expression e, StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         @Nullable ErrorDisplayer<Expression> d = expressionDisplayers.get(e);
         if (d != null)
@@ -63,6 +65,7 @@ public class ErrorDisplayerRecord
     {
         expressionDisplayers.forEach(((expression, errorDisplayer) -> {
             Either<TypeConcretisationError, TypeExp> typeDetails = types.get(expression);
+            Log.debug("Showing " + expression + " item " + typeDetails + " showing error: " + errorDisplayer.isShowingError());
             if (typeDetails != null)
             {
                 try
@@ -76,7 +79,7 @@ public class ErrorDisplayerRecord
                 catch (InternalException | UserException e)
                 {
                     if (!errorDisplayer.isShowingError())
-                        errorDisplayer.showError(e.getLocalizedMessage(), Collections.emptyList());
+                        errorDisplayer.showError(StyledString.s(e.getLocalizedMessage()), Collections.emptyList());
                 }
             }
             else

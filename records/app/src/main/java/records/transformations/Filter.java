@@ -54,6 +54,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -172,7 +173,7 @@ public class Filter extends TransformationEditable
                     typeFinal = errors.recordLeftError(filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
-                    throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
+                    throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 
                 type = typeFinal;
             }

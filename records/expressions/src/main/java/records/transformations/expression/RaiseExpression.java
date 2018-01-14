@@ -19,12 +19,14 @@ import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.MutUnitVar;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -99,7 +101,7 @@ public class RaiseExpression extends BinaryOpExpression
                 }
                 catch (ArithmeticException e)
                 {
-                    onError.recordError(rhs, "Power is too large to track the units");
+                    onError.recordError(rhs, StyledString.s("Power is too large to track the units"), Collections.emptyList());
                     return null;
                 }
             }

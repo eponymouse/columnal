@@ -7,6 +7,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import utility.Either;
 
 import java.util.Objects;
@@ -28,7 +29,7 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public Either<String, TypeExp> _unify(TypeExp b) throws InternalException
+    public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
     {
         if (!(b instanceof NumTypeExp))
             return typeMismatch(b);
@@ -48,7 +49,7 @@ public class NumTypeExp extends TypeExp
     {
         @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
         if (concreteUnit == null)
-            return Either.left(new TypeConcretisationError("Ambiguous unit: " + unit, DataType.NUMBER));
+            return Either.left(new TypeConcretisationError(StyledString.concat(StyledString.s("Ambiguous unit: "), unit.toStyledString()), DataType.NUMBER));
         else
             return Either.right(DataType.number(new NumberInfo(concreteUnit, null)));
     }
@@ -69,8 +70,8 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public String toString()
+    public StyledString toStyledString()
     {
-        return "Number{" + unit + "}";
+        return StyledString.concat(StyledString.s("Number{"), unit.toStyledString(), StyledString.s("}"));
     }
 }
