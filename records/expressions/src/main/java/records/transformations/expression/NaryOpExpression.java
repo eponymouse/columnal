@@ -159,7 +159,7 @@ public abstract class NaryOpExpression extends Expression
         return r;
     }
     
-    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<Pair<TypeExp, Expression>, Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<Pair<TypeExp, Expression>, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         for (Expression expression : expressions)
@@ -173,8 +173,8 @@ public abstract class NaryOpExpression extends Expression
             }
             else
             {
-                Pair<@Nullable StyledString, @Nullable QuickFix<Expression>> errorAndQuickFix = getCustomErrorAndFix.apply(new Pair<>(type, expression));
-                ImmutableList<QuickFix<Expression>> quickFixes = errorAndQuickFix.getSecond() == null ? ImmutableList.of() : ImmutableList.of(errorAndQuickFix.getSecond());
+                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new Pair<>(type, expression));
+                ImmutableList<QuickFix<Expression>> quickFixes = errorAndQuickFix.getSecond();
                 valid = onError.recordError(expression, TypeExp.unifyTypes(target, type).<Either<StyledString, TypeExp>>either(err -> {
                     if (errorAndQuickFix.getFirst() != null)
                         return Either.left(errorAndQuickFix.getFirst());

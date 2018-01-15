@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -51,7 +52,7 @@ public class OrExpression extends NaryOpExpression
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), data, state, onError, (typeAndExpression) -> {
-            return new Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getFirst().toStyledString()), null);
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getFirst().toStyledString()), ImmutableList.of());
         });
     }
 

@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -51,7 +52,7 @@ public class StringConcatExpression extends NaryOpExpression
     {
         return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), data, state, onError, (typeAndExpression) -> {
             // TODO offer a quick fix of wrapping to.string around operand
-            return new Pair<@Nullable StyledString, @Nullable QuickFix<Expression>>(StyledString.concat(StyledString.s("Operands to ';' must be text but found "), typeAndExpression.getFirst().toStyledString()), null);
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(StyledString.concat(StyledString.s("Operands to ';' must be text but found "), typeAndExpression.getFirst().toStyledString()), ImmutableList.of());
         });
     }
 

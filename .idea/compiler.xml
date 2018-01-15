@@ -34,7 +34,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="utility" />
       </profile>
@@ -52,7 +51,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="gui-utility" />
       </profile>
@@ -63,7 +61,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="data" />
       </profile>
@@ -74,7 +71,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="stf" />
       </profile>
@@ -85,7 +81,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="functions" />
       </profile>
@@ -96,7 +91,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="expressions" />
       </profile>
@@ -107,7 +101,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/types/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="types" />
       </profile>
@@ -118,7 +111,6 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
-        <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="app" />
       </profile>
