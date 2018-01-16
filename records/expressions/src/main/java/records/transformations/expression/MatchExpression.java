@@ -72,7 +72,7 @@ public class MatchExpression extends NonOperatorExpression
             if (patterns.isEmpty())
             {
                 // Probably a test generation error:
-                onError.recordError(MatchExpression.this, StyledString.s("Clause with no patterns"), Collections.emptyList());
+                onError.recordError(MatchExpression.this, StyledString.s("Clause with no patterns"));
                 return null;
             }
             for (int i = 0; i < patterns.size(); i++)
@@ -296,7 +296,7 @@ public class MatchExpression extends NonOperatorExpression
 
         if (clauses.isEmpty())
         {
-            onError.recordError(this, StyledString.s("Must have at least one clause in a match"), Collections.emptyList());
+            onError.recordError(this, StyledString.s("Must have at least one clause in a match"));
             return null;
         }
         

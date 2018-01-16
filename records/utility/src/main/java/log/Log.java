@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -89,6 +90,7 @@ public class Log
     }
 
     // This should only be used temporarily while debugging, and should not be left in:
+    @Pure
     public static void debug(String s)
     {
         logger.log(Level.DEBUG, s);

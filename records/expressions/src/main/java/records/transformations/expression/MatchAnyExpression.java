@@ -39,7 +39,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.recordError(this, StyledString.s("Any cannot be declared outside pattern match"), Collections.emptyList());
+        onError.recordError(this, StyledString.s("Any cannot be declared outside pattern match"));
         return null;
     }
 

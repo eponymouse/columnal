@@ -230,4 +230,11 @@ public class Either<A, B>
     {
         return isA ? ("Left(" + a.toString() + ")") : ("Right(" + b.toString() + ")"); 
     }
+
+    // Equivalent to either(l -> null, r -> r), but saves adding the annoying
+    // type annotations.
+    public @Nullable B leftToNull()
+    {
+        return this.<@Nullable B>either(l -> null, r -> r);
+    }
 }

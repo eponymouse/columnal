@@ -47,7 +47,7 @@ public class VarUseExpression extends NonOperatorExpression
         List<TypeExp> varType = state.findVarType(varName);
         if (varType == null)
         {
-            onError.recordError(this, StyledString.s("Undeclared variable: \"" + varName + "\""), Collections.emptyList());
+            onError.recordError(this, StyledString.s("Undeclared variable: \"" + varName + "\""));
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:

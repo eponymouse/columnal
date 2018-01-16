@@ -912,6 +912,12 @@ public class Utility
     {
         return x == null ? y : x;
     }
+    
+    // Could this be merged with replaceNull, above?
+    public static <T> T orElse(@Nullable T x, T y)
+    {
+        return x != null ? x : y; 
+    }
 
     public static <T> List<T> makeListEx(int len, ExFunction<Integer, T> makeOne) throws InternalException, UserException
     {

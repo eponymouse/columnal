@@ -101,7 +101,7 @@ public class RaiseExpression extends BinaryOpExpression
                 }
                 catch (ArithmeticException e)
                 {
-                    onError.recordError(rhs, StyledString.s("Power is too large to track the units"), Collections.emptyList());
+                    onError.recordError(rhs, StyledString.s("Power is too large to track the units"));
                     return null;
                 }
             }

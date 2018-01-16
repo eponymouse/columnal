@@ -249,7 +249,9 @@ public final class UnitExp implements StyledShowable
         Unit u = Unit.SCALAR;
         for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
         {
-            Unit multiplier = e.getKey().either(l -> Unit.SCALAR, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
+            @Nullable Unit multiplier = e.getKey().<@Nullable Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
+            if (multiplier == null)
+                return null;
             u = u.times(multiplier);
         }
         return u;

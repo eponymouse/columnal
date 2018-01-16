@@ -84,12 +84,12 @@ public class TagExpression extends NonOperatorExpression
         // If inner expression is null, it's meant to be there:
         if (inner == null)
         {
-            onError.recordError(this, StyledString.s("Tag " + getQualifiedTagName() + " requires value, but none given"), Collections.emptyList());
+            onError.recordError(this, StyledString.s("Tag " + getQualifiedTagName() + " requires value, but none given"));
             return null;
         }
         if (typeAndIndex.getTagInfo().getInner() == null)
         {
-            onError.recordError(this, StyledString.s("Tag " + getQualifiedTagName() + " has no inner value, but one was given"), Collections.emptyList());
+            onError.recordError(this, StyledString.s("Tag " + getQualifiedTagName() + " has no inner value, but one was given"));
             return null;
         }
         if (innerDerivedType == null)

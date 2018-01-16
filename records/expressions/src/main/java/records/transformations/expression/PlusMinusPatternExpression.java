@@ -51,7 +51,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.recordError(this, StyledString.s("Plus-minus cannot be declared outside pattern match"), Collections.emptyList());
+        onError.recordError(this, StyledString.s("Plus-minus cannot be declared outside pattern match"));
         return null;
     }
 

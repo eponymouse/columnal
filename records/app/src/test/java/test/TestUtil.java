@@ -935,9 +935,14 @@ public class TestUtil
         return new ErrorAndTypeRecorder()
         {
             @Override
-            public <E> void recordError(E src, StyledString error, List<QuickFix<E>> fixes)
+            public <E> void recordError(E src, StyledString error)
             {
                 throw new RuntimeException(error.toPlain());
+            }
+
+            @Override
+            public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+            {
             }
 
             @SuppressWarnings("recorded")

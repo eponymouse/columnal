@@ -70,7 +70,7 @@ public class CallExpression extends NonOperatorExpression
     {
         if (definition == null)
         {
-            onError.recordError(this, StyledString.s("Unknown function: \"" + functionName + "\""), Collections.emptyList());
+            onError.recordError(this, StyledString.s("Unknown function: \"" + functionName + "\""));
             return null;
         }
 

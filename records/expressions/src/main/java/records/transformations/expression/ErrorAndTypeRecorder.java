@@ -27,21 +27,25 @@ import java.util.function.Consumer;
 
 /**
  * A listener that records where errors have occurred when checking an expression.
+ * 
+ * Note: it is valid to record an error and/or quick fixes multiple times
+ * for the same expression.  In this case, the error and list of quick fixes
+ * should be concatenated to form the final outcome.
  */
 public interface ErrorAndTypeRecorder
 {
+    /**
+     * Checks the given error-or-type.  If error, that error is recorded 
+     * (with no available quick fixes) and null is returned.
+     * If type, it is returned directly.
+     * @param src
+     * @param errorOrType
+     * @return
+     */
     public default @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType)
     {
-        return recordError(src, errorOrType, ImmutableList.of());
-    }
-    
-    /**
-     * Records an error source and error message, with no available quick fixes
-     */
-    public default @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType, ImmutableList<QuickFix<Expression>> quickFixes)
-    {
         return errorOrType.<@Nullable TypeExp>either(err -> {
-            recordError(src, err, quickFixes);
+            recordError(src, err);
             return null;
         }, val -> val);
     }
@@ -53,7 +57,8 @@ public interface ErrorAndTypeRecorder
     {
         return errorOrVal.<@Nullable T>either(err -> {
             @Nullable DataType fix = err.getSuggestedTypeFix();
-            recordError(src, err.getErrorText(), ExpressionEditorUtil.quickFixesForTypeError(src, fix));
+            recordError(src, err.getErrorText());
+            recordQuickFixes(src, ExpressionEditorUtil.quickFixesForTypeError(src, fix));
             return null;
         }, val -> val);
     }
@@ -75,14 +80,16 @@ public interface ErrorAndTypeRecorder
     @Pure
     public default Consumer<StyledString> recordError(Expression src)
     {
-        return errMsg -> recordError(src, errMsg, Collections.emptyList());
+        return errMsg -> recordError(src, errMsg);
     }
 
     /**
      * Records an error source and error message, and a list of possible quick fixes
      */
     // TODO make the String @Localized
-    public <EXPRESSION> void recordError(EXPRESSION src, StyledString error, List<QuickFix<EXPRESSION>> fixes);
+    public <EXPRESSION> void recordError(EXPRESSION src, StyledString error);
+    
+    public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
     public default @Recorded @Nullable TypeExp recordTypeAndError(Expression expression, Either<StyledString, TypeExp> typeOrError)
     {

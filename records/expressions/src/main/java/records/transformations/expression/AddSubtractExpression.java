@@ -12,6 +12,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -27,6 +28,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,17 +85,49 @@ public class AddSubtractExpression extends NaryOpExpression
     public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError, p -> {
-            StyledString err = StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers with matching units but found "), p.getFirst().toStyledString());
+            @Nullable TypeExp ourType = p.getOurType();
+            if (ourType == null)
+                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());
+            @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers with matching units but found "), ourType.toStyledString());
             try
             {
+                // Is the problematic type text, and all ops '+'? If so, offer to convert it 
+                
                 // Note: we don't unify here because we don't want to alter the type.  We could try a 
                 // "could this be string?" unification attempt, but really we're only interested in offering
                 // the quick fix if it is definitely a string, for which we can use equals:
-                if (p.getFirst().equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
+                if (ourType.equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
                 {
                     return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, ImmutableList.of(new QuickFix<Expression>("Change to string concatenation", params -> {
                         return new Pair<>(PARENT, new StringConcatExpression(expressions));
                     })));
+                }
+                
+                if (ourType instanceof NumTypeExp)
+                {
+                    // Must be a units issue.  Check if fixing a numeric literal involved would make
+                    // the units match all non-literal units:
+                    List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
+                    List<UnitExp> nonLiteralUnits = new ArrayList<>();
+                    for (Expression expression : expressions)
+                    {
+                        if (expression instanceof NumericLiteral)
+                        {
+                            NumericLiteral n = (NumericLiteral)expression;
+                            @Nullable UnitExpression unitExpression = n.getUnitExpression();
+                            @Nullable Unit unit;
+                            if (unitExpression == null)
+                                unit = Unit.SCALAR;
+                            else
+                                unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
+                            literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
+                        }
+                        else
+                        {
+                            nonLiteralUnits.add(((NumTypeExp)ourType).unit);
+                        }
+                    }
+                    // TODO check if fixing a numeric literal would sort it
                 }
             }
             catch (InternalException e)

@@ -44,7 +44,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, StyledString.s("Incomplete expression: " + text), Collections.emptyList());
+        onError.recordError(this, StyledString.s("Incomplete expression: " + text));
         return null; // Unfinished expressions can't type check
     }
 

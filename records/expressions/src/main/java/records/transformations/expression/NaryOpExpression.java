@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.error.InternalException;
@@ -14,15 +15,16 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -159,31 +161,68 @@ public abstract class NaryOpExpression extends Expression
         return r;
     }
     
-    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<Pair<TypeExp, Expression>, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
+    class TypeProblemDetails
+    {
+        // Same length as expressions.  Boolean indicates whether unification
+        // was successful or not.
+        final ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes;
+        final int index;
+
+        TypeProblemDetails(ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes, int index)
+        {
+            this.expressionTypes = expressionTypes;
+            this.index = index;
+        }
+
+        @Pure
+        public @Nullable TypeExp getOurType()
+        {
+            @Nullable Pair<TypeExp, Boolean> us = expressionTypes.get(index).orElse(null);
+            return us == null ? null : us.getFirst();
+        }
+    }
+    
+    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
+        ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
         for (Expression expression : expressions)
         {
             @Nullable TypeExp type = expression.check(data, state, onError);
             // Make sure to execute always (don't use short-circuit and with allValid):
-            boolean valid;
             if (type == null)
             {
-                valid = false;
+                allValid = false;
+                unificationOutcomes.add(null);
             }
             else
             {
-                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new Pair<>(type, expression));
-                ImmutableList<QuickFix<Expression>> quickFixes = errorAndQuickFix.getSecond();
-                valid = onError.recordError(expression, TypeExp.unifyTypes(target, type).<Either<StyledString, TypeExp>>either(err -> {
-                    if (errorAndQuickFix.getFirst() != null)
-                        return Either.left(errorAndQuickFix.getFirst());
-                    else
-                        return Either.left(err);
-                }, t -> Either.right(t)), quickFixes) != null;
+                Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(target, type);
+                // We have to recreate either to add nullable constraint:
+                unificationOutcomes.add(new Pair<>(unified.<@Nullable StyledString>either(err -> err, u -> null), type));
+                if (unified.isLeft())
+                    allValid = false;
             }
-            allValid &= valid;
         }
+
+        ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes = unificationOutcomes.stream().<Optional<Pair<TypeExp, Boolean>>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<Pair<TypeExp, Boolean>>empty() : Optional.<Pair<TypeExp, Boolean>>of(new Pair<>(p.getSecond(), p.getFirst() == null))).collect(ImmutableList.toImmutableList());
+
+        for (int i = 0; i < expressions.size(); i++)
+        {
+            Expression expression = expressions.get(i);
+            Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, i));
+            onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
+            StyledString error;
+            if (errorAndQuickFix.getFirst() != null)
+                error = errorAndQuickFix.getFirst();
+            else if (unificationOutcomes.get(i) != null && unificationOutcomes.get(i).getFirst() != null)
+                error = unificationOutcomes.get(i).getFirst();
+            else
+                // Hack to ensure there is an error:
+                error = StyledString.s(" ");
+            onError.recordError(expression, error);
+        }
+        
         return allValid ? onError.recordType(this, target) : null;
     }
 }

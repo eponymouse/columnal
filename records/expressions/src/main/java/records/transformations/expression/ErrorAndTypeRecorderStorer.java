@@ -22,9 +22,15 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
     private final List<StyledString> errorMessages = new ArrayList<>();
 
     @Override
-    public <E> void recordError(E src, StyledString error, List<QuickFix<E>> fixes)
+    public <E> void recordError(E src, StyledString error)
     {
         errorMessages.add(error);
+    }
+
+    @Override
+    public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+    {
+        // Ignore them, just interested in errors
     }
 
     public Stream<@NonNull StyledString> getAllErrors()

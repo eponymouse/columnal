@@ -308,38 +308,9 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
-                    {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public <E> void recordError(E e, StyledString s, List<QuickFix<E>> q)
-                        {
-                            if (e instanceof Expression)
-                            {
-                                if (!errorDisplayers.showError((Expression)e, s, (List)q))
-                                {
-                                    // Show it on us, then:
-                                    ExpressionEditor.this.showError(s, (List)q);
-                                }
-                            }
-                        }
-
-                        @Override
-                        public @Nullable TypeExp recordError(Expression src, Either<StyledString, TypeExp> errorOrType)
-                        {
-                            return ErrorAndTypeRecorder.super.recordError(src, errorOrType);
-                        }
-
-                        @SuppressWarnings("recorded")
-                        @Override
-                        public @Recorded TypeExp recordTypeNN(Expression expression, TypeExp typeExp)
-                        {
-                            errorDisplayers.recordType(expression, Either.right(typeExp));
-                            return typeExp;
-                        }
-                    };
-                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorAndTypeRecorder);
-                    latestType.set(dataType == null ? null : errorAndTypeRecorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    
+                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorDisplayers.getRecorder());
+                    latestType.set(dataType == null ? null : errorDisplayers.getRecorder().recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
                     Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }

@@ -4,8 +4,12 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.controlsfx.control.PopOver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -38,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -74,6 +79,12 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     public void testUnitLiteralFix1()
     {
         testFix("ACC1+6", "6", "", "ACC1 + 6{m/s^2}");
+    }
+
+    @Test
+    public void testUnitLiteralFix1B()
+    {
+        testFix("6+ACC1", "6", "", "6{m/s^2} + ACC1");
     }
 
     @Test
@@ -117,15 +128,19 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             assertNotNull(lhs);
             if (lhs == null) return;
             clickOn(lhs);
-            assertEquals(1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
+            TestUtil.sleep(200);
+            @Nullable Window errorPopup = listWindows().stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
+            assertNotNull(errorPopup);
+            assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
+                1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
             assertTrue(!lookup(".quick-fix-row" + fixId).queryAll().isEmpty());
             clickOn(".quick-fix-row" + fixId);
             // Check that popup vanishes pretty much straight away:
-            TestUtil.sleep(400);
-            assertNull(lookup(".expression-info-popup").query());
+            TestUtil.sleep(200);
+            assertTrue(TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
-            //TODO really don't understand why I need to click OK twice:
-            TestUtil.sleep(1000);
+            moveTo(".ok-button");
+            TestUtil.sleep(3000);
             clickOn(".ok-button");
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
@@ -142,5 +157,10 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             // into unchecked for simpler signatures:
             throw new RuntimeException(e);
         }
+    }
+
+    private String textFlowToString(Node n)
+    {
+        return TestUtil.fx(() -> n.toString() + " " + n.localToScreen(n.getBoundsInLocal().getMinX(), n.getBoundsInLocal().getMinY()) + ((TextFlow)n).getChildren().stream().map(c -> ((Text)c).getText()).collect(Collectors.joining(";")));
     }
 }
