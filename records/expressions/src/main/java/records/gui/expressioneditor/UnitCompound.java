@@ -15,9 +15,9 @@ public class UnitCompound extends UnitCompoundBase implements OperandNode<UnitEx
 {
     private final ConsecutiveBase<UnitExpression, UnitNodeParent> unitParent;
 
-    public UnitCompound(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
+    public UnitCompound(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel, @Nullable ConsecutiveStartContent<UnitExpression, UnitNodeParent> startContent)
     {
-        super(parent, topLevel);
+        super(parent, topLevel, startContent);
         this.unitParent = parent;
     }
 

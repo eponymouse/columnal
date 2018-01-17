@@ -51,10 +51,9 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
+    public SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>> loadAsSingle()
     {
-        return new UnitEntry(parent, name, false);
+        return (p, s) -> new UnitEntry(p, name, false);
     }
 
     @Override

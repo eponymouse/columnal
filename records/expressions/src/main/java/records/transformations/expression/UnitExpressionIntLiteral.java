@@ -44,9 +44,9 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
+    public SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>> loadAsSingle()
     {
-        return new UnitEntry(parent, Integer.toString(number), false);
+        return (p, s) -> new UnitEntry(p, Integer.toString(number), false);
     }
 
     public int getNumber()

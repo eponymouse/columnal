@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -18,6 +19,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.MutUnitVar;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static records.transformations.expression.AddSubtractExpression.Op.ADD;
 import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.PARENT;
@@ -108,12 +111,13 @@ public class AddSubtractExpression extends NaryOpExpression
                     // Must be a units issue.  Check if fixing a numeric literal involved would make
                     // the units match all non-literal units:
                     List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
-                    List<UnitExp> nonLiteralUnits = new ArrayList<>();
-                    for (Expression expression : expressions)
+                    List<@Nullable Unit> nonLiteralUnits = new ArrayList<>();
+                    for (int i = 0; i < expressions.size(); i++)
                     {
+                        Expression expression = expressions.get(i);
                         if (expression instanceof NumericLiteral)
                         {
-                            NumericLiteral n = (NumericLiteral)expression;
+                            NumericLiteral n = (NumericLiteral) expression;
                             @Nullable UnitExpression unitExpression = n.getUnitExpression();
                             @Nullable Unit unit;
                             if (unitExpression == null)
@@ -121,13 +125,32 @@ public class AddSubtractExpression extends NaryOpExpression
                             else
                                 unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
                             literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
-                        }
-                        else
+                        } else
                         {
-                            nonLiteralUnits.add(((NumTypeExp)ourType).unit);
+                            @Nullable TypeExp type = p.getType(i);
+                            nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
                         }
                     }
-                    // TODO check if fixing a numeric literal would sort it
+                    Log.debug(">>> literals: " + Utility.listToString(literals));
+                    Log.debug(">>> non-literals: " + nonLiteralUnits.size());
+                    
+                    // For us to offer the quick fix, we need the following conditions: all non-literals
+                    // have the same known unit (and there is at least one non-literal).
+                    List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.toList());
+                    if (uniqueNonLiteralUnits.size() == 1)
+                    {
+                        for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
+                        {
+                            Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
+                            Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
+                            if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
+                            {
+                                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, ImmutableList.of(new QuickFix<Expression>("Change unit to {" + uniqueNonLiteralUnits.get(0) + "}", params -> {
+                                    return new Pair<>(ReplacementTarget.CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
+                                })));
+                            }
+                        }
+                    }
                 }
             }
             catch (InternalException e)

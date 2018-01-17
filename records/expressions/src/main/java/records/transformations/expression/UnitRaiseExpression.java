@@ -47,13 +47,6 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
-    public OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
-    {
-        return new UnitCompound(parent, topLevel);
-    }
-
-    @Override
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;

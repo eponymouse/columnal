@@ -1118,7 +1118,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         @Override
         public OperandNode<UnitExpression, UnitNodeParent> loadOperand(String src, ConsecutiveBase<UnitExpression, UnitNodeParent> parent) throws UserException, InternalException
         {
-            return UnitExpression.load(src).edit(parent, false);
+            return UnitExpression.load(src).loadAsSingle().load(parent, parent.getThisAsSemanticParent());
         }
     }
 

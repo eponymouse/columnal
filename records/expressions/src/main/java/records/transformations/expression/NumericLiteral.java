@@ -14,6 +14,10 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Status;
+import records.gui.expressioneditor.OperandNode;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
@@ -91,6 +95,17 @@ public class NumericLiteral extends Literal
     }
 
     @Override
+    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    {
+        return (p, s) -> {
+            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(editString(), false, Status.LITERAL, p, s);
+            if (unit != null)
+                generalExpressionEntry.addUnitSpecifier(unit);
+            return generalExpressionEntry;
+        };
+    }
+
+    @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables)
     {
         // TODO handle non-integers properly
@@ -129,5 +144,10 @@ public class NumericLiteral extends Literal
     public @Nullable UnitExpression getUnitExpression()
     {
         return unit;
+    }
+
+    public NumericLiteral withUnit(Unit unit)
+    {
+        return new NumericLiteral(value, UnitExpression.load(unit));
     }
 }

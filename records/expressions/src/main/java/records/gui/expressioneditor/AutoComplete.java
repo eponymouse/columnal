@@ -117,6 +117,7 @@ public class AutoComplete extends PopupControl
                     Completion completion = getCompletionIfFocusLeftNow();
                     if (completion != null)
                     {
+                        //#error TODO I think setting the text isn't enough to clear the error state, we also need to set the status or something?
                         textField.setText(onSelect.focusLeaving(textField.getText(), completion));
                     }
                     hide();

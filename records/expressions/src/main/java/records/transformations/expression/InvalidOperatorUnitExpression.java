@@ -59,12 +59,6 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
-    {
-        return new UnitCompound(parent, topLevel);
-    }
-
-    @Override
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;

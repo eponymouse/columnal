@@ -78,19 +78,19 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testUnitLiteralFix1()
     {
-        testFix("ACC1+6", "6", "", "ACC1 + 6{m/s^2}");
+        testFix("ACC1+6", "6", "", "@column ACC1 + 6{m/s^2}");
     }
 
     @Test
     public void testUnitLiteralFix1B()
     {
-        testFix("6+ACC1", "6", "", "6{m/s^2} + ACC1");
+        testFix("6+ACC1", "6", "", "6{m/s^2} + @column ACC1");
     }
 
     @Test
     public void testUnitLiteralFix2()
     {
-        testFix("ACC1 > 6 > ACC3", "6", "", "ACC1 > 6{m/s^2} > ACC3");
+        testFix("ACC1 > 6 > ACC3", "6", "", "@column ACC1 > 6{m/s^2} > @column ACC3");
     }
 
     /**
@@ -128,12 +128,13 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             assertNotNull(lhs);
             if (lhs == null) return;
             clickOn(lhs);
-            TestUtil.sleep(200);
+            TestUtil.sleep(2000);
             @Nullable Window errorPopup = listWindows().stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertTrue(!lookup(".quick-fix-row" + fixId).queryAll().isEmpty());
+            assertEquals(1, lookup(".quick-fix-row" + fixId).queryAll().size());
+            moveTo(".quick-fix-row" + fixId);
             clickOn(".quick-fix-row" + fixId);
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);

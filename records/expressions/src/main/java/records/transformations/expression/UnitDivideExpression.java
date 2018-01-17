@@ -49,13 +49,6 @@ public class UnitDivideExpression extends UnitExpression
             return "(" + core + ")";
     }
 
-    @Override
-    @OnThread(Tag.FXPlatform)
-    public OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
-    {
-        return new UnitCompound(parent, topLevel);
-    }
-
     public UnitExpression getNumerator()
     {
         return numerator;

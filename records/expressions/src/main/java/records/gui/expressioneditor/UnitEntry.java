@@ -173,7 +173,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         {
             if (c == bracketedCompletion)
             {
-                UnitCompound bracketedExpression = new UnitCompound(parent, false);
+                UnitCompound bracketedExpression = new UnitCompound(parent, false, null);
                 bracketedExpression.focusWhenShown();
                 parent.replace(UnitEntry.this, bracketedExpression);
             }

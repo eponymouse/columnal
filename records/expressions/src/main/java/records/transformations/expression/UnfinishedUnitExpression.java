@@ -62,10 +62,11 @@ public class UnfinishedUnitExpression extends UnitExpression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
+    public SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>> loadAsSingle()
     {
-        return new UnitEntry(parent, text, false);
+        return (p, s) -> new UnitEntry(p, text, false);
     }
+    
 
 
     @Override

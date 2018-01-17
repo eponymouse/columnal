@@ -59,13 +59,6 @@ public class UnitTimesExpression extends UnitExpression
         return b.toString();
     }
 
-    @Override
-    @OnThread(Tag.FXPlatform)
-    public OperandNode<UnitExpression, UnitNodeParent> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
-    {
-        return new UnitCompound(parent, topLevel);
-    }
-
     public ImmutableList<UnitExpression> getOperands()
     {
         return operands;

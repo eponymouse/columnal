@@ -38,11 +38,13 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -61,7 +63,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression>, EEDisplayNodeParent
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression>, EEDisplayNodeParent, UnitNodeParent
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
@@ -152,7 +154,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
-
+    
     public GeneralExpressionEntry(String content, boolean userEntered, Status initialStatus, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         super(Expression.class, parent);
@@ -766,7 +768,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 if (unitSpecifier == null)
                 {
-                    addUnitSpecifier(); // Should we put rest in the curly brackets?
+                    addUnitSpecifier(null); // Should we put rest in the curly brackets?
                     status.set(Status.LITERAL);
                 }
                 else
@@ -866,11 +868,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return node;
     }
 
-    private void addUnitSpecifier()
+    public void addUnitSpecifier(@Nullable UnitExpression unitExpression)
     {
         if (unitSpecifier == null)
         {
-            unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true));
+            if (unitExpression == null)
+                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, null));
+            else
+                unitSpecifier = new UnitCompoundBase(this, true, SingleLoader.withSemanticParent(unitExpression.loadAsConsecutive(true), this));
         }
         updateNodes();
         updateListeners();
@@ -932,6 +937,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return Collections.singletonList(new Pair<String, @Nullable DataType>(textField.getText().trim(), null));
         else
             return Collections.emptyList();
+    }
+
+    @Override
+    public UnitManager getUnitManager()
+    {
+        return parent.getEditor().getTypeManager().getUnitManager();
     }
 
     @Override

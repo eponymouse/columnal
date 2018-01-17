@@ -23,7 +23,7 @@ public abstract class Consecutive<EXPRESSION extends LoadableExpression<EXPRESSI
     private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable ConsecutiveStartContent<EXPRESSION, SEMANTIC_PARENT> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable ConsecutiveStartContent<EXPRESSION, SEMANTIC_PARENT> content, char... endCharacters)
     {
         super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
