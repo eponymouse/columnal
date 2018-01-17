@@ -163,3 +163,6 @@
          }
     }
 }
+.fix-list-heading, .quick-fix-row > .label {
+    -fx-text-fill: black;
+}

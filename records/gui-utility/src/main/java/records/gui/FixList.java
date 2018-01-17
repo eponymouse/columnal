@@ -37,7 +37,7 @@ public class FixList extends VBox
         getChildren().clear();
         if (!fixes.isEmpty())
         {
-            getChildren().add(GUI.label("error.fixes"));
+            getChildren().add(GUI.label("error.fixes", "fix-list-heading"));
         }
         for (Pair<@Localized String, FXPlatformRunnable> fix : fixes)
         {
