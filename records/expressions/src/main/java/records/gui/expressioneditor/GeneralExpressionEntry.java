@@ -603,7 +603,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             try
             {
-                return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.getText()), unitSpecifier == null ? null : unitSpecifier.save(errorDisplayer, onError)));
+                return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.numericLiteral().getText()), unitSpecifier == null ? null : unitSpecifier.save(errorDisplayer, onError)));
             }
             catch (UserException e)
             {
