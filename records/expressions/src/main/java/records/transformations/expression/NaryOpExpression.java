@@ -177,8 +177,17 @@ public abstract class NaryOpExpression extends Expression
         @Pure
         public @Nullable TypeExp getOurType()
         {
-            @Nullable Pair<TypeExp, Boolean> us = expressionTypes.get(index).orElse(null);
-            return us == null ? null : us.getFirst();
+            return getType(index);
+        }
+        
+        public @Nullable TypeExp getType(int index)
+        {
+            return expressionTypes.get(index).map(p -> p.getFirst()).orElse(null);
+        }
+
+        public Expression getOurExpression()
+        {
+            return expressions.get(index);
         }
     }
     
@@ -207,20 +216,23 @@ public abstract class NaryOpExpression extends Expression
 
         ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes = unificationOutcomes.stream().<Optional<Pair<TypeExp, Boolean>>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<Pair<TypeExp, Boolean>>empty() : Optional.<Pair<TypeExp, Boolean>>of(new Pair<>(p.getSecond(), p.getFirst() == null))).collect(ImmutableList.toImmutableList());
 
-        for (int i = 0; i < expressions.size(); i++)
+        if (!allValid)
         {
-            Expression expression = expressions.get(i);
-            Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, i));
-            onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
-            StyledString error;
-            if (errorAndQuickFix.getFirst() != null)
-                error = errorAndQuickFix.getFirst();
-            else if (unificationOutcomes.get(i) != null && unificationOutcomes.get(i).getFirst() != null)
-                error = unificationOutcomes.get(i).getFirst();
-            else
-                // Hack to ensure there is an error:
-                error = StyledString.s(" ");
-            onError.recordError(expression, error);
+            for (int i = 0; i < expressions.size(); i++)
+            {
+                Expression expression = expressions.get(i);
+                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, i));
+                onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
+                StyledString error;
+                if (errorAndQuickFix.getFirst() != null)
+                    error = errorAndQuickFix.getFirst();
+                else if (unificationOutcomes.get(i) != null && unificationOutcomes.get(i).getFirst() != null)
+                    error = unificationOutcomes.get(i).getFirst();
+                else
+                    // Hack to ensure there is an error:
+                    error = StyledString.s(" ");
+                onError.recordError(expression, error);
+            }
         }
         
         return allValid ? onError.recordType(this, target) : null;
