@@ -306,7 +306,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         else if (child instanceof OperatorEntry)
         {
             int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
-            if (index < operators.size() - 1)
+            if (index + 1 < operands.size())
                 operands.get(index + 1).focus(side);
             else
                 parentFocusRightOfThis(side);
