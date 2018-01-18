@@ -15,6 +15,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.MutVar;
 import records.types.TypeExp;
@@ -112,7 +113,9 @@ public class ComparisonExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(new MutVar(this), data, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of()));
+        type = checkAllOperandsSameType(new MutVar(this), data, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.copyOf(
+            ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p, p.getOurType(), expressions)
+        )));
         if (type == null)
             return null;
         return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));

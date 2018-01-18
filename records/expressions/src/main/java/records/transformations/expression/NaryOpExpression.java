@@ -161,7 +161,7 @@ public abstract class NaryOpExpression extends Expression
         return r;
     }
     
-    class TypeProblemDetails
+    public class TypeProblemDetails
     {
         // Same length as expressions.  Boolean indicates whether unification
         // was successful or not.

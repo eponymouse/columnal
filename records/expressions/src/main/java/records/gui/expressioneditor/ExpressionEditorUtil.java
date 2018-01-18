@@ -4,22 +4,31 @@ import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
+import records.data.unit.Unit;
 import records.gui.TypeDialog;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
 import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
+import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.TypeState;
+import records.transformations.expression.UnitExpression;
+import records.types.NumTypeExp;
+import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.Serializable;
@@ -131,6 +140,58 @@ public class ExpressionEditorUtil
             quickFixes.add(new QuickFix<>("Set type: " + fix, p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
         }
         return quickFixes;
+    }
+
+    @OnThread(Tag.Any)
+    public static List<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p, @Nullable TypeExp ourType, List<Expression> expressions)
+    {
+        if (ourType instanceof NumTypeExp)
+        {
+            // Must be a units issue.  Check if fixing a numeric literal involved would make
+            // the units match all non-literal units:
+            List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
+            List<@Nullable Unit> nonLiteralUnits = new ArrayList<>();
+            for (int i = 0; i < expressions.size(); i++)
+            {
+                Expression expression = expressions.get(i);
+                if (expression instanceof NumericLiteral)
+                {
+                    NumericLiteral n = (NumericLiteral) expression;
+                    @Nullable UnitExpression unitExpression = n.getUnitExpression();
+                    @Nullable Unit unit;
+                    if (unitExpression == null)
+                        unit = Unit.SCALAR;
+                    else
+                        unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
+                    literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
+                } else
+                {
+                    @Nullable TypeExp type = p.getType(i);
+                    nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
+                }
+            }
+            Log.debug(">>> literals: " + Utility.listToString(literals));
+            Log.debug(">>> non-literals: " + nonLiteralUnits.size());
+            
+            // For us to offer the quick fix, we need the following conditions: all non-literals
+            // have the same known unit (and there is at least one non-literal).
+            List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.toList());
+            if (uniqueNonLiteralUnits.size() == 1)
+            {
+                for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
+                {
+                    Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
+                    Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
+                    if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
+                    {
+                        return Collections.singletonList(new QuickFix<Expression>("Change unit to {" + uniqueNonLiteralUnits.get(0) + "}", params -> {
+                            return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
+                        }));
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
     }
 
     public static class CopiedItems implements Serializable

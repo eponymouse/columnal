@@ -84,14 +84,21 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testUnitLiteralFix1B()
     {
-        testFix("6+ACC1", "6", "", "6{m/s^2} + @column ACC1");
+        testFix("6-ACC1", "6", "", "6{m/s^2} - @column ACC1");
     }
 
     @Test
     public void testUnitLiteralFix2()
     {
-        testFix("ACC1 > 6 > ACC3", "6", "", "@column ACC1 > 6{m/s^2} > @column ACC3");
+        testFix("ACC1>6>ACC3", "6", "", "@column ACC1 > 6{m/s^2} > @column ACC3");
     }
+
+    @Test
+    public void testUnitLiteralFix3()
+    {
+        testFix("ACC1<>103", "103", "", "@column ACC1 <> 103{m/s^2}");
+    }
+
 
     /**
      * 

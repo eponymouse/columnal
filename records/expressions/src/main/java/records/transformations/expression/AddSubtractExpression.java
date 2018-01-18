@@ -3,7 +3,6 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -13,13 +12,12 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.MutUnitVar;
@@ -30,12 +28,10 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static records.transformations.expression.AddSubtractExpression.Op.ADD;
 import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.PARENT;
@@ -92,6 +88,7 @@ public class AddSubtractExpression extends NaryOpExpression
             if (ourType == null)
                 return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());
             @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers with matching units but found "), ourType.toStyledString());
+            ImmutableList.Builder<QuickFix<Expression>> fixes = ImmutableList.builder();
             try
             {
                 // Is the problematic type text, and all ops '+'? If so, offer to convert it 
@@ -101,63 +98,18 @@ public class AddSubtractExpression extends NaryOpExpression
                 // the quick fix if it is definitely a string, for which we can use equals:
                 if (ourType.equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
                 {
-                    return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, ImmutableList.of(new QuickFix<Expression>("Change to string concatenation", params -> {
+                    fixes.add(new QuickFix<Expression>("Change to string concatenation", params -> {
                         return new Pair<>(PARENT, new StringConcatExpression(expressions));
-                    })));
+                    }));
                 }
-                
-                if (ourType instanceof NumTypeExp)
-                {
-                    // Must be a units issue.  Check if fixing a numeric literal involved would make
-                    // the units match all non-literal units:
-                    List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
-                    List<@Nullable Unit> nonLiteralUnits = new ArrayList<>();
-                    for (int i = 0; i < expressions.size(); i++)
-                    {
-                        Expression expression = expressions.get(i);
-                        if (expression instanceof NumericLiteral)
-                        {
-                            NumericLiteral n = (NumericLiteral) expression;
-                            @Nullable UnitExpression unitExpression = n.getUnitExpression();
-                            @Nullable Unit unit;
-                            if (unitExpression == null)
-                                unit = Unit.SCALAR;
-                            else
-                                unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
-                            literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
-                        } else
-                        {
-                            @Nullable TypeExp type = p.getType(i);
-                            nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
-                        }
-                    }
-                    Log.debug(">>> literals: " + Utility.listToString(literals));
-                    Log.debug(">>> non-literals: " + nonLiteralUnits.size());
-                    
-                    // For us to offer the quick fix, we need the following conditions: all non-literals
-                    // have the same known unit (and there is at least one non-literal).
-                    List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.toList());
-                    if (uniqueNonLiteralUnits.size() == 1)
-                    {
-                        for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
-                        {
-                            Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
-                            Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
-                            if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
-                            {
-                                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, ImmutableList.of(new QuickFix<Expression>("Change unit to {" + uniqueNonLiteralUnits.get(0) + "}", params -> {
-                                    return new Pair<>(ReplacementTarget.CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
-                                })));
-                            }
-                        }
-                    }
-                }
+
+                fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p, ourType, expressions));
             }
             catch (InternalException e)
             {
                 Utility.report(e);
             }
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, ImmutableList.of());
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, fixes.build());
         });
         return type;
     }
