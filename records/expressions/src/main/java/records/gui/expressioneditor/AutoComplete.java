@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.sun.javafx.scene.control.skin.TextFieldSkin;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
@@ -124,6 +125,20 @@ public class AutoComplete extends PopupControl
                 }
             }
         });
+        
+        textField.setOnMouseClicked(e -> {
+            // Because the autocomplete is a popup which is technically a different window, there seems to be an annoying
+            // JavaFX behaviour.  A click back into the text field (i.e. not the popup window) doesn't delivery the mouse
+            // press event to the main window.  But it does deliver the click event, so we watch for a click, and if that
+            // finds an unfocused text field, we focus it.  The complication is that by default a click without a press on
+            // a text field will select the whole text, so after focusing, we must fix up the caret position to be correct:
+            if (!textField.isFocused())
+            {
+                // TODO in Java 9, move to public hit-test API:
+                textField.requestFocus();
+                textField.positionCaret(((TextFieldSkin)textField.getSkin()).getIndex(e.getX(), e.getY()).getInsertionIndex());
+            }
+        });
 
         FXUtility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), t -> updatePosition());
         FXUtility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
@@ -236,7 +251,10 @@ public class AutoComplete extends PopupControl
             }
             return change;
         }));
+        
         setHideOnEscape(true);
+        setAutoHide(true);
+        
         addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE)
             {

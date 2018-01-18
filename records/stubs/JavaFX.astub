@@ -254,6 +254,7 @@ class PopupWindow
     void show(Node ownerNode, double anchorX, double anchorY) @UnknownInitialization;
     void setAnchorX(final double value) @UnknownInitialization;
     void setAnchorY(final double value) @UnknownInitialization;
+    void setAutoHide(boolean value) @UnknownInitialization;
     void setHideOnEscape(boolean value) @UnknownInitialization;
     void hide() @UnknownInitialization;
 }
