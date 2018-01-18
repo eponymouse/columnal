@@ -146,7 +146,6 @@ public class ExpressionInfoDisplay
         {
             popup = new ErrorMessagePopup();
             popup.show(expressionNode);
-            Log.debug("#####\n# Showing " + popup + " " + popup.getContentNode().lookup(".expression-info-error") + "\n#####");
         }
     }
 
@@ -243,7 +242,7 @@ public class ExpressionInfoDisplay
         }
         else
         {
-            Log.debug("Message and fixes: " + newMsgAndFixes);
+            //Log.debug("Message and fixes: " + newMsgAndFixes);
             // The listener on this property should make the popup every time:
             errorMessage.set(newMsgAndFixes.getFirst());
             fixes.set(newMsgAndFixes.getSecond().stream().map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> {
