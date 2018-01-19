@@ -141,8 +141,11 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
             assertEquals(1, lookup(".quick-fix-row" + fixId).queryAll().size());
-            moveTo(".quick-fix-row" + fixId);
-            clickOn(".quick-fix-row" + fixId);
+            // Get around issue with not being able to get the position of
+            // items in the fix popup correctly, by using keyboard:
+            //moveTo(".quick-fix-row" + fixId);
+            //clickOn(".quick-fix-row" + fixId);
+            push(KeyCode.SHIFT, KeyCode.F1);
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);
             assertTrue(TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));

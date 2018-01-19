@@ -16,6 +16,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -84,6 +86,14 @@ public class ExpressionInfoDisplay
             mouseHoverStatusChanged();
         });
         FXUtility.addChangeListenerPlatformNN(errorMessage, s -> updateShowHide(true));
+        textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            if (e.isShiftDown() && e.getCode() == KeyCode.F1 && popup != null)
+            {
+                e.consume();
+                hide(true);
+                fixes.get().get(0).getSecond().run();
+            }
+        });
     }
 
     private class ErrorMessagePopup extends PopOver
@@ -145,6 +155,7 @@ public class ExpressionInfoDisplay
         if (expressionNode.getScene() != null)
         {
             popup = new ErrorMessagePopup();
+            Log.debug(" # Showing: " + popup);
             popup.show(expressionNode);
         }
     }

@@ -73,7 +73,14 @@ public class AutoComplete extends PopupControl
     public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, CompletionListener onSelect, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
-        this.completions = new ListView<>();
+        this.completions = new ListView<Completion>() {
+            @Override
+            @OnThread(Tag.FX)
+            public void requestFocus()
+            {
+                // Can't be focused
+            }
+        };
         container = new BorderPane(null, null, null, null, completions);
 
         completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
