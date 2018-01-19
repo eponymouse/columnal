@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import utility.Pair;
+import utility.Utility;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -45,12 +47,12 @@ public class FunctionList
         ));
     }
     
-    public static ImmutableList<FunctionDefinition> getAllFunctionDefinitions(UnitManager mgr) throws InternalException
+    public static ImmutableList<Pair<FunctionGroup, FunctionDefinition>> getAllFunctionDefinitions(UnitManager mgr) throws InternalException
     {
-        ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        ImmutableList.Builder<Pair<FunctionGroup, FunctionDefinition>> r = ImmutableList.builder();
         for (FunctionGroup group : getFunctionGroups())
         {
-            r.addAll(group.getFunctions(mgr));
+            r.addAll(Utility.mapList(group.getFunctions(mgr), f -> new Pair<>(group, f)));
         }
         return r.build();
     }

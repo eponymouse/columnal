@@ -1,8 +1,12 @@
 package records.transformations.expression;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.sosy_lab.java_smt.api.BitvectorFormula;
@@ -14,55 +18,68 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.types.MutVar;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
 /**
  * Created by neil on 30/11/2016.
  */
-public class EqualExpression extends BinaryOpExpression
+public class EqualExpression extends NaryOpExpression
 {
-    public EqualExpression(Expression lhs, Expression rhs)
+    public EqualExpression(List<Expression> operands)
     {
-        super(lhs, rhs);
+        super(operands);
     }
 
     @Override
-    protected String saveOp()
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    {
+        return new EqualExpression(replacements);
+    }
+
+    @Override
+    protected String saveOp(int index)
     {
         return "=";
     }
 
-    @Override
-    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
-    {
-        return new EqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
-    }
 
     @Override
-    @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        if (onError.recordError(this, TypeExp.unifyTypes(lhsType, rhsType)) == null)
+        @Nullable TypeExp argType = checkAllOperandsSameType(new MutVar(this), data, typeState, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of()));
+        if (argType == null)
             return null;
-        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
+        else
+            return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));
     }
 
     @Override
     public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        @Value Object lhsVal = lhs.getValue(rowIndex, state);
-        @Value Object rhsVal = rhs.getValue(rowIndex, state);
-        return DataTypeUtility.value(0 == Utility.compareValues(lhsVal, rhsVal));
+        @Value Object first = expressions.get(0).getValue(rowIndex, state);
+        for (int i = 1; i < expressions.size(); i++)
+        {
+            @Value Object rhsVal = expressions.get(i).getValue(rowIndex, state);
+            if (0 != Utility.compareValues(first, rhsVal))
+                return DataTypeUtility.value(false);
+        }
+
+        return DataTypeUtility.value(true);
     }
 
     @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
+        /*
         Formula lhsForm = lhs.toSolver(formulaManager, src, columnVariables);
         Formula rhsForm = rhs.toSolver(formulaManager, src, columnVariables);
         if (lhsForm instanceof BitvectorFormula && rhsForm instanceof BitvectorFormula)
@@ -70,6 +87,13 @@ public class EqualExpression extends BinaryOpExpression
             BitvectorFormulaManager m = formulaManager.getBitvectorFormulaManager();
             return m.equal((BitvectorFormula)lhsForm, (BitvectorFormula)rhsForm);
         }
+        */
         throw new UnimplementedException();
+    }
+
+    @Override
+    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+    {
+        return null;
     }
 }

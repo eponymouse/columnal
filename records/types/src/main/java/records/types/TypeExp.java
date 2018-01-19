@@ -1,6 +1,7 @@
 package records.types;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -239,7 +240,8 @@ public abstract class TypeExp implements StyledShowable
     protected abstract Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException;
 
     @Override
-    public final String toString()
+    @SuppressWarnings("i18n")
+    public final @Localized String toString()
     {
         return toStyledString().toPlain();
     }

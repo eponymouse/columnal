@@ -1293,7 +1293,8 @@ public class Utility
             }
         }
 
-        public static ListEx empty()
+        @SuppressWarnings("value")
+        public static @Value ListEx empty()
         {
             return new ListEx()
             {

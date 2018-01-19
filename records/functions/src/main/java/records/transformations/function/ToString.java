@@ -105,7 +105,7 @@ public class ToString extends FunctionDefinition
                 @OnThread(Tag.Simulation)
                 public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
                 {
-                    Object[] values = Utility.castTuple(param, inner.size());
+                    @Value Object @Value[] values = Utility.castTuple(param, inner.size());
                     StringBuilder s = new StringBuilder("(");
                     for (int i = 0; i < values.length; i++)
                     {

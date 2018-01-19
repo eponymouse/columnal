@@ -56,7 +56,7 @@ public class TypeState
         ImmutableList<FunctionDefinition> allFunctions;
         try
         {
-            allFunctions = FunctionList.getAllFunctionDefinitions(unitManager);
+            allFunctions = FunctionList.getAllFunctionDefinitions(unitManager).stream().map(p -> p.getSecond()).collect(ImmutableList.toImmutableList());
         }
         catch (InternalException e)
         {

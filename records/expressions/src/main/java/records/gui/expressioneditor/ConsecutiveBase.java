@@ -960,8 +960,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             }
             else if (ops.stream().allMatch(op -> op.equals("=")))
             {
-                if (expressionExps.size() == 2)
-                    return errorDisplayers.record(displayer, new EqualExpression(expressionExps.get(0), expressionExps.get(1)));
+                return errorDisplayers.record(displayer, new EqualExpression(expressionExps));
             }
             else if (ops.stream().allMatch(op -> op.equals("<>")))
             {

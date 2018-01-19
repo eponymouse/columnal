@@ -50,10 +50,10 @@ public class StringConcatExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), data, state, onError, (typeAndExpression) -> {
+        return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), data, state, onError, (typeAndExpression) -> {
             // TODO offer a quick fix of wrapping to.string around operand
             return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to ';' must be text but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
-        });
+        }));
     }
 
     @Override

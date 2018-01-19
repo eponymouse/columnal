@@ -152,7 +152,7 @@ public class MainWindow
                 }
                 catch (MalformedURLException e)
                 {
-                    FXUtility.logAndShowError("Error in file path", e);
+                    FXUtility.logAndShowError("error.filePath", e);
                 }
             }
 

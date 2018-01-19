@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -34,11 +35,11 @@ import java.util.stream.Stream;
  */
 public abstract class NaryOpExpression extends Expression
 {
-    protected final List<Expression> expressions;
+    protected final ImmutableList<Expression> expressions;
 
     public NaryOpExpression(List<Expression> expressions)
     {
-        this.expressions = expressions;
+        this.expressions = ImmutableList.copyOf(expressions);
     }
 
     @Override
@@ -191,7 +192,7 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable @Recorded TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
@@ -235,6 +236,6 @@ public abstract class NaryOpExpression extends Expression
             }
         }
         
-        return allValid ? onError.recordType(this, target) : null;
+        return allValid ? target : null;
     }
 }

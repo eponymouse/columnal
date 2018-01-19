@@ -51,9 +51,9 @@ public class OrExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), data, state, onError, (typeAndExpression) -> {
+        return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), data, state, onError, (typeAndExpression) -> {
             return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
-        });
+        }));
     }
 
     @Override

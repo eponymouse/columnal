@@ -40,6 +40,7 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import utility.Either;
 import utility.ExFunction;
@@ -389,9 +390,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @RequiresNonNull("parent")
     private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r) throws InternalException
     {
-        for (FunctionDefinition function : FunctionList.getAllFunctionDefinitions(parent.getEditor().getTypeManager().getUnitManager()))
+        for (Pair<FunctionGroup, FunctionDefinition> function : FunctionList.getAllFunctionDefinitions(parent.getEditor().getTypeManager().getUnitManager()))
         {
-            r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
+            r.add(new FunctionCompletion(function.getFirst(), function.getSecond(), parent.getEditor().getTypeManager().getUnitManager()));
         }
     }
 
@@ -460,11 +461,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     public static class FunctionCompletion extends Completion
     {
+        private final FunctionGroup functionGroup;
         private final FunctionDefinition function;
         private final UnitManager unitManager;
 
-        public FunctionCompletion(FunctionDefinition function, UnitManager unitManager)
+        public FunctionCompletion(FunctionGroup functionGroup, FunctionDefinition function, UnitManager unitManager)
         {
+            this.functionGroup = functionGroup;
             this.function = function;
             this.unitManager = unitManager;
         }
@@ -510,7 +513,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             functionName.getStyleClass().add("function-info-name");
             textFlow.getChildren().add(functionName);
             textFlow.getChildren().addAll(
-                TranslationUtility.makeTextLine(function.getName(), "function-info-short-description")
+                TranslationUtility.makeTextLine(functionGroup.getShortDescriptionKey(), "function-info-short-description")
             );
             textFlow.getStyleClass().add("function-info");
             return textFlow;

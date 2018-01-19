@@ -163,9 +163,9 @@ public class PropTypecheckIndividual
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
-        assertEquals(null, new EqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new EqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new EqualExpression(new DummyExpression(b), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b))).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a))).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b))).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));

@@ -232,7 +232,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
         {
-            return new EqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+            return new EqualExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
         }
 
         @Override

@@ -30,6 +30,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -122,7 +123,7 @@ public class ExpressionEditorUtil
     public static List<QuickFix<Expression>> quickFixesForTypeError(Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression>> quickFixes = new ArrayList<>();
-        quickFixes.add(new QuickFix<Expression>("Set type...", params -> {
+        quickFixes.add(new QuickFix<Expression>(TranslationUtility.getString("fix.setType"), params -> {
             TypeDialog typeDialog = new TypeDialog(params.parentWindow, params.tableManager.getTypeManager(), false);
             @Nullable DataType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
@@ -137,7 +138,7 @@ public class ExpressionEditorUtil
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<>("Set type: " + fix, p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
+            quickFixes.add(new QuickFix<Expression>(TranslationUtility.getString("fix.setTypeTo", fix.toString()), p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
         }
         return quickFixes;
     }
@@ -184,7 +185,7 @@ public class ExpressionEditorUtil
                     Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                     if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                     {
-                        return Collections.singletonList(new QuickFix<Expression>("Change unit to {" + uniqueNonLiteralUnits.get(0) + "}", params -> {
+                        return Collections.singletonList(new QuickFix<Expression>(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString()), params -> {
                             return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
                         }));
                     }

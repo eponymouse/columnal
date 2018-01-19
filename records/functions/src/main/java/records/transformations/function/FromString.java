@@ -182,7 +182,7 @@ public class FromString extends FunctionDefinition
                         throw new UserException("Expected tuple, but no opening round bracket, instead found: " + src.snippet());
 
                     
-                    @Value Object items[] = new Object[inner.size()];
+                    @Value Object items @Value [] = DataTypeUtility.value(new @Value Object[inner.size()]);
                     for (int i = 0; i < inner.size(); i++)
                     {
                         if (i > 0)

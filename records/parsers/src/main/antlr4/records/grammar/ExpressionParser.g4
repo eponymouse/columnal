@@ -28,7 +28,7 @@ addSubtractExpression :  expression (ADD_OR_SUBTRACT expression)+;
 timesExpression :  expression (TIMES expression)+;
 divideExpression :  expression DIVIDE expression;
 raisedExpression : expression RAISEDTO expression;
-equalExpression :  expression EQUALITY expression;
+equalExpression :  expression (EQUALITY expression)+;
 notEqualExpression :  expression NON_EQUALITY expression;
 lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;

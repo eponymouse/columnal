@@ -177,7 +177,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, null)), maxLevels - 1);
                     Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit, null)), maxLevels - 1);
                     // We avoid divide by zeros and return -7 in that case (arbitrary pick unlikely to come up by accident/bug):
-                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : DataTypeUtility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> new IfThenElseExpression(new EqualExpression(bottomE, new NumericLiteral(0, makeUnitExpression(denomUnit))), new NumericLiteral(-7, makeUnitExpression(displayInfo.getUnit())), new DivideExpression(topE, bottomE)));
+                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : DataTypeUtility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> new IfThenElseExpression(new EqualExpression(ImmutableList.of(bottomE, new NumericLiteral(0, makeUnitExpression(denomUnit)))), new NumericLiteral(-7, makeUnitExpression(displayInfo.getUnit())), new DivideExpression(topE, bottomE)));
                 }, /* TODO put RaiseExpression back again
                 () ->
                 {
@@ -479,13 +479,23 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 }), l(fix(maxLevels - 1, type),
                     () -> {
                         DataType t = makeType(r);
+                        int size = r.nextInt(2, 5);
+                        ArrayList<Pair<List<@Value Object>, Expression>> items = new ArrayList<>();
+                        List<Boolean> result = replicate(true);
+                        for (int i = 0; i < size; i++)
+                        {
+                            Pair<List<@Value Object>, Expression> item = make(t, maxLevels - 1);
+                            items.add(item);
+                            eachI(result, (j, v) -> v & Utility.compareValues(items.get(0).getFirst().get(j), item.getFirst().get(j)) == 0);
+                        }
+                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new EqualExpression(Utility.mapList(items, (Pair<List<@Value Object>, Expression> p) -> p.getSecond())));
+                    },
+                    () -> {
+                        DataType t = makeType(r);
 
                         Pair<List<@Value Object>, Expression> lhs = make(t, maxLevels - 1);
                         Pair<List<@Value Object>, Expression> rhs = make(t, maxLevels - 1);
-                        if (r.nextBoolean())
-                            return map2(lhs, rhs, (l, r) -> DataTypeUtility.value(Utility.compareValues(l, r) == 0), EqualExpression::new);
-                        else
-                            return map2(lhs, rhs, (l, r) -> DataTypeUtility.value(Utility.compareValues(l, r) != 0), NotEqualExpression::new);
+                        return map2(lhs, rhs, (l, r) -> DataTypeUtility.value(Utility.compareValues(l, r) != 0), NotEqualExpression::new);
                     },
                     () ->
                     {

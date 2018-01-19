@@ -27,6 +27,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.List;
 import java.util.Map;
@@ -83,7 +84,7 @@ public class AddSubtractExpression extends NaryOpExpression
     @Override
     public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError, p -> {
+        type = onError.recordType(this, checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());
@@ -98,7 +99,7 @@ public class AddSubtractExpression extends NaryOpExpression
                 // the quick fix if it is definitely a string, for which we can use equals:
                 if (ourType.equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
                 {
-                    fixes.add(new QuickFix<Expression>("Change to string concatenation", params -> {
+                    fixes.add(new QuickFix<Expression>(TranslationUtility.getString("fix.stringConcat"), params -> {
                         return new Pair<>(PARENT, new StringConcatExpression(expressions));
                     }));
                 }
@@ -110,7 +111,7 @@ public class AddSubtractExpression extends NaryOpExpression
                 Utility.report(e);
             }
             return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, fixes.build());
-        });
+        }));
         return type;
     }
 

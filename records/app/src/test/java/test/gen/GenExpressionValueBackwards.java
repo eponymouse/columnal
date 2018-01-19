@@ -383,18 +383,45 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 boolean target = (Boolean)targetValue;
                 return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue),
                     () -> {
+                        int size = r.nextInt(2, 5);
+                        ArrayList<Expression> expressions = new ArrayList<>();
                         DataType t = makeType(r);
-                        @Value Object valA = makeValue(t);
-                        @Value Object valB;
-                        int attempts = 0;
-                        do
+                        if (target == true)
                         {
-                            valB = makeValue(t);
-                            if (attempts++ >= 100)
-                                return new BooleanLiteral(target);
+                            @Value Object valA = makeValue(t);
+                            for (int i = 0; i < size; i++)
+                            {
+                                expressions.add(make(t, valA, maxLevels - 1));
+                            }
+                            return new EqualExpression(expressions);
                         }
-                        while (Utility.compareValues(valA, valB) == 0);
-                        return new EqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valA : valB, maxLevels - 1));
+                        else
+                        {
+                            // To provide a good test, we make an initial value, plus 
+                            // somewhere between 0 and size - 2 (incl) duplicates,
+                            // then the remaining 1 to size - 1 (incl) are different than original
+                            // (may be same as each other by coincidence, but that's okay)
+                            @Value Object valA = makeValue(t);
+                            int sameAsA = r.nextInt(0, size - 2);
+                            for (int i = 0; i < sameAsA; i++)
+                            {
+                                expressions.add(make(t, valA, maxLevels - 1));
+                            }
+                            while (expressions.size() < size)
+                            {
+                                @Value Object diffValFromA;
+                                int attempts = 0;
+                                do
+                                {
+                                    diffValFromA = makeValue(t);
+                                    if (attempts++ >= 100)
+                                        return new BooleanLiteral(target);
+                                }
+                                while (Utility.compareValues(valA, diffValFromA) == 0);
+                                expressions.add(make(t, diffValFromA, maxLevels - 1));
+                            }
+                        }
+                        return new EqualExpression(expressions);
                     },
                     () -> {
                         DataType t = makeType(r);
@@ -825,7 +852,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             else if (r.nextBoolean()) // Do equals but using variable + guard
             {
                 String varName = "var" + nextVar++;
-                return new Pair<>(new VarDeclExpression(varName), new EqualExpression(new VarUseExpression(varName), make(t, actual, maxLevels)));
+                return new Pair<>(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new VarUseExpression(varName), make(t, actual, maxLevels))));
             }
             Expression expression = make(t, actual, maxLevels);
             return new Pair<Expression, @Nullable Expression>(expression, null);
