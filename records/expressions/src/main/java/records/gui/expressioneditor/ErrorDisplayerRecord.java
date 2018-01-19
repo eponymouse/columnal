@@ -130,7 +130,7 @@ public class ErrorDisplayerRecord
             @Override
             public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
             {
-                if (src instanceof Expression)
+                if (src instanceof Expression && !quickFixes.isEmpty())
                     ErrorDisplayerRecord.this.showError((Expression) src, null, (List)quickFixes);
             }
 

@@ -162,16 +162,18 @@ public abstract class NaryOpExpression extends Expression
         return r;
     }
     
-    public class TypeProblemDetails
+    public static class TypeProblemDetails
     {
         // Same length as expressions.  Boolean indicates whether unification
         // was successful or not.
-        final ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes;
+        final ImmutableList<Optional<TypeExp>> expressionTypes;
+        public final ImmutableList<Expression> expressions;
         final int index;
 
-        TypeProblemDetails(ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes, int index)
+        TypeProblemDetails(ImmutableList<Optional<TypeExp>> expressionTypes, ImmutableList<Expression> expressions, int index)
         {
             this.expressionTypes = expressionTypes;
+            this.expressions = expressions;
             this.index = index;
         }
 
@@ -183,7 +185,7 @@ public abstract class NaryOpExpression extends Expression
         
         public @Nullable TypeExp getType(int index)
         {
-            return expressionTypes.get(index).map(p -> p.getFirst()).orElse(null);
+            return expressionTypes.get(index).orElse(null);
         }
 
         public Expression getOurExpression()
@@ -215,14 +217,14 @@ public abstract class NaryOpExpression extends Expression
             }
         }
 
-        ImmutableList<Optional<Pair<TypeExp, Boolean>>> expressionTypes = unificationOutcomes.stream().<Optional<Pair<TypeExp, Boolean>>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<Pair<TypeExp, Boolean>>empty() : Optional.<Pair<TypeExp, Boolean>>of(new Pair<>(p.getSecond(), p.getFirst() == null))).collect(ImmutableList.toImmutableList());
+        ImmutableList<Optional<TypeExp>> expressionTypes = unificationOutcomes.stream().<Optional<TypeExp>>map((@Nullable Pair<@Nullable StyledString, TypeExp> p) -> p == null ? Optional.<TypeExp>empty() : Optional.<TypeExp>of(p.getSecond())).collect(ImmutableList.toImmutableList());
 
         if (!allValid)
         {
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, i));
+                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
                 onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
                 StyledString error;
                 if (errorAndQuickFix.getFirst() != null)

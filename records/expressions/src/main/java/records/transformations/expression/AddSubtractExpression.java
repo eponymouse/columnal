@@ -104,7 +104,8 @@ public class AddSubtractExpression extends NaryOpExpression
                     }));
                 }
 
-                fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p, ourType, expressions));
+                if (ourType instanceof NumTypeExp)
+                    fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p));
             }
             catch (InternalException e)
             {

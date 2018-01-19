@@ -144,51 +144,48 @@ public class ExpressionEditorUtil
     }
 
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p, @Nullable TypeExp ourType, List<Expression> expressions)
+    public static List<QuickFix<Expression>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
     {
-        if (ourType instanceof NumTypeExp)
+        // Must be a units issue.  Check if fixing a numeric literal involved would make
+        // the units match all non-literal units:
+        List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
+        List<@Nullable Unit> nonLiteralUnits = new ArrayList<>();
+        for (int i = 0; i < p.expressions.size(); i++)
         {
-            // Must be a units issue.  Check if fixing a numeric literal involved would make
-            // the units match all non-literal units:
-            List<Pair<NumericLiteral, @Nullable Unit>> literals = new ArrayList<>();
-            List<@Nullable Unit> nonLiteralUnits = new ArrayList<>();
-            for (int i = 0; i < expressions.size(); i++)
+            Expression expression = p.expressions.get(i);
+            if (expression instanceof NumericLiteral)
             {
-                Expression expression = expressions.get(i);
-                if (expression instanceof NumericLiteral)
-                {
-                    NumericLiteral n = (NumericLiteral) expression;
-                    @Nullable UnitExpression unitExpression = n.getUnitExpression();
-                    @Nullable Unit unit;
-                    if (unitExpression == null)
-                        unit = Unit.SCALAR;
-                    else
-                        unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
-                    literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
-                } else
-                {
-                    @Nullable TypeExp type = p.getType(i);
-                    nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
-                }
+                NumericLiteral n = (NumericLiteral) expression;
+                @Nullable UnitExpression unitExpression = n.getUnitExpression();
+                @Nullable Unit unit;
+                if (unitExpression == null)
+                    unit = Unit.SCALAR;
+                else
+                    unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
+                literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
+            } else
+            {
+                @Nullable TypeExp type = p.getType(i);
+                nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
             }
-            Log.debug(">>> literals: " + Utility.listToString(literals));
-            Log.debug(">>> non-literals: " + nonLiteralUnits.size());
-            
-            // For us to offer the quick fix, we need the following conditions: all non-literals
-            // have the same known unit (and there is at least one non-literal).
-            List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.toList());
-            if (uniqueNonLiteralUnits.size() == 1)
+        }
+        Log.debug(">>> literals: " + Utility.listToString(literals));
+        Log.debug(">>> non-literals: " + nonLiteralUnits.size());
+        
+        // For us to offer the quick fix, we need the following conditions: all non-literals
+        // have the same known unit (and there is at least one non-literal).
+        List<Unit> uniqueNonLiteralUnits = Utility.filterOutNulls(nonLiteralUnits.stream()).distinct().collect(Collectors.toList());
+        if (uniqueNonLiteralUnits.size() == 1)
+        {
+            for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
             {
-                for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
+                Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
+                Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
+                if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
-                    Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
-                    Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
-                    if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
-                    {
-                        return Collections.singletonList(new QuickFix<Expression>(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString()), params -> {
-                            return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
-                        }));
-                    }
+                    return Collections.singletonList(new QuickFix<Expression>(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString()), params -> {
+                        return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
+                    }));
                 }
             }
         }
