@@ -111,7 +111,17 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
         testFix("@matchACC1@case3@then5", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 5");
     }
 
+    @Test
+    public void testBracketFix1()
+    {
+        testFix("1+2*3", "*", "", "1 + (2 * 3)");
+    }
 
+    @Test
+    public void testBracketFix1B()
+    {
+        testFix("1+2*3", "+", "", "(1 + 2) * 3");
+    }
 
 
     /**
