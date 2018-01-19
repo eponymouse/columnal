@@ -4,12 +4,15 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import records.error.InternalException;
 import records.grammar.ExpressionLexer;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
+import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.Literal;
 import records.transformations.expression.MatchExpression;
@@ -100,7 +103,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
             CallExpression call = (CallExpression) expression;
             write(call._test_getFunctionName());
             //TODO bracket should work same as tab here, but doesn't yet:
-            push(KeyCode.TAB);
+            push(KeyCode.ENTER);
             //write("(");
             enterExpression(call._test_getParam(), false, r);
             write(")");
@@ -191,6 +194,24 @@ public interface EnterExpressionTrait extends FxRobotInterface
         {
             write(((VarUseExpression)expression).getName());
             push(KeyCode.TAB); // TODO make sure we've scrolled to new-var in cases of overlap
+        }
+        else if (c == FixedTypeExpression.class)
+        {
+            write("@type");
+            FixedTypeExpression f = (FixedTypeExpression)expression; 
+            write(f.getType().either(s -> s, t -> {
+                try
+                {
+                    return t.save(new OutputBuilder()).toString();
+                }
+                catch (InternalException e)
+                {
+                    return t.toString();
+                }
+            }));
+            push(KeyCode.RIGHT);
+            enterExpression(f.getInner(), false, r);
+            write(")");
         }
         else
         {

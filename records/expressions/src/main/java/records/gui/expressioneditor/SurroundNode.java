@@ -148,7 +148,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         }
         else
         {
-            head.requestFocus();
+            FXUtility.onceNotNull(head.sceneProperty(), s -> head.requestFocus());
         }
     }
 

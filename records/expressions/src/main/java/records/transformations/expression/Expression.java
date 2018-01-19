@@ -331,7 +331,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             String typeSrc = ctx.TYPE_CONTENT().getText();
             try
             {
-                return new FixedTypeExpression(typeManager.loadTypeUse(typeSrc), visitExpression(ctx.expression()));
+                return new FixedTypeExpression(typeManager.loadTypeUseAllowIncomplete(typeSrc), visitExpression(ctx.expression()));
             }
             catch (InternalException | UserException e)
             {

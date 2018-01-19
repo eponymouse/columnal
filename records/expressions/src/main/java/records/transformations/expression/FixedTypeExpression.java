@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -12,13 +13,16 @@ import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.FixedTypeNode;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -33,12 +37,13 @@ import java.util.stream.Stream;
  * An expression, and a fixed type it should conform to.  Like the :: operator in Haskell expressions,
  * (or like the `asTypeOf` function if you specified a type).  Just wraps an inner expression with a type. 
  */
-public class FixedTypeExpression extends Expression
+public class FixedTypeExpression extends NonOperatorExpression
 {
-    private final DataType type;
+    // If a String, then it's an incomplete or incorrect type as specified in the slot.
+    private final Either<String, DataType> type;
     private final Expression inner;
     
-    public FixedTypeExpression(DataType type, Expression innerExpression)
+    public FixedTypeExpression(Either<String, DataType> type, Expression innerExpression)
     {
         this.type = type;
         this.inner = innerExpression;
@@ -47,9 +52,9 @@ public class FixedTypeExpression extends Expression
     public static Expression fixType(DataType fix, Expression expression)
     {
         if (expression instanceof FixedTypeExpression)
-            return new FixedTypeExpression(fix, ((FixedTypeExpression)expression).inner);
+            return new FixedTypeExpression(Either.right(fix), ((FixedTypeExpression)expression).inner);
         else
-            return new FixedTypeExpression(fix, expression);
+            return new FixedTypeExpression(Either.right(fix), expression);
     }
 
     @Override
@@ -59,7 +64,10 @@ public class FixedTypeExpression extends Expression
         if (innerType == null)
             return null;
         else
-            return onError.recordTypeAndError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, type), innerType));
+        {
+            @NonNull TypeExp innerTypeFinal = innerType;
+            return type.<@Nullable @Recorded TypeExp>eitherInt(text -> null, t -> onError.recordTypeAndError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, t), innerTypeFinal)));
+        }
     }
 
     @Override
@@ -79,7 +87,9 @@ public class FixedTypeExpression extends Expression
     {
         try
         {
-            return "@type {|" + type.save(new OutputBuilder()).toString() + "|} " + inner.save(false);
+            return "@type {|" + type.eitherInt(
+                text -> "@incomplete \"" + GrammarUtility.escapeChars(text)+ "\"",
+                t -> t.save(new OutputBuilder()).toString()) + "|} " + inner.save(false);
         }
         catch (InternalException e)
         {
@@ -96,15 +106,9 @@ public class FixedTypeExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-    {
-        throw new RuntimeException("TODO");
-    }
-
-    @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        return (p, s) -> new FixedTypeNode(p, s, type.either(str -> str, t -> t.toString()), inner);
     }
 
     @Override
@@ -136,5 +140,15 @@ public class FixedTypeExpression extends Expression
     public int hashCode()
     {
         return Objects.hash(type, inner);
+    }
+
+    public Either<String, DataType> getType()
+    {
+        return type;
+    }
+
+    public Expression getInner()
+    {
+        return inner;
     }
 }

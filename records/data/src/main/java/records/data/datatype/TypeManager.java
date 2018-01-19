@@ -12,9 +12,11 @@ import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
+import records.grammar.FormatParser.CompleteTypeOrIncompleteContext;
 import records.grammar.FormatParser.DateContext;
 import records.grammar.FormatParser.DecimalPlacesContext;
 import records.grammar.FormatParser.NumberContext;
@@ -131,6 +133,24 @@ public class TypeManager
     public DataType loadTypeUse(String type) throws InternalException, UserException
     {
         return Utility.parseAsOne(type, FormatLexer::new, FormatParser::new, p -> loadTypeUse(p.completeType().type()));
+    }
+
+    public Either<String, DataType> loadTypeUseAllowIncomplete(String type) throws InternalException, UserException
+    {
+        try
+        {
+            return Utility.<Either<String, DataType>, FormatParser>parseAsOne(type, FormatLexer::new, FormatParser::new, (FormatParser p) -> {
+                CompleteTypeOrIncompleteContext typeOrNot = p.completeTypeOrIncomplete();
+                if (typeOrNot.type() != null)
+                    return Either.right(loadTypeUse(typeOrNot.type()));
+                else
+                    return Either.left(typeOrNot.STRING().getText());
+            });
+        }
+        catch (ParseException e)
+        {
+            throw new UserException("Error parsing {|" + type + "|}", e);
+        }
     }
 
     public DataType loadTypeUse(TypeContext type) throws InternalException, UserException

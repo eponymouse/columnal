@@ -127,6 +127,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private final Completion matchCompletion;
 
     /**
+     * Completion for fixed-type expressions
+     */
+    private final Completion fixedTypeCompletion;
+
+    /**
      * Set to true while updating field with auto completion.  Allows us to avoid
      * certain listeners firing which should only fire when the user has made a change.
      */
@@ -166,6 +171,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH);
+        fixedTypeCompletion = new KeywordCompletion(ExpressionLexer.FIX_TYPE);
         varDeclCompletion = new VarDeclCompletion();
         if (!userEntered)
         {
@@ -284,7 +290,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return PseudoClass.getPseudoClass(pseudoClass);
     }
 
-    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "varDeclCompletion", "parent", "semanticParent"})
+    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "parent", "semanticParent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
@@ -293,6 +299,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(stringCompletion);
         r.add(ifCompletion);
         r.add(matchCompletion);
+        r.add(fixedTypeCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "any", "", Status.ANY));
@@ -788,6 +795,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c != null && c.equals(matchCompletion))
             {
                 parent.replace(GeneralExpressionEntry.this, focusWhenShown(new PatternMatchNode(parent, null)));
+            }
+            else if (c != null && c.equals(fixedTypeCompletion))
+            {
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FixedTypeNode(parent, semanticParent, "", null)));
             }
             else if (c instanceof FunctionCompletion)
             {

@@ -26,3 +26,4 @@ typeDecl : TYPE typeName taggedDecl NEWLINE;
 typeDecls : NEWLINE* (typeDecl NEWLINE*)*;
 
 completeType : type EOF;
+completeTypeOrIncomplete : (type | INCOMPLETE STRING) EOF;

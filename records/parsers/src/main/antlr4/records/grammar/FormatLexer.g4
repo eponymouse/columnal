@@ -36,6 +36,7 @@ CLOSE_SQUARE : ']';
 DASH: '-';
 TAGOR: '|';
 
+INCOMPLETE : '@INCOMPLETE';
 
 
 NEWLINE : '\r'? '\n' ;
