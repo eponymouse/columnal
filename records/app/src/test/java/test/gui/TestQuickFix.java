@@ -102,7 +102,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testUnitLiteralFix4()
     {
-        testFix("@ifACC1=ACC2=32@then2@else7", "32", "", "@if @column ACC1 = @column ACC2 = 32{m/s^2} @then 2 @else 7");
+        testFix("@ifACC1=ACC2=32@then2@else7+6", "32", "", "@if (@column ACC1 = @column ACC2 = 32{m/s^2}) @then 2 @else (7 + 6)");
     }
 
     @Test
