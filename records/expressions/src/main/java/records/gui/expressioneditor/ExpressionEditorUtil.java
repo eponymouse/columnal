@@ -169,8 +169,8 @@ public class ExpressionEditorUtil
                 nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
             }
         }
-        Log.debug(">>> literals: " + Utility.listToString(literals));
-        Log.debug(">>> non-literals: " + nonLiteralUnits.size());
+        //Log.debug(">>> literals: " + Utility.listToString(literals));
+        //Log.debug(">>> non-literals: " + nonLiteralUnits.size());
         
         // For us to offer the quick fix, we need the following conditions: all non-literals
         // have the same known unit (and there is at least one non-literal).

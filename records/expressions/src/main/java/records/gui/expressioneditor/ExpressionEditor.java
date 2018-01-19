@@ -311,7 +311,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                     
                     @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorDisplayers.getRecorder());
                     latestType.set(dataType == null ? null : errorDisplayers.getRecorder().recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
-                    Log.debug("Latest type: " + dataType);
+                    //Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }
             }

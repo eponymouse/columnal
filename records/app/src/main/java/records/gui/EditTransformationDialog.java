@@ -89,7 +89,7 @@ public class EditTransformationDialog
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         dialog.getDialogPane().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.ESCAPE)
+            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER)
                 e.consume();
         });
         dialog.setResizable(true);

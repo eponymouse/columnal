@@ -155,7 +155,7 @@ public class ExpressionInfoDisplay
         if (expressionNode.getScene() != null)
         {
             popup = new ErrorMessagePopup();
-            Log.debug(" # Showing: " + popup);
+            //Log.debug(" # Showing: " + popup);
             popup.show(expressionNode);
         }
     }
@@ -170,7 +170,7 @@ public class ExpressionInfoDisplay
 
         if (immediately)
         {
-            Log.debug("#####\n# Hiding " + popupFinal + "\n#####");
+            //Log.debug("#####\n# Hiding " + popupFinal + "\n#####");
             popupFinal.hide();
             popup = null;
         }
@@ -257,7 +257,7 @@ public class ExpressionInfoDisplay
             // The listener on this property should make the popup every time:
             errorMessage.set(newMsgAndFixes.getFirst());
             fixes.set(newMsgAndFixes.getSecond().stream().<Pair<@Localized String, FXPlatformRunnable>>map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> {
-                Log.debug("Clicked fix: " + q.getTitle());
+                //Log.debug("Clicked fix: " + q.getTitle());
                 if (popup != null)
                     hide(true);
                 replace.consume(q.getFixedVersion(parentWindow, tableManager));

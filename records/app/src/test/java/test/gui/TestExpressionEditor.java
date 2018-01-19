@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import jdk.nashorn.internal.codegen.CompilerConstants.Call;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
@@ -85,6 +86,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             // Focus expression editor:
             push(KeyCode.TAB);
             push(KeyCode.TAB);
+            Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
             enterExpression(expressionValue.expression, false, r);
             // Finish any final column completion:
             push(KeyCode.TAB);
