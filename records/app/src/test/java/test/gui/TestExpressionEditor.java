@@ -70,7 +70,6 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     }
 
     // TODO this test seems to cause later tests to fail
-    @Ignore
     @Property(trials = 10)
     public void testEntry(@When(seed=2L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws InterruptedException, ExecutionException, InternalException, IOException, UserException, InvocationTargetException
     {
@@ -79,10 +78,12 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         {
             scrollTo(".id-tableDisplay-menu-button");
             clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-            selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().matches("calculate.?columns"));
+            TestUtil.sleep(200);
+            selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().startsWith("calculate"));
             push(KeyCode.TAB);
             write("DestCol");
             // Focus expression editor:
+            push(KeyCode.TAB);
             push(KeyCode.TAB);
             enterExpression(expressionValue.expression, false, r);
             // Finish any final column completion:
