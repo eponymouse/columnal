@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -14,9 +15,11 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ClauseNode;
+import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
+import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -24,10 +27,12 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -65,7 +70,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern match type, outcome type
          */
-        public @Nullable Pair<TypeExp, TypeExp> check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public @Nullable Pair<List<TypeExp>, TypeExp> check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             TypeExp[] patternTypes = new TypeExp[patterns.size()];
             TypeState[] rhsStates = new TypeState[patterns.size()];
@@ -83,15 +88,12 @@ public class MatchExpression extends NonOperatorExpression
                 patternTypes[i] = ts.getFirst();
                 rhsStates[i] = ts.getSecond();
             }
-            @Nullable TypeExp patternType = onError.recordError(MatchExpression.this, TypeExp.unifyTypes(patternTypes));
-            if (patternType == null)
-                return null;
             TypeState rhsState = TypeState.intersect(Arrays.asList(rhsStates));
             @Nullable TypeExp outcomeType = outcome.check(data, rhsState, onError);
             if (outcomeType == null)
                 return null;
             else
-                return new Pair<>(patternType, outcomeType);
+                return new Pair<>(Arrays.asList(patternTypes), outcomeType);
         }
 
         //Returns null if no match
@@ -141,7 +143,10 @@ public class MatchExpression extends NonOperatorExpression
         @OnThread(Tag.FXPlatform)
         public ClauseNode load(PatternMatchNode parent)
         {
-            return new ClauseNode(parent, new Pair<List<Pair<Expression, @Nullable Expression>>, Expression>(Utility.<Pattern, Pair<Expression, @Nullable Expression>>mapList(patterns, p -> p.load()), outcome));
+            Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome
+                = new Pair<List<Pair<Expression, @Nullable Expression>>, Expression>(
+                    Utility.<Pattern, Pair<Expression, @Nullable Expression>>mapList(patterns, p -> p.load()), outcome);
+            return new ClauseNode(parent, patternsAndGuardsToOutcome);
         }
     }
 
@@ -301,17 +306,30 @@ public class MatchExpression extends NonOperatorExpression
         }
         
         // Add one extra for the srcType:
-        TypeExp[] patternTypes = new TypeExp[1 + clauses.size()];
-        patternTypes[0] = srcType;
+        List<TypeExp> patternTypes = new ArrayList<>(1 + clauses.size());
+        patternTypes.add(srcType);
         TypeExp[] outcomeTypes = new TypeExp[clauses.size()];
+        // Includes the original source pattern:
+        List<Expression> patternExpressions = new ArrayList<>();
+        patternExpressions.add(expression);
+        boolean allValid = true;
         for (int i = 0; i < clauses.size(); i++)
         {
-            @Nullable Pair<TypeExp, TypeExp> patternAndOutcomeType = clauses.get(i).check(data, state, onError);
+            patternExpressions.addAll(Utility.mapList(clauses.get(i).getPatterns(), p -> p.pattern));
+            @Nullable Pair<List<TypeExp>, TypeExp> patternAndOutcomeType = clauses.get(i).check(data, state, onError);
             if (patternAndOutcomeType == null)
                 return null;
-            patternTypes[i + 1] = patternAndOutcomeType.getFirst();
+            patternTypes.addAll(patternAndOutcomeType.getFirst());
             outcomeTypes[i] = patternAndOutcomeType.getSecond();
         }
+        for (int i = 0; i < patternExpressions.size(); i++)
+        {
+            Expression expression = patternExpressions.get(i);
+            // Must show an error to get the quick fixes to show:
+            onError.recordError(expression, StyledString.s("Pattern match items must have matching items"));
+            onError.recordQuickFixes(expression, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), ImmutableList.copyOf(patternExpressions), i)));
+        }
+        
         if (onError.recordError(this, TypeExp.unifyTypes(patternTypes)) == null)
             return null;
 

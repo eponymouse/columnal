@@ -112,6 +112,24 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     }
 
     @Test
+    public void testUnitLiteralFix6()
+    {
+        testFix("@matchACC1@case3@then52@case12@or14@then63", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12 @or 14 @then 63");
+    }
+
+    @Test
+    public void testUnitLiteralFix6B()
+    {
+        testFix("@matchACC1@case3@then52@case12@or14@then63", "12", "", "@match @column ACC1 @case 3 @then 52 @case 12{m/s^2} @or 14 @then 63");
+    }
+
+    @Test
+    public void testUnitLiteralFix6C()
+    {
+        testFix("@matchACC1@case3@then52@case12@or14@then63", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @or 14{m/s^2} @then 63");
+    }
+
+    @Test
     public void testBracketFix1()
     {
         testFix("1+2*3", "*", "", "1 + (2 * 3)");
@@ -158,6 +176,9 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             Node lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<Node>query();
             assertNotNull(lhs);
             if (lhs == null) return;
+            // Get rid of any popups in the way:
+            push(KeyCode.ESCAPE);
+            push(KeyCode.ESCAPE);
             clickOn(lhs);
             TestUtil.sleep(2000);
             @Nullable Window errorPopup = listWindows().stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
