@@ -597,7 +597,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             CompleteBooleanLiteralContext bool = parseOrNull(ExpressionParser::completeBooleanLiteral);
             if (bool != null)
             {
-                return errorDisplayer.record(this, new BooleanLiteral(bool.getText().equals("true")));
+                return errorDisplayer.record(this, new BooleanLiteral(bool.booleanLiteral().getText().equals("true")));
             }
             // Numeric literals are handled at the end, so deliberately fall through:
         }
@@ -1015,7 +1015,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean shouldShow(String input)
         {
-            return input.length() >= 1 && Character.isLetter(input.codePointAt(0));
+            return input.length() >= 1 && Character.isLetter(input.codePointAt(0)) && !(input.equals("true") || input.equals("false"));
         }
 
         @Override

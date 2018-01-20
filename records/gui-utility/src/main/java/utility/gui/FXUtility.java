@@ -518,6 +518,28 @@ public class FXUtility
         }
     }
 
+    // From https://stackoverflow.com/questions/12837592/how-to-scroll-to-make-a-node-within-the-content-of-a-scrollpane-visible
+    // And made to actually work!
+    public static void scrollTo(ScrollPane scrollPane, Node node)
+    {
+        Bounds viewport = scrollPane.getViewportBounds();
+        Bounds scrollBoundsInScene = scrollPane.localToScene(scrollPane.getBoundsInLocal());
+        double nodeMinY = node.localToScene(node.getBoundsInLocal()).getMinY();
+        double nodeMaxY = node.localToScene(node.getBoundsInLocal()).getMaxY();
+
+        double vValueDelta = 0;
+        double vValueCurrent = scrollPane.getVvalue();
+
+        if (nodeMaxY < scrollBoundsInScene.getMinY()) {
+            // currently located above (remember, top left is (0,0))
+            vValueDelta = (nodeMinY - viewport.getHeight()) / scrollPane.getContent().getBoundsInLocal().getHeight();
+        } else if (nodeMinY > scrollBoundsInScene.getMaxY()) {
+            // currently located below
+            vValueDelta = (nodeMinY + viewport.getHeight()) / scrollPane.getContent().getBoundsInLocal().getHeight();
+        }
+        scrollPane.setVvalue(vValueCurrent + vValueDelta);
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)

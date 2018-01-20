@@ -455,7 +455,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return allChildren.subList(a, b + 1);
     }
 
-    private List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> getAllChildren()
+    protected List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> getAllChildren()
     {
         return interleaveOperandsAndOperators(operands, operators);
     }

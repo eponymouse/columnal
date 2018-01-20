@@ -64,7 +64,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> c == '-' || (!parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c)));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);

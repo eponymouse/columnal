@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
@@ -31,6 +32,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Callback;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -88,6 +90,19 @@ public class EditTransformationDialog
 
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.setOnAction(e -> {
+            Log.debug("Action on OK");
+        });
+        okButton.setOnMouseClicked(e -> {
+            Log.debug("Clicked on OK");
+        });
+        okButton.setOnMousePressed(e -> {
+            Log.debug("Pressed on OK: " + e);
+        });
+        okButton.setOnMouseReleased(e -> {
+            Log.debug("Released on OK, armed: " + okButton.isArmed());
+        });
         dialog.getDialogPane().addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER)
                 e.consume();
@@ -188,9 +203,11 @@ public class EditTransformationDialog
                         @Nullable Optional<TableId> destId = tableNameTextField.valueProperty().get();
                         if (destId != null)
                         {
+                            Log.debug("Returning transformation");
                             return ed.get().getTransformation(parentView.getManager(), destId.orElse(null));
                         }
                     }
+                    Log.debug("Falling through OK");
                 }
                 return null;
             }

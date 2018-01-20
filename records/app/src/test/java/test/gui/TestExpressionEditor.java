@@ -53,6 +53,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -93,6 +94,9 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             // Hide any code completion (also: check it doesn't dismiss dialog)
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
+            //TEMP:
+            moveTo(".ok-button");
+            TestUtil.sleep(2000);
             clickOn(".ok-button");
             // Now close dialog, and check for equality;
             View view = lookup(".view").query();
@@ -101,7 +105,8 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
                 assertNotNull(view);
                 return;
             }
-            TestUtil.sleep(200);
+            TestUtil.sleep(500);
+            assertNull(lookup(".ok-button").query());
             Transform transform = (Transform) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
             // Check expressions match:

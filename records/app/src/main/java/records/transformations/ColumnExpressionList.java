@@ -58,6 +58,7 @@ public class ColumnExpressionList
     public ColumnExpressionList(TableManager mgr, SingleSourceControl srcTableControl, List<Pair<ColumnId, Expression>> initialColumns)
     {
         ObjectExpression<@Nullable Table> srcTable = srcTableControl.tableProperty();
+        columnListScrollPane = new ScrollPaneFill();
 
         columnEditors = new VBox();
         columnEditors.getChildren().add(GUI.button("columnExpression.addEnd", () -> {
@@ -69,7 +70,7 @@ public class ColumnExpressionList
         {
             addColumn(mgr, srcTable, newColumn, columns.size());
         }
-        columnListScrollPane = new ScrollPaneFill();
+        
         columnListScrollPane.setContent(columnEditors);
         validateColumnNames();
 
@@ -83,7 +84,7 @@ public class ColumnExpressionList
         outerPane.getStyleClass().add("column-expression-list");
     }
 
-    @RequiresNonNull({"allColNamesValid", "columns", "columnEditors"})
+    @RequiresNonNull({"allColNamesValid", "columns", "columnEditors", "columnListScrollPane"})
     private void addColumn(@UnknownInitialization(Object.class) ColumnExpressionList this,
                            TableManager mgr, ObjectExpression<@Nullable Table> srcTable, Pair<ColumnId, Expression> newColumn, int destIndex)
     {
@@ -97,6 +98,9 @@ public class ColumnExpressionList
         GridPane gridPane = new GridPane();
         gridPane.add(columnNameTextField.getNode(), 0, 0);
         ExpressionEditor expressionEditor = makeExpressionEditor(mgr, srcTable, wrapper);
+        expressionEditor.addFocusListener(node -> {
+            FXUtility.scrollTo(columnListScrollPane, node);
+        });
         TypeLabel typeLabel = new TypeLabel(expressionEditor.typeProperty());
         gridPane.add(typeLabel, 1, 0);
         GridPane.setHgrow(typeLabel, Priority.ALWAYS);

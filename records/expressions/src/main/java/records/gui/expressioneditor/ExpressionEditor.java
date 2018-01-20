@@ -40,6 +40,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -54,6 +55,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
     private final TableManager tableManager;
+    private final List<FXPlatformConsumer<Node>> focusListeners = new ArrayList<>();
 
     // Selections take place within one consecutive and go from one operand to another (inclusive):
 
@@ -452,5 +454,19 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             return Collections.emptyList();
         else
             return Collections.singletonList(new Pair<>(t, Collections.emptyList()));
+    }
+
+    @Override
+    public void focusChanged()
+    {
+        super.focusChanged();
+        getAllChildren().stream().flatMap(c -> c.nodes().stream()).filter(c -> c.isFocused()).findFirst().ifPresent(focused -> {
+            focusListeners.forEach(l -> l.consume(focused));
+        });
+    }
+    
+    public void addFocusListener(FXPlatformConsumer<Node> focusListener)
+    {
+        focusListeners.add(focusListener);
     }
 }

@@ -166,6 +166,11 @@ public class ExpressionEditorUtil
             } else
             {
                 @Nullable TypeExp type = p.getType(i);
+                if (type != null && !(type instanceof NumTypeExp))
+                {
+                    // Non-numeric type; definitely can't offer a sensible fix:
+                    return Collections.emptyList();
+                }
                 nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
             }
         }

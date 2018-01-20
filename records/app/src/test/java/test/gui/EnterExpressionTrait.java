@@ -97,6 +97,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
         else if (c == ColumnReference.class)
         {
             write(((ColumnReference)expression).allColumnNames().findFirst().get().getRaw());
+            push(KeyCode.ENTER);
         }
         else if (c == CallExpression.class)
         {
@@ -112,7 +113,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
         {
             TagExpression tag = (TagExpression)expression;
             write(tag._test_getQualifiedTagName());
-            push(KeyCode.TAB);
+            push(KeyCode.ENTER);
             if (tag.getInner() != null)
             {
                 enterExpression(tag.getInner(), false, r);
@@ -188,12 +189,12 @@ public interface EnterExpressionTrait extends FxRobotInterface
         {
             write(((VarDeclExpression)expression).getName());
             // Have to manually move on because it won't auto-complete:
-            push(KeyCode.TAB); // TODO make sure we've scrolled to new-var in cases of overlap
+            push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else if (c == VarUseExpression.class)
         {
             write(((VarUseExpression)expression).getName());
-            push(KeyCode.TAB); // TODO make sure we've scrolled to new-var in cases of overlap
+            push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else if (c == FixedTypeExpression.class)
         {
