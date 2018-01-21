@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.LoadableExpression;
 import utility.FXPlatformFunction;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.List;

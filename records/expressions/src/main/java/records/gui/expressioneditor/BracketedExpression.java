@@ -10,7 +10,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;

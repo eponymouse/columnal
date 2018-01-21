@@ -8,7 +8,6 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import log.Log;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -19,14 +18,10 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.transformations.expression.*;
-import records.transformations.expression.AddSubtractExpression.Op;
-import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledString;
-import threadchecker.OnThread;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -34,13 +29,10 @@ import utility.gui.FXUtility;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -748,7 +740,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    private static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> void removeBlanks(List<OPERAND> operands, List<OPERATOR> operators, Predicate<COMMON> isBlank, Predicate<COMMON> isFocused, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
+    static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> void removeBlanks(List<OPERAND> operands, List<OPERATOR> operators, Predicate<COMMON> isBlank, Predicate<COMMON> isFocused, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
         // which will do nothing if we never edited
@@ -834,292 +826,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         MISC;
     }
 
-
-    public static interface OperandOps<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
-    {
-        public OperandNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
-
-        public ImmutableList<Pair<String, @Localized String>> getValidOperators(SEMANTIC_PARENT semanticParent);
-
-        public boolean isOperatorAlphabet(char character, SEMANTIC_PARENT semanticParent);
-
-        public Class<EXPRESSION> getOperandClass();
-
-        @NonNull EXPRESSION makeUnfinished(String s);
-
-        EXPRESSION makeExpression(ErrorDisplayer<EXPRESSION> displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
-
-        String save(EXPRESSION expression);
-
-        OperandNode<EXPRESSION, SEMANTIC_PARENT> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
-    }
-
-    private static class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
-    {
-        private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
-            opD("=", "op.equal"),
-            opD("<>", "op.notEqual"),
-            opD("+", "op.plus"),
-            opD("-", "op.minus"),
-            opD("*", "op.times"),
-            opD("/", "op.divide"),
-            opD("&", "op.and"),
-            opD("|", "op.or"),
-            opD(";", "op.stringConcat"),
-            opD("<", "op.lessThan"),
-            opD("<=", "op.lessThanOrEqual"),
-            opD(">", "op.greaterThan"),
-            opD(">=", "op.greaterThanOrEqual"),
-            opD("^", "op.raise"),
-            opD(",", "op.separator"),
-            opD("~", "op.matches"),
-            opD("\u00B1", "op.plusminus")
-        ));
-        private final Set<Integer> ALPHABET = OPERATORS.stream().map(ExpressionOps::getOp).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
-
-        private static String getOp(Pair<String, @Localized String> p)
-        {
-            return p.getFirst();
-        }
-
-        @Override
-        public ImmutableList<Pair<String, @Localized String>> getValidOperators(ExpressionNodeParent parent)
-        {
-            return Utility.<Pair<String, @Localized String>>concatI(OPERATORS, parent.operatorKeywords());
-        }
-
-        public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
-        {
-            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
-        }
-
-        @Override
-        public OperandNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
-        {
-            return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, true, Status.UNFINISHED, parent, semanticParent);
-        }
-
-        @Override
-        public Class<Expression> getOperandClass()
-        {
-            return Expression.class;
-        }
-
-        @Override
-        public Expression makeUnfinished(String s)
-        {
-            return new UnfinishedExpression(s);
-        }
-
-        @Override
-        public Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
-        {
-            // Make copy for editing:
-            expressionExps = new ArrayList<>(expressionExps);
-            ops = new ArrayList<>(ops);
-
-            // Trim blanks from end:
-            removeBlanks(expressionExps, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedExpression && ((UnfinishedExpression)o).getText().trim().isEmpty(), o -> false, false, null);
-
-            if (ops.isEmpty())
-            {
-                if (bracketedStatus == BracketedStatus.MISC && !expressionExps.isEmpty())
-                    return expressionExps.get(0);
-                else if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && expressionExps.size() <= 1)
-                    return new ArrayExpression(ImmutableList.copyOf(expressionExps));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
-            {
-                return errorDisplayers.record(displayer, new AddSubtractExpression(expressionExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT)));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("*")))
-            {
-                return errorDisplayers.record(displayer, new TimesExpression(expressionExps));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("&")))
-            {
-                return errorDisplayers.record(displayer, new AndExpression(expressionExps));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("|")))
-            {
-                return errorDisplayers.record(displayer, new OrExpression(expressionExps));
-            }
-            else if (ops.stream().allMatch(op -> op.equals(";")))
-            {
-                return errorDisplayers.record(displayer, new StringConcatExpression(expressionExps));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("/")))
-            {
-                if (expressionExps.size() == 2)
-                    return errorDisplayers.record(displayer, new DivideExpression(expressionExps.get(0), expressionExps.get(1)));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("^")))
-            {
-                if (expressionExps.size() == 2)
-                    return errorDisplayers.record(displayer, new RaiseExpression(expressionExps.get(0), expressionExps.get(1)));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("=")))
-            {
-                return errorDisplayers.record(displayer, new EqualExpression(expressionExps));
-            }
-            else if (ops.stream().allMatch(op -> op.equals("<>")))
-            {
-                if (expressionExps.size() == 2)
-                    return errorDisplayers.record(displayer, new NotEqualExpression(expressionExps.get(0), expressionExps.get(1)));
-            }
-            else if (ops.stream().allMatch(op -> op.equals(">") || op.equals(">=")) || ops.stream().allMatch(op -> op.equals("<") || op.equals("<=")))
-            {
-                try
-                {
-                    return errorDisplayers.record(displayer, new ComparisonExpression(expressionExps, Utility.mapListExI(ops, ComparisonOperator::parse)));
-                }
-                catch (UserException | InternalException e)
-                {
-                    Log.log(e);
-                    // Fall-through...
-                }
-            }
-            else if (ops.stream().allMatch(op -> op.equals(",")))
-            {
-                switch (bracketedStatus)
-                {
-                    case DIRECT_ROUND_BRACKETED:
-                        return errorDisplayers.record(displayer, new TupleExpression(ImmutableList.copyOf(expressionExps)));
-                    case DIRECT_SQUARE_BRACKETED:
-                        return errorDisplayers.record(displayer, new ArrayExpression(ImmutableList.copyOf(expressionExps)));
-                    default:
-                        break; // Invalid: fall-through....
-                }
-                // TODO offer fix to bracket this?
-            }
-
-            return errorDisplayers.record(displayer, new InvalidOperatorExpression(expressionExps, ops));
-        }
-
-        @Override
-        public String save(Expression child)
-        {
-            return child.save(false);
-        }
-
-        @Override
-        public OperandNode<Expression, ExpressionNodeParent> loadOperand(String curItem, ConsecutiveBase<Expression, ExpressionNodeParent> consecutiveBase) throws UserException, InternalException
-        {
-            return Expression.parse(null, curItem, consecutiveBase.getEditor().getTypeManager()).loadAsSingle().load(consecutiveBase, consecutiveBase.getThisAsSemanticParent());
-        }
-    }
-
-    private static class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
-    {
-        private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
-            opD("*", "op.times"),
-            opD("/", "op.divide"),
-            opD("^", "op.raise")
-        ));
-        private final Set<Integer> ALPHABET = OPERATORS.stream().map(UnitExpressionOps::getOp).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
-
-        private static String getOp(Pair<String, @Localized String> p)
-        {
-            return p.getFirst();
-        }
-
-        @Override
-        public OperandNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
-        {
-            return new UnitEntry(parent, initialContent == null ? "" : initialContent, true);
-        }
-
-        @Override
-        public ImmutableList<Pair<String, @Localized String>> getValidOperators(UnitNodeParent parent)
-        {
-            return OPERATORS;
-        }
-
-        @Override
-        public boolean isOperatorAlphabet(char character, UnitNodeParent parent)
-        {
-            return ALPHABET.contains((int)character);
-        }
-
-        @Override
-        public Class<UnitExpression> getOperandClass()
-        {
-            return UnitExpression.class;
-        }
-
-        @Override
-        public UnitExpression makeUnfinished(String s)
-        {
-            return new UnfinishedUnitExpression(s);
-        }
-
-        @Override
-        public UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, BracketedStatus bracketedStatus)
-        {
-            // Make copy for editing:
-            operands = new ArrayList<>(operands);
-            ops = new ArrayList<>(ops);
-
-            System.err.println("Original ops: " + Utility.listToString(ops) + " " + ops.size());
-            System.err.println("  Operands: " + Utility.listToString(Utility.mapList(operands, o -> o.getClass().getName() + ":" + o.save(false))));
-
-            // Trim blanks from end:
-            removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)o).getText().trim().isEmpty(), o -> false, false, null);
-
-            System.err.println("  Trimmed: " + Utility.listToString(ops) + " " + ops.size());
-
-            // Go through and sort out any raise expressions:
-            int i = 0;
-            while (i < ops.size())
-            {
-                // Raise binds tightest, so just take the adjacent operands:
-                // It will bind left, but that doesn't matter as chained raise is an error anyway:
-                if (ops.get(i).trim().equals("^") && i + 1 < operands.size() && operands.get(i + 1) instanceof UnitExpressionIntLiteral)
-                {
-                    operands.set(i, new UnitRaiseExpression(operands.get(i), ((UnitExpressionIntLiteral)operands.get(i + 1)).getNumber()));
-                    operands.remove(i + 1);
-                    ops.remove(i);
-                }
-                else
-                {
-                    i += 1;
-                }
-            }
-
-            System.err.println("  Raised: " + Utility.listToString(ops) + " " + ops.size());
-
-            if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
-            {
-                return errorDisplayers.recordUnit(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));
-            }
-            else if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("^") && operands.get(1) instanceof UnitExpressionIntLiteral)
-            {
-                return errorDisplayers.recordUnit(displayer, new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber()));
-            }
-            else if (ops.size() > 0 && ops.stream().allMatch(o -> o.equals("*")))
-            {
-                return errorDisplayers.recordUnit(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands)));
-            }
-            else if (ops.size() == 0 && operands.size() == 1)
-            {
-                return errorDisplayers.recordUnit(displayer, operands.get(0));
-            }
-
-            return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));
-        }
-
-        @Override
-        public String save(UnitExpression unitExpression)
-        {
-            return unitExpression.save(true);
-        }
-
-        @Override
-        public OperandNode<UnitExpression, UnitNodeParent> loadOperand(String src, ConsecutiveBase<UnitExpression, UnitNodeParent> parent) throws UserException, InternalException
-        {
-            return UnitExpression.load(src).loadAsSingle().load(parent, parent.getThisAsSemanticParent());
-        }
-    }
 
     public static final OperandOps<Expression, ExpressionNodeParent> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitNodeParent> UNIT_OPS = new UnitExpressionOps();

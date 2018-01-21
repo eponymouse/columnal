@@ -29,9 +29,9 @@ import java.util.Map;
  * Special values like any are allowed, but not variables as they are not meaningful
  * (they cannot escape the match to be used outside it; again, use full @match).
  */
-public class MatchesExpression extends BinaryOpExpression
+public class MatchesOneExpression extends BinaryOpExpression
 {
-    protected MatchesExpression(Expression lhs, Expression rhs)
+    public MatchesOneExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -45,7 +45,7 @@ public class MatchesExpression extends BinaryOpExpression
     @Override
     public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
     {
-        return new MatchesExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
+        return new MatchesOneExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
     // Must use checkAsPattern on RHS, not check:

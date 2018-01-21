@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public class PlusMinusPatternExpression extends BinaryOpExpression
 {
-    protected PlusMinusPatternExpression(Expression lhs, Expression rhs)
+    public PlusMinusPatternExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }

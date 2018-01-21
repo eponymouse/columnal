@@ -1,14 +1,12 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
