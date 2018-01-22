@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static records.gui.expressioneditor.DeepNodeTree.opD;
 
@@ -119,7 +120,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             ), (args, _ops) -> null /* TODO */)
         )
     );
-    private final Set<Integer> ALPHABET = OPERATORS.stream().map(ExpressionOps::getOp).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private final Set<Integer> ALPHABET = OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map(p -> p.getFirst())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     private static String getOp(Pair<String, @Localized String> p)
     {
@@ -129,7 +130,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     @Override
     public ImmutableList<Pair<String, @Localized String>> getValidOperators(ExpressionNodeParent parent)
     {
-        return Utility.<Pair<String, @Localized String>>concatI(OPERATORS, parent.operatorKeywords());
+        return Stream.concat(OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream()), parent.operatorKeywords().stream()).collect(ImmutableList.toImmutableList());
     }
 
     public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
@@ -175,7 +176,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         }
         else
         {
-            expression = makeExpressionWithOperators(OPERATORS, displayer, errorDisplayers, expressionExps, ops, bracketedStatus);
+            expression = OperandOps.makeExpressionWithOperators(OPERATORS, displayer, errorDisplayers, expressionExps, ops, bracketedStatus);
         }
         if (expression == null)
             expression = new InvalidOperatorExpression(expressionExps, ops);

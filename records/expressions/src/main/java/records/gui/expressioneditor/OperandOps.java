@@ -64,7 +64,17 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         }
     }
     
-    static class OperatorSection<EXPRESSION>
+    static interface OperatorSection<EXPRESSION>
+    {
+        boolean includesOperator(String operator);
+    }
+    
+    static class BinaryOperatorSection<EXPRESSION>
+    {
+        
+    }
+    
+    static class NaryOperatorSection<EXPRESSION>
     {
         public final OperatorExpressionInfo<EXPRESSION> operatorSet;
         // The ordering in the candidates list:
@@ -73,7 +83,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         public int startingOperatorIndex;
         public int endingOperatorIndex;
 
-        private OperatorSection(OperatorExpressionInfo<EXPRESSION> operatorSet, int candidatePrecedence, int initialIndex)
+        private NaryOperatorSection(OperatorExpressionInfo<EXPRESSION> operatorSet, int candidatePrecedence, int initialIndex)
         {
             this.operatorSet = operatorSet;
             this.operatorSetPrecedence = candidatePrecedence;
@@ -92,7 +102,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
      *                   plus will come earlier in the list than equals, because given "a + b = c", we're more likely
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
-    static <EXPRESSION> @Nullable EXPRESSION makeExpressionWithOperators(List<List<OperatorExpressionInfo<EXPRESSION>>> candidates, ErrorDisplayer<EXPRESSION> displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+    static <EXPRESSION> @Nullable EXPRESSION makeExpressionWithOperators(ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION>>> candidates, ErrorDisplayer<EXPRESSION> displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         if (ops.isEmpty())
         {
@@ -103,7 +113,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         List<OperatorSection<EXPRESSION>> operatorSections = new ArrayList<>();
         nextOp: for (int i = 0; i < ops.size(); i++)
         {
-            if (operatorSections.isEmpty() || !operatorSections.get(operatorSections.size() - 1).operatorSet.includes(ops.get(i)))
+            if (operatorSections.isEmpty() || !operatorSections.get(operatorSections.size() - 1).includesOperator(ops.get(i)))
             {
                 // Make new section:
                 for (int candidateIndex = 0; candidateIndex < candidates.size(); candidateIndex++)
@@ -130,7 +140,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         if (operatorSections.size() == 1)
         {
             // All operators are coherent with each other, can just return single expression:
-            return operatorSections.get(0).operatorSet.makeExpression.apply(ops); 
+            return operatorSections.get(0).makeExpression(); 
         }
         else
         {
