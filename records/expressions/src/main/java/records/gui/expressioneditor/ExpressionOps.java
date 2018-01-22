@@ -25,6 +25,7 @@ import records.transformations.expression.PlusMinusPatternExpression;
 import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TimesExpression;
+import records.transformations.expression.TupleExpression;
 import records.transformations.expression.UnfinishedExpression;
 import utility.Pair;
 import utility.Utility;
@@ -115,9 +116,27 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
         ImmutableList.of(
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo<Expression>(
                 opD(",", "op.separator")
-            ), (args, _ops) -> null /* TODO */)
+            , (lhs, rhs) -> /* Dummy, see below: */ lhs)
+            {
+                @Override
+                public OperatorSection<Expression> makeOperatorSection(BracketedStatus bracketedStatus, int operatorSetPrecedence, int initialIndex)
+                {
+                    return new NaryOperatorSection<Expression>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops) -> {
+                        switch (bracketedStatus)
+                        {
+                            case DIRECT_SQUARE_BRACKETED:
+                                return new ArrayExpression(args);
+                            case DIRECT_ROUND_BRACKETED:
+                                return new TupleExpression(args);
+                        }
+                        // TODO work out what to do here:
+                        return new TupleExpression(args);
+                    }, initialIndex, bracketedStatus);
+                    
+                }
+            }
         )
     );
     private final Set<Integer> ALPHABET = OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map(p -> p.getFirst())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
@@ -157,10 +176,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+    public Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<Expression> originalExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
-        expressionExps = new ArrayList<>(expressionExps);
+        ArrayList<Expression> expressionExps = new ArrayList<>(originalExps);
         ops = new ArrayList<>(ops);
 
         // Trim blanks from end:
@@ -176,7 +195,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         }
         else
         {
-            expression = OperandOps.makeExpressionWithOperators(OPERATORS, displayer, errorDisplayers, expressionExps, ops, bracketedStatus);
+            expression = OperandOps.<Expression>makeExpressionWithOperators(OPERATORS, displayer, errorDisplayers, ImmutableList.copyOf(expressionExps), ops, bracketedStatus);
         }
         if (expression == null)
             expression = new InvalidOperatorExpression(expressionExps, ops);

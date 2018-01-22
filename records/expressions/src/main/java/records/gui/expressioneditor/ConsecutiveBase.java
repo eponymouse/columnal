@@ -414,7 +414,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             bracketedStatus = getChildrenBracketedStatus();
         }
 
-        List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> n) -> n.save(errorDisplayers, onError));
+        ImmutableList<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>, @NonNull EXPRESSION>mapListI(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> n) -> n.save(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
         List<String> ops = opsValid.getSecond();
 

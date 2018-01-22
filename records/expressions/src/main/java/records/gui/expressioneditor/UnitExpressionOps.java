@@ -68,10 +68,10 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, BracketedStatus bracketedStatus)
+    public UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
-        operands = new ArrayList<>(operands);
+        ArrayList<UnitExpression> operands = new ArrayList<>(originalOperands);
         ops = new ArrayList<>(ops);
 
         System.err.println("Original ops: " + Utility.listToString(ops) + " " + ops.size());
