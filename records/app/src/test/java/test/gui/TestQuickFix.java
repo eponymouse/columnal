@@ -27,8 +27,13 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionParser;
+import records.gui.expressioneditor.OperandOps;
 import records.transformations.Transform;
 import records.transformations.TransformationInfo;
+import records.transformations.expression.Expression;
+import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -130,9 +135,14 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     }
 
     @Test
-    public void testBracketFix1()
+    public void testBracketFix1() throws UserException, InternalException
     {
-        testFix("1+2*3", "*", "", "1 + (2 * 3)");
+        testFix("1+2*3", "*", cssClassFor("1 + (2 * 3)"), "1 + (2 * 3)");
+    }
+
+    private String cssClassFor(String expression) throws InternalException, UserException
+    {
+        return OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager()));
     }
 
     @Test

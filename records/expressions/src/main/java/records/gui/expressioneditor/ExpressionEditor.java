@@ -301,7 +301,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         if (!atomicEdit.get())
         {
             ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
-            Expression expression = save(errorDisplayers, err -> {});
+            Expression expression = save(errorDisplayers, errorDisplayers.getRecorder());
             if (onChange != null)
             {
                 onChange.consume(expression);

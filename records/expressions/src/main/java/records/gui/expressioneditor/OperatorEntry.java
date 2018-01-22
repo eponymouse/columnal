@@ -21,7 +21,9 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.LoadableExpression;
+import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -152,6 +154,11 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
     public void showType(String type)
     {
         container.getSecond().showType(type);
+    }
+
+    public void showError(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
+    {
+        container.getSecond().showError(error, quickFixes);
     }
 
     private static class SimpleCompletion extends Completion

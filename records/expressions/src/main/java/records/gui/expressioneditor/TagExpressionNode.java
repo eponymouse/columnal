@@ -6,6 +6,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TagExpression;
 import utility.Either;
@@ -77,7 +78,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         Expression innerExp;
         if (contents == null)

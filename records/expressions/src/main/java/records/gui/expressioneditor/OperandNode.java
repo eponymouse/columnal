@@ -5,6 +5,7 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -40,7 +41,7 @@ public @Interned interface OperandNode<@NonNull EXPRESSION extends LoadableExpre
      * should call onError (1+ times) with problem, and return InvalidExpression if needed.
      *
      */
-    public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError);
+    public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError);
 
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
 }

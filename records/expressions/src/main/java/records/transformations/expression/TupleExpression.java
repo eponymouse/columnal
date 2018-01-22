@@ -81,7 +81,7 @@ public class TupleExpression extends Expression
         }
         memberTypes = ImmutableList.copyOf(typeArray);
         tupleType = new TupleTypeExp(this, memberTypes, true);        
-        @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
+        @Nullable TypeState endState = TypeState.union(state, onError.recordErrorCurried(this), typeStates);
         if (endState == null)
             return null;
         return new Pair<>(onError.recordTypeNN(this, tupleType), endState);

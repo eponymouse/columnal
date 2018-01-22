@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -50,6 +51,8 @@ public class AddSubtractExpression extends NaryOpExpression
     {
         super(expressions);
         this.ops = ops;
+        if (ops.isEmpty())
+            Log.logStackTrace("Ops empty");
     }
 
     @Override

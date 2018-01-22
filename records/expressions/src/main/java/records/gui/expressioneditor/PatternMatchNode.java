@@ -217,7 +217,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
         // Ignore
     }
 
-    public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         Expression sourceExp = source.save(errorDisplayer, onError);
         List<Function<MatchExpression, MatchClause>> clauseExps = new ArrayList<>();

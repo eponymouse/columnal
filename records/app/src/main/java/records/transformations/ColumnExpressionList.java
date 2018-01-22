@@ -29,6 +29,7 @@ import records.gui.SingleSourceControl;
 import records.gui.TypeLabel;
 import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnfinishedExpression;
 import threadchecker.OnThread;
@@ -113,7 +114,7 @@ public class ColumnExpressionList
                 GUI.menuItem("columnExpression.copy", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:
                     int curIndex = Utility.indexOfRef(columns, columnPair);
-                    addColumn(mgr, srcTable, new Pair<>(Optional.ofNullable(columnNameTextField.valueProperty().getValue()).orElse(new ColumnId("")), expressionEditor.save(new ErrorDisplayerRecord(), err -> {})), curIndex + 1);
+                    addColumn(mgr, srcTable, new Pair<>(Optional.ofNullable(columnNameTextField.valueProperty().getValue()).orElse(new ColumnId("")), expressionEditor.save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer())), curIndex + 1);
                 }),
                 GUI.menuItem("columnExpression.addBefore", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:

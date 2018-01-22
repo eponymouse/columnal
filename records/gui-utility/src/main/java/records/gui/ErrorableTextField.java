@@ -18,6 +18,7 @@ import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.FixList.FixInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
@@ -85,7 +86,7 @@ public class ErrorableTextField<T>
             popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.concat(
                 Utility.streamNullable(result.getError()),
                 result.getWarnings().stream()
-            ).map(Text::new).toArray(Node[]::new)), new FixList(ImmutableList.copyOf(Utility.mapList(result.getFixes(), f -> new Pair<>(f.fixDescription, () -> setText(f.fixedValue)))))));
+            ).map(Text::new).toArray(Node[]::new)), new FixList(ImmutableList.copyOf(Utility.mapList(result.getFixes(), f -> new FixInfo(f.fixDescription, ImmutableList.of(), () -> setText(f.fixedValue)))))));
 
             if (!popOver.isShowing())
             {

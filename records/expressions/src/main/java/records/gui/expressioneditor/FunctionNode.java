@@ -6,6 +6,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.CallExpression;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
@@ -41,7 +42,7 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
 
     @SuppressWarnings("nullness") // contents is known to be non-null.
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         // TODO allow units (second optional consecutive)
         Expression argExp = contents.save(errorDisplayer, onError);

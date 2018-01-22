@@ -23,7 +23,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -57,7 +56,7 @@ public class VarDeclExpression extends NonOperatorExpression
             return null; // We are a variable declaration, so clearly not allowed!
 
         MutVar type = new MutVar(this);
-        @Nullable TypeState newState = typeState.add(varName, type, onError.recordError(this));
+        @Nullable TypeState newState = typeState.add(varName, type, onError.recordErrorCurried(this));
         if (newState == null)
             return null;
         else

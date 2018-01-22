@@ -195,7 +195,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         }
         else
         {
-            expression = OperandOps.<Expression>makeExpressionWithOperators(OPERATORS, displayer, errorDisplayers, ImmutableList.copyOf(expressionExps), ops, bracketedStatus);
+            expression = makeExpressionWithOperators(OPERATORS, errorDisplayers.getRecorder(), ImmutableList.copyOf(expressionExps), ops, bracketedStatus);
         }
         if (expression == null)
             expression = new InvalidOperatorExpression(expressionExps, ops);
@@ -279,5 +279,11 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     public OperandNode<Expression, ExpressionNodeParent> loadOperand(String curItem, ConsecutiveBase<Expression, ExpressionNodeParent> consecutiveBase) throws UserException, InternalException
     {
         return Expression.parse(null, curItem, consecutiveBase.getEditor().getTypeManager()).loadAsSingle().load(consecutiveBase, consecutiveBase.getThisAsSemanticParent());
+    }
+
+    @Override
+    public Expression makeInvalidOpExpression(ImmutableList<Expression> expressionExps, List<String> ops)
+    {
+        return new InvalidOperatorExpression(expressionExps, ops);
     }
 }

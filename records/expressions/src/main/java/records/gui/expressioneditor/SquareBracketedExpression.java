@@ -5,6 +5,7 @@ import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ArrayExpression;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -26,7 +27,7 @@ public class SquareBracketedExpression extends BracketedExpression
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
+    public Expression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);

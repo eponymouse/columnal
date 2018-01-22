@@ -868,7 +868,7 @@ public class Utility
         r.addAll(c);
         return r;
     }
-    public static <T> ImmutableList<T> concatI(List<T> a, List<T> b)
+    public static <T> ImmutableList<T> concatI(List<? extends T> a, List<? extends T> b)
     {
         return ImmutableList.<T>builder().addAll(a).addAll(b).build();
     }

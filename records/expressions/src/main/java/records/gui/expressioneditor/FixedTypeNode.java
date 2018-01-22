@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.FixedTypeExpression;
 import utility.Either;
@@ -57,7 +58,7 @@ public class FixedTypeNode extends SurroundNode
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {        
         @SuppressWarnings("nullness")
         Expression innerExp = contents.save(errorDisplayer, onError);

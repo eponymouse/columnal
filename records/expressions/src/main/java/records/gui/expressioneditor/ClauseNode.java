@@ -19,6 +19,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -473,7 +474,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return false;
     }
 
-    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)

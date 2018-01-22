@@ -100,7 +100,7 @@ public class ArrayExpression extends Expression
         _test_originalTypes = Arrays.asList(typeArray);
         if (elementType == null)
             return null;
-        @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
+        @Nullable TypeState endState = TypeState.union(state, onError.recordErrorCurried(this), typeStates);
         if (endState == null)
             return null;
         return new Pair<>(onError.recordTypeNN(this, new TypeCons(this, TypeExp.CONS_LIST, elementType)), endState);

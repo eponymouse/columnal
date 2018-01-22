@@ -133,4 +133,10 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     {
         return UnitExpression.load(src).loadAsSingle().load(parent, parent.getThisAsSemanticParent());
     }
+
+    @Override
+    public UnitExpression makeInvalidOpExpression(ImmutableList<UnitExpression> expressionExps, List<String> ops)
+    {
+        return new InvalidOperatorUnitExpression(expressionExps, ImmutableList.copyOf(ops));
+    }
 }

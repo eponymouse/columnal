@@ -33,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import records.data.TableManager;
 import records.gui.FixList;
+import records.gui.FixList.FixInfo;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
@@ -63,7 +64,7 @@ public class ExpressionInfoDisplay
 {
     private final SimpleStringProperty type = new SimpleStringProperty("");
     private final SimpleObjectProperty<StyledString> errorMessage = new SimpleObjectProperty<>(StyledString.s(""));
-    private final SimpleObjectProperty<ImmutableList<Pair<@Localized String, FXPlatformRunnable>>> fixes = new SimpleObjectProperty<>(ImmutableList.<Pair<@Localized String, FXPlatformRunnable>>of());
+    private final SimpleObjectProperty<ImmutableList<FixInfo>> fixes = new SimpleObjectProperty<>(ImmutableList.of());
     private final VBox expressionNode;
     private @Nullable ErrorMessagePopup popup = null;
     private boolean focused = false;
@@ -91,7 +92,7 @@ public class ExpressionInfoDisplay
             {
                 e.consume();
                 hide(true);
-                fixes.get().get(0).getSecond().run();
+                fixes.get().get(0).executeFix.run();
             }
         });
     }
@@ -256,7 +257,7 @@ public class ExpressionInfoDisplay
             //Log.debug("Message and fixes: " + newMsgAndFixes);
             // The listener on this property should make the popup every time:
             errorMessage.set(newMsgAndFixes.getFirst());
-            fixes.set(newMsgAndFixes.getSecond().stream().<Pair<@Localized String, FXPlatformRunnable>>map(q -> new Pair<@Localized String, FXPlatformRunnable>(q.getTitle(), () -> {
+            fixes.set(newMsgAndFixes.getSecond().stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
                 //Log.debug("Clicked fix: " + q.getTitle());
                 if (popup != null)
                     hide(true);

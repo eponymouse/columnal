@@ -11,6 +11,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitExpression;
@@ -93,7 +94,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     }
 
     @Override
-    public UnitExpression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         String text = textField.getText().trim();
 

@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
@@ -40,6 +41,9 @@ public abstract class NaryOpExpression extends Expression
     public NaryOpExpression(List<Expression> expressions)
     {
         this.expressions = ImmutableList.copyOf(expressions);
+        // Bit hacky to use instanceof, but only for logging purposes anyway:
+        if (expressions.size() < 2 && !(this instanceof InvalidOperatorExpression))
+            Log.logStackTrace("Expressions size: " + expressions.size());
     }
 
     @Override

@@ -7,6 +7,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -23,7 +24,7 @@ public class FixList extends VBox
     private int selectedIndex; // TODO add support for keyboard selection
 
     @OnThread(Tag.FXPlatform)
-    public FixList(ImmutableList<Pair<@Localized String, FXPlatformRunnable>> fixes)
+    public FixList(ImmutableList<FixInfo> fixes)
     {
         selectedIndex = -1;
 
@@ -32,16 +33,30 @@ public class FixList extends VBox
         setFixes(fixes);
     }
 
-    public void setFixes(@UnknownInitialization(Object.class) FixList this, ImmutableList<Pair<@Localized String, FXPlatformRunnable>> fixes)
+    public void setFixes(@UnknownInitialization(Object.class) FixList this, ImmutableList<FixInfo> fixes)
     {
         getChildren().clear();
         if (!fixes.isEmpty())
         {
             getChildren().add(GUI.label("error.fixes", "fix-list-heading"));
         }
-        for (Pair<@Localized String, FXPlatformRunnable> fix : fixes)
+        for (FixInfo fix : fixes)
         {
-            getChildren().add(new FixRow(fix.getFirst(), fix.getSecond()));
+            getChildren().add(new FixRow(fix));
+        }
+    }
+    
+    public static class FixInfo
+    {
+        private final @Localized String label;
+        private final ImmutableList<String> cssClasses;
+        public final FXPlatformRunnable executeFix;
+
+        public FixInfo(@Localized String label, ImmutableList<String> cssClasses, FXPlatformRunnable executeFix)
+        {
+            this.label = label;
+            this.cssClasses = cssClasses;
+            this.executeFix = executeFix;
         }
     }
 
@@ -50,12 +65,13 @@ public class FixList extends VBox
         private final FXPlatformRunnable execute;
 
         @OnThread(Tag.FXPlatform)
-        public FixRow(String text, FXPlatformRunnable execute)
+        public FixRow(FixInfo fixInfo)
         {
-            this.execute = execute;
-            FixRow.this.getStyleClass().add("quick-fix-row");
+            this.execute = fixInfo.executeFix;
+            getStyleClass().add("quick-fix-row");
+            getStyleClass().addAll(fixInfo.cssClasses);
             
-            setCenter(new Label(text));
+            setCenter(new Label(fixInfo.label));
 
             setOnMouseClicked(e -> {
                 doFix();

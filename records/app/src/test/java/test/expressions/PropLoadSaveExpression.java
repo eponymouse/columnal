@@ -16,6 +16,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.JavaFXThreadingRule;
@@ -48,7 +49,7 @@ public class PropLoadSaveExpression
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save(new ErrorDisplayerRecord(), e -> {});
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
         assertEquals(expression, edited);
         assertEquals(expression.save(true), edited.save(true));
     }

@@ -78,7 +78,7 @@ public interface ErrorAndTypeRecorder
      * A curried version of the two-arg function of the same name.
      */
     @Pure
-    public default Consumer<StyledString> recordError(Expression src)
+    public default Consumer<StyledString> recordErrorCurried(Expression src)
     {
         return errMsg -> recordError(src, errMsg);
     }
@@ -106,9 +106,17 @@ public interface ErrorAndTypeRecorder
     {
         private final @Localized String title;
         private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement;
+        private final ImmutableList<String> cssClasses;
 
-        public QuickFix(@Localized String title, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement) {
+        public QuickFix(@Localized String title, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement)
+        {
+            this(title, ImmutableList.of(), fixedReplacement);
+        }
+        
+        public QuickFix(@Localized String title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement)
+        {
             this.title = title;
+            this.cssClasses = cssClasses;
             this.fixedReplacement = fixedReplacement;
         }
 
@@ -121,7 +129,12 @@ public interface ErrorAndTypeRecorder
         {
             return fixedReplacement.apply(new QuickFixParams(parentWindow, tableManager));
         }
-        
+
+        public ImmutableList<String> getCssClasses()
+        {
+            return cssClasses;
+        }
+
         public static enum ReplacementTarget
         {
             CURRENT, PARENT;

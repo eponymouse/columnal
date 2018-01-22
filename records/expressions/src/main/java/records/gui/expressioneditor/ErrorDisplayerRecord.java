@@ -17,6 +17,8 @@ import records.types.TypeConcretisationError;
 import records.types.TypeExp;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,10 +57,14 @@ public class ErrorDisplayerRecord
     private final IdentityHashMap<UnitExpression, ErrorDetails<UnitExpression>> unitDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
-    @SuppressWarnings("initialization")
+    private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?>>>> pending = new IdentityHashMap<>();
+    
+    @SuppressWarnings({"initialization", "unchecked"})
     public <EXPRESSION extends Expression> @NonNull EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression> displayer, @NonNull EXPRESSION e)
     {
         expressionDisplayers.put(e, new ErrorDetails<>(displayer));
+        if (pending.containsKey(e))
+            showError(e, pending.get(e).getFirst(), (List)pending.get(e).getSecond());
         return e;
     }
 
@@ -69,16 +75,22 @@ public class ErrorDisplayerRecord
         return e;
     }
 
-    private boolean showError(Expression e, @Nullable StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    private void showError(Expression e, @Nullable StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
         @Nullable ErrorDetails<Expression> d = expressionDisplayers.get(e);
         if (d != null)
         {
             d.addErrorAndFixes(s, quickFixes);
-            return true;
         }
         else
-            return false;
+        {
+            pending.compute(e, (_k, p) -> {
+                if (p == null)
+                    return new Pair<>(s == null ? StyledString.s("") : s, ImmutableList.copyOf(quickFixes));
+                else
+                    return new Pair<>(s == null ? p.getFirst() : StyledString.concat(p.getFirst(), s), Utility.concatI(p.getSecond(), quickFixes));
+            });
+        }
     }
     
     public void showAllTypes(TypeManager typeManager)
@@ -123,7 +135,9 @@ public class ErrorDisplayerRecord
             public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
             {
                 if (src instanceof Expression)
+                {
                     ErrorDisplayerRecord.this.showError((Expression) src, error, ImmutableList.of());
+                }
             }
 
             @SuppressWarnings("unchecked")
@@ -131,7 +145,9 @@ public class ErrorDisplayerRecord
             public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
             {
                 if (src instanceof Expression && !quickFixes.isEmpty())
-                    ErrorDisplayerRecord.this.showError((Expression) src, null, (List)quickFixes);
+                {
+                    ErrorDisplayerRecord.this.showError((Expression) src, null, (List) quickFixes);
+                }
             }
 
             @Override
