@@ -344,7 +344,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 }
 
                 errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                    new QuickFix<>("Bracket as X", ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
+                    new QuickFix<>("Add brackets: " + replacement.toString(), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
                 ));
             }
             

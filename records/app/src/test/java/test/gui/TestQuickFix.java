@@ -156,7 +156,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testBracketFix3()
     {
-        testBracketFix("1 + 2 = 3 - 4", "-", "@invalidops 1 + 2 = (3 - 4)");
+        testBracketFix("1 + 2 = 3 - 4", "-", "@invalidops 1 \"+\" 2 \"=\" (3 - 4)");
     }
     
     @Test
@@ -240,7 +240,8 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             assertNotNull(errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals(1, lookup(".quick-fix-row" + fixId).queryAll().size());
+            assertEquals(lookup(".quick-fix-row" + fixId).<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
+                1, lookup(".quick-fix-row" + fixId).queryAll().size());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:
             //moveTo(".quick-fix-row" + fixId);
