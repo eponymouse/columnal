@@ -759,7 +759,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == roundBracketCompletion)
                 {
-                    BracketedExpression bracketedExpression = new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, new Label("("), new Label(")"), null, ')');
+                    BracketedExpression bracketedExpression = new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')');
                     bracketedExpression.focusWhenShown();
                     parent.replace(GeneralExpressionEntry.this, bracketedExpression);
                 }

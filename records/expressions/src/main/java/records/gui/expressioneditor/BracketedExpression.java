@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -24,10 +25,15 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
 
-    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
+    protected BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, Node prefixNode, Node suffixNode, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
     {
         super(operations, parent, prefixNode, suffixNode, "bracket", content, endCharacter);
         this.consecParent = parent;
+    }
+
+    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
+    {
+        this(operations, parent, new Label("("), new Label(")"), content, endCharacter);
     }
 
     @Override
