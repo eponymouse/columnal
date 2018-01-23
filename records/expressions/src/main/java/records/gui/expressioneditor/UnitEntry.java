@@ -11,6 +11,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnfinishedUnitExpression;
@@ -43,7 +44,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             initialContentEntered.set(true);
         }
         @SuppressWarnings("initialization") // Dummy variable to allow suppressing warning about the self method reference:
-        AutoComplete dummy = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        AutoComplete dummy = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
         updateNodes();
 
         if (userEntered)

@@ -147,6 +147,39 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
         testBracketFix("1+2*3", "+", "(1 + 2) * 3");
     }
 
+    @Test
+    public void testBracketFix2()
+    {
+        testBracketFix("1 + 2 = 3", "+", "(1 + 2) = 3");
+    }
+
+    @Test
+    public void testBracketFix3()
+    {
+        testBracketFix("1 + 2 = 3 - 4", "-", "@invalidops 1 + 2 = (3 - 4)");
+    }
+    
+    @Test
+    public void testBracketFix4()
+    {
+        testBracketFix("1 = 2 = 3 + 4 = 5 = 6", "+", "1 = 2 = (3 + 4) = 5 = 6");
+    }
+
+    @Test
+    public void testBracketFix5()
+    {
+        // Tuples must be bracketed:
+        testBracketFix("1 , 2", ",", "(1, 2)");
+    }
+    
+    @Test
+    public void testBracketFix5B()
+    {
+        testBracketFix("1 , 2", ",", "[1, 2]");
+    }
+   
+    
+    
     private void testBracketFix(String original, String fixFieldContent, String fixed)
     {
         try

@@ -34,6 +34,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
@@ -44,8 +45,6 @@ import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import utility.Either;
 import utility.ExFunction;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -180,7 +179,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
 
         FXUtility.addChangeListenerPlatformNN(status, s -> {
             // Need to beware that some status values may map to same pseudoclass:

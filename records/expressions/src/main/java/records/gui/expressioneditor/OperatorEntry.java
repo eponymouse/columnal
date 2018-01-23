@@ -20,6 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.LoadableExpression;
@@ -66,7 +67,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> c == '-' || (!parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), WhitespacePolicy.DISALLOW, c -> c == '-' || (!parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c)));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);

@@ -4,7 +4,6 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -23,6 +22,7 @@ import records.error.InternalException;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
+import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -51,7 +51,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
         getStyleClass().add("single-source-control");
         Label label = new Label("Source:");
         TextField selected = new TextField(srcTableId == null ? "" : srcTableId.getOutput());
-        autoComplete = new AutoComplete(selected, (s, q) -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), this, c -> false);
+        autoComplete = new AutoComplete(selected, (s, q) -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), this, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
         Button select = new Button("Choose...");
         select.setOnAction(e -> {
             if (getScene() != null && getScene().getWindow() != null)

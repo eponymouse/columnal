@@ -9,6 +9,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import styled.StyledString;
@@ -63,7 +64,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             {
                 return currentText;
             }
-        }, c -> false);
+        }, WhitespacePolicy.ALLOW_ANYWHERE, c -> false);
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);

@@ -47,6 +47,13 @@ public class AutoComplete extends PopupControl
     private final ListView<Completion> completions;
     private BorderPane container;
 
+    public static enum WhitespacePolicy
+    {
+        ALLOW_ANYWHERE,
+        ALLOW_ONE_ANYWHERE_TRIM,
+        DISALLOW
+    }
+    
     public static enum CompletionQuery
     {
         // They've entered another char which doesn't fit, we're planning to leave the slot now:
@@ -70,7 +77,7 @@ public class AutoComplete extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, CompletionListener onSelect, Predicate<Character> inNextAlphabet)
+    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, CompletionListener onSelect, WhitespacePolicy whitespacePolicy, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
         this.completions = new ListView<Completion>() {
@@ -256,6 +263,16 @@ public class AutoComplete extends PopupControl
             {
                 completions.getSelectionModel().select(0);
             }
+            
+            if (whitespacePolicy == WhitespacePolicy.DISALLOW)
+            {
+                String originalChangeText = change.getText();
+                String withoutWhitespace = originalChangeText.replaceAll("\\s", "");
+                change.setText(withoutWhitespace);
+                change.setCaretPosition(change.getCaretPosition() - (originalChangeText.length() - withoutWhitespace.length()));
+                return change;
+            }
+            
             return change;
         }));
         
