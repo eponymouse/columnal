@@ -47,7 +47,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<>(
                 opD("^", "op.raise")
-            , (lhs, rhs) -> new RaiseExpression(lhs, rhs))
+            , (lhs, rhs, _b) -> new RaiseExpression(lhs, rhs))
         ),
         
         // Arithmetic operators are all one group.  I know we could separate +- from */, but if you see
@@ -56,13 +56,13 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("+", "op.plus"),
                 opD("-", "op.minus")
-            ), (args, ops) -> new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT))),
+            ), (args, ops, _b) -> new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT))),
             new OperatorExpressionInfo<Expression>(ImmutableList.of(
                 opD("*", "op.times")
-            ), (args, _ops) -> new TimesExpression(args)),
+            ), (args, _ops, _b) -> new TimesExpression(args)),
             new OperatorExpressionInfo<Expression>(
                 opD("/", "op.divide")
-            , (lhs, rhs) -> new DivideExpression(lhs, rhs))
+            , (lhs, rhs, _b) -> new DivideExpression(lhs, rhs))
         ),
     
         // String concatenation lower than arithmetic.  If you write "val: (" ; 1 * 2; ")" then what you meant
@@ -71,35 +71,35 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD(";", "op.stringConcat")
-            ), (args, _ops) -> new StringConcatExpression(args))    
+            ), (args, _ops, _b) -> new StringConcatExpression(args))    
         ),
     
         // It's moot really whether this is before or after string concat, but feels odd putting them in same group:
         ImmutableList.of(
             new OperatorExpressionInfo<>(
                 opD("\u00B1", "op.plusminus")
-            , (lhs, rhs) -> new PlusMinusPatternExpression(lhs, rhs))
+            , (lhs, rhs, _b) -> new PlusMinusPatternExpression(lhs, rhs))
         ),
     
         // Equality and comparison operators:
         ImmutableList.of(
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("=", "op.equal")
-            ), (args, _ops) -> new EqualExpression(args)),
+            ), (args, _ops, _b) -> new EqualExpression(args)),
             new OperatorExpressionInfo<>(
                 opD("<>", "op.notEqual")
-            , (lhs, rhs) -> new NotEqualExpression(lhs, rhs)),
+            , (lhs, rhs, _b) -> new NotEqualExpression(lhs, rhs)),
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("<", "op.lessThan"),
                 opD("<=", "op.lessThanOrEqual")
-            ), (args, ops) -> new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals("<") ? ComparisonOperator.LESS_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL_TO))),
+            ), (args, ops, _b) -> new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals("<") ? ComparisonOperator.LESS_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL_TO))),
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD(">", "op.greaterThan"),
                 opD(">=", "op.greaterThanOrEqual")
-            ), (args, ops) -> new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals(">") ? ComparisonOperator.GREATER_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO))),
+            ), (args, ops, _b) -> new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals(">") ? ComparisonOperator.GREATER_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO))),
             new OperatorExpressionInfo<>(
                 opD("~", "op.matches")
-            , (lhs, rhs) -> new MatchesOneExpression(lhs, rhs))
+            , (lhs, rhs, _b) -> new MatchesOneExpression(lhs, rhs))
         ),
         
         // Boolean and, or expressions come near-last.  If you see a = b & c = d, it's much more likely you wanted (a = b) & (c = d) than
@@ -107,10 +107,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("&", "op.and")
-            ), (args, _ops) -> new AndExpression(args)),
+            ), (args, _ops, _b) -> new AndExpression(args)),
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("|", "op.or")
-            ), (args, _ops) -> new OrExpression(args))
+            ), (args, _ops, _b) -> new OrExpression(args))
         ),
         
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
@@ -118,12 +118,12 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<Expression>(
                 opD(",", "op.separator")
-            , (lhs, rhs) -> /* Dummy, see below: */ lhs)
+            , (lhs, rhs, _b) -> /* Dummy, see below: */ lhs)
             {
                 @Override
-                public OperatorSection<Expression> makeOperatorSection(BracketedStatus bracketedStatus, int operatorSetPrecedence, String initialOperator, int initialIndex)
+                public OperatorSection<Expression> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection<Expression>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops) -> {
+                    return new NaryOperatorSection<Expression>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, bracketedStatus) -> {
                         switch (bracketedStatus)
                         {
                             case DIRECT_SQUARE_BRACKETED:
@@ -131,9 +131,8 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
                             case DIRECT_ROUND_BRACKETED:
                                 return new TupleExpression(args);
                         }
-                        // TODO work out what to do here:
-                        return new TupleExpression(args);
-                    }, initialIndex, initialOperator, bracketedStatus);
+                        return null;
+                    }, initialIndex, initialOperator);
                     
                 }
             }
