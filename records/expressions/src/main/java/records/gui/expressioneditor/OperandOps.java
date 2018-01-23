@@ -11,11 +11,13 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.NaryOpExpression;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -236,6 +238,23 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             args.set(args.size() - 1, rhs);
             return makeExpression.makeNary(ImmutableList.copyOf(args), actualOperators);
         }
+
+        /**
+         * Uses this expression as the LHS, and a custom middle and RHS that must have matching operators.  Used
+         * to join two NaryOpExpressions while bracketing an item in the middle.
+         */
+        
+        public EXPRESSION makeExpressionMiddleMerge(EXPRESSION middle, NaryOperatorSection<EXPRESSION> rhs, List<EXPRESSION> expressions)
+        {
+            List<EXPRESSION> args = new ArrayList<>();
+            // Add our args, minus the end one:
+            args.addAll(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 1));
+            // Add the middle:
+            args.add(middle);
+            // Add RHS, minus the start one:
+            args.addAll(expressions.subList(rhs.startingOperatorIndexIncl + 1, rhs.endingOperatorIndexIncl + 2));
+            return makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators));
+        }
     }
 
     /**
@@ -290,11 +309,31 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             // All operators are coherent with each other, can just return single expression:
             return operatorSections.get(0).makeExpression(expressionExps); 
         }
-        else
+
+        EXPRESSION invalidOpExpression = makeInvalidOpExpression(expressionExps, ops);
+        errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Mixed operators: brackets required"));
+        
+        if (operatorSections.size() == 3
+            && operatorSections.get(0).possibleOperators.equals(operatorSections.get(2).possibleOperators)
+            && operatorSections.get(0) instanceof NaryOperatorSection
+            && operatorSections.get(2) instanceof NaryOperatorSection
+            && operatorSections.get(1).operatorSetPrecedence <= operatorSections.get(0).operatorSetPrecedence
+            )
         {
-            EXPRESSION invalidOpExpression = makeInvalidOpExpression(expressionExps, ops);
-            errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Mixed operators: brackets required"));
-            
+            // The sections either side match up, and the middle is same or lower precedence, so we can bracket
+            // the middle and put it into one valid expression.  Hurrah!
+            EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION>)operatorSections.get(0)).makeExpressionMiddleMerge(
+                operatorSections.get(1).makeExpression(expressionExps),
+                (NaryOperatorSection<EXPRESSION>)operatorSections.get(2),
+                expressionExps
+            );
+
+            errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
+                new QuickFix<>("Add brackets: " + replacement.toString(), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
+            ));
+        }
+        else
+        {            
             // We may be able to suggest some brackets
             Collections.sort(operatorSections, Comparator.comparing(os -> os.operatorSetPrecedence));
             int precedence = operatorSections.get(0).operatorSetPrecedence;
@@ -347,11 +386,8 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                     new QuickFix<>("Add brackets: " + replacement.toString(), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
                 ));
             }
-            
-            
-            
-            return invalidOpExpression;
         }
+        return invalidOpExpression;
     }
 
     @OnThread(Tag.Any)
