@@ -40,9 +40,12 @@ public class FixList extends VBox
         {
             getChildren().add(GUI.label("error.fixes", "fix-list-heading"));
         }
-        for (FixInfo fix : fixes)
+        for (int i = 0; i < fixes.size(); i++)
         {
-            getChildren().add(new FixRow(fix));
+            FixRow fixRow = new FixRow(fixes.get(i));
+            // CSS class helps in testing:
+            fixRow.getStyleClass().add("key-F" + (i + 1));
+            getChildren().add(fixRow);
         }
     }
     

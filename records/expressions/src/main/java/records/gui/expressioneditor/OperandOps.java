@@ -77,10 +77,10 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             return operators.stream().anyMatch(p -> p.getFirst().equals(op));
         }
         
-        public OperatorSection<EXPRESSION> makeOperatorSection(BracketedStatus bracketedStatus, int operatorSetPrecedence, int initialIndex)
+        public OperatorSection<EXPRESSION> makeOperatorSection(BracketedStatus bracketedStatus, int operatorSetPrecedence, String initialOperator, int initialIndex)
         {
             return makeExpression.either(
-                nAry -> new NaryOperatorSection<EXPRESSION>(operators, operatorSetPrecedence, nAry, initialIndex, bracketedStatus),
+                nAry -> new NaryOperatorSection<EXPRESSION>(operators, operatorSetPrecedence, nAry, initialIndex, initialOperator, bracketedStatus),
                 binary -> new BinaryOperatorSection<EXPRESSION>(operators, operatorSetPrecedence, binary, initialIndex, bracketedStatus)
             );
         }
@@ -177,12 +177,13 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         private final int startingOperatorIndexIncl;
         private int endingOperatorIndexIncl;
 
-        NaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION> makeExpression, int initialIndex, BracketedStatus bracketedStatus)
+        NaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION> makeExpression, int initialIndex, String initialOperator, BracketedStatus bracketedStatus)
         {
             super(operators, candidatePrecedence, bracketedStatus);
             this.makeExpression = makeExpression;
             this.startingOperatorIndexIncl = initialIndex;
             this.endingOperatorIndexIncl = initialIndex;
+            this.actualOperators.add(initialOperator);
         }
 
         @Override
@@ -274,7 +275,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                     {
                         if (operatorExpressionInfo.includes(ops.get(i)))
                         {
-                            operatorSections.add(operatorExpressionInfo.makeOperatorSection(bracketedStatus, candidateIndex, i));
+                            operatorSections.add(operatorExpressionInfo.makeOperatorSection(bracketedStatus, candidateIndex, ops.get(i), i));
                             continue nextOp; 
                         }
                     }

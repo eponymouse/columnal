@@ -121,7 +121,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             , (lhs, rhs) -> /* Dummy, see below: */ lhs)
             {
                 @Override
-                public OperatorSection<Expression> makeOperatorSection(BracketedStatus bracketedStatus, int operatorSetPrecedence, int initialIndex)
+                public OperatorSection<Expression> makeOperatorSection(BracketedStatus bracketedStatus, int operatorSetPrecedence, String initialOperator, int initialIndex)
                 {
                     return new NaryOperatorSection<Expression>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops) -> {
                         switch (bracketedStatus)
@@ -133,7 +133,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
                         }
                         // TODO work out what to do here:
                         return new TupleExpression(args);
-                    }, initialIndex, bracketedStatus);
+                    }, initialIndex, initialOperator, bracketedStatus);
                     
                 }
             }

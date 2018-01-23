@@ -199,7 +199,18 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     // Replaces the whole operator-expression that operator was part of, with the new expression
     protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, EXPRESSION e)
     {
-        
+        if (operators.contains(oldOperator))
+        {
+            Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> loaded = e.loadAsConsecutive(hasImplicitRoundBrackets());
+            List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
+            List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> startingOperators = Utility.mapList(loaded.getSecond(), operator -> operator.load(this, getThisAsSemanticParent()));
+            atomicEdit.set(true);
+            operands.setAll(startingOperands);
+            operators.setAll(startingOperators);
+            atomicEdit.set(false);
+            // Get rid of anything which would go if you got focus and lost it again:
+            focusChanged();
+        }
     }
 
     public void replace(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @Nullable OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> newNode)

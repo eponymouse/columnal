@@ -26,6 +26,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
@@ -538,6 +539,22 @@ public class FXUtility
             vValueDelta = (nodeMinY + viewport.getHeight()) / scrollPane.getContent().getBoundsInLocal().getHeight();
         }
         scrollPane.setVvalue(vValueCurrent + vValueDelta);
+    }
+
+    /**
+     * If code is an F key (F1, F2, etc), returns the number as an int
+     * (F1 is 1, not zero, F2 is 2, etc).  Otherwise, empty is returned.
+     */
+    public static OptionalInt FKeyNumber(KeyCode code)
+    {
+        if (code.compareTo(KeyCode.F1) >= 0 && code.compareTo(KeyCode.F24) <= 0)
+        {
+            return OptionalInt.of(code.ordinal() - KeyCode.F1.ordinal() + 1);
+        }
+        else
+        {
+            return OptionalInt.empty();
+        }
     }
 
     public static interface DragHandler

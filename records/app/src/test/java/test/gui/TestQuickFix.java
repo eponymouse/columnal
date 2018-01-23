@@ -8,6 +8,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
 import org.junit.Test;
@@ -135,22 +136,33 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     }
 
     @Test
-    public void testBracketFix1() throws UserException, InternalException
+    public void testBracketFix1()
     {
-        testFix("1+2*3", "*", cssClassFor("1 + (2 * 3)"), "1 + (2 * 3)");
+        testBracketFix("1+2*3", "*","1 + (2 * 3)");
+    }
+
+    @Test
+    public void testBracketFix1B()
+    {
+        testBracketFix("1+2*3", "+", "(1 + 2) * 3");
+    }
+
+    private void testBracketFix(String original, String fixFieldContent, String fixed)
+    {
+        try
+        {
+            testFix(original, fixFieldContent, "." + cssClassFor(fixed), fixed);
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     private String cssClassFor(String expression) throws InternalException, UserException
     {
         return OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager()));
     }
-
-    @Test
-    public void testBracketFix1B()
-    {
-        testFix("1+2*3", "+", "", "(1 + 2) * 3");
-    }
-
 
     /**
      * 
@@ -200,7 +212,11 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             // items in the fix popup correctly, by using keyboard:
             //moveTo(".quick-fix-row" + fixId);
             //clickOn(".quick-fix-row" + fixId);
-            push(KeyCode.SHIFT, KeyCode.F1);
+            Node fixRow = lookup(".quick-fix-row" + fixId).queryAll().iterator().next();
+            List<String> fixStyles = TestUtil.fx(() -> fixRow.getStyleClass());
+            String key = fixStyles.stream().filter(c -> c.startsWith("key-")).map(c -> c.substring("key-".length())).findFirst().orElse("");
+            assertNotEquals(Utility.listToString(fixStyles), "", key);
+            push(KeyCode.SHIFT, KeyCode.valueOf(key));
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);
             assertTrue(TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));

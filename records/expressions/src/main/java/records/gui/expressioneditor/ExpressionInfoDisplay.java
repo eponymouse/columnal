@@ -46,6 +46,7 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * Manages the display of errors, quick fixes and type information in the expression editor.
@@ -88,11 +89,13 @@ public class ExpressionInfoDisplay
         });
         FXUtility.addChangeListenerPlatformNN(errorMessage, s -> updateShowHide(true));
         textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-            if (e.isShiftDown() && e.getCode() == KeyCode.F1 && popup != null)
+            OptionalInt fKey = FXUtility.FKeyNumber(e.getCode());
+            if (e.isShiftDown() && fKey.isPresent() && popup != null)
             {
                 e.consume();
                 hide(true);
-                fixes.get().get(0).executeFix.run();
+                // 1 is F1, but should trigger fix zero:
+                fixes.get().get(fKey.getAsInt() - 1).executeFix.run();
             }
         });
     }
