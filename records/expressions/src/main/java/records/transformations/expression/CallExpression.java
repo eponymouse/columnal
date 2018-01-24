@@ -16,6 +16,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
@@ -100,12 +101,12 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
         if (param instanceof TupleExpression)
-            return functionName + param.save(false);
+            return functionName + param.save(BracketedStatus.MISC);
         else
-            return functionName + "(" + param.save(true) + ")";
+            return functionName + "(" + param.save(BracketedStatus.DIRECT_ROUND_BRACKETED) + ")";
     }
 
     @Override

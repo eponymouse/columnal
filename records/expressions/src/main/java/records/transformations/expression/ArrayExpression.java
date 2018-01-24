@@ -16,6 +16,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
@@ -144,9 +145,9 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
-        return "[" + items.stream().map(e -> e.save(false)).collect(Collectors.joining(", ")) + "]";
+        return "[" + items.stream().map(e -> e.save(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC)).collect(Collectors.joining(", ")) + "]";
     }
 
     @Override

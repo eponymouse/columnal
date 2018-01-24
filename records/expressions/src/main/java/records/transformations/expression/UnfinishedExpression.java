@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
@@ -23,7 +24,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -61,7 +61,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
         return "@unfinished " + OutputBuilder.quoted(text);
     }

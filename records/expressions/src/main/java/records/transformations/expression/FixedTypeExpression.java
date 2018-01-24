@@ -14,10 +14,10 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FixedTypeNode;
 import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
 import threadchecker.OnThread;
@@ -26,7 +26,6 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -83,19 +82,19 @@ public class FixedTypeExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
         try
         {
             return "@type {|" + type.eitherInt(
                 text -> "@incomplete \"" + GrammarUtility.escapeChars(text)+ "\"",
-                t -> t.save(new OutputBuilder()).toString()) + "|} " + inner.save(false);
+                t -> t.save(new OutputBuilder()).toString()) + "|} " + inner.save(BracketedStatus.MISC);
         }
         catch (InternalException e)
         {
             Utility.report(e);
             // Not much else we can do:
-            return inner.save(false);
+            return inner.save(BracketedStatus.MISC);
         }
     }
     

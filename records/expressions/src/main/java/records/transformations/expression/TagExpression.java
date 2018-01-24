@@ -12,6 +12,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.TypeManager.TagInfo;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.TagExpressionNode;
 import records.types.TypeExp;
@@ -28,7 +29,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -173,13 +173,13 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
         String tag = this.tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
         if (inner == null)
             return tag;
         else
-            return tag + ":" + inner.save(false);
+            return tag + ":" + inner.save(BracketedStatus.MISC);
     }
 
     @Override

@@ -35,6 +35,7 @@ import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
 import records.gui.SingleSourceControl;
 import records.gui.View;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
@@ -534,7 +535,7 @@ public class SummaryStatistics extends TransformationEditable
             b.kw("SUMMARY");
             b.id(entry.getFirst());
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
-            b.raw(entry.getSecond().save(true));
+            b.raw(entry.getSecond().save(BracketedStatus.MISC));
             b.nl();
         }
         for (ColumnId c : splitBy)

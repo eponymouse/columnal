@@ -24,6 +24,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
@@ -88,7 +89,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public String save(boolean topLevel)
+        public String save(BracketedStatus surround)
         {
             return "Testing";
         }
@@ -402,7 +403,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public String save(boolean topLevel)
+        public String save(BracketedStatus surround)
         {
             return "";
         }

@@ -487,30 +487,28 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean shouldShow(String input)
         {
-            return function.getName().startsWith(input);
+            return (function.getName() + "(").startsWith(input);
         }
 
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            if (function.getName().equals(input))
+            if ((function.getName() + "(").equals(input))
             {
                 if (onlyAvailableCompletion)
                     return CompletionAction.COMPLETE_IMMEDIATELY;
                 else
                     return CompletionAction.SELECT;
             }
-            if ((function.getName() + "(").equals(input))
-                return CompletionAction.COMPLETE_IMMEDIATELY;
             return CompletionAction.NONE;
         }
 
         @Override
         public boolean features(String curInput, char character)
         {
-            return function.getName().contains("" + character);
+            return function.getName().contains("" + character) || (curInput.equals(function.getName()) && character == '(');
         }
-
+        
         @Override
         public @Nullable Node getFurtherDetails()
         {

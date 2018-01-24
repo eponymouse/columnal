@@ -47,6 +47,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.SingleSourceControl;
 import records.gui.View;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
@@ -222,7 +223,7 @@ public class Filter extends TransformationEditable
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
-        return Collections.singletonList(PREFIX + " " + filterExpression.save(true));
+        return Collections.singletonList(PREFIX + " " + filterExpression.save(BracketedStatus.MISC));
     }
 
     @Override

@@ -15,6 +15,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ClauseNode;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
@@ -29,7 +30,6 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -111,7 +111,7 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save()
         {
-            return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(false);
+            return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(BracketedStatus.MISC);
         }
 
         public MatchClause copy(MatchExpression e)
@@ -198,7 +198,7 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save()
         {
-            return pattern.save(false) + (guard == null ? "" : " @given " + guard.save(false));
+            return pattern.save(BracketedStatus.MISC) + (guard == null ? "" : " @given " + guard.save(BracketedStatus.MISC));
         }
 
         public Expression getPattern()
@@ -271,7 +271,7 @@ public class MatchExpression extends NonOperatorExpression
                 return clause.outcome.getValue(rowIndex, newState);
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(true) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(BracketedStatus.MISC) + "\"");
     }
 
     @Override
@@ -281,10 +281,10 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
-        String inner = "@match " + expression.save(false) + clauses.stream().map(c -> c.save()).collect(Collectors.joining(""));
-        return topLevel ? inner : ("(" + inner + ")");
+        String inner = "@match " + expression.save(BracketedStatus.MISC) + clauses.stream().map(c -> c.save()).collect(Collectors.joining(""));
+        return surround != BracketedStatus.MISC ? inner : ("(" + inner + ")");
     }
 
     @Override

@@ -53,8 +53,7 @@ import records.grammar.ExpressionParser.TimesExpressionContext;
 import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
-import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
-import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
@@ -124,7 +123,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();
 
-    public abstract String save(boolean topLevel);
+    public abstract String save(BracketedStatus surround);
 
     public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager) throws UserException, InternalException
     {
@@ -463,7 +462,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @Override
     public String toString()
     {
-        return save(true);
+        return save(BracketedStatus.TOP_LEVEL);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

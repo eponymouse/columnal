@@ -5,6 +5,7 @@ import records.data.ColumnId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.BooleanLiteral;
@@ -111,6 +112,6 @@ public class TestLoadSaveExpression
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
         assertEquals(expression, Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
-        assertEquals(src, expression.save(true));
+        assertEquals(src, expression.save(BracketedStatus.MISC));
     }
 }

@@ -1,7 +1,5 @@
 package records.transformations.expression;
 
-import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -12,12 +10,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
-import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -67,17 +65,17 @@ public abstract class NaryOpExpression extends Expression
     public abstract NaryOpExpression copyNoNull(List<Expression> replacements);
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
-        StringBuilder s = new StringBuilder(topLevel ? "" : "(");
+        StringBuilder s = new StringBuilder(surround == BracketedStatus.MISC ? "(" : "");
         s.append(getSpecialPrefix());
         for (int i = 0; i < expressions.size(); i++)
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save(false));
+            s.append(expressions.get(i).save(BracketedStatus.MISC));
         }
-        if (!topLevel)
+        if (surround == BracketedStatus.MISC)
             s.append(")");
         return s.toString();
     }

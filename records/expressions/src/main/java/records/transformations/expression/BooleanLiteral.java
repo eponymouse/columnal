@@ -12,6 +12,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.types.TypeExp;
 import utility.Pair;
 
@@ -42,7 +43,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
         return Boolean.toString(value);
     }

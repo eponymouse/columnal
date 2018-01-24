@@ -14,6 +14,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
@@ -51,7 +52,7 @@ public class PropLoadSaveExpression
     {
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
         assertEquals(expression, edited);
-        assertEquals(expression.save(true), edited.save(true));
+        assertEquals(expression.save(BracketedStatus.MISC), edited.save(BracketedStatus.MISC));
     }
 
     @Property(trials = 1000)
@@ -69,11 +70,11 @@ public class PropLoadSaveExpression
 
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
-        String saved = expression.save(true);
+        String saved = expression.save(BracketedStatus.MISC);
         // Use same manager to load so that types are preserved:
         Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
-        String resaved = reloaded.save(true);
+        String resaved = reloaded.save(BracketedStatus.MISC);
         assertEquals(saved, resaved);
 
     }

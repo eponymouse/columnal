@@ -189,6 +189,20 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         testFix("1 + 2 + (3 * 4 / 5) + 6", "*", "." + cssClassFor("3 * (4 / 5)"), "1 + 2 + (3 * (4 / 5)) + 6");
     }
+
+    @Test
+    public void testBracketFix7() throws UserException, InternalException
+    {
+        // Test that inner square brackets are preserved:
+        testFix("1 + 2 + [3 * 4 / 5] + 6", "*", "." + cssClassFor("3 * (4 / 5)"), "1 + 2 + [3 * (4 / 5)] + 6");
+    }
+
+    @Test
+    public void testBracketFix8() throws UserException, InternalException
+    {
+        // Test that inner square brackets are preserved:
+        testFix("@if true @then abs(-5 - -6 * -7) @else 8", "*", "." + cssClassFor("-5 - (-6 * -7)"), "@if true @then abs(-5 - (-6 * -7)) @else 8");
+    }
     
     
     

@@ -26,6 +26,7 @@ import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
 import records.gui.SingleSourceControl;
 import records.gui.View;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
@@ -198,7 +199,7 @@ public class Transform extends TransformationEditable
             OutputBuilder b = new OutputBuilder();
             b.kw("CALCULATE").id(entry.getFirst());
             b.kw("@EXPRESSION");
-            b.raw(entry.getSecond().save(true));
+            b.raw(entry.getSecond().save(BracketedStatus.MISC));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }

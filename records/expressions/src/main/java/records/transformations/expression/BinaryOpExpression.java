@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
@@ -63,10 +64,10 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
-        String inner = lhs.save(false) + " " + saveOp() + " " + rhs.save(false);
-        if (topLevel)
+        String inner = lhs.save(BracketedStatus.MISC) + " " + saveOp() + " " + rhs.save(BracketedStatus.MISC);
+        if (surround != BracketedStatus.MISC)
             return inner;
         else
             return "(" + inner + ")";

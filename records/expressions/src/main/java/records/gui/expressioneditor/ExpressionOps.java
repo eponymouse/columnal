@@ -271,7 +271,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     @Override
     public String save(Expression child)
     {
-        return child.save(false);
+        return child.save(BracketedStatus.MISC);
     }
 
     @Override

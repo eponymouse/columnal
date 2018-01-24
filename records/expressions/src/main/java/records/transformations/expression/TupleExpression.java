@@ -17,6 +17,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
@@ -125,9 +126,9 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
-        return "(" + members.stream().map(e -> e.save(false)).collect(Collectors.joining(", ")) + ")";
+        return "(" + members.stream().map(e -> e.save(BracketedStatus.MISC)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override

@@ -13,6 +13,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
@@ -84,10 +85,10 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(BracketedStatus surround)
     {
-        String content = "@if " + condition.save(false) + " @then " + thenExpression.save(false) + " @else " + elseExpression.save(false);
-        return topLevel ? content : ("(" + content + ")");
+        String content = "@if " + condition.save(BracketedStatus.MISC) + " @then " + thenExpression.save(BracketedStatus.MISC) + " @else " + elseExpression.save(BracketedStatus.MISC);
+        return surround != BracketedStatus.MISC ? content : ("(" + content + ")");
     }
 
     @Override
