@@ -103,9 +103,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
         {
             CallExpression call = (CallExpression) expression;
             write(call._test_getFunctionName());
-            //TODO bracket should work same as tab here, but doesn't yet:
-            push(KeyCode.ENTER);
-            //write("(");
+            write("(");
             enterExpression(call._test_getParam(), false, r);
             write(")");
         }
