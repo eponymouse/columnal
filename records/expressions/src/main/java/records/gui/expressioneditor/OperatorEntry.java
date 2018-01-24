@@ -234,7 +234,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
             }
             else if (c instanceof KeyShortcutCompletion)
             {
-                parent.focusRightOf(OperatorEntry.this, Focus.LEFT);
+                parent.parentFocusRightOfThis(Focus.LEFT);
                 return "";
             }
             return textField.getText();

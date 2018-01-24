@@ -177,7 +177,19 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         testBracketFix("1 , 2", ",", "[1, 2]");
     }
-   
+
+    @Test
+    public void testBracketFix6() throws UserException, InternalException
+    {
+        testFix("1 + 2 + (3 * 4 / 5) + 6", "*", "." + cssClassFor("(3 * 4) / 5"), "1 + 2 + ((3 * 4) / 5) + 6");
+    }
+
+    @Test
+    public void testBracketFix6B() throws UserException, InternalException
+    {
+        testFix("1 + 2 + (3 * 4 / 5) + 6", "*", "." + cssClassFor("3 * (4 / 5)"), "1 + 2 + (3 * (4 / 5)) + 6");
+    }
+    
     
     
     private void testBracketFix(String original, String fixFieldContent, String fixed)
@@ -240,7 +252,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             assertNotNull(errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
-            assertEquals(lookup(".quick-fix-row" + fixId).<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
+            assertEquals("Looking for row that matches, among: " + lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
                 1, lookup(".quick-fix-row" + fixId).queryAll().size());
             // Get around issue with not being able to get the position of
             // items in the fix popup correctly, by using keyboard:
