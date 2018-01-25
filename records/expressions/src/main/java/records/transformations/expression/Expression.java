@@ -139,7 +139,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         {
             return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p ->
             {
-                return new CompileExpression(typeManager).visit(p.completeExpression());
+                return new CompileExpression(typeManager).visit(p.completeExpression().topLevelExpression());
             });
         }
         catch (RuntimeException e)
@@ -414,7 +414,10 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitArrayExpression(ArrayExpressionContext ctx)
         {
-            return new ArrayExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
+            if (ctx.compoundExpression() != null)
+                return new ArrayExpression(ImmutableList.of(visitCompoundExpression(ctx.compoundExpression())));
+            else
+                return new ArrayExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
         }
 
         @Override

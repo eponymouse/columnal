@@ -284,7 +284,7 @@ public class MatchExpression extends NonOperatorExpression
     public String save(BracketedStatus surround)
     {
         String inner = "@match " + expression.save(BracketedStatus.MISC) + clauses.stream().map(c -> c.save()).collect(Collectors.joining(""));
-        return surround != BracketedStatus.MISC ? inner : ("(" + inner + ")");
+        return (surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : ("(" + inner + ")");
     }
 
     @Override

@@ -50,7 +50,7 @@ functionName : UNQUOTED_IDENT;
 callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;
 
 tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
-arrayExpression : OPEN_SQUARE (expression (COMMA expression)*)? CLOSE_SQUARE;
+arrayExpression : OPEN_SQUARE (compoundExpression | (expression (COMMA expression)*))? CLOSE_SQUARE;
 
 newVariable : NEWVAR UNQUOTED_IDENT;
 typeName : STRING | UNQUOTED_IDENT;
