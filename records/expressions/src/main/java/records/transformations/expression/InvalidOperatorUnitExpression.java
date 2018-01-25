@@ -41,7 +41,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     @Override
     public String save(boolean topLevel)
     {
-        StringBuilder b = new StringBuilder();
+        final StringBuilder b = new StringBuilder();
         if (!topLevel)
             b.append("(");
         b.append("@invalidopunit ");

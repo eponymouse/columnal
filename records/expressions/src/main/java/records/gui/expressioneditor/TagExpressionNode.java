@@ -28,7 +28,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     @SuppressWarnings({"initialization", "i18n"}) // Because LeaveableTextField gets marked uninitialized, and because of header
     public TagExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, Either<String, TagInfo> tag, @Nullable Expression innerContent)
     {
-        super(parent, semanticParent, "tag", TranslationUtility.getString("tag") + " " + tag.either(s -> "<unknown>", t -> t.getTypeName()), tag.either(s -> s, t -> t.getTagInfo().getName()), innerContent != null, innerContent);
+        super(parent, semanticParent, "tag", TranslationUtility.getString("head.tag") + " " + tag.either(s -> "<unknown>", t -> t.getTypeName()), tag.either(s -> s, t -> t.getTagInfo().getName()), innerContent != null, innerContent);
         this.tag = tag;
     }
 

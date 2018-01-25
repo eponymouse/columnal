@@ -138,7 +138,12 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             }
         )
     );
-    private final Set<Integer> ALPHABET = OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map(p -> p.getFirst())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private final Set<Integer> ALPHABET = makeAlphabet();
+
+    private static Set<@NonNull Integer> makeAlphabet()
+    {
+        return OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map((Pair<String, @Localized String> p) -> p.getFirst())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    }
 
     private static String getOp(Pair<String, @Localized String> p)
     {

@@ -30,7 +30,7 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
     public FunctionNode(Either<String, FunctionDefinition> function, ExpressionNodeParent semanticParent, @Nullable Expression argumentsExpression, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
-        super(parent, semanticParent, "function", TranslationUtility.getString("function"), function.either(n -> n, FunctionDefinition::getName), true, argumentsExpression);
+        super(parent, semanticParent, "function", TranslationUtility.getString("head.function"), function.either(n -> n, FunctionDefinition::getName), true, argumentsExpression);
         this.function = function;
     }
 

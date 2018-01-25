@@ -296,7 +296,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 ), l(fix(maxLevels - 1, type), () -> {
                     int numOperands = r.nextInt(2, 5);
                     List<Expression> operands = new ArrayList<>();
-                    List<@Value Object> results = replicate("");
+                    List<@Value Object> results = GenExpressionValueForwards.this.<@Value Object>replicate(DataTypeUtility.value(""));
                     for (int i = 0; i < numOperands; i++)
                     {
                         Pair<List<@Value Object>, Expression> item = make(DataType.TEXT, maxLevels - 1);

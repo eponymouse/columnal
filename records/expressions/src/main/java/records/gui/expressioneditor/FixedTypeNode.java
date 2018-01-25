@@ -15,6 +15,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +24,7 @@ public class FixedTypeNode extends SurroundNode
 {
     public FixedTypeNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, String startingType, @Nullable Expression startingInner)
     {
-        super(parent, semanticParent, "fix-type", "type", startingType, true, startingInner);
+        super(parent, semanticParent, "fix-type", TranslationUtility.getString("head.type"), startingType, true, startingInner);
     }
 
     @Override

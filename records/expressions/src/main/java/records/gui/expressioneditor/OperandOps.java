@@ -18,6 +18,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,7 +78,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
 
         public boolean includes(String op)
         {
-            return operators.stream().anyMatch(p -> p.getFirst().equals(op));
+            return operators.stream().anyMatch((Pair<String, @Localized String> p) -> p.getFirst().equals(op));
         }
         
         public OperatorSection<EXPRESSION> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
@@ -190,7 +191,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         @Override
         boolean addOperator(String operator, int indexOfOperator)
         {
-            if (possibleOperators.stream().anyMatch(p -> p.getFirst().equals(operator)) && indexOfOperator == endingOperatorIndexIncl + 1)
+            if (possibleOperators.stream().anyMatch((Pair<String, @Localized String> p) -> p.getFirst().equals(operator)) && indexOfOperator == endingOperatorIndexIncl + 1)
             {
                 endingOperatorIndexIncl = indexOfOperator;
                 actualOperators.add(operator);
@@ -324,7 +325,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 {
                     EXPRESSION invalidOpExpression = makeInvalidOpExpression(expressionExps, ops);
                     errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("Bracket as " + e.toString(), ImmutableList.of(makeCssClass(e)), params -> new Pair<>(ReplacementTarget.CURRENT, e))));
+                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>(TranslationUtility.getString("fix.bracketAs", e.toString()), ImmutableList.of(makeCssClass(e)), params -> new Pair<>(ReplacementTarget.CURRENT, e))));
                     return invalidOpExpression;
                 }
             }
@@ -354,7 +355,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 if (replacement != null)
                 {
                     errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>("Add brackets: " + replacement.toString(), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
+                        new QuickFix<>(TranslationUtility.getString("fix.bracketAs", replacement.toString()), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
                     ));
                 }
             }
@@ -418,7 +419,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 if (replacement != null)
                 {
                     errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>("Add brackets: " + replacement.toString(), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
+                        new QuickFix<>(TranslationUtility.getString("fix.bracketAs", replacement.toString()), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
                     ));
                 }
             }
