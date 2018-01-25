@@ -257,11 +257,15 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             Node lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<Node>query();
             assertNotNull(lhs);
             if (lhs == null) return;
-            // Get rid of any popups in the way:
-            push(KeyCode.ESCAPE);
-            push(KeyCode.ESCAPE);
-            clickOn(lhs);
-            TestUtil.sleep(2000);
+            @NonNull Node lhsFinal = lhs;
+            if (!TestUtil.fx(() -> lhsFinal.isFocused()))
+            {
+                // Get rid of any popups in the way:
+                push(KeyCode.ESCAPE);
+                push(KeyCode.ESCAPE);
+                clickOn(lhs);
+                TestUtil.sleep(2000);
+            }
             @Nullable Window errorPopup = listWindows().stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
