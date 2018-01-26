@@ -350,7 +350,6 @@ public class SummaryStatistics extends TransformationEditable
     private static class Editor extends TransformationEditor
     {
         private final SingleSourceControl srcControl;
-        private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<ColumnId, Expression>> ops;
         private final ObservableList<@NonNull ColumnId> splitBy;
         private final ListView<ColumnId> columnListView;
@@ -510,12 +509,6 @@ public class SummaryStatistics extends TransformationEditable
 
         }
 */
-        @Override
-        public BooleanExpression canPressOk()
-        {
-            return ready;
-        }
-
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
         {

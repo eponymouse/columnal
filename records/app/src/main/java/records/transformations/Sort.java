@@ -318,7 +318,6 @@ public class Sort extends TransformationEditable
     {
         private final SingleSourceControl srcControl;
         private final ObservableList<Optional<ColumnId>> sortBy;
-        private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ListView<ColumnId> columnListView;
 
         @SuppressWarnings("initialization")
@@ -646,13 +645,7 @@ public class Sort extends TransformationEditable
             srcHeaderAndData.setAll(srcCols);
         }
         */
-
-        @Override
-        public @OnThread(Tag.FXPlatform) BooleanExpression canPressOk()
-        {
-            return ready;
-        }
-
+        
         @Override
         public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
         {

@@ -26,12 +26,14 @@ import javax.swing.SwingUtilities;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by neil on 16/11/2016.
@@ -94,11 +96,11 @@ public class PropLoadSaveTransformation
 
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
+    public void testNoOpEdit(@When(seed=1L) @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
     {
         // Initialise JavaFX:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
-        CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
+        CompletableFuture<Optional<SimulationSupplier<Transformation>>> f = new CompletableFuture<>();
         Platform.runLater(() -> {
             View view;
             try
@@ -111,8 +113,10 @@ public class PropLoadSaveTransformation
             {
                 throw new RuntimeException(e);
             }
-            f.complete(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, original.transformation.getId()));
+            f.complete(Optional.ofNullable(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, original.transformation.getId())));
         });
-        assertEquals(original.transformation, f.get(10, TimeUnit.SECONDS).get());
+        Optional<SimulationSupplier<Transformation>> maker = f.get(10, TimeUnit.SECONDS);
+        assertTrue(maker.isPresent());
+        assertEquals(original.transformation, maker.get().get());
     }
 }

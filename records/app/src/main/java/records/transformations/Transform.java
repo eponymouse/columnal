@@ -299,21 +299,20 @@ public class Transform extends TransformationEditable
         {
             return columnEditors.getNode();
         }
-
+        
         @Override
-        public BooleanExpression canPressOk()
-        {
-            return columnEditors.allColumnNamesValidProperty();
-        }
-
-        @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId ourId)
+        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId ourId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            // They were only allowed to press OK if all columns were non-null:
-            ImmutableList<Pair<ColumnId, Expression>> cols = columnEditors.getColumns().stream().
-                    map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map((ObjectExpression<@Nullable ColumnId> e) -> Optional.ofNullable(e.get()).orElse(new ColumnId("")), e -> e.get())).collect(ImmutableList.toImmutableList());
-            return () -> new Transform(mgr, ourId, srcId.get(), cols);
+            ImmutableList.Builder<Pair<ColumnId, Expression>> cols = ImmutableList.builder();
+            for (Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> col : columnEditors.getColumns())
+            {
+                @Nullable ColumnId columnId = col.getFirst().getValue();
+                if (columnId == null)
+                    return null;
+                cols.add(new Pair<>(columnId, col.getSecond().getValue()));
+            }
+            return () -> new Transform(mgr, ourId, srcId.get(), cols.build());
         }
 
         @Override

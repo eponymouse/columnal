@@ -350,12 +350,6 @@ public class Concatenate extends TransformationEditable
         }
 
         @Override
-        public BooleanExpression canPressOk()
-        {
-            return new ReadOnlyBooleanWrapper(true);
-        }
-
-        @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId tableId)
         {
             return () -> new Concatenate(mgr, tableId, srcTableIds, missingVals);

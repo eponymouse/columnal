@@ -66,9 +66,12 @@ public abstract class TransformationEditor
 
     public abstract Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError);
 
-    public abstract BooleanExpression canPressOk();
-
-    public abstract SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId newId);
+    /**
+     * Get a simulation-thread maker for the resulting transformation.  If null
+     * is returned, it is not valid to press OK at the moment, and an error should
+     * be displayed.
+     */
+    public abstract @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId newId);
 
     public abstract @Nullable TableId getSourceId();
 

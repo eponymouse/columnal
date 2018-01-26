@@ -472,12 +472,6 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public BooleanExpression canPressOk()
-        {
-            return new ReadOnlyBooleanWrapper(true);
-        }
-
-        @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();

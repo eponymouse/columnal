@@ -231,13 +231,6 @@ public class HideColumns extends TransformationEditable
             return GUI.vbox("hide-columns-content", srcControl, columnsPanel.getNode());
         }
 
-
-        @Override
-        public BooleanExpression canPressOk()
-        {
-            return new ReadOnlyBooleanWrapper(true);
-        }
-
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId tableId)
         {
