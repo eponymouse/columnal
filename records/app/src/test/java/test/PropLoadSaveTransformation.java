@@ -96,7 +96,7 @@ public class PropLoadSaveTransformation
 
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@When(seed=1L) @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
+    public void testNoOpEdit(@From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
     {
         // Initialise JavaFX:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
@@ -116,7 +116,7 @@ public class PropLoadSaveTransformation
             f.complete(Optional.ofNullable(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, original.transformation.getId())));
         });
         Optional<SimulationSupplier<Transformation>> maker = f.get(10, TimeUnit.SECONDS);
-        assertTrue(maker.isPresent());
+        assertTrue("Not valid after no-op edit: " + original.transformation, maker.isPresent());
         assertEquals(original.transformation, maker.get().get());
     }
 }

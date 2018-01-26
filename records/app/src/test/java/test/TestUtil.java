@@ -184,13 +184,13 @@ public class TestUtil
         if (sourceOfRandomness.nextBoolean())
         {
             List<String> keywords = getKeywords();
-            return keywords.get(sourceOfRandomness.nextInt(0, keywords.size() - 1));
+            return keywords.get(sourceOfRandomness.nextInt(0, keywords.size() - 1)).replaceAll("[^A-Za-z0-9]", "");
         }
         else
         {
             // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
-            String trimmed = TestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
-                "a", "r", "n", "Z", "0", "9", "-", "=", "+", " ", "^", "@", "\"", "'"
+            String trimmed = "" + sourceOfRandomness.nextChar('a', 'z') + TestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
+                "a", "r", "n", "Z", "0", "9"
             ))).stream().collect(Collectors.joining()).trim();
             if (trimmed.isEmpty())
                 return "a";
