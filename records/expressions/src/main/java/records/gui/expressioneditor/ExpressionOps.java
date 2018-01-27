@@ -192,10 +192,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         @Nullable Expression expression = null;
         if (ops.isEmpty())
         {
-            if (bracketedStatus == BracketedStatus.MISC && !expressionExps.isEmpty())
-                expression = expressionExps.get(0);
-            else if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && expressionExps.size() <= 1)
+            if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && expressionExps.size() <= 1)
                 expression = new ArrayExpression(ImmutableList.copyOf(expressionExps));
+            else if (expressionExps.size() == 1)
+                expression = expressionExps.get(0);
         }
         else
         {
