@@ -181,27 +181,59 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testBracketFix6() throws UserException, InternalException
     {
-        testFix("1 + 2 + (3 * 4 / 5) + 6", "*", "." + cssClassFor("(3 * 4) / 5"), "1 + 2 + ((3 * 4) / 5) + 6");
+        testFix("1 + 2 + (3 * 4 / 5) + 6", "*", dotCssClassFor("(3 * 4) / 5"), "1 + 2 + ((3 * 4) / 5) + 6");
     }
 
     @Test
     public void testBracketFix6B() throws UserException, InternalException
     {
-        testFix("1 + 2 + (3 * 4 / 5) + 6", "*", "." + cssClassFor("3 * (4 / 5)"), "1 + 2 + (3 * (4 / 5)) + 6");
+        testFix("1 + 2 + (3 * 4 / 5) + 6", "*", dotCssClassFor("3 * (4 / 5)"), "1 + 2 + (3 * (4 / 5)) + 6");
     }
 
     @Test
     public void testBracketFix7() throws UserException, InternalException
     {
         // Test that inner square brackets are preserved:
-        testFix("1 + 2 + [3 * 4 / 5] + 6", "*", "." + cssClassFor("3 * (4 / 5)"), "1 + 2 + [3 * (4 / 5)] + 6");
+        testFix("1 + 2 + [3 * 4 / 5] + 6", "*", dotCssClassFor("3 * (4 / 5)"), "1 + 2 + [3 * (4 / 5)] + 6");
     }
 
     @Test
     public void testBracketFix8() throws UserException, InternalException
     {
         // Test that inner square brackets are preserved:
-        testFix("@if true @then abs(-5 - -6 * -7) @else 8", "*", "." + cssClassFor("-5 - (-6 * -7)"), "@if true @then abs(-5 - (-6 * -7)) @else 8");
+        testFix("@if true @then abs(-5 - -6 * -7) @else 8", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then abs(-5 - (-6 * -7)) @else 8");
+    }
+    
+    @Test
+    public void testListBracketFix1()
+    {
+        // If a function takes a list, and the user passes either one item (which is not of list type)
+        // or a tuple, offer to switch to list brackets:
+        testFix("sum(2)", "2", "", "sum([2])");
+    }
+
+    @Test
+    public void testListBracketFix2()
+    {
+        // If a function takes a list, and the user passes either one item (which is not of list type)
+        // or a tuple, offer to switch to list brackets:
+        testFix("sum(2, 3, 4)", "2", "", "sum([2, 3, 4])");
+    }
+    
+    @Test
+    public void testColumnToListFix1()
+    {
+        // If a column-single-row is used where a list is expected, offer to switch to
+        // a whole-column item:
+        fail("TODO");
+    }
+
+    @Test
+    public void testColumnFromListFix1()
+    {
+        // If a column-all-rows is used where a non-list is expected, offer to switch to
+        // a column-single-row item:
+        fail("TODO");
     }
     
     
@@ -210,7 +242,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         try
         {
-            testFix(original, fixFieldContent, "." + cssClassFor(fixed), fixed);
+            testFix(original, fixFieldContent, dotCssClassFor(fixed), fixed);
         }
         catch (InternalException | UserException e)
         {
@@ -218,9 +250,9 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
         }
     }
 
-    private String cssClassFor(String expression) throws InternalException, UserException
+    private String dotCssClassFor(String expression) throws InternalException, UserException
     {
-        return OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager()));
+        return "." + OperandOps.makeCssClass(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager()));
     }
 
     /**
