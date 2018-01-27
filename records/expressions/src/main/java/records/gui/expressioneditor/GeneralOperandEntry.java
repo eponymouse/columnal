@@ -94,4 +94,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     {
         expressionInfoDisplay.setType(type);
     }
+
+    @Override
+    public void cleanup()
+    {
+        expressionInfoDisplay.hideImmediately();
+    }
 }

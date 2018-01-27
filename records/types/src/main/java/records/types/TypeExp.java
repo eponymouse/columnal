@@ -245,4 +245,9 @@ public abstract class TypeExp implements StyledShowable
     {
         return toStyledString().toPlain();
     }
+
+    public static boolean isList(TypeExp typeExp)
+    {
+        return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_LIST);
+    }
 }

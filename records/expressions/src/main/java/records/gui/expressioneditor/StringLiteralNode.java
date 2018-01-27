@@ -123,6 +123,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
         return this == child;
     }
 
+    @Override
+    public void cleanup()
+    {
+        expressionInfoDisplay.hideImmediately();
+    }
+
     private static class EndStringCompletion extends Completion
     {
         @Override

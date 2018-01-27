@@ -72,6 +72,7 @@ public class Log
         log("", e);
     }
 
+    @Pure
     public static void logStackTrace(String s)
     {
         try

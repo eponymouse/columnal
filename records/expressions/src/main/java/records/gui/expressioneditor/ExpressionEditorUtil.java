@@ -92,6 +92,12 @@ public class ExpressionEditorUtil
             {
                 errorShower.setType(type);
             }
+
+            @Override
+            public void cleanup()
+            {
+                errorShower.hideImmediately();
+            }
         });
     }
 

@@ -46,6 +46,12 @@ public class StyledString
         return members.stream().map(p -> p.getSecond()).collect(Collectors.joining());
     }
 
+    @Override
+    public String toString()
+    {
+        return toPlain();
+    }
+
     /**
      * Concats the items together, inserting divider between each pair
      */

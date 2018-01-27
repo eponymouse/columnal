@@ -464,6 +464,18 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return this == child || outcome.isOrContains(child) || matches.stream().anyMatch((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst().isOrContains(child) || (p.getSecond() != null && p.getSecond().isOrContains(child)));
     }
 
+    @Override
+    public void cleanup()
+    {
+        for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)
+        {
+            match.getFirst().cleanup();
+            if (match.getSecond() != null)
+                match.getSecond().cleanup();
+        }
+        outcome.cleanup();
+    }
+
     public boolean isMatchNode(ConsecutiveBase consecutive)
     {
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)

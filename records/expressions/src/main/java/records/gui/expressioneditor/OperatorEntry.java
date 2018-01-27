@@ -162,6 +162,12 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         container.getSecond().showError(error, quickFixes);
     }
 
+    @Override
+    public void cleanup()
+    {
+        container.getSecond().cleanup();
+    }
+
     private static class SimpleCompletion extends Completion
     {
         private final String operator;

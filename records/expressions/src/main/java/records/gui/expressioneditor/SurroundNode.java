@@ -81,6 +81,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
                     super.forward();
             }
         };
+        head.getStyleClass().add("entry-field");
         head.setText(startingHead);
         this.cssClass = cssClass;
         Pair<VBox, ErrorDisplayer<Expression>> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getEditor(), e -> getParent().replaceLoad(this, e), getParentStyles());
@@ -424,5 +425,13 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     public boolean isOrContains(EEDisplayNode child)
     {
         return this == child || (contents != null && contents.isOrContains(child));
+    }
+
+    @Override
+    public void cleanup()
+    {
+        showError.cleanup();
+        if (contents != null)
+            contents.cleanup();
     }
 }

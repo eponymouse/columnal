@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -205,6 +206,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
             List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> startingOperators = Utility.mapList(loaded.getSecond(), operator -> operator.load(this, getThisAsSemanticParent()));
             atomicEdit.set(true);
+            operands.forEach(EEDisplayNode::cleanup);
+            operators.forEach(EEDisplayNode::cleanup);
             operands.setAll(startingOperands);
             operators.setAll(startingOperators);
             atomicEdit.set(false);
@@ -223,7 +226,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             if (newNode != null)
                 operands.set(index, newNode);
             else
-                operands.remove(index);
+                operands.remove(index).cleanup();
         }
     }
 
@@ -622,7 +625,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             operands.addAll(index + 1, newOperands);
         }
 
-        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), false, null);
+        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, false, null);
 
         atomicEdit.set(false);
         return true;
@@ -668,7 +671,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         {
             // Important to go backwards so that the indexes don't get screwed up:
             for (int i = endIndex; i >= startIndex; i--)
-                all.remove(i);
+                all.remove(i).cleanup();
         }
         
         // There's three cases:
@@ -685,7 +688,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         {
             all.add(startIndex, makeBlankOperand());
         }
-        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), true, null);
+        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, null);
         atomicEdit.set(false);
     }
 
@@ -725,7 +728,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
 
     public void focusChanged()
     {
-        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), true, atomicEdit);
+        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned
@@ -751,7 +754,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> void removeBlanks(List<OPERAND> operands, List<OPERATOR> operators, Predicate<COMMON> isBlank, Predicate<COMMON> isFocused, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
+    static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> void removeBlanks(List<OPERAND> operands, List<OPERATOR> operators, Predicate<COMMON> isBlank, Predicate<COMMON> isFocused, Consumer<COMMON> withRemoved, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
         // which will do nothing if we never edited
@@ -773,7 +776,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
                     all.remove(index);
                 if (index - 1 > 0 || all.size() > 1)
                 {
-                    all.remove(index - 1);
+                    withRemoved.accept(all.remove(index - 1));
                 }
                 // Else we don't want to change index, as we want to assess the next
                 // pair
@@ -790,7 +793,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             {
                 if (atomicEdit != null)
                     atomicEdit.set(true);
-                all.remove(all.size() - 1);
+                withRemoved.accept(all.remove(all.size() - 1));
             }
         }
 
@@ -835,6 +838,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         {
             operator.showType(type);
         }
+    }
+
+    @Override
+    public void cleanup()
+    {
+        operands.forEach(EEDisplayNode::cleanup);
+        operators.forEach(EEDisplayNode::cleanup);
     }
 
     public static enum BracketedStatus

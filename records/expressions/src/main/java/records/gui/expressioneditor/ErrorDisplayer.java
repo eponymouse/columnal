@@ -17,4 +17,6 @@ public interface ErrorDisplayer<EXPRESSION>
     public void showType(String type);
 
     public boolean isShowingError();
+    
+    public void cleanup();
 }

@@ -246,6 +246,14 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
         return this == child || source.isOrContains(child) || clauses.stream().anyMatch(n -> n.isOrContains(child));
     }
 
+    @Override
+    public void cleanup()
+    {
+        matchLabel.getSecond().cleanup();
+        source.cleanup();
+        clauses.forEach(ClauseNode::cleanup);
+    }
+
     @SuppressWarnings("nullness") // Because we return wrapper which can't be null
     @Override
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()

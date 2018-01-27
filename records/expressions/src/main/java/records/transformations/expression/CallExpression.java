@@ -20,6 +20,9 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperandOps;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionList;
@@ -79,9 +82,27 @@ public class CallExpression extends NonOperatorExpression
         if (paramType == null)
             return null;
         types = definition.makeParamAndReturnType(state.getTypeManager());
-        @Nullable TypeExp checked = onError.recordError(this, TypeExp.unifyTypes(types.paramType, paramType));
+        boolean takesList = TypeExp.isList(types.paramType);
+        Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(types.paramType, paramType);
+        @Nullable TypeExp checked = onError.recordError(this, temp);
         if (checked == null)
+        {
+            // Check after unification attempted, because that will have constrained
+            // to list if possible (and not, if not)
+            if (takesList && !TypeExp.isList(paramType.prune()))
+            {
+                // Offer to make a list:
+                Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
+                CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
+                onError.recordQuickFixes(this, Collections.singletonList(
+                    new QuickFix<>("Change to single-item list", ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {
+                        return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
+                    })
+                ));
+            }
+            
             return null;
+        }
         return onError.recordType(this, types.returnType);
     }
 

@@ -187,7 +187,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ops = new ArrayList<>(ops);
 
         // Trim blanks from end:
-        ConsecutiveBase.removeBlanks(expressionExps, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedExpression && ((UnfinishedExpression)o).getText().trim().isEmpty(), o -> false, false, null);
+        ConsecutiveBase.removeBlanks(expressionExps, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedExpression && ((UnfinishedExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
 
         @Nullable Expression expression = null;
         if (ops.isEmpty())

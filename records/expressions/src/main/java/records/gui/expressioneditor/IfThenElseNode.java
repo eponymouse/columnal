@@ -191,6 +191,14 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
+    public void cleanup()
+    {
+        condition.cleanup();
+        thenPart.cleanup();
+        elsePart.cleanup();
+    }
+
+    @Override
     @SuppressWarnings("nullness") // Because we return non-null item
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {

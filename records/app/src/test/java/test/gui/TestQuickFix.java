@@ -209,7 +209,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2)", "2", "", "sum([2])");
+        testFix("sum(2)", "sum", "", "sum([2])");
     }
 
     @Test
@@ -315,7 +315,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             push(KeyCode.SHIFT, KeyCode.valueOf(key));
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);
-            assertTrue(TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
+            assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
             moveTo(".ok-button");
             TestUtil.sleep(3000);

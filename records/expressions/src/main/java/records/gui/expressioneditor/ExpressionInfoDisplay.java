@@ -100,6 +100,12 @@ public class ExpressionInfoDisplay
         });
     }
 
+    public void hideImmediately()
+    {
+        if (popup != null)
+            hide(true);
+    }
+
     private class ErrorMessagePopup extends PopOver
     {
         private final FixList fixList;
