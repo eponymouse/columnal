@@ -51,7 +51,7 @@ public class TransformationManager implements TransformationLoader
             new SummaryStatistics.Info(),
             new Filter.Info(),
             new Sort.Info(),
-            new HideColumns.Info(),
+            //new HideColumns.Info(),
             new Concatenate.Info()
         );
     }
