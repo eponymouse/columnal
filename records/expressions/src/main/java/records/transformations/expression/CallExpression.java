@@ -26,6 +26,7 @@ import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.Replacem
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionList;
+import records.types.TupleTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -89,16 +90,36 @@ public class CallExpression extends NonOperatorExpression
         {
             // Check after unification attempted, because that will have constrained
             // to list if possible (and not, if not)
-            if (takesList && !TypeExp.isList(paramType.prune()))
+            if (takesList)
             {
-                // Offer to make a list:
-                Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
-                CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
-                onError.recordQuickFixes(this, Collections.singletonList(
-                    new QuickFix<>("Change to single-item list", ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {
-                        return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
-                    })
-                ));
+                TypeExp prunedParam = paramType.prune();
+
+                if (prunedParam instanceof TupleTypeExp && param instanceof TupleExpression)
+                {
+                    // Offer to turn tuple into a list:
+                    Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
+                    CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
+                    onError.recordQuickFixes(this, Collections.singletonList(
+                            new QuickFix<>("Add missing list brackets: " + replacementParam, ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {
+                                return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
+                            })
+                    ));
+                }
+                // Although we may want to pass a tuple as a single-item list, it's much less likely
+                // than the missing list brackets case, hence the else here:
+                else if (!TypeExp.isList(prunedParam))
+                {
+                    // Offer to make a list:
+                    Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
+                    CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
+                    onError.recordQuickFixes(this, Collections.singletonList(
+                        new QuickFix<>("Change to single-item list", ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {
+                            return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
+                        })
+                    ));
+                }
+                
+                
             }
             
             return null;

@@ -213,11 +213,11 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     }
 
     @Test
-    public void testListBracketFix2()
+    public void testListBracketFix2() throws UserException, InternalException
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2, 3, 4)", "2", "", "sum([2, 3, 4])");
+        testFix("sum(2, 3, 4)", "sum", dotCssClassFor("sum([2, 3, 4])"), "sum([2, 3, 4])");
     }
     
     @Test

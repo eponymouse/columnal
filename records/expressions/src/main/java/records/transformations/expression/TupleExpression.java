@@ -184,7 +184,7 @@ public class TupleExpression extends Expression
         return members.hashCode();
     }
 
-    public ImmutableList<Expression> _test_getMembers()
+    public ImmutableList<Expression> getMembers()
     {
         return members;
     }

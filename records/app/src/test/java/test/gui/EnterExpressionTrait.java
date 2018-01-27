@@ -42,7 +42,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
         {
             TupleExpression t = (TupleExpression)expression;
             write("(");
-            ImmutableList<Expression> members = t._test_getMembers();
+            ImmutableList<Expression> members = t.getMembers();
             for (int i = 0; i < members.size(); i++)
             {
                 if (i > 0)
