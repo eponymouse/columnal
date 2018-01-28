@@ -101,7 +101,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         return tableManager;
     }
 
-    private static class SelectionInfo<E extends LoadableExpression<E, P> & StyledShowable, P>
+    private static class SelectionInfo<E extends LoadableExpression<E, P>, P>
     {
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
@@ -359,7 +359,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @SuppressWarnings("initialization")
-    public <E extends LoadableExpression<E, P> & StyledShowable, P> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E, P> src)
+    public <E extends LoadableExpression<E, P>, P> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;

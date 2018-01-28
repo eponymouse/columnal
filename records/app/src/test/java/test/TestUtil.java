@@ -44,6 +44,7 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionInstance;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.GenString;
 import utility.*;
@@ -941,7 +942,7 @@ public class TestUtil
             }
 
             @Override
-            public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+            public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
             {
             }
 

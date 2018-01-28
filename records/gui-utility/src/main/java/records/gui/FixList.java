@@ -1,9 +1,11 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -51,11 +53,11 @@ public class FixList extends VBox
     
     public static class FixInfo
     {
-        private final @Localized String label;
+        private final StyledString label;
         private final ImmutableList<String> cssClasses;
         public final FXPlatformRunnable executeFix;
 
-        public FixInfo(@Localized String label, ImmutableList<String> cssClasses, FXPlatformRunnable executeFix)
+        public FixInfo(StyledString label, ImmutableList<String> cssClasses, FXPlatformRunnable executeFix)
         {
             this.label = label;
             this.cssClasses = cssClasses;
@@ -74,7 +76,7 @@ public class FixList extends VBox
             getStyleClass().add("quick-fix-row");
             getStyleClass().addAll(fixInfo.cssClasses);
             
-            setCenter(new Label(fixInfo.label));
+            setCenter(new TextFlow(fixInfo.label.toGUI().toArray(new Node[0])));
 
             setOnMouseClicked(e -> {
                 doFix();

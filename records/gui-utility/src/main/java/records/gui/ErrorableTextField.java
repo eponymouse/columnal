@@ -19,6 +19,7 @@ import org.controlsfx.control.PopOver.ArrowLocation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.FixList.FixInfo;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
@@ -206,10 +207,10 @@ public class ErrorableTextField<T>
 
     public static class QuickFix
     {
-        private final @Localized String fixDescription;
+        private final StyledString fixDescription;
         private final String fixedValue;
 
-        public QuickFix(@Localized String fixDescription, String fixedValue)
+        public QuickFix(StyledString fixDescription, String fixedValue)
         {
             this.fixDescription = fixDescription;
             this.fixedValue = fixedValue;
@@ -256,7 +257,7 @@ public class ErrorableTextField<T>
                 // Not valid anywhere; offer to remove in case it's an unprintable or awkward character:
                 return ConversionResult.error(
                     TranslationUtility.getString("error.illegalCharacter", Utility.codePointToString(codepoint) + " [\\u" + Integer.toHexString(codepoint) + "]"),
-                    new QuickFix(TranslationUtility.getString("error.illegalCharacter.remove"), new String(codePoints, 0, i) + new String(codePoints, i + 1, codePoints.length - i - 1))
+                    new QuickFix(StyledString.s(TranslationUtility.getString("error.illegalCharacter.remove")), new String(codePoints, 0, i) + new String(codePoints, i + 1, codePoints.length - i - 1))
                 );
             }
         }

@@ -152,7 +152,7 @@ public interface ErrorAndTypeRecorder
             CURRENT, PARENT;
         }
         
-        public final class QuickFixParams
+        public static final class QuickFixParams
         {
             public final @Nullable Window parentWindow;
             public final TableManager tableManager;

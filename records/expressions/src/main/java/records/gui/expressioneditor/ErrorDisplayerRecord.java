@@ -145,7 +145,7 @@ public class ErrorDisplayerRecord
 
             @SuppressWarnings("unchecked")
             @Override
-            public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+            public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
             {
                 if (src instanceof Expression && !quickFixes.isEmpty())
                 {

@@ -101,9 +101,7 @@ public class CallExpression extends NonOperatorExpression
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
                     // Offer to turn a this-row column reference into whole column:
                     onError.recordQuickFixes(this, Collections.singletonList(
-                        new QuickFix<>("Use whole column: " + param, ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {          
-                            return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
-                        })
+                        new QuickFix<>("fix.wholeColumn", ReplacementTarget.CURRENT, replacementCall)
                     ));
                 }
                 if (prunedParam instanceof TupleTypeExp && param instanceof TupleExpression)
@@ -112,9 +110,7 @@ public class CallExpression extends NonOperatorExpression
                     Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
                     onError.recordQuickFixes(this, Collections.singletonList(
-                            new QuickFix<>("Add missing list brackets: " + replacementParam, ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {
-                                return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
-                            })
+                            new QuickFix<>("fix.squareBracketAs", ReplacementTarget.CURRENT, replacementCall)
                     ));
                 }
                 // Although we may want to pass a tuple as a single-item list, it's much less likely
@@ -125,9 +121,7 @@ public class CallExpression extends NonOperatorExpression
                     Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
                     onError.recordQuickFixes(this, Collections.singletonList(
-                        new QuickFix<>("Change to single-item list", ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {
-                            return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
-                        })
+                        new QuickFix<>("fix.singleItemList", ReplacementTarget.CURRENT, replacementCall)
                     ));
                 }
                 

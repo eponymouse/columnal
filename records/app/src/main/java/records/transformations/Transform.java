@@ -34,6 +34,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
@@ -122,7 +123,7 @@ public class Transform extends TransformationEditable
                     }
 
                     @Override
-                    public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+                    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
                     {
                         
                     }

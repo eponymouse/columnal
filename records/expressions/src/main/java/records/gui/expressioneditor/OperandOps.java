@@ -326,7 +326,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 {
                     EXPRESSION invalidOpExpression = makeInvalidOpExpression(expressionExps, ops);
                     errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>(TranslationUtility.getString("fix.bracketAs", e.toString()), ImmutableList.of(makeCssClass(e)), params -> new Pair<>(ReplacementTarget.CURRENT, e))));
+                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, e)));
                     return invalidOpExpression;
                 }
             }
@@ -356,7 +356,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 if (replacement != null)
                 {
                     errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>(TranslationUtility.getString("fix.bracketAs", replacement.toString()), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
+                        new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, replacement)
                     ));
                 }
             }
@@ -420,7 +420,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 if (replacement != null)
                 {
                     errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>(TranslationUtility.getString("fix.bracketAs", replacement.toString()), ImmutableList.of(makeCssClass(replacement)), p -> new Pair<>(ReplacementTarget.CURRENT, replacement))
+                        new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, replacement)
                     ));
                 }
             }

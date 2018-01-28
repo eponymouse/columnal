@@ -89,6 +89,12 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    {
+        return StyledString.s(varName);
+    }
+
+    @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();

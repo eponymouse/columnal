@@ -12,7 +12,7 @@ import utility.gui.FXUtility;
 /**
  * A child of a ConsecutiveBase item.  Has methods for selection, dragging and focusing.
  */
-public interface ConsecutiveChild<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT> & StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode
+public interface ConsecutiveChild<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EEDisplayNode
 {
     @Pure
     public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent();

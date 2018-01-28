@@ -14,6 +14,7 @@ import records.data.datatype.DataType;
 import records.data.unit.Unit;
 import records.gui.TypeDialog;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.QuickFixParams;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
 import records.transformations.expression.FixedTypeExpression;
@@ -29,6 +30,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -59,7 +61,7 @@ public class ExpressionEditorUtil
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
     @NotNull
-    protected static <E extends LoadableExpression<E, P> & StyledShowable, P> Pair<VBox, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replaceWithFixed, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replaceWithFixed, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -120,7 +122,7 @@ public class ExpressionEditorUtil
     }
 
     @NotNull
-    protected static <E extends LoadableExpression<E, P> & StyledShowable, P> Pair<VBox, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replace, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replace, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
@@ -137,18 +139,18 @@ public class ExpressionEditorUtil
     public static List<QuickFix<Expression>> quickFixesForTypeError(Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression>> quickFixes = new ArrayList<>();
-        quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.of(), params -> {
+        FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, Expression>> makeTypeFix = params -> {
             TypeDialog typeDialog = new TypeDialog(params.parentWindow, params.tableManager.getTypeManager(), false);
             @Nullable DataType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
             {
                 return new Pair<>(CURRENT, FixedTypeExpression.fixType(dataType, src));
-            }
-            else
+            } else
             {
                 return new Pair<>(CURRENT, src);
             }
-        }));
+        };
+        quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), makeTypeFix));
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;

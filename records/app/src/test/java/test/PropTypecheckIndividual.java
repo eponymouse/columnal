@@ -34,6 +34,7 @@ import records.transformations.expression.MatchExpression.Pattern;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
+import styled.StyledString;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
@@ -92,6 +93,12 @@ public class PropTypecheckIndividual
         public String save(BracketedStatus surround)
         {
             return "Testing";
+        }
+
+        @Override
+        protected StyledString toDisplay(BracketedStatus bracketedStatus)
+        {
+            return StyledString.s("Testing");
         }
 
         @Override
@@ -405,7 +412,13 @@ public class PropTypecheckIndividual
         @Override
         public String save(BracketedStatus surround)
         {
-            return "";
+            return "Testing";
+        }
+
+        @Override
+        protected StyledString toDisplay(BracketedStatus bracketedStatus)
+        {
+            return StyledString.s("Testing");
         }
 
         @Override

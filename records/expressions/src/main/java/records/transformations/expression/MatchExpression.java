@@ -114,6 +114,16 @@ public class MatchExpression extends NonOperatorExpression
             return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(BracketedStatus.MISC);
         }
 
+        public StyledString toDisplay()
+        {
+            return StyledString.concat(
+                StyledString.s(" case "),
+                patterns.stream().map(p -> p.toDisplay()).collect(StyledString.joining(" or ")),
+                StyledString.s(" then "),
+                outcome.toDisplay(BracketedStatus.MISC)
+            );
+        }
+
         public MatchClause copy(MatchExpression e)
         {
             return e.new MatchClause(patterns, outcome); //TODO deep copy patterns
@@ -199,6 +209,12 @@ public class MatchExpression extends NonOperatorExpression
         public String save()
         {
             return pattern.save(BracketedStatus.MISC) + (guard == null ? "" : " @given " + guard.save(BracketedStatus.MISC));
+        }
+
+        public StyledString toDisplay()
+        {
+            StyledString patternDisplay = pattern.toDisplay(BracketedStatus.MISC);
+            return guard == null ? patternDisplay : StyledString.concat(StyledString.s(" given "), guard.toDisplay(BracketedStatus.MISC));
         }
 
         public Expression getPattern()

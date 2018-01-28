@@ -30,6 +30,7 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.ExpressionValue;
 import test.gen.GenDataType;
@@ -103,7 +104,7 @@ public class PropTypecheck
                 }
 
                 @Override
-                public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+                public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
                 {
                 }
 

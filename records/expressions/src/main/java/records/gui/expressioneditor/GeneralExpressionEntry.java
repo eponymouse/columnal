@@ -66,8 +66,8 @@ import java.util.stream.Stream;
  */
 public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression>, EEDisplayNodeParent, UnitNodeParent
 {
-    private static final String ARROW_SAME_ROW = "\u2192";
-    private static final String ARROW_WHOLE = "\u2195";
+    public static final String ARROW_SAME_ROW = "\u2192";
+    public static final String ARROW_WHOLE = "\u2195";
 
     public static enum Status
     {

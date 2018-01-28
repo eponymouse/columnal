@@ -153,7 +153,7 @@ public class ArrayExpression extends Expression
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        return StyledString.concat(StyledString.s("["), items.stream().map(e -> e.save(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC)).collect(StyledString.joining(", ")), StyledString.s("]"));
+        return StyledString.concat(StyledString.s("["), items.stream().map(e -> e.toDisplay(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC)).collect(StyledString.joining(", ")), StyledString.s("]"));
     }
 
     @Override

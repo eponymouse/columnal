@@ -29,6 +29,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -132,6 +133,15 @@ public class ColumnReference extends NonOperatorExpression
     public String save(BracketedStatus surround)
     {
         return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@wholecolumn " : "@column ") + OutputBuilder.quotedIfNecessary(columnName.getOutput());
+    }
+
+    @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    {
+        return StyledString.concat(
+            StyledString.s(referenceType == ColumnReferenceType.WHOLE_COLUMN ? GeneralExpressionEntry.ARROW_WHOLE : GeneralExpressionEntry.ARROW_SAME_ROW),
+            StyledString.s(OutputBuilder.quotedIfNecessary(columnName.getOutput()))
+        );
     }
 
     @Override
