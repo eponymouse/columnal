@@ -28,8 +28,6 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.ExpressionLexer;
-import records.grammar.ExpressionParser;
 import records.gui.expressioneditor.OperandOps;
 import records.transformations.Transform;
 import records.transformations.TransformationInfo;
@@ -41,12 +39,9 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Utility;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -138,44 +133,44 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testBracketFix1()
     {
-        testBracketFix("1+2*3", "*","1 + (2 * 3)");
+        testSimpleFix("1+2*3", "*","1 + (2 * 3)");
     }
 
     @Test
     public void testBracketFix1B()
     {
-        testBracketFix("1+2*3", "+", "(1 + 2) * 3");
+        testSimpleFix("1+2*3", "+", "(1 + 2) * 3");
     }
 
     @Test
     public void testBracketFix2()
     {
-        testBracketFix("1 + 2 = 3", "+", "(1 + 2) = 3");
+        testSimpleFix("1 + 2 = 3", "+", "(1 + 2) = 3");
     }
 
     @Test
     public void testBracketFix3()
     {
-        testBracketFix("1 + 2 = 3 - 4", "-", "@invalidops 1 \"+\" 2 \"=\" (3 - 4)");
+        testSimpleFix("1 + 2 = 3 - 4", "-", "@invalidops 1 \"+\" 2 \"=\" (3 - 4)");
     }
     
     @Test
     public void testBracketFix4()
     {
-        testBracketFix("1 = 2 = 3 + 4 = 5 = 6", "+", "1 = 2 = (3 + 4) = 5 = 6");
+        testSimpleFix("1 = 2 = 3 + 4 = 5 = 6", "+", "1 = 2 = (3 + 4) = 5 = 6");
     }
 
     @Test
     public void testBracketFix5()
     {
         // Tuples must be bracketed:
-        testBracketFix("1 , 2", ",", "(1, 2)");
+        testSimpleFix("1 , 2", ",", "(1, 2)");
     }
     
     @Test
     public void testBracketFix5B()
     {
-        testBracketFix("1 , 2", ",", "[1, 2]");
+        testSimpleFix("1 , 2", ",", "[1, 2]");
     }
 
     @Test
@@ -225,7 +220,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testFix("sum(ACC1)", "ACC1", dotCssClassFor("@wholecolumn ACC1"), "sum(@wholecolumn ACC1)");
+        testSimpleFix("sum(ACC1)", "sum", "sum(@wholecolumn ACC1)");
     }
 
     @Test
@@ -240,7 +235,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     
     
     
-    private void testBracketFix(String original, String fixFieldContent, String fixed)
+    private void testSimpleFix(String original, String fixFieldContent, String fixed)
     {
         try
         {

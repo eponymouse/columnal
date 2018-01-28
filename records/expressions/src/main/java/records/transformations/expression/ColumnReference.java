@@ -230,6 +230,22 @@ public class ColumnReference extends NonOperatorExpression
         // TODO could replace with an invalid column name
         return null;
     }
+
+    public @Nullable TableId getTableId()
+    {
+        return tableName;
+    }
+
+    public ColumnId getColumnId()
+    {
+        return columnName;
+    }
+
+
+    public ColumnReferenceType getReferenceType()
+    {
+        return referenceType;
+    }
 }
 
 

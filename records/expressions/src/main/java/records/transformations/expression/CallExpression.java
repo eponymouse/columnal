@@ -21,6 +21,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperandOps;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
@@ -94,6 +95,17 @@ public class CallExpression extends NonOperatorExpression
             {
                 TypeExp prunedParam = paramType.prune();
 
+                if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference)param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+                {
+                    ColumnReference colRef = (ColumnReference)param;
+                    CallExpression replacementCall = new CallExpression(functionName, definition, units, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
+                    // Offer to turn a this-row column reference into whole column:
+                    onError.recordQuickFixes(this, Collections.singletonList(
+                        new QuickFix<>("Use whole column: " + param, ImmutableList.of(OperandOps.makeCssClass(replacementCall)), p -> {          
+                            return new Pair<>(ReplacementTarget.CURRENT, replacementCall);
+                        })
+                    ));
+                }
                 if (prunedParam instanceof TupleTypeExp && param instanceof TupleExpression)
                 {
                     // Offer to turn tuple into a list:
