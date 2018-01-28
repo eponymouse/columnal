@@ -16,6 +16,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Pair;
 
 import java.util.Arrays;
@@ -71,6 +72,16 @@ public abstract class BinaryOpExpression extends Expression
             return inner;
         else
             return "(" + inner + ")";
+    }
+
+    @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        StyledString inner = StyledString.concat(lhs.toDisplay(BracketedStatus.MISC), StyledString.s(" " + saveOp() + " "), rhs.toDisplay(BracketedStatus.MISC));
+        if (surround != BracketedStatus.MISC)
+            return inner;
+        else
+            return StyledString.roundBracket(inner);
     }
 
     protected abstract String saveOp();

@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.ExConsumer;
 
@@ -28,7 +29,7 @@ public class ErrorAndTypeRecorderStorer implements ErrorAndTypeRecorder
     }
 
     @Override
-    public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
     {
         // Ignore them, just interested in errors
     }

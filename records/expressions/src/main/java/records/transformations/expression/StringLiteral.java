@@ -18,6 +18,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Pair;
 
 import java.math.BigInteger;
@@ -51,6 +52,12 @@ public class StringLiteral extends Literal
     public String save(BracketedStatus surround)
     {
         return OutputBuilder.quoted(value);
+    }
+
+    @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    {
+        return StyledString.monospace(StyledString.s("\"" + value + "\""));
     }
 
     @Override

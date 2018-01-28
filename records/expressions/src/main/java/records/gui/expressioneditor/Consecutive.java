@@ -7,6 +7,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.LoadableExpression;
+import styled.StyledShowable;
 import utility.FXPlatformFunction;
 import utility.Utility;
 
@@ -16,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 19/02/2017.
  */
-public abstract class Consecutive<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
+public abstract class Consecutive<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT> & StyledShowable, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final EEDisplayNodeParent parent;
     private final ImmutableSet<Character> endCharacters;
@@ -87,7 +88,7 @@ public abstract class Consecutive<EXPRESSION extends LoadableExpression<EXPRESSI
         return endCharacters;
     }
 
-    public static class ConsecutiveStartContent<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
+    public static class ConsecutiveStartContent<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT> & StyledShowable, SEMANTIC_PARENT>
     {
         private final List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION, SEMANTIC_PARENT>>> startingOperands;
         private final List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> startingOperators;

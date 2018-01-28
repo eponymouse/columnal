@@ -15,6 +15,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -30,7 +31,7 @@ import java.util.List;
  */
 public class ErrorDisplayerRecord
 {
-    private static class ErrorDetails<EXPRESSION>
+    private static class ErrorDetails<EXPRESSION extends StyledShowable>
     {
         public final ErrorDisplayer<EXPRESSION> displayer;
         public final ArrayList<StyledString> errors = new ArrayList<>();

@@ -66,6 +66,8 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.types.ExpressionBase;
 import records.types.TypeExp;
+import styled.StyledShowable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -84,7 +86,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionNodeParent>
+public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionNodeParent>, StyledShowable
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
@@ -488,6 +490,14 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public abstract boolean equals(@Nullable Object o);
     @Override
     public abstract int hashCode();
+
+    @Override
+    public final StyledString toStyledString()
+    {
+        return toDisplay(BracketedStatus.TOP_LEVEL);
+    }
+
+    protected abstract StyledString toDisplay(BracketedStatus bracketedStatus);
 
     // Only for testing:
     public static interface _test_TypeVary extends FunctionDefinition._test_TypeVary<Expression>

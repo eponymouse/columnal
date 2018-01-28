@@ -288,6 +288,13 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        StyledString inner = StyledString.concat(StyledString.s("match "), expression.toDisplay(BracketedStatus.MISC), clauses.stream().map(c -> c.toDisplay()).collect(StyledString.joining("")));
+        return (surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : StyledString.roundBracket(inner);
+    }
+
+    @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:

@@ -30,6 +30,7 @@ import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -100,7 +101,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         return tableManager;
     }
 
-    private static class SelectionInfo<E extends LoadableExpression<E, P>, P>
+    private static class SelectionInfo<E extends LoadableExpression<E, P> & StyledShowable, P>
     {
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
@@ -358,7 +359,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @SuppressWarnings("initialization")
-    public <E extends LoadableExpression<E, P>, P> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E, P> src)
+    public <E extends LoadableExpression<E, P> & StyledShowable, P> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;
@@ -395,7 +396,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         ensureSelectionIncludes(src);
     }
 
-    public <E extends @NonNull LoadableExpression<E, P>, P> void extendSelectionTo(ConsecutiveChild<E, P> node)
+    public <E extends @NonNull LoadableExpression<E, P> & StyledShowable, P> void extendSelectionTo(ConsecutiveChild<E, P> node)
     {
         if (selectionLocked)
             return;

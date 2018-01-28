@@ -14,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.types.TypeExp;
+import styled.StyledString;
 import utility.Pair;
 
 import java.util.Map;
@@ -46,6 +47,12 @@ public class BooleanLiteral extends Literal
     public String save(BracketedStatus surround)
     {
         return Boolean.toString(value);
+    }
+
+    @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    {
+        return StyledString.s(Boolean.toString(value));
     }
 
     @Override

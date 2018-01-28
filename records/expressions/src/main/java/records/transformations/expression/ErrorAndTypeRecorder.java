@@ -3,15 +3,20 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.gui.ErrorableTextField;
+import records.gui.ErrorableTextField.QuickFix;
 import records.gui.expressioneditor.ExpressionEditorUtil;
+import records.gui.expressioneditor.OperandOps;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -19,6 +24,7 @@ import utility.Either;
 import utility.FXPlatformFunction;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,7 +95,7 @@ public interface ErrorAndTypeRecorder
     // TODO make the String @Localized
     public <EXPRESSION> void recordError(EXPRESSION src, StyledString error);
     
-    public <EXPRESSION> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
+    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
 
     public default @Recorded @Nullable TypeExp recordTypeAndError(Expression expression, Either<StyledString, TypeExp> typeOrError)
     {
@@ -102,25 +108,31 @@ public interface ErrorAndTypeRecorder
      * A quick fix for an error.  Has a title to display, and a thunk to run
      * to get a replacement expression for the error source.
      */
-    public final static class QuickFix<EXPRESSION>
+    public final static class QuickFix<EXPRESSION extends StyledShowable>
     {
-        private final @Localized String title;
+        private final StyledString title;
         private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement;
         private final ImmutableList<String> cssClasses;
 
-        public QuickFix(@Localized String title, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement)
+        public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, EXPRESSION replacement)
         {
-            this(title, ImmutableList.of(), fixedReplacement);
+            this(StyledString.concat(
+                    StyledString.s(TranslationUtility.getString(titleKey)),
+                    StyledString.s(": "),
+                    replacement.toStyledString()),
+                ImmutableList.of(OperandOps.makeCssClass(replacement)),
+                p -> new Pair<>(replacementTarget, replacement));
         }
         
-        public QuickFix(@Localized String title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement)
+        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement)
         {
             this.title = title;
             this.cssClasses = cssClasses;
             this.fixedReplacement = fixedReplacement;
         }
 
-        public @Localized String getTitle() {
+        public StyledString getTitle()
+        {
             return title;
         }
         

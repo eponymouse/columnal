@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import records.transformations.expression.ErrorAndTypeRecorder;
+import styled.StyledShowable;
 import styled.StyledString;
 
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
  * An interface implemented by an expression editor component which can display
  * an error and accompanying quick fixes.
  */
-public interface ErrorDisplayer<EXPRESSION>
+public interface ErrorDisplayer<EXPRESSION extends StyledShowable>
 {
     // TODO make the String @Localized
     public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes);

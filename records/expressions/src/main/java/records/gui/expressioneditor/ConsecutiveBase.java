@@ -21,6 +21,7 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.*;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -41,7 +42,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION>
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT> & StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION>
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 

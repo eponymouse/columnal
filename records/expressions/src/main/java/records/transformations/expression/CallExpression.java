@@ -164,6 +164,15 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        if (param instanceof TupleExpression)
+            return StyledString.concat(StyledString.s(functionName), param.toDisplay(BracketedStatus.MISC));
+        else
+            return StyledString.concat(StyledString.s(functionName + "("), param.toDisplay(BracketedStatus.DIRECT_ROUND_BRACKETED), StyledString.s(")"));
+    }
+
+    @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();

@@ -18,6 +18,7 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.types.units.UnitExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitNodeParent>
+public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitNodeParent>, StyledShowable
 {
     public static UnitExpression load(Unit unit)
     {
@@ -132,6 +133,12 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     public abstract Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager);
 
     public abstract String save(boolean topLevel);
+
+    @Override
+    public final StyledString toStyledString()
+    {
+        return StyledString.s(save(true));
+    }
 
     @Override
     public abstract int hashCode();

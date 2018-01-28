@@ -18,6 +18,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -89,6 +90,19 @@ public class IfThenElseExpression extends NonOperatorExpression
     {
         String content = "@if " + condition.save(BracketedStatus.MISC) + " @then " + thenExpression.save(BracketedStatus.MISC) + " @else " + elseExpression.save(BracketedStatus.MISC);
         return surround != BracketedStatus.MISC ? content : ("(" + content + ")");
+    }
+
+    @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        StyledString content = StyledString.concat(
+            StyledString.s("if "),
+            condition.toDisplay(BracketedStatus.MISC),
+            StyledString.s(" then "),
+            thenExpression.toDisplay(BracketedStatus.MISC),
+            StyledString.s(" else "),
+            elseExpression.toDisplay(BracketedStatus.MISC));
+        return surround != BracketedStatus.MISC ? content : StyledString.roundBracket(content);
     }
 
     @Override

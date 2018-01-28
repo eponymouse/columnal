@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -59,7 +60,7 @@ public class NumericLiteral extends Literal
         Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {
             onError.recordError(this, err.getFirst());
-            onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> new QuickFix<>(TranslationUtility.getString("quick.fix.unit"), p -> new Pair<>(CURRENT, new NumericLiteral(value, u)))));
+            onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> new QuickFix<>("quick.fix.unit", CURRENT, new NumericLiteral(value, u))));
             return null;
         }, u -> onError.recordType(this, new NumTypeExp(this, u)));
     }
@@ -82,12 +83,21 @@ public class NumericLiteral extends Literal
     @Override
     public String save(BracketedStatus surround)
     {
-        String num;
-        num = numberAsString();
+        String num = numberAsString();
         if (unit == null || unit.equals(Unit.SCALAR))
             return num;
         else
             return num + "{" + unit.save(true) + "}";
+    }
+
+    @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        StyledString num = StyledString.s(numberAsString());
+        if (unit == null || unit.equals(Unit.SCALAR))
+            return num;
+        else
+            return StyledString.concat(num, StyledString.s("{"), unit.toStyledString(), StyledString.s("}"));
     }
 
     private String numberAsString()

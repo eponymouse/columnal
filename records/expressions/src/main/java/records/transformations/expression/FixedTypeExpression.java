@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -20,6 +21,7 @@ import records.gui.expressioneditor.FixedTypeNode;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -95,6 +97,23 @@ public class FixedTypeExpression extends NonOperatorExpression
             Utility.report(e);
             // Not much else we can do:
             return inner.save(BracketedStatus.MISC);
+        }
+    }
+
+    @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        try
+        {
+            return StyledString.concat(StyledString.s("type ("), type.eitherEx(
+                    text -> StyledString.s(text),
+                    t -> StyledString.s(t.toDisplay(false))), StyledString.s(") "), inner.toDisplay(BracketedStatus.MISC));
+        }
+        catch (UserException | InternalException e)
+        {
+            Log.log(e);
+            // Not much else we can do:
+            return StyledString.s(inner.save(BracketedStatus.MISC));
         }
     }
     

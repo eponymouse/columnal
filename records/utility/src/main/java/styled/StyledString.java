@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class StyledString
@@ -38,7 +39,12 @@ public class StyledString
     @Pure
     public static StyledString italicise(StyledString styledString)
     {
-        return new StyledString(styledString.members.stream().map(p -> p.mapFirst(style -> new Style(true, style.bold, style.size))).collect(ImmutableList.toImmutableList()));
+        return new StyledString(styledString.members.stream().map(p -> p.mapFirst(style -> new Style(true, style.bold, style.monospace, style.size))).collect(ImmutableList.toImmutableList()));
+    }
+
+    public static StyledString monospace(StyledString styledString)
+    {
+        return new StyledString(styledString.members.stream().map(p -> p.mapFirst(style -> new Style(style.italic, style.bold, true, style.size))).collect(ImmutableList.toImmutableList()));
     }
 
     public String toPlain()
@@ -55,7 +61,7 @@ public class StyledString
     /**
      * Concats the items together, inserting divider between each pair
      */
-    public static StyledString intercalate(StyledString divider, ImmutableList<StyledString> items)
+    public static StyledString intercalate(StyledString divider, List<StyledString> items)
     {
         ImmutableList.Builder<Pair<Style, String>> l = ImmutableList.builder();
         boolean addDivider = false;
@@ -78,21 +84,30 @@ public class StyledString
             {
                 t.setStyle("-fx-font-style: italic;");
             }
-            // TODO bold, font size
+            // TODO bold, monospace,font size
             return t;
         });
+    }
+
+    public static Collector<StyledString, ?, StyledString> joining(String s)
+    {
+        return Collector.<StyledString, Builder, StyledString>of(Builder::new, (l, x) -> {
+            l.append(x);
+        }, Builder::new, b -> b.build(StyledString.s(s)));
     }
 
     public static class Style
     {
         public final boolean italic;
         public final boolean bold;
+        public final boolean monospace;
         public final double size; // 1.0 is normal.
 
-        private Style(boolean italic, boolean bold, double size)
+        private Style(boolean italic, boolean bold, boolean monospace, double size)
         {
             this.italic = italic;
             this.bold = bold;
+            this.monospace = monospace;
             this.size = size;
         }
 
@@ -100,6 +115,7 @@ public class StyledString
         {
             this.italic = false;
             this.bold = false;
+            this.monospace = false;
             this.size = 1.0;
         }
 
@@ -108,7 +124,7 @@ public class StyledString
             return ITALIC;
         }
         
-        private static Style ITALIC = new Style(true, false, 1.0);
+        private static Style ITALIC = new Style(true, false, false, 1.0);
 
         @Override
         public boolean equals(@Nullable Object o)
@@ -140,6 +156,11 @@ public class StyledString
         return new StyledString(content);
     }
 
+    public static StyledString roundBracket(StyledString inner)
+    {
+        return StyledString.concat(StyledString.s("("), inner, StyledString.s(")"));
+    }
+    
     @Override
     public boolean equals(@Nullable Object o)
     {
@@ -153,5 +174,41 @@ public class StyledString
     public int hashCode()
     {
         return Objects.hash(members);
+    }
+
+    public static class Builder
+    {
+        private final ArrayList<StyledString> contents = new ArrayList<>();
+
+        public Builder()
+        {
+        }
+        
+        public Builder(Builder lhs, Builder rhs)
+        {
+            contents.addAll(lhs.contents);
+            contents.addAll(rhs.contents);
+        }
+
+        public Builder append(StyledString styledString)
+        {
+            contents.add(styledString);
+            return this;
+        }
+        
+        public Builder append(String unstyled)
+        {
+            return append(StyledString.s(unstyled));
+        }
+        
+        public StyledString build()
+        {
+            return StyledString.concat(contents.toArray(new StyledString[0]));
+        }
+
+        public StyledString build(StyledString divider)
+        {
+            return StyledString.intercalate(divider, contents);
+        }
     }
 }

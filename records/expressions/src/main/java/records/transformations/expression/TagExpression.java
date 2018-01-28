@@ -183,6 +183,16 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        StyledString tag = StyledString.s("tag " + this.tag.either(s -> OutputBuilder.quotedIfNecessary(s), t -> OutputBuilder.quotedIfNecessary(t.getTagInfo().getName())));
+        if (inner == null)
+            return tag;
+        else
+            return StyledString.concat(tag, StyledString.s(":"), inner.toDisplay(BracketedStatus.MISC));
+    }
+
+    @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();

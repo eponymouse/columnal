@@ -37,6 +37,7 @@ import records.gui.FixList.FixInfo;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -256,7 +257,7 @@ public class ExpressionInfoDisplay
         }
     }
     
-    public <EXPRESSION> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, EXPRESSION>> replace)
+    public <EXPRESSION extends StyledShowable> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, EXPRESSION>> replace)
     {
         if (newMsgAndFixes == null)
         {

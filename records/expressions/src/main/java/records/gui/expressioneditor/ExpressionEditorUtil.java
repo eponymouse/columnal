@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -23,6 +24,7 @@ import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitExpression;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -57,7 +59,7 @@ public class ExpressionEditorUtil
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
     @NotNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replaceWithFixed, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P> & StyledShowable, P> Pair<VBox, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replaceWithFixed, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -118,7 +120,7 @@ public class ExpressionEditorUtil
     }
 
     @NotNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replace, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P> & StyledShowable, P> Pair<VBox, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replace, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
@@ -135,7 +137,7 @@ public class ExpressionEditorUtil
     public static List<QuickFix<Expression>> quickFixesForTypeError(Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression>> quickFixes = new ArrayList<>();
-        quickFixes.add(new QuickFix<Expression>(TranslationUtility.getString("fix.setType"), params -> {
+        quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.of(), params -> {
             TypeDialog typeDialog = new TypeDialog(params.parentWindow, params.tableManager.getTypeManager(), false);
             @Nullable DataType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
@@ -150,7 +152,7 @@ public class ExpressionEditorUtil
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression>(TranslationUtility.getString("fix.setTypeTo", fix.toString()), p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
+            quickFixes.add(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
         }
         return quickFixes;
     }
@@ -200,7 +202,7 @@ public class ExpressionEditorUtil
                 Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                 if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
-                    return Collections.singletonList(new QuickFix<Expression>(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString()), params -> {
+                    return Collections.singletonList(new QuickFix<Expression>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), params -> {
                         return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
                     }));
                 }

@@ -23,6 +23,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.types.TupleTypeExp;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -129,6 +130,12 @@ public class TupleExpression extends Expression
     public String save(BracketedStatus surround)
     {
         return "(" + members.stream().map(e -> e.save(BracketedStatus.MISC)).collect(Collectors.joining(", ")) + ")";
+    }
+
+    @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        return StyledString.roundBracket(members.stream().map(e -> e.toDisplay(BracketedStatus.MISC)).collect(StyledString.joining(", ")));
     }
 
     @Override

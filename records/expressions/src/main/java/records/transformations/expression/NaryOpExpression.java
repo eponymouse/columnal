@@ -80,6 +80,23 @@ public abstract class NaryOpExpression extends Expression
         return s.toString();
     }
 
+    @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        StyledString.Builder s = new StyledString.Builder();
+        s.append(surround == BracketedStatus.MISC ? "(" : "");
+        s.append(getSpecialPrefix());
+        for (int i = 0; i < expressions.size(); i++)
+        {
+            if (i > 0)
+                s.append(" ").append(saveOp(i - 1)).append(" ");
+            s.append(expressions.get(i).toDisplay(BracketedStatus.MISC));
+        }
+        if (surround == BracketedStatus.MISC)
+            s.append(")");
+        return s.build();
+    }
+
     // Can be overridden by child classes to insert prefix before expression
     protected String getSpecialPrefix()
     {

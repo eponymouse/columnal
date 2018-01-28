@@ -102,9 +102,7 @@ public class AddSubtractExpression extends NaryOpExpression
                 // the quick fix if it is definitely a string, for which we can use equals:
                 if (ourType.equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
                 {
-                    fixes.add(new QuickFix<Expression>(TranslationUtility.getString("fix.stringConcat"), params -> {
-                        return new Pair<>(PARENT, new StringConcatExpression(expressions));
-                    }));
+                    fixes.add(new QuickFix<Expression>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
                 }
 
                 if (ourType instanceof NumTypeExp)

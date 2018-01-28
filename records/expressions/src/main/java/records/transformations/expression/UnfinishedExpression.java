@@ -67,6 +67,12 @@ public class UnfinishedExpression extends NonOperatorExpression
     }
 
     @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    {
+        return StyledString.s(text);
+    }
+
+    @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();

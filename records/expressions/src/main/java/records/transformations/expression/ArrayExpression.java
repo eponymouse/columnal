@@ -151,6 +151,12 @@ public class ArrayExpression extends Expression
     }
 
     @Override
+    public StyledString toDisplay(BracketedStatus surround)
+    {
+        return StyledString.concat(StyledString.s("["), items.stream().map(e -> e.save(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC)).collect(StyledString.joining(", ")), StyledString.s("]"));
+    }
+
+    @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
