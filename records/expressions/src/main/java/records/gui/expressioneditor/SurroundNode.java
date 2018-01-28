@@ -410,6 +410,12 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
+    public void clearError()
+    {
+        showError.clearError();
+    }
+
+    @Override
     public boolean isShowingError()
     {
         return showError.isShowingError();

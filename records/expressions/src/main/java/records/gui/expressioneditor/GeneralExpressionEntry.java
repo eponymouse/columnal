@@ -462,6 +462,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             return type;
         }
+
+        // For debugging:
+        @Override
+        public String toString()
+        {
+            return "SimpleCompletion{" +
+                    "prefix='" + prefix + '\'' +
+                    ", text='" + text + '\'' +
+                    ", suffix='" + suffix + '\'' +
+                    ", type=" + type +
+                    '}';
+        }
     }
 
 

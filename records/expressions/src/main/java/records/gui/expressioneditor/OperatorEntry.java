@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>
+public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION>
 {
     /**
      * The outermost container for the whole thing:
@@ -152,14 +152,28 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         });
     }
 
+    @Override
     public void showType(String type)
     {
         container.getSecond().showType(type);
     }
 
+    @Override
     public void showError(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         container.getSecond().showError(error, quickFixes);
+    }
+
+    @Override
+    public void clearError()
+    {
+        container.getSecond().clearError();
+    }
+
+    @Override
+    public boolean isShowingError()
+    {
+        return container.getSecond().isShowingError();
     }
 
     @Override

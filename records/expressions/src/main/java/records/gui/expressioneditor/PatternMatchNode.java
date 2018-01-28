@@ -315,6 +315,12 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
+    public void clearError()
+    {
+        matchLabel.getSecond().clearError();
+    }
+
+    @Override
     public boolean isShowingError()
     {
         return matchLabel.getSecond().isShowingError();

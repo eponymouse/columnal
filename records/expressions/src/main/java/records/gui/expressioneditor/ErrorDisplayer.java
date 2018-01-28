@@ -19,4 +19,6 @@ public interface ErrorDisplayer<EXPRESSION>
     public boolean isShowingError();
     
     public void cleanup();
+
+    public void clearError();
 }

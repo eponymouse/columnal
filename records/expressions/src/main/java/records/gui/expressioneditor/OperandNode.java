@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.value.ObservableObjectValue;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -41,7 +42,7 @@ public @Interned interface OperandNode<@NonNull EXPRESSION extends LoadableExpre
      * should call onError (1+ times) with problem, and return InvalidExpression if needed.
      *
      */
-    public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError);
+    public abstract @NonNull @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError);
 
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
 }

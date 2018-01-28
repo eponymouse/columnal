@@ -112,6 +112,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
+    public void clearError()
+    {
+        expressionInfoDisplay.clearError();
+    }
+
+    @Override
     public void showType(String type)
     {
         expressionInfoDisplay.setType(type);

@@ -59,12 +59,14 @@ public class ErrorDisplayerRecord
 
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?>>>> pending = new IdentityHashMap<>();
     
-    @SuppressWarnings({"initialization", "unchecked"})
-    public <EXPRESSION extends Expression> @NonNull EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression> displayer, @NonNull EXPRESSION e)
+    @SuppressWarnings({"initialization", "unchecked", "recorded"})
+    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression> displayer, @NonNull EXPRESSION e)
     {
         expressionDisplayers.put(e, new ErrorDetails<>(displayer));
         if (pending.containsKey(e))
             showError(e, pending.get(e).getFirst(), (List)pending.get(e).getSecond());
+        else
+            displayer.clearError();
         return e;
     }
 

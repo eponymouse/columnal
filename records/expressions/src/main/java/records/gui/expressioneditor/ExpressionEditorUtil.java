@@ -88,6 +88,12 @@ public class ExpressionEditorUtil
             }
 
             @Override
+            public void clearError()
+            {
+                errorShower.clearError();
+            }
+
+            @Override
             public void showType(String type)
             {
                 errorShower.setType(type);

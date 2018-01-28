@@ -221,19 +221,21 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     }
     
     @Test
-    public void testColumnToListFix1()
+    public void testColumnToListFix1() throws UserException, InternalException
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        fail("TODO");
+        testFix("sum(ACC1)", "ACC1", dotCssClassFor("@wholecolumn ACC1"), "sum(@wholecolumn ACC1)");
     }
 
     @Test
-    public void testColumnFromListFix1()
+    public void testColumnFromListFix1() throws UserException, InternalException
     {
         // If a column-all-rows is used where a non-list is expected, offer to switch to
         // a column-single-row item:
-        fail("TODO");
+        
+        // Note units aren't right here, but fix should still be offered:
+        testFix("ACC1§ + 6", "ACC1", dotCssClassFor("@column ACC1"), "@column ACC1 + 6");
     }
     
     
@@ -293,6 +295,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             if (!TestUtil.fx(() -> lhsFinal.isFocused()))
             {
                 // Get rid of any popups in the way:
+                push(KeyCode.ESCAPE);
                 push(KeyCode.ESCAPE);
                 push(KeyCode.ESCAPE);
                 clickOn(lhs);

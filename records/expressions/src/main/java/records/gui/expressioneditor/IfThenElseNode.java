@@ -279,6 +279,12 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
+    public void clearError()
+    {
+        ifLabel.getSecond().clearError();
+    }
+
+    @Override
     public boolean isShowingError()
     {
         return ifLabel.getSecond().isShowingError();

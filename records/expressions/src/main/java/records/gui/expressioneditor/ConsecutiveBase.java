@@ -826,6 +826,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     }
 
     @Override
+    public void clearError()
+    {
+        operators.forEach(op -> op.clearError());
+        operands.forEach(x -> x.clearError());
+    }
+
+    @Override
     public boolean isShowingError()
     {
         return operands.get(0).isShowingError();

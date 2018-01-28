@@ -90,6 +90,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     }
 
     @Override
+    public void clearError()
+    {
+        expressionInfoDisplay.clearError();
+    }
+
+    @Override
     public void showType(String type)
     {
         expressionInfoDisplay.setType(type);

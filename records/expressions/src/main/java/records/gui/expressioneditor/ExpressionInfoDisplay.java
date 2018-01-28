@@ -106,6 +106,12 @@ public class ExpressionInfoDisplay
             hide(true);
     }
 
+    public void clearError()
+    {
+        errorMessage.set(StyledString.s(""));
+        fixes.set(ImmutableList.of());
+    }
+
     private class ErrorMessagePopup extends PopOver
     {
         private final FixList fixList;
