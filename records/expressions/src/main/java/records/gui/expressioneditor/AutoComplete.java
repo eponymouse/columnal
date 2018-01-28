@@ -129,6 +129,10 @@ public class AutoComplete extends PopupControl
             {
                 if (isShowing())
                 {
+                    // Update completions in case it was recently changed
+                    // e.g. they pressed closing bracket and that has been removed and
+                    // is causing us to move focus:
+                    updateCompletions(calculateCompletions, textField.getText());
                     Completion completion = getCompletionIfFocusLeftNow();
                     if (completion != null)
                     {
@@ -355,7 +359,9 @@ public class AutoComplete extends PopupControl
         List<Completion> availableCompletions = completions.getItems();
         for (Completion completion : availableCompletions)
         {
-            CompletionAction completionAction = completion.completesOnExactly(textField.getText(), availableCompletions.size() == 1);
+            // Say it's the only completion, because otherwise e.g. column completions
+            // won't fire because there are always two of them:
+            CompletionAction completionAction = completion.completesOnExactly(textField.getText(), true);
             if (completionAction != CompletionAction.NONE)
             {
                 return completion;
