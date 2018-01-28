@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -39,7 +40,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
 
     @NonNull EXPRESSION makeUnfinished(String s);
 
-    EXPRESSION makeExpression(ErrorDisplayer<EXPRESSION> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
+    @Recorded EXPRESSION makeExpression(ErrorDisplayer<EXPRESSION> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
 
     String save(EXPRESSION expression);
 

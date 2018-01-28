@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableObjectValue;
@@ -95,33 +96,31 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     }
 
     @Override
-    public UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         String text = textField.getText().trim();
 
         if (text.isEmpty())
         {
-            return new UnfinishedUnitExpression("");
+            return errorDisplayer.recordUnit(this, new UnfinishedUnitExpression(""));
         }
 
         try
         {
             int num = Integer.parseInt(text);
             UnitExpressionIntLiteral unitExpressionIntLiteral = new UnitExpressionIntLiteral(num);
-            errorDisplayer.recordUnit(this, unitExpressionIntLiteral);
-            return unitExpressionIntLiteral;
+            return errorDisplayer.recordUnit(this, unitExpressionIntLiteral);
         }
         catch (NumberFormatException e)
         {
             if (parent.getThisAsSemanticParent().getUnitManager().isUnit(text))
             {
                 SingleUnitExpression singleUnitExpression = new SingleUnitExpression(text);
-                errorDisplayer.recordUnit(this, singleUnitExpression);
-                return singleUnitExpression;
+                return errorDisplayer.recordUnit(this, singleUnitExpression);
             }
             else
             {
-                return new UnfinishedUnitExpression(text);
+                return errorDisplayer.recordUnit(this, new UnfinishedUnitExpression(text));
             }
         }
     }

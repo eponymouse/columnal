@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
@@ -217,7 +218,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
         // Ignore
     }
 
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         Expression sourceExp = source.save(errorDisplayer, onError);
         List<Function<MatchExpression, MatchClause>> clauseExps = new ArrayList<>();

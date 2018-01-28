@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -68,7 +69,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
+    public @Recorded UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
         ArrayList<UnitExpression> operands = new ArrayList<>(originalOperands);
@@ -119,7 +120,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
             return errorDisplayers.recordUnit(displayer, operands.get(0));
         }
 
-        return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));
+        return errorDisplayers.recordUnit(displayer, new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops)));
     }
 
     @Override

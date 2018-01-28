@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -27,7 +28,7 @@ public class SquareBracketedExpression extends BracketedExpression
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -42,22 +43,22 @@ public class SquareBracketedExpression extends BracketedExpression
         {
             Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
             if (!opsValid.getFirst())
-                return new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last)));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
             List<String> ops = opsValid.getSecond();
             if (ops.stream().allMatch(s -> s.equals(",")))
             {
                 // Easy; just return this as an array:
-                return new ArrayExpression(ImmutableList.copyOf(Utility.<OperandNode<@NonNull Expression, ExpressionNodeParent>, @NonNull Expression>mapList(operands, (OperandNode<@NonNull Expression, ExpressionNodeParent> n) -> n.save(errorDisplayers, onError))));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.copyOf(Utility.<OperandNode<@NonNull Expression, ExpressionNodeParent>, @NonNull Expression>mapList(operands, (OperandNode<@NonNull Expression, ExpressionNodeParent> n) -> n.save(errorDisplayers, onError)))));
             }
             else if (ops.stream().anyMatch(s -> s.equals(",")))
             {
                 // Mixed operators; return singleton of unfinished
-                return new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last)));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
             }
             else
             {
                 // No commas, just a singleton:
-                return new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last)));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
             }
         }
         else

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -59,7 +60,7 @@ public class FixedTypeNode extends SurroundNode
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {        
         @SuppressWarnings("nullness")
         Expression innerExp = contents.save(errorDisplayer, onError);
@@ -77,6 +78,6 @@ public class FixedTypeNode extends SurroundNode
             // No need to log, this is reasonably expected if the user hasn't completely filled in the type.
         }
         
-        return new FixedTypeExpression(type, innerExp);
+        return errorDisplayer.record(this, new FixedTypeExpression(type, innerExp));
     }
 }

@@ -71,8 +71,8 @@ public class ErrorDisplayerRecord
         return e;
     }
 
-    @SuppressWarnings("initialization")
-    public <UNIT_EXPRESSION extends UnitExpression> @NonNull UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression> displayer, @NonNull UNIT_EXPRESSION e)
+    @SuppressWarnings({"initialization", "recorded"})
+    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression> displayer, @NonNull UNIT_EXPRESSION e)
     {
         unitDisplayers.put(e, new ErrorDetails<>(displayer));
         return e;

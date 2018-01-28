@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
@@ -88,7 +89,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         return errorDisplayer.record(this, new records.transformations.expression.StringLiteral(textField.getText()));
     }

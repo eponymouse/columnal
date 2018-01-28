@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -595,7 +596,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
@@ -612,11 +613,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         else if (status.get() == Status.VARIABLE_DECL && textField.getText().trim().length() > 0)
         {
-            return new VarDeclExpression(textField.getText().trim());
+            return errorDisplayer.record(this, new VarDeclExpression(textField.getText().trim()));
         }
         else if (status.get() == Status.VARIABLE_USE)
         {
-            return new VarUseExpression(textField.getText().trim());
+            return errorDisplayer.record(this, new VarUseExpression(textField.getText().trim()));
         }
         // Unfinished -- could be number though:
         CompleteNumericLiteralContext number = parseOrNull(ExpressionParser::completeNumericLiteral);

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -180,7 +181,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<Expression> originalExps, List<String> ops, BracketedStatus bracketedStatus)
+    public @Recorded Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded Expression> originalExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
         ArrayList<Expression> expressionExps = new ArrayList<>(originalExps);

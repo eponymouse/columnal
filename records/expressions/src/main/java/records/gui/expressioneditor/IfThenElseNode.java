@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -173,7 +174,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         return errorDisplayer.record(this, new IfThenElseExpression(condition.save(errorDisplayer, onError), thenPart.save(errorDisplayer, onError), elsePart.save(errorDisplayer, onError)));
     }

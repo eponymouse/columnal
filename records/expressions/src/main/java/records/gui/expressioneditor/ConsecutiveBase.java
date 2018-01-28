@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.BooleanProperty;
@@ -400,7 +402,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>, String>mapList(operators, op -> op.get()));
     }
 
-    public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
+    public @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
     {
         if (operands.isEmpty())
             return operations.makeExpression(this, errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
@@ -413,7 +415,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return BracketedStatus.MISC;
     }
 
-    public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
+    public @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -429,7 +431,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             bracketedStatus = getChildrenBracketedStatus();
         }
 
-        ImmutableList<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>, @NonNull EXPRESSION>mapListI(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> n) -> n.save(errorDisplayers, onError));
+        ImmutableList<@NonNull @Recorded EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>, @NonNull @Recorded EXPRESSION>mapListI(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> n) -> n.save(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
         List<String> ops = opsValid.getSecond();
 
@@ -555,7 +557,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
                 if (child instanceof OperatorEntry)
                     return ((OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child).get();
                 else
-                    return operations.save(((OperandNode<EXPRESSION, SEMANTIC_PARENT>)child).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer()));
+                {
+                    @UnknownIfRecorded EXPRESSION saved = ((OperandNode<EXPRESSION, SEMANTIC_PARENT>) child).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
+                    return operations.save(saved);
+                }
             }), startIsOperator);
     }
 

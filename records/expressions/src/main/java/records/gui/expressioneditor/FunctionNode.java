@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -42,7 +43,7 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
 
     @SuppressWarnings("nullness") // contents is known to be non-null.
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         // TODO allow units (second optional consecutive)
         Expression argExp = contents.save(errorDisplayer, onError);
