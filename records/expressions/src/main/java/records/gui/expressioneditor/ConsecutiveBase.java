@@ -176,7 +176,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             operands.get(operands.size() - 1).focus(side);
     }
     
-    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, EXPRESSION> newNode)
+    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> newNode)
     {
         if (newNode.getFirst() == ReplacementTarget.CURRENT)
         {
@@ -201,7 +201,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     protected abstract boolean hasImplicitRoundBrackets();
 
     // Replaces the whole operator-expression that operator was part of, with the new expression
-    protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, EXPRESSION e)
+    protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded EXPRESSION e)
     {
         if (operators.contains(oldOperator))
         {

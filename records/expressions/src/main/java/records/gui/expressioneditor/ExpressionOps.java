@@ -44,6 +44,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
 {
     // Remember: earlier means more likely to be inner-bracketed.  Outer list is groups of operators
     // with equal bracketing likelihood/precedence.
+    @SuppressWarnings("recorded")
     private final static ImmutableList<ImmutableList<OperatorExpressionInfo<Expression>>> OPERATORS = ImmutableList.of(
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
         ImmutableList.of(
@@ -58,11 +59,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("+", "op.plus"),
                 opD("-", "op.minus")
-            ), (ImmutableList<@Recorded Expression> args, List<String> ops, BracketedStatus _b) ->
-                    new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT))),
+            ), ExpressionOps::makeAddSubtract),
             new OperatorExpressionInfo<Expression>(ImmutableList.of(
                 opD("*", "op.times")
-            ), (args, _ops, _b) -> new TimesExpression(args)),
+            ), ExpressionOps::makeTimes),
             new OperatorExpressionInfo<Expression>(
                 opD("/", "op.divide")
             , (lhs, rhs, _b) -> new DivideExpression(lhs, rhs))
@@ -74,7 +74,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD(";", "op.stringConcat")
-            ), (args, _ops, _b) -> new StringConcatExpression(args))    
+            ), ExpressionOps::makeStringConcat)    
         ),
     
         // It's moot really whether this is before or after string concat, but feels odd putting them in same group:
@@ -88,18 +88,18 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("=", "op.equal")
-            ), (args, _ops, _b) -> new EqualExpression(args)),
+            ), ExpressionOps::makeEqual),
             new OperatorExpressionInfo<>(
                 opD("<>", "op.notEqual")
             , (lhs, rhs, _b) -> new NotEqualExpression(lhs, rhs)),
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("<", "op.lessThan"),
                 opD("<=", "op.lessThanOrEqual")
-            ), (args, ops, _b) -> new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals("<") ? ComparisonOperator.LESS_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL_TO))),
+            ), ExpressionOps::makeComparisonLess),
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD(">", "op.greaterThan"),
                 opD(">=", "op.greaterThanOrEqual")
-            ), (args, ops, _b) -> new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals(">") ? ComparisonOperator.GREATER_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO))),
+            ), ExpressionOps::makeComparisonGreater),
             new OperatorExpressionInfo<>(
                 opD("~", "op.matches")
             , (lhs, rhs, _b) -> new MatchesOneExpression(lhs, rhs))
@@ -110,10 +110,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ImmutableList.of(
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("&", "op.and")
-            ), (args, _ops, _b) -> new AndExpression(args)),
+            ), ExpressionOps::makeAnd),
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("|", "op.or")
-            ), (args, _ops, _b) -> new OrExpression(args))
+            ), ExpressionOps::makeOr)
         ),
         
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
@@ -151,6 +151,46 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     private static String getOp(Pair<String, @Localized String> p)
     {
         return p.getFirst();
+    }
+
+    private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<String> ops, BracketedStatus _b)
+    {
+        return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT));
+    }
+
+    private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<String> _ops, BracketedStatus _b)
+    {
+        return new TimesExpression(args);
+    }
+
+    private static Expression makeStringConcat(ImmutableList<@Recorded Expression> args, List<String> _ops, BracketedStatus _b)
+    {
+        return new StringConcatExpression(args);
+    }
+
+    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<String> _ops, BracketedStatus _b)
+    {
+        return new EqualExpression(args);
+    }
+
+    private static Expression makeComparisonLess(ImmutableList<@Recorded Expression> args, List<String> ops, BracketedStatus _b)
+    {
+        return new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals("<") ? ComparisonOperator.LESS_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL_TO));
+    }
+
+    private static Expression makeComparisonGreater(ImmutableList<@Recorded Expression> args, List<String> ops, BracketedStatus _b)
+    {
+        return new ComparisonExpression(args, Utility.mapListI(ops, op -> op.equals(">") ? ComparisonOperator.GREATER_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO));
+    }
+
+    private static Expression makeAnd(ImmutableList<@Recorded Expression> args, List<String> _ops, BracketedStatus _b)
+    {
+        return new AndExpression(args);
+    }
+
+    private static Expression makeOr(ImmutableList<@Recorded Expression> args, List<String> _ops, BracketedStatus _b)
+    {
+        return new OrExpression(args);
     }
 
     @Override

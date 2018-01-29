@@ -92,7 +92,9 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
             // It will bind left, but that doesn't matter as chained raise is an error anyway:
             if (ops.get(i).trim().equals("^") && i + 1 < operands.size() && operands.get(i + 1) instanceof UnitExpressionIntLiteral)
             {
-                operands.set(i, new UnitRaiseExpression(operands.get(i), ((UnitExpressionIntLiteral)operands.get(i + 1)).getNumber()));
+                @SuppressWarnings("recorded")
+                @Recorded UnitRaiseExpression unitRaiseExpression = new UnitRaiseExpression(operands.get(i), ((UnitExpressionIntLiteral) operands.get(i + 1)).getNumber());
+                operands.set(i, unitRaiseExpression);
                 operands.remove(i + 1);
                 ops.remove(i);
             }

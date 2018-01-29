@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -111,20 +112,20 @@ public interface ErrorAndTypeRecorder
     public final static class QuickFix<EXPRESSION extends StyledShowable>
     {
         private final StyledString title;
-        private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement;
+        private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> fixedReplacement;
         private final ImmutableList<String> cssClasses;
 
-        public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, EXPRESSION replacement)
+        public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, @UnknownIfRecorded EXPRESSION replacement)
         {
             this(StyledString.concat(
                     StyledString.s(TranslationUtility.getString(titleKey)),
                     StyledString.s(": "),
                     replacement.toStyledString()),
                 ImmutableList.of(OperandOps.makeCssClass(replacement)),
-                p -> new Pair<>(replacementTarget, replacement));
+                p -> new Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>(replacementTarget, replacement));
         }
         
-        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, EXPRESSION>> fixedReplacement)
+        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> fixedReplacement)
         {
             this.title = title;
             this.cssClasses = cssClasses;
@@ -137,7 +138,7 @@ public interface ErrorAndTypeRecorder
         }
         
         @OnThread(Tag.FXPlatform)
-        public Pair<ReplacementTarget, EXPRESSION> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
+        public Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
         {
             return fixedReplacement.apply(new QuickFixParams(parentWindow, tableManager));
         }

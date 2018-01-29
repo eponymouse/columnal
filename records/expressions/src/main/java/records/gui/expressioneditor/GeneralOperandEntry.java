@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -79,7 +80,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     public void showError(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
-        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), e -> {
+        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> {
             getParent().replaceLoad(this, e);
         });
     }

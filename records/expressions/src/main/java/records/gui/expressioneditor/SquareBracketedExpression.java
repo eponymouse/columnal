@@ -44,22 +44,22 @@ public class SquareBracketedExpression extends BracketedExpression
         {
             Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
             if (!opsValid.getFirst())
-                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(errorDisplayers.record(this, super.save(errorDisplayers, onError, first, last)))));
             List<String> ops = opsValid.getSecond();
             if (ops.stream().allMatch(s -> s.equals(",")))
             {
                 // Easy; just return this as an array:
-                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.copyOf(Utility.<OperandNode<@NonNull Expression, ExpressionNodeParent>, @NonNull Expression>mapList(operands, (OperandNode<@NonNull Expression, ExpressionNodeParent> n) -> n.save(errorDisplayers, onError)))));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.copyOf(Utility.<OperandNode<@NonNull Expression, ExpressionNodeParent>, @NonNull @Recorded Expression>mapList(operands, (OperandNode<@NonNull Expression, ExpressionNodeParent> n) -> n.save(errorDisplayers, onError)))));
             }
             else if (ops.stream().anyMatch(s -> s.equals(",")))
             {
                 // Mixed operators and commas; return singleton of unfinished
-                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(errorDisplayers.record(this, super.save(errorDisplayers, onError, first, last)))));
             }
             else
             {
                 // No commas, just a singleton expression:
-                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
+                return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(errorDisplayers.record(this, super.save(errorDisplayers, onError, first, last)))));
             }
         }
         else

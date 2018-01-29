@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
@@ -61,7 +62,7 @@ public class ExpressionEditorUtil
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
     @NotNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replaceWithFixed, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded E>> replaceWithFixed, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -84,11 +85,12 @@ public class ExpressionEditorUtil
                 return errorShower.isShowingError();
             }
 
+            @SuppressWarnings("recorded") // Damned if I can work out the right annotation
             @Override
             public void showError(StyledString s, List<QuickFix<E>> q)
             {
                 setError(vBox, s);
-                errorShower.setMessageAndFixes(new Pair<>(s, q), editor.getWindow(), editor.getTableManager(), replaceWithFixed);
+                errorShower.setMessageAndFixes(new Pair<StyledString, List<QuickFix<@UnknownIfRecorded E>>>(s, q), editor.getWindow(), editor.getTableManager(), replaceWithFixed);
             }
 
             @Override
@@ -122,12 +124,12 @@ public class ExpressionEditorUtil
     }
 
     @NotNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, E>> replace, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P>, P> Pair<VBox, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded E>> replace, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
         t.setDisable(true);
-        return withLabelAbove(t, cssClass, "", surrounding, expressionEditor, replace, parentStyles);
+        return ExpressionEditorUtil.<E, P>withLabelAbove(t, cssClass, "", surrounding, expressionEditor, replace, parentStyles);
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)

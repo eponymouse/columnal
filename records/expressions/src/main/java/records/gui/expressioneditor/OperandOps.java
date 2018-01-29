@@ -345,7 +345,8 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         {
             // The sections either side match up, and the middle is same or lower precedence, so we can bracket
             // the middle and put it into one valid expression.  Hurrah!
-            @Nullable EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, bracketedStatus);
+            @SuppressWarnings("recorded")
+            @Nullable @Recorded EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, bracketedStatus);
             if (middle != null)
             {
                 @Nullable EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION>) operatorSections.get(0)).makeExpressionMiddleMerge(
@@ -375,13 +376,14 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                     break;
 
                 // We try all the bracketing states, preferring un-bracketed, for valid replacements: 
-                
-                @Nullable EXPRESSION sectionExpression = operatorSection.makeExpression(expressionExps, bracketedStatus);
+
+                @SuppressWarnings("recorded")
+                @Nullable @Recorded EXPRESSION sectionExpression = operatorSection.makeExpression(expressionExps, bracketedStatus);
                 if (sectionExpression == null)
                     continue;
                 
                 // The replacement if we just bracketed this section:
-                EXPRESSION replacement;
+                @UnknownIfRecorded EXPRESSION replacement;
                 // There's three possibilities.  One is that if there is one other section, or two that match each other,
                 // we could make a valid expression.  Otherwise we're going to be invalid even with a bracket.
                 if (operatorSections.size() == 2)

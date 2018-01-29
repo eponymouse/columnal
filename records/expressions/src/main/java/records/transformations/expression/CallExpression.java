@@ -121,6 +121,7 @@ public class CallExpression extends NonOperatorExpression
                 else if (!TypeExp.isList(prunedParam))
                 {
                     // Offer to make a list:
+                    @SuppressWarnings("recorded")
                     Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
                     @SuppressWarnings("recorded")
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);

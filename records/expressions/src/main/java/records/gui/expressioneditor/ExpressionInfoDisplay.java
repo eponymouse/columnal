@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -259,7 +260,7 @@ public class ExpressionInfoDisplay
         }
     }
     
-    public <EXPRESSION extends StyledShowable> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, EXPRESSION>> replace)
+    public <EXPRESSION extends StyledShowable> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> replace)
     {
         if (newMsgAndFixes == null)
         {

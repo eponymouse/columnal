@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
@@ -23,6 +24,7 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -64,7 +66,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
             initialContentEntered.set(true);
         }
         FXUtility.sizeToFit(textField, 5.0, 5.0);
-        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), e -> parent.replaceWholeLoad(FXUtility.mouse(this), e.getSecond()), parent.getParentStyles());
+        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> parent.replaceWholeLoad(FXUtility.mouse(this), e.getSecond()), parent.getParentStyles());
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
