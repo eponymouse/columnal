@@ -73,7 +73,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     public @UnknownIfRecorded UnitExpression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
-        ArrayList<UnitExpression> operands = new ArrayList<>(originalOperands);
+        ArrayList<@Recorded UnitExpression> operands = new ArrayList<>(originalOperands);
         ops = new ArrayList<>(ops);
 
         System.err.println("Original ops: " + Utility.listToString(ops) + " " + ops.size());
@@ -137,7 +137,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public UnitExpression makeInvalidOpExpression(ImmutableList<UnitExpression> expressionExps, List<String> ops)
+    public UnitExpression makeInvalidOpExpression(ImmutableList<@Recorded UnitExpression> expressionExps, List<String> ops)
     {
         return new InvalidOperatorUnitExpression(expressionExps, ImmutableList.copyOf(ops));
     }

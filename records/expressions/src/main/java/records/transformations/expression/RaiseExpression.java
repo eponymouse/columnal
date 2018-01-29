@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -35,7 +36,7 @@ import java.util.Optional;
  */
 public class RaiseExpression extends BinaryOpExpression
 {
-    public RaiseExpression(Expression lhs, Expression rhs)
+    public RaiseExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -47,7 +48,7 @@ public class RaiseExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
+    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
     {
         return new RaiseExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }

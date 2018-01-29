@@ -65,6 +65,7 @@ public class CallExpression extends NonOperatorExpression
         this.param = arg;
     }
 
+    @SuppressWarnings("recorded")
     // For testing:
     public CallExpression(UnitManager mgr, String functionName, Expression... args) throws InternalException
     {
@@ -98,6 +99,7 @@ public class CallExpression extends NonOperatorExpression
                 if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference)param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
                 {
                     ColumnReference colRef = (ColumnReference)param;
+                    @SuppressWarnings("recorded")
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
                     // Offer to turn a this-row column reference into whole column:
                     onError.recordQuickFixes(this, Collections.singletonList(
@@ -108,6 +110,7 @@ public class CallExpression extends NonOperatorExpression
                 {
                     // Offer to turn tuple into a list:
                     Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
+                    @SuppressWarnings("recorded")
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
                     onError.recordQuickFixes(this, Collections.singletonList(
                             new QuickFix<>("fix.squareBracketAs", ReplacementTarget.CURRENT, replacementCall)
@@ -119,6 +122,7 @@ public class CallExpression extends NonOperatorExpression
                 {
                     // Offer to make a list:
                     Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
+                    @SuppressWarnings("recorded")
                     CallExpression replacementCall = new CallExpression(functionName, definition, units, replacementParam);
                     onError.recordQuickFixes(this, Collections.singletonList(
                         new QuickFix<>("fix.singleItemList", ReplacementTarget.CURRENT, replacementCall)
@@ -185,12 +189,14 @@ public class CallExpression extends NonOperatorExpression
             return (p, s) -> new FunctionNode(Either.left(functionName), s, param, p);
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         return param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newParam -> new CallExpression(functionName, definition, units, newParam)));
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {

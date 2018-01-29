@@ -55,7 +55,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new InvalidOperatorExpression(replacements, operators);
     }

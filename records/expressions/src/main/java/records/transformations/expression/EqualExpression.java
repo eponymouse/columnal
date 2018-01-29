@@ -36,13 +36,13 @@ import utility.Utility;
  */
 public class EqualExpression extends NaryOpExpression
 {
-    public EqualExpression(List<Expression> operands)
+    public EqualExpression(List<@Recorded Expression> operands)
     {
         super(operands);
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new EqualExpression(replacements);
     }

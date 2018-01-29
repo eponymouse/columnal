@@ -31,13 +31,13 @@ import java.util.Random;
  */
 public class OrExpression extends NaryOpExpression
 {
-    public OrExpression(List<Expression> expressions)
+    public OrExpression(List<@Recorded Expression> expressions)
     {
         super(expressions);
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new OrExpression(replacements);
     }
@@ -74,6 +74,7 @@ public class OrExpression extends NaryOpExpression
         throw new UnimplementedException();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {

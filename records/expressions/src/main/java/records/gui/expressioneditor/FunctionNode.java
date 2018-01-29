@@ -46,7 +46,7 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         // TODO allow units (second optional consecutive)
-        Expression argExp = errorDisplayer.record(contents, contents.saveUnrecorded(errorDisplayer, onError));
+        @Recorded Expression argExp = errorDisplayer.record(contents, contents.saveUnrecorded(errorDisplayer, onError));
         return errorDisplayer.record(this, new CallExpression(head.getText(), function.either(n -> null, f -> f), Collections.emptyList(), argExp));
     }
 

@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  */
 public class TupleExpression extends Expression
 {
-    private final ImmutableList<Expression> members;
+    private final ImmutableList<@Recorded Expression> members;
     private @Nullable ImmutableList<TypeExp> memberTypes;
     private @Nullable TypeExp tupleType;
 
@@ -161,6 +161,7 @@ public class TupleExpression extends Expression
         return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
@@ -191,7 +192,7 @@ public class TupleExpression extends Expression
         return members.hashCode();
     }
 
-    public ImmutableList<Expression> getMembers()
+    public ImmutableList<@Recorded Expression> getMembers()
     {
         return members;
     }

@@ -58,7 +58,8 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD("+", "op.plus"),
                 opD("-", "op.minus")
-            ), (args, ops, _b) -> new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT))),
+            ), (ImmutableList<@Recorded Expression> args, List<String> ops, BracketedStatus _b) ->
+                    new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT))),
             new OperatorExpressionInfo<Expression>(ImmutableList.of(
                 opD("*", "op.times")
             ), (args, _ops, _b) -> new TimesExpression(args)),
@@ -185,7 +186,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     public @UnknownIfRecorded Expression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded Expression> originalExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
-        ArrayList<Expression> expressionExps = new ArrayList<>(originalExps);
+        ArrayList<@Recorded Expression> expressionExps = new ArrayList<>(originalExps);
         ops = new ArrayList<>(ops);
 
         // Trim blanks from end:
@@ -288,7 +289,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public Expression makeInvalidOpExpression(ImmutableList<Expression> expressionExps, List<String> ops)
+    public Expression makeInvalidOpExpression(ImmutableList<@Recorded Expression> expressionExps, List<String> ops)
     {
         return new InvalidOperatorExpression(expressionExps, ops);
     }

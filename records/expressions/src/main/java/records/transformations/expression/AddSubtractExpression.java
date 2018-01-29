@@ -47,7 +47,7 @@ public class AddSubtractExpression extends NaryOpExpression
     private final List<Op> ops;
     private @Nullable @Recorded TypeExp type;
 
-    public AddSubtractExpression(List<Expression> expressions, List<Op> ops)
+    public AddSubtractExpression(List<@Recorded Expression> expressions, List<Op> ops)
     {
         super(expressions);
         this.ops = ops;
@@ -56,7 +56,7 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new AddSubtractExpression(replacements, ops);
     }
@@ -137,6 +137,7 @@ public class AddSubtractExpression extends NaryOpExpression
         throw new UnimplementedException();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {

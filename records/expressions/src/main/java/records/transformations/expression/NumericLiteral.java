@@ -60,7 +60,11 @@ public class NumericLiteral extends Literal
         Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {
             onError.recordError(this, err.getFirst());
-            onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> new QuickFix<>("quick.fix.unit", CURRENT, new NumericLiteral(value, u))));
+            onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
+                @SuppressWarnings("recorded")
+                NumericLiteral replacement = new NumericLiteral(value, u);
+                return new QuickFix<>("quick.fix.unit", CURRENT, replacement);
+            }));
             return null;
         }, u -> onError.recordType(this, new NumTypeExp(this, u)));
     }

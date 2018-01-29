@@ -558,7 +558,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
                     return ((OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child).get();
                 else
                 {
-                    @UnknownIfRecorded EXPRESSION saved = ((OperandNode<EXPRESSION, SEMANTIC_PARENT>) child).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
+                    @SuppressWarnings("recorded")
+                    EXPRESSION saved = ((OperandNode<EXPRESSION, SEMANTIC_PARENT>) child).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
                     return operations.save(saved);
                 }
             }), startIsOperator);

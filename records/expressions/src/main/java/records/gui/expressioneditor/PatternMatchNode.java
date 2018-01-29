@@ -220,7 +220,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
 
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
-        Expression sourceExp = errorDisplayer.record(source, source.saveUnrecorded(errorDisplayer, onError));
+        @Recorded Expression sourceExp = errorDisplayer.record(source, source.saveUnrecorded(errorDisplayer, onError));
         List<Function<MatchExpression, MatchClause>> clauseExps = new ArrayList<>();
         for (ClauseNode clause : clauses)
         {

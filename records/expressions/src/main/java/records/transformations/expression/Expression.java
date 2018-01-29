@@ -181,6 +181,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return Utility.compareValues(value, ourValue) == 0 ? state : null;
     }
 
+    @SuppressWarnings("recorded")
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {
         private final TypeManager typeManager;

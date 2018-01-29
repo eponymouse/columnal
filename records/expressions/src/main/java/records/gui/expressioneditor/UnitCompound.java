@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -47,7 +48,7 @@ public class UnitCompound extends UnitCompoundBase implements OperandNode<UnitEx
     }
 
     @Override
-    public UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         return errorDisplayer.recordUnit(this, saveUnrecorded(errorDisplayer, onError));
     }

@@ -93,14 +93,14 @@ public class ComparisonExpression extends NaryOpExpression
     private final ImmutableList<ComparisonOperator> operators;
     private @Nullable TypeExp type;
 
-    public ComparisonExpression(List<Expression> expressions, ImmutableList<ComparisonOperator> operators)
+    public ComparisonExpression(List<@Recorded Expression> expressions, ImmutableList<ComparisonOperator> operators)
     {
         super(expressions);
         this.operators = operators;
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new ComparisonExpression(replacements, operators);
     }
@@ -142,6 +142,7 @@ public class ComparisonExpression extends NaryOpExpression
         throw new UnimplementedException();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {

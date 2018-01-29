@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
@@ -23,10 +24,10 @@ import java.util.List;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
 {
-    private final ImmutableList<UnitExpression> operands;
+    private final ImmutableList<@Recorded UnitExpression> operands;
     private final ImmutableList<String> operators;
 
-    public InvalidOperatorUnitExpression(ImmutableList<UnitExpression> operands, ImmutableList<String> operators)
+    public InvalidOperatorUnitExpression(ImmutableList<@Recorded UnitExpression> operands, ImmutableList<String> operators)
     {
         this.operands = operands;
         this.operators = operators;

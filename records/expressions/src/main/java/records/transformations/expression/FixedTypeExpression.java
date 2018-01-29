@@ -42,7 +42,7 @@ public class FixedTypeExpression extends NonOperatorExpression
 {
     // If a String, then it's an incomplete or incorrect type as specified in the slot.
     private final Either<String, DataType> type;
-    private final Expression inner;
+    private final @Recorded Expression inner;
     
     public FixedTypeExpression(Either<String, DataType> type, @Recorded Expression innerExpression)
     {
@@ -50,7 +50,7 @@ public class FixedTypeExpression extends NonOperatorExpression
         this.inner = innerExpression;
     }
 
-    public static Expression fixType(DataType fix, Expression expression)
+    public static Expression fixType(DataType fix, @Recorded Expression expression)
     {
         if (expression instanceof FixedTypeExpression)
             return new FixedTypeExpression(Either.right(fix), ((FixedTypeExpression)expression).inner);

@@ -1,7 +1,9 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.sosy_lab.java_smt.api.BitvectorFormula;
@@ -32,7 +34,7 @@ import java.util.Optional;
  */
 public class NotEqualExpression extends BinaryOpExpression
 {
-    public NotEqualExpression(Expression lhs, Expression rhs)
+    public NotEqualExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -53,7 +55,7 @@ public class NotEqualExpression extends BinaryOpExpression
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    TypeProblemDetails typeProblemDetails = new TypeProblemDetails(ImmutableList.of(Optional.ofNullable(lhsType), Optional.ofNullable(rhsType)), ImmutableList.of(lhs, rhs), i);
+                    final @NonNull TypeProblemDetails typeProblemDetails = new TypeProblemDetails(ImmutableList.of(Optional.ofNullable(lhsType), Optional.ofNullable(rhsType)), ImmutableList.of(lhs, rhs), i);
                     // Must show an error to get the quick fixes to show:
                     onError.recordError(typeProblemDetails.getOurExpression(), StyledString.s("Operands to <> must have matching units"));
                     onError.recordQuickFixes(typeProblemDetails.getOurExpression(), ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, typeProblemDetails));
@@ -73,7 +75,7 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
+    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
     {
         return new NotEqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }

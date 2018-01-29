@@ -29,14 +29,14 @@ import java.util.Random;
 
 public class StringConcatExpression extends NaryOpExpression
 {
-    public StringConcatExpression(List<Expression> operands)
+    public StringConcatExpression(List<@Recorded Expression> operands)
     {
         super(operands);
         
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new StringConcatExpression(replacements);
     }

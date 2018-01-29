@@ -51,11 +51,11 @@ import java.util.stream.Stream;
  */
 public class ArrayExpression extends Expression
 {
-    private final ImmutableList<Expression> items;
+    private final ImmutableList<@Recorded Expression> items;
     private @Nullable TypeExp elementType;
     private @MonotonicNonNull List<TypeExp> _test_originalTypes;
 
-    public ArrayExpression(ImmutableList<Expression> items)
+    public ArrayExpression(ImmutableList<@Recorded Expression> items)
     {
         this.items = items;
     }
@@ -176,6 +176,7 @@ public class ArrayExpression extends Expression
         return (p, s) -> new SquareBracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, SingleLoader.withSemanticParent(new Pair<>(loadOperands, loadCommas), s));
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
@@ -183,6 +184,7 @@ public class ArrayExpression extends Expression
             items.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> new ArrayExpression(Utility.replaceList(items, i, p.getSecond().apply(newExp)))))).flatMap(s -> s);
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
@@ -235,7 +237,7 @@ public class ArrayExpression extends Expression
         return items.hashCode();
     }
 
-    public ImmutableList<Expression> _test_getElements()
+    public ImmutableList<@Recorded Expression> _test_getElements()
     {
         return items;
     }

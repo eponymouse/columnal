@@ -35,7 +35,7 @@ import java.util.stream.Stream;
  */
 public abstract class NaryOpExpression extends Expression
 {
-    protected final ImmutableList<Expression> expressions;
+    protected final ImmutableList<@Recorded Expression> expressions;
 
     public NaryOpExpression(List<@Recorded Expression> expressions)
     {
@@ -52,18 +52,18 @@ public abstract class NaryOpExpression extends Expression
     }
 
     // Will be same length as expressions, if null use existing
-    public final NaryOpExpression copy(List<@Nullable Expression> replacements)
+    public final NaryOpExpression copy(List<@Nullable @Recorded Expression> replacements)
     {
-        List<Expression> newExps = new ArrayList<>();
+        List<@Recorded Expression> newExps = new ArrayList<>();
         for (int i = 0; i < expressions.size(); i++)
         {
-            @Nullable Expression newExp = replacements.get(i);
+            @Nullable @Recorded Expression newExp = replacements.get(i);
             newExps.add(newExp != null ? newExp : expressions.get(i));
         }
         return copyNoNull(newExps);
     }
 
-    public abstract NaryOpExpression copyNoNull(List<Expression> replacements);
+    public abstract NaryOpExpression copyNoNull(List<@Recorded Expression> replacements);
 
     @Override
     public String save(BracketedStatus surround)
@@ -106,6 +106,7 @@ public abstract class NaryOpExpression extends Expression
 
     protected abstract String saveOp(int index);
 
+    @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
@@ -187,10 +188,10 @@ public abstract class NaryOpExpression extends Expression
         // Same length as expressions.  Boolean indicates whether unification
         // was successful or not.
         final ImmutableList<Optional<TypeExp>> expressionTypes;
-        public final ImmutableList<Expression> expressions;
+        public final ImmutableList<@Recorded Expression> expressions;
         final int index;
 
-        TypeProblemDetails(ImmutableList<Optional<TypeExp>> expressionTypes, ImmutableList<Expression> expressions, int index)
+        TypeProblemDetails(ImmutableList<Optional<TypeExp>> expressionTypes, ImmutableList<@Recorded Expression> expressions, int index)
         {
             this.expressionTypes = expressionTypes;
             this.expressions = expressions;

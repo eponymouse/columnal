@@ -81,7 +81,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     @Override
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
-        Expression innerExp;
+        @Recorded Expression innerExp;
         if (contents == null)
             innerExp = null;
         else

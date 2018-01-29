@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -491,8 +492,8 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)
         {
-            Expression patExp = errorDisplayer.record(match.getFirst(), match.getFirst().saveUnrecorded(errorDisplayer, onError));
-            @Nullable Expression matchExp = match.getSecond() == null ? null : errorDisplayer.record(match.getSecond(), match.getSecond().saveUnrecorded(errorDisplayer, onError));
+            @Recorded Expression patExp = errorDisplayer.record(match.getFirst(), match.getFirst().saveUnrecorded(errorDisplayer, onError));
+            @Nullable @Recorded Expression matchExp = match.getSecond() == null ? null : errorDisplayer.record(match.getSecond(), match.getSecond().saveUnrecorded(errorDisplayer, onError));
             patterns.add(me -> new Pattern(patExp, matchExp));
         }
         Expression outcomeExp = errorDisplayer.record(outcome, this.outcome.saveUnrecorded(errorDisplayer, onError));

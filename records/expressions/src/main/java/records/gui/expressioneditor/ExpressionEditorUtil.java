@@ -135,6 +135,7 @@ public class ExpressionEditorUtil
         topLabel.getStyleClass().add(parentStyles.collect(Collectors.joining("-")) + "-child");
     }
 
+    @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
     public static List<QuickFix<Expression>> quickFixesForTypeError(Expression src, @Nullable DataType fix)
     {

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -115,7 +116,7 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         return errorDisplayer.record(this, saveUnrecorded(errorDisplayer, onError));
     }

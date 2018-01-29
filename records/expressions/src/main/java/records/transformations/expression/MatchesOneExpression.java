@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public class MatchesOneExpression extends BinaryOpExpression
 {
-    public MatchesOneExpression(Expression lhs, Expression rhs)
+    public MatchesOneExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -43,7 +43,7 @@ public class MatchesOneExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
+    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
     {
         return new MatchesOneExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }

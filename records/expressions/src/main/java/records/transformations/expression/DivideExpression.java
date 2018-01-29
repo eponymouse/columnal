@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -32,7 +33,7 @@ import java.util.Random;
  */
 public class DivideExpression extends BinaryOpExpression
 {
-    public DivideExpression(Expression lhs, Expression rhs)
+    public DivideExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -44,7 +45,7 @@ public class DivideExpression extends BinaryOpExpression
     }
 
     @Override
-    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
+    public BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS)
     {
         return new DivideExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
@@ -90,6 +91,7 @@ public class DivideExpression extends BinaryOpExpression
         throw new UnimplementedException();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {

@@ -49,7 +49,7 @@ public class MatchExpression extends NonOperatorExpression
     public class MatchClause
     {
         private final List<Pattern> patterns;
-        private final Expression outcome;
+        private final @Recorded Expression outcome;
 
         public MatchClause(List<Pattern> patterns, @Recorded Expression outcome)
         {
@@ -254,7 +254,7 @@ public class MatchExpression extends NonOperatorExpression
         }
     }
 
-    private final Expression expression;
+    private final @Recorded Expression expression;
     private final List<MatchClause> clauses;
 
     @SuppressWarnings("initialization") // Because we pass this to sub-clauses which we are creating.
@@ -345,12 +345,15 @@ public class MatchExpression extends NonOperatorExpression
             patternTypes.addAll(patternAndOutcomeType.getFirst());
             outcomeTypes[i] = patternAndOutcomeType.getSecond();
         }
+        @SuppressWarnings("recorded")
+        ImmutableList<@Recorded Expression> immPatternExpressions = ImmutableList.copyOf(patternExpressions);
+        
         for (int i = 0; i < patternExpressions.size(); i++)
         {
             Expression expression = patternExpressions.get(i);
             // Must show an error to get the quick fixes to show:
-            onError.recordError(expression, StyledString.s("Pattern match items must have matching items"));
-            onError.recordQuickFixes(expression, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), ImmutableList.copyOf(patternExpressions), i)));
+            onError.recordError(expression, StyledString.s("Pattern match items must have matching items")); 
+            onError.recordQuickFixes(expression, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i)));
         }
         
         if (onError.recordError(this, TypeExp.unifyTypes(patternTypes)) == null)
@@ -392,6 +395,7 @@ public class MatchExpression extends NonOperatorExpression
         return result;
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {

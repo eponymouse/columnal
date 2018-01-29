@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
@@ -32,7 +33,8 @@ import java.util.stream.Stream;
 
 public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitNodeParent>, StyledShowable
 {
-    public static UnitExpression load(Unit unit)
+    @SuppressWarnings("recorded")
+    public static @Recorded UnitExpression load(Unit unit)
     {
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
             .filter(p -> p.getValue() > 0)
@@ -58,7 +60,10 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             return new UnitDivideExpression(r, new UnitTimesExpression(bottom));
     }
     
-    public static UnitExpression load(String text) throws InternalException, UserException
+    // We mark as Recorded because constructors require
+    // that, even though it's not actually reached GUI yet:
+    @SuppressWarnings("recorded")
+    public static @Recorded UnitExpression load(String text) throws InternalException, UserException
     {
         return loadUnbracketed(Utility.<UnbracketedUnitContext, UnitParser>parseAsOne(text, UnitLexer::new, UnitParser::new, p -> p.unitUse().unbracketedUnit()));
     }

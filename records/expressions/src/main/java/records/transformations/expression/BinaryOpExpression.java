@@ -53,8 +53,8 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     private final Op op;*/
-    protected final Expression lhs;
-    protected final Expression rhs;
+    protected final @Recorded Expression lhs;
+    protected final @Recorded Expression rhs;
     protected @Nullable TypeExp lhsType;
     protected @Nullable TypeExp rhsType;
 
@@ -114,7 +114,7 @@ public abstract class BinaryOpExpression extends Expression
         return result;
     }
     
-    public abstract BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS);
+    public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
 
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
@@ -129,6 +129,7 @@ public abstract class BinaryOpExpression extends Expression
     @RequiresNonNull({"lhsType", "rhsType"})
     protected abstract @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
+    @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
@@ -138,6 +139,7 @@ public abstract class BinaryOpExpression extends Expression
         );
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {

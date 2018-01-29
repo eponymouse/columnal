@@ -32,13 +32,13 @@ import java.util.Random;
  */
 public class TimesExpression extends NaryOpExpression
 {
-    public TimesExpression(List<Expression> expressions)
+    public TimesExpression(List<@Recorded Expression> expressions)
     {
         super(expressions);
     }
 
     @Override
-    public NaryOpExpression copyNoNull(List<Expression> replacements)
+    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
     {
         return new TimesExpression(replacements);
     }
@@ -100,6 +100,7 @@ public class TimesExpression extends NaryOpExpression
         throw new UnimplementedException();
     }
 
+    @SuppressWarnings("recorded")
     @Override
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
