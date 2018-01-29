@@ -46,10 +46,4 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     {
         return true;
     }
-
-    @Override
-    public UnitExpression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull UnitExpression, UnitNodeParent> first, OperandNode<@NonNull UnitExpression, UnitNodeParent> last)
-    {
-        return errorDisplayers.recordUnit(this, save(errorDisplayers, onError, first, last));
-    }
 }
