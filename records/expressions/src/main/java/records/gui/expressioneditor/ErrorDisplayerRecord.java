@@ -30,32 +30,12 @@ import java.util.List;
  * Created by neil on 24/02/2017.
  */
 public class ErrorDisplayerRecord
-{
-    private static class ErrorDetails<EXPRESSION extends StyledShowable>
-    {
-        public final ErrorDisplayer<EXPRESSION> displayer;
-        public final ArrayList<StyledString> errors = new ArrayList<>();
-        public final ArrayList<QuickFix<EXPRESSION>> fixes = new ArrayList<>();
-
-        private ErrorDetails(ErrorDisplayer<EXPRESSION> displayer)
-        {
-            this.displayer = displayer;
-        }
-
-        public void addErrorAndFixes(@Nullable StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
-        {
-            if (error != null)
-                this.errors.add(error);
-            this.fixes.addAll(quickFixes);
-            displayer.showError(StyledString.concat(errors.toArray(new StyledString[0])), fixes);
-        }
-    }
-    
+{    
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
-    private final IdentityHashMap<Expression, ErrorDetails<Expression>> expressionDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<UnitExpression, ErrorDetails<UnitExpression>> unitDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, ErrorDisplayer<Expression>> expressionDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression>> unitDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?>>>> pending = new IdentityHashMap<>();
@@ -63,8 +43,7 @@ public class ErrorDisplayerRecord
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
     public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression> displayer, @NonNull EXPRESSION e)
     {
-        expressionDisplayers.put(e, new ErrorDetails<>(displayer));
-        displayer.clearError();
+        expressionDisplayers.put(e, displayer);
         Pair<StyledString, List<QuickFix<?>>> pendingItem = pending.remove(e);
         if (pendingItem != null)
         {
@@ -77,16 +56,16 @@ public class ErrorDisplayerRecord
     @SuppressWarnings({"initialization", "recorded"})
     public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression> displayer, @NonNull UNIT_EXPRESSION e)
     {
-        unitDisplayers.put(e, new ErrorDetails<>(displayer));
+        unitDisplayers.put(e, displayer);
         return e;
     }
 
     private void showError(Expression e, @Nullable StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        @Nullable ErrorDetails<Expression> d = expressionDisplayers.get(e);
+        @Nullable ErrorDisplayer<Expression> d = expressionDisplayers.get(e);
         if (d != null)
         {
-            d.addErrorAndFixes(s, quickFixes);
+            d.addErrorAndFixes(s == null ? StyledString.s("") : s, quickFixes);
         }
         else
         {
@@ -110,19 +89,18 @@ public class ErrorDisplayerRecord
                 {
                     typeDetails.flatMapEx(typeExp -> typeExp.toConcreteType(typeManager).mapEx(dataType -> dataType.toDisplay(false)))
                         .either_(err -> {
-                            errorDisplayer.displayer.showType("");
+                            errorDisplayer.showType("");
                             errorDisplayer.addErrorAndFixes(err.getErrorText(), ExpressionEditorUtil.quickFixesForTypeError(expression, err.getSuggestedTypeFix()));
-                        }, display -> errorDisplayer.displayer.showType(display));
+                        }, display -> errorDisplayer.showType(display));
                 }
                 catch (InternalException | UserException e)
                 {
-                    if (!errorDisplayer.errors.isEmpty())
-                        errorDisplayer.addErrorAndFixes(StyledString.s(e.getLocalizedMessage()), Collections.emptyList());
+                    errorDisplayer.addErrorAndFixes(StyledString.s(e.getLocalizedMessage()), Collections.emptyList());
                 }
             }
             else
             {
-                errorDisplayer.displayer.showType("");
+                errorDisplayer.showType("");
             }
             
         }));

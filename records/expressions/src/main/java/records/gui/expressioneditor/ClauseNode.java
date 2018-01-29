@@ -55,7 +55,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     private final ObservableList<Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>>> matches;
     // This is the body of the clause:
     private final ConsecutiveBase<Expression, ExpressionNodeParent> outcome;
-
+    
     private static enum SubType
     {
         PATTERN, GUARD, OUTCOME;
@@ -130,6 +130,18 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     {
 
     }
+    
+    public void clearAllErrors()
+    {
+        for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : this.matches)
+        {
+            match.getFirst().clearAllErrors();
+            if (match.getSecond() != null)
+                match.getSecond().clearAllErrors();
+        }
+        this.outcome.clearAllErrors();
+    }
+
 
     @SuppressWarnings("initialization") // Because of Consecutive
     private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, SubType subType, @Nullable Expression startingContent)

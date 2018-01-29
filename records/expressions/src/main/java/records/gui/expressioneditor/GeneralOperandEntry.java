@@ -77,10 +77,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     }
 
     @Override
-    public void showError(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
-        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> {
+        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> {
             getParent().replaceLoad(this, e);
         });
     }
@@ -92,7 +92,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
         expressionInfoDisplay.clearError();
     }

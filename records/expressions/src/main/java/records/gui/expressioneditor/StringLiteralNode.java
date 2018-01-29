@@ -101,9 +101,9 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes), parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e));
+        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e));
     }
 
     @Override
@@ -113,7 +113,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
         expressionInfoDisplay.clearError();
     }

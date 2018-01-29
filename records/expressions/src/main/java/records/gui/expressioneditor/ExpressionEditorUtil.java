@@ -87,14 +87,14 @@ public class ExpressionEditorUtil
 
             @SuppressWarnings("recorded") // Damned if I can work out the right annotation
             @Override
-            public void showError(StyledString s, List<QuickFix<E>> q)
+            public void addErrorAndFixes(StyledString s, List<QuickFix<E>> q)
             {
                 setError(vBox, s);
-                errorShower.setMessageAndFixes(new Pair<StyledString, List<QuickFix<@UnknownIfRecorded E>>>(s, q), editor.getWindow(), editor.getTableManager(), replaceWithFixed);
+                errorShower.addMessageAndFixes(s, q, editor.getWindow(), editor.getTableManager(), replaceWithFixed);
             }
 
             @Override
-            public void clearError()
+            public void clearAllErrors()
             {
                 errorShower.clearError();
             }

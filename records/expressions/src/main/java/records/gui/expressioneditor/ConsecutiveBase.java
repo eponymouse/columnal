@@ -23,9 +23,7 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.*;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import styled.StyledShowable;
 import styled.StyledString;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -37,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -817,26 +816,27 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     }
 
     @Override
-    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes)
     {
+        Log.logStackTrace("\n\n\n" + this + " showing " + error.toPlain() + " " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
         if (operators.isEmpty())
         {
-            operands.get(0).showError(error, quickFixes);
+            operands.get(0).addErrorAndFixes(error, quickFixes);
         }
         else
         {
             for (OperatorEntry<EXPRESSION, SEMANTIC_PARENT> operator : operators)
             {
-                operator.showError(error, quickFixes);
+                operator.addErrorAndFixes(error, quickFixes);
             }
         }
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
-        operators.forEach(op -> op.clearError());
-        operands.forEach(x -> x.clearError());
+        operators.forEach(op -> op.clearAllErrors());
+        operands.forEach(x -> x.clearAllErrors());
     }
 
     @Override

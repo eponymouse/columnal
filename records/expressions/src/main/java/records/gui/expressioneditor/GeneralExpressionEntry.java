@@ -975,6 +975,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return parent.getEditor();
     }
 
+    @Override
+    public void clearAllErrors()
+    {
+        super.clearAllErrors();
+        if (unitSpecifier != null)
+            unitSpecifier.clearAllErrors();
+    }
+
     private class AddUnitCompletion extends Completion
     {
         @Override

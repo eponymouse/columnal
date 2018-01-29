@@ -4,16 +4,11 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -26,12 +21,9 @@ import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
-import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -162,15 +154,15 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
     }
 
     @Override
-    public void showError(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
-        container.getSecond().showError(error, quickFixes);
+        container.getSecond().addErrorAndFixes(error, quickFixes);
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
-        container.getSecond().clearError();
+        container.getSecond().clearAllErrors();
     }
 
     @Override

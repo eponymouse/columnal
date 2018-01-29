@@ -13,7 +13,7 @@ import java.util.List;
 public interface ErrorDisplayer<EXPRESSION extends StyledShowable>
 {
     // TODO make the String @Localized
-    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes);
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes);
     
     public void showType(String type);
 
@@ -21,5 +21,5 @@ public interface ErrorDisplayer<EXPRESSION extends StyledShowable>
     
     public void cleanup();
 
-    public void clearError();
+    public void clearAllErrors();
 }

@@ -309,7 +309,9 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         if (!atomicEdit.get())
         {
             ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
-            Expression expression = errorDisplayers.record(this, saveUnrecorded(errorDisplayers, errorDisplayers.getRecorder()));
+            ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
+            clearAllErrors();
+            Expression expression = errorDisplayers.record(this, saveUnrecorded(errorDisplayers, recorder));
             Log.debug("Saved as: " + expression);
             if (onChange != null)
             {
@@ -320,8 +322,8 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                 if (srcTable != null && tableManager != null)
                 {
                     
-                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorDisplayers.getRecorder());
-                    latestType.set(dataType == null ? null : errorDisplayers.getRecorder().recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
+                    latestType.set(dataType == null ? null : recorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
                     //Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }
@@ -331,7 +333,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                 Log.log(e);
                 String msg = e.getLocalizedMessage();
                 if (msg != null)
-                    showError(StyledString.s(msg), Collections.emptyList());
+                    addErrorAndFixes(StyledString.s(msg), Collections.emptyList());
             }
         }
     }

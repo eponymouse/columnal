@@ -24,7 +24,6 @@ import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import styled.StyledString;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -310,15 +309,17 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        matchLabel.getSecond().showError(error, quickFixes);
+        matchLabel.getSecond().addErrorAndFixes(error, quickFixes);
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
-        matchLabel.getSecond().clearError();
+        matchLabel.getSecond().clearAllErrors();
+        source.clearAllErrors();
+        clauses.forEach(ClauseNode::clearAllErrors);
     }
 
     @Override

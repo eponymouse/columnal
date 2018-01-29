@@ -404,15 +404,17 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        showError.showError(error, quickFixes);
+        showError.addErrorAndFixes(error, quickFixes);
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
-        showError.clearError();
+        showError.clearAllErrors();
+        if (contents != null)
+            contents.clearAllErrors();
     }
 
     @Override

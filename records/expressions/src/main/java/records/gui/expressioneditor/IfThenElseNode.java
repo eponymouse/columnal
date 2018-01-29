@@ -22,7 +22,6 @@ import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledString;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -274,15 +273,18 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void showError(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        ifLabel.getSecond().showError(error, quickFixes);
+        ifLabel.getSecond().addErrorAndFixes(error, quickFixes);
     }
 
     @Override
-    public void clearError()
+    public void clearAllErrors()
     {
-        ifLabel.getSecond().clearError();
+        ifLabel.getSecond().clearAllErrors();
+        condition.clearAllErrors();
+        thenPart.clearAllErrors();
+        elsePart.clearAllErrors();
     }
 
     @Override

@@ -45,6 +45,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.List;
@@ -142,8 +143,6 @@ public class ExpressionInfoDisplay
             FXUtility.addChangeListenerPlatformNN(errorMessage, err -> {
                 errorLabel.getChildren().setAll(err.toGUI());
                 errorLabel.setVisible(!err.toPlain().isEmpty());
-                if (errorLabel.isVisible())
-                    Log.logStackTrace("Showing error: \"" + errorMessage.get().toPlain() + "\"");
                 updateShowHide(true);
             });
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());
@@ -260,32 +259,20 @@ public class ExpressionInfoDisplay
         }
     }
     
-    public <EXPRESSION extends StyledShowable> void setMessageAndFixes(@Nullable Pair<StyledString, List<QuickFix<EXPRESSION>>> newMsgAndFixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> replace)
+    public <EXPRESSION extends StyledShowable> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION>> fixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> replace)
     {
-        if (newMsgAndFixes == null)
-        {
-            errorMessage.setValue(StyledString.s(""));
-            // Hide the popup:
+        //Log.debug("Message and fixes: " + newMsgAndFixes);
+        // The listener on this property should make the popup every time:
+        errorMessage.set(StyledString.concat(errorMessage.get(), msg));
+        this.fixes.set(Utility.concatI(this.fixes.get(), fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
+            //Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
-            {
                 hide(true);
-            }
-        }
-        else
+            replace.consume(q.getFixedVersion(parentWindow, tableManager));
+        })).collect(ImmutableList.toImmutableList())));
+        if (popup != null)
         {
-            //Log.debug("Message and fixes: " + newMsgAndFixes);
-            // The listener on this property should make the popup every time:
-            errorMessage.set(newMsgAndFixes.getFirst());
-            fixes.set(newMsgAndFixes.getSecond().stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
-                //Log.debug("Clicked fix: " + q.getTitle());
-                if (popup != null)
-                    hide(true);
-                replace.consume(q.getFixedVersion(parentWindow, tableManager));
-            })).collect(ImmutableList.toImmutableList()));
-            if (popup != null)
-            {
-                popup.fixList.setFixes(fixes.get());
-            }
+            popup.fixList.setFixes(this.fixes.get());
         }
     }
     

@@ -86,7 +86,6 @@ public abstract class NaryOpExpression extends Expression
     {
         StyledString.Builder s = new StyledString.Builder();
         s.append(surround == BracketedStatus.MISC ? "(" : "");
-        s.append(getSpecialPrefix());
         for (int i = 0; i < expressions.size(); i++)
         {
             if (i > 0)

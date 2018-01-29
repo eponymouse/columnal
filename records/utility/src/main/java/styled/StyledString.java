@@ -147,7 +147,12 @@ public class StyledString
     @Pure
     public static StyledString concat(StyledString... items)
     {
-        return new StyledString(Arrays.stream(items).flatMap(ss -> ss.members.stream()).collect(ImmutableList.toImmutableList()));
+        return new StyledString(
+            Arrays.stream(items)
+                .flatMap(ss -> ss.members.stream())
+                .filter(ss -> !ss.getSecond().isEmpty())
+                .collect(ImmutableList.toImmutableList())
+        );
     }
     
     @Pure
