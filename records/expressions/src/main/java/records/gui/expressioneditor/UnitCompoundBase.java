@@ -1,8 +1,10 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.control.Label;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
 
@@ -43,5 +45,11 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     protected boolean hasImplicitRoundBrackets()
     {
         return true;
+    }
+
+    @Override
+    public UnitExpression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull UnitExpression, UnitNodeParent> first, OperandNode<@NonNull UnitExpression, UnitNodeParent> last)
+    {
+        return errorDisplayers.recordUnit(this, save(errorDisplayers, onError, first, last));
     }
 }

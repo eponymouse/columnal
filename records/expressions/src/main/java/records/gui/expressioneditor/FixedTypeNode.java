@@ -63,7 +63,7 @@ public class FixedTypeNode extends SurroundNode
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {        
         @SuppressWarnings("nullness")
-        Expression innerExp = contents.save(errorDisplayer, onError);
+        Expression innerExp = errorDisplayer.record(contents, contents.saveUnrecorded(errorDisplayer, onError));
         Either<String, DataType> type = Either.left(head.getText());
         try
         {

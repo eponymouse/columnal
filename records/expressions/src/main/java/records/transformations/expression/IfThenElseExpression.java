@@ -43,7 +43,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     private final Expression thenExpression;
     private final Expression elseExpression;
 
-    public IfThenElseExpression(Expression condition, Expression thenExpression, Expression elseExpression)
+    public IfThenElseExpression(@Recorded Expression condition, @Recorded Expression thenExpression, @Recorded Expression elseExpression)
     {
         this.condition = condition;
         this.thenExpression = thenExpression;

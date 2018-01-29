@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
 import utility.Pair;
@@ -43,5 +44,11 @@ public class UnitCompound extends UnitCompoundBase implements OperandNode<UnitEx
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {
         return null;
+    }
+
+    @Override
+    public UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    {
+        return errorDisplayer.recordUnit(this, saveUnrecorded(errorDisplayer, onError));
     }
 }

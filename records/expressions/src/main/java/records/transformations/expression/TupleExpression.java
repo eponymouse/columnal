@@ -47,7 +47,7 @@ public class TupleExpression extends Expression
     private @Nullable ImmutableList<TypeExp> memberTypes;
     private @Nullable TypeExp tupleType;
 
-    public TupleExpression(ImmutableList<Expression> members)
+    public TupleExpression(ImmutableList<@Recorded Expression> members)
     {
         this.members = members;
     }

@@ -25,6 +25,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -99,6 +100,11 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     public TableManager getTableManager()
     {
         return tableManager;
+    }
+
+    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayerRecord, ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer)
+    {
+        return errorDisplayerRecord.record(this, saveUnrecorded(errorDisplayerRecord, errorAndTypeRecorderStorer));
     }
 
     private static class SelectionInfo<E extends LoadableExpression<E, P>, P>
@@ -303,7 +309,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         if (!atomicEdit.get())
         {
             ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
-            Expression expression = save(errorDisplayers, errorDisplayers.getRecorder());
+            Expression expression = errorDisplayers.record(this, saveUnrecorded(errorDisplayers, errorDisplayers.getRecorder()));
             Log.debug("Saved as: " + expression);
             if (onChange != null)
             {

@@ -35,7 +35,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
 {
     private final List<String> operators;
 
-    public InvalidOperatorExpression(List<Expression> operands, List<String> operators)
+    public InvalidOperatorExpression(List<@Recorded Expression> operands, List<String> operators)
     {
         super(operands);
         this.operators = operators;

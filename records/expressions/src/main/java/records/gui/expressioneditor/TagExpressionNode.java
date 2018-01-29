@@ -86,7 +86,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
             innerExp = null;
         else
         {
-            innerExp = contents.save(errorDisplayer, onError);
+            innerExp = errorDisplayer.record(contents, contents.saveUnrecorded(errorDisplayer, onError));
         }
         return errorDisplayer.record(this, new TagExpression(tag, innerExp));
     }

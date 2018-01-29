@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -69,7 +70,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public @Recorded UnitExpression makeExpression(ErrorDisplayer<UnitExpression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
+    public @UnknownIfRecorded UnitExpression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
         ArrayList<UnitExpression> operands = new ArrayList<>(originalOperands);
@@ -105,22 +106,22 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
 
         if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
         {
-            return errorDisplayers.recordUnit(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));
+            return new UnitDivideExpression(operands.get(0), operands.get(1));
         }
         else if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("^") && operands.get(1) instanceof UnitExpressionIntLiteral)
         {
-            return errorDisplayers.recordUnit(displayer, new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber()));
+            return new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber());
         }
         else if (ops.size() > 0 && ops.stream().allMatch(o -> o.equals("*")))
         {
-            return errorDisplayers.recordUnit(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands)));
+            return new UnitTimesExpression(ImmutableList.copyOf(operands));
         }
         else if (ops.size() == 0 && operands.size() == 1)
         {
-            return errorDisplayers.recordUnit(displayer, operands.get(0));
+            return operands.get(0);
         }
 
-        return errorDisplayers.recordUnit(displayer, new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops)));
+        return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));
     }
 
     @Override

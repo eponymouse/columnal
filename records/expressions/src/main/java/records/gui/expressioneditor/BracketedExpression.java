@@ -5,10 +5,12 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import utility.Pair;
@@ -110,5 +112,11 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     protected boolean hasImplicitRoundBrackets()
     {
         return true;
+    }
+
+    @Override
+    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    {
+        return errorDisplayer.record(this, saveUnrecorded(errorDisplayer, onError));
     }
 }

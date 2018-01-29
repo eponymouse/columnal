@@ -402,10 +402,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>, String>mapList(operators, op -> op.get()));
     }
 
-    public @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
+    public @UnknownIfRecorded EXPRESSION saveUnrecorded(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
     {
         if (operands.isEmpty())
-            return operations.makeExpression(this, errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
+            return operations.makeExpression(errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
         else
             return save(errorDisplayers, onError, operands.get(0), operands.get(operands.size() - 1));
     }
@@ -415,7 +415,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return BracketedStatus.MISC;
     }
 
-    public @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
+    public @UnknownIfRecorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -441,7 +441,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             return expressionExps.get(0);
         }
 
-        return operations.makeExpression(this, errorDisplayers, expressionExps, ops, bracketedStatus);
+        return operations.makeExpression(errorDisplayers, expressionExps, ops, bracketedStatus);
     }
 
     public @Nullable DataType inferType()

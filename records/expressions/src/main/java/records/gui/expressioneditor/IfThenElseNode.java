@@ -38,9 +38,9 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> parent;
     private final ExpressionNodeParent semanticParent;
-    private final @Interned Consecutive<Expression, ExpressionNodeParent> condition;
-    private final @Interned Consecutive<Expression, ExpressionNodeParent> thenPart;
-    private final @Interned Consecutive<Expression, ExpressionNodeParent> elsePart;
+    private final @Interned SubConsecutive condition;
+    private final @Interned SubConsecutive thenPart;
+    private final @Interned SubConsecutive elsePart;
     private final Pair<VBox, ErrorDisplayer<Expression>> ifLabel;
     private final VBox thenLabel;
     private final VBox elseLabel;
@@ -328,6 +328,11 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         protected boolean hasImplicitRoundBrackets()
         {
             return false;
+        }
+
+        public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+        {
+            return errorDisplayer.record(this, saveUnrecorded(errorDisplayer, onError));
         }
     }
 }

@@ -491,11 +491,11 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)
         {
-            Expression patExp = match.getFirst().save(errorDisplayer, onError);
-            @Nullable Expression matchExp = match.getSecond() == null ? null : match.getSecond().save(errorDisplayer, onError);
+            Expression patExp = errorDisplayer.record(match.getFirst(), match.getFirst().saveUnrecorded(errorDisplayer, onError));
+            @Nullable Expression matchExp = match.getSecond() == null ? null : errorDisplayer.record(match.getSecond(), match.getSecond().saveUnrecorded(errorDisplayer, onError));
             patterns.add(me -> new Pattern(patExp, matchExp));
         }
-        Expression outcomeExp = this.outcome.save(errorDisplayer, onError);
+        Expression outcomeExp = errorDisplayer.record(outcome, this.outcome.saveUnrecorded(errorDisplayer, onError));
         return me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, f -> f.apply(me)), outcomeExp);
     }
 

@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -181,7 +182,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public @Recorded Expression makeExpression(ErrorDisplayer<Expression> displayer, ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded Expression> originalExps, List<String> ops, BracketedStatus bracketedStatus)
+    public @UnknownIfRecorded Expression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded Expression> originalExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         // Make copy for editing:
         ArrayList<Expression> expressionExps = new ArrayList<>(originalExps);
@@ -205,7 +206,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         if (expression == null)
             expression = new InvalidOperatorExpression(expressionExps, ops);
 
-        return errorDisplayers.record(displayer, expression);
+        return expression;
         /*
         else if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
         {

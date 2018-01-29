@@ -57,7 +57,7 @@ public class CallExpression extends NonOperatorExpression
     @MonotonicNonNull
     private FunctionTypes types;
 
-    public CallExpression(String functionName, @Nullable FunctionDefinition functionDefinition, List<Unit> units, Expression arg)
+    public CallExpression(String functionName, @Nullable FunctionDefinition functionDefinition, List<Unit> units, @Recorded Expression arg)
     {
         this.functionName = functionName;
         this.definition = functionDefinition;

@@ -45,7 +45,7 @@ public class NumericLiteral extends Literal
     private final @Value Number value;
     private final @Nullable UnitExpression unit;
 
-    public NumericLiteral(Number value, @Nullable UnitExpression unit)
+    public NumericLiteral(Number value, @Nullable @Recorded UnitExpression unit)
     {
         this.value = DataTypeUtility.value(value);
         this.unit = unit;

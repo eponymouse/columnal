@@ -62,7 +62,7 @@ public class TagExpression extends NonOperatorExpression
      *                that is checked later during type-checking
      * @param inner   The optional inner expression for this tag expression.
      */
-    public TagExpression(Either<String, TagInfo> tag, @Nullable Expression inner)
+    public TagExpression(Either<String, TagInfo> tag, @Nullable @Recorded Expression inner)
     {
         this.tag = tag;
         this.inner = inner;

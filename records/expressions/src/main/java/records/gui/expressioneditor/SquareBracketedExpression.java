@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -28,7 +29,7 @@ public class SquareBracketedExpression extends BracketedExpression
     }
 
     @Override
-    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
+    public @UnknownIfRecorded Expression save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull Expression, ExpressionNodeParent> first, OperandNode<@NonNull Expression, ExpressionNodeParent> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -52,12 +53,12 @@ public class SquareBracketedExpression extends BracketedExpression
             }
             else if (ops.stream().anyMatch(s -> s.equals(",")))
             {
-                // Mixed operators; return singleton of unfinished
+                // Mixed operators and commas; return singleton of unfinished
                 return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
             }
             else
             {
-                // No commas, just a singleton:
+                // No commas, just a singleton expression:
                 return errorDisplayers.record(this, new ArrayExpression(ImmutableList.of(super.save(errorDisplayers, onError, first, last))));
             }
         }

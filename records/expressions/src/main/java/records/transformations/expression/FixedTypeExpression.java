@@ -44,7 +44,7 @@ public class FixedTypeExpression extends NonOperatorExpression
     private final Either<String, DataType> type;
     private final Expression inner;
     
-    public FixedTypeExpression(Either<String, DataType> type, Expression innerExpression)
+    public FixedTypeExpression(Either<String, DataType> type, @Recorded Expression innerExpression)
     {
         this.type = type;
         this.inner = innerExpression;

@@ -64,10 +64,13 @@ public class ErrorDisplayerRecord
     public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression> displayer, @NonNull EXPRESSION e)
     {
         expressionDisplayers.put(e, new ErrorDetails<>(displayer));
-        if (pending.containsKey(e))
-            showError(e, pending.get(e).getFirst(), (List)pending.get(e).getSecond());
-        else
-            displayer.clearError();
+        displayer.clearError();
+        Pair<StyledString, List<QuickFix<?>>> pendingItem = pending.remove(e);
+        if (pendingItem != null)
+        {
+            showError(e, pendingItem.getFirst(), (List) pendingItem.getSecond());
+            
+        }
         return e;
     }
 

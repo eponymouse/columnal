@@ -58,7 +58,7 @@ public abstract class BinaryOpExpression extends Expression
     protected @Nullable TypeExp lhsType;
     protected @Nullable TypeExp rhsType;
 
-    protected BinaryOpExpression(Expression lhs, Expression rhs)
+    protected BinaryOpExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
         this.lhs = lhs;
         this.rhs = rhs;

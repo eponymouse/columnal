@@ -51,7 +51,7 @@ public class MatchExpression extends NonOperatorExpression
         private final List<Pattern> patterns;
         private final Expression outcome;
 
-        public MatchClause(List<Pattern> patterns, Expression outcome)
+        public MatchClause(List<Pattern> patterns, @Recorded Expression outcome)
         {
             this.patterns = patterns;
             this.outcome = outcome;
@@ -168,7 +168,7 @@ public class MatchExpression extends NonOperatorExpression
         private final Expression pattern;
         private final @Nullable Expression guard;
 
-        public Pattern(Expression pattern, @Nullable Expression guard)
+        public Pattern(@Recorded Expression pattern, @Nullable @Recorded Expression guard)
         {
             this.pattern = pattern;
             this.guard = guard;
@@ -258,7 +258,7 @@ public class MatchExpression extends NonOperatorExpression
     private final List<MatchClause> clauses;
 
     @SuppressWarnings("initialization") // Because we pass this to sub-clauses which we are creating.
-    public MatchExpression(Expression expression, List<Function<MatchExpression, MatchClause>> clauses)
+    public MatchExpression(@Recorded Expression expression, List<Function<MatchExpression, MatchClause>> clauses)
     {
         this.expression = expression;
         this.clauses = Utility.<Function<MatchExpression, MatchClause>, MatchClause>mapList(clauses, f -> f.apply(this));

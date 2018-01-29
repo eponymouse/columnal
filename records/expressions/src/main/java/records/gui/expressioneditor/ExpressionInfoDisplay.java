@@ -134,13 +134,15 @@ public class ExpressionInfoDisplay
                 getRoot().setMinHeight(20.0);
             });
             
-            
+            Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
             TextFlow errorLabel = new TextFlow(errorMessage.get().toGUI().toArray(new Node[0]));
             errorLabel.getStyleClass().add("expression-info-error");
             errorLabel.setVisible(!errorMessage.get().toPlain().isEmpty());
             FXUtility.addChangeListenerPlatformNN(errorMessage, err -> {
                 errorLabel.getChildren().setAll(err.toGUI());
                 errorLabel.setVisible(!err.toPlain().isEmpty());
+                if (errorLabel.isVisible())
+                    Log.logStackTrace("Showing error: \"" + errorMessage.get().toPlain() + "\"");
                 updateShowHide(true);
             });
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());

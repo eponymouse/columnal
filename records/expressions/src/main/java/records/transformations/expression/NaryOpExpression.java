@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,7 +37,7 @@ public abstract class NaryOpExpression extends Expression
 {
     protected final ImmutableList<Expression> expressions;
 
-    public NaryOpExpression(List<Expression> expressions)
+    public NaryOpExpression(List<@Recorded Expression> expressions)
     {
         this.expressions = ImmutableList.copyOf(expressions);
         // Bit hacky to use instanceof, but only for logging purposes anyway:
