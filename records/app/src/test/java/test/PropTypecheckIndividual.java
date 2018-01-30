@@ -58,6 +58,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 24/01/2017.
  */
+@SuppressWarnings("recorded")
 @RunWith(JUnitQuickcheck.class)
 public class PropTypecheckIndividual
 {

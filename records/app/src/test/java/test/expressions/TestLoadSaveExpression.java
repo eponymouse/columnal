@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by neil on 30/11/2016.
  */
+@SuppressWarnings("recorded")
 public class TestLoadSaveExpression
 {
     @Test

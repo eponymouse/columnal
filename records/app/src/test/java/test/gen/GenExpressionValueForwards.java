@@ -86,6 +86,7 @@ import static test.TestUtil.distinctTypes;
  * In contrast, going backwards we would start with the year-month value we want,
  * then generate the integer values to match.
  */
+@SuppressWarnings("recorded")
 public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 {
     @SuppressWarnings("initialization")

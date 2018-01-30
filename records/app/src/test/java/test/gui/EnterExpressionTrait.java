@@ -32,6 +32,7 @@ import java.util.Random;
 
 import static org.junit.Assert.fail;
 
+@SuppressWarnings("recorded")
 public interface EnterExpressionTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)

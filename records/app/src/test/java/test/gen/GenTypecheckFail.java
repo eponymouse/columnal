@@ -172,6 +172,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                             throw new RuntimeException("Type predicate too hard to satisfy");
                         }
 
+                        @SuppressWarnings("recorded")
                         @Override
                         public Expression makeArrayExpression(ImmutableList<Expression> items)
                         {

@@ -62,7 +62,7 @@ import static org.junit.Assume.assumeTrue;
 /**
  * Created by neil on 01/12/2016.
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "recorded"})
 @RunWith(JUnitQuickcheck.class)
 public class PropRunTransformation
 {

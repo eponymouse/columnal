@@ -96,6 +96,7 @@ public class ExpressionEditorUtil
             @Override
             public void clearAllErrors()
             {
+                setError(vBox, null);
                 errorShower.clearError();
             }
 

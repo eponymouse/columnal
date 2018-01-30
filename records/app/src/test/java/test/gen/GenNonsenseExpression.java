@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
  * Generates arbitrary expression which probably won't type check.
  * Useful for testing loading and saving of expressions.
  */
+@SuppressWarnings("recorded")
 public class GenNonsenseExpression extends Generator<Expression>
 {
     public GenNonsenseExpression()

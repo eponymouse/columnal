@@ -104,6 +104,7 @@ import java.util.stream.Stream;
  * results due to precision (e.g. make me a function which returns 0.3333333; 1/3 might
  * not quite crack it).
  */
+@SuppressWarnings("recorded")
 public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 {
 

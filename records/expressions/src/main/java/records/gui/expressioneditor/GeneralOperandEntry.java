@@ -94,6 +94,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     @Override
     public void clearAllErrors()
     {
+        ExpressionEditorUtil.setError(container, null);
         expressionInfoDisplay.clearError();
     }
 
