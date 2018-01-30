@@ -20,6 +20,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
@@ -50,12 +51,21 @@ import java.util.stream.Stream;
 public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ExpressionNodeParent
 {
     private final PatternMatchNode parent;
-    private final VBox caseLabel;
+    private final ErrorTop caseLabel;
     // Each item here is a pattern + guard pair.  You can have one or more in a clause:
     private final ObservableList<Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>>> matches;
     // This is the body of the clause:
     private final ConsecutiveBase<Expression, ExpressionNodeParent> outcome;
-    
+
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return Stream.concat(Stream.concat(
+            caseLabel._test_getHeaderState(),
+            matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> Stream.concat(p.getFirst()._test_getHeaders(), p.getSecond() == null ? Stream.<Pair<String, Boolean>>of() : p.getSecond()._test_getHeaders()))
+            ), outcome._test_getHeaders()
+        );
+    }
+
     private static enum SubType
     {
         PATTERN, GUARD, OUTCOME;

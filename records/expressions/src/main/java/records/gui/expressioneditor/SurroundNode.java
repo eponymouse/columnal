@@ -22,6 +22,7 @@ import javafx.scene.shape.VLineTo;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
@@ -59,6 +60,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     // mainly because it makes all the nullness checks a pain.
     private final ObservableList<Node> noInnerNodes;
     private final ErrorDisplayer<Expression> showError;
+    private final ErrorTop errorTop;
 
     @SuppressWarnings("initialization")
     public SurroundNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
@@ -84,9 +86,10 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         head.getStyleClass().add("entry-field");
         head.setText(startingHead);
         this.cssClass = cssClass;
-        Pair<VBox, ErrorDisplayer<Expression>> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getEditor(), e -> getParent().replaceLoad(this, e), getParentStyles());
+        Pair<ErrorTop, ErrorDisplayer<Expression>> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getEditor(), e -> getParent().replaceLoad(this, e), getParentStyles());
         VBox vBox = vBoxAndErrorShow.getFirst();
         this.showError = vBoxAndErrorShow.getSecond();
+        this.errorTop = vBoxAndErrorShow.getFirst();
         noInnerNodes = FXCollections.observableArrayList();
         if (hasInner)
         {
@@ -441,5 +444,11 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         showError.cleanup();
         if (contents != null)
             contents.cleanup();
+    }
+
+    @Override
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return Stream.concat(errorTop._test_getHeaderState(), contents == null ? Stream.<Pair<String, Boolean>>of() : contents._test_getHeaders());
     }
 }

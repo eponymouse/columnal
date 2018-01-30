@@ -16,6 +16,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
@@ -25,6 +26,7 @@ import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -40,9 +42,9 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     private final @Interned SubConsecutive condition;
     private final @Interned SubConsecutive thenPart;
     private final @Interned SubConsecutive elsePart;
-    private final Pair<VBox, ErrorDisplayer<Expression>> ifLabel;
-    private final VBox thenLabel;
-    private final VBox elseLabel;
+    private final Pair<ErrorTop, ErrorDisplayer<Expression>> ifLabel;
+    private final ErrorTop thenLabel;
+    private final ErrorTop elseLabel;
 
     @SuppressWarnings("initialization") // because of Consecutive
     public IfThenElseNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable Expression startingCondition, @Nullable Expression startingThen,  @Nullable Expression startingElse)
@@ -155,6 +157,19 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         condition.focusChanged();
         thenPart.focusChanged();
         elsePart.focusChanged();
+    }
+
+    @Override
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return Arrays.asList(
+            ifLabel.getFirst()._test_getHeaderState(),
+            condition._test_getHeaders(),
+            thenLabel._test_getHeaderState(),
+            thenPart._test_getHeaders(),
+            elseLabel._test_getHeaderState(),
+            elsePart._test_getHeaders()
+        ).stream().flatMap(s -> s);
     }
 
     @Override

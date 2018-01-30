@@ -1,13 +1,18 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.gui.FXUtility;
+
+import java.util.stream.Stream;
 
 /**
  * A child of a ConsecutiveBase item.  Has methods for selection, dragging and focusing.
@@ -36,4 +41,7 @@ public interface ConsecutiveChild<EXPRESSION extends LoadableExpression<EXPRESSI
     default boolean isBlank() { return false; }
 
     void focusChanged();
+
+    @OnThread(Tag.FXPlatform)
+    Stream<Pair<String, Boolean>> _test_getHeaders();
 }

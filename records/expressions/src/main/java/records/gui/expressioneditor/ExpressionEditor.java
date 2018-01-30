@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -107,6 +108,13 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         return errorDisplayerRecord.record(this, saveUnrecorded(errorDisplayerRecord, errorAndTypeRecorderStorer));
     }
 
+    // Gets content, and error (true = error) state of all header labels.
+    @OnThread(Tag.FXPlatform)
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return getAllChildren().stream().flatMap(c -> c._test_getHeaders());
+    }
+
     private static class SelectionInfo<E extends LoadableExpression<E, P>, P>
     {
         private final ConsecutiveBase<E, P> parent;
@@ -145,7 +153,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS,  null, null, "");
-        this.container = new FlowPane();
+        this.container = new ExpressionEditorFlowPane();
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
@@ -479,5 +487,15 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     public void addFocusListener(FXPlatformConsumer<Node> focusListener)
     {
         focusListeners.add(focusListener);
+    }
+
+    // Only really exists for testing purposes:
+    public class ExpressionEditorFlowPane extends FlowPane
+    {
+        @OnThread(Tag.Any)
+        public ExpressionEditor _test_getEditor()
+        {
+            return ExpressionEditor.this;
+        }
     }
 }

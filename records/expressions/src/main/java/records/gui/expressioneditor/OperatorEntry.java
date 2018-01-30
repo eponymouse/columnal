@@ -18,6 +18,7 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
@@ -37,7 +38,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
     /**
      * The outermost container for the whole thing:
      */
-    private final Pair<VBox, ErrorDisplayer<EXPRESSION>> container;
+    private final Pair<ErrorTop, ErrorDisplayer<EXPRESSION>> container;
     private final @MonotonicNonNull AutoComplete autoComplete;
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
@@ -128,6 +129,12 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
     public boolean isBlank()
     {
         return textField.getText().isEmpty();
+    }
+
+    @Override
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return this.container.getFirst()._test_getHeaderState();
     }
 
     @Override

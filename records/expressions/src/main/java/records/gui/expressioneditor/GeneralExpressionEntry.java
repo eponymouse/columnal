@@ -44,6 +44,7 @@ import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
+import styled.StyledString;
 import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
@@ -632,7 +633,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 // Fall through to unfinished case...
             }
         }
-        return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
+        
+        UnfinishedExpression unfinishedExpression = new UnfinishedExpression(textField.getText().trim());
+        onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
+        return errorDisplayer.record(this, unfinishedExpression);
     }
 
     private <T> @Nullable T parseOrNull(ExFunction<ExpressionParser, T> parse)

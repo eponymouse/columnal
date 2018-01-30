@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import styled.StyledString;
@@ -28,7 +29,7 @@ import java.util.stream.Stream;
 public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>
 {
     private final AutoComplete autoComplete;
-    private final VBox container;
+    private final ErrorTop container;
     private final ExpressionInfoDisplay expressionInfoDisplay;
 
     public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
@@ -75,7 +76,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditorUtil.enableSelection(typeLabel, this);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
-        container = new VBox(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
+        container = new ErrorTop(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
         this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
         
@@ -134,6 +135,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     public void cleanup()
     {
         expressionInfoDisplay.hideImmediately();
+    }
+
+    @Override
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return container._test_getHeaderState();
     }
 
     private static class EndStringCompletion extends Completion

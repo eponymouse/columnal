@@ -3,6 +3,7 @@ package test.gui;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.ColumnId;
@@ -16,16 +17,23 @@ import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
+import records.gui.expressioneditor.ExpressionEditor;
+import records.gui.expressioneditor.ExpressionEditor.ExpressionEditorFlowPane;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.Pair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
@@ -42,6 +50,7 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
         this.windowToUse = stage;
     }
     
+    @OnThread(Tag.Any)
     private static class State
     {
         public final String headerText;
@@ -52,6 +61,42 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             this.headerText = headerText;
             this.errorColourHeader = errorColourHeader;
         }
+        
+        public Pair<String, Boolean> toPair()
+        {
+            return new Pair<>(headerText, errorColourHeader);
+        }
+    }
+    
+    @Test
+    public void test1()
+    {
+        // Check basic:
+        testError("1", false, h(""));
+    }
+
+    @Test
+    public void test2()
+    {
+        // Don't want an error if we're still in the slot::
+        testError("1#", false, h(""));
+    }
+
+    @Test
+    public void test2B()
+    {
+        // Error once we leave the slot:
+        testError("1#+", false, e(), h(""), h(""));
+    }
+
+    private static State h(String s)
+    {
+        return new State(s, false);
+    }
+    
+    private static State e()
+    {
+        return new State("error", true);
     }
 
     private void testError(String original, boolean errorPopupShowing, State... states)
@@ -78,9 +123,14 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             push(KeyCode.TAB);
             push(KeyCode.TAB);
             write(original);
-            // TODO fetch items, check headers, check error popup
-            fail("TODO");
+            ExpressionEditorFlowPane editorPane = lookup(".expression-editor").<ExpressionEditorFlowPane>query();
+            assertNotNull(editorPane);
+            if (editorPane == null) return;
+            ExpressionEditor expressionEditor = editorPane._test_getEditor();
+            List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).collect(Collectors.toList());
             
+            assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
+            // TODO check error popup
         }
         catch (Exception e)
         {

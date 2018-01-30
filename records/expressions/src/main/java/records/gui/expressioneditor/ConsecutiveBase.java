@@ -239,6 +239,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return this == child || getAllChildren().stream().anyMatch(n -> n.isOrContains(child));
     }
 
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return getAllChildren().stream().flatMap(o -> o._test_getHeaders());
+    }
+
     public static enum OperatorOutcome { KEEP, BLANK }
 
     public OperatorOutcome addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)

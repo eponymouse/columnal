@@ -17,6 +17,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
@@ -39,7 +40,7 @@ import java.util.stream.Stream;
  */
 public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression, ExpressionNodeParent>, ExpressionNodeParent
 {
-    private final Pair<VBox, ErrorDisplayer<Expression>> matchLabel;
+    private final Pair<ErrorTop, ErrorDisplayer<Expression>> matchLabel;
     private final ConsecutiveBase<Expression, ExpressionNodeParent> source;
     private final ObservableList<ClauseNode> clauses;
     private ConsecutiveBase<Expression, ExpressionNodeParent> parent;
@@ -306,6 +307,15 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
         {
             clause.focusChanged();
         }
+    }
+
+    @Override
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return Stream.concat(
+            source._test_getHeaders(),
+            clauses.stream().flatMap(c -> c._test_getHeaders())
+        );
     }
 
     @Override

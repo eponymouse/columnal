@@ -1,11 +1,13 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
+import com.google.common.collect.ImmutableList;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
@@ -16,6 +18,7 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A helper class that implements various methods when you
@@ -38,7 +41,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     /**
      * The outermost container for the whole thing:
      */
-    protected final VBox container;
+    protected final ErrorTop container;
 
     private final ExpressionInfoDisplay expressionInfoDisplay;
 
@@ -53,7 +56,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
         ExpressionEditorUtil.enableSelection(typeLabel, this);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
         prefix = new Label();
-        container = new VBox(typeLabel, new HBox(prefix, textField));
+        container = new ErrorTop(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
         this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
@@ -79,7 +82,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     @Override
     public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
     {
-        ExpressionEditorUtil.setError(container, error);
+        container.setError(true);
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> {
             getParent().replaceLoad(this, e);
         });
@@ -94,7 +97,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     @Override
     public void clearAllErrors()
     {
-        ExpressionEditorUtil.setError(container, null);
+        container.setError(false);
         expressionInfoDisplay.clearError();
     }
 
@@ -108,5 +111,11 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     public void cleanup()
     {
         expressionInfoDisplay.hideImmediately();
+    }
+
+    @Override
+    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    {
+        return container._test_getHeaderState();
     }
 }
