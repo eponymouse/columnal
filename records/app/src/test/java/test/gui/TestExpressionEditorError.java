@@ -72,22 +72,49 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
     public void test1()
     {
         // Check basic:
-        testError("1", false, h(""));
+        testError("1", false, h());
     }
 
     @Test
     public void test2()
     {
         // Don't want an error if we're still in the slot::
-        testError("1#", false, h(""));
+        testError("1#", false, h());
     }
 
     @Test
     public void test2B()
     {
         // Error once we leave the slot:
-        testError("1#+", false, e(), h(""), h(""));
+        // (but no error in the blank operand added at the end)
+        testError("1#+", false, e(), h(), h());
     }
+
+    @Test
+    public void test2C()
+    {
+        // Error once we leave the slot:
+        // (and error in the blank operand skipped)
+        testError("1#+/", false, e(), h(), e(), h(), h());
+    }
+    
+    @Test
+    public void test3()
+    {
+        testError("@if 3 @then #", false,
+            // if, condition
+            h(), e(),
+            // then, # (but focused)
+            h(), h(),
+            // else, blank (but unvisited)
+            h(), h());
+    }
+
+    private static State h()
+    {
+        return new State("", false);
+    }
+
 
     private static State h(String s)
     {
