@@ -311,7 +311,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     @Override
     protected void selfChanged()
     {
-        Log.debug("selfChanged: " + atomicEdit.get());
+        //Log.debug("selfChanged: " + atomicEdit.get());
         clearSelection();
         // Can be null during initialisation
         if (!atomicEdit.get())
@@ -320,7 +320,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
             clearAllErrors();
             Expression expression = errorDisplayers.record(this, saveUnrecorded(errorDisplayers, recorder));
-            Log.debug("Saved as: " + expression);
+            //Log.debug("Saved as: " + expression);
             if (onChange != null)
             {
                 onChange.consume(expression);

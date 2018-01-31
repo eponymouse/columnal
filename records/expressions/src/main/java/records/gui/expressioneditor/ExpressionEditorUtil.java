@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.BooleanExpression;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
@@ -60,6 +61,7 @@ public class ExpressionEditorUtil
     {
         private final Label topLabel;
         private boolean hasError;
+        private boolean maskErrors = false;
 
         public ErrorTop(Label topLabel, Node content)
         {
@@ -77,7 +79,19 @@ public class ExpressionEditorUtil
         public void setError(boolean error)
         {
             this.hasError = error;
-            FXUtility.setPseudoclass(this, "exp-error", hasError);
+            FXUtility.setPseudoclass(this, "exp-error", hasError && !maskErrors);
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private void bindErrorMasking(BooleanExpression errorMasking)
+        {
+            maskErrors = errorMasking.get();
+            FXUtility.addChangeListenerPlatformNN(errorMasking, maskErrors -> {
+                Log.logStackTrace("Mask error changed to: " + maskErrors);
+                this.maskErrors = maskErrors;
+                setError(hasError);
+            });
+            setError(hasError);
         }
     }
     
@@ -143,9 +157,11 @@ public class ExpressionEditorUtil
         });
     }
 
-    public static ExpressionInfoDisplay installErrorShower(VBox vBox, Label topLabel, TextField textField)
+    public static ExpressionInfoDisplay installErrorShower(ErrorTop vBox, Label topLabel, TextField textField)
     {
-        return new ExpressionInfoDisplay(vBox, topLabel, textField);
+        ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField);
+        vBox.bindErrorMasking(expressionInfoDisplay.maskingErrors());
+        return expressionInfoDisplay;
     }
 
     @NotNull

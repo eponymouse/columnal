@@ -8,6 +8,8 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -76,7 +78,11 @@ public class ExpressionInfoDisplay
     private boolean hoveringTopOfAttached = false;
     private boolean hoveringPopup = false;
     private @Nullable Animation hidingAnimation;
-
+    private boolean textFieldHasLostFocus = false;
+    private boolean textFieldEmpty = false;
+    private final SimpleBooleanProperty maskingErrors = new SimpleBooleanProperty();
+    
+    
     @SuppressWarnings("initialization")
     public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField)
     {
@@ -101,6 +107,14 @@ public class ExpressionInfoDisplay
                 fixes.get().get(fKey.getAsInt() - 1).executeFix.run();
             }
         });
+
+        // Default is to mask errors if the text field is blank and has never *lost* focus.
+        textFieldEmpty = textField.getText().isEmpty();
+        maskingErrors.set(textFieldEmpty && !textFieldHasLostFocus);
+        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), content -> {
+            textFieldEmpty = content.isEmpty();
+            updateShowHide(false);
+        });
     }
 
     public void hideImmediately()
@@ -113,6 +127,11 @@ public class ExpressionInfoDisplay
     {
         errorMessage.set(StyledString.s(""));
         fixes.set(ImmutableList.of());
+    }
+
+    public BooleanExpression maskingErrors()
+    {
+        return maskingErrors;
     }
 
     private class ErrorMessagePopup extends PopOver
@@ -136,7 +155,7 @@ public class ExpressionInfoDisplay
                 getRoot().setMinHeight(20.0);
             });
             
-            Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
+            //Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
             TextFlow errorLabel = new TextFlow(errorMessage.get().toGUI().toArray(new Node[0]));
             errorLabel.getStyleClass().add("expression-info-error");
             errorLabel.setVisible(!errorMessage.get().toPlain().isEmpty());
@@ -220,22 +239,29 @@ public class ExpressionInfoDisplay
     private void textFieldFocusChanged(boolean newFocused)
     {
         this.focused = newFocused;
+        if (!focused)
+        {
+            textFieldHasLostFocus = true;
+        }
         updateShowHide(true);
     }
 
 
     private void updateShowHide(boolean hideImmediately)
     {
+        maskingErrors.set(textFieldEmpty && !textFieldHasLostFocus);
         if (hoveringPopup || hoveringTopOfAttached || ((hoveringAttached || focused) && !errorMessage.get().toPlain().isEmpty()) || (popup != null && popup.isDetached()))
         {
-            if (popup == null)
+            if (!maskingErrors.get())
             {
-                show();
-            }
-            else
-            {
-                // Make sure to cancel any hide animation:
-                cancelHideAnimation();
+                if (popup == null)
+                {
+                    show();
+                } else
+                {
+                    // Make sure to cancel any hide animation:
+                    cancelHideAnimation();
+                }
             }
         }
         else
