@@ -32,6 +32,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import test.gen.GenImmediateData;
+import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -148,6 +149,7 @@ public class PropRunTransformation
             @Value Object data = filter.getData().getColumn(target.getName()).getType().getCollapsed(row);
             assertTrue("Value " + targetValue + " should be " + op.saveOp()+ " " + data + " (but wasn't)", check.test(Utility.compareValues(data, targetValue)));
         }
+        srcTable.mgr.record(filter);
 
         Filter invertedFilter = new Filter(srcTable.mgr, null, srcTable.data().getId(),
             new ComparisonExpression(
@@ -159,6 +161,8 @@ public class PropRunTransformation
         // Lengths should equal original:
         assertEquals(srcTable.data().getData().getLength(), filter.getData().getLength() + invertedFilter.getData().getLength());
 
+        srcTable.mgr.record(invertedFilter);
+        
         Concatenate concatFilters = new Concatenate(srcTable.mgr, null, Arrays.asList(filter.getId(), invertedFilter.getId()), Collections.emptyMap());
 
         // Check that the same set of rows is present:
@@ -249,7 +253,7 @@ public class PropRunTransformation
     @Property
     @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
-    public void testConcatUnrelated(@From(GenImmediateData.class) @Precision(scale=2) GenImmediateData.ImmediateData_Mgr data) throws InternalException, UserException
+    public void testConcatUnrelated(@From(GenImmediateData.class) @NumTables(minTables = 2, maxTables = 2) GenImmediateData.ImmediateData_Mgr data) throws InternalException, UserException
     {
         // Test that concating two tables with different columns with insufficient defaults
         // will fail:

@@ -780,7 +780,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         DataType t = makeType(r);
         @Value Object actual = makeValue(t);
         // Make a bunch of guards which won't fire:
-        List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
+        List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 4, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
             // Generate a bunch which can't match the item:
             List<ExFunction<MatchExpression, Pattern>> patterns = makeNonMatchingPatterns(maxLevels - 1, t, actual);
             Expression outcome = makeOtherOutcome.get();
