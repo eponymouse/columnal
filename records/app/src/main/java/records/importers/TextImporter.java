@@ -155,7 +155,7 @@ public class TextImporter implements Importer
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo), numericColumnType::removePrefix);
+                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)
@@ -164,7 +164,7 @@ public class TextImporter implements Importer
                 if (orBlankColumnType.getInner() instanceof NumericColumnType)
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) orBlankColumnType.getInner();
-                    DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo));
+                    DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
                     DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(numberType));
                     columns.add(rs -> {
                         return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {

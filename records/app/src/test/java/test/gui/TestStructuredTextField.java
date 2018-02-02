@@ -648,7 +648,7 @@ public class TestStructuredTextField extends ApplicationTest
     {
         BigDecimal numA = new BigDecimal(numAsStringA, MathContext.DECIMAL128);
         BigDecimal numB = new BigDecimal(numAsStringB, MathContext.DECIMAL128);
-        DataType numType = DataType.number(new NumberInfo(Unit.SCALAR, null));
+        DataType numType = DataType.number(new NumberInfo(Unit.SCALAR));
         f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial}));
         targetF();
         pushSelectAll();
@@ -669,7 +669,7 @@ public class TestStructuredTextField extends ApplicationTest
     public void propNumberBoolPair(@From(GenNumberAsString.class) String numAsString, boolean boolValue, @From(GenRandom.class) Random r) throws InternalException
     {
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
-        DataType numType = DataType.number(new NumberInfo(Unit.SCALAR, null));
+        DataType numType = DataType.number(new NumberInfo(Unit.SCALAR));
         boolean numFirst = r.nextBoolean();
         DataType tupleType = numFirst ? DataType.tuple(numType, DataType.BOOLEAN) : DataType.tuple(DataType.BOOLEAN, numType);
         f.set(field(tupleType, numFirst ? new Object[] {0, !boolValue} : new Object[] {!boolValue, 0}));
@@ -729,7 +729,7 @@ public class TestStructuredTextField extends ApplicationTest
         assumeThat(c, Matchers.<Character>greaterThan(' '));
 
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
-        f.set(field(DataType.number(new NumberInfo(Unit.SCALAR, null)), initial));
+        f.set(field(DataType.number(new NumberInfo(Unit.SCALAR)), initial));
         targetF();
         pushSelectAll();
         type(numAsString, numAsString, num);

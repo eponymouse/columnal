@@ -228,7 +228,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
                         Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
                         // TODO test division by zero behaviour (test errors generally)
-                        return new DivideExpression(make(DataType.number(new NumberInfo(numUnit, null)), numerator, maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit, null)), denominator, maxLevels - 1));
+                        return new DivideExpression(make(DataType.number(new NumberInfo(numUnit)), numerator, maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit)), denominator, maxLevels - 1));
                     }
                 }));
             }
@@ -280,13 +280,13 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalDate target = (LocalDate) targetValue;
                         deep.add(() -> call("date",
-                            make(DataType.number(new NumberInfo(getUnit("year"), null)), target.getYear(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("month"), null)), target.getMonthValue(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("day"), null)), target.getDayOfMonth(), maxLevels - 1)
+                            make(DataType.number(new NumberInfo(getUnit("year"))), target.getYear(), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("month"))), target.getMonthValue(), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("day"))), target.getDayOfMonth(), maxLevels - 1)
                         ));
                         deep.add(() -> call("date.from.ym.day",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), YearMonth.of(target.getYear(), target.getMonth()), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("day"), null)), target.getDayOfMonth(), maxLevels - 1)
+                            make(DataType.number(new NumberInfo(getUnit("day"))), target.getDayOfMonth(), maxLevels - 1)
                         ));
                     }
                         break;
@@ -300,8 +300,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         YearMonth target = (YearMonth) targetValue;
                         deep.add(() -> call("dateym",
-                            make(DataType.number(new NumberInfo(getUnit("year"), null)), target.getYear(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("month"), null)), target.getMonthValue(), maxLevels - 1)
+                            make(DataType.number(new NumberInfo(getUnit("year"))), target.getYear(), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("month"))), target.getMonthValue(), maxLevels - 1)
                         ));
                     }
                         break;
@@ -315,10 +315,10 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalTime target = (LocalTime) targetValue;
                         deep.add(() -> call("time",
-                            make(DataType.number(new NumberInfo(getUnit("hour"), null)), target.getHour(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("min"), null)), target.getMinute(), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("hour"))), target.getHour(), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("min"))), target.getMinute(), maxLevels - 1),
                             // We only generate integers in this class, so generate nanos then divide:
-                            new DivideExpression(make(DataType.number(new NumberInfo(getUnit("s"), null)), (long)target.getSecond() * 1_000_000_000L + target.getNano(), maxLevels - 1), new NumericLiteral(1_000_000_000L, null))
+                            new DivideExpression(make(DataType.number(new NumberInfo(getUnit("s"))), (long)target.getSecond() * 1_000_000_000L + target.getNano(), maxLevels - 1), new NumericLiteral(1_000_000_000L, null))
                         ));
                     }
                         break;

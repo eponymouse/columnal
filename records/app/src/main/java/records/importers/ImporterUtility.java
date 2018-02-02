@@ -109,7 +109,7 @@ public class ImporterUtility
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnType;
-                    return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo), slice.stream().map(numericColumnType::removePrefix));
+                    return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit), slice.stream().map(numericColumnType::removePrefix));
                 });
             }
             else if (columnType instanceof TextColumnType)
@@ -124,7 +124,7 @@ public class ImporterUtility
             {
                 OrBlankColumnType or = (OrBlankColumnType) columnType;
                 NumericColumnType inner = (NumericColumnType) or.getInner();
-                DataType numberType = DataType.number(new NumberInfo(inner.unit, inner.displayInfo));
+                DataType numberType = DataType.number(new NumberInfo(inner.unit));
                 @Nullable DataType type = mgr.getTypeManager().getMaybeType().instantiate(
                     ImmutableList.of(numberType)
                 );

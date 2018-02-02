@@ -307,7 +307,7 @@ public class TypeSelectionPane
             Unit u = units.get();
             if (u == null)
                 return null;
-            return Optional.of(DataType.number(new NumberInfo(u, null)));
+            return Optional.of(DataType.number(new NumberInfo(u)));
         }
     }
 }

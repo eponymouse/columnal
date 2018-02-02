@@ -10,17 +10,14 @@ import records.data.unit.Unit;
 public class NumberInfo
 {
     private final Unit unit;
-    // Can override file-wide default.  If null, use file-wide default
-    private final @Nullable NumberDisplayInfo numberDisplayInfo;
 
-    public NumberInfo(Unit unit, @Nullable NumberDisplayInfo numberDisplayInfo)
+    public NumberInfo(Unit unit)
     {
         this.unit = unit;
-        this.numberDisplayInfo = numberDisplayInfo;
     }
 
-    public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR, null);
-
+    public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR);
+    
     @Override
     public boolean equals(@Nullable Object o)
     {
@@ -29,16 +26,13 @@ public class NumberInfo
 
         NumberInfo that = (NumberInfo) o;
 
-        if (!unit.equals(that.unit)) return false;
-        return numberDisplayInfo != null ? numberDisplayInfo.equals(that.numberDisplayInfo) : that.numberDisplayInfo == null;
+        return unit.equals(that.unit);
     }
 
     @Override
     public int hashCode()
     {
-        int result = unit.hashCode();
-        result = 31 * result + (numberDisplayInfo != null ? numberDisplayInfo.hashCode() : 0);
-        return result;
+        return unit.hashCode();
     }
 
     public Unit getUnit()
@@ -57,11 +51,5 @@ public class NumberInfo
     public int hashCodeForType()
     {
         return unit.hashCode();
-    }
-
-    @Pure
-    public @Nullable NumberDisplayInfo getDisplayInfo()
-    {
-        return numberDisplayInfo;
     }
 }

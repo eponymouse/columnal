@@ -270,7 +270,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             {
                 int iFinal = i;
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
-                columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2"), NumberDisplayInfo.SYSTEMWIDE_DEFAULT), Collections.emptyList(), 0));
+                columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
             TableManager tableManager = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 

@@ -38,8 +38,8 @@ public class ToYearMonth extends ToTemporalFunction
         r.add(new FunctionDefinition("dateym.from.datetime", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionDefinition("dateym.from.datetimezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionDefinition("dateym", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), null)),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), null))
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"))),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("month")))
         )));
         return r.build();
     }

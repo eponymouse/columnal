@@ -191,7 +191,7 @@ public class TypeManager
                     throw new InternalException("Cannot parse integer from digits: " + dp.getText());
                 ndi = new NumberDisplayInfo(minDP.getAsInt(), maxDP.getAsInt(), dp.ZERO_KWD() != null ? Padding.ZERO : Padding.SPACE);
             }
-            return DataType.number(new NumberInfo(unit, ndi));
+            return DataType.number(new NumberInfo(unit));
         }
         else if (type.tagRef() != null)
         {

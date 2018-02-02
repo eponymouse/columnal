@@ -252,7 +252,7 @@ public class PropTypecheckIndividual
         Assume.assumeFalse(unit.equals(Unit.SCALAR));
 
         // No units on RHS:
-        DataType unitNum = DataType.number(new NumberInfo(unit, null));
+        DataType unitNum = DataType.number(new NumberInfo(unit));
         assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(unitNum))));
         // Plain on both is fine, even when RHS doesn't constant fold:
         assertEquals(DataType.NUMBER, checkConcrete(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(DataType.NUMBER))));
@@ -261,13 +261,13 @@ public class PropTypecheckIndividual
         // LHS units and RHS integer is fine:
         assertEquals(unitNum, checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ONE))));
         assertEquals(DataType.NUMBER, checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ZERO))));
-        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5), null)), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
-        assertEquals(DataType.number(new NumberInfo(unit.reciprocal(), null)), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
-        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal(), null)), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5))), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
+        assertEquals(DataType.number(new NumberInfo(unit.reciprocal())), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal())), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
         // 1/integer is ok if all units divisible:
-        assertEquals(unitNum, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
+        assertEquals(unitNum, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3)))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
         // Any other rational not allowed:
-        assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
+        assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6)))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
     }
 
     @Property

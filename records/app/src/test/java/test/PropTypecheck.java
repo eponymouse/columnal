@@ -146,13 +146,13 @@ public class PropTypecheck
     public void checkNumber(@From(GenUnit.class) Unit unitA, @From(GenUnit.class) Unit unitB) throws InternalException, UserException
     {
         // TODO test with non-null NumberDisplayInfo
-        assertEquals(new NumberInfo(unitA, null), new NumberInfo(unitA, null));
-        assertEquals(new NumberInfo(unitB, null), new NumberInfo(unitB, null));
+        assertEquals(new NumberInfo(unitA), new NumberInfo(unitA));
+        assertEquals(new NumberInfo(unitB), new NumberInfo(unitB));
 
-        DataType numberA = DataType.number(new NumberInfo(unitA, null));
-        DataType numberB = DataType.number(new NumberInfo(unitB, null));
-        DataTypeValue numberAV = DataTypeValue.number(new NumberInfo(unitA, null), (i, prog) -> DataTypeUtility.value(0));
-        DataTypeValue numberBV = DataTypeValue.number(new NumberInfo(unitB, null), (i, prog) -> DataTypeUtility.value(0));
+        DataType numberA = DataType.number(new NumberInfo(unitA));
+        DataType numberB = DataType.number(new NumberInfo(unitB));
+        DataTypeValue numberAV = DataTypeValue.number(new NumberInfo(unitA), (i, prog) -> DataTypeUtility.value(0));
+        DataTypeValue numberBV = DataTypeValue.number(new NumberInfo(unitB), (i, prog) -> DataTypeUtility.value(0));
 
         boolean same = unitA.equals(unitB);
 

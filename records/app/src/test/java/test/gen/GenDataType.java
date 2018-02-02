@@ -85,7 +85,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         List<ExSupplier<DataType>> options = new ArrayList<>(Arrays.asList(
             () -> DataType.BOOLEAN,
             () -> DataType.TEXT,
-            () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs), null /* TODO generate NDI? */)),
+            () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs))),
             () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
         ));
         if (!availableTypeVariables.isEmpty())

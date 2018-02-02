@@ -55,9 +55,9 @@ public class ToTime extends ToTemporalFunction
         r.add(new FunctionDefinition("time.from.datetimezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionDefinition("time.from.timezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
         r.add(new FunctionDefinition("time", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"), null)),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("min"), null)),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("s"), null))
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"))),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("min"))),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("s")))
         )));
         return r.build();
     }

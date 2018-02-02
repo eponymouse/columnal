@@ -51,7 +51,7 @@ public class NumTypeExp extends TypeExp
         if (concreteUnit == null)
             return Either.left(new TypeConcretisationError(StyledString.concat(StyledString.s("Ambiguous unit: "), unit.toStyledString()), DataType.NUMBER));
         else
-            return Either.right(DataType.number(new NumberInfo(concreteUnit, null)));
+            return Either.right(DataType.number(new NumberInfo(concreteUnit)));
     }
 
     @Override

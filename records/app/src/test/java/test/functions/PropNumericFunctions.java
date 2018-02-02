@@ -128,7 +128,7 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)));
+            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
@@ -154,7 +154,7 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null))));
+            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
