@@ -158,6 +158,11 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             
             assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
             // TODO check error popup
+            
+            // Dismiss dialog:
+            push(KeyCode.ESCAPE);
+            push(KeyCode.ESCAPE);
+            clickOn(".ok-button");
         }
         catch (Exception e)
         {

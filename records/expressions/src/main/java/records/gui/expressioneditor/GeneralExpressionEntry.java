@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -183,33 +184,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
 
-        FXUtility.addChangeListenerPlatformNN(status, s -> {
-            // Need to beware that some status values may map to same pseudoclass:
-            // First turn all off:
-            for (Status possibleStatus : Status.values())
-            {
-                container.pseudoClassStateChanged(getPseudoClass(possibleStatus), false);
-            }
-            // Then turn on the one we want:
-            container.pseudoClassStateChanged(getPseudoClass(s), true);
-            typeLabel.setText(getTypeLabel(s));
+        FXUtility.addChangeListenerPlatformNN(status, this::updateStatusAndTypeLabel);
+        updateStatusAndTypeLabel(Status.UNFINISHED);
+        FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
+            updateStatusAndTypeLabel(status.get());
         });
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
-            if (!completing)
-            {
-                // TODO set prospective status if focus left now
-                @Nullable Completion completion = autoComplete.getCompletionIfFocusLeftNow();
-                if (completion == null)
-                    status.set(Status.UNFINISHED);
-                else
-                    status.set(getStatusFor(completion));
-            }
-            else
-                completing = false;
-            textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
+            updateStatus(t);
             parent.changed(GeneralExpressionEntry.this);
         });
-        textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
+        updateStatus(textField.getText());
         status.setValue(initialStatus);
         if (userEntered)
         {
@@ -220,6 +204,36 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 initialContentEntered.set(true);
             });
         }
+    }
+
+    @RequiresNonNull({"container", "textField", "typeLabel"})
+    private void updateStatusAndTypeLabel(@UnknownInitialization(Object.class) GeneralExpressionEntry this, Status s)
+    {
+        for (Status possibleStatus : Status.values())
+        {
+            container.pseudoClassStateChanged(getPseudoClass(possibleStatus), false);
+        }
+        // Then turn on the one we want:
+        container.pseudoClassStateChanged(getPseudoClass(s), true);
+        typeLabel.setText(getTypeLabel(s, textField.isFocused()));
+    }
+
+    @RequiresNonNull({"autoComplete", "status", "textField"})
+    private void updateStatus(@UnknownInitialization(Object.class) GeneralExpressionEntry this, String t)
+    {
+        if (!completing)
+        {
+            // TODO set prospective status if focus left now
+            @Initialized AutoComplete auto = autoComplete;
+            AutoComplete.@Nullable Completion completion = auto.getCompletionIfFocusLeftNow();
+            if (completion == null)
+                status.set(Status.UNFINISHED);
+            else
+                status.set(getStatusFor(completion));
+        }
+        else
+            completing = false;
+        textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
     }
 
     private static Status getStatusFor(@Nullable Completion completion)
@@ -246,7 +260,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return Utility.streamNullable(unitSpecifier);
     }
 
-    private static String getTypeLabel(Status s)
+    private static String getTypeLabel(Status s, boolean focused)
     {
         switch (s)
         {
@@ -261,7 +275,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             case VARIABLE_USE:
                 return "variable";
             case UNFINISHED:
-                return "error";
+                return focused ? "" : "error";
         }
         return "";
     }
