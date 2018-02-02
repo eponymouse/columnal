@@ -78,8 +78,6 @@ public class ExpressionInfoDisplay
     private boolean hoveringTopOfAttached = false;
     private boolean hoveringPopup = false;
     private @Nullable Animation hidingAnimation;
-    private boolean textFieldHasLostFocus = false;
-    private boolean textFieldEmpty = false;
     private final SimpleBooleanProperty maskingErrors = new SimpleBooleanProperty();
     
     
@@ -108,13 +106,8 @@ public class ExpressionInfoDisplay
             }
         });
 
-        // Default is to mask errors if the text field is blank and has never *lost* focus.
-        textFieldEmpty = textField.getText().isEmpty();
-        maskingErrors.set(textFieldEmpty && !textFieldHasLostFocus);
-        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), content -> {
-            textFieldEmpty = content.isEmpty();
-            updateShowHide(false);
-        });
+        // Default is to mask errors if field has never *lost* focus.
+        maskingErrors.set(true);
     }
 
     public void hideImmediately()
@@ -241,7 +234,8 @@ public class ExpressionInfoDisplay
         this.focused = newFocused;
         if (!focused)
         {
-            textFieldHasLostFocus = true;
+            // Lost focus, show errors:
+            maskingErrors.set(false);
         }
         updateShowHide(true);
     }
@@ -249,7 +243,6 @@ public class ExpressionInfoDisplay
 
     private void updateShowHide(boolean hideImmediately)
     {
-        maskingErrors.set(textFieldEmpty && !textFieldHasLostFocus);
         if (hoveringPopup || hoveringTopOfAttached || ((hoveringAttached || focused) && !errorMessage.get().toPlain().isEmpty()) || (popup != null && popup.isDetached()))
         {
             if (!maskingErrors.get())

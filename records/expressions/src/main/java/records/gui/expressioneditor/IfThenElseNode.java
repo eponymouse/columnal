@@ -290,13 +290,12 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     @Override
     public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
     {
-        ifLabel.getSecond().addErrorAndFixes(error, quickFixes);
+        condition.addErrorAndFixes(error, quickFixes);
     }
 
     @Override
     public void clearAllErrors()
     {
-        ifLabel.getSecond().clearAllErrors();
         condition.clearAllErrors();
         thenPart.clearAllErrors();
         elsePart.clearAllErrors();

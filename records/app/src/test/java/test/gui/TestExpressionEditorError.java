@@ -87,7 +87,7 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
     {
         // Error once we leave the slot:
         // (but no error in the blank operand added at the end)
-        testError("1#+", false, e(), h(), h());
+        testError("1#+", false, eRed(), h(), h());
     }
 
     @Test
@@ -95,19 +95,43 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
     {
         // Error once we leave the slot:
         // (and error in the blank operand skipped)
-        testError("1#+/", false, e(), h(), e(), h(), h());
+        testError("1#+/", false, eRed(), h(), eRed(), h(), h());
     }
     
     @Test
     public void test3()
     {
-        testError("@if 3 @then #", false,
+        testError("@if # @then #", false,
             // if, condition
-            h(), e(),
+            h(), eRed(),
             // then, # (but focused)
             h(), h(),
             // else, blank (but unvisited)
-            h(), h());
+            h(), e());
+    }
+
+    @Test
+    public void test3B()
+    {
+        testError("@if 3 @then 4 @else 5", false,
+                // if, condition (should be boolean)
+                h(), red(""),
+                // then, 4
+                h(), h(),
+                // else, 5
+                h(), h());
+    }
+
+    @Test
+    public void test3C()
+    {
+        testError("@if 3 @then #", false,
+                // if, condition (type error)
+                h(), red(""),
+                // then, # (but focused)
+                h(), h(),
+                // else, blank (but unvisited)
+                h(), e());
     }
 
     private static State h()
@@ -120,12 +144,23 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
     {
         return new State(s, false);
     }
-    
-    private static State e()
+
+    private static State red(String header)
+    {
+        return new State(header, true);
+    }
+
+
+    private static State eRed()
     {
         return new State("error", true);
     }
 
+    private static State e()
+    {
+        return new State("error", false);
+    }
+    
     private void testError(String original, boolean errorPopupShowing, State... states)
     {
         try

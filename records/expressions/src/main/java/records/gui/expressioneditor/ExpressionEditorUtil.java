@@ -80,6 +80,7 @@ public class ExpressionEditorUtil
         {
             this.hasError = error;
             FXUtility.setPseudoclass(this, "exp-error", hasError && !maskErrors);
+            //Log.logStackTrace("Error state: " + hasError + " && " + !maskErrors);
         }
 
         @OnThread(Tag.FXPlatform)
