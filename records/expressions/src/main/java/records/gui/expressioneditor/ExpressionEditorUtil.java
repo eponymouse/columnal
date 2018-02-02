@@ -87,7 +87,6 @@ public class ExpressionEditorUtil
         {
             maskErrors = errorMasking.get();
             FXUtility.addChangeListenerPlatformNN(errorMasking, maskErrors -> {
-                Log.logStackTrace("Mask error changed to: " + maskErrors);
                 this.maskErrors = maskErrors;
                 setError(hasError);
             });

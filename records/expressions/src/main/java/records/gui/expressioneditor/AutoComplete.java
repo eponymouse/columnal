@@ -515,7 +515,7 @@ public class AutoComplete extends PopupControl
         @Override
         public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
         {
-            return selected(textBefore, selectedItem, textAfter);
+            return selected(textBefore, selectedItem != null && selectedItem.completesOnExactly(textBefore, true) != CompletionAction.NONE ? selectedItem : null, textAfter);
         }
 
         @Override
