@@ -198,6 +198,14 @@
             <scope>system</scope>
             <systemPath>${basedir}/../lib/scenicView.jar</systemPath>
         </dependency>
+
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <version>8u76-b04</version> <!-- jdk-9+181 for Java 9 -->
+            <scope>test</scope>
+        </dependency>
+        
         <!--
         <dependency>
             <groupId>org.bluej</groupId>
@@ -333,6 +341,12 @@
                         <include>**/Test*.java</include>
                         <include>**/Prop*.java</include>
                     </includes>
+                    <!-- TEMP -->
+                    <!--
+                    <excludes>
+                        <exclude>**/gui/*.java</exclude>
+                    </excludes>
+                    -->
                 </configuration>
             </plugin>
 
