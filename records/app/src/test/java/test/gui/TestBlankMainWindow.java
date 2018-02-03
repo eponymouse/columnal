@@ -114,6 +114,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     {
         testStartState();
         clickOn("#id-menu-data").clickOn(".id-menu-data-new");
+        TestUtil.sleep(1000);
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
     }
