@@ -50,14 +50,16 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class ColumnExpressionList
 {
+    private final boolean allowSameRow;
     private final List<Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>>> columns = new ArrayList<>();
     private final ScrollPaneFill columnListScrollPane;
     private SimpleBooleanProperty allColNamesValid = new SimpleBooleanProperty(false);
     private final BorderPane outerPane;
     private final VBox columnEditors;
 
-    public ColumnExpressionList(TableManager mgr, SingleSourceControl srcTableControl, List<Pair<ColumnId, Expression>> initialColumns)
+    public ColumnExpressionList(TableManager mgr, SingleSourceControl srcTableControl, boolean allowSameRow, List<Pair<ColumnId, Expression>> initialColumns)
     {
+        this.allowSameRow = allowSameRow;
         ObjectExpression<@Nullable Table> srcTable = srcTableControl.tableProperty();
         columnListScrollPane = new ScrollPaneFill();
 
@@ -150,9 +152,9 @@ public class ColumnExpressionList
     }
 
 
-    private static ExpressionEditor makeExpressionEditor(TableManager mgr, ObjectExpression<@Nullable Table> srcTable, SimpleObjectProperty<Expression> container)
+    private ExpressionEditor makeExpressionEditor(@UnknownInitialization(Object.class) ColumnExpressionList this, TableManager mgr, ObjectExpression<@Nullable Table> srcTable, SimpleObjectProperty<Expression> container)
     {
-        return new ExpressionEditor(container.getValue(), srcTable, new ReadOnlyObjectWrapper<@Nullable DataType>(null), mgr, e -> {
+        return new ExpressionEditor(container.getValue(), srcTable, allowSameRow, new ReadOnlyObjectWrapper<@Nullable DataType>(null), mgr, e -> {
             container.set(e);
         });
     }

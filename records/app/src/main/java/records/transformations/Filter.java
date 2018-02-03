@@ -258,7 +258,7 @@ public class Filter extends TransformationEditable
             //this.srcHeaderAndData = FXCollections.observableArrayList();
             //this.destHeaderAndData = FXCollections.observableArrayList();
             this.expression = expression;
-            this.expressionEditor = new ExpressionEditor(expression, srcControl.tableProperty(), new ReadOnlyObjectWrapper<>(DataType.BOOLEAN), mgr, e -> {
+            this.expressionEditor = new ExpressionEditor(expression, srcControl.tableProperty(), true, new ReadOnlyObjectWrapper<>(DataType.BOOLEAN), mgr, e -> {
                 try
                 {
                     updateExample(e);

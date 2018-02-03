@@ -2,13 +2,16 @@ package records.transformations;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -40,6 +43,7 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
 import styled.StyledString;
@@ -323,7 +327,7 @@ public class SummaryStatistics extends TransformationEditable
         @Override
         public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, srcTableId, src, ImmutableList.of(), Collections.emptyList());
+            return new Editor(view, mgr, srcTableId, src, ImmutableList.of(new Pair<ColumnId, Expression>(new ColumnId(""), new NumericLiteral(0, null))), Collections.emptyList());
         }
 
         @Override
@@ -350,7 +354,6 @@ public class SummaryStatistics extends TransformationEditable
     private static class Editor extends TransformationEditor
     {
         private final SingleSourceControl srcControl;
-        private final ObservableList<@NonNull Pair<ColumnId, Expression>> ops;
         private final ObservableList<@NonNull ColumnId> splitBy;
         private final ListView<ColumnId> columnListView;
         private final ColumnExpressionList columnExpressions;
@@ -360,9 +363,8 @@ public class SummaryStatistics extends TransformationEditable
         {
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.splitBy = FXCollections.observableArrayList(splitBy);
-            this.ops = FXCollections.observableArrayList(summaries);
             this.columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null, null);
-            this.columnExpressions = new ColumnExpressionList(mgr, srcControl, summaries);
+            this.columnExpressions = new ColumnExpressionList(mgr, srcControl, false, summaries);
         }
 
         @Override
@@ -428,11 +430,14 @@ public class SummaryStatistics extends TransformationEditable
             buttons.getChildren().add(button);
             colsAndSummaries.getChildren().add(buttons);
 
-            ListView<Pair<ColumnId, Expression>> opListView = FXUtility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
             ListView<ColumnId> splitListView = FXUtility.readOnlyListView(splitBy, s -> s.toString());
             colsAndSummaries.getChildren().add(splitListView);
 
-            return new BorderPane(columnExpressions.getNode(), colsAndSummaries, null, null, null);
+            TitledPane colsAndSummariesFoldout = new TitledPane("Calculate separately for values of columns", colsAndSummaries);
+            colsAndSummariesFoldout.setExpanded(false);
+            BorderPane.setAlignment(colsAndSummariesFoldout, Pos.BOTTOM_CENTER);
+            
+            return new BorderPane(columnExpressions.getNode(), null, null, colsAndSummariesFoldout, null);
         }
 /*
         private static boolean valid(Column src, SummaryType summaryType) throws InternalException, UserException
@@ -510,11 +515,19 @@ public class SummaryStatistics extends TransformationEditable
         }
 */
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
+        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
+            ImmutableList.Builder<Pair<ColumnId, Expression>> cols = ImmutableList.builder();
+            for (Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> col : columnExpressions.getColumns())
+            {
+                @Nullable ColumnId columnId = col.getFirst().getValue();
+                if (columnId == null)
+                    return null;
+                cols.add(new Pair<>(columnId, col.getSecond().getValue()));
+            }
             return () -> {
-                return new SummaryStatistics(mgr, thisTableId, srcId.get(), ImmutableList.copyOf(ops), ImmutableList.copyOf(splitBy));
+                return new SummaryStatistics(mgr, thisTableId, srcId.get(), cols.build(), ImmutableList.copyOf(splitBy));
             };
         }
     }

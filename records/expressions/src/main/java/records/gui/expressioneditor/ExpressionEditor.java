@@ -59,6 +59,8 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     private final FXPlatformConsumer<@NonNull Expression> onChange;
     private final TableManager tableManager;
     private final List<FXPlatformConsumer<Node>> focusListeners = new ArrayList<>();
+    // Does it allow use of same-row column references?  Thinks like Transform, Sort, do -- but Aggregate does not.
+    private final boolean allowsSameRow;
 
     // Selections take place within one consecutive and go from one operand to another (inclusive):
 
@@ -115,6 +117,11 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         return getAllChildren().stream().flatMap(c -> c._test_getHeaders());
     }
 
+    public boolean allowsSameRow()
+    {
+        return allowsSameRow;
+    }
+
     private static class SelectionInfo<E extends LoadableExpression<E, P>, P>
     {
         private final ConsecutiveBase<E, P> parent;
@@ -150,9 +157,10 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @SuppressWarnings("initialization")
-    public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS,  null, null, "");
+        this.allowsSameRow = allowsSameRow;
         this.container = new ExpressionEditorFlowPane();
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");

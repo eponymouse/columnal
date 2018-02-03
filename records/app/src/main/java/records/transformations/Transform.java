@@ -273,7 +273,7 @@ public class Transform extends TransformationEditable
         public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
         {
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
-            this.columnEditors = new ColumnExpressionList(mgr, srcControl, newColumns);
+            this.columnEditors = new ColumnExpressionList(mgr, srcControl, true, newColumns);
         }
 
 

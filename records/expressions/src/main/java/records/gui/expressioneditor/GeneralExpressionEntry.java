@@ -322,7 +322,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(new SimpleCompletion("", "false", "", Status.LITERAL));
         for (Column column : parent.getEditor().getAvailableColumns())
         {
-            r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
+            if (parent.getEditor().allowsSameRow())
+            {
+                r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
+            }
             r.add(new SimpleCompletion(ARROW_WHOLE, column.getName().getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
         }
         for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
