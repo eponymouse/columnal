@@ -18,13 +18,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -61,7 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The internal node architecture is a bit complicated.
  *
  * .stable-view: StackPane
- *     .stable-view-placeholder: Label
+ *     .stable-view-placeholderLabel: Label
  *     *: BorderPane
  *         .stable-view-scroll-pane: VirtualizedScrollPane
  *             .: VirtualFlow [table contents]
@@ -102,8 +100,8 @@ public class StableView
     private final VirtRowLabels lineNumbers;
     private final VirtColHeaders headerItemsContainer;
     private final VirtScrollStrTextGrid grid;
-    private final Label placeholder;
-    private final StackPane stackPane; // has grid and placeholder as its children
+    private final Label placeholderLabel;
+    private final StackPane stackPane; // has grid and placeholderLabel as its children
     private final DoubleProperty widthEstimate;
     private final DoubleProperty heightEstimate;
     private final ContentLayout contentLayout;
@@ -187,10 +185,11 @@ public class StableView
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());
         lineNumberWrapper.setPickOnBounds(false);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
-        placeholder = new Label(messageWhenEmpty.getDisplayMessageNoColumns());
-        placeholder.getStyleClass().add(".stable-view-placeholder");
+        placeholderLabel = new Label(messageWhenEmpty.getDisplayMessageNoColumns());
+        placeholderLabel.getStyleClass().add(".stable-view-placeholderLabel");
+        BorderPane placeholder = new BorderPane(placeholderLabel, null, null, null, headerItemsContainer.makeAddColumnButton());
         placeholder.visibleProperty().bind(nonEmptyProperty.not());
-        placeholder.setWrapText(true);
+        placeholderLabel.setWrapText(true);
 
         Button topButton = makeScrollEndButton();
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
@@ -224,7 +223,7 @@ public class StableView
         stackPane = new StackPane(placeholder, contentLayout);
         // TODO figure out grid equivalent
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
-        placeholder.managedProperty().bind(placeholder.visibleProperty());
+        placeholderLabel.managedProperty().bind(placeholderLabel.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
 
         // Need to clip, otherwise scrolled-out part can still show up:
@@ -368,7 +367,7 @@ public class StableView
 
     public void setPlaceholderText(@Localized String text)
     {
-        placeholder.setText(text);
+        placeholderLabel.setText(text);
     }
 
     private void appendColumn()
@@ -408,7 +407,7 @@ public class StableView
         this.operations = operations;
         this.columns = columns;
 
-        placeholder.setText(columns.isEmpty() ? messageWhenEmpty.getDisplayMessageNoColumns() : messageWhenEmpty.getDisplayMessageNoRows());
+        placeholderLabel.setText(columns.isEmpty() ? messageWhenEmpty.getDisplayMessageNoColumns() : messageWhenEmpty.getDisplayMessageNoRows());
 
         nonEmptyProperty.set(!columns.isEmpty());
 

@@ -124,7 +124,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     public void testAddColumnRequiresName() throws UserException, InternalException
     {
         testNewEntryTable();
-        clickOn(".add-column");
+        clickOn(".virt-grid-add-column");
         Window dialog = lookup(".ok-button").<Node>query().getScene().getWindow();
         assertTrue(dialog.isShowing());
         assertTrue(lookup(".new-column-name").<TextField>query().getText().isEmpty());
@@ -149,7 +149,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     private void addNewTableWithColumn(DataType dataType, @Nullable @Value Object value) throws InternalException, UserException
     {
         testNewEntryTable();
-        clickOn(".add-column");
+        clickOn(".virt-grid-add-column");
         String newColName = "Column " + new Random().nextInt();
         write(newColName);
         clickForDataTypeDialog(rootNode(window(Window::isFocused)), dataType, value);

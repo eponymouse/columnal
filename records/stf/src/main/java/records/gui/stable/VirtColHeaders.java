@@ -53,7 +53,8 @@ public class VirtColHeaders implements ScrollBindable
     private final FXPlatformFunction<Integer, ImmutableList<Node>> getContent;
     private final Pane glass;
     private final StackPane stackPane;
-
+    private final List<Button> addColumnButtons = new ArrayList<>();
+    
 
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
@@ -212,7 +213,7 @@ public class VirtColHeaders implements ScrollBindable
         @OnThread(Tag.FXPlatform)
         private Container()
         {
-            addColumnButton = GUI.button("virtGrid.addColumn", () -> {}, "virt-grid-add-column");
+            addColumnButton = makeAddColumnButton();
             getChildren().add(addColumnButton);
 
             getStyleClass().add("virt-grid-col-container");
@@ -294,14 +295,21 @@ public class VirtColHeaders implements ScrollBindable
             if (addColumn != null)
             {
                 @NonNull FXPlatformRunnable addColumnFinal = addColumn;
-                addColumnButton.setVisible(true);
-                addColumnButton.resizeRelocate(x, 0, addColumnButton.prefWidth(getHeight()), getHeight());
-                addColumnButton.setOnAction(e -> addColumnFinal.run());
+                for (Button addColumnButton : addColumnButtons)
+                {
+                    addColumnButton.setVisible(true);
+                    addColumnButton.setOnAction(e -> addColumnFinal.run());
+                    if (getChildren().contains(addColumnButton))
+                        addColumnButton.resizeRelocate(x, 0, addColumnButton.prefWidth(getHeight()), getHeight());
+                }
             }
             else
             {
-                addColumnButton.setVisible(false);
-                addColumnButton.relocate(-1000, -1000);
+                for (Button addColumnButton : addColumnButtons)
+                {
+                    addColumnButton.setVisible(false);
+                    addColumnButton.relocate(-1000, -1000);
+                }
             }
 
 
@@ -317,5 +325,13 @@ public class VirtColHeaders implements ScrollBindable
                 spareCell.setVisible(false);
             }
         }
+    }
+
+    // A reference is retained, as we are in charge of updating its action when the contents of the table changes
+    Button makeAddColumnButton()
+    {
+        Button button = GUI.button("virtGrid.addColumn", () -> {}, "virt-grid-add-column");
+        addColumnButtons.add(button);
+        return button;
     }
 }
