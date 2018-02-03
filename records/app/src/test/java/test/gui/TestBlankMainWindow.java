@@ -22,6 +22,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.robot.Motion;
 import org.testfx.service.query.PointQuery;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
@@ -113,7 +114,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     public void testNewEntryTable() throws InternalException, UserException
     {
         testStartState();
-        clickOn("#id-menu-data").clickOn(".id-menu-data-new");
+        clickOn("#id-menu-data").moveBy(5, 0).clickOn(".id-menu-data-new", Motion.VERTICAL_FIRST);
         TestUtil.sleep(1000);
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
