@@ -250,6 +250,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     {
         // Must add operand and operator
         int index = Utility.indexOfRef(operators, rightOf);
+        
+        if (index < operands.size())
+        {
+            if (focus)
+                operands.get(index + 1).focus(Focus.LEFT);
+            return OperatorOutcome.KEEP;
+        }
+        
         if (index != -1)
         {
             atomicEdit.set(true);

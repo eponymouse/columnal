@@ -240,7 +240,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         }
 
         @Override
-        protected String selected(String currentText, @Nullable Completion c, String rest)
+        protected @Nullable String selected(String currentText, @Nullable Completion c, String rest)
         {
             if (c instanceof SimpleCompletion)
             {
@@ -259,12 +259,15 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
                 parent.parentFocusRightOfThis(Focus.LEFT);
                 return "";
             }
-            return textField.getText();
+            return null;
         }
 
         @Override
-        public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+        public @Nullable String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
         {
+            if (textField.leavingByCursorLeft())
+                return null;
+            
             if (selectedItem != null && selectedItem instanceof SimpleCompletion)
             {
                 SimpleCompletion c = (SimpleCompletion)selectedItem;
@@ -274,7 +277,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
                     return selected(currentText, c, "");
                 }
             }
-            return currentText;
+            return null;
         }
     }
 }

@@ -25,7 +25,7 @@ public abstract class EntryNode<EXPRESSION extends LoadableExpression<EXPRESSION
     protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent;
     private final Class<EXPRESSION> expressionClass;
 
-    protected final TextField textField;
+    protected final LeaveableTextField textField;
 
     @SuppressWarnings("initialization")
     public EntryNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, Class<EXPRESSION> expressionClass)

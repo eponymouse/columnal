@@ -99,7 +99,9 @@ public class AutoComplete extends PopupControl
             @Nullable Completion selectedItem = completions.getSelectionModel().getSelectedItem();
             if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && selectedItem != null)
             {
-                textField.setText(onSelect.doubleClick(textField.getText(), selectedItem));
+                @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
+                if (newContent != null)
+                    textField.setText(newContent);
             }
         });
 
@@ -137,7 +139,9 @@ public class AutoComplete extends PopupControl
                     if (completion != null)
                     {
                         //#error TODO I think setting the text isn't enough to clear the error state, we also need to set the status or something?
-                        textField.setText(onSelect.focusLeaving(textField.getText(), completion));
+                        @Nullable String newContent = onSelect.focusLeaving(textField.getText(), completion);
+                        if (newContent != null)
+                            textField.setText(newContent);
                     }
                     hide();
                 }
@@ -229,7 +233,9 @@ public class AutoComplete extends PopupControl
                         // complete the top one (if any are available) and move character to next slot
                         List<Completion> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
                         @Nullable Completion completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
-                        change.setText(onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last));
+                        @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last);
+                        if (newContent != null)
+                            change.setText(newContent);
                         change.setRange(0, textField.getLength());
                         return change;
                     }
@@ -247,7 +253,9 @@ public class AutoComplete extends PopupControl
                 CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
                 if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY)
                 {
-                    change.setText(onSelect.exactCompletion(text, completion));
+                    @Nullable String newContent = onSelect.exactCompletion(text, completion);
+                    if (newContent != null)
+                        change.setText(newContent);
                     change.setRange(0, textField.getLength());
                     hide();
                     return change;
@@ -300,7 +308,9 @@ public class AutoComplete extends PopupControl
                 if (selectedItem != null)
                 {
                     e.consume();
-                    textField.setText(onSelect.keyboardSelect(textField.getText(), selectedItem));
+                    @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);
+                    if (newContent != null)
+                        textField.setText(newContent);
                     hide();
                 }
             }
@@ -483,54 +493,54 @@ public class AutoComplete extends PopupControl
     public static interface CompletionListener
     {
         // Item was double-clicked in the list
-        // Returns the new text for the textfield
-        String doubleClick(String currentText, Completion selectedItem);
+        // Returns the new text for the textfield, or null if keep as-is
+        @Nullable String doubleClick(String currentText, Completion selectedItem);
 
         // Moving on because non alphabet character entered
-        // Returns the new text for the textfield
-        String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter);
+        // Returns the new text for the textfield, or null if keep as-is
+        @Nullable String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter);
 
         // Enter or Tab used to select
-        // Returns the new text for the textfield
-        String keyboardSelect(String currentText, Completion selectedItem);
+        // Returns the new text for the textfield, or null if keep as-is
+        @Nullable String keyboardSelect(String currentText, Completion selectedItem);
 
         // Selected because completesOnExactly returned true
-        // Returns the new text for the textfield
-        String exactCompletion(String currentText, Completion selectedItem);
+        // Returns the new text for the textfield, or null if keep as-is
+        @Nullable String exactCompletion(String currentText, Completion selectedItem);
         
         // Leaving the slot.  selectedItem is only non-null if
         // completesOnExactly is true.
-        // Returns the new text for the textfield
-        String focusLeaving(String currentText, @Nullable Completion selectedItem);
+        // Returns the new text for the textfield, or null if keep as-is
+        @Nullable String focusLeaving(String currentText, @Nullable Completion selectedItem);
     }
 
     public static abstract class SimpleCompletionListener implements CompletionListener
     {
         @Override
-        public String doubleClick(String currentText, Completion selectedItem)
+        public @Nullable String doubleClick(String currentText, Completion selectedItem)
         {
             return selected(currentText, selectedItem, "");
         }
 
         @Override
-        public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
+        public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
         {
             return selected(textBefore, selectedItem != null && selectedItem.completesOnExactly(textBefore, true) != CompletionAction.NONE ? selectedItem : null, textAfter);
         }
 
         @Override
-        public String keyboardSelect(String currentText, Completion selectedItem)
+        public @Nullable String keyboardSelect(String currentText, Completion selectedItem)
         {
             return selected(currentText, selectedItem, "");
         }
 
         @Override
-        public String exactCompletion(String currentText, Completion selectedItem)
+        public @Nullable String exactCompletion(String currentText, Completion selectedItem)
         {
             return selected(currentText, selectedItem, "");
         }
 
-        protected abstract String selected(String currentText, @Nullable Completion c, String rest);
+        protected abstract @Nullable String selected(String currentText, @Nullable Completion c, String rest);
     }
 
     private class AutoCompleteSkin implements Skin<AutoComplete>

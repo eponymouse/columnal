@@ -114,8 +114,24 @@ public class TestExpressionEditorPosition extends ApplicationTest implements Scr
             assertNotEquals(0, maxRemaining);
             Collections.reverse(accum);
             assertEquals(Utility.listToString(accum), content, accum.stream().collect(Collectors.joining()));
-            
-            // TODO same going right
+
+            curPosition = getPosition();
+            oldPosition = null;
+            maxRemaining = 3 * content.length() + 5;
+            accum.clear();
+            while (!curPosition.equals(oldPosition) && --maxRemaining > 0)
+            {
+                Pair<TextField, Integer> curFinal = curPosition;
+                // Add the character to the right of the caret:
+                String toRight = TestUtil.fx(() -> curFinal.getFirst().getText(Math.max(0, curFinal.getSecond() - 1), curFinal.getSecond()));
+                accum.add(toRight);
+
+                push(KeyCode.RIGHT);
+                oldPosition = curPosition;
+                curPosition = getPosition();
+            }
+            assertNotEquals(0, maxRemaining);
+            assertEquals(Utility.listToString(accum), content, accum.stream().collect(Collectors.joining()));
             
             
             ExpressionEditorFlowPane editorPane = lookup(".expression-editor").<ExpressionEditorFlowPane>query();

@@ -15,6 +15,7 @@ public class LeaveableTextField extends TextField
 {
     private final EEDisplayNode us;
     private final EEDisplayNodeParent parent;
+    private boolean leavingByPressingLeft = false;
 
     public LeaveableTextField(EEDisplayNode us, EEDisplayNodeParent parent)
     {
@@ -37,8 +38,19 @@ public class LeaveableTextField extends TextField
     public void backward()
     {
         if (getCaretPosition() == 0)
+        {
+            leavingByPressingLeft = true;
             parent.focusLeftOf(us);
+            leavingByPressingLeft = false;
+            
+        }
         else
             super.backward();
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public boolean leavingByCursorLeft()
+    {
+        return leavingByPressingLeft;
     }
 }
