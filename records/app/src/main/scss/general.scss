@@ -9,6 +9,12 @@
     -fx-faint-focus-color: $faint-focus-color;
 }
 
+/* Need this for case when context menu shows on something with
+   a custom text colour (e.g. selected column header) */
+.context-menu .label {
+    -fx-text-fill: black !important;
+}
+
 .list-view {
     -fx-background-color: -fx-box-border, $list-background;
 }
