@@ -45,6 +45,7 @@ class Node
     void setEffect(@Nullable Effect e) @UnknownInitialization;
     ObservableList<String> getStyleClass() @UnknownInitialization;
     @Pure @Nullable Scene getScene() @UnknownInitialization;
+    void setFocusTraversable(boolean b) @UnknownInitialization;
 
     void addEventFilter(EventType t, EventHandler handler) @UnknownInitialization;
     void addEventHandler(EventType t, EventHandler handler) @UnknownInitialization;

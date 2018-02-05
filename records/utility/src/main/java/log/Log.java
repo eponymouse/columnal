@@ -50,7 +50,6 @@ public class Log
                     sb.append("\tat " + traceElement + "\n");
                 logger.log(Level.ERROR, sb);
             }
-            
         }
     }
 
@@ -75,14 +74,39 @@ public class Log
     @Pure
     public static void logStackTrace(String s)
     {
-        try
+        String trace = getStackTrace(1, 1000);
+        debug(s + "\n" + trace);
+    }
+
+    @Pure
+    public static void normalStackTrace(String message, int maxLevels)
+    {
+        String trace = getStackTrace(1, maxLevels);
+        debug(message + "\n" + trace);
+    }
+
+    private static String getStackTrace(int excludeFromTop, int maxItems)
+    {
+        StringBuilder sb = new StringBuilder();
+        StackTraceElement[] ourStack = Thread.currentThread().getStackTrace();
+        // By default we exclude top item, which is us,
+        // then we also exclude the number passed to us
+        for (int i = 1 + excludeFromTop; i < Math.min(ourStack.length, 1 + excludeFromTop + maxItems); i++)
         {
-            throw new Exception(s);
+            sb.append("\tat " + ourStack[i] + "\n");
         }
-        catch (Exception e)
+
+        synchronized (Log.class)
         {
-            log(e);
+            StackTraceElement[] el = threadedCallers.get(Thread.currentThread());
+            if (el != null)
+            {
+                sb.append("Original caller:\n");
+                for (StackTraceElement traceElement : el)
+                    sb.append("\tat " + traceElement + "\n");
+            }
         }
+        return sb.toString();
     }
 
     public static void error(String s)

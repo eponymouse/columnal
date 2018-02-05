@@ -707,6 +707,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, ImmutableList.of())));
         showItems.put(Display.CUSTOM, GUI.radioMenuItem("tableDisplay.menu.show.custom", () -> editCustomDisplay()));
 
+        Optional.ofNullable(showItems.get(columnDisplay.get().getFirst())).ifPresent(show::selectToggle);
+
         items.addAll(Arrays.asList(
             GUI.menu("tableDisplay.menu.showColumns",
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
@@ -720,9 +722,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                     final File fileNonNull = file;
                     Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE_TO_DISK, () -> FXUtility.alertOnError_(() -> exportToCSV(table, fileNonNull)));
                 }
+            }),
+            GUI.menuItem("tableDisplay.menu.delete", () -> {
+                Workers.onWorkerThread("Deleting " + table.getId(), Workers.Priority.SAVE_ENTRY, () ->
+                    parent.getManager().remove(table.getId())
+                );
             })
         ));
-        Optional.ofNullable(showItems.get(columnDisplay.get().getFirst())).ifPresent(show::selectToggle);
         return new ContextMenu(items.toArray(new MenuItem[0]));
     }
 

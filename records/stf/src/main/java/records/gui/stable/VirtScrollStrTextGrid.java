@@ -962,6 +962,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         public Container()
         {
             getStyleClass().add("virt-grid");
+            // Need this for when JavaFX looks for a default focus target:
+            setFocusTraversable(true);
 
             clip = new Rectangle();
             setClip(clip);

@@ -337,8 +337,9 @@ public class TableManager
      * in the given Saver.
      */
     @OnThread(Tag.Simulation)
-    private void removeAndSerialise(TableId tableId, Saver then)
+    private void removeAndSerialise(TableId tableId, @Nullable Saver then)
     {
+        Log.normalStackTrace("Removing table " + tableId + (then == null ? " permanently" : " as part of edit"), 3);
         Table removed = null;
         int remainingCount;
         synchronized (this)
@@ -373,8 +374,16 @@ public class TableManager
         if (removed != null)
         {
             listener.removeTable(removed, remainingCount);
-            removed.save(null, then);
+            if (then != null)
+                removed.save(null, then);
         }
+    }
+    
+    // Removes the table from the data and from the display.
+    @OnThread(Tag.Simulation)
+    public void remove(TableId tableId)
+    {
+        removeAndSerialise(tableId, null);
     }
 
     /**
