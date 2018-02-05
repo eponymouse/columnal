@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -8,6 +9,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

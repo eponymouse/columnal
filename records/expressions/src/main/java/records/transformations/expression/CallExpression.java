@@ -64,9 +64,9 @@ public class CallExpression extends NonOperatorExpression
         this.units = new ArrayList<>(units);
         this.param = arg;
     }
-
+    
+    // Used for testing, and for creating quick recipe functions:
     @SuppressWarnings("recorded")
-    // For testing:
     public CallExpression(UnitManager mgr, String functionName, Expression... args) throws InternalException
     {
         this(functionName, FunctionList.lookup(mgr, functionName), Collections.emptyList(), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));

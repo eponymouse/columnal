@@ -176,7 +176,7 @@ public abstract class RecordSet
             if (c.getName().equals(name))
                 return c;
         }
-        throw new UserException("Column not found");
+        throw new UserException("Column not found: {{{" + name.getRaw() + "}}}");
     }
 
     @OnThread(Tag.Any)

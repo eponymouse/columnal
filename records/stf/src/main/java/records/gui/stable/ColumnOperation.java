@@ -11,7 +11,7 @@ import utility.gui.GUI;
 /**
  * Created by neil on 29/05/2017.
  */
-abstract class ColumnOperation
+public abstract class ColumnOperation
 {
     @OnThread(Tag.Any)
     private final @LocalizableKey String nameKey;

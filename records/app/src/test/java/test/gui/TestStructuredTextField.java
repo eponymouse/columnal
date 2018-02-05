@@ -247,7 +247,7 @@ public class TestStructuredTextField extends ApplicationTest
             try
             {
                 EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(0, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> {});
-                stableView.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), cacheSTF)), null, i -> i == 0);
+                stableView.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), cacheSTF)), null, null, i -> i == 0);
                 stableView.loadColumnWidths(new double[]{600.0});
             }
             catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)

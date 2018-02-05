@@ -861,7 +861,7 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImporter.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), null), null, recordSet::indexValid);
+                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), null), null, null, recordSet::indexValid);
                 });
             }
             catch (IOException | InternalException | UserException e)

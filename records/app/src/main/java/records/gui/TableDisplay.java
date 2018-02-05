@@ -34,7 +34,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
+import log.Log;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -52,16 +54,23 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations.AppendColumn;
 import records.data.Transformation;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.View.SnapDetails;
+import records.gui.stable.ColumnOperation;
 import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.transformations.HideColumnsPanel;
+import records.transformations.SummaryStatistics;
+import records.transformations.Transform;
 import records.transformations.TransformationEditable;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -69,6 +78,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
@@ -262,7 +272,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             this.onModify = onModify;
             recordSet.setListener(this);
             displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify);
-            setColumnsAndRows(displayColumns, table.getOperations(), recordSet::indexValid);
+            setColumnsAndRows(displayColumns, table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
             //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
@@ -292,7 +302,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), recordSet::indexValid);
+                setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
             });
         }
 
@@ -334,13 +344,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
+            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
         }
 
         @Override
         public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
         {
-            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
+            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
         }
 
         public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
@@ -927,6 +937,53 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         return getPrefHeight();
     }
 
+
+    public ImmutableList<records.gui.stable.ColumnOperation> getExtraColumnActions(ColumnId c)
+    {
+        ImmutableList.Builder<ColumnOperation> r = ImmutableList.builder();
+        try
+        {
+            DataType type = getTable().getData().getColumn(c).getType();
+            if (type.isNumber())
+            {
+                r.add(columnQuickTransform("recipe.sum", "sum", c, newId -> {
+                    return new SummaryStatistics(parent.getManager(), null, table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "sum", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                }));
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            Log.log(e);
+        }
+        return r.build();
+    }
+    
+    private ColumnOperation columnQuickTransform(@LocalizableKey String nameKey, String suggestedPrefix, ColumnId srcColumn, SimulationFunction<ColumnId, Transformation> makeTransform) throws InternalException, UserException
+    {
+        String stem = suggestedPrefix + "." + srcColumn.getRaw();
+        String nextId = stem;
+        for (int i = 1; i <= 1000; i++)
+        {
+            if (!table.getData().getColumnIds().contains(new ColumnId(nextId)))
+                break;
+            nextId = stem + i;
+        }
+        // If we reach 999, just go with that and let user fix it
+        ColumnId newColumnId = new ColumnId(nextId);
+        
+        return new ColumnOperation(nameKey)
+        {
+            @Override
+            public @OnThread(Tag.Simulation) void execute()
+            {
+                FXUtility.alertOnError_(() -> {
+                    Transformation t = makeTransform.apply(newColumnId);
+                    parent.getManager().record(t);
+                });
+            }
+        };
+    }
+    
     @OnThread(Tag.FXPlatform)
     private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
     {

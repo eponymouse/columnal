@@ -42,6 +42,7 @@ import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
@@ -123,6 +124,7 @@ public class StableView
 
     @OnThread(Tag.FXPlatform)
     private @Nullable TableOperations operations;
+    private FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnOperations = c -> ImmutableList.of();
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty lineNumberShowing = new SimpleBooleanProperty(true);
     private final BorderPane rightVertScroll;
@@ -316,6 +318,7 @@ public class StableView
         });
 
         // TODO: quick transforms, e.g. sort-by, filter, summarise
+        r.addAll(extraColumnOperations.apply(columnId));
 
         return r;
     }
@@ -396,15 +399,16 @@ public class StableView
     public void clear(@Nullable TableOperations operations)
     {
         // Clears rows, too:
-        setColumnsAndRows(ImmutableList.of(), operations, i -> false);
+        setColumnsAndRows(ImmutableList.of(), operations, null, i -> false);
     }
 
     // If append is empty, can't append.  If it's present, can append, and run
     // this action after appending.
-    public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, SimulationFunction<Integer, Boolean> isRowValid)
+    public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
     {
         final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
+        this.extraColumnOperations = extraColumnActions == null ? (c -> ImmutableList.of()) : extraColumnActions;
         this.columns = columns;
 
         placeholderLabel.setText(columns.isEmpty() ? messageWhenEmpty.getDisplayMessageNoColumns() : messageWhenEmpty.getDisplayMessageNoRows());
