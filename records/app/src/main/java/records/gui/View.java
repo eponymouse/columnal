@@ -49,6 +49,7 @@ import records.data.Table.FullSaver;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableManager.TableManagerListener;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
@@ -72,7 +73,7 @@ import java.util.stream.Stream;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends StackPane implements TableManager.TableManagerListener
+public class View extends StackPane
 {
     private static final double DEFAULT_SPACE = 150.0;
 
@@ -191,10 +192,9 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         return tableManager;
     }
-
-    @Override
+    
     @OnThread(Tag.Simulation)
-    public void removeTable(Table t, int remainingCount)
+    private void removeTable(Table t, int remainingCount)
     {
         Platform.runLater(() ->
         {
@@ -645,7 +645,26 @@ public class View extends StackPane implements TableManager.TableManagerListener
         this.emptyListener = emptyListener;
         this.adjustParent = adjustParent;
         diskFile = new SimpleObjectProperty<>(location);
-        tableManager = new TableManager(TransformationManager.getInstance(), this);
+        tableManager = new TableManager(TransformationManager.getInstance(), new TableManagerListener()
+        {
+            @Override
+            public void removeTable(Table t, int tablesRemaining)
+            {
+                View.this.removeTable(t, tablesRemaining);
+            }
+
+            @Override
+            public void addSource(DataSource dataSource)
+            {
+                View.this.addSource(dataSource);
+            }
+
+            @Override
+            public void addTransformation(Transformation transformation)
+            {
+                View.this.addTransformation(transformation);
+            }
+        });
         mainPane = new Pane();
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
@@ -730,8 +749,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     }
 
     @OnThread(Tag.Any)
-    @Override
-    public void addSource(DataSource data)
+    private void addSource(DataSource data)
     {
         Platform.runLater(() -> {
             emptyListener.consume(false);
@@ -741,8 +759,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     }
 
     @OnThread(Tag.Any)
-    @Override
-    public void addTransformation(Transformation transformation)
+    private void addTransformation(Transformation transformation)
     {
         Platform.runLater(() ->
         {
