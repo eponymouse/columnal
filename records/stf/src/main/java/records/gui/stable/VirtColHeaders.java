@@ -274,7 +274,11 @@ public class VirtColHeaders implements ScrollBindable
                     cell.setOnContextMenuRequested(e -> {
                         ContextMenu menu = new ContextMenu();
                         menu.getItems().addAll(makeContextMenuItems.apply(colIndexFinal));
-                        menu.show(newCellFinal, e.getScreenX(), e.getScreenY());
+                        if (!menu.getItems().isEmpty())
+                        {
+                            grid.selectColumn(colIndexFinal);
+                            menu.show(newCellFinal, e.getScreenX(), e.getScreenY());
+                        }
                     });
                     cell.setOnMouseClicked(e -> {
                         if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1)
