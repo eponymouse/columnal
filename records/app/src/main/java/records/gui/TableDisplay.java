@@ -949,6 +949,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 r.add(columnQuickTransform("recipe.sum", "sum", c, newId -> {
                     return new SummaryStatistics(parent.getManager(), null, table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "sum", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
+
+                r.add(columnQuickTransform("recipe.average", "average", c, newId -> {
+                    return new SummaryStatistics(parent.getManager(), null, table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "average", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                }));
             }
         }
         catch (InternalException | UserException e)
