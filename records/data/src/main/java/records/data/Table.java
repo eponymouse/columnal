@@ -60,9 +60,7 @@ public abstract class Table
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private Either<Bounds, Pair<TableId, Double>> prevPosition = Either.left(new BoundingBox(10, 10, 400, 600));
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private ImmutableMap<ColumnId, Double> prevColumnWidths = ImmutableMap.of();
+    private CellPosition prevPosition = new CellPosition(1, 1);
 
     // The list is the blacklist, only applicable if first is CUSTOM:
     @OnThread(value = Tag.Any, requireSynchronized = true)
@@ -94,7 +92,7 @@ public abstract class Table
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 
-    public final synchronized Table loadPosition(@Nullable Either<Bounds, Pair<TableId, Double>> position)
+    public final synchronized Table loadPosition(@Nullable CellPosition position)
     {
         if (position != null)
         {
@@ -103,15 +101,6 @@ public abstract class Table
                 display.loadPosition(prevPosition, showColumns);
         }
         return this;
-    }
-
-    @OnThread(Tag.Any)
-    public synchronized Either<Bounds, Pair<TableId, Double>> getPositionOrSnap()
-    {
-        if (display != null)
-            return display.getPositionOrSnap();
-        else
-            return prevPosition;
     }
 
     public static interface Saver
@@ -206,27 +195,15 @@ public abstract class Table
         }
         this.display = display;
         display.loadPosition(prevPosition, showColumns);
-        display.loadColumnWidths(prevColumnWidths);
     }
 
     public synchronized final void loadPosition(DisplayContext display) throws UserException
     {
         try
         {
-            if (display.displayTablePosition().POSITION() != null)
-            {
-                double x = Double.parseDouble(display.displayTablePosition().item(0).getText());
-                double y = Double.parseDouble(display.displayTablePosition().item(1).getText());
-                double mx = Double.parseDouble(display.displayTablePosition().item(2).getText());
-                double my = Double.parseDouble(display.displayTablePosition().item(3).getText());
-                prevPosition = Either.left(new BoundingBox(x, y, mx - x, my - y));
-            }
-            else
-            {
-                TableId id = new TableId(display.displayTablePosition().item(0).getText());
-                double width = Double.parseDouble(display.displayTablePosition().item(1).getText());
-                prevPosition = Either.right(new Pair<>(id, width));
-            }
+            int x = Integer.parseInt(display.displayTablePosition().item(0).getText());
+            int y = Integer.parseInt(display.displayTablePosition().item(1).getText());
+            prevPosition = new CellPosition(x, y);
 
             // Now handle the show-columns:
             if (display.displayShowColumns().ALL() != null)
@@ -241,19 +218,9 @@ public abstract class Table
                 showColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
-            Map<ColumnId, Double> columnWidths = new HashMap<>();
-            List<ItemContext> columnWidthContexts = display.displayColumnWidths().item();
-            for (int i = 0; i < columnWidthContexts.size(); i += 2)
-            {
-                ColumnId columnId = new ColumnId(columnWidthContexts.get(i).getText());
-                Utility.parseDoubleOpt(columnWidthContexts.get(i + 1).getText()).ifPresent(w -> columnWidths.put(columnId, w));
-            }
-            prevColumnWidths = ImmutableMap.copyOf(columnWidths);
-
             if (this.display != null)
             {
                 this.display.loadPosition(prevPosition, showColumns);
-                this.display.loadColumnWidths(columnWidths);
             }
         }
         catch (Exception e)
@@ -267,11 +234,9 @@ public abstract class Table
     {
         if (display != null)
         {
-            prevPosition = display.getPositionOrSnap();
+            prevPosition = display.getPosition();
         }
-        prevPosition.either_(b -> 
-            out.t(MainLexer.POSITION).d(b.getMinX()).d(b.getMinY()).d(b.getMaxX()).d(b.getMaxY()).nl(),
-            s -> out.t(MainLexer.SNAPPEDTO).id(s.getFirst()).d(s.getSecond()).nl());
+        out.t(MainLexer.POSITION).d(prevPosition.columnIndex).d(prevPosition.rowIndex).nl();
         out.t(MainLexer.SHOWCOLUMNS);
         switch (showColumns.getFirst())
         {
@@ -283,17 +248,6 @@ public abstract class Table
                 // TODO output the list;
                 break;
         }
-        out.nl();
-
-        if (display != null)
-        {
-            prevColumnWidths = display.getColumnWidths();
-        }
-        out.t(MainLexer.COLUMNWIDTHS);
-        prevColumnWidths.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).forEach(e -> {
-            out.id(e.getKey()).d(e.getValue());
-        });
-
         out.nl();
     }
 
@@ -397,22 +351,9 @@ public abstract class Table
     public static interface TableDisplayBase
     {
         @OnThread(Tag.Any)
-        public void loadPosition(Either<Bounds, Pair<TableId, Double>> bounds, Pair<Display, ImmutableList<ColumnId>> display);
-
-        // Either standalone bounds, or snapped-to table id and width
-        @OnThread(Tag.Any)
-        public Either<Bounds, Pair<TableId, Double>> getPositionOrSnap();
-
-        @OnThread(Tag.FXPlatform)
-        public Bounds getHeaderBoundsInParent();
+        public void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display);
 
         @OnThread(Tag.Any)
-        public void loadColumnWidths(Map<ColumnId, Double> columnWidths);
-
-        @OnThread(Tag.Any)
-        public ImmutableMap<ColumnId, Double> getColumnWidths();
-
-        @OnThread(Tag.FXPlatform)
-        public Bounds getBoundsInParent();
+        public CellPosition getPosition();
     }
 }

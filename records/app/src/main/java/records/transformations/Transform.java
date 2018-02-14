@@ -15,6 +15,7 @@ import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableOperations;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
@@ -44,6 +45,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -211,6 +213,34 @@ public class Transform extends TransformationEditable
         if (recordSet == null)
             throw new UserException(error == null ? StyledString.s("Unknown error") : error);
         return recordSet;
+    }
+
+    @Override
+    public @OnThread(Tag.Any) TableOperations getOperations()
+    {
+        // Renames and deletes are valid, if they refer to
+        // columns derived from us.
+        // TODO allow renames backwards through dependencies
+        return new TableOperations(null, renameId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(renameId)) ? this::renameColumn : null, deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
+    }
+
+    private void deleteColumn(ColumnId columnId)
+    {
+        //TODO
+    }
+
+    private void renameColumn(ColumnId oldColumnId, ColumnId newColumnId)
+    {
+        FXUtility.alertOnError_(() -> {
+            getManager().edit(getId(), () -> {
+                return new Transform(getManager(), getId(), srcTableId, Utility.mapListI(newColumns, p -> {
+                    if (p.getFirst().equals(oldColumnId))
+                        return new Pair<>(newColumnId, p.getSecond());
+                    else
+                        return p;
+                }));
+            });
+        });
     }
 
     @Override

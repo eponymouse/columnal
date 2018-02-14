@@ -58,7 +58,7 @@ public class ScrollGroup
         }, calcExtraRows, FXUtility.mouse(this)::updateClip);
     }
 
-    void requestScroll(ScrollEvent scrollEvent)
+    public void requestScroll(ScrollEvent scrollEvent)
     {
         requestScrollBy(-scrollEvent.getDeltaX(), -scrollEvent.getDeltaY());
     }

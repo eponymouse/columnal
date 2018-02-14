@@ -53,6 +53,7 @@ import records.data.TableManager.TableManagerListener;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.grid.VirtualGrid;
 import records.transformations.TransformationEditable;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
@@ -80,7 +81,7 @@ public class View extends StackPane
     private final ObservableMap<Transformation, Overlays> overlays;
     private final TableManager tableManager;
     // The pane which actually holds the TableDisplay items:
-    private final Pane mainPane;
+    private final VirtualGrid mainPane;
     private final Pane overlayPane;
     private final Pane snapGuidePane;
     // We want a display that dims everything except the hovered-over table
@@ -200,7 +201,7 @@ public class View extends StackPane
         {
             save();
             overlays.remove(t); // Listener removes them from display
-            mainPane.getChildren().remove(t.getDisplay());
+            mainPane.removeTable(t.getDisplay());
             emptyListener.consume(remainingCount == 0);
         });
     }
@@ -311,7 +312,6 @@ public class View extends StackPane
      */
     public SnapDetails snapTableDisplayPositionWhileDragging(List<TableDisplay> tableDisplayGroup, boolean suppressSnapTogether, Point2D position, Dimension2D size)
     {
-        bringTableDisplayToFront(new HashSet<>(tableDisplayGroup));
         snapGuides.clear();
 
         double x = position.getX();
@@ -479,31 +479,6 @@ public class View extends StackPane
         return new Pair<>(left.get(), right.get());
     }
 
-    private void bringTableDisplayToFront(Set<TableDisplay> toFront)
-    {
-        // The only way to do a re-order in Java 8 is to rearrange the children.
-        // Simple thing would be to move the node to the end of the list -- but if a drag has begun
-        // on this node (one of the ways we might be called), the remove/add interrupts the drag.
-        // So instead, we take all those items ahead of any of us in the list and move them behind us:
-        boolean foundToFront = false;
-        List<Node> toBack = new ArrayList<>();
-        for (int i = 0; i < mainPane.getChildren().size(); i++)
-        {
-            Node item = mainPane.getChildren().get(i);
-            if (toFront.contains(item))
-            {
-                foundToFront = true;
-            }
-            else if (foundToFront)
-            {
-                // One that we should move:
-                toBack.add(item);
-            }
-        }
-        mainPane.getChildren().removeAll(toBack);
-        mainPane.getChildren().addAll(0, toBack);
-    }
-
     private boolean overlapsAnyExcept(List<TableDisplay> except, double x, double y)
     {
         List<Bounds> exceptHeaders = Utility.mapList(except, e -> new BoundingBox(x, y, e.getHeaderBoundsInParent().getWidth(), e.getHeaderBoundsInParent().getHeight()));
@@ -665,7 +640,7 @@ public class View extends StackPane
                 View.this.addTransformation(transformation);
             }
         });
-        mainPane = new Pane();
+        mainPane = new VirtualGrid();
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
         snapGuidePane = new Pane();
@@ -673,7 +648,7 @@ public class View extends StackPane
         pickPaneMouse = new Pane();
         pickPaneDisplay = new Pane();
         pickPaneDisplay.getStyleClass().add("view-pick-pane");
-        getChildren().addAll(mainPane, overlayPane, snapGuidePane);
+        getChildren().addAll(mainPane.getNode(), overlayPane, snapGuidePane);
         getStyleClass().add("view");
         currentPick = new SimpleObjectProperty<>(null);
         // Needs to pick up mouse events on mouse pane, not display pane:
@@ -683,7 +658,8 @@ public class View extends StackPane
             if (t != null)
             {
                 Bounds b = ((TableDisplay)t.getDisplay()).getBoundsInParent();
-                pickPaneDisplay.setClip(Shape.subtract(new Rectangle(mainPane.getWidth(), mainPane.getHeight()), new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight())));
+                //TODO
+                //pickPaneDisplay.setClip(Shape.subtract(new Rectangle(mainPane.getWidth(), mainPane.getHeight()), new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight())));
                 pickPaneMouse.setCursor(Cursor.HAND);
             }
             else
@@ -734,6 +710,8 @@ public class View extends StackPane
 
     private @Nullable Table pickAt(double x, double y)
     {
+        return null; //TODO
+        /*
         Point2D sceneLocation = localToScene(x, y);
         @Nullable Table picked = null;
         // This is paint order, so later nodes are drawn on top
@@ -746,6 +724,7 @@ public class View extends StackPane
             }
         }
         return picked;
+        */
     }
 
     @OnThread(Tag.Any)
@@ -785,7 +764,7 @@ public class View extends StackPane
 
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
-        mainPane.getChildren().add(tableDisplay);
+        mainPane.addTable(tableDisplay);
         if (alignToRightOf != null)
         {
             tableDisplay.setLayoutX(alignToRightOf.getLayoutX() + alignToRightOf.getWidth() + DEFAULT_SPACE);
@@ -933,8 +912,6 @@ public class View extends StackPane
             // Tables:
             r.addAll(Utility.mapList(getAllTables(), t -> new Result(t.getId().getRaw(), () -> {
                 TableDisplay tableDisplay = (TableDisplay) t.getDisplay();
-                if (tableDisplay != null)
-                    bringTableDisplayToFront(Collections.singleton(tableDisplay));
             })));
 
             return r;

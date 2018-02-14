@@ -104,6 +104,7 @@ public abstract class Transformation extends Table
         return b.toString();
     }
 
+    // Should be overridden by any transformation where any of these are possible.
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {

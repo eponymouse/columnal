@@ -43,6 +43,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -60,6 +61,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.View.SnapDetails;
 import records.gui.stable.ColumnOperation;
+import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stf.TableDisplayUtility;
@@ -108,7 +110,7 @@ import java.util.stream.Collectors;
  * the display.  The data is handled by the inner class TableDataDisplay.
  */
 @OnThread(Tag.FXPlatform)
-public class TableDisplay extends BorderPane implements TableDisplayBase
+public class TableDisplay implements TableDisplayBase
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
@@ -116,28 +118,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private final Table table;
     private final View parent;
     private @MonotonicNonNull TableDataDisplay tableDataDisplay;
-    private boolean resizing;
-    // In parent coordinates:
-    private @Nullable Bounds originalSize;
-    // In local coordinates:
-    private @Nullable Point2D offsetDrag;
-    private boolean resizeLeft;
-    private boolean resizeRight;
-    private boolean resizeTop;
-    private boolean resizeBottom;
     @OnThread(Tag.Any)
-    private final AtomicReference<Pair<Bounds, @Nullable Pair<TableId, Double>>> mostRecentBounds;
-    @OnThread(Tag.Any)
-    private final AtomicReference<ImmutableMap<ColumnId, Double>> mostRecentColumnWidths;
+    private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
-
-    // If true, automatically resizes to fit content.  Manual resizing will set this to false,
-    // but a double-click will return to automatic resizing.
-    private final BooleanProperty sizedToFitHorizontal = new SimpleBooleanProperty(false);
-    private final BooleanProperty sizedToFitVertical = new SimpleBooleanProperty(false);
-    private @Nullable TableDisplay displayThatWeAreSnappedToTheRightOf;
-    private @Nullable TableDisplay displayThatIsSnappedToOurRight;
 
     /**
      * Finds the closest point on the edge of this rectangle to the given point.
@@ -256,7 +240,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
-    private class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
+    private class TableDataDisplay implements RecordSet.RecordSetListener
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
@@ -353,24 +337,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
         }
 
-        public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
-        {
-            super.loadColumnWidths(Doubles.toArray(Utility.mapList(displayColumns, c -> columnWidths.getOrDefault(c.getColumnId(), DEFAULT_COLUMN_WIDTH))));
-        }
-
-        @Override
-        protected void columnWidthChanged(int changedColIndex, double newWidth)
-        {
-            super.columnWidthChanged(changedColIndex, newWidth);
-            ImmutableMap.Builder<ColumnId, Double> m = ImmutableMap.builder();
-            for (int columnIndex = 0; columnIndex < displayColumns.size(); columnIndex++)
-            {
-                m.put(displayColumns.get(columnIndex).getColumnId(), getColumnWidth(columnIndex));
-            }
-            mostRecentColumnWidths.set(m.build());
-            parent.tableMovedOrResized(TableDisplay.this);
-        }
-
         @Override
         protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
         {
@@ -428,9 +394,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
             })).getNode()));
         Utility.addStyleClass(body, "table-body");
-        setCenter(body);
-        Utility.addStyleClass(this, "table-wrapper", "tableDisplay", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");
-        setPickOnBounds(true);
         Pane spacer = new Pane();
         spacer.setVisible(false);
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -446,143 +409,9 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         header = new HBox(actionsButton, title, spacer);
         header.getChildren().add(addButton);
         Utility.addStyleClass(header, "table-header");
-        setTop(header);
-
-        EventHandler<MouseEvent> onPressed = e ->
-        {
-            offsetDrag = sceneToLocal(e.getSceneX(), e.getSceneY());
-            resizing = resizeLeft || resizeTop || resizeRight || resizeBottom;
-            if (resizing)
-                originalSize = getBoundsInParent();
-        };
-        header.setOnMousePressed(onPressed);
-        SimpleObjectProperty<@Nullable TableDisplay> prospectiveSnapToRightOf = new SimpleObjectProperty<>(null);
-        header.setOnMouseDragged(e -> {
-            double sceneX = e.getSceneX();
-            double sceneY = e.getSceneY();
-            // If it is a resize, that will be taken care of in the called method.  Otherwise, we do a drag-move:
-            @Nullable Point2D offset = offsetDrag;
-            if (offset != null && !FXUtility.mouse(this).dragResize(parent, sceneX, sceneY))
-            {
-                List<TableDisplay> dragGroup = e.isShiftDown() ? Collections.<@NonNull TableDisplay>singletonList(FXUtility.mouse(this)) : FXUtility.mouse(this).getDragGroup();
-                
-                Point2D pos = dragGroup.get(0).localToParent(dragGroup.get(0).sceneToLocal(sceneX, sceneY));
-                // Become relative to dragGroup.get(0):
-                offset = dragGroup.get(0).sceneToLocal(FXUtility.mouse(this).localToScene(offset));
-                double newX = Math.max(0, pos.getX() - offset.getX());
-                double newY = Math.max(0, pos.getY() - offset.getY());
-                
-                
-
-                SnapDetails snapDetails = parent.snapTableDisplayPositionWhileDragging(dragGroup, e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
-                snapDetails.positionGroup(dragGroup);
-                FXUtility.mouse(this).updateMostRecentBounds();
-                //FXUtility.mouse(this).snapToRightOf(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
-                if (displayThatWeAreSnappedToTheRightOf != null)
-                {
-                    // If we are already snapped, options are only to decouple (via holding shift)
-                    // or to remain coupled:
-                    prospectiveSnapToRightOf.set(e.isShiftDown() ? null : displayThatWeAreSnappedToTheRightOf);
-                }
-                else if (snapDetails.snapToTable != null && snapDetails.snapToTable.getFirst() == Side.LEFT)
-                {
-                    prospectiveSnapToRightOf.set(snapDetails.snapToTable.getSecond());
-                }
-                else
-                {
-                    prospectiveSnapToRightOf.set(null);
-                }
-            }
-        });
-        header.setOnMouseReleased(e -> {
-            parent.tableDragEnded();
-            // We call this even if null, because that will unsnap us:
-            @Nullable TableDisplay snapRightOf = prospectiveSnapToRightOf.get();
-            if (snapRightOf != displayThatWeAreSnappedToTheRightOf)
-            {
-                FXUtility.mouse(this).snapToRightOf(snapRightOf);
-                if (snapRightOf != null)
-                {
-                    setLayoutX(snapRightOf.getBoundsInParent().getMaxX());
-                    setLayoutY(snapRightOf.getLayoutY());
-                    setPrefHeight(snapRightOf.getHeight());
-                }
-            }
-            FXUtility.mouse(this).updateMostRecentBounds();
-            parent.tableMovedOrResized(this);
-        });
-
-        setOnMouseMoved(e -> {
-            if (resizing)
-                return;
-            double padding = body.getPadding().getBottom();
-            Point2D p = sceneToLocal(e.getSceneX(), e.getSceneY());
-            double paddingResizeToleranceFactor = 2.5;
-            resizeLeft = p.getX() < padding * paddingResizeToleranceFactor;
-            resizeRight = p.getX() > getBoundsInLocal().getMaxX() - padding * paddingResizeToleranceFactor;
-            // Top deliberately doesn't use extra tolerance, as more likely want to drag to move:
-            resizeTop = p.getY() < padding;
-            resizeBottom = p.getY() > getBoundsInLocal().getMaxY() - padding * paddingResizeToleranceFactor;
-            if (resizeLeft)
-            {
-                if (resizeTop)
-                    setCursor(Cursor.NW_RESIZE);
-                else if (resizeBottom)
-                    setCursor(Cursor.SW_RESIZE);
-                else
-                    setCursor(Cursor.W_RESIZE);
-            }
-            else if (resizeRight)
-            {
-                if (resizeTop)
-                    setCursor(Cursor.NE_RESIZE);
-                else if (resizeBottom)
-                    setCursor(Cursor.SE_RESIZE);
-                else
-                    setCursor(Cursor.E_RESIZE);
-            }
-            else if (resizeTop || resizeBottom)
-            {
-                setCursor(resizeTop ? Cursor.N_RESIZE : Cursor.S_RESIZE);
-            }
-            else
-            {
-                setCursor(null);
-            }
-        });
-        setOnMousePressed(onPressed);
-        setOnMouseDragged(e -> FXUtility.mouse(this).dragResize(parent, e.getSceneX(), e.getSceneY()));
-        setOnMouseReleased(e -> {
-            resizing = false;
-        });
-        setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
-            {
-                if (resizeRight)
-                {
-                    sizedToFitHorizontal.set(true);
-                }
-                // Not an else -- both can fire if over bottom right:
-                if (resizeBottom)
-                {
-                    sizedToFitVertical.set(true);
-                }
-            }
-        });
 
         mostRecentBounds = new AtomicReference<>();
         updateMostRecentBounds();
-        mostRecentColumnWidths = new AtomicReference<>(ImmutableMap.of());
-
-        if (tableDataDisplay != null)
-        {
-            FXUtility.addChangeListenerPlatformNN(sizedToFitHorizontal, b -> FXUtility.mouse(this).updateSnappedFitWidth());
-            FXUtility.addChangeListenerPlatformNN(sizedToFitVertical, b -> FXUtility.mouse(this).updateSnappedFitHeight());
-            FXUtility.addChangeListenerPlatformNN(tableDataDisplay.widthEstimateProperty(), w -> FXUtility.mouse(this).updateSnappedFitWidth());
-            FXUtility.addChangeListenerPlatformNN(tableDataDisplay.heightEstimateProperty(), h -> FXUtility.mouse(this).updateSnappedFitHeight());
-        }
-
-        FXUtility.forcePrefSize(this);
 
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
@@ -598,95 +427,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             return new TextFlow(err.toGUI().toArray(new Node[0]));
     }
 
-    private List<TableDisplay> getDragGroup()
-    {
-        // We go all the way to the left and build from there:
-        if (displayThatWeAreSnappedToTheRightOf != null)
-            return displayThatWeAreSnappedToTheRightOf.getDragGroup();
-        else
-        {
-            @Nullable TableDisplay t = this;
-            List<TableDisplay> r = new ArrayList<>();
-            while (t != null)
-            {
-                r.add(t);
-                t = t.displayThatIsSnappedToOurRight;
-            }
-            return r;
-        }
-    }
-
-    private void snapToRightOf(@Nullable TableDisplay newSnap)
-    {
-        if (tableDataDisplay != null)
-        {
-            tableDataDisplay.setRowLabelsVisible(newSnap == null);
-            FXUtility.setPseudoclass(this, "has-left-snap", newSnap != null);
-        }
-        
-        // We can only snap if there's nothing already snapped to its right.
-        // First, check for the unsnap condition:
-        if (newSnap == null || newSnap.displayThatIsSnappedToOurRight != null)
-        {
-            if (this.displayThatWeAreSnappedToTheRightOf != null)
-            {
-                FXUtility.setPseudoclass(this.displayThatWeAreSnappedToTheRightOf, "has-right-snap", false);
-                if (displayThatWeAreSnappedToTheRightOf.displayThatIsSnappedToOurRight == this)
-                    displayThatWeAreSnappedToTheRightOf.displayThatIsSnappedToOurRight = null;
-                if (this.displayThatWeAreSnappedToTheRightOf.tableDataDisplay != null)
-                {
-                    this.displayThatWeAreSnappedToTheRightOf.tableDataDisplay.setVerticalScrollVisible(true);
-                }
-                this.displayThatWeAreSnappedToTheRightOf = null;
-            }
-        }
-        else
-        {
-            // Ok to snap:
-            setDisplay(Display.ALTERED, columnDisplay.get().getSecond());
-            if (newSnap.tableDataDisplay != null)
-            {
-                newSnap.tableDataDisplay.setVerticalScrollVisible(false);
-                FXUtility.setPseudoclass(newSnap, "has-right-snap", true);
-                if (tableDataDisplay != null)
-                {
-                    tableDataDisplay.bindScroll(newSnap.tableDataDisplay, ScrollLock.VERTICAL);
-                }
-            }
-            this.displayThatWeAreSnappedToTheRightOf = newSnap;
-            newSnap.displayThatIsSnappedToOurRight = this;
-        }
-    }
-
     @RequiresNonNull("mostRecentBounds")
     private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
     {
         BoundingBox bounds = new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
         mostRecentBounds.set(new Pair<>(bounds, displayThatWeAreSnappedToTheRightOf == null ? null : new Pair<>(displayThatWeAreSnappedToTheRightOf.getTable().getId(), bounds.getWidth())));
-    }
-
-    private void updateSnappedFitWidth()
-    {
-        if (sizedToFitHorizontal.get() && tableDataDisplay != null)
-        {
-            setPrefWidth(tableDataDisplay.widthEstimateProperty().getValue() +
-                ((Pane)getCenter()).getInsets().getLeft() + ((Pane)getCenter()).getInsets().getRight()
-                + 2 // Fudge factor: possibly overall border?
-            );
-        }
-    }
-
-    private void updateSnappedFitHeight()
-    {
-        if (sizedToFitVertical.get() && tableDataDisplay != null)
-        {
-            setPrefHeight(Math.min(parent.getSensibleMaxTableHeight(),
-                tableDataDisplay.heightEstimateProperty().getValue().doubleValue() +
-                header.getHeight() +
-                ((Pane)getCenter()).getInsets().getTop() + ((Pane)getCenter()).getInsets().getBottom()
-                + 2 // Fudge factor: possibly overall border?
-            ));
-        }
     }
 
     @RequiresNonNull({"columnDisplay", "table", "parent"})
@@ -787,57 +532,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         return "\"" + original.replace("\"", "\"\"\"") + "\"";
     }
-
-    private boolean dragResize(View parent, double sceneX, double sceneY)
-    {
-        if (resizing && originalSize != null && offsetDrag != null)
-        {
-            Point2D p = sceneToLocal(sceneX, sceneY);
-            final double offsetDragX = offsetDrag.getX();
-            final double offsetDragY = offsetDrag.getY();
-            final double originalSizeWidth = originalSize.getWidth();
-            final double originalSizeHeight = originalSize.getHeight();
-            final double originalSizeMaxX = originalSize.getMaxX();
-            final double originalSizeMaxY = originalSize.getMaxY();
-
-            boolean changed = false;
-            if (resizeBottom)
-            {
-                setPrefHeight(p.getY() + (originalSizeHeight - offsetDragY));
-                sizedToFitVertical.set(false);
-                changed = true;
-            }
-            if (resizeRight)
-            {
-                setPrefWidth(p.getX() + (originalSizeWidth - offsetDragX));
-                sizedToFitHorizontal.set(false);
-                changed = true;
-            }
-            if (resizeLeft)
-            {
-                setLayoutX(localToParent(p.getX() - offsetDragX, getLayoutY()).getX());
-                setPrefWidth(originalSizeMaxX - getLayoutX());
-                sizedToFitHorizontal.set(false);
-                changed = true;
-            }
-            if (resizeTop)
-            {
-                setLayoutY(localToParent(getLayoutX(), p.getY() - offsetDragY).getY());
-                setPrefHeight(originalSizeMaxY - getLayoutY());
-                sizedToFitVertical.set(false);
-                changed = true;
-            }
-            if (changed)
-            {
-                updateMostRecentBounds();
-                parent.tableMovedOrResized(this);
-            }
-
-            return true;
-        }
-        return false;
-    }
-
+    
     @OnThread(Tag.Any)
     @Override
     public void loadPosition(Either<Bounds, Pair<TableId, Double>> boundsOrSnap, Pair<Display, ImmutableList<ColumnId>> display)
@@ -863,86 +558,16 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
                 return defaultPos;
             });
-            
-            setLayoutX(bounds.getMinX());
-            setLayoutY(bounds.getMinY());
-            setPrefWidth(bounds.getWidth());
-            setPrefHeight(bounds.getHeight());
             this.columnDisplay.set(display);
         });
     }
 
-    // Gets intended bounds.  Useful while loading, when we have set intended bounds,
-    // but layout pass may not have happened yet.
-    private Bounds getIntendedBounds()
-    {
-        return new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
-    }
-
     @OnThread(Tag.Any)
     @Override
-    public Either<Bounds, Pair<TableId, Double>> getPositionOrSnap()
+    public CellPosition getPosition()
     {
-        Pair<Bounds, @Nullable Pair<TableId, Double>> recent = mostRecentBounds.get();
-        if (recent.getSecond() != null)
-            return Either.right(recent.getSecond());
-        else
-            return Either.left(recent.getFirst());
+        return mostRecentBounds.get();
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) Bounds getHeaderBoundsInParent()
-    {
-        // Header in parent is our local coords, so localToParent that to get our parent:
-        return localToParent(header.getBoundsInParent());
-    }
-
-    @OnThread(Tag.Any)
-    @Override
-    public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
-    {
-        mostRecentColumnWidths.set(ImmutableMap.copyOf(columnWidths));
-        Platform.runLater(() -> {
-            if (tableDataDisplay != null)
-                tableDataDisplay.loadColumnWidths(columnWidths);
-        });
-    }
-
-    @OnThread(Tag.Any)
-    @Override
-    public ImmutableMap<ColumnId, Double> getColumnWidths()
-    {
-        return mostRecentColumnWidths.get();
-    }
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected double computePrefWidth(double height)
-    {
-        return getPrefWidth();
-    }
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected double computePrefHeight(double width)
-    {
-        return getPrefHeight();
-    }
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected double computeMinWidth(double height)
-    {
-        return getPrefWidth();
-    }
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected double computeMinHeight(double width)
-    {
-        return getPrefHeight();
-    }
-
 
     public ImmutableList<records.gui.stable.ColumnOperation> getExtraColumnActions(ColumnId c)
     {
