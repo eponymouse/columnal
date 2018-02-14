@@ -65,7 +65,7 @@ public class MainWindow
         emptyMessage.setWrapText(true);
         emptyMessage.setMaxWidth(400.0);
 
-        View v = new View(scrollPane::fillWidth, destinationFile, emptyMessage::setVisible);
+        View v = new View(destinationFile, emptyMessage::setVisible);
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
         stage.setOnHidden(e -> {

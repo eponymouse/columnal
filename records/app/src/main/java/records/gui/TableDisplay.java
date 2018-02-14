@@ -59,7 +59,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.View.SnapDetails;
+import records.gui.grid.GridArea;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stable.VirtScrollStrTextGrid;
@@ -128,6 +128,7 @@ public class TableDisplay implements TableDisplayBase
      * 
      * If the point is inside our rectangular bounds, still locates a point on our edge.
      */
+    /*TODO
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
     {
@@ -148,6 +149,7 @@ public class TableDisplay implements TableDisplayBase
         return new Point2D(middle.getX() + Math.max(-halfWidth, Math.min(1.0/Math.tan(angle) * ((angle >= 0) ? halfHeight : -halfHeight), halfWidth)),
             middle.getY() + Math.max(-halfHeight, Math.min(Math.tan(angle) * ((angle >= deg90 || angle <= -deg90) ? -halfWidth : halfWidth), halfHeight)));
     }
+    */
 
     /**
      * Treating the given bounds as a simple rectangle, finds the point
@@ -157,6 +159,7 @@ public class TableDisplay implements TableDisplayBase
      * @return The pair of (point-on-our-bounds, point-on-their-bounds)
      * that give shortest bounds between the two.
      */
+    /*TODO
     @OnThread(Tag.FXPlatform)
     public Pair<Point2D, Point2D> closestPointTo(Bounds them)
     {
@@ -224,6 +227,7 @@ public class TableDisplay implements TableDisplayBase
 
         return candidates.stream().min(Pair.<Double, Pair<Point2D, Point2D>>comparatorFirst()).orElseThrow(() -> new RuntimeException("Impossible!")).getSecond();
     }
+    */
 
     @OnThread(Tag.Any)
     public Table getTable()
@@ -240,7 +244,7 @@ public class TableDisplay implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
-    private class TableDataDisplay implements RecordSet.RecordSetListener
+    private class TableDataDisplay extends GridArea implements RecordSet.RecordSetListener
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
@@ -430,8 +434,7 @@ public class TableDisplay implements TableDisplayBase
     @RequiresNonNull("mostRecentBounds")
     private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
     {
-        BoundingBox bounds = new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
-        mostRecentBounds.set(new Pair<>(bounds, displayThatWeAreSnappedToTheRightOf == null ? null : new Pair<>(displayThatWeAreSnappedToTheRightOf.getTable().getId(), bounds.getWidth())));
+        mostRecentBounds.set(tableDataDisplay.getPosition());
     }
 
     @RequiresNonNull({"columnDisplay", "table", "parent"})
@@ -535,29 +538,13 @@ public class TableDisplay implements TableDisplayBase
     
     @OnThread(Tag.Any)
     @Override
-    public void loadPosition(Either<Bounds, Pair<TableId, Double>> boundsOrSnap, Pair<Display, ImmutableList<ColumnId>> display)
+    public void loadPosition(CellPosition cellPosition, Pair<Display, ImmutableList<ColumnId>> display)
     {
-        BoundingBox defaultPos = new BoundingBox(0, 0, 400, 800);
         // Important we do this now, not in runLater, as if we then save,
         // it will be valid:
-        mostRecentBounds.set(boundsOrSnap.<Pair<Bounds, @Nullable Pair<TableId, Double>>>either(b -> new Pair<>(b, null), s -> new Pair<>(defaultPos, s)));
+        mostRecentBounds.set(cellPosition);
         
         Platform.runLater(() -> {
-            Bounds bounds = boundsOrSnap.either(b -> b, snappedTo -> {
-                @Nullable Table snapSrc = parent.getManager().getSingleTableOrNull(snappedTo.getFirst());
-                if (snapSrc != null)
-                {
-                    TableDisplay snapSrcDisplay = (TableDisplay)snapSrc.getDisplay();
-                    if (snapSrcDisplay != null)
-                    {
-                        snapToRightOf(snapSrcDisplay);
-                        Bounds snapSrcBounds = snapSrcDisplay.getIntendedBounds();
-                        return new BoundingBox(snapSrcBounds.getMaxX(), snapSrcBounds.getMinY(), snappedTo.getSecond(), snapSrcBounds.getHeight());
-                    }
-                }
-
-                return defaultPos;
-            });
             this.columnDisplay.set(display);
         });
     }

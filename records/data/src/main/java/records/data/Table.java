@@ -228,6 +228,12 @@ public abstract class Table
             throw new UserException("Could not parse position: \"" + display.getText() + "\"");
         }
     }
+    
+    @OnThread(Tag.Any)
+    public synchronized final @Nullable CellPosition getPosition()
+    {
+        return display == null ? null : display.getPosition();
+    }
 
     @OnThread(Tag.Any)
     protected synchronized final void savePosition(OutputBuilder out)

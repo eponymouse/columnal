@@ -43,6 +43,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
@@ -78,7 +79,7 @@ public class View extends StackPane
 {
     private static final double DEFAULT_SPACE = 150.0;
 
-    private final ObservableMap<Transformation, Overlays> overlays;
+    //private final ObservableMap<Transformation, Overlays> overlays;
     private final TableManager tableManager;
     // The pane which actually holds the TableDisplay items:
     private final VirtualGrid mainPane;
@@ -91,7 +92,6 @@ public class View extends StackPane
     private final Pane pickPaneMouse;
     private final Pane pickPaneDisplay;
     private final ObjectProperty<@Nullable Table> currentPick;
-    private final FXPlatformRunnable adjustParent;
     private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
     @OnThread(Tag.FXPlatform)
     private final ObjectProperty<File> diskFile;
@@ -200,7 +200,7 @@ public class View extends StackPane
         Platform.runLater(() ->
         {
             save();
-            overlays.remove(t); // Listener removes them from display
+            //overlays.remove(t); // Listener removes them from display
             mainPane.removeTable(t.getDisplay());
             emptyListener.consume(remainingCount == 0);
         });
@@ -238,7 +238,6 @@ public class View extends StackPane
             cancelDelayedSave.run();
         }
         cancelDelayedSave = FXUtility.runAfterDelay(Duration.millis(1000), () -> modified());
-        adjustParent.run();
     }
 
     public void tableDragEnded()
@@ -271,33 +270,6 @@ public class View extends StackPane
         }
     }
 
-    public static class SnapDetails
-    {
-        // Always present and valid:
-        public final Point2D snapToPos;
-        // Side is relative to the table being moved, so LEFT means snapping to a table on the left
-        // (and thus the snap-ee's right).  Only valid when snapping is directly to side of table.
-        public final @Nullable Pair<Side, TableDisplay> snapToTable;
-
-        public SnapDetails(Point2D snapToPos, @Nullable Pair<Side, TableDisplay> snapToTable)
-        {
-            this.snapToPos = snapToPos;
-            this.snapToTable = snapToTable;
-        }
-
-        @OnThread(Tag.FXPlatform)
-        public void positionGroup(List<TableDisplay> group)
-        {
-            double x = snapToPos.getX();
-            for (TableDisplay tableDisplay : group)
-            {
-                tableDisplay.setLayoutX(x);
-                x += tableDisplay.getPrefWidth();
-                tableDisplay.setLayoutY(snapToPos.getY());
-            }
-        }
-    }
-
     /**
      * Snaps the table display position.  There are three types of snapping:
      *  - One is snapping to the nearest N pixels.  This is always in force.
@@ -310,6 +282,7 @@ public class View extends StackPane
      * @param tableDisplayGroup The group of snapped-together tables to drag.
      *                          The first one is the leftmost table in the chain.  If suppressSnapTogether is true, this should be a single item.
      */
+    /* TODO
     public SnapDetails snapTableDisplayPositionWhileDragging(List<TableDisplay> tableDisplayGroup, boolean suppressSnapTogether, Point2D position, Dimension2D size)
     {
         snapGuides.clear();
@@ -437,6 +410,7 @@ public class View extends StackPane
 
         return new SnapDetails(new Point2D(x, y), null);
     }
+    */
 
     // If any sources are invalid, they are skipped
     private ImmutableList<Table> getSources(Table table)
@@ -479,6 +453,7 @@ public class View extends StackPane
         return new Pair<>(left.get(), right.get());
     }
 
+    /* TODO
     private boolean overlapsAnyExcept(List<TableDisplay> except, double x, double y)
     {
         List<Bounds> exceptHeaders = Utility.mapList(except, e -> new BoundingBox(x, y, e.getHeaderBoundsInParent().getWidth(), e.getHeaderBoundsInParent().getHeight()));
@@ -488,7 +463,9 @@ public class View extends StackPane
                 .map(t -> t.getHeaderBoundsInParent())
                 .anyMatch(r -> exceptHeaders.stream().anyMatch(e -> r.intersects(e)));
     }
+    */
 
+    /* TODO
     @OnThread(Tag.FXPlatform)
     private class Overlays
     {
@@ -612,13 +589,13 @@ public class View extends StackPane
             }
         }
     }
+    */
 
     // The type of the listener really throws off the checkers so suppress them all:
     @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype", "helpfile"})
-    public View(FXPlatformRunnable adjustParent, File location, FXPlatformConsumer<Boolean> emptyListener) throws InternalException, UserException
+    public View(File location, FXPlatformConsumer<Boolean> emptyListener) throws InternalException, UserException
     {
         this.emptyListener = emptyListener;
-        this.adjustParent = adjustParent;
         diskFile = new SimpleObjectProperty<>(location);
         tableManager = new TableManager(TransformationManager.getInstance(), new TableManagerListener()
         {
@@ -657,8 +634,8 @@ public class View extends StackPane
         FXUtility.addChangeListenerPlatform(currentPick, t -> {
             if (t != null)
             {
-                Bounds b = ((TableDisplay)t.getDisplay()).getBoundsInParent();
                 //TODO
+                //Bounds b = ((TableDisplay)t.getDisplay()).getBoundsInParent();
                 //pickPaneDisplay.setClip(Shape.subtract(new Rectangle(mainPane.getWidth(), mainPane.getHeight()), new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight())));
                 pickPaneMouse.setCursor(Cursor.HAND);
             }
@@ -684,6 +661,7 @@ public class View extends StackPane
         });
         //TODO let escape cancel
 
+        /*
         // Must use identity hash map as transformations' hash code can change if position changes.
         overlays = FXCollections.observableMap(new IdentityHashMap<>());
         overlays.addListener((MapChangeListener<? super @UnknownIfRecorded Transformation, ? super @UnknownIfRecorded Overlays>) c -> {
@@ -698,6 +676,7 @@ public class View extends StackPane
                 overlayPane.getChildren().addAll(added.arrowFrom, added.name, added.arrowTo);
             }
         });
+        */
 
         snapGuides.addListener((ListChangeListener<Shape>) c -> {
             while (c.next())
@@ -753,10 +732,10 @@ public class View extends StackPane
                 if (td != null)
                     sourceDisplays.add(td);
             }
-            overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
+            /*overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
             {
                 View.this.editTransform((TransformationEditable)transformation);
-            }));
+            }));*/
 
             save();
         });
@@ -765,12 +744,6 @@ public class View extends StackPane
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
         mainPane.addTable(tableDisplay);
-        if (alignToRightOf != null)
-        {
-            tableDisplay.setLayoutX(alignToRightOf.getLayoutX() + alignToRightOf.getWidth() + DEFAULT_SPACE);
-            tableDisplay.setLayoutY(alignToRightOf.getLayoutY());
-        }
-        FXUtility.runAfter(adjustParent);
     }
 
     private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)
@@ -785,7 +758,7 @@ public class View extends StackPane
     public void editTransform(TransformationEditable existing)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
-        showEditDialog(dialog, existing, existing.getPositionOrSnap());
+        showEditDialog(dialog, existing, existing.getPosition());
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window
@@ -800,13 +773,13 @@ public class View extends StackPane
         showEditDialog(dialog, null, null);
     }
 
-    private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable Either<Bounds, Pair<TableId, Double>> position)
+    private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable CellPosition position)
     {
         currentlyShowingEditTransformationDialog = dialog;
         // add will re-run any dependencies:
         dialog.show().ifPresent(t -> {
-            if (replaceOnOK != null)
-                overlays.remove(replaceOnOK);
+            //if (replaceOnOK != null)
+            //    overlays.remove(replaceOnOK);
             Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));
         });
         currentlyShowingEditTransformationDialog = null;
