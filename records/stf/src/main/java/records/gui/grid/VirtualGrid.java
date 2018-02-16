@@ -12,7 +12,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
@@ -20,17 +19,21 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import records.gui.grid.RectangularTableCellSelection.TableLimits;
+import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
+import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollResult;
+import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiConsumer;
@@ -38,8 +41,9 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 @OnThread(Tag.FXPlatform)
 public class VirtualGrid
@@ -63,11 +67,19 @@ public class VirtualGrid
     private double firstVisibleRowOffset;
     private int visibleRowCount;
     private int visibleColumnCount;
+    // How many extra rows to show off-screen, to account for scrolling (when actual display can lag logical display).
+    // Negative means we need them left/above, positive means we need them below/right:
+    private final IntegerProperty extraRowsForSmoothScroll = new SimpleIntegerProperty(0);
+    private final IntegerProperty extraColsForSmoothScroll = new SimpleIntegerProperty(0);
+    
+    private final IntegerProperty currentKnownRows = new SimpleIntegerProperty(10);
+    private final IntegerProperty currentColumns = new SimpleIntegerProperty(10);
 
     // Package visible to let sidebars access it
     static final double rowHeight = 24;
+    static final double defaultColumnWidth = 100;
 
-    private double[] columnWidths;
+    private final Map<Integer, Double> customisedColumnWidths = new HashMap<>();
 
     private final ObjectProperty<@Nullable CellSelection> selection = new SimpleObjectProperty<>(null);
 
@@ -83,7 +95,6 @@ public class VirtualGrid
 
     public VirtualGrid()
     {
-        this.columnWidths = new double[0];
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
@@ -97,9 +108,9 @@ public class VirtualGrid
                 // If it's negative, we're scrolling left, and we need to show extra
                 // rows to the right until they scroll out of view.
                 double w = 0;
-                for (startCol = firstVisibleColumnIndex; startCol < columnWidths.length; startCol++)
+                for (startCol = firstVisibleColumnIndex; startCol < currentColumns.get(); startCol++)
                 {
-                    w += columnWidths[startCol];
+                    w += getColumnWidth(startCol);
                     if (w >= container.getWidth())
                     {
                         break;
@@ -109,9 +120,9 @@ public class VirtualGrid
                 int col;
                 for (col = startCol + 1; curX < -targetX; col++)
                 {
-                    if (col >= columnWidths.length)
-                        return columnWidths.length - startCol;
-                    curX += columnWidths[col];
+                    if (col >= currentColumns.get())
+                        return currentColumns.get() - startCol;
+                    curX += getColumnWidth(col);
                 }
                 // Will be 0 or positive:
                 return col - startCol;
@@ -126,7 +137,7 @@ public class VirtualGrid
                 {
                     if (col < 0)
                         return -startCol;
-                    curX -= columnWidths[col];
+                    curX -= getColumnWidth(col);
                 }
                 // Will be 0 or negative:
                 return col - startCol;
@@ -143,9 +154,9 @@ public class VirtualGrid
         int rowIndex;
         int colIndex;
         x -= firstVisibleColumnOffset;
-        for (colIndex = firstVisibleColumnIndex; colIndex < columnWidths.length; colIndex++)
+        for (colIndex = firstVisibleColumnIndex; colIndex < currentColumns.get(); colIndex++)
         {
-            x -= columnWidths[colIndex];
+            x -= getColumnWidth(colIndex);
             if (x < 0.0)
             {
                 break;
@@ -157,7 +168,7 @@ public class VirtualGrid
         rowIndex = (int) Math.floor(y / rowHeight) + firstVisibleRowIndex;
         if (rowIndex >= getLastSelectableRowGlobal())
             return null;
-        return new RectangularTableCellSelection(rowIndex, colIndex, new TableLimits()
+        return new RectangularTableCellSelection(rowIndex, colIndex, new TableSelectionLimits()
         {
             @Override
             public int getFirstPossibleRowIncl()
@@ -208,40 +219,41 @@ public class VirtualGrid
     private Pair<Integer, Double> scrollXToPixel(double targetX, ScrollGroup.Token token)
     {
         double lhs = Math.max(targetX, 0.0);
-        for (int lhsCol = 0; lhsCol < columnWidths.length; lhsCol++)
+        for (int lhsCol = 0; lhsCol < currentColumns.get(); lhsCol++)
         {
-            if (lhsCol == columnWidths.length - 1 && lhs > columnWidths[lhsCol])
+            double lhsColWidth = getColumnWidth(lhsCol);
+            if (lhsCol == currentColumns.get() - 1 && lhs > lhsColWidth)
             {
                 // Clamp:
-                lhs = columnWidths[lhsCol];
+                lhs = lhsColWidth;
             }
 
-            if (lhs <= columnWidths[lhsCol])
+            if (lhs <= lhsColWidth)
             {
                 // Stop here, possibly clamping to RHS if needed:
                 double clampedLHS = container.getWidth();
-                for (int clampedLHSCol = columnWidths.length - 1; clampedLHSCol >= 0; clampedLHSCol--)
+                for (int clampedLHSCol = currentColumns.get() - 1; clampedLHSCol >= 0; clampedLHSCol--)
                 {
-                    if (clampedLHS < columnWidths[lhsCol])
+                    if (clampedLHS < lhsColWidth)
                     {
                         // We've found furthest place we could
                         // scroll to, so go to the leftmost out of
                         // furthest place, and ideal place:
 
                         // clampedLHS was from right, make it from left:
-                        clampedLHS = columnWidths[lhsCol] - clampedLHS;
+                        clampedLHS = lhsColWidth - clampedLHS;
                         if (clampedLHSCol < lhsCol || (clampedLHSCol == lhsCol && clampedLHS < lhs))
                             return new Pair<>(clampedLHSCol, -clampedLHS);
                         else
                             return new Pair<>(lhsCol, -lhs);
                     }
-                    clampedLHS -= columnWidths[clampedLHSCol];
+                    clampedLHS -= getColumnWidth(clampedLHSCol);
                 }
                 // If we get here, column widths are smaller than
                 // container, so stay at left:
                 return new Pair<>(0, 0.0);
             }
-            lhs -= columnWidths[lhsCol];
+            lhs -= lhsColWidth;
         }
         // Should be impossible to reach here unless there are no columns:
         return new Pair<>(0, 0.0);
@@ -298,9 +310,9 @@ public class VirtualGrid
         return total;
     }
 
-    private double getColumnWidth(int columnIndex)
+    private double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
     {
-        return columnWidths[columnIndex];
+        return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
     }
 
     private int getLastSelectableRowGlobal()
@@ -310,7 +322,7 @@ public class VirtualGrid
 
     private double getMaxScrollX()
     {
-        return Math.max(0, sumColumnWidths(0, columnWidths.length)  - container.getWidth());
+        return Math.max(0, sumColumnWidths(0, currentColumns.get())  - container.getWidth());
     }
 
     private double getMaxScrollY()
@@ -379,9 +391,59 @@ public class VirtualGrid
         return container;
     }
 
+    public void positionOrAreaChanged(GridArea child)
+    {
+        container.redoLayout();
+    }
+
+    public int _test_getFirstLogicalVisibleRowIncl()
+    {
+        // This is first row with middle visible, so check for that:
+        if (firstVisibleRowOffset < -rowHeight / 2.0)
+            return firstVisibleRowIndex + 1;
+        else
+            return firstVisibleRowIndex;
+    }
+
+    public int _test_getLastLogicalVisibleRowExcl()
+    {
+        int numVisible = (int)Math.round((double)container.getHeight() / rowHeight);
+        return firstVisibleRowIndex + numVisible;
+    }
+
+
+    // The last actual display column (exclusive), including any needed for displaying smooth scrolling
+    int getLastDisplayColExcl()
+    {
+        return Math.min(currentColumns.get(), firstVisibleColumnIndex + visibleColumnCount + Math.max(0, extraColsForSmoothScroll.get()));
+    }
+
+    // The first actual display column, including any needed for displaying smooth scrolling
+    int getFirstDisplayCol()
+    {
+        return Math.max(0, firstVisibleColumnIndex + Math.min(0, extraColsForSmoothScroll.get()));
+    }
+
+    // The last actual display row (exclusive), including any needed for displaying smooth scrolling
+    int getLastDisplayRowExcl()
+    {
+        return Math.min(currentKnownRows.get(), firstVisibleRowIndex + visibleRowCount + Math.max(0, extraRowsForSmoothScroll.get()));
+    }
+
+    // The first actual display row, including any needed for displaying smooth scrolling
+    int getFirstDisplayRow()
+    {
+        return Math.max(0, firstVisibleRowIndex + Math.min(0, extraRowsForSmoothScroll.get()));
+    }
+
+    public void addNodeSupplier(VirtualGridSupplier<?> cellSupplier)
+    {
+        nodeSuppliers.add(cellSupplier);
+        container.redoLayout();
+    }
 
     @OnThread(Tag.FXPlatform)
-    private class Container extends Region
+    private class Container extends Pane
     {
         private final Rectangle clip;
 
@@ -504,6 +566,63 @@ public class VirtualGrid
             {
                 select(focusedCellPos.atEnd(extendSelection));
             }
+        }
+
+        private void redoLayout()
+        {
+            double x = firstVisibleColumnOffset;
+            double y = firstVisibleRowOffset;
+
+            // We may not need the +1, but play safe:
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstVisibleRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
+            int newNumVisibleCols = 0;
+            for (int column = firstVisibleColumnIndex; x < getWidth() && column < currentColumns.get(); column++)
+            {
+                newNumVisibleCols += 1;
+                x += getColumnWidth(column);
+            }
+            VirtualGrid.this.visibleRowCount = newNumVisibleRows;
+            VirtualGrid.this.visibleColumnCount = newNumVisibleCols;
+
+            // This includes extra rows needed for smooth scrolling:
+            int firstDisplayRow = getFirstDisplayRow();
+            int lastDisplayRowExcl = getLastDisplayRowExcl();
+            int firstDisplayCol = getFirstDisplayCol();
+            int lastDisplayColExcl = getLastDisplayColExcl();
+
+            VisibleDetails columnBounds = new VisibleDetails(firstDisplayCol, lastDisplayColExcl - 1)
+            {
+                @Override
+                protected double getItemCoord(int itemIndex)
+                {
+                    return firstVisibleColumnOffset + sumColumnWidths(firstDisplayCol, itemIndex);
+                }
+            };
+            VisibleDetails rowBounds = new VisibleDetails(firstDisplayRow, lastDisplayRowExcl - 1)
+            {
+                @Override
+                protected double getItemCoord(int itemIndex)
+                {
+                    return firstVisibleRowOffset + rowHeight * (itemIndex - firstDisplayRow);
+                }
+            };
+
+            for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+            {
+                nodeSupplier.layoutItems(this, rowBounds, columnBounds);
+            }
+            
+            updateClip();
+            requestLayout();
+        }
+
+        private void updateClip()
+        {
+            clip.setX(-getTranslateX());
+            clip.setY(-getTranslateY());
+            clip.setWidth(getWidth());
+            clip.setHeight(getHeight());
+            scrollGroup.updateClip();
         }
     }
 

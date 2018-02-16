@@ -62,8 +62,6 @@ public final class EditorKitCache<V> implements ColumnHandler
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
     private final MakeEditorKit<V> makeEditorKit;
     private final int columnIndex;
-    private int firstVisibleRowIndexIncl = -1;
-    private int lastVisibleRowIndexIncl = -1;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
@@ -133,10 +131,8 @@ public final class EditorKitCache<V> implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
-        this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
-        this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
         try
         {
             displayCacheItems.get(rowIndex, () -> new DisplayCacheItem(rowIndex, focusListener, relinquishFocus, setCellContent)).updateDisplay();

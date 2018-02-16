@@ -351,8 +351,9 @@ public class OutputBuilder
     }
 
     @OnThread(Tag.Any)
-    public synchronized void n(long n)
+    public synchronized OutputBuilder n(long n)
     {
         cur().add(Long.toString(n));
+        return this;
     }
 }

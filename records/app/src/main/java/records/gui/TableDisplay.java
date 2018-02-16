@@ -1,22 +1,10 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Doubles;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.event.EventHandler;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
-import javafx.geometry.Dimension2D;
-import javafx.geometry.Point2D;
-import javafx.geometry.Side;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -25,34 +13,26 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.RecordSet.RecordSetListener;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.MessageWhenEmpty;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableOperations;
 import records.data.TableOperations.AppendColumn;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -60,15 +40,19 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.grid.GridArea;
+import records.gui.grid.RectangularTableCellSelection;
+import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
+import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.StableView.ColumnDetails;
-import records.gui.stable.VirtScrollStrTextGrid;
-import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
+import records.gui.stf.EditorKitSimpleLabel;
+import records.gui.stf.StructuredTextField;
+import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.transformations.HideColumnsPanel;
 import records.transformations.SummaryStatistics;
-import records.transformations.Transform;
 import records.transformations.TransformationEditable;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
@@ -78,14 +62,16 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
-import records.gui.stable.StableView;
 import utility.gui.GUI;
+import utility.gui.TranslationUtility;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -93,7 +79,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +102,7 @@ public class TableDisplay implements TableDisplayBase
     private final Either<StyledString, RecordSet> recordSetOrError;
     private final Table table;
     private final View parent;
-    private @MonotonicNonNull TableDataDisplay tableDataDisplay;
+    private final GridArea tableDataDisplay;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
@@ -235,21 +220,48 @@ public class TableDisplay implements TableDisplayBase
         return table;
     }
 
-    public VirtScrollStrTextGrid _test_getGrid()
+    public VirtualGrid _test_getGrid()
     {
         if (tableDataDisplay != null)
-            return tableDataDisplay._test_getGrid();
+            return tableDataDisplay._test_getParent();
         else
             throw new RuntimeException("Table "+ getTable().getId() + " is empty");
     }
 
+    public GridArea getGridArea()
+    {
+        return tableDataDisplay;
+    }
+
+    public GridCellInfo<StructuredTextField> getDataGridCellInfo()
+    {
+        if (tableDataDisplay instanceof TableDataDisplay)
+            return ((TableDataDisplay)tableDataDisplay).getDataGridCellInfo();
+        else
+            return new GridCellInfo<StructuredTextField>()
+            {
+                @Override
+                public boolean hasCellAt(CellPosition cellPosition)
+                {
+                    return false;
+                }
+
+                @Override
+                public void useCellFor(StructuredTextField item, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck)
+                {
+
+                }
+            };
+    }
+
     @OnThread(Tag.FXPlatform)
-    private class TableDataDisplay extends GridArea implements RecordSet.RecordSetListener
+    private class TableDataDisplay extends GridArea implements RecordSetListener, TableSelectionLimits
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
         // Not final because it changes if user changes the display item:
         private ImmutableList<ColumnDetails> displayColumns;
+        private ImmutableList<ColumnDetails> columns;
 
         @SuppressWarnings("initialization")
         @UIEffect
@@ -294,6 +306,43 @@ public class TableDisplay implements TableDisplayBase
             });
         }
 
+
+        public GridCellInfo<StructuredTextField> getDataGridCellInfo()
+        {
+            return new GridCellInfo<StructuredTextField>()
+            {
+                @Override
+                public boolean hasCellAt(CellPosition cellPosition)
+                {
+                    return cellPosition.columnIndex >= getPosition().columnIndex
+                            && cellPosition.columnIndex < getPosition().columnIndex + columns.size()
+                            && cellPosition.rowIndex >= getPosition().rowIndex
+                            && cellPosition.rowIndex <= 100 /* TODO */;
+                }
+
+                @Override
+                public void useCellFor(StructuredTextField cell, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck)
+                {
+                    // Blank then queue fetch:
+                    cell.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
+                    int columnIndexWithinTable = cellPosition.columnIndex - TableDisplay.this.getPosition().columnIndex;
+                    int rowIndexWithinTable = cellPosition.rowIndex - TableDisplay.this.getPosition().rowIndex;
+                    if (columns != null && columnIndexWithinTable < columns.size())
+                    {
+                        columns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
+                            rowIndexWithinTable,
+                            b -> {},
+                            c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, TableDataDisplay.this)),
+                            (rowIndex, colIndex, editorKit) -> {
+                                if (samePositionCheck.get())
+                                    cell.resetContent(editorKit);
+                            }
+                        );
+                    }
+                }
+            };
+        }
+
         @Override
         @OnThread(Tag.FXPlatform)
         public void modifiedDataItems(int startRowIncl, int endRowIncl)
@@ -301,7 +350,7 @@ public class TableDisplay implements TableDisplayBase
             onModify.run();
         }
 
-        @Override
+        //TODO @Override
         protected void withNewColumnDetails(AppendColumn appendColumn)
         {
             FXUtility.alertOnErrorFX_(() -> {
@@ -325,7 +374,7 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
         {
-            super.removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
+            // TODO
             onModify.run();
         }
 
@@ -341,7 +390,7 @@ public class TableDisplay implements TableDisplayBase
             setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
         }
 
-        @Override
+        //TODO @Override
         protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
         {
             return columnId -> {
@@ -375,6 +424,37 @@ public class TableDisplay implements TableDisplayBase
                 }
             };
         }
+
+        public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
+        {
+            this.columns = columns;
+            super.updateParent();
+            
+        }
+
+        @Override
+        public int getFirstPossibleRowIncl()
+        {
+            return TableDisplay.this.getPosition().rowIndex;
+        }
+
+        @Override
+        public int getLastPossibleRowIncl()
+        {
+            return TableDisplay.this.getPosition().rowIndex + 10 /* TODO */;
+        }
+
+        @Override
+        public int getFirstPossibleColumnIncl()
+        {
+            return TableDisplay.this.getPosition().columnIndex;
+        }
+
+        @Override
+        public int getLastPossibleColumnIncl()
+        {
+            return TableDisplay.this.getPosition().columnIndex + columns.size() - 1;
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -392,15 +472,13 @@ public class TableDisplay implements TableDisplayBase
             recordSetOrError = Either.left(e.getStyledMessage());
         }
         this.recordSetOrError = recordSetOrError;
-        StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> makeErrorDisplay(err),
-            recordSet -> (tableDataDisplay = new TableDataDisplay(recordSet, table.getDisplayMessageWhenEmpty(), () -> {
-                parent.modified();
-                Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
-            })).getNode()));
-        Utility.addStyleClass(body, "table-body");
-        Pane spacer = new Pane();
-        spacer.setVisible(false);
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        tableDataDisplay = this.recordSetOrError.<GridArea>either(err -> makeErrorDisplay(err),
+                recordSet -> 
+                    new TableDataDisplay(recordSet, table.getDisplayMessageWhenEmpty(), () -> {
+                        parent.modified();
+                        Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
+                    })
+                );
         Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu());
 
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
@@ -410,7 +488,7 @@ public class TableDisplay implements TableDisplayBase
         Label title = new Label(table.getId().getOutput());
         GUI.showTooltipWhenAbbrev(title);
         Utility.addStyleClass(title, "table-title");
-        header = new HBox(actionsButton, title, spacer);
+        header = new HBox(actionsButton, title);
         header.getChildren().add(addButton);
         Utility.addStyleClass(header, "table-header");
 
@@ -423,16 +501,19 @@ public class TableDisplay implements TableDisplayBase
     }
 
     @RequiresNonNull({"parent", "table"})
-    private Node makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, StyledString err)
+    private GridArea makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, StyledString err)
     {
+        return new GridArea(new MessageWhenEmpty(err));
+        /* TODO have a floating message with the below
         if (table instanceof TransformationEditable)
             return new VBox(new TextFlow(err.toGUI().toArray(new Node[0])), GUI.button("transformation.edit", () -> parent.editTransform((TransformationEditable)table)));
         else
             return new TextFlow(err.toGUI().toArray(new Node[0]));
+            */
     }
 
-    @RequiresNonNull("mostRecentBounds")
-    private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
+    @RequiresNonNull({"mostRecentBounds", "tableDataDisplay"})
+    private void updateMostRecentBounds(@UnknownInitialization(Object.class) TableDisplay this)
     {
         mostRecentBounds.set(tableDataDisplay.getPosition());
     }
@@ -624,5 +705,17 @@ public class TableDisplay implements TableDisplayBase
                     return null;
             });
         }
+    }
+
+    public static interface ValueLoadSave
+    {
+        @OnThread(Tag.FXPlatform)
+        void fetchEditorKit(CellPosition cellPosition, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit);
+    }
+
+    public interface EditorKitCallback
+    {
+        @OnThread(Tag.FXPlatform)
+        public void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit);
     }
 }

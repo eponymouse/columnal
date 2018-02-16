@@ -149,7 +149,7 @@ public class StableView
                 if (columns != null && colIndex < columns.size())
                 {
                     columns.get(colIndex).columnHandler.fetchValue(rowIndex, b -> {
-                    }, relinquishFocus, setEditorKit, -1, -1);
+                    }, relinquishFocus, setEditorKit);
                 }
             }
         }, pos -> tableEditable && columns.get(pos.columnIndex).columnHandler.isEditable(), hbar, vbar)
@@ -511,7 +511,7 @@ public class StableView
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
+        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent);
 
         // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);
@@ -673,6 +673,11 @@ public class StableView
         public final ColumnId getColumnId()
         {
             return columnId;
+        }
+        
+        public final ColumnHandler getColumnHandler()
+        {
+            return columnHandler;
         }
     }
 }

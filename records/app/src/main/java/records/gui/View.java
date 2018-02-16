@@ -55,6 +55,10 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridLineSupplier;
+import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplierIndividual;
+import records.gui.stf.StructuredTextField;
 import records.transformations.TransformationEditable;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
@@ -85,6 +89,9 @@ public class View extends StackPane
     private final VirtualGrid mainPane;
     private final Pane overlayPane;
     private final Pane snapGuidePane;
+    // The STF supplier for the main pane:
+    private final VirtualGridSupplierIndividual<StructuredTextField> dataCellSupplier = new DataCellSupplier();
+    
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
     // use two panes: one which is invisible for the mouse events, and one for the
@@ -201,7 +208,11 @@ public class View extends StackPane
         {
             save();
             //overlays.remove(t); // Listener removes them from display
-            mainPane.removeTable(t.getDisplay());
+            TableDisplay display = (TableDisplay) t.getDisplay();
+            if (display != null)
+            {
+                dataCellSupplier.removeGrid(display.getGridArea());
+            }
             emptyListener.consume(remainingCount == 0);
         });
     }
@@ -248,6 +259,11 @@ public class View extends StackPane
     public double getSensibleMaxTableHeight()
     {
         return getHeight();
+    }
+
+    public VirtualGrid getGrid()
+    {
+        return mainPane;
     }
 
     // Basically a pair of a double value for snapping to (X or Y determined by context),
@@ -618,6 +634,8 @@ public class View extends StackPane
             }
         });
         mainPane = new VirtualGrid();
+        mainPane.addNodeSupplier(new VirtualGridLineSupplier());
+        mainPane.addNodeSupplier(dataCellSupplier);
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
         snapGuidePane = new Pane();
@@ -743,7 +761,8 @@ public class View extends StackPane
 
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
-        mainPane.addTable(tableDisplay);
+        dataCellSupplier.addGrid(tableDisplay.getGridArea(), tableDisplay.getDataGridCellInfo());
+        tableDisplay.getGridArea().addedToGrid(mainPane);
     }
 
     private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)

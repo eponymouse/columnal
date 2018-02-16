@@ -42,7 +42,8 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait
         write(tableId.getRaw());
         push(KeyCode.ENTER);
 
-        NodeQuery tableMenuButton = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay)t).getTable().getId().equals(tableId)).lookup(".id-tableDisplay-menu-button");
+        // TODO this lookup is not unique
+        NodeQuery tableMenuButton = lookup(".id-tableDisplay-menu-button");
         scrollTo(tableMenuButton);
         @SuppressWarnings("nullness") // Will throw if null and fail test, which is fine
         @NonNull Node button = tableMenuButton.<Node>query();

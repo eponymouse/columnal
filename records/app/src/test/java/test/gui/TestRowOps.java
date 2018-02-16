@@ -21,6 +21,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.NodeQuery;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
@@ -36,6 +37,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.TableDisplay;
+import records.gui.grid.VirtualGrid;
 import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stf.StructuredTextField;
 import records.transformations.Sort;
@@ -107,11 +109,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
         Table srcData = new ImmediateDataSource(manager, new EditableRecordSet(expressionValue.recordSet));
-        srcData.loadPosition(Either.left(new BoundingBox(0, 0, 200, 600)));
+        srcData.loadPosition(new CellPosition(1, 1));
         manager.record(srcData);
 
         Table calculated = new Transform(manager, null, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
-        calculated.loadPosition(Either.left(new BoundingBox(250, 0, 200, 600)));
+        calculated.loadPosition(new CellPosition(1, 2 + expressionValue.recordSet.getColumns().size()));
         manager.record(calculated);
 
         TestUtil.openDataAsTable(windowToUse, manager).get();
@@ -175,12 +177,12 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         TableManager manager = srcDataAndMgr.mgr;
         Table srcData = srcDataAndMgr.data.get(0);
-        TestUtil.sim_(() -> srcData.loadPosition(Either.left(new BoundingBox(0, 0, 300, 600))));
+        TestUtil.sim_(() -> srcData.loadPosition(new CellPosition(1, 1)));
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         Table calculated = TestUtil.sim(() -> new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName())));
         TestUtil.sim(() -> {
-            calculated.loadPosition(Either.left(new BoundingBox(350, 0, 300, 600)));
+            calculated.loadPosition(new CellPosition(1, 2 + srcData.getData().getColumns().size()));
             manager.record(calculated);
             try
             {
@@ -389,7 +391,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @OnThread(Tag.Any)
     private NodeQuery queryTableDisplay(TableId id)
     {
-        return lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id));
+        // TODO This is broken in new scheme
+        return lookup(".tableDisplay");
     }
 
     @OnThread(Tag.Any)
@@ -400,11 +403,12 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         //write(id.getRaw());
         //push(KeyCode.ENTER);
 
-        Node tableDisplay = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id)).query();
+        Node tableDisplay = queryTableDisplay(id).query();
         if (tableDisplay == null)
             throw new RuntimeException("Table " + id + " not found");
         @NonNull Node tableDisplayFinal = tableDisplay;
-        VirtScrollStrTextGrid grid = TestUtil.fx(() -> ((TableDisplay)tableDisplayFinal)._test_getGrid());
+        // TODO this is broken:
+        VirtualGrid grid = TestUtil.fx(() -> ((TableDisplay)(Object)tableDisplayFinal)._test_getGrid());
         Node cell = from(TestUtil.fx(() -> grid.getNode())).lookup(".virt-grid-cell").<Node>query();
         if (cell != null)
             clickOn(cell);

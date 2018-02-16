@@ -19,6 +19,7 @@ import records.grammar.MainLexer;
 import records.grammar.MainParser.DisplayContext;
 import records.grammar.MainParser.ItemContext;
 import records.loadsave.OutputBuilder;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -242,7 +243,7 @@ public abstract class Table
         {
             prevPosition = display.getPosition();
         }
-        out.t(MainLexer.POSITION).d(prevPosition.columnIndex).d(prevPosition.rowIndex).nl();
+        out.t(MainLexer.POSITION).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
         out.t(MainLexer.SHOWCOLUMNS);
         switch (showColumns.getFirst())
         {
@@ -329,6 +330,13 @@ public abstract class Table
         {
             this.noColumns = TranslationUtility.getString(noColumnsKey);
             this.noRows = TranslationUtility.getString(noRowsKey);
+        }
+        
+        @SuppressWarnings("localized")
+        public MessageWhenEmpty(StyledString err)
+        {
+            this.noColumns = err.toPlain();
+            this.noRows = noColumns;
         }
 
         /** Message to show when the table has no columns */

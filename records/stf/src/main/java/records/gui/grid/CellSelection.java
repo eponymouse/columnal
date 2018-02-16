@@ -1,6 +1,8 @@
 package records.gui.grid;
 
 import records.data.CellPosition;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * A selection of cells.  This might be, for example:
@@ -9,6 +11,7 @@ import records.data.CellPosition;
  * - The entire table
  * - A rectangular grid of cells within the table of at least 1x1
  */
+@OnThread(Tag.FXPlatform)
 public interface CellSelection
 {
     // Primary selection means the single cell/row/column being moved around,
