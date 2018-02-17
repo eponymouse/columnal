@@ -157,6 +157,12 @@ public class EditableRecordSet extends RecordSet
                 }
                 return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new ListExList(Collections.emptyList())), ListEx.class));
             }
+
+            @Override
+            public EditableColumn inferred(GetValue<String> g) throws InternalException, UserException
+            {
+                return new InferTypeColumn(rs, original.getName(), getAll(g));
+            }
         });
     }
 

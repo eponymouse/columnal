@@ -28,6 +28,7 @@ import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
@@ -178,7 +179,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void clickForDataTypeDialog(Node root, DataType dataType, @Nullable @Value Object initialValue) throws InternalException, UserException
     {
-        dataType.apply(new DataTypeVisitor<Void>()
+        dataType.apply(new ConcreteDataTypeVisitor<Void>()
         {
             @SuppressWarnings("nullness") // We'll accept the exception as it will fail the test
             private void clickOnSubOfDataTypeDialog(String subQuery)

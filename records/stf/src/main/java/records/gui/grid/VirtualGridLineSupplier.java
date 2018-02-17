@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 import threadchecker.OnThread;
@@ -18,7 +19,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     private final HashMap<Double, Line> yLinesInUse = new HashMap<>();
     
     @Override
-    void layoutItems(Pane container, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
         // TODO this whole method is inefficient, it will discard all lines every time we scroll both directions
 
@@ -37,7 +38,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             if (line == null)
             {
                 line = new Line(x, 0, x, 0);
-                container.getChildren().add(line);
+                containerChildren.add(line);
                 xLinesInUse.put(x, line);
             }
             line.setStartY(lowestY);
@@ -52,7 +53,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             if (line == null)
             {
                 line = new Line(0, y, 0, y);
-                container.getChildren().add(line);
+                containerChildren.add(line);
                 yLinesInUse.put(y, line);
             }
             line.setStartX(lowestX);

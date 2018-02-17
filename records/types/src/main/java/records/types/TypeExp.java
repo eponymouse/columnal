@@ -228,6 +228,12 @@ public abstract class TypeExp implements StyledShowable
             {
                 return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src) : fromConcrete(src, inner));
             }
+
+            @Override
+            public TypeExp toInfer() throws InternalException, InternalException
+            {
+                return new MutVar(src);
+            }
         });
     }
 

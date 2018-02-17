@@ -305,6 +305,12 @@ public class TypeManager
                     }
 
                     @Override
+                    public UnitType toInfer() throws InternalException, UserException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
                     public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                     {
                         if (!topLevel)

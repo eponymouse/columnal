@@ -11,6 +11,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
+import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
@@ -142,7 +143,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
     private Pair<List<@Value Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<Pair<List<@Value Object>, Expression>>()
+        return type.apply(new ConcreteDataTypeVisitor<Pair<List<@Value Object>, Expression>>()
         {
             @Override
             @OnThread(value = Tag.Simulation,ignoreParent = true)

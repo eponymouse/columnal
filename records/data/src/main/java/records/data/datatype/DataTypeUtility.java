@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
  */
 public class DataTypeUtility
 {
+    /*
     public static @Value Object generateExample(DataType type, int index) throws UserException, InternalException
     {
         return type.apply(new DataTypeVisitor<@Value Object>()
@@ -108,6 +109,7 @@ public class DataTypeUtility
             }
         });
     }
+    */
 
     @OnThread(Tag.Simulation)
     @SuppressWarnings("unchecked")
@@ -162,6 +164,12 @@ public class DataTypeUtility
             public ColumnStorage<?> array(@Nullable DataType inner) throws InternalException
             {
                 return new ArrayColumnStorage(inner, (BeforeGet<ArrayColumnStorage>)beforeGet);
+            }
+
+            @Override
+            public ColumnStorage<?> toInfer() throws InternalException, InternalException
+            {
+                throw new InternalException("Should not be trying to make inner storage for infer type");
             }
         });
     }
@@ -315,6 +323,12 @@ public class DataTypeUtility
             public String text() throws InternalException, UserException
             {
                 return "\"" + GrammarUtility.escapeChars(item.toString()) + "\"";
+            }
+
+            @Override
+            public String toInfer() throws InternalException, UserException
+            {
+                return text();
             }
 
             @Override
@@ -493,6 +507,12 @@ public class DataTypeUtility
             public @Value Object array(@Nullable DataType inner) throws InternalException, InternalException
             {
                 return DataTypeUtility.value(Collections.emptyList());
+            }
+
+            @Override
+            public @Value Object toInfer() throws InternalException, InternalException
+            {
+                return DataTypeUtility.value("");
             }
         });
     }

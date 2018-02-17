@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.NumberInfo;
@@ -241,7 +242,7 @@ public class PropTypecheck
      */
     private DataType blankArray(DataType original, Random r) throws UserException, InternalException
     {
-        return original.apply(new DataTypeVisitor<DataType>()
+        return original.apply(new ConcreteDataTypeVisitor<DataType>()
         {
             @Override
             public DataType number(NumberInfo displayInfo) throws InternalException, UserException
@@ -292,7 +293,7 @@ public class PropTypecheck
 
     private DataTypeValue toValue(@NonNull DataType t) throws UserException, InternalException
     {
-        return t.apply(new DataTypeVisitor<DataTypeValue>()
+        return t.apply(new ConcreteDataTypeVisitor<DataTypeValue>()
         {
             @Override
             public DataTypeValue number(NumberInfo displayInfo) throws InternalException, UserException

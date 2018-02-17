@@ -26,7 +26,7 @@ import java.util.function.Predicate;
 @OnThread(Tag.FXPlatform)
 public abstract class VirtualGridSupplier<T extends Node>
 {
-    abstract void layoutItems(Pane container, VisibleDetails rowBounds, VisibleDetails columnBounds);
+    abstract void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds);
     
     // Used for both rows and columns, to specify visible extends and divider positions
     public static abstract class VisibleDetails

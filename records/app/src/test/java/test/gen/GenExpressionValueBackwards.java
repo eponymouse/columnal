@@ -18,6 +18,7 @@ import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.MemoryTupleColumn;
 import records.data.RecordSet;
+import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
@@ -157,7 +158,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     @SuppressWarnings("valuetype")
     private Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<Expression>()
+        return type.apply(new ConcreteDataTypeVisitor<Expression>()
         {
             @Override
             @OnThread(Tag.Simulation)
@@ -693,7 +694,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     private Expression columnRef(DataType type, @Value Object value)
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
-        columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
+        columns.add(rs -> type.apply(new ConcreteDataTypeVisitor<Column>()
         {
             @Override
             @OnThread(Tag.Simulation)

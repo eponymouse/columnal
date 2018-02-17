@@ -385,6 +385,12 @@ public class TableDisplayUtility
             {
                 return ImmutableList.of("stf-cell-array");
             }
+
+            @Override
+            public ImmutableList<String> toInfer() throws InternalException, InternalException
+            {
+                return ImmutableList.of("stf-cell-infer");
+            }
         });
     }
 
@@ -403,6 +409,12 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
                 return new GetValueAndComponent<@Value String>(g, TextEntry::new);
+            }
+
+            @Override
+            public GetValueAndComponent<?> inferred(GetValue<String> g) throws InternalException, InternalException
+            {
+                return new GetValueAndComponent<@Value String>(g, InferTypeEntry::new);
             }
 
             @Override
@@ -557,6 +569,12 @@ public class TableDisplayUtility
             public Component<@NonNull @Value ?> bool() throws InternalException
             {
                 return new BoolComponent(parents, (Boolean)value);
+            }
+
+            @Override
+            public Component<@NonNull @Value ?> toInfer() throws InternalException, InternalException
+            {
+                return new InferTypeEntry(parents, value == null ? "" : (String)value);
             }
 
             @Override

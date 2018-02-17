@@ -736,6 +736,12 @@ public class TestUtil
                     registerAllTaggedTypes(typeManager, inner);
                 return null;
             }
+
+            @Override
+            public @Nullable Void toInfer() throws InternalException, UserException
+            {
+                return null;
+            }
         });
     }
 
@@ -1058,6 +1064,13 @@ public class TestUtil
             public UnitType typeVariable(String typeVariableName) throws InternalException, InternalException
             {
                 fail("Found type variable in type: " + dataType);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType toInfer() throws InternalException, InternalException
+            {
+                fail("Found automatic type in type: " + dataType);
                 return UnitType.UNIT;
             }
         });

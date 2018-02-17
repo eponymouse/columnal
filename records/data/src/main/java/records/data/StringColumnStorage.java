@@ -92,19 +92,24 @@ public class StringColumnStorage implements ColumnStorage<String>
                 @Override
                 public @OnThread(Tag.Simulation) void set(int index, @Value String value) throws InternalException
                 {
-                    if (index == values.size())
-                    {
-                        values.add(pool.pool(value));
-
-                    }
-                    else
-                    {
-                        values.set(index, pool.pool(value));
-                    }
+                    setValue(index, value);
                 }
             });
         }
         return dataType;
+    }
+
+    public void setValue(int index, @Value String value) throws InternalException
+    {
+        if (index == values.size())
+        {
+            values.add(pool.pool(value));
+
+        }
+        else
+        {
+            values.set(index, pool.pool(value));
+        }
     }
 
     @Override

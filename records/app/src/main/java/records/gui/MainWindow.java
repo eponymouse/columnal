@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
@@ -13,9 +14,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
+import records.data.InferTypeColumn;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -194,8 +197,8 @@ public class MainWindow
         Workers.onWorkerThread("Create new table", Priority.SAVE_ENTRY, () -> {
             try
             {
-                EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), () -> 0);
-                ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
+                EditableRecordSet newRecordSet = new EditableRecordSet(Collections.singletonList(rs -> new InferTypeColumn(rs, new ColumnId("C1"), ImmutableList.of(""))), () -> 0);
+                ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), newRecordSet);
                 v.getManager().record(ds);
             }
             catch (InternalException | UserException ex)

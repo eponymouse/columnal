@@ -29,7 +29,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
     private final List<T> spareItems = new ArrayList<>();
 
     // package-visible
-    void layoutItems(Pane container, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<CellPosition, T>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
@@ -75,7 +75,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
                     else
                     {
                         cell = makeNewItem();
-                        container.getChildren().add(cell);
+                        containerChildren.add(cell);
                     }
 
                     visibleItems.put(cellPosition, cell);
@@ -92,7 +92,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
         int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(rowBounds.lastItemIncl - rowBounds.firstItemIncl + 1, columnBounds.lastItemIncl - columnBounds.firstItemIncl + 1);
 
         while (spareItems.size() > maxSpareCells)
-            container.getChildren().remove(spareItems.remove(spareItems.size() - 1));
+            containerChildren.remove(spareItems.remove(spareItems.size() - 1));
 
         for (T spareCell : spareItems)
         {

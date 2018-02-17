@@ -12,6 +12,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.TaggedValue;
+import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.time.temporal.TemporalAccessor;
@@ -45,6 +46,11 @@ public class DataTypeValue extends DataType
         this.getBoolean = getBoolean;
         this.getTag = getTag;
         this.getArrayContent = getArrayContent;
+    }
+    
+    public static DataTypeValue toInfer(GetValue<@Value String> getValue)
+    {
+        return new DataTypeValue(Kind.TO_INFER, null, null, null, null, null, getValue, null, null, null, null);
     }
 
     public static DataTypeValue bool(GetValue<@Value Boolean> getValue)
@@ -104,6 +110,14 @@ public class DataTypeValue extends DataType
             public Void text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 g.set(rowIndex, (String)value);
+                return null;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void inferred(GetValue<@Value String> g) throws InternalException, UserException
+            {
+                g.set(rowIndex, Utility.cast(value, String.class));
                 return null;
             }
 
@@ -243,6 +257,12 @@ public class DataTypeValue extends DataType
         {
             return defaultOp("Unexpected array type");
         }
+
+        @Override
+        public R inferred(GetValue<String> g) throws InternalException, UserException
+        {
+            return defaultOp("Unexpected inferred type");
+        }
     }
 
     public static interface DataTypeVisitorGetEx<R, E extends Throwable>
@@ -258,6 +278,9 @@ public class DataTypeValue extends DataType
         // Each item is a pair of size and accessor.  The inner type gives the type
         // of each entry (but is null when the array is empty)
         R array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
+        
+        // If we are inferring column type, values are strings and type is unknown:
+        R inferred(GetValue<@Value String> g) throws InternalException, E;
     }
 
     public static interface DataTypeVisitorGet<R> extends DataTypeVisitorGetEx<R, UserException>
@@ -287,6 +310,8 @@ public class DataTypeValue extends DataType
             case ARRAY:
                 DataType arrayType = memberType.get(0);
                 return visitor.array(arrayType, getArrayContent);
+            case TO_INFER: // This means we are inferring, so it is text in the mean time:
+                return visitor.inferred(getText);
             default:
                 throw new InternalException("Missing kind case");
         }
@@ -341,6 +366,13 @@ public class DataTypeValue extends DataType
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object text(GetValue<@Value String> g) throws InternalException, UserException
+            {
+                return g.get(index);
+            }
+            
+            @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
+            public @Value Object inferred(GetValue<String> g) throws InternalException, UserException
             {
                 return g.get(index);
             }

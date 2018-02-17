@@ -443,7 +443,7 @@ public class VirtualGrid
     }
 
     @OnThread(Tag.FXPlatform)
-    private class Container extends Pane
+    private class Container extends Region
     {
         private final Rectangle clip;
 
@@ -609,7 +609,7 @@ public class VirtualGrid
 
             for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
             {
-                nodeSupplier.layoutItems(this, rowBounds, columnBounds);
+                nodeSupplier.layoutItems(getChildren(), rowBounds, columnBounds);
             }
             
             updateClip();
