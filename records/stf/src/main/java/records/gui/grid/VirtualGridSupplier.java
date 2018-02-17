@@ -51,9 +51,9 @@ public abstract class VirtualGridSupplier<T extends Node>
     public static abstract class VisibleDetails
     {
         // Index of the first column/row visible (inclusive)
-        protected int firstItemIncl;
+        public final int firstItemIncl;
         // Index of the last column/row visible (inclusive)
-        protected int lastItemIncl;
+        public final int lastItemIncl;
 
         public VisibleDetails(int firstItemIncl, int lastItemIncl)
         {
@@ -63,6 +63,6 @@ public abstract class VirtualGridSupplier<T extends Node>
 
         // The X/Y position of the left/top of the given item index
         @OnThread(Tag.FXPlatform)
-        protected abstract double getItemCoord(int itemIndex);
+        public abstract double getItemCoord(int itemIndex);
     }
 }

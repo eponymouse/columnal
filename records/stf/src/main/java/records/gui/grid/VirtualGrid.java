@@ -593,7 +593,7 @@ public class VirtualGrid
             VisibleDetails columnBounds = new VisibleDetails(firstDisplayCol, lastDisplayColExcl - 1)
             {
                 @Override
-                protected double getItemCoord(int itemIndex)
+                public double getItemCoord(int itemIndex)
                 {
                     return firstVisibleColumnOffset + sumColumnWidths(firstDisplayCol, itemIndex);
                 }
@@ -601,7 +601,7 @@ public class VirtualGrid
             VisibleDetails rowBounds = new VisibleDetails(firstDisplayRow, lastDisplayRowExcl - 1)
             {
                 @Override
-                protected double getItemCoord(int itemIndex)
+                public double getItemCoord(int itemIndex)
                 {
                     return firstVisibleRowOffset + rowHeight * (itemIndex - firstDisplayRow);
                 }

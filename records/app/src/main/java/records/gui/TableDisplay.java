@@ -5,6 +5,8 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.BoundingBox;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -43,6 +45,8 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.StableView.ColumnDetails;
@@ -103,6 +107,7 @@ public class TableDisplay implements TableDisplayBase
     private final Table table;
     private final View parent;
     private final GridArea tableDataDisplay;
+    private final ColumnHeaderSupplier columnHeaderSupplier;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
@@ -262,6 +267,7 @@ public class TableDisplay implements TableDisplayBase
         // Not final because it changes if user changes the display item:
         private ImmutableList<ColumnDetails> displayColumns;
         private ImmutableList<ColumnDetails> columns;
+        private final List<FloatingItem<Label>> headerItems = new ArrayList<>();
 
         @SuppressWarnings("initialization")
         @UIEffect
@@ -425,9 +431,43 @@ public class TableDisplay implements TableDisplayBase
             };
         }
 
+        @OnThread(Tag.FXPlatform)
         public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
         {
+            // Remove old columns:
+            headerItems.forEach(columnHeaderSupplier::removeItem);
+            headerItems.clear();
             this.columns = columns;
+            for (ColumnDetails column : columns)
+            {
+                // TODO should be two, one for name, one for type.
+                FloatingItem<Label> item = new FloatingItem<Label>() {                    
+                    @Override
+                    @OnThread(Tag.FXPlatform)
+                    public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+                    {
+                        // TODO make it float in position when scrolled down
+                        double x = columnBounds.getItemCoord(getPosition().columnIndex);
+                        double y = rowBounds.getItemCoord(getPosition().rowIndex);
+                        return Optional.of(new BoundingBox(
+                            x,
+                            y,
+                            columnBounds.getItemCoord(getPosition().columnIndex + 1) - x,
+                            rowBounds.getItemCoord(getPosition().rowIndex + 1) - y
+                        ));
+                    }
+
+                    @Override
+                    @OnThread(Tag.FXPlatform)
+                    public void useCell(Label item)
+                    {
+                        item.setText(column.getColumnId().getOutput());
+                    }
+                };
+                headerItems.add(item);
+                columnHeaderSupplier.addItem(item);
+            }
+            
             super.updateParent();
             
         }
@@ -458,10 +498,11 @@ public class TableDisplay implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
-    public TableDisplay(View parent, Table table)
+    public TableDisplay(View parent, ColumnHeaderSupplier columnHeaderSupplier, Table table)
     {
         this.parent = parent;
         this.table = table;
+        this.columnHeaderSupplier = columnHeaderSupplier;
         Either<StyledString, RecordSet> recordSetOrError;
         try
         {

@@ -57,6 +57,7 @@ import records.error.UserException;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.stf.StructuredTextField;
 import records.transformations.TransformationEditable;
@@ -90,7 +91,9 @@ public class View extends StackPane
     private final Pane overlayPane;
     private final Pane snapGuidePane;
     // The STF supplier for the main pane:
-    private final VirtualGridSupplierIndividual<StructuredTextField> dataCellSupplier = new DataCellSupplier();
+    private final DataCellSupplier dataCellSupplier = new DataCellSupplier();
+    // The column header supplier:
+    private final ColumnHeaderSupplier columnHeaderSupplier = new ColumnHeaderSupplier();
     
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
@@ -636,6 +639,7 @@ public class View extends StackPane
         mainPane = new VirtualGrid();
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
+        mainPane.addNodeSupplier(columnHeaderSupplier);
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
         snapGuidePane = new Pane();
@@ -729,7 +733,7 @@ public class View extends StackPane
     {
         Platform.runLater(() -> {
             emptyListener.consume(false);
-            addDisplay(new TableDisplay(this, data), null);
+            addDisplay(new TableDisplay(this, columnHeaderSupplier, data), null);
             save();
         });
     }
@@ -740,7 +744,7 @@ public class View extends StackPane
         Platform.runLater(() ->
         {
             emptyListener.consume(false);
-            TableDisplay tableDisplay = new TableDisplay(this, transformation);
+            TableDisplay tableDisplay = new TableDisplay(this, columnHeaderSupplier, transformation);
             addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
 
             List<TableDisplay> sourceDisplays = new ArrayList<>();
