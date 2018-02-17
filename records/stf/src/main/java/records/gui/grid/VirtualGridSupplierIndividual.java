@@ -16,11 +16,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+/**
+ * An implementation of {@link VirtualGridSupplier} that has one node per cell position, and re-uses
+ * nodes when scrolling occurs.  Can be used by multiple grid-areas
+ * @param <T>
+ */
 @OnThread(Tag.FXPlatform)
 public abstract class VirtualGridSupplierIndividual<T extends Node> extends VirtualGridSupplier<T>
 {
+    // Maximum extra rows/cols to keep as spare cells
     private static final int MAX_EXTRA_ROW_COLS = 4;
 
+    // Each grid area that we are handling
     private final Map<GridArea, GridCellInfo<T>> gridAreas = new IdentityHashMap<>();
 
     // All items that are currently in the parent container and laid out properly:
@@ -29,7 +36,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
     private final List<T> spareItems = new ArrayList<>();
 
     // package-visible
-    void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    final void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<CellPosition, T>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
@@ -100,24 +107,33 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
         }
     }
 
+    // Make a new cell.
     protected abstract T makeNewItem();
 
+    // Can be over-ridden by subclasses.
     protected void resetForReuse(T cell)
     {
     }
 
+    // Keep item in children, but make it invisible
     private void hideItem(T spareCell)
     {
         spareCell.relocate(-1000, -1000);
         spareCell.setVisible(false);
     }
 
-    public void addGrid(GridArea gridArea, GridCellInfo<T> gridCellInfo)
+    /**
+     * Adds the grid (and its associated info) to being managed by this supplier.
+     */
+    public final void addGrid(GridArea gridArea, GridCellInfo<T> gridCellInfo)
     {
         gridAreas.put(gridArea, gridCellInfo);
     }
 
-    public void removeGrid(GridArea gridArea)
+    /**
+     * Removes the grid from being used for this supplier.
+     */
+    public final void removeGrid(GridArea gridArea)
     {
         gridAreas.remove(gridArea);
     }
@@ -127,8 +143,13 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
     @OnThread(Tag.FXPlatform)
     public static interface GridCellInfo<T>
     {
+        // Does the GridArea have a cell at the given position?  No assumptions are made
+        // about contiguity of grid areas.
         public boolean hasCellAt(CellPosition cellPosition);
 
+        // Takes a cell, a position, a check for whether the cell is still in that position (useful
+        // if you hop thread and back to detect scrolls in the mean time), then sets the content
+        // of that cell to match whatever should be shown at that position.
         public void useCellFor(T item, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck);
     }
 }
