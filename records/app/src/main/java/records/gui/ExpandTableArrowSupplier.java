@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformFunction;
 import utility.FXPlatformSupplier;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -62,8 +63,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
 
             @Override
-            public void useCellFor(Button item, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck)
+            public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell)
             {
+                @Nullable Button item = getCell.apply(cellPosition);
+                if (item == null)
+                    return;
+                
                 if (hasAddColumnArrow(cellPosition))
                 {
                     item.setVisible(true);

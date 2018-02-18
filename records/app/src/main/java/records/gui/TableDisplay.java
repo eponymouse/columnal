@@ -258,9 +258,9 @@ public class TableDisplay implements TableDisplayBase
                 }
 
                 @Override
-                public void useCellFor(StructuredTextField item, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck)
+                public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
                 {
-
+                    
                 }
             };
     }
@@ -354,10 +354,12 @@ public class TableDisplay implements TableDisplayBase
                 }
 
                 @Override
-                public void useCellFor(StructuredTextField cell, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck)
+                public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
                 {
                     // Blank then queue fetch:
-                    cell.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
+                    StructuredTextField orig = getCell.apply(cellPosition);
+                    if (orig != null)
+                        orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
                     int columnIndexWithinTable = cellPosition.columnIndex - TableDisplay.this.getPosition().columnIndex;
                     int rowIndexWithinTable = cellPosition.rowIndex - (TableDisplay.this.getPosition().rowIndex + HEADER_ROWS);
                     if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
@@ -367,7 +369,9 @@ public class TableDisplay implements TableDisplayBase
                             b -> {},
                             c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, TableDataDisplay.this)),
                             (rowIndex, colIndex, editorKit) -> {
-                                if (samePositionCheck.get())
+                                // The rowIndex and colIndex are in table data terms, so we must translate:
+                                @Nullable StructuredTextField cell = getCell.apply(new CellPosition(TableDisplay.this.getPosition().rowIndex + HEADER_ROWS + rowIndex, getPosition().columnIndex + colIndex));
+                                if (cell != null)
                                     cell.resetContent(editorKit);
                             }
                         );

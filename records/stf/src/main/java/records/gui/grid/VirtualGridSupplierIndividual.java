@@ -2,9 +2,11 @@ package records.gui.grid;
 
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformFunction;
 import utility.FXPlatformSupplier;
 
 import java.util.ArrayList;
@@ -86,8 +88,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
                     }
 
                     visibleItems.put(cellPosition, cell);
-                    T cellFinal = cell;
-                    gridForItem.get().useCellFor(cell, cellPosition, () -> visibleItems.get(cellPosition) == cellFinal);
+                    gridForItem.get().fetchFor(cellPosition, pos -> visibleItems.get(pos));
                 }
                 cell.setVisible(true);
                 double nextX = columnBounds.getItemCoord(columnIndex + 1);
@@ -147,9 +148,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
         // about contiguity of grid areas.
         public boolean hasCellAt(CellPosition cellPosition);
 
-        // Takes a cell, a position, a check for whether the cell is still in that position (useful
-        // if you hop thread and back to detect scrolls in the mean time), then sets the content
-        // of that cell to match whatever should be shown at that position.
-        public void useCellFor(T item, CellPosition cellPosition, FXPlatformSupplier<Boolean> samePositionCheck);
+        // Takes a position,then sets the content of that cell to match whatever should
+        // be shown at that position.  The callback lets you fetch the right cell now or in the
+        // future (it may change after this call, if you are thread-hopping you should check again).
+        public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable T> getCell);
     }
 }
