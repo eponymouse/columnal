@@ -448,6 +448,11 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
         {
+            if (startRowIncl < currentKnownRows)
+            {
+                currentKnownRows += addedRowsCount - removedRowsCount;
+            }
+            currentKnownRowsIsFinal = false;
             updateParent();
             onModify.run();
         }
