@@ -74,14 +74,20 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
         for (Iterator<Entry<Integer, Line>> iterator = xLinesInUse.entrySet().iterator(); iterator.hasNext(); )
         {
             Entry<Integer, Line> integerLineEntry = iterator.next();
-            if (!linesToKeep.contains(integerLineEntry.getKey()))
+            if (!linesToKeep.contains(integerLineEntry.getValue()))
+            {
+                containerChildren.remove(integerLineEntry.getValue());
                 iterator.remove();
+            }
         }
         for (Iterator<Entry<Integer, Line>> iterator = yLinesInUse.entrySet().iterator(); iterator.hasNext(); )
         {
             Entry<Integer, Line> integerLineEntry = iterator.next();
-            if (!linesToKeep.contains(integerLineEntry.getKey()))
+            if (!linesToKeep.contains(integerLineEntry.getValue()))
+            {
+                containerChildren.remove(integerLineEntry.getValue());
                 iterator.remove();
+            }
         }
     }
 }

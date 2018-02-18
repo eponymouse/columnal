@@ -659,12 +659,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         }
     }
 
-    @Override
-    public @OnThread(Tag.FXPlatform) void columnsChanged()
-    {
-        //Not sure we care that what we are bound to has had its columns changed.
-    }
-
     public int _test_getFirstLogicalVisibleRowIncl()
     {
         // This is first row with middle visible, so check for that:

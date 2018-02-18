@@ -87,7 +87,7 @@ public class ScrollGroup
             smoothScrollY.smoothScroll(deltaY);
     }
 
-    void add(ScrollBindable scrollBindable, ScrollLock scrollLock)
+    public void add(ScrollBindable scrollBindable, ScrollLock scrollLock)
     {
         directScrollDependents.put(scrollBindable, scrollLock);
         // TODO we need to set the scroll to right place immediately

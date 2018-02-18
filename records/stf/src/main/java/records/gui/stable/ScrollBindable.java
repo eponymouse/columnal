@@ -6,15 +6,11 @@ import threadchecker.Tag;
 import utility.Pair;
 
 // An item which can have its scrolling bound to VirtScrollStrTextGrid
-//package-visible
-interface ScrollBindable
+public interface ScrollBindable
 {
     @OnThread(Tag.FXPlatform)
     public void showAtOffset(@Nullable Pair<Integer, Double> rowAndPixelOffset, @Nullable Pair<Integer, Double> colAndPixelOffset);
 
     @OnThread(Tag.FXPlatform)
     public void updateClip();
-
-    @OnThread(Tag.FXPlatform)
-    public void columnsChanged();
 }

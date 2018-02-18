@@ -22,6 +22,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,8 +32,10 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollResult;
+import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -47,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 
 @OnThread(Tag.FXPlatform)
-public class VirtualGrid
+public class VirtualGrid implements ScrollBindable
 {
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
@@ -149,7 +152,7 @@ public class VirtualGrid
         }
                 , FXUtility.mouse(this)::scrollLayoutYBy
                 , y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight)));
-        
+        scrollGroup.add(FXUtility.mouse(this), ScrollLock.BOTH);
     }
     
     private @Nullable CellSelection getCellPositionAt(double x, double y)
@@ -197,6 +200,57 @@ public class VirtualGrid
                 return 5;
             }
         });
+    }
+
+    // This is the canonical scroll method which all scroll
+    // attempts should pass through, to avoid duplicating the
+    // update code
+    @Override
+    public void showAtOffset(@Nullable Pair<Integer, Double> rowAndPixelOffset, @Nullable Pair<Integer, Double> colAndPixelOffset)
+    {
+        if (rowAndPixelOffset != null)
+        {
+            int row = rowAndPixelOffset.getFirst();
+            double rowPixelOffset = rowAndPixelOffset.getSecond();
+            if (row < 0)
+            {
+                row = 0;
+                // Can't scroll above top of first item:
+                rowPixelOffset = 0.0;
+            }
+            else if (row > Math.max(0, currentKnownRows.get() - 1))
+            {
+                // Can't scroll beyond showing the last cell at the top of the window:
+                row = Math.max(0, currentKnownRows.get() - 1);
+                rowPixelOffset = 0;
+            }
+            this.firstVisibleRowOffset = rowPixelOffset;
+            this.firstVisibleRowIndex = row;
+            updateVBar();
+
+            boolean atTop = firstVisibleRowIndex == 0 && firstVisibleRowOffset >= -5;
+            //FXUtility.setPseudoclass(glass, "top-shadow", !atTop);
+        }
+        if (colAndPixelOffset != null)
+        {
+            int col = colAndPixelOffset.getFirst();
+            if (col < 0)
+                col = 0;
+
+            this.firstVisibleColumnOffset = colAndPixelOffset.getSecond();
+            this.firstVisibleColumnIndex = col;
+            updateHBar();
+
+            boolean atLeft = firstVisibleColumnIndex == 0 && firstVisibleColumnOffset >= -5;
+            //FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
+        }
+        container.redoLayout();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void updateClip()
+    {
+        container.updateClip();
     }
 
     // This scrolls just the layout, without smooth scrolling
@@ -396,8 +450,8 @@ public class VirtualGrid
 
     public void positionOrAreaChanged(GridArea child)
     {
+        // This calls container.redoLayout():
         updateSizeAndPositions();
-        container.redoLayout();
     }
 
     public int _test_getFirstLogicalVisibleRowIncl()
@@ -627,8 +681,9 @@ public class VirtualGrid
             {
                 nodeSupplier.layoutItems(getChildren(), rowBounds, columnBounds);
             }
+            Log.debug("Children: " + getChildren().size());
             
-            updateClip();
+            Container.this.updateClip();
             requestLayout();
         }
 

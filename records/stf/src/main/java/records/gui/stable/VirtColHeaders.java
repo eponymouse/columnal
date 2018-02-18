@@ -189,13 +189,6 @@ public class VirtColHeaders implements ScrollBindable
         container.requestLayout();
     }
 
-    @Override
-    public void columnsChanged()
-    {
-        spareCells.addAll(visibleCells.values());
-        visibleCells.clear();
-    }
-
     public Region getNode()
     {
         return stackPane;
