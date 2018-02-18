@@ -511,22 +511,25 @@ public class TableDisplay implements TableDisplayBase
             headerItems.forEach(columnHeaderSupplier::removeItem);
             headerItems.clear();
             TableDisplay.this.displayColumns = columns;
-            for (ColumnDetails column : columns)
+            for (int i = 0; i < columns.size(); i++)
             {
+                final int columnIndex = i;
+                ColumnDetails column = columns.get(i);
                 // TODO should be two, one for name, one for type.
-                FloatingItem<Label> item = new FloatingItem<Label>() {                    
+                FloatingItem<Label> item = new FloatingItem<Label>()
+                {
                     @Override
                     @OnThread(Tag.FXPlatform)
                     public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
                     {
                         // TODO make it float in position when scrolled down
-                        double x = columnBounds.getItemCoord(getPosition().columnIndex);
+                        double x = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex);
                         double y = rowBounds.getItemCoord(getPosition().rowIndex);
                         return Optional.of(new BoundingBox(
-                            x,
-                            y,
-                            columnBounds.getItemCoord(getPosition().columnIndex + 1) - x,
-                            rowBounds.getItemCoord(getPosition().rowIndex + 1) - y
+                                x,
+                                y,
+                                columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x,
+                                rowBounds.getItemCoord(getPosition().rowIndex + 1) - y
                         ));
                     }
 
