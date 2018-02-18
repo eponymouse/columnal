@@ -67,6 +67,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 {
                     item.setVisible(true);
                     item.setText("v");
+                    // TODO set action
                 }
                 else
                 {

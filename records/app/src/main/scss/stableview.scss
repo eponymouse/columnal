@@ -167,6 +167,11 @@
     }
 }
 
+.virt-grid-line {
+    -fx-stroke-width: 1;
+    -fx-stroke: $table-divider;
+}
+
 .virt-grid-cell {
     -fx-background-color: $table-cell;
     -fx-border-style: solid inside;
