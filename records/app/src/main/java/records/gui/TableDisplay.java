@@ -2,8 +2,10 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
@@ -73,6 +75,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
@@ -112,6 +115,8 @@ public class TableDisplay implements TableDisplayBase
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
+    private int currentKnownRows = 0;
+    private boolean currentKnownRowsIsFinal = false;
 
     /**
      * Finds the closest point on the edge of this rectangle to the given point.
@@ -265,7 +270,6 @@ public class TableDisplay implements TableDisplayBase
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
         // Not final because it changes if user changes the display item:
-        private ImmutableList<ColumnDetails> displayColumns;
         private ImmutableList<ColumnDetails> columns;
         private final List<FloatingItem<Label>> headerItems = new ArrayList<>();
 
@@ -277,7 +281,7 @@ public class TableDisplay implements TableDisplayBase
             this.recordSet = recordSet;
             this.onModify = onModify;
             recordSet.setListener(this);
-            displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify);
+            ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify);
             setColumnsAndRows(displayColumns, table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -308,22 +312,24 @@ public class TableDisplay implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+                setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
             });
         }
 
 
         public GridCellInfo<StructuredTextField> getDataGridCellInfo()
         {
+            final int HEADER_ROWS = 3; // Table title, column title, column type
+            
             return new GridCellInfo<StructuredTextField>()
             {
                 @Override
                 public boolean hasCellAt(CellPosition cellPosition)
                 {
                     return cellPosition.columnIndex >= getPosition().columnIndex
-                            && cellPosition.columnIndex < getPosition().columnIndex + columns.size()
-                            && cellPosition.rowIndex >= getPosition().rowIndex
-                            && cellPosition.rowIndex <= 100 /* TODO */;
+                        && cellPosition.columnIndex < getPosition().columnIndex + columns.size()
+                        && cellPosition.rowIndex >= getPosition().rowIndex + HEADER_ROWS
+                        && cellPosition.rowIndex < getPosition().rowIndex + HEADER_ROWS + currentKnownRows;
                 }
 
                 @Override
@@ -332,7 +338,7 @@ public class TableDisplay implements TableDisplayBase
                     // Blank then queue fetch:
                     cell.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
                     int columnIndexWithinTable = cellPosition.columnIndex - TableDisplay.this.getPosition().columnIndex;
-                    int rowIndexWithinTable = cellPosition.rowIndex - TableDisplay.this.getPosition().rowIndex;
+                    int rowIndexWithinTable = cellPosition.rowIndex - (TableDisplay.this.getPosition().rowIndex + HEADER_ROWS);
                     if (columns != null && columnIndexWithinTable < columns.size())
                     {
                         columns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
@@ -347,6 +353,46 @@ public class TableDisplay implements TableDisplayBase
                     }
                 }
             };
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        {
+            final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
+            if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
+            {
+                Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
+                    try
+                    {
+                        // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
+                        boolean lastRowValid = recordSet.indexValid(checkUpToRowIncl);
+                        if (lastRowValid)
+                        {
+                            Platform.runLater(() -> {
+                                currentKnownRows = checkUpToRowIncl;
+                                currentKnownRowsIsFinal = false;
+                                updateSizeAndPositions.run();
+                            });
+                        } else
+                        {
+                            // Just a matter of working out where it ends.  Since we know end is close,
+                            // just force with getLength:
+                            int length = recordSet.getLength();
+                            Platform.runLater(() -> {
+                                currentKnownRows = length;
+                                currentKnownRowsIsFinal = true;
+                                updateSizeAndPositions.run();
+                            });
+                        }
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        Log.log(e);
+                        // We just don't call back the update function
+                    }
+                });
+            }
+            return currentKnownRows;
         }
 
         @Override
@@ -387,13 +433,13 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
         }
 
         @Override
         public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
         {
-            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
         }
 
         //TODO @Override
@@ -544,7 +590,14 @@ public class TableDisplay implements TableDisplayBase
     @RequiresNonNull({"parent", "table"})
     private GridArea makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, StyledString err)
     {
-        return new GridArea(new MessageWhenEmpty(err));
+        return new GridArea(new MessageWhenEmpty(err)) {
+            @Override
+            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            {
+                // Enough size to display our error:
+                return 5;
+            }
+        };
         /* TODO have a floating message with the below
         if (table instanceof TransformationEditable)
             return new VBox(new TextFlow(err.toGUI().toArray(new Node[0])), GUI.button("transformation.edit", () -> parent.editTransform((TransformationEditable)table)));

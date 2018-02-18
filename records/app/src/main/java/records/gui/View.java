@@ -215,6 +215,7 @@ public class View extends StackPane
             if (display != null)
             {
                 dataCellSupplier.removeGrid(display.getGridArea());
+                mainPane.removeGridArea(display.getGridArea());
             }
             emptyListener.consume(remainingCount == 0);
         });
@@ -766,7 +767,7 @@ public class View extends StackPane
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
         dataCellSupplier.addGrid(tableDisplay.getGridArea(), tableDisplay.getDataGridCellInfo());
-        tableDisplay.getGridArea().addedToGrid(mainPane);
+        mainPane.addGridArea(tableDisplay.getGridArea());
     }
 
     private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)

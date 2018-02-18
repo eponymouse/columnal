@@ -38,6 +38,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import java.util.Map;
 public class VirtualGrid
 {
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
+    private final List<GridArea> gridAreas = new ArrayList<>();
     
     private final Container container;
     private final ScrollGroup scrollGroup;
@@ -72,8 +74,10 @@ public class VirtualGrid
     private final IntegerProperty extraRowsForSmoothScroll = new SimpleIntegerProperty(0);
     private final IntegerProperty extraColsForSmoothScroll = new SimpleIntegerProperty(0);
     
-    private final IntegerProperty currentKnownRows = new SimpleIntegerProperty(10);
-    private final IntegerProperty currentColumns = new SimpleIntegerProperty(10);
+    private static final int MIN_ROWS = 10;
+    private static final int MIN_COLS = 10;
+    private final IntegerProperty currentKnownRows = new SimpleIntegerProperty(MIN_ROWS);
+    private final IntegerProperty currentColumns = new SimpleIntegerProperty(MIN_COLS);
 
     // Package visible to let sidebars access it
     static final double rowHeight = 24;
@@ -626,8 +630,35 @@ public class VirtualGrid
         }
     }
 
+    private void updateSizeAndPositions()
+    {
+        // Three things to do:
+        //   - Get each grid area to update its known size (which may involve calling us back)
+        //   - Check for overlaps between tables, and reshuffle if needed
+        //   - Update our known overall grid size
+
+        List<Integer> rowSizes = Utility.mapList(gridAreas, gridArea -> gridArea.updateKnownRows(currentKnownRows.get() + MAX_EXTRA_ROW_COLS, this::updateSizeAndPositions));
+        
+        // TODO check for overlaps and do reshuffle
+        
+        currentKnownRows.setValue(Math.max(MIN_ROWS, rowSizes.stream().mapToInt(x -> x).max().orElse(0)));
+        container.redoLayout();
+    }
+    
     private void activateCell(@Nullable CellSelection cellPosition)
     {
         // TODO
+    }
+    
+    public void addGridArea(GridArea gridArea)
+    {
+        gridAreas.add(gridArea);
+        updateSizeAndPositions();
+    }
+
+    public void removeGridArea(GridArea gridArea)
+    {
+        gridAreas.remove(gridArea);
+        updateSizeAndPositions();
     }
 }

@@ -6,6 +6,7 @@ import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 
 /**
  * One rectangular table area within a parent VirtualGrid.  Tracks position,
@@ -13,9 +14,15 @@ import threadchecker.Tag;
  * 
  * Overlays such as line numbers are not included in the logical bounds,
  * but column headers are included.
+ * 
+ * No two GridArea items may overlap, and VirtualGrid will reposition to make sure
+ * this is always true.
+ * 
+ * Each GridArea is assumed to have a fixed immediately-knowable position and number of columns,
+ * but a number of rows which may not be known ahead of time.
  */
 @OnThread(Tag.FXPlatform)
-public class GridArea
+public abstract class GridArea
 {
     // The top left cell, which is probably a column header.
     private CellPosition topLeft;
@@ -61,4 +68,15 @@ public class GridArea
             throw new RuntimeException("GridArea " + this + " has no parent");
         return parent;
     }
+
+    /**
+     * Check if more rows are available, up to and including the given row number (but not beyond).
+     * If you need to do a calculation off-thread, and find that you do have a new size
+     * (i.e. different to the one you return from the method), call the runnable
+     * @param checkUpToRowIncl The row to check up to in overall grid position
+     * @param updateSizeAndPositions The runnable to call if the size later changes.
+     * @return The current known row size.
+     */
+    @OnThread(Tag.FXPlatform)
+    public abstract int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
 }
