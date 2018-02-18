@@ -150,7 +150,6 @@ public class VirtualGrid
                 , FXUtility.mouse(this)::scrollLayoutYBy
                 , y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight)));
         
-        
     }
     
     private @Nullable CellSelection getCellPositionAt(double x, double y)
@@ -461,8 +460,8 @@ public class VirtualGrid
             clip = new Rectangle();
             setClip(clip);
 
-            FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> updateHBar());
-            FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> updateVBar());
+            FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> {updateHBar(); redoLayout();});
+            FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> {updateVBar(); redoLayout();});
 
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp MouseEvent> clickHandler = mouseEvent -> {
 
@@ -585,7 +584,7 @@ public class VirtualGrid
             }
         }
 
-        private void redoLayout()
+        private void redoLayout(@UnknownInitialization(Region.class) Container this)
         {
             double x = firstVisibleColumnOffset;
             double y = firstVisibleRowOffset;
@@ -633,13 +632,16 @@ public class VirtualGrid
             requestLayout();
         }
 
-        private void updateClip()
+        private void updateClip(@UnknownInitialization(Region.class) Container this)
         {
-            clip.setX(-getTranslateX());
-            clip.setY(-getTranslateY());
-            clip.setWidth(getWidth());
-            clip.setHeight(getHeight());
-            scrollGroup.updateClip();
+            if (clip != null && scrollGroup != null)
+            {
+                clip.setX(-getTranslateX());
+                clip.setY(-getTranslateY());
+                clip.setWidth(getWidth());
+                clip.setHeight(getHeight());
+                scrollGroup.updateClip();
+            }
         }
     }
 

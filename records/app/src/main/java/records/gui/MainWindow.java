@@ -61,8 +61,6 @@ public class MainWindow
     // If src is null, make new
     public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src) throws UserException, InternalException
     {
-        ScrollPaneFill scrollPane = new ScrollPaneFill();
-
         Label emptyMessage = new Label(TranslationUtility.getString("main.emptyHint"));
         emptyMessage.getStyleClass().add("main-empty-hint");
         emptyMessage.setWrapText(true);
@@ -124,12 +122,7 @@ public class MainWindow
         });
         */
 
-        scrollPane.setContent(v);
-        scrollPane.getStyleClass().add("main-scroll");
-        scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
-
-        BorderPane root = new BorderPane(new StackPane(scrollPane, emptyMessage), menuBar, null, null, null);
+        BorderPane root = new BorderPane(new StackPane(v, emptyMessage), menuBar, null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);

@@ -73,6 +73,8 @@ class Node
     double getLayoutY() @UnknownInitialization;
     void setLayoutX(double x) @UnknownInitialization;
     void setLayoutY(double y) @UnknownInitialization;
+    double getTranslateX() @UnknownInitialization;
+    double getTranslateY() @UnknownInitialization;
     
     WritableImage snapshot(@Nullable SnapshotParameters params, @Nullable WritableImage image);
 }
