@@ -392,6 +392,11 @@ public class DataType
             this.tagTypes = tagTypes;
         }
     }
+
+    public static DataType toInfer()
+    {
+        return new DataType(Kind.TO_INFER, null, null, null, null, null);
+    }
     
     public static DataType array()
     {

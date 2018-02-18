@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableOperations.DeleteColumn;
 import records.data.datatype.DataType;
@@ -87,7 +88,22 @@ public class ImmediateDataSource extends DataSource
     {
         return new TableOperations((newColumnName, newColumnType, defaultValue) -> {
             FXUtility.alertOnError_(() -> {
-                data.addColumn(newColumnType.makeImmediateColumn(newColumnName, defaultValue));
+                @MonotonicNonNull ColumnId name = newColumnName;
+                if (name == null)
+                {
+                    String stem = "C";
+                    for (int i = 1; i < 100000; i++)
+                    {
+                        name = new ColumnId(stem + i);
+                        if (!getData().getColumnIds().contains(name))
+                            break;
+                    }
+                    // Give up!
+                }
+                if (name == null || getData().getColumnIds().contains(name))
+                    throw new UserException("Column name already exists in table: " + name);
+                
+                data.addColumn(newColumnType.makeImmediateColumn(name, defaultValue));
             });
             // All columns in ImmediateDataSource can be renamed:
         }, _c -> null /*((oldColumnName, newColumnName) -> {

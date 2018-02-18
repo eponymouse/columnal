@@ -413,7 +413,8 @@ public class TableDisplay implements TableDisplayBase
                     }
                 });
             }
-            return currentKnownRows;
+            // Add one if we need append arrows:
+            return currentKnownRows + HEADER_ROWS + (getTable().getOperations().appendRows != null ? 1 : 0);
         }
 
         @Override
@@ -447,7 +448,7 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
         {
-            // TODO
+            updateParent();
             onModify.run();
         }
 

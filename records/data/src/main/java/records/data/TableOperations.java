@@ -46,7 +46,7 @@ public class TableOperations
     public static interface AppendColumn
     {
         @OnThread(Tag.Simulation)
-        public void appendColumn(ColumnId newColumnName, DataType newColumnType, @Value Object defaultValue);
+        public void appendColumn(@Nullable ColumnId newColumnName, DataType newColumnType, @Value Object defaultValue);
     }
 
     // Rename column (only available if this is source of the column)

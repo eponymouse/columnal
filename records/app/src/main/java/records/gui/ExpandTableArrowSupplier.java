@@ -2,11 +2,18 @@ package records.gui;
 
 import javafx.scene.control.Button;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.data.ColumnId;
+import records.data.TableOperations.AppendColumn;
+import records.data.TableOperations.AppendRows;
+import records.data.datatype.DataType;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplier;
+import utility.Workers;
+import utility.Workers.Priority;
 
 @OnThread(Tag.FXPlatform)
 public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button>
@@ -61,13 +68,25 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 {
                     item.setVisible(true);
                     item.setText("->");
-                    // TODO set action
+                    item.setOnAction(e -> {
+                        Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
+                            @Nullable AppendColumn appendOp = tableDisplay.getTable().getOperations().appendColumn;
+                            if (appendOp != null)
+                                appendOp.appendColumn(null, DataType.toInfer(), "");
+                        });
+                    });
                 }
                 else if (hasAddRowArrow(cellPosition))
                 {
                     item.setVisible(true);
                     item.setText("v");
-                    // TODO set action
+                    item.setOnAction(e -> {
+                        Workers.onWorkerThread("Adding row", Priority.SAVE_ENTRY, () -> {
+                            @Nullable AppendRows appendOp = tableDisplay.getTable().getOperations().appendRows;
+                            if (appendOp != null)
+                                appendOp.appendRows(1);
+                        });
+                    });
                 }
                 else
                 {

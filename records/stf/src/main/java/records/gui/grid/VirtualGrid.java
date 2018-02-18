@@ -397,6 +397,7 @@ public class VirtualGrid
 
     public void positionOrAreaChanged(GridArea child)
     {
+        updateSizeAndPositions();
         container.redoLayout();
     }
 
@@ -649,7 +650,7 @@ public class VirtualGrid
         //   - Check for overlaps between tables, and reshuffle if needed
         //   - Update our known overall grid size
 
-        List<Integer> rowSizes = Utility.mapList(gridAreas, gridArea -> gridArea.updateKnownRows(currentKnownRows.get() + MAX_EXTRA_ROW_COLS, this::updateSizeAndPositions));
+        List<Integer> rowSizes = Utility.mapList(gridAreas, gridArea -> gridArea.getPosition().rowIndex + gridArea.updateKnownRows(currentKnownRows.get() + MAX_EXTRA_ROW_COLS, this::updateSizeAndPositions));
         
         // TODO check for overlaps and do reshuffle
         
@@ -665,6 +666,7 @@ public class VirtualGrid
     public void addGridArea(GridArea gridArea)
     {
         gridAreas.add(gridArea);
+        gridArea.addedToGrid(this);
         updateSizeAndPositions();
     }
 
