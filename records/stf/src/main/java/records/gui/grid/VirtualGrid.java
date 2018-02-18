@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
@@ -53,7 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 @OnThread(Tag.FXPlatform)
-public class VirtualGrid implements ScrollBindable
+public abstract class VirtualGrid implements ScrollBindable
 {
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
@@ -750,6 +751,13 @@ public class VirtualGrid implements ScrollBindable
             if (button == null)
             {
                 button = new Button("+++");
+                button.setOnAction(e -> {
+                    if (focus != null)
+                    {
+                        // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
+                        createTable(focus.getSecond());
+                    }
+                });
                 containerChildren.add(button);
             }
 
@@ -772,4 +780,6 @@ public class VirtualGrid implements ScrollBindable
             }
         }
     }
+
+    protected abstract void createTable(CellPosition cellPosition, Point2D mouseScreenPos);
 }

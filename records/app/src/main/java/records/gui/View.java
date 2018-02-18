@@ -45,6 +45,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.DataSource;
+import records.data.ImmediateDataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
 import records.data.Table.TableDisplayBase;
@@ -55,6 +56,7 @@ import records.data.TableOperations;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplier;
@@ -640,7 +642,34 @@ public class View extends StackPane
                 View.this.addTransformation(transformation);
             }
         });
-        mainPane = new VirtualGrid();
+        mainPane = new VirtualGrid() {
+            @Override
+            protected void createTable(CellPosition cellPosition, Point2D mouseScreenPos)
+            {
+                // Data table if there are none, or if we ask and they say data
+                
+                Optional<DataOrTransform> choice = Optional.of(DataOrTransform.DATA);
+                if (!tableManager.getAllTables().isEmpty())
+                {
+                    // Ask what they want
+                    choice = new DataOrTransformChoice(getWindow()).showAndWaitCentredOn(mouseScreenPos);
+                }
+                #error TODO act on choice
+                if (choice.isPresent())
+                {
+                    switch (choice.get())
+                    {
+                        case DATA:
+                            ImmediateDataSource data = new ImmediateDataSource();
+                            data.setPositino();
+                            addSource(data);
+                            break;
+                        case TRANSFORM:
+                            break;
+                    }
+                }
+            }
+        };
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(columnHeaderSupplier);
