@@ -51,6 +51,7 @@ import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableManager.TableManagerListener;
+import records.data.TableOperations;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
@@ -94,6 +95,8 @@ public class View extends StackPane
     private final DataCellSupplier dataCellSupplier = new DataCellSupplier();
     // The column header supplier:
     private final ColumnHeaderSupplier columnHeaderSupplier = new ColumnHeaderSupplier();
+    // The supplier for buttons to add rows and columns:
+    private final ExpandTableArrowSupplier expandTableArrowSupplier = new ExpandTableArrowSupplier();
     
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
@@ -641,6 +644,7 @@ public class View extends StackPane
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(columnHeaderSupplier);
+        mainPane.addNodeSupplier(expandTableArrowSupplier);
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
         snapGuidePane = new Pane();
@@ -768,6 +772,11 @@ public class View extends StackPane
     {
         dataCellSupplier.addGrid(tableDisplay.getGridArea(), tableDisplay.getDataGridCellInfo());
         mainPane.addGridArea(tableDisplay.getGridArea());
+        @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
+        if (tableOps.appendColumn != null || tableOps.appendRows != null)
+        {
+            expandTableArrowSupplier.addTable(tableDisplay);
+        }
     }
 
     private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)

@@ -2,13 +2,10 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -116,7 +113,11 @@ public class TableDisplay implements TableDisplayBase
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private int currentKnownRows = 0;
-    private boolean currentKnownRowsIsFinal = false;
+    private boolean currentKnownRowsIsFinal = false;// Table title, column title, column type
+    // Not final because it changes if user changes the display item:
+    @OnThread(Tag.FXPlatform)
+    private ImmutableList<ColumnDetails> displayColumns;
+    public static final int HEADER_ROWS = 3;
 
     /**
      * Finds the closest point on the edge of this rectangle to the given point.
@@ -265,12 +266,34 @@ public class TableDisplay implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
+    public int getFirstDataDisplayRowIncl()
+    {
+        return getPosition().rowIndex + HEADER_ROWS;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public int getLastDataDisplayRowIncl()
+    {
+        return getPosition().rowIndex + HEADER_ROWS + currentKnownRows - 1;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public int getFirstDataDisplayColumnIncl()
+    {
+        return getPosition().columnIndex;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public int getLastDataDisplayColumnIncl()
+    {
+        return getPosition().columnIndex + displayColumns.size() - 1;
+    }
+
+    @OnThread(Tag.FXPlatform)
     private class TableDataDisplay extends GridArea implements RecordSetListener, TableSelectionLimits
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
-        // Not final because it changes if user changes the display item:
-        private ImmutableList<ColumnDetails> columns;
         private final List<FloatingItem<Label>> headerItems = new ArrayList<>();
 
         @SuppressWarnings("initialization")
@@ -319,15 +342,13 @@ public class TableDisplay implements TableDisplayBase
 
         public GridCellInfo<StructuredTextField> getDataGridCellInfo()
         {
-            final int HEADER_ROWS = 3; // Table title, column title, column type
-            
             return new GridCellInfo<StructuredTextField>()
             {
                 @Override
                 public boolean hasCellAt(CellPosition cellPosition)
                 {
                     return cellPosition.columnIndex >= getPosition().columnIndex
-                        && cellPosition.columnIndex < getPosition().columnIndex + columns.size()
+                        && cellPosition.columnIndex < getPosition().columnIndex + displayColumns.size()
                         && cellPosition.rowIndex >= getPosition().rowIndex + HEADER_ROWS
                         && cellPosition.rowIndex < getPosition().rowIndex + HEADER_ROWS + currentKnownRows;
                 }
@@ -339,9 +360,9 @@ public class TableDisplay implements TableDisplayBase
                     cell.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
                     int columnIndexWithinTable = cellPosition.columnIndex - TableDisplay.this.getPosition().columnIndex;
                     int rowIndexWithinTable = cellPosition.rowIndex - (TableDisplay.this.getPosition().rowIndex + HEADER_ROWS);
-                    if (columns != null && columnIndexWithinTable < columns.size())
+                    if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                     {
-                        columns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
+                        displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
                             rowIndexWithinTable,
                             b -> {},
                             c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, TableDataDisplay.this)),
@@ -483,7 +504,7 @@ public class TableDisplay implements TableDisplayBase
             // Remove old columns:
             headerItems.forEach(columnHeaderSupplier::removeItem);
             headerItems.clear();
-            this.columns = columns;
+            TableDisplay.this.displayColumns = columns;
             for (ColumnDetails column : columns)
             {
                 // TODO should be two, one for name, one for type.
@@ -539,7 +560,7 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public int getLastPossibleColumnIncl()
         {
-            return TableDisplay.this.getPosition().columnIndex + columns.size() - 1;
+            return TableDisplay.this.getPosition().columnIndex + displayColumns.size() - 1;
         }
     }
 
@@ -549,6 +570,7 @@ public class TableDisplay implements TableDisplayBase
         this.parent = parent;
         this.table = table;
         this.columnHeaderSupplier = columnHeaderSupplier;
+        this.displayColumns = ImmutableList.of();
         Either<StyledString, RecordSet> recordSetOrError;
         try
         {

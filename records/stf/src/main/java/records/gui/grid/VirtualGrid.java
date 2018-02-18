@@ -531,6 +531,18 @@ public class VirtualGrid
             ));
         }
 
+        @Override
+        @OnThread(Tag.FX)
+        protected void layoutChildren()
+        {
+            // Note: it is important to not call super.layoutChildren() here, because Parent will
+            // resize its children to their preferred size, which we do not want.
+            
+            // We do nothing directly here because redoLayout will have done it.  We don't call redoLayout during
+            // the actual layout pass, because redoLayout adds and removes children, and JavaFX goes a bit loopy
+            // if you do this during its layout pass.
+        }
+
         /**
          * Like bind, but binds with and without shift held, passing a boolean for shift state to the lambda
          * @param keyCode
