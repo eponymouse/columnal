@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
@@ -25,11 +26,13 @@ import javafx.scene.shape.Rectangle;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
+import records.data.CellPosition;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.stable.ScrollBindable;
@@ -60,6 +63,7 @@ public class VirtualGrid implements ScrollBindable
     private static final int MAX_EXTRA_ROW_COLS = 12;
     private final ScrollBar hBar;
     private final ScrollBar vBar;
+    private final CreateTableButtonSupplier createTableButtonSupplier;
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
 
@@ -99,9 +103,15 @@ public class VirtualGrid implements ScrollBindable
     // Negative means we need them left/above, positive means we need them below/right:
     private final IntegerProperty extraRowsForScrolling = new SimpleIntegerProperty(0);
     private final IntegerProperty extraColsForScrolling = new SimpleIntegerProperty(0);
+    // null means the grid and immediately contained cells don't have focus
+    private @Nullable Pair<FocusType, CellPosition> focus;
 
+    private static enum FocusType {EMPTY};
+    
     public VirtualGrid()
     {
+        this.createTableButtonSupplier = new CreateTableButtonSupplier();
+        nodeSuppliers.add(createTableButtonSupplier);
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
@@ -155,7 +165,7 @@ public class VirtualGrid implements ScrollBindable
         scrollGroup.add(FXUtility.mouse(this), ScrollLock.BOTH);
     }
     
-    private @Nullable CellSelection getCellPositionAt(double x, double y)
+    private @Nullable CellPosition getCellPositionAt(double x, double y)
     {
         int rowIndex;
         int colIndex;
@@ -174,32 +184,7 @@ public class VirtualGrid implements ScrollBindable
         rowIndex = (int) Math.floor(y / rowHeight) + firstVisibleRowIndex;
         if (rowIndex >= getLastSelectableRowGlobal())
             return null;
-        return new RectangularTableCellSelection(rowIndex, colIndex, new TableSelectionLimits()
-        {
-            @Override
-            public int getFirstPossibleRowIncl()
-            {
-                return 0;
-            }
-
-            @Override
-            public int getLastPossibleRowIncl()
-            {
-                return 100;
-            }
-
-            @Override
-            public int getFirstPossibleColumnIncl()
-            {
-                return 0;
-            }
-
-            @Override
-            public int getLastPossibleColumnIncl()
-            {
-                return 5;
-            }
-        });
+        return new CellPosition(rowIndex, colIndex);
     }
 
     // This is the canonical scroll method which all scroll
@@ -519,7 +504,24 @@ public class VirtualGrid implements ScrollBindable
 
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp MouseEvent> clickHandler = mouseEvent -> {
 
-                @Nullable CellSelection cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                
+                if (cellPosition != null)
+                {
+                    // Go through each grid area and see if it contains the position:
+                    for (GridArea gridArea : gridAreas)
+                    {
+                        if (gridArea.contains(cellPosition))
+                        {
+                            return;
+                        }
+                    }
+                    // Belongs to no-one; we must handle it:
+                    focus = new Pair<>(FocusType.EMPTY, cellPosition);
+                    FXUtility.mouse(this).requestFocus();
+                    redoLayout();
+                }
+                
                 /*
                 @Nullable StructuredTextField cell = cellPosition == null ? null : visibleCells.get(cellPosition.editPosition());
                 // This check may not be right now we have selections larger than one cell
@@ -554,7 +556,11 @@ public class VirtualGrid implements ScrollBindable
 
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
+                {
+                    focus = null;
                     select(null);
+                    redoLayout();
+                }
             });
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
@@ -731,5 +737,39 @@ public class VirtualGrid implements ScrollBindable
     {
         gridAreas.remove(gridArea);
         updateSizeAndPositions();
+    }
+
+    // A really simple class that manages a single button which is shown when an empty location is focused
+    private class CreateTableButtonSupplier extends VirtualGridSupplier<Button>
+    {
+        private @MonotonicNonNull Button button;
+        
+        @Override
+        void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+        {
+            if (button == null)
+            {
+                button = new Button("+++");
+                containerChildren.add(button);
+            }
+
+            @Nullable Pair<FocusType, CellPosition> curFocus = VirtualGrid.this.focus;
+            if (curFocus != null && curFocus.getFirst() == FocusType.EMPTY)
+            {
+                button.setVisible(true);
+                double x = columnBounds.getItemCoord(curFocus.getSecond().columnIndex);
+                double y = rowBounds.getItemCoord(curFocus.getSecond().rowIndex);
+                button.resizeRelocate(
+                    x,
+                    y,
+                    columnBounds.getItemCoord(curFocus.getSecond().columnIndex + 1) - x,
+                    rowBounds.getItemCoord(curFocus.getSecond().rowIndex + 1) - y
+                );
+            }
+            else
+            {
+                button.setVisible(false);
+            }
+        }
     }
 }

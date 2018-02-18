@@ -1,6 +1,7 @@
 package records.gui.grid;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
@@ -79,4 +80,10 @@ public abstract class GridArea
      */
     @OnThread(Tag.FXPlatform)
     public abstract int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
+
+    public boolean contains(CellPosition cellPosition)
+    {
+        //TODO
+        return false;
+    }
 }
