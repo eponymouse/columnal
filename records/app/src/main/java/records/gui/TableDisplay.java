@@ -560,9 +560,11 @@ public class TableDisplay implements TableDisplayBase
                         double y = rowBounds.getItemCoord(getPosition().rowIndex + 1);
                         double width = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x;
                         double height = rowBounds.getItemCoord(getPosition().rowIndex + 2) - y;
+                        
+                        double lastY = Math.max(y, rowBounds.getItemCoord(TableDisplay.this.getPosition().rowIndex + HEADER_ROWS + currentKnownRows - 2));
                         return Optional.of(new BoundingBox(
                                 x,
-                                Math.max(0, y),
+                                Math.min(Math.max(0, y), lastY),
                                 width,
                                 height
                         ));
