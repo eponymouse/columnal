@@ -23,7 +23,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     private final HashMap<Integer, Line> yLinesInUse = new HashMap<>();
     
     @Override
-    void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
         double lowestX = columnBounds.getItemCoord(columnBounds.firstItemIncl);
         double highestX = columnBounds.getItemCoord(columnBounds.lastItemIncl + 1);
@@ -41,7 +41,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             {
                 line = new Line();
                 line.getStyleClass().add(LINE_STYLE_CLASS);
-                containerChildren.add(line);
+                containerChildren.add(line, ViewOrder.GRID_LINES);
                 xLinesInUse.put(i, line);
             }
             // +0.5 to make line appear in the middle of the pixel:
@@ -60,7 +60,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             {
                 line = new Line();
                 line.getStyleClass().add(LINE_STYLE_CLASS);
-                containerChildren.add(line);
+                containerChildren.add(line, ViewOrder.GRID_LINES);
                 yLinesInUse.put(i, line);
             }
             // +0.5 to make line appear in the middle of the pixel:

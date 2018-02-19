@@ -45,7 +45,17 @@ public abstract class VirtualGridSupplier<T extends Node>
      * @param columnBounds The column bounds (horizontal) of the current visible items (including any needed for scrolling)
      */
     // package-visible
-    abstract void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds);
+    abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds);
+    
+    @OnThread(Tag.FXPlatform)
+    public static interface ContainerChildren
+    {
+        public void add(Node node, ViewOrder viewOrder);
+        
+        public void remove(Node node);
+    }
+    
+    public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED }
     
     // Used for both rows and columns, to specify visible extents and divider positions
     public static abstract class VisibleDetails

@@ -38,7 +38,8 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
     private final List<T> spareItems = new ArrayList<>();
 
     // package-visible
-    final void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    @Override
+    final void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<CellPosition, T>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
@@ -84,7 +85,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
                     else
                     {
                         cell = makeNewItem();
-                        containerChildren.add(cell);
+                        containerChildren.add(cell, ViewOrder.STANDARD);
                     }
 
                     visibleItems.put(cellPosition, cell);

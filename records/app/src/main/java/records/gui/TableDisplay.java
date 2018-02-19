@@ -44,6 +44,8 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -529,19 +531,22 @@ public class TableDisplay implements TableDisplayBase
                         // TODO make it float in position when scrolled down
                         double x = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex);
                         double y = rowBounds.getItemCoord(getPosition().rowIndex);
+                        double width = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x;
+                        double height = rowBounds.getItemCoord(getPosition().rowIndex + 1) - y;
                         return Optional.of(new BoundingBox(
                                 x,
-                                y,
-                                columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x,
-                                rowBounds.getItemCoord(getPosition().rowIndex + 1) - y
+                                Math.max(0, y),
+                                width,
+                                height
                         ));
                     }
 
                     @Override
                     @OnThread(Tag.FXPlatform)
-                    public void useCell(Label item)
+                    public VirtualGridSupplier.ViewOrder useCell(Label item)
                     {
                         item.setText(column.getColumnId().getOutput());
+                        return ViewOrder.FLOATING_PINNED;
                     }
                 };
                 headerItems.add(item);

@@ -27,9 +27,9 @@ public abstract class VirtualGridSupplierFloating<T extends Node> extends Virtua
     private final List<T> toRemove = new ArrayList<>();
 
     @Override
-    void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
-        containerChildren.removeAll(toRemove);
+        toRemove.forEach(r -> containerChildren.remove(r));
         toRemove.clear();
         
         for (Entry<FloatingItem<T>, Optional<T>> item : items.entrySet())
@@ -41,8 +41,8 @@ public abstract class VirtualGridSupplierFloating<T extends Node> extends Virtua
                 if (!item.getValue().isPresent())
                 {
                     T newCell = makeCell();
-                    containerChildren.add(newCell);
-                    item.getKey().useCell(newCell);
+                    ViewOrder viewOrder = item.getKey().useCell(newCell);
+                    containerChildren.add(newCell, viewOrder);
                     item.setValue(Optional.of(newCell));
                 }
                 // Now that there's a cell there, locate it:
@@ -79,6 +79,6 @@ public abstract class VirtualGridSupplierFloating<T extends Node> extends Virtua
         // If empty is returned, means not visible.  Otherwise, coords in parent are returned.
         public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds);
         
-        public void useCell(T item);
+        public ViewOrder useCell(T item);
     }
 }

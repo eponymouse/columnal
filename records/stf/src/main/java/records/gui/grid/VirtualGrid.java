@@ -35,6 +35,8 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.CellPosition;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
+import records.gui.grid.VirtualGridSupplier.ContainerChildren;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
@@ -487,9 +489,10 @@ public abstract class VirtualGrid implements ScrollBindable
     }
 
     @OnThread(Tag.FXPlatform)
-    private class Container extends Region
+    private class Container extends Region implements ContainerChildren
     {
         private final Rectangle clip;
+        private List<ViewOrder> viewOrders = new ArrayList<>();
 
         public Container()
         {
@@ -686,9 +689,9 @@ public abstract class VirtualGrid implements ScrollBindable
 
             for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
             {
-                nodeSupplier.layoutItems(getChildren(), rowBounds, columnBounds);
+                nodeSupplier.layoutItems(FXUtility.mouse(this), rowBounds, columnBounds);
             }
-            Log.debug("Children: " + getChildren().size());
+            //Log.debug("Children: " + getChildren().size());
             
             Container.this.updateClip();
             requestLayout();
@@ -704,6 +707,26 @@ public abstract class VirtualGrid implements ScrollBindable
                 clip.setHeight(getHeight());
                 scrollGroup.updateClip();
             }
+        }
+
+        @Override
+        public void add(Node node, ViewOrder viewOrder)
+        {
+            // Need to insert at right place:
+            // Children are kept sorted by view order:
+            int insertionIndex = 0;
+            while (insertionIndex < viewOrders.size() && viewOrders.get(insertionIndex).ordinal() < viewOrder.ordinal())
+                insertionIndex += 1;
+            getChildren().add(insertionIndex, node);
+            viewOrders.add(insertionIndex, viewOrder);
+        }
+
+        @Override
+        public void remove(Node node)
+        {
+            int index = getChildren().indexOf(node);
+            getChildren().remove(index);
+            viewOrders.remove(index);
         }
     }
 
@@ -746,7 +769,7 @@ public abstract class VirtualGrid implements ScrollBindable
         private @MonotonicNonNull Button button;
         
         @Override
-        void layoutItems(List<Node> containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+        void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
         {
             if (button == null)
             {
@@ -763,7 +786,7 @@ public abstract class VirtualGrid implements ScrollBindable
                         createTable(focus.getSecond(), lastMousePos[0]);
                     }
                 });
-                containerChildren.add(button);
+                containerChildren.add(button, ViewOrder.STANDARD);
             }
 
             @Nullable Pair<FocusType, CellPosition> curFocus = VirtualGrid.this.focus;
