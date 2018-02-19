@@ -48,13 +48,6 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public CellPosition editPosition()
-    {
-        // Top-left
-        return curFocus;
-    }
-
-    @Override
     public CellSelection move(boolean extendSelection, int byRows, int byColumns)
     {
         CellPosition dest = new CellPosition(Math.max(tableSelectionLimits.getFirstPossibleRowIncl(), Math.min(tableSelectionLimits.getLastPossibleRowIncl() - 1, curFocus.rowIndex + byRows)),
@@ -62,7 +55,7 @@ public class RectangularTableCellSelection implements CellSelection
         // Move from top-left:
         return new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits);
     }
-
+/*
     @Override
     public SelectionStatus selectionStatus(CellPosition cellPosition)
     {
@@ -89,7 +82,7 @@ public class RectangularTableCellSelection implements CellSelection
     {
         return SelectionStatus.UNSELECTED;
     }
-
+*/
     @OnThread(Tag.FXPlatform)
     public static interface TableSelectionLimits
     {

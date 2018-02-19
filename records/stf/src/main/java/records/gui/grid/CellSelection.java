@@ -28,25 +28,5 @@ public interface CellSelection
      */
     public CellSelection atEnd(boolean extendSelection);
 
-    /**
-     * If the user was to try to edit (e.g. by pressing enter), which cell would they actually edit?
-     */
-    public CellPosition editPosition();
-
     public CellSelection move(boolean extendSelection, int byRows, int byColumns);
-
-    /**
-     * Does this selection contain the given cell?
-     */
-    public SelectionStatus selectionStatus(CellPosition cellPosition);
-
-    /**
-     * Does the selection contain the given row header?
-     */
-    public SelectionStatus rowSelectionStatus(int rowIndex);
-
-    /**
-     * Does the selection contain the given column header?
-     */
-    public SelectionStatus columnSelectionStatus(int columnIndex);
 }

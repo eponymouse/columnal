@@ -94,6 +94,7 @@ public abstract class VirtualGrid implements ScrollBindable
 
     private final Map<Integer, Double> customisedColumnWidths = new HashMap<>();
 
+    // null means the grid doesn't have focus:
     private final ObjectProperty<@Nullable CellSelection> selection = new SimpleObjectProperty<>(null);
 
     private final BooleanProperty atLeftProperty = new SimpleBooleanProperty(false);
@@ -105,10 +106,6 @@ public abstract class VirtualGrid implements ScrollBindable
     // Negative means we need them left/above, positive means we need them below/right:
     private final IntegerProperty extraRowsForScrolling = new SimpleIntegerProperty(0);
     private final IntegerProperty extraColsForScrolling = new SimpleIntegerProperty(0);
-    // null means the grid and immediately contained cells don't have focus
-    private @Nullable Pair<FocusType, CellPosition> focus;
-
-    private static enum FocusType {EMPTY};
     
     public VirtualGrid()
     {
@@ -533,7 +530,7 @@ public abstract class VirtualGrid implements ScrollBindable
                         }
                     }
                     // Belongs to no-one; we must handle it:
-                    focus = new Pair<>(FocusType.EMPTY, cellPosition);
+                    select(new EmptyCellSelection(cellPosition));
                     FXUtility.mouse(this).requestFocus();
                     redoLayout();
                 }
@@ -568,7 +565,6 @@ public abstract class VirtualGrid implements ScrollBindable
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
-                    focus = null;
                     select(null);
                     redoLayout();
                 }
@@ -775,26 +771,28 @@ public abstract class VirtualGrid implements ScrollBindable
                     lastMousePos[0] = new Point2D(e.getScreenX(), e.getScreenY());
                 });
                 button.setOnAction(e -> {
-                    if (focus != null)
+                    @Nullable CellSelection curSel = selection.get();
+                    if (curSel instanceof EmptyCellSelection)
                     {
                         // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
-                        createTable(focus.getSecond(), lastMousePos[0]);
+                        createTable(((EmptyCellSelection)curSel).position, lastMousePos[0]);
                     }
                 });
                 containerChildren.add(button, ViewOrder.STANDARD);
             }
 
-            @Nullable Pair<FocusType, CellPosition> curFocus = VirtualGrid.this.focus;
-            if (curFocus != null && curFocus.getFirst() == FocusType.EMPTY)
+            @Nullable CellSelection curSel = selection.get();
+            if (curSel != null && curSel instanceof EmptyCellSelection)
             {
                 button.setVisible(true);
-                double x = columnBounds.getItemCoord(curFocus.getSecond().columnIndex);
-                double y = rowBounds.getItemCoord(curFocus.getSecond().rowIndex);
+                CellPosition pos = ((EmptyCellSelection) curSel).position;
+                double x = columnBounds.getItemCoord(pos.columnIndex);
+                double y = rowBounds.getItemCoord(pos.rowIndex);
                 button.resizeRelocate(
                     x,
                     y,
-                    columnBounds.getItemCoord(curFocus.getSecond().columnIndex + 1) - x,
-                    rowBounds.getItemCoord(curFocus.getSecond().rowIndex + 1) - y
+                    columnBounds.getItemCoord(pos.columnIndex + 1) - x,
+                    rowBounds.getItemCoord(pos.rowIndex + 1) - y
                 );
             }
             else
@@ -805,4 +803,35 @@ public abstract class VirtualGrid implements ScrollBindable
     }
 
     protected abstract void createTable(CellPosition cellPosition, Point2D mouseScreenPos);
+    
+    private static class EmptyCellSelection implements CellSelection
+    {
+        private final CellPosition position;
+
+        public EmptyCellSelection(CellPosition position)
+        {
+            this.position = position;
+        }
+
+        @Override
+        public CellSelection atHome(boolean extendSelection)
+        {
+            // Should we make home do anything if on empty spot?
+            return this;
+        }
+
+        @Override
+        public CellSelection atEnd(boolean extendSelection)
+        {
+            // Should we make end do anything if on empty spot?
+            return this;
+        }
+        
+        @Override
+        public CellSelection move(boolean extendSelection, int byRows, int byColumns)
+        {
+            //TODO
+            return this;
+        }
+    }
 }
