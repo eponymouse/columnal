@@ -259,7 +259,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R inferred(GetValue<String> g) throws InternalException, UserException
+        public R inferred(GetValue<@Value String> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected inferred type");
         }
@@ -372,7 +372,7 @@ public class DataTypeValue extends DataType
             
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object inferred(GetValue<String> g) throws InternalException, UserException
+            public @Value Object inferred(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return g.get(index);
             }

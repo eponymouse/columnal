@@ -213,7 +213,7 @@ public class OutputBuilder
             
             @Override
             @OnThread(Tag.Simulation)
-            public String inferred(GetValue<String> g) throws InternalException, UserException
+            public String inferred(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return text(g);
             }

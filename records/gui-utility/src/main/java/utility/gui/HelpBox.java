@@ -63,7 +63,7 @@ class HelpBox extends StackPane
         circle.setOnMouseEntered(e -> {
             cancelHover = FXUtility.runAfterDelay(Duration.millis(400), () -> {
                 if (!popupShowing())
-                    showPopOver();
+                    FXUtility.mouse(this).showPopOver();
             });
         });
         circle.setOnMouseExited(e -> {
@@ -82,7 +82,7 @@ class HelpBox extends StackPane
             showingFull.set(true);
             if (!popupShowing())
             {
-                showPopOver();
+                FXUtility.mouse(this).showPopOver();
             }
             else
             {
@@ -101,7 +101,7 @@ class HelpBox extends StackPane
 
     @OnThread(Tag.FXPlatform)
     @RequiresNonNull("helpId")
-    private void showPopOver(@UnknownInitialization(StackPane.class) HelpBox this)
+    private void showPopOver(HelpBox this)
     {
         if (popOver == null)
         {

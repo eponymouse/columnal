@@ -48,25 +48,25 @@ public class InferTypeColumn extends EditableColumn
     {
         return contents.eitherEx(values -> {
             return DataTypeValue.toInfer(
-                new GetValue<String>()
+                new GetValue<@Value String>()
                 {
                     @Override
-                    public String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    public @Value String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
                         return values.getValue(index);
                     }
 
                     @Override
-                    public @OnThread(Tag.Simulation) void set(int index, String value) throws InternalException, UserException
+                    public @OnThread(Tag.Simulation) void set(int index, @Value String value) throws InternalException, UserException
                     {
                         values.setValue(index, value);
                         
-                        List<Pair<DataType, @Value Object>> typeGuesses = Utility.mapList(values.getAll(), InferTypeColumn::guessType);
+                        List<Pair<DataType, @Value Object>> typeGuesses = Utility.<String, Pair<DataType, @Value Object>>mapList(values.getAll(), InferTypeColumn::guessType);
                         
                         if (typeGuesses.stream().map(p -> p.getFirst()).distinct().count() == 1 && !typeGuesses.get(0).getFirst().isToInfer())
                         {
                             // We can switch to that type!
-                            contents = Either.right(typeGuesses.get(0).getFirst().makeImmediateColumn(getName(), Utility.mapList(typeGuesses, p -> p.getSecond()), DataTypeUtility.makeDefaultValue(typeGuesses.get(0).getFirst())).apply(getRecordSet()));
+                            contents = Either.right(typeGuesses.get(0).getFirst().makeImmediateColumn(getName(), Utility.<Pair<DataType, @Value Object>, @Value Object>mapList(typeGuesses, p -> p.getSecond()), DataTypeUtility.makeDefaultValue(typeGuesses.get(0).getFirst())).apply(getRecordSet()));
                         }
                     }
                 }
@@ -77,12 +77,12 @@ public class InferTypeColumn extends EditableColumn
     private static Pair<DataType, @Value Object> guessType(String src)
     {
         if (!src.isEmpty())
-            return new Pair<>(DataType.typeVariable("inferred"), "");
+            return new Pair<>(DataType.typeVariable("inferred"), DataTypeUtility.value(""));
         
         try
         {
             Number number = Utility.parseNumber(src);
-            return new Pair<>(DataType.NUMBER, number);
+            return new Pair<>(DataType.NUMBER, DataTypeUtility.value(number));
         }
         catch (UserException e)
         {
@@ -92,13 +92,13 @@ public class InferTypeColumn extends EditableColumn
         // TODO try dates, tuples, arrays
         
         // Our best remaining guess is a string:
-        return new Pair<>(DataType.TEXT, src);
+        return new Pair<>(DataType.TEXT, DataTypeUtility.value(src));
     }
 
     @Override
     public synchronized @NonNull @Value Object getDefaultValue()
     {
-        return contents.either(v -> DataTypeUtility.value(""), column -> column.getDefaultValue());
+        return contents.<@Value Object>either(v -> DataTypeUtility.value(""), column -> column.getDefaultValue());
     }
 
     public synchronized void add(String value) throws InternalException

@@ -65,13 +65,13 @@ public class MemoryStringColumn extends EditableColumn
     }
 
     // Used by InferTypeColumn to easily directly access the values:
-    public String getValue(int index) throws UserException, InternalException
+    public @Value String getValue(int index) throws UserException, InternalException
     {
         return storage.get(index, null);
     }
 
     // Used by InferTypeColumn to easily directly access the values:
-    public void setValue(int index, String value) throws InternalException
+    public void setValue(int index, @Value String value) throws InternalException
     {
         storage.setValue(index, value);
     }

@@ -217,7 +217,7 @@ public final class StructuredTextField extends StyleClassedTextArea
     }
 
 
-    private void showFixPopup(@UnknownInitialization StructuredTextField this, List<ErrorFix> errorFixes)
+    private void showFixPopup(List<ErrorFix> errorFixes)
     {
         hidePopup();
         PopOver popup = new PopOver();
@@ -246,7 +246,7 @@ public final class StructuredTextField extends StyleClassedTextArea
         popup.setAnimated(false);
         popup.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
         fixPopup = popup;
-        popup.show(this);
+        popup.show(FXUtility.mouse(this));
     }
 
     private void hidePopup(@UnknownInitialization(Object.class) StructuredTextField this)

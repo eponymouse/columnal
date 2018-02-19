@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -67,7 +68,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     
     public final void removeItem(FloatingItem item)
     {
-        Optional<Node> removed = items.remove(item);
+        @Nullable Optional<Node> removed = items.remove(item);
         if (removed != null && removed.isPresent())
             toRemove.add(removed.get());
     }

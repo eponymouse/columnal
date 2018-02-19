@@ -333,7 +333,7 @@ public abstract class Table
             this.noRows = TranslationUtility.getString(noRowsKey);
         }
         
-        @SuppressWarnings("localized")
+        @SuppressWarnings("i18n")
         public MessageWhenEmpty(StyledString err)
         {
             this.noColumns = err.toPlain();

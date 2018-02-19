@@ -412,7 +412,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<?> inferred(GetValue<String> g) throws InternalException, InternalException
+            public GetValueAndComponent<?> inferred(GetValue<@Value String> g) throws InternalException, InternalException
             {
                 return new GetValueAndComponent<@Value String>(g, InferTypeEntry::new);
             }

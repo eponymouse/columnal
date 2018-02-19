@@ -247,7 +247,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public DataTypeValue inferred(GetValue<String> g) throws InternalException, InternalException
+            public DataTypeValue inferred(GetValue<@Value String> g) throws InternalException, InternalException
             {
                 throw new InternalException("Cannot have an inferred type inside a tagged type");
             }
