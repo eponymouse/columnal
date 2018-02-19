@@ -168,6 +168,7 @@ public abstract class VirtualGrid implements ScrollBindable
             scrollGroup.requestScroll(scrollEvent);
             scrollEvent.consume();
         });
+        FXUtility.addChangeListenerPlatform(selection, s -> container.redoLayout());
     }
     
     private @Nullable CellPosition getCellPositionAt(double x, double y)
@@ -804,7 +805,7 @@ public abstract class VirtualGrid implements ScrollBindable
 
     protected abstract void createTable(CellPosition cellPosition, Point2D mouseScreenPos);
     
-    private static class EmptyCellSelection implements CellSelection
+    private class EmptyCellSelection implements CellSelection
     {
         private final CellPosition position;
 
@@ -830,8 +831,16 @@ public abstract class VirtualGrid implements ScrollBindable
         @Override
         public CellSelection move(boolean extendSelection, int byRows, int byColumns)
         {
-            //TODO
-            return this;
+            CellPosition newPos = new CellPosition(position.rowIndex + byRows, position.columnIndex + byColumns);
+            // Go through each grid area and see if it contains the position:
+            for (GridArea gridArea : gridAreas)
+            {
+                if (gridArea.contains(newPos))
+                {
+                    return this; // TODO select in table
+                }
+            }
+            return new EmptyCellSelection(newPos);
         }
     }
 }
