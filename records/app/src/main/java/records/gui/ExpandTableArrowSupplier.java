@@ -8,6 +8,7 @@ import records.data.ColumnId;
 import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -77,7 +78,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                         Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
                             @Nullable AppendColumn appendOp = tableDisplay.getTable().getOperations().appendColumn;
                             if (appendOp != null)
-                                appendOp.appendColumn(null, DataType.toInfer(), "");
+                                appendOp.appendColumn(null, DataType.toInfer(), DataTypeUtility.value(""));
                         });
                     });
                 }

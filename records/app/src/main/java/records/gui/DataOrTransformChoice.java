@@ -33,11 +33,11 @@ public class DataOrTransformChoice extends Dialog<DataOrTransform>
         initStyle(StageStyle.UNDECORATED);
         initModality(Modality.WINDOW_MODAL);
         @UnknownInitialization(Dialog.class) DataOrTransformChoice us = DataOrTransformChoice.this;
-        Button transformButton = GUI.button("Transform", () -> {
+        Button transformButton = GUI.button("new.transform", () -> {
             us.setResult(DataOrTransform.TRANSFORM);
             close();
         });
-        Button dataButton = GUI.button("Data", () -> {
+        Button dataButton = GUI.button("new.data", () -> {
             us.setResult(DataOrTransform.DATA);
             close();
         });
