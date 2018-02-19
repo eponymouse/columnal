@@ -751,11 +751,16 @@ public abstract class VirtualGrid implements ScrollBindable
             if (button == null)
             {
                 button = new Button("+++");
+                button.setFocusTraversable(false);
+                Point2D[] lastMousePos = new Point2D[1];
+                button.addEventFilter(MouseEvent.ANY, e -> {
+                    lastMousePos[0] = new Point2D(e.getScreenX(), e.getScreenY());
+                });
                 button.setOnAction(e -> {
                     if (focus != null)
                     {
                         // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
-                        createTable(focus.getSecond());
+                        createTable(focus.getSecond(), lastMousePos[0]);
                     }
                 });
                 containerChildren.add(button);

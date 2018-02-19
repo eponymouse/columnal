@@ -1,24 +1,20 @@
 package records.gui;
 
-import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
-import records.data.InferTypeColumn;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -30,13 +26,11 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.ScrollPaneFill;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -190,7 +184,7 @@ public class MainWindow
         Workers.onWorkerThread("Create new table", Priority.SAVE_ENTRY, () -> {
             try
             {
-                EditableRecordSet newRecordSet = new EditableRecordSet(Collections.singletonList(rs -> new InferTypeColumn(rs, new ColumnId("C1"), ImmutableList.of(""))), () -> 0);
+                EditableRecordSet newRecordSet = EditableRecordSet.newRecordSetSingleColumn();
                 ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), newRecordSet);
                 v.getManager().record(ds);
             }

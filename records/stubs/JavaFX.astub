@@ -84,16 +84,19 @@ class Scene
 }
 
 package javafx.scene.control;
-class Dialog<T>
+class Dialog<R>
 {
     void setResizable(boolean b) @UnknownInitialization;
     void initModality(Modality m) @UnknownInitialization;
     void initOwner(Window w) @UnknownInitialization;
+    void initStyle(StageStyle s) @UnknownInitialization;
     DialogPane getDialogPane() @UnknownInitialization;
-    void setResultConverter(Callback<ButtonType, @Nullable T> a) @UnknownInitialization;
+    void setResult(@Nullable R t) @UnknownInitialization;
+    void setResultConverter(Callback<ButtonType, @Nullable R> a) @UnknownInitialization;
     void setOnShown(EventHandler<DialogEvent> e) @UnknownInitialization;
     void setOnHidden(EventHandler<DialogEvent> e) @UnknownInitialization;
     void setTitle(String s) @UnknownInitialization;
+    void close() @UnknownInitialization;
 }
 class Button
 {
@@ -145,7 +148,7 @@ class TableCell
 {
      void setGraphic(@Nullable Node a);
 }
-class ListCell
+class ListCell<T>
 {
      StringProperty textProperty() @UnknownInitialization;
      void updateItem(@Nullable T item, boolean empty);

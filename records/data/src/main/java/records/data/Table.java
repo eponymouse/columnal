@@ -93,6 +93,7 @@ public abstract class Table
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 
+    @OnThread(Tag.Any)
     public final synchronized Table loadPosition(@Nullable CellPosition position)
     {
         if (position != null)

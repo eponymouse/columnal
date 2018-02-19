@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
@@ -164,6 +165,12 @@ public class EditableRecordSet extends RecordSet
                 return new InferTypeColumn(rs, original.getName(), getAll(g));
             }
         });
+    }
+
+    @NotNull
+    public static EditableRecordSet newRecordSetSingleColumn() throws InternalException, UserException
+    {
+        return new EditableRecordSet(Collections.singletonList(rs -> new InferTypeColumn(rs, new ColumnId("C1"), ImmutableList.of(""))), () -> 0);
     }
 
     @Override

@@ -45,6 +45,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.DataSource;
+import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
@@ -654,17 +655,21 @@ public class View extends StackPane
                     // Ask what they want
                     choice = new DataOrTransformChoice(getWindow()).showAndWaitCentredOn(mouseScreenPos);
                 }
-                #error TODO act on choice
                 if (choice.isPresent())
                 {
                     switch (choice.get())
                     {
                         case DATA:
-                            ImmediateDataSource data = new ImmediateDataSource();
-                            data.setPositino();
-                            addSource(data);
+                            Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
+                                FXUtility.alertOnError_(() -> {
+                                    ImmediateDataSource data = new ImmediateDataSource(tableManager, EditableRecordSet.newRecordSetSingleColumn());
+                                    data.loadPosition(cellPosition);
+                                    addSource(data);
+                                });
+                            });
                             break;
                         case TRANSFORM:
+                            // TODO show edit-transformation dialog
                             break;
                     }
                 }
