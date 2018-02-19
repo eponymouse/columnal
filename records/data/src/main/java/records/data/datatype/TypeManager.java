@@ -215,6 +215,10 @@ public class TypeManager
         {
             return DataType.typeVariable(type.typeVar().ident().getText());
         }
+        else if (type.AUTOMATIC() != null)
+        {
+            return DataType.toInfer();
+        }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
     }
