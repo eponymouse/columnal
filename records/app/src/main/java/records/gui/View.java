@@ -1,45 +1,29 @@
 package records.gui;
 
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableObjectValue;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
-import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
-import javafx.geometry.Side;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.QuadCurve;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -49,7 +33,6 @@ import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
-import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableManager.TableManagerListener;
@@ -60,10 +43,6 @@ import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
-import records.gui.grid.VirtualGridSupplier;
-import records.gui.grid.VirtualGridSupplierFloating;
-import records.gui.grid.VirtualGridSupplierIndividual;
-import records.gui.stf.StructuredTextField;
 import records.transformations.TransformationEditable;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
@@ -634,13 +613,36 @@ public class View extends StackPane
             @Override
             public void addSource(DataSource dataSource)
             {
-                View.this.addSource(dataSource);
+                Platform.runLater(() -> {
+                    View.this.emptyListener.consume(false);
+                    addDisplay(new TableDisplay(View.this, columnHeaderSupplier, dataSource), null);
+                    save();
+                });
             }
 
             @Override
             public void addTransformation(Transformation transformation)
             {
-                View.this.addTransformation(transformation);
+                Platform.runLater(() ->
+                {
+                    View.this.emptyListener.consume(false);
+                    TableDisplay tableDisplay = new TableDisplay(View.this, columnHeaderSupplier, transformation);
+                    addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
+        
+                    List<TableDisplay> sourceDisplays = new ArrayList<>();
+                    for (TableId t : transformation.getSources())
+                    {
+                        TableDisplay td = getTableDisplayOrNull(t);
+                        if (td != null)
+                            sourceDisplays.add(td);
+                    }
+                    /*overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
+                    {
+                        View.this.editTransform((TransformationEditable)transformation);
+                    }));*/
+        
+                    save();
+                });
             }
         });
         mainPane = new VirtualGrid() {
@@ -664,12 +666,20 @@ public class View extends StackPane
                                 FXUtility.alertOnError_(() -> {
                                     ImmediateDataSource data = new ImmediateDataSource(tableManager, EditableRecordSet.newRecordSetSingleColumn());
                                     data.loadPosition(cellPosition);
-                                    addSource(data);
+                                    tableManager.record(data);
                                 });
                             });
                             break;
                         case TRANSFORM:
-                            // TODO show edit-transformation dialog
+                            Optional<SimulationSupplier<Transformation>> optTrans = new EditTransformationDialog(getWindow(), View.this, null).showAndWait();
+                            
+                            optTrans.ifPresent(createTrans -> Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
+                                FXUtility.alertOnError_(() -> {
+                                    Transformation trans = createTrans.get();
+                                    trans.loadPosition(cellPosition);
+                                    tableManager.record(trans);
+                                });
+                            }));
                             break;
                     }
                 }
@@ -767,41 +777,6 @@ public class View extends StackPane
         */
     }
 
-    @OnThread(Tag.Any)
-    private void addSource(DataSource data)
-    {
-        Platform.runLater(() -> {
-            emptyListener.consume(false);
-            addDisplay(new TableDisplay(this, columnHeaderSupplier, data), null);
-            save();
-        });
-    }
-
-    @OnThread(Tag.Any)
-    private void addTransformation(Transformation transformation)
-    {
-        Platform.runLater(() ->
-        {
-            emptyListener.consume(false);
-            TableDisplay tableDisplay = new TableDisplay(this, columnHeaderSupplier, transformation);
-            addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
-
-            List<TableDisplay> sourceDisplays = new ArrayList<>();
-            for (TableId t : transformation.getSources())
-            {
-                TableDisplay td = getTableDisplayOrNull(t);
-                if (td != null)
-                    sourceDisplays.add(td);
-            }
-            /*overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
-            {
-                View.this.editTransform((TransformationEditable)transformation);
-            }));*/
-
-            save();
-        });
-    }
-
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
         dataCellSupplier.addGrid(tableDisplay.getGridArea(), tableDisplay.getDataGridCellInfo());
@@ -844,7 +819,7 @@ public class View extends StackPane
     {
         currentlyShowingEditTransformationDialog = dialog;
         // add will re-run any dependencies:
-        dialog.show().ifPresent(t -> {
+        dialog.showAndWait().ifPresent(t -> {
             //if (replaceOnOK != null)
             //    overlays.remove(replaceOnOK);
             Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));

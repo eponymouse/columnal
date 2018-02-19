@@ -297,7 +297,7 @@ public class EditTransformationDialog
         e.printStackTrace();
     }
 
-    public Optional<SimulationSupplier<Transformation>> show()
+    public Optional<SimulationSupplier<Transformation>> showAndWait()
     {
         return dialog.showAndWait();
     }
