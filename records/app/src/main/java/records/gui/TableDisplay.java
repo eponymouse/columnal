@@ -69,7 +69,6 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -296,7 +295,8 @@ public class TableDisplay implements TableDisplayBase
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
-        private final List<FloatingItem<Label>> headerItems = new ArrayList<>();
+        private final List<FloatingItem<Label>> columnHeaderItems = new ArrayList<>();
+        private final FloatingItem<Label> tableHeaderItem;
 
         @SuppressWarnings("initialization")
         @UIEffect
@@ -339,6 +339,33 @@ public class TableDisplay implements TableDisplayBase
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
                 setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
             });
+            
+            this.tableHeaderItem = new FloatingItem<Label>() {
+                @Override
+                @OnThread(Tag.FXPlatform)
+                public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+                {
+                    double x = columnBounds.getItemCoord(getPosition().columnIndex);
+                    double y = rowBounds.getItemCoord(getPosition().rowIndex);
+                    double width = columnBounds.getItemCoord(getPosition().columnIndex + displayColumns.size()) - x;
+                    double height = rowBounds.getItemCoord(getPosition().rowIndex + 1) - y;
+                    return Optional.of(new BoundingBox(
+                            x,
+                            y,
+                            width,
+                            height
+                    ));
+                }
+
+                @Override
+                @OnThread(Tag.FXPlatform)
+                public ViewOrder useCell(Label item)
+                {
+                    item.setText(getTable().getId().getOutput());
+                    return ViewOrder.FLOATING;
+                }
+            };
+            columnHeaderSupplier.addItem(tableHeaderItem);
         }
 
 
@@ -514,25 +541,24 @@ public class TableDisplay implements TableDisplayBase
         public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
         {
             // Remove old columns:
-            headerItems.forEach(columnHeaderSupplier::removeItem);
-            headerItems.clear();
+            columnHeaderItems.forEach(columnHeaderSupplier::removeItem);
+            columnHeaderItems.clear();
             TableDisplay.this.displayColumns = columns;
             for (int i = 0; i < columns.size(); i++)
             {
                 final int columnIndex = i;
                 ColumnDetails column = columns.get(i);
-                // TODO should be two, one for name, one for type.
+                // Item for column name:
                 FloatingItem<Label> item = new FloatingItem<Label>()
                 {
                     @Override
                     @OnThread(Tag.FXPlatform)
                     public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
                     {
-                        // TODO make it float in position when scrolled down
                         double x = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex);
-                        double y = rowBounds.getItemCoord(getPosition().rowIndex);
+                        double y = rowBounds.getItemCoord(getPosition().rowIndex + 1);
                         double width = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x;
-                        double height = rowBounds.getItemCoord(getPosition().rowIndex + 1) - y;
+                        double height = rowBounds.getItemCoord(getPosition().rowIndex + 2) - y;
                         return Optional.of(new BoundingBox(
                                 x,
                                 Math.max(0, y),
@@ -549,7 +575,7 @@ public class TableDisplay implements TableDisplayBase
                         return ViewOrder.FLOATING_PINNED;
                     }
                 };
-                headerItems.add(item);
+                columnHeaderItems.add(item);
                 columnHeaderSupplier.addItem(item);
             }
             
