@@ -27,8 +27,6 @@ public abstract class GridArea
 {
     // The top left cell, which is probably a column header.
     private CellPosition topLeft;
-    // Number of data columns, doesn't include line numbers or add-column buttons
-    private int numColumns;
     
     private MessageWhenEmpty messageWhenEmpty;
     private @MonotonicNonNull VirtualGrid parent;
@@ -44,11 +42,10 @@ public abstract class GridArea
     {
         return topLeft;
     }
-
-    protected final void setNumColumns(int numColumns)
+    
+    public final void setPosition(CellPosition cellPosition)
     {
-        this.numColumns = numColumns;
-        updateParent();
+        topLeft = cellPosition;
     }
 
     protected void updateParent()

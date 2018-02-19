@@ -755,6 +755,7 @@ public class TableDisplay implements TableDisplayBase
         mostRecentBounds.set(cellPosition);
         
         Platform.runLater(() -> {
+            this.tableDataDisplay.setPosition(cellPosition);
             this.columnDisplay.set(display);
         });
     }
