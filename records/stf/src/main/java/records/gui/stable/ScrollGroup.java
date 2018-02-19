@@ -140,4 +140,14 @@ public class ScrollGroup
     {
         private Token() {}
     }
+
+    public DoubleProperty translateXProperty()
+    {
+        return translateXProperty;
+    }
+
+    public DoubleProperty translateYProperty()
+    {
+        return translateYProperty;
+    }
 }

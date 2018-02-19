@@ -62,7 +62,6 @@ public abstract class VirtualGrid implements ScrollBindable
     private final List<GridArea> gridAreas = new ArrayList<>();
     
     private final Container container;
-    private final ScrollGroup scrollGroup;
     private static final int MAX_EXTRA_ROW_COLS = 12;
     private final ScrollBar hBar;
     private final ScrollBar vBar;
@@ -118,7 +117,7 @@ public abstract class VirtualGrid implements ScrollBindable
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
-        this.scrollGroup = new ScrollGroup(
+        ScrollGroup scrollGroup = new ScrollGroup(
                 FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
             // Count column widths in that direction until we reach target:
             double curX;
@@ -166,6 +165,12 @@ public abstract class VirtualGrid implements ScrollBindable
                 , FXUtility.mouse(this)::scrollLayoutYBy
                 , y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight)));
         scrollGroup.add(FXUtility.mouse(this), ScrollLock.BOTH);
+        container.translateXProperty().bind(scrollGroup.translateXProperty());
+        container.translateYProperty().bind(scrollGroup.translateYProperty());
+        container.addEventFilter(ScrollEvent.ANY, scrollEvent -> {
+            scrollGroup.requestScroll(scrollEvent);
+            scrollEvent.consume();
+        });
     }
     
     private @Nullable CellPosition getCellPositionAt(double x, double y)
@@ -238,7 +243,14 @@ public abstract class VirtualGrid implements ScrollBindable
     @Override
     public @OnThread(Tag.FXPlatform) void updateClip()
     {
-        container.updateClip();
+        if (container.clip != null)
+        {
+            container.clip.setX(-container.getTranslateX());
+            container.clip.setY(-container.getTranslateY());
+            container.clip.setWidth(container.getWidth());
+            container.clip.setHeight(container.getHeight());
+            //scrollGroup.updateClip();
+        }
     }
 
     // This scrolls just the layout, without smooth scrolling
@@ -551,12 +563,7 @@ public abstract class VirtualGrid implements ScrollBindable
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
             addEventFilter(MouseEvent.MOUSE_PRESSED, clickHandler);
             addEventFilter(MouseEvent.MOUSE_RELEASED, clickHandler);
-
-            // Filter because we want to steal it from the cells themselves:
-            addEventFilter(ScrollEvent.ANY, scrollEvent -> {
-                scrollGroup.requestScroll(scrollEvent);
-                scrollEvent.consume();
-            });
+            
 
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
@@ -693,20 +700,8 @@ public abstract class VirtualGrid implements ScrollBindable
             }
             //Log.debug("Children: " + getChildren().size());
             
-            Container.this.updateClip();
+            updateClip();
             requestLayout();
-        }
-
-        private void updateClip(@UnknownInitialization(Region.class) Container this)
-        {
-            if (clip != null && scrollGroup != null)
-            {
-                clip.setX(-getTranslateX());
-                clip.setY(-getTranslateY());
-                clip.setWidth(getWidth());
-                clip.setHeight(getHeight());
-                scrollGroup.updateClip();
-            }
         }
 
         @Override

@@ -67,6 +67,8 @@ class Node
     
     void getTranslateX(@UnknownInitialization(javafx.scene.Node.class) Node this);
     void getTranslateY(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    DoubleProperty translateXProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    DoubleProperty translateYProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
 
     WritableImage snapshot(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable SnapshotParameters params, @Nullable WritableImage image);
 }
