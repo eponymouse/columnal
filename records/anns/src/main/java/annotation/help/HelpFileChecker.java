@@ -17,6 +17,7 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.GenericAnnotatedTypeFactory;
 import org.checkerframework.framework.type.treeannotator.ListTreeAnnotator;
 import org.checkerframework.framework.type.treeannotator.TreeAnnotator;
+import org.checkerframework.javacutil.AnnotationBuilder;
 import org.checkerframework.javacutil.AnnotationUtils;
 
 import javax.annotation.processing.SupportedOptions;
@@ -103,7 +104,7 @@ public class HelpFileChecker extends BaseTypeChecker
                         public ValueTypeTreeAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
                         {
                             super(atypeFactory);
-                            this.HELP_KEY = AnnotationUtils.fromClass(elements, HelpKey.class);
+                            this.HELP_KEY = AnnotationBuilder.fromClass(elements, HelpKey.class);
                         }
 
                         public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)

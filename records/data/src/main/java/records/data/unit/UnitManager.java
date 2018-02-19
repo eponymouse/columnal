@@ -1,5 +1,6 @@
 package records.data.unit;
 
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
@@ -212,7 +213,8 @@ public class UnitManager
     {
         Rational accumScale = original.getFirst();
         Unit accumUnit = Unit.SCALAR;
-        for (Entry<SingleUnit, Integer> entry : original.getSecond().getDetails().entrySet())
+        Map<SingleUnit, Integer> details = original.getSecond().getDetails();
+        for (Entry<@KeyFor("details") SingleUnit, Integer> entry : details.entrySet())
         {
             Pair<Rational, Unit> canonicalised = canonicalise(entry.getKey());
             accumScale = accumScale.times(Utility.rationalToPower(canonicalised.getFirst(), entry.getValue()));

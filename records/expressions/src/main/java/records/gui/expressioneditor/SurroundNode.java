@@ -345,7 +345,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
 
         @SuppressWarnings("initialization") // Because we use this as a listener
         @OnThread(Tag.FXPlatform)
-        protected void updateDisplay(@UnknownInitialization(ConsecutiveBase.class)SurroundNode.ContentConsecutive this)
+        protected void updateDisplay(SurroundNode.@UnknownInitialization(ConsecutiveBase.class) ContentConsecutive this)
         {
             if (openBracket != null) // Can be in constructor
             {

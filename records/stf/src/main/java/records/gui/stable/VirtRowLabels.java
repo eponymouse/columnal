@@ -10,6 +10,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.CellSelection.SelectionStatus;
 import records.gui.stable.VirtScrollStrTextGrid.Container;
@@ -50,7 +51,7 @@ public class VirtRowLabels implements ScrollBindable
         FXUtility.addChangeListenerPlatformNN(grid.currentKnownRows(), r -> container.requestLayout());
         FXUtility.addChangeListenerPlatformNN(grid.heightProperty(), r -> container.requestLayout());
         FXUtility.addChangeListenerPlatform(grid.selectionProperty(), (@Nullable CellSelection sel) -> {
-            for (Entry<Integer, StackPane> entry : visibleCells.entrySet())
+            for (Entry<@KeyFor("this.visibleCells") Integer, StackPane> entry : visibleCells.entrySet())
             {
                 FXUtility.setPseudoclass(entry.getValue(), "primary-selected-cell", sel != null && sel.rowSelectionStatus(entry.getKey()) == SelectionStatus.PRIMARY_SELECTION);
                 FXUtility.setPseudoclass(entry.getValue(), "secondary-selected-cell", sel != null && sel.rowSelectionStatus(entry.getKey()) == SelectionStatus.SECONDARY_SELECTION);
@@ -117,9 +118,9 @@ public class VirtRowLabels implements ScrollBindable
             int lastDisplayRowExcl = grid.getLastDisplayRowExcl();
 
             // Remove not-visible cells and put them in spare cells:
-            for (Iterator<Entry<Integer, StackPane>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<@KeyFor("this.visibleCells") Integer, StackPane>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<Integer, StackPane> vis = iterator.next();
+                Entry<@KeyFor("this.visibleCells") Integer, StackPane> vis = iterator.next();
                 boolean shouldBeVisible =
                     vis.getKey() >= firstDisplayRow &&
                     vis.getKey() < lastDisplayRowExcl;

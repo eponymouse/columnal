@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.embed.swing.JFXPanel;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
@@ -40,6 +41,7 @@ public class PropStorageSet
     @OnThread(Tag.Simulation)
     public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
+        @SuppressWarnings("keyfor")
         EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(rs -> typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"), Collections.emptyList(), typeAndValueGen.makeValue()).apply(rs)), () -> 0);
         Column c = recordSet.getColumns().get(0);
         assertEquals(0, c.getLength());
@@ -59,7 +61,7 @@ public class PropStorageSet
             vals.put(rowIndex, value);
         }
         // Test all at end, helps test post overwrites:
-        for (Entry<Integer, @Value Object> entry : vals.entrySet())
+        for (Entry<@KeyFor("vals") Integer, @Value Object> entry : vals.entrySet())
         {
             TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + entry.getKey(), entry.getValue(), c.getType().getCollapsed(entry.getKey()));
         }

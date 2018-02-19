@@ -103,9 +103,9 @@ public class Concatenate extends TransformationEditable
             ends.add(totalLength);
 
             // Remove all from prevColumns that have an omit instruction:
-            for (Iterator<Entry<ColumnId, DataType>> iterator = prevColumns.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<@KeyFor("prevColumns") ColumnId, DataType>> iterator = prevColumns.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<ColumnId, DataType> entry = iterator.next();
+                Entry<@KeyFor("prevColumns") ColumnId, DataType> entry = iterator.next();
                 @Nullable Pair<DataType, Optional<@Value Object>> typedInstruction = missingValues.get(entry.getKey());
                 if (typedInstruction != null && !typedInstruction.getSecond().isPresent())
                 {
@@ -130,7 +130,7 @@ public class Concatenate extends TransformationEditable
                 // prevColumns if present
 
                 Set<ColumnId> matchedPrev = new HashSet<>();
-                for (Entry<ColumnId, DataType> curEntry : curColumns.entrySet())
+                for (Entry<@KeyFor("curColumns") ColumnId, DataType> curEntry : curColumns.entrySet())
                 {
                     @Nullable DataType prev = prevColumns.get(curEntry.getKey());
                     if (prev == null)
@@ -270,7 +270,7 @@ public class Concatenate extends TransformationEditable
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
-        return missingValues.entrySet().stream().map((Entry<ColumnId, Pair<DataType, Optional<@Value Object>>> e) ->
+        return missingValues.entrySet().stream().map((Entry<@KeyFor("missingValues") ColumnId, Pair<DataType, Optional<@Value Object>>> e) ->
         {
             try
             {

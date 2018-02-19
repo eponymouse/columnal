@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
@@ -42,9 +43,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node> extends Virt
     final void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
     {
         // Remove not-visible cells and put them in spare cells:
-        for (Iterator<Entry<CellPosition, T>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, T>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<CellPosition, T> vis = iterator.next();
+            Entry<@KeyFor("this.visibleItems") CellPosition, T> vis = iterator.next();
             CellPosition pos = vis.getKey();
 
             boolean shouldBeVisible =

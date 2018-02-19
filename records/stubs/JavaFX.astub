@@ -12,14 +12,7 @@ import org.checkerframework.dataflow.qual.Pure;
 package javafx.css;
 class Styleable
 {
-    ObservableList<String> getStyleClass() @UnknownInitialization;
-}
-
-package javafx.animation;
-class Animation
-{
-    // It doesn't alter any nullness, so counts as pure for us:
-    @Pure void stop();
+    ObservableList<String> getStyleClass(@UnknownInitialization(javafx.css.Styleable.class) Styleable this);
 }
 
 package javafx.geometry;
@@ -33,50 +26,49 @@ package javafx.scene;
 class Parent
 {
     // Can *request* layout even if children are uninitialized:
-    void requestLayout() @UnknownInitialization;
-    ObservableList<Node> getChildren() @UnknownInitialization;
+    void requestLayout(@UnknownInitialization(javafx.scene.Parent.class) Parent this);
+    ObservableList<Node> getChildren(@UnknownInitialization(javafx.scene.Parent.class) Parent this);
 }
 
 class Node
 {
-    void setCursor(@Nullable Cursor c) @UnknownInitialization;
-    Cursor getCursor() @UnknownInitialization;
-    void setClip(@Nullable Node a);
-    void setEffect(@Nullable Effect e) @UnknownInitialization;
-    ObservableList<String> getStyleClass() @UnknownInitialization;
-    @Pure @Nullable Scene getScene() @UnknownInitialization;
-    void setFocusTraversable(boolean b) @UnknownInitialization;
+    void setCursor(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable Cursor c);
+    Cursor getCursor(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    void setClip(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable Node a);
+    void setEffect(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable Effect e);
+    ObservableList<String> getStyleClass(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    @Pure @Nullable Scene getScene(@UnknownInitialization(javafx.scene.Node.class) Node this);
 
-    void addEventFilter(EventType t, EventHandler handler) @UnknownInitialization;
-    void addEventHandler(EventType t, EventHandler handler) @UnknownInitialization;
-    void setOnMousePressed(EventHandler<? super MouseEvent> value) @UnknownInitialization;
-    void setOnMouseReleased(EventHandler<? super MouseEvent> value) @UnknownInitialization;
-    void setOnMouseClicked(EventHandler<? super MouseEvent> value) @UnknownInitialization;
-    void setOnMouseMoved(EventHandler<? super MouseEvent> value) @UnknownInitialization;
-    void setOnMouseDragged(EventHandler<? super MouseEvent> value) @UnknownInitialization;
+    <T extends Event> void addEventFilter(@UnknownInitialization(javafx.scene.Node.class) Node this, EventType t, EventHandler handler);
+    <T extends Event> void addEventHandler(@UnknownInitialization(javafx.scene.Node.class) Node this, EventType t, EventHandler handler);
+    void setOnMousePressed(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
+    void setOnMouseReleased(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
+    void setOnMouseClicked(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
+    void setOnMouseMoved(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
+    void setOnMouseDragged(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
 
-    void setScaleX(double x) @UnknownInitialization;
+    void setScaleX(@UnknownInitialization(javafx.scene.Node.class) Node this, double x);
 
-    double getWidth() @UnknownInitialization;
-    double getHeight() @UnknownInitialization;
+    double getWidth(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    double getHeight(@UnknownInitialization(javafx.scene.Node.class) Node this);
 
-    BooleanProperty focusedProperty() @UnknownInitialization;
-    @Pure boolean isFocused() @UnknownInitialization;
+    void setFocusTraversable(@UnknownInitialization(javafx.scene.Node.class) Node this, boolean b);
+    BooleanProperty focusedProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    @Pure boolean isFocused(@UnknownInitialization(javafx.scene.Node.class) Node this);
 
-    void setPickOnBounds(boolean b) @UnknownInitialization;
-    Bounds getBoundsInLocal() @UnknownInitialization;
-    Bounds getBoundsInParent() @UnknownInitialization;
-    SimpleObjectProperty boundsInParentProperty() @UnknownInitialization;
-    @Pure Point2D localToParent(Point2D p) @UnknownInitialization;
-    @Pure Point2D sceneToLocal(double x, double y) @UnknownInitialization;
-    double getLayoutX() @UnknownInitialization;
-    double getLayoutY() @UnknownInitialization;
-    void setLayoutX(double x) @UnknownInitialization;
-    void setLayoutY(double y) @UnknownInitialization;
-    double getTranslateX() @UnknownInitialization;
-    double getTranslateY() @UnknownInitialization;
+    void setPickOnBounds(@UnknownInitialization(javafx.scene.Node.class) Node this, boolean b);
+    Bounds getBoundsInLocal(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    Bounds getBoundsInParent(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    SimpleObjectProperty boundsInParentProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    @Pure Point2D localToParent(@UnknownInitialization(javafx.scene.Node.class) Node this, Point2D p);
+    @Pure Point2D sceneToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, double x, double y);
+    void setLayoutX(@UnknownInitialization(javafx.scene.Node.class) Node this, double x);
+    void setLayoutY(@UnknownInitialization(javafx.scene.Node.class) Node this, double y);
     
-    WritableImage snapshot(@Nullable SnapshotParameters params, @Nullable WritableImage image);
+    void getTranslateX(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    void getTranslateY(@UnknownInitialization(javafx.scene.Node.class) Node this);
+
+    WritableImage snapshot(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable SnapshotParameters params, @Nullable WritableImage image);
 }
 class Scene
 {
@@ -84,41 +76,42 @@ class Scene
 }
 
 package javafx.scene.control;
-class Dialog<R>
+class Dialog<T>
 {
-    void setResizable(boolean b) @UnknownInitialization;
-    void initModality(Modality m) @UnknownInitialization;
-    void initOwner(Window w) @UnknownInitialization;
-    void initStyle(StageStyle s) @UnknownInitialization;
-    DialogPane getDialogPane() @UnknownInitialization;
-    void setResult(@Nullable R t) @UnknownInitialization;
-    void setResultConverter(Callback<ButtonType, @Nullable R> a) @UnknownInitialization;
-    void setOnShown(EventHandler<DialogEvent> e) @UnknownInitialization;
-    void setOnHidden(EventHandler<DialogEvent> e) @UnknownInitialization;
-    void setTitle(String s) @UnknownInitialization;
-    void close() @UnknownInitialization;
+    void setResizable(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, boolean b);
+    void initStyle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, StageStyle s);
+    void initModality(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Modality m);
+    void initOwner(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Window w);
+    DialogPane getDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
+    void setResultConverter(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Callback<ButtonType, @Nullable T> a);
+    void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, @Nullable T t);
+    void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
+    void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
+    void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, String s);
+    void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
 }
 class Button
 {
-    void setOnAction(@NonNull EventHandler<ActionEvent> ev) @UnknownInitialization;
+    void setOnAction(@UnknownInitialization(javafx.scene.control.Button.class) Button this, @NonNull EventHandler<ActionEvent> ev);
 }
+
 class Label
 {
-    void setText(String s) @UnknownInitialization;
+    void setText(@UnknownInitialization(javafx.scene.control.Label.class) Label this, String s);
 }
 class ToggleButton
 {
     ToggleButton(@Localized String text);
     ToggleButton(@Localized String text, Node graphic);
-    void setGraphic(Node graphic) @UnknownInitialization;
-    BooleanProperty selectedProperty() @UnknownInitialization;
+    void setGraphic(@UnknownInitialization(javafx.scene.control.ToggleButton.class) ToggleButton this, Node graphic);
+    BooleanProperty selectedProperty(@UnknownInitialization(javafx.scene.control.ToggleButton.class) ToggleButton this);
 }
 class ScrollPane
 {
-    Property viewportBoundsProperty() @UnknownInitialization;
-    Node getContent() @UnknownInitialization;
-    void setFitToWidth(boolean b) @UnknownInitialization;
-    void setFitToHeight(boolean b) @UnknownInitialization;
+    Property viewportBoundsProperty(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
+    Node getContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
+    void setFitToWidth(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);
+    void setFitToHeight(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);
 }
 @Interned class ButtonType
 {
@@ -128,40 +121,40 @@ class ComboBox<T>
 {
     ObjectProperty<@Nullable T> valueProperty();
 }
-class TableView
+class TableView<T>
 {
     //@UnderInitialization(TableView.class) List getItems();
 }
 class ListView<T>
 {
-    void setCellFactory(Callback factory) @UnknownInitialization;
-    MultipleSelectionModel<T> getSelectionModel() @UnknownInitialization;
-    void setOnKeyPressed(EventHandler handler) @UnknownInitialization;
-    List getItems() @UnknownInitialization;
+    void setCellFactory(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this, Callback factory);
+    MultipleSelectionModel getSelectionModel(@UnknownInitialization(javafx.scene.control.ListView.class) ListView this);
+    void setOnKeyPressed(@UnknownInitialization(javafx.scene.control.ListView.class) ListView this, EventHandler handler);
+    List getItems(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this);
 }
 class SelectionModel<T>
 {
     ReadOnlyObjectProperty<@Nullable T> selectedItemProperty();
     @Nullable T getSelectedItem();
 }
-class TableCell
+class TableCell<S, T>
 {
      void setGraphic(@Nullable Node a);
 }
 class ListCell<T>
 {
-     StringProperty textProperty() @UnknownInitialization;
+     StringProperty textProperty(@UnknownInitialization(javafx.scene.control.ListCell.class) ListCell this);
      void updateItem(@Nullable T item, boolean empty);
 }
 class Cell<T>
 {
-     @Nullable T getItem() @UnknownInitialization;
+     @Nullable T getItem(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
 }
 class PopupControl
 {
-    ObservableList<String> getStyleClass() @UnknownInitialization;
-    void setSkin(Skin<?> value) @UnknownInitialization;
-    ObjectProperty<Skin<?>> skinProperty() @UnknownInitialization;
+    ObservableList<String> getStyleClass(@UnknownInitialization(javafx.scene.control.PopupControl.class) PopupControl this);
+    void setSkin(@UnknownInitialization(javafx.scene.control.PopupControl.class) PopupControl this, Skin<?> value);
+    ObjectProperty<Skin<?>> skinProperty(@UnknownInitialization(javafx.scene.control.PopupControl.class) PopupControl this);
 }
 class Menu
 {
@@ -169,11 +162,11 @@ class Menu
 }
 class MenuItem
 {
-    void setDisable(boolean b) @UnknownInitialization;
-    void setOnMenuValidation(EventHandler e) @UnknownInitialization;
-    void addEventHandler(EventType t, EventHandler e) @UnknownInitialization;
-    StringProperty textProperty() @UnknownInitialization;
-    ReadOnlyObjectProperty parentMenuProperty() @UnknownInitialization;
+    void setDisable(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this, boolean b);
+    void setOnMenuValidation(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this,EventHandler e);
+    <T extends Event> void addEventHandler(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this,EventType t, EventHandler e);
+    StringProperty textProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
+    ReadOnlyObjectProperty parentMenuProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
 }
 
 package javafx.scene.effect;
@@ -194,75 +187,67 @@ package javafx.scene.layout;
 class BorderPane
 {
     BorderPane(@Nullable Node a, @Nullable Node b, @Nullable Node c, @Nullable Node d, @Nullable Node e);
-    void setTop(@Nullable Node a) @UnknownInitialization;
-    void setCenter(@Nullable Node a) @UnknownInitialization;
-    ObservableList<String> getStyleClass() @UnknownInitialization;
+    @UnknownInitialization void setTop(@Nullable Node a);
+    void setCenter(@UnknownInitialization(javafx.scene.layout.BorderPane.class) BorderPane this, @Nullable Node a);
+    //@UnknownInitialization ObservableList<String> getStyleClass();
 }
 class GridPane
 {
-    ObservableList<String> getStyleClass() @UnknownInitialization;
+    //@UnknownInitialization ObservableList<String> getStyleClass();
 }
 class StackPane
 {
-    ObservableList<String> getStyleClass() @UnknownInitialization;
+    //@UnknownInitialization ObservableList<String> getStyleClass();
 }
 class Pane
 {
-    ObservableList<Node> getChildren() @UnknownInitialization;
+    ObservableList<Node> getChildren(@UnknownInitialization(javafx.scene.layout.Pane.class) Pane this);
 }
 class Region
 {
-    DoubleProperty minWidthProperty() @UnknownInitialization;
-    DoubleProperty prefWidthProperty() @UnknownInitialization;
-    DoubleProperty maxWidthProperty() @UnknownInitialization;
-    DoubleProperty widthProperty() @UnknownInitialization;
+    ObservableList<Node> getChildren(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
 
-    DoubleProperty minHeightProperty() @UnknownInitialization;
-    DoubleProperty prefHeightProperty() @UnknownInitialization;
-    DoubleProperty maxHeightProperty() @UnknownInitialization;
-    DoubleProperty heightProperty() @UnknownInitialization;
+    DoubleProperty minWidthProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    DoubleProperty prefWidthProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    DoubleProperty maxWidthProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    DoubleProperty widthProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+
+    DoubleProperty minHeightProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    DoubleProperty prefHeightProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    DoubleProperty maxHeightProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    DoubleProperty heightProperty(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
     
-    void setMinWidth(double v) @UnknownInitialization;
-    void setPrefWidth(double v) @UnknownInitialization;
-    void setMaxWidth(double v) @UnknownInitialization;
+    void setMinWidth(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double v);
+    void setPrefWidth(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double v);
+    void setMaxWidth(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double v);
     
-    void setMinHeight(double v) @UnknownInitialization;
-    void setPrefHeight(double v) @UnknownInitialization;
-    void setMaxHeight(double v) @UnknownInitialization;
+    void setMinHeight(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double v);
+    void setPrefHeight(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double v);
+    void setMaxHeight(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double v);
 
-    double getPrefWidth() @UnknownInitialization;
-    double getPrefHeight() @UnknownInitialization;
-
-    double getWidth() @UnknownInitialization;
-    double getHeight() @UnknownInitialization;
-    void setHeight(double height) @UnknownInitialization;
-    void setWidth(double width) @UnknownInitialization;
-
-
-    void setTranslateY(double y) @UnknownInitialization;
-
-    void setClip(@Nullable Node node) @UnknownInitialization;
+    double getWidth(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    double getHeight(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
 }
 
 package javafx.stage;
 class Window
 {
-    boolean isShowing() @UnknownInitialization;
-    void hide() @UnknownInitialization;
+    boolean isShowing(@UnknownInitialization(javafx.stage.Window.class) Window this);
+    void hide(@UnknownInitialization(javafx.stage.Window.class) Window this);
 
-    <T extends Event> void addEventFilter(
+    <T extends Event> void addEventFilter(@UnknownInitialization(javafx.stage.Window.class) Window this,
                 final EventType<T> eventType,
-                final EventHandler<? super T> eventFilter) @UnknownInitialization;
+                @UnknownInitialization final EventHandler<? super T> eventFilter);
 }
 class PopupWindow
 {
-    ObservableList<String> getStyleClass() @UnknownInitialization;
-    void show(Node ownerNode, double anchorX, double anchorY) @UnknownInitialization;
-    void setAnchorX(final double value) @UnknownInitialization;
-    void setAnchorY(final double value) @UnknownInitialization;
-    void setAutoHide(boolean value) @UnknownInitialization;
-    void setHideOnEscape(boolean value) @UnknownInitialization;
-    void hide() @UnknownInitialization;
+    //@UnknownInitialization ObservableList<String> getStyleClass();
+    void show(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, Node ownerNode, double anchorX, double anchorY);
+    void setAnchorX(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, final double value);
+    void setAnchorY(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, final double value);
+    void setAutoHide(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, boolean value);
+    void setHideOnEscape(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, boolean value);
+    void hide(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this);
 }
 class FileChooser
 {
@@ -280,42 +265,32 @@ class ScenicView
 package org.controlsfx.control;
 class SegmentedButton
 {
-    List getButtons() @UnknownInitialization;
-    ToggleGroup getToggleGroup() @UnknownInitialization;
+    List getButtons(@UnknownInitialization(org.controlsfx.control.SegmentedButton.class) SegmentedButton this);
+    ToggleGroup getToggleGroup(@UnknownInitialization(org.controlsfx.control.SegmentedButton.class) SegmentedButton this);
 }
 class PopOver
 {
-    Node getRoot() @UnknownInitialization;
-
-    void show(@UnknownInitialization @NonNull Node owner);
-    void setContentNode(@Nullable Node content) @UnknownInitialization;
-    void setArrowLocation(ArrowLocation location) @UnknownInitialization;
-    void setAutoFix(boolean value) @UnknownInitialization;
-    void setDetachable(boolean value) @UnknownInitialization;
-    
-    void setMinWidth(double v) @UnknownInitialization;
-    void setPrefWidth(double v) @UnknownInitialization;
-    void setMaxWidth(double v) @UnknownInitialization;
-    
-    void setMinHeight(double v) @UnknownInitialization;
-    void setPrefHeight(double v) @UnknownInitialization;
-    void setMaxHeight(double v) @UnknownInitialization; 
-    
-    BooleanProperty detachedProperty() @UnknownInitialization;
+    void setDetachable(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, boolean b);
+    BooleanProperty detachedProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
+    void setAutoFix(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, boolean b);
+    void show(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, @NonNull Node owner);
+    void setArrowLocation(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, ArrowLocation location);
+    StackPane getRoot(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
+    void setContentNode(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, Node content);
 }
 package org.fxmisc.richtext;
 class StyleClassedTextArea
 {
-    String getText() @UnknownInitialization;
-    void setText(String s) @UnknownInitialization;
-    int getLength() @UnknownInitialization;
-    StyledDocument getDocument() @UnknownInitialization;
-    void replaceText(String s) @UnknownInitialization;
-    ObjectProperty selectionProperty() @UnknownInitialization;
-    void selectRange(int a, int b) @UnknownInitialization;
-    IndexRange getSelection() @UnknownInitialization;
+    String getText(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
+    void setText(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, String s);
+    int getLength(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
+    StyledDocument<Collection<String>, StyledText<String>, Collection<String>> getDocument(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
+    void replaceText(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, String s);
+    ObjectProperty<IndexRange> selectionProperty(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
+    void selectRange(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, int a, int b);
+    IndexRange getSelection(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
 }
-class GenericStyledArea
+class GenericStyledArea<PS, SEG, S>
 {
-    void replace(StyledDocument doc) @UnknownInitialization;
+    void replace(@UnknownInitialization(org.fxmisc.richtext.GenericStyledArea.class) StyledDocument<PS, SEG, S> doc);
 }

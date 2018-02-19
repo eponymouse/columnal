@@ -3,6 +3,7 @@ package records.transformations.expression;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -96,7 +97,8 @@ public class TypeState
         Map<String, List<TypeExp>> mergedVars = new HashMap<>(typeStates.get(0).variables);
         for (int i = 1; i < typeStates.size(); i++)
         {
-            for (Entry<String, List<TypeExp>> entry : typeStates.get(i).variables.entrySet())
+            Map<String, List<TypeExp>> variables = typeStates.get(i).variables;
+            for (Entry<@KeyFor("variables") String, List<TypeExp>> entry : variables.entrySet())
             {
                 // If it's present in both sets, only keep if same type, otherwise mask:
                 mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concat(a, b));

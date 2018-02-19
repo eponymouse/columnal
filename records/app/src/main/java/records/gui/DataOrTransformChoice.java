@@ -10,6 +10,7 @@ import javafx.stage.Modality;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.DataOrTransformChoice.DataOrTransform;
@@ -31,15 +32,16 @@ public class DataOrTransformChoice extends Dialog<DataOrTransform>
         initOwner(parent);
         initStyle(StageStyle.UNDECORATED);
         initModality(Modality.WINDOW_MODAL);
+        @UnknownInitialization(Dialog.class) DataOrTransformChoice us = DataOrTransformChoice.this;
         Button transformButton = GUI.button("Transform", () -> {
-            setResult(DataOrTransform.TRANSFORM);
+            us.setResult(DataOrTransform.TRANSFORM);
             close();
         });
         Button dataButton = GUI.button("Data", () -> {
-            setResult(DataOrTransform.DATA);
+            us.setResult(DataOrTransform.DATA);
             close();
         });
-        for (Button button : new @NonNull Button[]{transformButton, dataButton})
+        for (@Initialized Button button : new @NonNull Button[]{transformButton, dataButton})
         {
             button.setMaxWidth(Double.MAX_VALUE);
             button.setMaxHeight(Double.MAX_VALUE);

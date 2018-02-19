@@ -27,6 +27,8 @@ import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
+import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -82,16 +84,16 @@ public class TypeSelectionPane
 
         if (emptyAllowed)
         {
-            addType("type.none", new ReadOnlyObjectWrapper<>(Optional.empty()));
+            addType("type.none", new ReadOnlyObjectWrapper<>(Optional.empty()), ImmutableList.of());
         }
         ErrorableTextField<Unit> units = new ErrorableTextField<Unit>(unitSrc ->
             ErrorableTextField.validate(() -> typeManager.getUnitManager().loadUse(unitSrc))
         );
-        numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode());
+        numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), ImmutableList.of(new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode()));
         units.getNode().getStyleClass().add("type-number-units");
         units.disableProperty().bind(numberNotSelected);
-        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(DataType.TEXT)));
-        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(DataType.BOOLEAN)));
+        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(DataType.TEXT)), ImmutableList.of());
+        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(DataType.BOOLEAN)), ImmutableList.of());
         ComboBox<DataType> dateTimeComboBox = new ComboBox<>();
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
@@ -101,13 +103,13 @@ public class TypeSelectionPane
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
         dateTimeComboBox.getSelectionModel().selectFirst();
         dateTimeComboBox.getStyleClass().add("type-datetime-combo");
-        dateNotSelected = addType("type.datetime", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), dateTimeComboBox);
+        dateNotSelected = addType("type.datetime", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), ImmutableList.of(dateTimeComboBox));
         dateTimeComboBox.disableProperty().bind(dateNotSelected);
 
         ComboBox<TaggedTypeDefinition> taggedComboBox = new ComboBox<>();
         taggedComboBox.getStyleClass().add("type-tagged-combo");
         FXPlatformRunnable updateTaggedCombo = () -> {
-            for (Entry<TypeId, TaggedTypeDefinition> taggedType : typeManager.getKnownTaggedTypes().entrySet())
+            for (Entry<@KeyFor("typeManager.getKnownTaggedTypes()") TypeId, TaggedTypeDefinition> taggedType : typeManager.getKnownTaggedTypes().entrySet())
             {
                 taggedComboBox.getItems().add(taggedType.getValue());
             }
@@ -137,7 +139,7 @@ public class TypeSelectionPane
                     return null;
                 }
             }
-        }), taggedComboBox, newTaggedTypeButton);
+        }), ImmutableList.of(taggedComboBox, newTaggedTypeButton));
 
         updateTaggedCombo.run();
         taggedComboBox.getSelectionModel().selectFirst();
@@ -170,7 +172,7 @@ public class TypeSelectionPane
                 commas.get(i).setText(i == commas.size() - 1 ? "" : ",");
             }
         });
-        tupleNotSelected = addType("type.tuple", tupleType,  tupleTypesPane);
+        tupleNotSelected = addType("type.tuple", tupleType,  ImmutableList.of(tupleTypesPane));
 
 
         FXPlatformRunnable addTupleType = () -> {
@@ -210,7 +212,7 @@ public class TypeSelectionPane
 
         Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> listSubType = makeTypeButton(typeManager, false);
         listSubType.getFirst().getStyleClass().add("type-list-of-set");
-        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<DataType>, @Nullable Optional<DataType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || !inner.isPresent() ? null : Optional.of(DataType.array(inner.get()))), listSubType.getFirst());
+        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<DataType>, @Nullable Optional<DataType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || !inner.isPresent() ? null : Optional.of(DataType.array(inner.get()))), ImmutableList.of(listSubType.getFirst()));
         listSubType.getFirst().disableProperty().bind(listNotSelected);
 
         FXUtility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {
@@ -261,7 +263,7 @@ public class TypeSelectionPane
      * @return An observable which is *false* when this type is selected (useful to disable sub-items) and *true* when it is *not* selected
      */
     @RequiresNonNull({"contents", "typeGroup", "types"})
-    private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable Optional<DataType>> calculateType, Node... furtherDetails)
+    private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable Optional<DataType>> calculateType, ImmutableList<Node> furtherDetails)
     {
         RadioButton radioButton = new RadioButton(TranslationUtility.getString(typeKey));
         radioButton.getStyleClass().add("id-" + typeKey.replace(".", "-"));

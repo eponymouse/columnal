@@ -9,6 +9,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -65,7 +66,7 @@ public class DeepListBinding<LIST_ELEMENT, RESULT> extends SimpleObjectProperty<
     public void onChanged(Change<? extends ObservableValue<LIST_ELEMENT>> c)
     {
         // Set all old listeners to false:
-        for (Entry<ObservableValue<LIST_ELEMENT>, Boolean> entry : listeningTo.entrySet())
+        for (Entry<@KeyFor("this.listeningTo") ObservableValue<LIST_ELEMENT>, Boolean> entry : listeningTo.entrySet())
         {
             entry.setValue(false);
         }
@@ -75,9 +76,9 @@ public class DeepListBinding<LIST_ELEMENT, RESULT> extends SimpleObjectProperty<
             listenTo(observableValue);
         }
         // Now stop listening to anything mapped to false:
-        for (Iterator<Entry<ObservableValue<LIST_ELEMENT>, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.listeningTo") ObservableValue<LIST_ELEMENT>, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<ObservableValue<LIST_ELEMENT>, Boolean> entry = iterator.next();
+            Entry<@KeyFor("this.listeningTo") ObservableValue<LIST_ELEMENT>, Boolean> entry = iterator.next();
             if (entry.getValue() == false)
             {
                 entry.getKey().removeListener(this);

@@ -186,7 +186,7 @@ public class Utility
     }
 
     @OnThread(Tag.FX)
-    public static void addStyleClass(@UnknownInitialization Styleable styleable, String... classes)
+    public static void addStyleClass(@UnknownInitialization(Styleable.class) Styleable styleable, String... classes)
     {
         styleable.getStyleClass().addAll(classes);
     }

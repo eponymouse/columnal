@@ -3,6 +3,7 @@ package records.gui.grid;
 import com.google.common.collect.Sets;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -32,7 +33,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         toRemove.forEach(r -> containerChildren.remove(r));
         toRemove.clear();
         
-        for (Entry<FloatingItem, Optional<Node>> item : items.entrySet())
+        for (Entry<@KeyFor("this.items") FloatingItem, Optional<Node>> item : items.entrySet())
         {
             Optional<BoundingBox> pos = item.getKey().calculatePosition(rowBounds, columnBounds);
             if (pos.isPresent())

@@ -1,5 +1,6 @@
 package utility.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -41,8 +42,10 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
 import org.jetbrains.annotations.NotNull;
@@ -580,7 +583,7 @@ public class FXUtility
         });
         destination.setOnDragOver(e -> {
             boolean accepts = false;
-            for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
+            for (Entry<@KeyFor("receivers") DataFormat, DragHandler> receiver : receivers.entrySet())
             {
                 if (e.getDragboard().hasContent(receiver.getKey()))
                 {
@@ -594,7 +597,7 @@ public class FXUtility
         });
         destination.setOnDragDropped(e -> {
             boolean dropped = false;
-            for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
+            for (Entry<@KeyFor("receivers") DataFormat, DragHandler> receiver : receivers.entrySet())
             {
                 if (e.getDragboard().hasContent(receiver.getKey()))
                 {
@@ -611,7 +614,12 @@ public class FXUtility
         return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
     }
 
-    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract, ObservableValue<?>... otherDependencies)
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract)
+    {
+        return mapBindingEager(original, extract, ImmutableList.of());
+    }
+
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract, ImmutableList<ObservableValue<?>> otherDependencies)
     {
         ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
         addChangeListenerPlatform(original, x -> binding.setValue(extract.apply(x)));
@@ -622,14 +630,10 @@ public class FXUtility
         return binding;
     }
 
-    public static <T, R> ObjectExpression<@NonNull R> mapBindingEagerNN(ObservableValue<@NonNull T> original, FXPlatformFunction<@NonNull T, @NonNull R> extract, ObservableValue<?>... otherDependencies)
+    public static <T, R> ObjectExpression<@NonNull R> mapBindingEagerNN(ObservableValue<@NonNull T> original, FXPlatformFunction<@NonNull T, @NonNull R> extract)
     {
         ObjectProperty<@NonNull R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
         addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
-        for (ObservableValue<?> otherDep : otherDependencies)
-        {
-            addChangeListenerPlatform(otherDep, y -> binding.setValue(extract.apply(original.getValue())));
-        }
         return binding;
     }
 

@@ -18,13 +18,13 @@ class Integer
     static @Localized String toString(int i);
 }
 package java.util;
-class List
+class List<T>
 {
     public void remove(@Nullable Object o);
 }
 class OptionalInt
 {
-    @Pure boolean isPresent() @Pure;
+    @Pure boolean isPresent();
 }
 package java.io;
 class PrintStream

@@ -2,6 +2,7 @@ package records.types.units;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.math.IntMath;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
@@ -59,7 +60,7 @@ public final class UnitExp implements StyledShowable
 
     private void timesInPlace(UnitExp rhs)
     {
-        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
+        for (Entry<@KeyFor("rhs.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
             units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
                 return addButZeroIsNull(l, r);
@@ -83,7 +84,7 @@ public final class UnitExp implements StyledShowable
     public UnitExp reciprocal()
     {
         UnitExp u = new UnitExp();
-        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
+        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
         {
             u.units.put(entry.getKey(), - entry.getValue());
         }
@@ -128,9 +129,9 @@ public final class UnitExp implements StyledShowable
         do
         {
             substituted = false;
-            for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+                Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
                 @Nullable UnitExp pointer = entry.getKey().<@Nullable UnitExp>either(mut -> mut.pointer, s -> null);
                 if (pointer != null)
                 {
@@ -224,9 +225,9 @@ public final class UnitExp implements StyledShowable
         units.forEach((k, v) -> subst.units.put(k, -(v / divisor)));
         lowestAbsPower.getFirst().pointer = subst;
         
-        for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+            Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
             int mod = IntMath.mod(entry.getValue(), Math.abs(lowestAbsPower.getSecond()));
             if (mod == 0)
             {
@@ -247,7 +248,7 @@ public final class UnitExp implements StyledShowable
     {
         substituteMutVars();
         Unit u = Unit.SCALAR;
-        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
         {
             @Nullable Unit multiplier = e.getKey().<@Nullable Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
             if (multiplier == null)

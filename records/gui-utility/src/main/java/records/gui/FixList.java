@@ -35,7 +35,7 @@ public class FixList extends VBox
         setFixes(fixes);
     }
 
-    public void setFixes(@UnknownInitialization(Object.class) FixList this, ImmutableList<FixInfo> fixes)
+    public void setFixes(@UnknownInitialization(VBox.class) FixList this, ImmutableList<FixInfo> fixes)
     {
         getChildren().clear();
         if (!fixes.isEmpty())

@@ -9,6 +9,7 @@ import javafx.scene.Node;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import utility.Pair;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
@@ -89,9 +90,9 @@ abstract class DeepNodeTree
             listeningTo.put(child, true);
         });
         // Stop listening to old:
-        for (Iterator<Entry<EEDisplayNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.listeningTo") EEDisplayNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<EEDisplayNode, Boolean> e = iterator.next();
+            Entry<@KeyFor("this.listeningTo") EEDisplayNode, Boolean> e = iterator.next();
             if (e.getValue() == false)
             {
                 e.getKey().nodes().removeListener(childrenNodeListener);

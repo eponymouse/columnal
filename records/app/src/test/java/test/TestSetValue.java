@@ -37,6 +37,7 @@ public class TestSetValue
             originals.add(typeAndValueGen.makeValue());
             replacements.add(typeAndValueGen.makeValue());
         }
+        @SuppressWarnings("keyfor")
         EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C0"), originals, typeAndValueGen.makeValue())), () -> length);
         Column col = rs.getColumns().get(0);
 

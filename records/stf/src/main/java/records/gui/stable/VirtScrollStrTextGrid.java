@@ -42,6 +42,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -1126,9 +1127,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             int lastDisplayColExcl = getLastDisplayColExcl();
 
             // Remove not-visible cells and put them in spare cells:
-            for (Iterator<Entry<CellPosition, StructuredTextField>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<@KeyFor("this.visibleCells") CellPosition, StructuredTextField>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<CellPosition, StructuredTextField> vis = iterator.next();
+                Entry<@KeyFor("this.visibleCells") CellPosition, StructuredTextField> vis = iterator.next();
                 CellPosition pos = vis.getKey();
 
                 boolean shouldBeVisible =
@@ -1251,7 +1252,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private void cellFocusChanged(StructuredTextField cell, boolean focused)
     {
         @MonotonicNonNull CellPosition cellPosition = null;
-        for (Entry<CellPosition, StructuredTextField> vis : visibleCells.entrySet())
+        for (Entry<@KeyFor("this.visibleCells") CellPosition, StructuredTextField> vis : visibleCells.entrySet())
         {
             if (vis.getValue().equals(cell))
             {

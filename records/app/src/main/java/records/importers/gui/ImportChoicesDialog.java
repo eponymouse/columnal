@@ -57,6 +57,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Workers;
@@ -274,14 +275,22 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 choiceNode = combo;
             }
             ReadOnlyObjectProperty<@Nullable PickOrOther<C>> selectedItemProperty = combo.getSelectionModel().selectedItemProperty();
-            choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, (@Nullable PickOrOther<C> selectedItem) -> {
-                    if (selectedItem != null && selectedItem.value != null)
-                        return selectedItem.value;
-                    else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
-                        return fieldValue.get();
-                    else
-                        return null;
-            }, fieldValue == null ? new ObservableValue<?> @RecordedBottom @KeyForBottom [0] : new ObservableValue<?> @RecordedBottom @KeyForBottom [] {fieldValue});
+            FXPlatformFunction<@Nullable PickOrOther<C>, @Nullable C> extract = (@Nullable PickOrOther<C> selectedItem) -> {
+                if (selectedItem != null && selectedItem.value != null)
+                    return selectedItem.value;
+                else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
+                    return fieldValue.get();
+                else
+                    return null;
+            };
+            if (fieldValue == null)
+                choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract);
+            else
+            {
+                @SuppressWarnings("keyfor")
+                @KeyForBottom ImmutableList<ObservableValue<?>> fieldList = ImmutableList.of(fieldValue);
+                choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract, fieldList);
+            }
         }
         int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<@Nullable C> pick = item -> {

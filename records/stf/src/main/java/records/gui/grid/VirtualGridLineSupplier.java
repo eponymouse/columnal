@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import threadchecker.OnThread;
 
 import java.util.HashMap;
@@ -71,18 +72,18 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             linesToKeep.add(line);
         }
 
-        for (Iterator<Entry<Integer, Line>> iterator = xLinesInUse.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.xLinesInUse") Integer, Line>> iterator = xLinesInUse.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<Integer, Line> integerLineEntry = iterator.next();
+            Entry<@KeyFor("this.xLinesInUse") Integer, Line> integerLineEntry = iterator.next();
             if (!linesToKeep.contains(integerLineEntry.getValue()))
             {
                 containerChildren.remove(integerLineEntry.getValue());
                 iterator.remove();
             }
         }
-        for (Iterator<Entry<Integer, Line>> iterator = yLinesInUse.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.yLinesInUse") Integer, Line>> iterator = yLinesInUse.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<Integer, Line> integerLineEntry = iterator.next();
+            Entry<@KeyFor("this.yLinesInUse") Integer, Line> integerLineEntry = iterator.next();
             if (!linesToKeep.contains(integerLineEntry.getValue()))
             {
                 containerChildren.remove(integerLineEntry.getValue());

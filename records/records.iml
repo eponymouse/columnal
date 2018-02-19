@@ -11,6 +11,6 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="classes" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.14" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.3.2" level="project" />
   </component>
 </module>

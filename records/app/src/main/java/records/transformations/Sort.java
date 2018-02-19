@@ -441,7 +441,7 @@ public class Sort extends TransformationEditable
                 {
                     clearAllCellsStates();
 
-                    Pair<@Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell, @Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell> nearest = sortByView.getNearestGap(pointInScene.getX(), pointInScene.getY());
+                    Pair<DeletableListView<Optional<ColumnId>>.@Nullable DeletableListCell, DeletableListView<Optional<ColumnId>>.@Nullable DeletableListCell> nearest = sortByView.getNearestGap(pointInScene.getX(), pointInScene.getY());
                     if (nearest.getFirst() != null)
                     {
                         FXUtility.setPseudoclass(nearest.getFirst(), "drop-target-at-bottom", true);
@@ -467,7 +467,7 @@ public class Sort extends TransformationEditable
                 {
                     clearAllCellsStates();
 
-                    Pair<@Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell, @Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell> nearest = sortByView.getNearestGap(pointInScene.getX(), pointInScene.getY());
+                    Pair<DeletableListView<Optional<ColumnId>>.@Nullable DeletableListCell, DeletableListView<Optional<ColumnId>>.@Nullable DeletableListCell> nearest = sortByView.getNearestGap(pointInScene.getX(), pointInScene.getY());
 
                     // If no nearest, or no nearest below, just add at end of list
                     OptionalInt beforeIndex = nearest.getSecond() == null ? OptionalInt.empty() : OptionalInt.of(Utility.indexOfRef(sortBy, nearest.getSecond().getItem()));

@@ -2,6 +2,7 @@ package records.gui.stf;
 
 import javafx.scene.control.ListCell;
 import javafx.scene.input.MouseButton;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.flowless.Cell;

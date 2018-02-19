@@ -1,5 +1,6 @@
 package utility;
 
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class GraphUtility
 
         // We don't have any empty lists in the map:
         Map<@NonNull T, List<T>> remainingEdges = new HashMap<>();
-        for (Entry<@NonNull T, ? extends Collection<T>> origEdge : incomingEdges.entrySet())
+        for (Entry<@NonNull @KeyFor("incomingEdges") T, ? extends Collection<T>> origEdge : incomingEdges.entrySet())
         {
             if (!origEdge.getValue().isEmpty())
                 remainingEdges.put(origEdge.getKey(), new ArrayList<>(origEdge.getValue()));
@@ -73,9 +74,9 @@ public class GraphUtility
             if (next == null)
                 next = s.remove(s.size() - 1); // Faster to remove from end
             l.add(next);
-            for (Iterator<Entry<@NonNull T, List<T>>> iterator = remainingEdges.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<@NonNull @KeyFor("remainingEdges") T, List<T>>> iterator = remainingEdges.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<@NonNull T, List<T>> incoming = iterator.next();
+                Entry<@NonNull @KeyFor("remainingEdges") T, List<T>> incoming = iterator.next();
                 incoming.getValue().remove(next);
                 if (incoming.getValue().isEmpty())
                 {

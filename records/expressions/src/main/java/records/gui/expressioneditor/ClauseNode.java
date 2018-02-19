@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -337,7 +338,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         {
             if (allClauseVars != null)
             {
-                for (Entry<String, Collection<@Nullable DataType>> varType : allClauseVars.asMap().entrySet())
+                for (Entry<@KeyFor("allClauseVars.asMap()") String, Collection<@Nullable DataType>> varType : allClauseVars.asMap().entrySet())
                 {
                     // If all types are non-null and the same, add as known type
                     // Otherwise, must add null (unknown type).

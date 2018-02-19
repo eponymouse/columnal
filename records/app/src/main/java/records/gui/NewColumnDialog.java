@@ -3,6 +3,7 @@ package records.gui;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -99,13 +100,13 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         });
     }
 
-    private EditorKit<?> makeEditorKit(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
+    private EditorKit<?> makeEditorKit(@UnknownInitialization(Dialog.class) NewColumnDialog this, DataType dataType) throws InternalException
     {
         defaultValue = DataTypeUtility.makeDefaultValue(dataType);
         return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(Dialog.class) NewColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
     {
         return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
     }

@@ -2,6 +2,7 @@ package records.data;
 
 import com.google.common.collect.Sets;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -189,7 +190,7 @@ public class TableManager
         // Deep copy:
         synchronized (this)
         {
-            for (Entry<TableId, Set<Table>> tables : usedIds.entrySet())
+            for (Entry<@KeyFor("usedIds") TableId, Set<Table>> tables : usedIds.entrySet())
             {
                 values.put(tables.getKey(), new TablesWithSameId(tables.getKey(), tables.getValue()));
             }

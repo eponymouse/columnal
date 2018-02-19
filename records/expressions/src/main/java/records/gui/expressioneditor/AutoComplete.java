@@ -350,7 +350,7 @@ public class AutoComplete extends PopupControl
     }
 
     @OnThread(Tag.FXPlatform)
-    private void updatePosition(@UnknownInitialization(Object.class) AutoComplete this)
+    private void updatePosition(@UnknownInitialization(PopupControl.class) AutoComplete this)
     {
         if (isShowing() && textField != null)
         {

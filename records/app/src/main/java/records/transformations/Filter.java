@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -334,7 +335,7 @@ public class Filter extends TransformationEditable
                     if (!isUnsat) {
                         //srcHeaderAndData.clear();
                         Model model = prover.getModel();
-                        for (Entry<Pair<@Nullable TableId, ColumnId>, @NonNull Formula> var : vars.entrySet())
+                        for (Entry<@KeyFor("vars") Pair<@Nullable TableId, ColumnId>, @NonNull Formula> var : vars.entrySet())
                         {
                             Object evaluated = model.evaluate(var.getValue());
                             if (evaluated != null)
@@ -360,7 +361,7 @@ public class Filter extends TransformationEditable
                     //System.out.println("Satisfiable negation: " + !isUnsat);
                     if (!isUnsat) {
                         Model model = prover.getModel();
-                        for (Entry<Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
+                        for (Entry<@KeyFor("vars") Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
                         {
                             Object evaluated = model.evaluate(var.getValue());
                             if (evaluated != null)

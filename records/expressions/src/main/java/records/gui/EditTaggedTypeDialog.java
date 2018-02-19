@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -118,7 +119,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
         }
     }
 
-    private void sizeToFit(@UnknownInitialization(Object.class) EditTaggedTypeDialog this)
+    private void sizeToFit(@UnknownInitialization(Dialog.class) EditTaggedTypeDialog this)
     {
         Scene scene = getDialogPane().getScene();
         if (scene != null)
