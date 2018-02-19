@@ -63,7 +63,7 @@ public class ScrollGroup
         requestScrollBy(-scrollEvent.getDeltaX(), -scrollEvent.getDeltaY());
     }
 
-    void requestScrollBy(double deltaX, double deltaY)
+    public void requestScrollBy(double deltaX, double deltaY)
     {
         // If we're not the root group, forward up the chain:
         if (parent != null)

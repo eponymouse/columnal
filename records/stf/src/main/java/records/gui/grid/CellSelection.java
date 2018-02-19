@@ -27,6 +27,8 @@ public interface CellSelection
      * Gets a new selection that is the result of pressing end on this one.
      */
     public CellSelection atEnd(boolean extendSelection);
-
+    
     public CellSelection move(boolean extendSelection, int byRows, int byColumns);
+    
+    public CellPosition positionToEnsureInView();
 }

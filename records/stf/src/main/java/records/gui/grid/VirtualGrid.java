@@ -12,6 +12,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -66,6 +68,7 @@ public abstract class VirtualGrid implements ScrollBindable
     private final ScrollBar hBar;
     private final ScrollBar vBar;
     private final CreateTableButtonSupplier createTableButtonSupplier;
+    private final ScrollGroup scrollGroup;
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
 
@@ -114,7 +117,7 @@ public abstract class VirtualGrid implements ScrollBindable
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
-        ScrollGroup scrollGroup = new ScrollGroup(
+        scrollGroup = new ScrollGroup(
                 FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
             // Count column widths in that direction until we reach target:
             double curX;
@@ -168,7 +171,13 @@ public abstract class VirtualGrid implements ScrollBindable
             scrollGroup.requestScroll(scrollEvent);
             scrollEvent.consume();
         });
-        FXUtility.addChangeListenerPlatform(selection, s -> container.redoLayout());
+        FXUtility.addChangeListenerPlatform(selection, s -> {
+            if (s != null)
+            {
+                FXUtility.mouse(this).smoothScrollToEnsureVisible(s.positionToEnsureInView());
+            }
+            container.redoLayout();
+        });
     }
     
     private @Nullable CellPosition getCellPositionAt(double x, double y)
@@ -741,6 +750,45 @@ public abstract class VirtualGrid implements ScrollBindable
     {
         // TODO
     }
+
+    private Bounds getPixelPosition(CellPosition target)
+    {
+        double minX = sumColumnWidths(0, target.columnIndex);
+        double minY = rowHeight * target.rowIndex;
+        return new BoundingBox(minX, minY, getColumnWidth(target.columnIndex), rowHeight);
+    }
+
+    private void smoothScrollToEnsureVisible(CellPosition target)
+    {
+        Point2D currentXY = new Point2D(getCurrentScrollX(null), getCurrentScrollY(null));
+        Bounds targetBounds = getPixelPosition(target);
+        double deltaX = 0.0;
+        double deltaY = 0.0;
+        if (targetBounds.getMinX() < currentXY.getX())
+        {
+            // Off screen to left, scroll til it's visible plus a margin:
+            deltaX = targetBounds.getMinX() - currentXY.getX() - 20;
+        }
+        else if (targetBounds.getMaxX() > currentXY.getX() + container.getWidth())
+        {
+            // Off screen to right:
+            deltaX = targetBounds.getMaxX() - (currentXY.getX() + container.getWidth()) + 20;
+        }
+
+        if (targetBounds.getMinY() < currentXY.getY())
+        {
+            // Off screen above, scroll til it's visible plus a margin:
+            deltaY = targetBounds.getMinY() - currentXY.getY() - 20;
+        }
+        else if (targetBounds.getMaxY() > currentXY.getY() + container.getHeight())
+        {
+            // Off screen below:
+            deltaY = targetBounds.getMaxY() - (currentXY.getY() + container.getHeight()) + 20;
+        }
+
+        if (deltaX != 0.0 || deltaY != 0.0)
+            scrollGroup.requestScrollBy(deltaX, deltaY);
+    }
     
     public void addGridArea(GridArea gridArea)
     {
@@ -831,7 +879,12 @@ public abstract class VirtualGrid implements ScrollBindable
         @Override
         public CellSelection move(boolean extendSelection, int byRows, int byColumns)
         {
-            CellPosition newPos = new CellPosition(position.rowIndex + byRows, position.columnIndex + byColumns);
+            CellPosition newPos = new CellPosition(
+                Math.min(currentKnownRows.get() - 1, Math.max(position.rowIndex + byRows, 0)), 
+                Math.min(currentColumns.get() - 1, Math.max(position.columnIndex + byColumns, 0))
+            );
+            if (newPos.equals(position))
+                return this; // Not moving
             // Go through each grid area and see if it contains the position:
             for (GridArea gridArea : gridAreas)
             {
@@ -841,6 +894,12 @@ public abstract class VirtualGrid implements ScrollBindable
                 }
             }
             return new EmptyCellSelection(newPos);
+        }
+
+        @Override
+        public CellPosition positionToEnsureInView()
+        {
+            return position;
         }
     }
 }
