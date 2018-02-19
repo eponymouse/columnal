@@ -6,6 +6,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -47,6 +48,7 @@ import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
@@ -108,7 +110,7 @@ public class TableDisplay implements TableDisplayBase
     private final Table table;
     private final View parent;
     private final GridArea tableDataDisplay;
-    private final ColumnHeaderSupplier columnHeaderSupplier;
+    private final VirtualGridSupplierFloating columnHeaderSupplier;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
@@ -295,8 +297,8 @@ public class TableDisplay implements TableDisplayBase
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
-        private final List<FloatingItem<Label>> columnHeaderItems = new ArrayList<>();
-        private final FloatingItem<Label> tableHeaderItem;
+        private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
+        private final FloatingItem tableHeaderItem;
 
         @SuppressWarnings("initialization")
         @UIEffect
@@ -340,7 +342,7 @@ public class TableDisplay implements TableDisplayBase
                 setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
             });
             
-            this.tableHeaderItem = new FloatingItem<Label>() {
+            this.tableHeaderItem = new FloatingItem() {
                 @Override
                 @OnThread(Tag.FXPlatform)
                 public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
@@ -359,10 +361,9 @@ public class TableDisplay implements TableDisplayBase
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public ViewOrder useCell(Label item)
+                public Pair<ViewOrder, Node> makeCell()
                 {
-                    item.setText(getTable().getId().getOutput());
-                    return ViewOrder.FLOATING;
+                    return new Pair<>(ViewOrder.FLOATING, new Label(getTable().getId().getOutput()));
                 }
             };
             columnHeaderSupplier.addItem(tableHeaderItem);
@@ -549,7 +550,7 @@ public class TableDisplay implements TableDisplayBase
                 final int columnIndex = i;
                 ColumnDetails column = columns.get(i);
                 // Item for column name:
-                FloatingItem<Label> item = new FloatingItem<Label>()
+                FloatingItem item = new FloatingItem()
                 {
                     @Override
                     @OnThread(Tag.FXPlatform)
@@ -569,10 +570,9 @@ public class TableDisplay implements TableDisplayBase
 
                     @Override
                     @OnThread(Tag.FXPlatform)
-                    public VirtualGridSupplier.ViewOrder useCell(Label item)
+                    public Pair<VirtualGridSupplier.ViewOrder, Node> makeCell()
                     {
-                        item.setText(column.getColumnId().getOutput());
-                        return ViewOrder.FLOATING_PINNED;
+                        return new Pair<>(ViewOrder.FLOATING_PINNED, new Label(column.getColumnId().getOutput()));
                     }
                 };
                 columnHeaderItems.add(item);
@@ -609,7 +609,7 @@ public class TableDisplay implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
-    public TableDisplay(View parent, ColumnHeaderSupplier columnHeaderSupplier, Table table)
+    public TableDisplay(View parent, VirtualGridSupplierFloating columnHeaderSupplier, Table table)
     {
         this.parent = parent;
         this.table = table;

@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.ColumnMaker;
@@ -25,6 +26,7 @@ import records.grammar.MainParser.DataSourceImmediateContext;
 import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -152,13 +154,18 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.mapList(columns, c -> rs -> c.apply(rs)), () -> Utility.loadData(immed.values().detail(), p ->
+            super(Utility.mapList(columns, c -> create(c)), () -> Utility.loadData(immed.values().detail(), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
                     columns.get(i).loadRow(p);
                 }
             }));
+        }
+
+        public static ExFunction<RecordSet, ? extends EditableColumn> create(DataType.ColumnMaker<?, ?> c)
+        {
+            return rs -> c.apply(rs);
         }
     }
 }

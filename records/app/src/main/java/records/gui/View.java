@@ -43,6 +43,7 @@ import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
+import records.gui.grid.VirtualGridSupplierFloating;
 import records.transformations.TransformationEditable;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
@@ -76,7 +77,7 @@ public class View extends StackPane
     // The STF supplier for the main pane:
     private final DataCellSupplier dataCellSupplier = new DataCellSupplier();
     // The column header supplier:
-    private final ColumnHeaderSupplier columnHeaderSupplier = new ColumnHeaderSupplier();
+    private final VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
     // The supplier for buttons to add rows and columns:
     private final ExpandTableArrowSupplier expandTableArrowSupplier = new ExpandTableArrowSupplier();
     

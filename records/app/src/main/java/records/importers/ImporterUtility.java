@@ -1,6 +1,7 @@
 package records.importers;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -95,7 +96,8 @@ public class ImporterUtility
     @OnThread(Tag.Simulation)
     public static EditableRecordSet makeEditableRecordSet(TableManager mgr, List<List<String>> vals, Format format) throws InternalException, UserException
     {
-        List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+        @SuppressWarnings("keyfor")
+        @KeyForBottom List<ExFunction<RecordSet, ? extends EditableColumn>> columns = new ArrayList<>();
         for (int i = 0; i < format.columnTypes.size(); i++)
         {
             ColumnInfo columnInfo = format.columnTypes.get(i);

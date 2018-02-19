@@ -5,6 +5,7 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -18,13 +19,12 @@ import java.util.Set;
  * An implementation of {@link VirtualGridSupplier} that allows nodes to related to a grid area,
  * but to float depending on that grid's position on screen.  This might be a column header,
  * a message when the table is empty, or so on.
- * @param <T>
  */
 @OnThread(Tag.FXPlatform)
-public abstract class VirtualGridSupplierFloating<T extends Node> extends VirtualGridSupplier<T>
+public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
 {
-    private final Map<FloatingItem<T>, Optional<T>> items = new IdentityHashMap<>();
-    private final List<T> toRemove = new ArrayList<>();
+    private final Map<FloatingItem, Optional<Node>> items = new IdentityHashMap<>();
+    private final List<Node> toRemove = new ArrayList<>();
 
     @Override
     void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
@@ -32,7 +32,7 @@ public abstract class VirtualGridSupplierFloating<T extends Node> extends Virtua
         toRemove.forEach(r -> containerChildren.remove(r));
         toRemove.clear();
         
-        for (Entry<FloatingItem<T>, Optional<T>> item : items.entrySet())
+        for (Entry<FloatingItem, Optional<Node>> item : items.entrySet())
         {
             Optional<BoundingBox> pos = item.getKey().calculatePosition(rowBounds, columnBounds);
             if (pos.isPresent())
@@ -40,10 +40,9 @@ public abstract class VirtualGridSupplierFloating<T extends Node> extends Virtua
                 // Should be visible; make sure there is a cell and put in right position:
                 if (!item.getValue().isPresent())
                 {
-                    T newCell = makeCell();
-                    ViewOrder viewOrder = item.getKey().useCell(newCell);
-                    containerChildren.add(newCell, viewOrder);
-                    item.setValue(Optional.of(newCell));
+                    Pair<ViewOrder, Node> itemAndOrder = item.getKey().makeCell();
+                    containerChildren.add(itemAndOrder.getSecond(), itemAndOrder.getFirst());
+                    item.setValue(Optional.of(itemAndOrder.getSecond()));
                 }
                 // Now that there's a cell there, locate it:
                 item.getValue().get().resizeRelocate(pos.get().getMinX(), pos.get().getMinY(), pos.get().getWidth(), pos.get().getHeight());
@@ -60,25 +59,23 @@ public abstract class VirtualGridSupplierFloating<T extends Node> extends Virtua
         }
     }
     
-    protected abstract T makeCell();
-    
-    public final void addItem(FloatingItem<T> item)
+    public final void addItem(FloatingItem item)
     {
         items.put(item, Optional.empty());
     }
     
-    public final void removeItem(FloatingItem<T> item)
+    public final void removeItem(FloatingItem item)
     {
-        Optional<T> removed = items.remove(item);
+        Optional<Node> removed = items.remove(item);
         if (removed != null && removed.isPresent())
             toRemove.add(removed.get());
     }
 
-    public static interface FloatingItem<T extends Node>
+    public static interface FloatingItem
     {
         // If empty is returned, means not visible.  Otherwise, coords in parent are returned.
         public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds);
         
-        public ViewOrder useCell(T item);
+        public Pair<ViewOrder, Node> makeCell();
     }
 }
