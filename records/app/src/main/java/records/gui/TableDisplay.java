@@ -295,9 +295,9 @@ public class TableDisplay implements TableDisplayBase
 
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(Pair<@Nullable RecordSet, MessageWhenEmpty> recordSetMessageWhenEmptyPair, VirtualGridSupplierFloating columnHeaderSupplier, FXPlatformRunnable onModify)
+        public TableDataDisplay(TableManager tableManager, Pair<@Nullable RecordSet, MessageWhenEmpty> recordSetMessageWhenEmptyPair, VirtualGridSupplierFloating columnHeaderSupplier, FXPlatformRunnable onModify)
         {
-            super(getTable().getId().getOutput(), recordSetMessageWhenEmptyPair.getSecond(), columnHeaderSupplier);
+            super(tableManager, getTable().getId(), recordSetMessageWhenEmptyPair.getSecond(), columnHeaderSupplier);
             this.recordSet = recordSetMessageWhenEmptyPair.getFirst();
             this.onModify = onModify;
             recordSet.setListener(this);
@@ -585,7 +585,7 @@ public class TableDisplay implements TableDisplayBase
             recordSetOrError = Either.left(e.getStyledMessage());
         }
         this.recordSetOrError = recordSetOrError;
-        tableDataDisplay = new TableDataDisplay(this.recordSetOrError.<Pair<@Nullable RecordSet, MessageWhenEmpty>>either(err -> new Pair<@Nullable RecordSet, MessageWhenEmpty>(null, new MessageWhenEmpty(err)),
+        tableDataDisplay = new TableDataDisplay(parent.getManager(), this.recordSetOrError.<Pair<@Nullable RecordSet, MessageWhenEmpty>>either(err -> new Pair<@Nullable RecordSet, MessageWhenEmpty>(null, new MessageWhenEmpty(err)),
                 recordSet -> new Pair<>(recordSet, table.getDisplayMessageWhenEmpty())), columnHeaderSupplier, () -> {
             parent.modified();
             Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));

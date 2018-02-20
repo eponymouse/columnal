@@ -1,0 +1,32 @@
+@import 'colors';
+@import 'fonts';
+
+.table-display-table-title {
+    -fx-background-color: $table-header-background-color;
+    &:table-selected {
+        -fx-cursor: move;
+        -fx-background-color: $table-header-background-color-selected;
+    }
+    .text-field {
+        -fx-text-fill: $table-header-text-color;
+        -fx-background-color: $table-header-background-color, $table-header-background-color;
+        &:focused, &:hover {
+            -fx-background-color: grey(65%), $table-header-background-color;
+        }
+        -fx-background-insets: 0, 1;
+        -fx-padding: -1 1 -1 1;
+    }
+}
+
+.table-display-column-title {
+    -fx-background-color: $column-header-background-color;
+    .text-field {
+        -fx-text-fill: $column-header-text-color;
+        -fx-background-color: $column-header-background-color, $column-header-background-color;
+        &:focused, &:hover {
+            -fx-background-color: grey(65%), $column-header-background-color;
+        }
+        -fx-background-insets: 0, 1;
+        -fx-padding: -1 1 -1 1;
+    }
+}

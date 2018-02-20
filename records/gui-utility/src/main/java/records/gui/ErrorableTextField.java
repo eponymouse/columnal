@@ -24,7 +24,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.FXPlatformFunction;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -145,6 +144,11 @@ public class ErrorableTextField<T>
     public List<String> getStyleClass(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
     {
         return field.getStyleClass();
+    }
+
+    public void sizeToFit(@Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused)
+    {
+        FXUtility.sizeToFit(field, minSizeFocused, minSizeUnfocused);
     }
 
     public static class ConversionResult<T>

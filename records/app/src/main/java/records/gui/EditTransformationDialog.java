@@ -71,8 +71,6 @@ public class EditTransformationDialog
     // The key is the canonical name of the transformation.
     private final Map<String, TransformationEditor> editors = new HashMap<>();
     private final BooleanProperty showingMoreDescription = new SimpleBooleanProperty(false);
-    // Currently retained only for testing:
-    private TableNameTextField destTableNameField;
 
     /**
      * Edits a transformation: either a new one (srcId non-null and existing null) or an existing (srcId null and and existing non-null)
@@ -137,11 +135,7 @@ public class EditTransformationDialog
         });
         VBox infoPane = new VBox();
         infoPane.getStyleClass().add("transformation-info");
-        TableNameTextField tableNameTextField = new TableNameTextField(parentView.getManager(), existing == null ? null : existing.getFirst());
-        destTableNameField = tableNameTextField;
-        tableNameTextField.getStyleClass().add("transformation-table-id");
-        Node tableNamePane = GUI.labelled("transformEditor.table.name", tableNameTextField.getNode(), "table-name-wrapper");
-
+        
         Text title = new Text("");
         title.getStyleClass().add("transformation-title");
         title.textProperty().bind(new SelectedTransformationStringBinding(editor, TransformationEditor::getDisplayTitle));
@@ -165,12 +159,11 @@ public class EditTransformationDialog
         textFlow.getStyleClass().add("transformation-description-wrapper");
         //textFlow.maxWidthProperty().bind(infoPane.widthProperty());
         infoPane.getChildren().add(textFlow);
-        infoPane.getChildren().add(tableNamePane);
         content.setCenter(infoPane);
 
         FXUtility.addChangeListenerPlatform(editor, ed ->
         {
-            infoPane.getChildren().retainAll(titleWrapper, textFlow, tableNamePane);
+            infoPane.getChildren().retainAll(titleWrapper, textFlow);
             if (ed == null || !ed.isPresent())
             {
                 // Leave out
@@ -179,7 +172,7 @@ public class EditTransformationDialog
             {
                 Pane parameterDisplay = ed.get().getParameterDisplay(this::showError);
                 VBox.setVgrow(parameterDisplay, Priority.ALWAYS);
-                infoPane.getChildren().add(infoPane.getChildren().indexOf(tableNamePane), parameterDisplay);
+                infoPane.getChildren().add(infoPane.getChildren().size(), parameterDisplay);
             }
         });
         editor.set(existing == null ? Optional.empty() : Optional.of(existing.getSecond()));
@@ -200,12 +193,8 @@ public class EditTransformationDialog
                     Optional<TransformationEditor> ed = editor.get();
                     if (ed.isPresent())
                     {
-                        @Nullable Optional<TableId> destId = tableNameTextField.valueProperty().get();
-                        if (destId != null)
-                        {
-                            Log.debug("Returning transformation");
-                            return ed.get().getTransformation(parentView.getManager(), destId.orElse(null));
-                        }
+                        Log.debug("Returning transformation");
+                        return ed.get().getTransformation(parentView.getManager(), null);
                     }
                     Log.debug("Falling through OK");
                 }
@@ -300,11 +289,6 @@ public class EditTransformationDialog
     public Optional<SimulationSupplier<Transformation>> showAndWait()
     {
         return dialog.showAndWait();
-    }
-
-    public TableNameTextField _test_getDestTableNameField()
-    {
-        return destTableNameField;
     }
 
     private static class SelectedTransformationStringBinding extends StringBinding

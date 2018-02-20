@@ -2,11 +2,16 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table.MessageWhenEmpty;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.TableOperations;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
@@ -21,6 +26,7 @@ import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +50,7 @@ public abstract class DataDisplay extends GridArea
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
     
-    public DataDisplay(String initialTableName, MessageWhenEmpty messageWhenEmpty, VirtualGridSupplierFloating columnHeaderSupplier)
+    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, VirtualGridSupplierFloating columnHeaderSupplier)
     {
         super(messageWhenEmpty);
         this.columnHeaderSupplier = columnHeaderSupplier;
@@ -69,7 +75,14 @@ public abstract class DataDisplay extends GridArea
               @OnThread(Tag.FXPlatform)
               public Pair<ViewOrder, Node> makeCell()
               {
-                  return new Pair<>(ViewOrder.FLOATING, new Label(initialTableName));
+                  ErrorableTextField<TableId> tableNameField = new TableNameTextField(tableManager, initialTableName);
+                  tableNameField.sizeToFit(30.0, 30.0);
+                  // TODO support dragging to move table
+                  BorderPane borderPane = new BorderPane(tableNameField.getNode());
+                  borderPane.getStyleClass().add("table-display-table-title");
+                  BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
+                  BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
+                  return new Pair<>(ViewOrder.FLOATING, borderPane);
               }
           }  
         );
@@ -111,7 +124,13 @@ public abstract class DataDisplay extends GridArea
                 @OnThread(Tag.FXPlatform)
                 public Pair<ViewOrder, Node> makeCell()
                 {
-                    return new Pair<>(ViewOrder.FLOATING_PINNED, new Label(column.getColumnId().getOutput()));
+                    ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
+                    textField.sizeToFit(30.0, 30.0);
+                    BorderPane borderPane = new BorderPane(textField.getNode());
+                    borderPane.getStyleClass().add("table-display-column-title");
+                    BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
+                    BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
+                    return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
                 }
             };
             columnHeaderItems.add(item);

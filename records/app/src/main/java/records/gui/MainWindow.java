@@ -1,9 +1,5 @@
 package records.gui;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -30,7 +26,6 @@ import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -193,33 +188,6 @@ public class MainWindow
                 FXUtility.logAndShowError("newtable.error", ex);
             }
         });
-    }
-
-    private static class DummySaveMenuItem extends MenuItem
-    {
-        private final ObjectProperty<Object> dummyNowBinding = new SimpleObjectProperty<>(new Object());
-        private final @OnThread(Tag.FXPlatform) StringBinding text;
-
-        @OnThread(Tag.FXPlatform)
-        public DummySaveMenuItem(View view)
-        {
-            setDisable(true);
-            text = Bindings.createStringBinding(() ->
-            {
-                @Nullable Instant lastSave = view.lastSaveTime().get();
-                if (lastSave == null)
-                    return TranslationUtility.getString("menu.project.modified");
-                else
-                    return "" + (Instant.now().getEpochSecond() - lastSave.getEpochSecond());
-            }, view.lastSaveTime(), dummyNowBinding);
-            // Invalidating this binding on show will force re-evaluation of the time gap:
-            FXUtility.onceNotNull(parentMenuProperty(), menu -> menu.addEventHandler(Menu.ON_SHOWING, e -> {
-                text.invalidate();
-            }));
-            textProperty().bind(TranslationUtility.bindString("menu.project.save", text));
-        }
-
-
     }
 
     public static Map<View, Stage> _test_getViews()

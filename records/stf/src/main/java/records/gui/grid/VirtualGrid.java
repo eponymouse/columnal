@@ -112,6 +112,7 @@ public class VirtualGrid implements ScrollBindable
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
+        this.container.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
         scrollGroup = new ScrollGroup(
                 FXUtility.mouse(this)::scrollLayoutXBy, MAX_EXTRA_ROW_COLS, targetX -> {
             // Count column widths in that direction until we reach target:

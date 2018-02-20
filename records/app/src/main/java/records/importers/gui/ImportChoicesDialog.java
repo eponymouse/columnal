@@ -101,7 +101,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         VirtualGridSupplierFloating destColumnHeaderSupplier = new VirtualGridSupplierFloating();
         destGrid.addNodeSupplier(destColumnHeaderSupplier);
-        DataDisplay destData = new DataDisplay(suggestedName, new MessageWhenEmpty(StyledString.s("...")), destColumnHeaderSupplier) {
+        DataDisplay destData = new DataDisplay(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), destColumnHeaderSupplier) {
             boolean currentKnownRowsIsFinal;
             int currentKnownRows = 0;
             @Override
@@ -161,7 +161,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         VirtualGridSupplierFloating srcColumnHeaderSupplier = new VirtualGridSupplierFloating();
         srcGrid.addNodeSupplier(srcColumnHeaderSupplier);
-        DataDisplay srcDataDisplay = new DataDisplay(suggestedName, new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier) {
+        DataDisplay srcDataDisplay = new DataDisplay(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier) {
 
             @Override
             public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
@@ -179,10 +179,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
         LabelledGrid choices = new LabelledGrid();
         choices.getStyleClass().add("choice-grid");
-        TableNameTextField nameField = new TableNameTextField(mgr, new TableId(suggestedName));
         //@SuppressWarnings("unchecked")
         //SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
-        choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));
         //choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
 
         SimpleObjectProperty<@Nullable FORMAT> formatProperty = new SimpleObjectProperty<>(null);
@@ -190,7 +188,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             if (format != null)
             {
                 @NonNull FORMAT formatNonNull = format;
-                Workers.onWorkerThread("Previewing " + nameField.valueProperty().get(), Priority.LOAD_FROM_DISK, () -> {
+                Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
                         RecordSet recordSet = loadData.apply(formatNonNull);
@@ -267,11 +265,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         });
         //TODO disable ok button if name isn't valid
         setResultConverter(bt -> {
-            @Nullable Optional<TableId> tableId = nameField.valueProperty().get();
             @Nullable FORMAT format = formatProperty.get();
-            if (bt == ButtonType.OK && tableId != null && format != null)
+            if (bt == ButtonType.OK && format != null)
             {
-                return new Pair<>(new ImportInfo(tableId.orElse(null)/*, linkCopyButtons.valueProperty().get()*/), format);
+                return new Pair<>(new ImportInfo(null/*, linkCopyButtons.valueProperty().get()*/), format);
             }
             return null;
         });
@@ -282,10 +279,6 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         setOnShown(e -> {
             //initModality(Modality.NONE); // For scenic view
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
-
-            // Have to use runAfter because the OK button gets focused
-            // so we have to wait, then steal the focus back:
-            FXUtility.runAfter(() -> nameField.requestFocusWhenInScene());
         });
     }
 

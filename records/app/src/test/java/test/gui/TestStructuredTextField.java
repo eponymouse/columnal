@@ -32,6 +32,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.Table.MessageWhenEmpty;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -127,7 +128,7 @@ public class TestStructuredTextField extends ApplicationTest
         VirtualGrid virtualGrid = new VirtualGrid(null);
         VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
         virtualGrid.addNodeSupplier(columnHeaderSupplier);
-        dataDisplay = new DataDisplay("TestTable", new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), columnHeaderSupplier)
+        dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), columnHeaderSupplier)
         {
             @Override
             public int getCurrentKnownRows()
