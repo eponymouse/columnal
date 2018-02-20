@@ -646,10 +646,7 @@ public class View extends StackPane
                 });
             }
         });
-        mainPane = new VirtualGrid() {
-            @Override
-            protected void createTable(CellPosition cellPosition, Point2D mouseScreenPos)
-            {
+        mainPane = new VirtualGrid((CellPosition cellPosition, Point2D mouseScreenPos) -> {
                 // Data table if there are none, or if we ask and they say data
                 
                 Optional<DataOrTransform> choice = Optional.of(DataOrTransform.DATA);
@@ -684,8 +681,7 @@ public class View extends StackPane
                             break;
                     }
                 }
-            }
-        };
+        });
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(columnHeaderSupplier);

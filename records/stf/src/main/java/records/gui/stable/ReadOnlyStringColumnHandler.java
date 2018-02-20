@@ -1,9 +1,8 @@
 package records.gui.stable;
 
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
-import records.gui.stable.StableView.ColumnHandler;
-import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.EditorKitSimpleLabel;
 import threadchecker.OnThread;
 import threadchecker.Tag;

@@ -36,9 +36,6 @@ import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
 import records.data.TableOperations.DeleteColumn;
 import records.data.TableOperations.InsertRows;
-import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
-import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
-import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -97,587 +94,526 @@ import java.util.concurrent.atomic.AtomicInteger;
 @OnThread(Tag.FXPlatform)
 public class StableView
 {
-    public static final double DEFAULT_COLUMN_WIDTH = 100.0;
-    private final VirtRowLabels lineNumbers;
-    private final VirtColHeaders headerItemsContainer;
-    private final VirtScrollStrTextGrid grid;
-    private final Label placeholderLabel;
-    private final StackPane stackPane; // has grid and placeholderLabel as its children
-    private final DoubleProperty widthEstimate;
-    private final DoubleProperty heightEstimate;
-    private final ContentLayout contentLayout;
+    /*
+public static final double DEFAULT_COLUMN_WIDTH = 100.0;
+private final VirtRowLabels lineNumbers;
+private final VirtColHeaders headerItemsContainer;
+private final VirtScrollStrTextGrid grid;
+private final Label placeholderLabel;
+private final StackPane stackPane; // has grid and placeholderLabel as its children
+private final DoubleProperty widthEstimate;
+private final DoubleProperty heightEstimate;
+private final ContentLayout contentLayout;
 
-    // An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
-    // effectively cancel some queued run-laters if the method is called twice in quick succession.
-    @OnThread(Tag.FXPlatform)
-    private AtomicInteger columnAndRowSet = new AtomicInteger(0);
-    private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
-    // Contents can't change, but whole list can:
-    private ImmutableList<ColumnDetails> columns = ImmutableList.of();
-    private static final double EDGE_DRAG_TOLERANCE = 8;
-    private static final double MIN_COLUMN_WIDTH = 30;
-    // A column is only editable if it is marked editable AND the table is editable:
-    private boolean tableEditable = true;
-    private final MessageWhenEmpty messageWhenEmpty;
-    private final ScrollBar hbar;
-    private final ScrollBar vbar;
+// An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
+// effectively cancel some queued run-laters if the method is called twice in quick succession.
+@OnThread(Tag.FXPlatform)
+private AtomicInteger columnAndRowSet = new AtomicInteger(0);
+private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
+// Contents can't change, but whole list can:
+private ImmutableList<ColumnDetails> columns = ImmutableList.of();
+private static final double EDGE_DRAG_TOLERANCE = 8;
+private static final double MIN_COLUMN_WIDTH = 30;
+// A column is only editable if it is marked editable AND the table is editable:
+private boolean tableEditable = true;
+private final MessageWhenEmpty messageWhenEmpty;
+private final ScrollBar hbar;
+private final ScrollBar vbar;
 
-    @OnThread(Tag.FXPlatform)
-    private @Nullable TableOperations operations;
-    private FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnOperations = c -> ImmutableList.of();
-    private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
-    private final BooleanProperty lineNumberShowing = new SimpleBooleanProperty(true);
-    private final BorderPane rightVertScroll;
+@OnThread(Tag.FXPlatform)
+private @Nullable TableOperations operations;
+private FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnOperations = c -> ImmutableList.of();
+private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
+private final BooleanProperty lineNumberShowing = new SimpleBooleanProperty(true);
+private final BorderPane rightVertScroll;
 
 
-    public StableView(MessageWhenEmpty messageWhenEmpty)
+public StableView(MessageWhenEmpty messageWhenEmpty)
+{
+    this.messageWhenEmpty = messageWhenEmpty;
+
+    hbar = new ScrollBar();
+    hbar.setOrientation(Orientation.HORIZONTAL);
+    hbar.getStyleClass().add("stable-view-scroll-bar");
+    vbar = new ScrollBar();
+    vbar.setOrientation(Orientation.VERTICAL);
+    vbar.getStyleClass().add("stable-view-scroll-bar");
+
+    grid = new VirtScrollStrTextGrid(new ValueLoadSave()
     {
-        this.messageWhenEmpty = messageWhenEmpty;
-
-        hbar = new ScrollBar();
-        hbar.setOrientation(Orientation.HORIZONTAL);
-        hbar.getStyleClass().add("stable-view-scroll-bar");
-        vbar = new ScrollBar();
-        vbar.setOrientation(Orientation.VERTICAL);
-        vbar.getStyleClass().add("stable-view-scroll-bar");
-
-        grid = new VirtScrollStrTextGrid(new ValueLoadSave()
+        @Override
+        public void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit)
         {
-            @Override
-            public void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit)
+            if (columns != null && colIndex < columns.size())
             {
-                if (columns != null && colIndex < columns.size())
-                {
-                    columns.get(colIndex).columnHandler.fetchValue(rowIndex, b -> {
-                    }, relinquishFocus, setEditorKit);
-                }
+                columns.get(colIndex).columnHandler.fetchValue(rowIndex, b -> {
+                }, relinquishFocus, setEditorKit);
             }
-        }, pos -> tableEditable && columns.get(pos.columnIndex).columnHandler.isEditable(), hbar, vbar)
-        {
-
-            @Override
-            public void columnWidthChanged(int columnIndex, double newWidth)
-            {
-                super.columnWidthChanged(columnIndex, newWidth);
-                if (columns != null)
-                {
-                    ColumnHandler colHandler = columns.get(columnIndex).columnHandler;
-                    colHandler.columnResized(newWidth);
-                    updateWidthEstimate();
-                    StableView.this.columnWidthChanged(columnIndex, newWidth);
-                }
-            }
-        };
-        /*
-        scrollPane.getStyleClass().add("stable-view-scroll-pane");
-        scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
-        // VirtualFlow seems to get layout issues when empty, so don't
-        // make it layout when empty:
-        scrollPane.managedProperty().bind(nonEmptyProperty);
-        scrollPane.visibleProperty().bind(nonEmptyProperty);
-        hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
-        vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
-        */
-
-        headerItemsContainer = grid.makeColumnHeaders(colIndex -> Utility.mapList(FXUtility.mouse(this).getColumnOperations(columns.get(colIndex).columnId), ColumnOperation::makeMenuItem), col -> columns.get(col).makeHeaderContent());
-        final Pane header = new BorderPane(headerItemsContainer.getNode());
-        header.getStyleClass().add("stable-view-header");
-        lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
-        final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());
-        lineNumberWrapper.setPickOnBounds(false);
-        lineNumberWrapper.getStyleClass().add("stable-view-side");
-        placeholderLabel = new Label(messageWhenEmpty.getDisplayMessageNoColumns());
-        placeholderLabel.getStyleClass().add(".stable-view-placeholderLabel");
-        BorderPane placeholder = new BorderPane(placeholderLabel, null, null, null, headerItemsContainer.makeAddColumnButton());
-        placeholder.visibleProperty().bind(nonEmptyProperty.not());
-        placeholderLabel.setWrapText(true);
-
-        Button topButton = makeScrollEndButton();
-        topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
-        topButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(0.0, -Double.MAX_VALUE));
-
-        Region topLeft = new Region();
-        topLeft.getStyleClass().add("stable-view-top-left");
-        FXUtility.forcePrefSize(topLeft);
-        topLeft.setMaxHeight(Double.MAX_VALUE);
-        topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
-
-        Pane top = new BorderPane(header, null, null, null, topLeft);
-        top.getStyleClass().add("stable-view-top");
-
-        Button leftButton = makeScrollEndButton();
-        leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
-        leftButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, 0.0));
-        Button rightButton = makeScrollEndButton();
-        rightButton.getStyleClass().addAll("stable-view-button", "stable-view-button-right");
-        rightButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, 0.0));
-
-        Button bottomButton = makeScrollEndButton();
-        bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
-        bottomButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(0.0, Double.MAX_VALUE));
-
-        rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
-        BorderPane bottomHorizScroll = new BorderPane(hbar, null, rightButton, null, leftButton);
-        
-        contentLayout = new ContentLayout(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper);
-        contentLayout.visibleProperty().bind(nonEmptyProperty);
-        stackPane = new StackPane(placeholder, contentLayout);
-        // TODO figure out grid equivalent
-        //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
-        placeholderLabel.managedProperty().bind(placeholderLabel.visibleProperty());
-        stackPane.getStyleClass().add("stable-view");
-
-        // Need to clip, otherwise scrolled-out part can still show up:
-        Rectangle headerClip = new Rectangle();
-        headerClip.widthProperty().bind(header.widthProperty());
-        headerClip.heightProperty().bind(header.heightProperty());
-        header.setClip(headerClip);
-
-        Rectangle sideClip = new Rectangle();
-        sideClip.widthProperty().bind(lineNumbers.getNode().widthProperty());
-        sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
-        lineNumberWrapper.setClip(sideClip);
-
-        FXUtility.bindPseudoclass(stackPane, "at-left", grid.atLeftProperty());
-        FXUtility.bindPseudoclass(stackPane, "at-right", grid.atRightProperty());
-        FXUtility.bindPseudoclass(stackPane, "at-top", grid.atTopProperty());
-        FXUtility.bindPseudoclass(stackPane, "at-bottom", grid.atBottomProperty());
-
-
-        widthEstimate = new SimpleDoubleProperty();
-        FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), x -> updateWidthEstimate());
-        heightEstimate = new SimpleDoubleProperty();
-        FXPlatformConsumer<Number> heightListener = x -> heightEstimate.set(grid.totalHeightEstimateProperty().getValue() + headerItemsContainer.getNode().getHeight());
-        FXUtility.addChangeListenerPlatformNN(grid.totalHeightEstimateProperty(), heightListener);
-        FXUtility.addChangeListenerPlatformNN(headerItemsContainer.getNode().heightProperty(), heightListener);
-    }
-
-    private List<ColumnOperation> getColumnOperations(ColumnId columnId)
+        }
+    }, pos -> tableEditable && columns.get(pos.columnIndex).columnHandler.isEditable(), hbar, vbar)
     {
-        // TODO add before/after?
-        List<ColumnOperation> r = new ArrayList<>();
-        if (operations != null && operations.renameColumn.apply(columnId) != null)
-        {
-            r.add(new ColumnOperation("stableView.column.rename")
-            {
-                @Override
-                public @OnThread(Tag.Simulation) void execute()
-                {
-                    //TODO
-                }
-            });
-        }
 
-        if (operations != null && operations.deleteColumn.apply(columnId) != null)
+        @Override
+        public void columnWidthChanged(int columnIndex, double newWidth)
         {
-            r.add(new ColumnOperation("stableView.column.delete")
+            super.columnWidthChanged(columnIndex, newWidth);
+            if (columns != null)
             {
-                @Override
-                public @OnThread(Tag.Simulation) void execute()
-                {
-                    if (operations != null)
-                    {
-                        @Nullable DeleteColumn deleteColumn = operations.deleteColumn.apply(columnId);
-                        if (deleteColumn != null)
-                            deleteColumn.deleteColumn(columnId);
-                    }
-                }
-            });
+                ColumnHandler colHandler = columns.get(columnIndex).columnHandler;
+                colHandler.columnResized(newWidth);
+                updateWidthEstimate();
+                StableView.this.columnWidthChanged(columnIndex, newWidth);
+            }
         }
+    };
+    //scrollPane.getStyleClass().add("stable-view-scroll-pane");
+    //scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
+    //scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+    // VirtualFlow seems to get layout issues when empty, so don't
+    // make it layout when empty:
+    //scrollPane.managedProperty().bind(nonEmptyProperty);
+    //scrollPane.visibleProperty().bind(nonEmptyProperty);
+    //hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
+    //vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
+    
 
-        if (hideColumnOperation() != null)
-        {
-            r.add(new ColumnOperation("stableView.column.hide")
-            {
-                @Override
-                public @OnThread(Tag.Simulation) void execute()
-                {
-                    Platform.runLater(() -> {
-                        @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation = hideColumnOperation();
-                        if (hideColumnOperation != null)
-                            hideColumnOperation.consume(columnId);
-                    });
-                }
-            });
-        }
+    headerItemsContainer = grid.makeColumnHeaders(colIndex -> Utility.mapList(FXUtility.mouse(this).getColumnOperations(columns.get(colIndex).columnId), ColumnOperation::makeMenuItem), col -> columns.get(col).makeHeaderContent());
+    final Pane header = new BorderPane(headerItemsContainer.getNode());
+    header.getStyleClass().add("stable-view-header");
+    lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
+    final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());
+    lineNumberWrapper.setPickOnBounds(false);
+    lineNumberWrapper.getStyleClass().add("stable-view-side");
+    placeholderLabel = new Label(messageWhenEmpty.getDisplayMessageNoColumns());
+    placeholderLabel.getStyleClass().add(".stable-view-placeholderLabel");
+    BorderPane placeholder = new BorderPane(placeholderLabel, null, null, null, headerItemsContainer.makeAddColumnButton());
+    placeholder.visibleProperty().bind(nonEmptyProperty.not());
+    placeholderLabel.setWrapText(true);
 
-        // Heavy-handed way to add a divider:
-        r.add(new ColumnOperation(/* Just need something valid: */ "stableView.column.hide")
+    Button topButton = makeScrollEndButton();
+    topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
+    topButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(0.0, -Double.MAX_VALUE));
+
+    Region topLeft = new Region();
+    topLeft.getStyleClass().add("stable-view-top-left");
+    FXUtility.forcePrefSize(topLeft);
+    topLeft.setMaxHeight(Double.MAX_VALUE);
+    topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
+
+    Pane top = new BorderPane(header, null, null, null, topLeft);
+    top.getStyleClass().add("stable-view-top");
+
+    Button leftButton = makeScrollEndButton();
+    leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
+    leftButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, 0.0));
+    Button rightButton = makeScrollEndButton();
+    rightButton.getStyleClass().addAll("stable-view-button", "stable-view-button-right");
+    rightButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, 0.0));
+
+    Button bottomButton = makeScrollEndButton();
+    bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
+    bottomButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(0.0, Double.MAX_VALUE));
+
+    rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
+    BorderPane bottomHorizScroll = new BorderPane(hbar, null, rightButton, null, leftButton);
+    
+    contentLayout = new ContentLayout(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper);
+    contentLayout.visibleProperty().bind(nonEmptyProperty);
+    stackPane = new StackPane(placeholder, contentLayout);
+    // TODO figure out grid equivalent
+    //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
+    placeholderLabel.managedProperty().bind(placeholderLabel.visibleProperty());
+    stackPane.getStyleClass().add("stable-view");
+
+    // Need to clip, otherwise scrolled-out part can still show up:
+    Rectangle headerClip = new Rectangle();
+    headerClip.widthProperty().bind(header.widthProperty());
+    headerClip.heightProperty().bind(header.heightProperty());
+    header.setClip(headerClip);
+
+    Rectangle sideClip = new Rectangle();
+    sideClip.widthProperty().bind(lineNumbers.getNode().widthProperty());
+    sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
+    lineNumberWrapper.setClip(sideClip);
+
+    FXUtility.bindPseudoclass(stackPane, "at-left", grid.atLeftProperty());
+    FXUtility.bindPseudoclass(stackPane, "at-right", grid.atRightProperty());
+    FXUtility.bindPseudoclass(stackPane, "at-top", grid.atTopProperty());
+    FXUtility.bindPseudoclass(stackPane, "at-bottom", grid.atBottomProperty());
+
+
+    widthEstimate = new SimpleDoubleProperty();
+    FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), x -> updateWidthEstimate());
+    heightEstimate = new SimpleDoubleProperty();
+    FXPlatformConsumer<Number> heightListener = x -> heightEstimate.set(grid.totalHeightEstimateProperty().getValue() + headerItemsContainer.getNode().getHeight());
+    FXUtility.addChangeListenerPlatformNN(grid.totalHeightEstimateProperty(), heightListener);
+    FXUtility.addChangeListenerPlatformNN(headerItemsContainer.getNode().heightProperty(), heightListener);
+}
+
+private List<ColumnOperation> getColumnOperations(ColumnId columnId)
+{
+    // TODO add before/after?
+    List<ColumnOperation> r = new ArrayList<>();
+    if (operations != null && operations.renameColumn.apply(columnId) != null)
+    {
+        r.add(new ColumnOperation("stableView.column.rename")
         {
             @Override
             public @OnThread(Tag.Simulation) void execute()
             {
-            }
-
-            @Override
-            public @OnThread(Tag.FXPlatform) MenuItem makeMenuItem()
-            {
-                return new SeparatorMenuItem();
+                //TODO
             }
         });
-
-        // TODO: quick transforms, e.g. sort-by, filter, summarise
-        r.addAll(extraColumnOperations.apply(columnId));
-
-        return r;
     }
 
-    @Pure
-    protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
+    if (operations != null && operations.deleteColumn.apply(columnId) != null)
     {
-        return null;
-    }
-
-    // Can be overridden by subclasses
-    protected void columnWidthChanged(int columnIndex, double newWidth)
-    {
-    }
-
-    private void updateWidthEstimate(@UnknownInitialization(Object.class) StableView this)
-    {
-        if (widthEstimate != null && grid != null && lineNumbers != null)
+        r.add(new ColumnOperation("stableView.column.delete")
         {
-            widthEstimate.set(grid.sumColumnWidths(0, grid.getNumColumns()) + lineNumbers.getNode().getWidth());
-        }
-    }
-
-    private static Button makeScrollEndButton()
-    {
-        Button button = new Button("", makeButtonArrow());
-        FXUtility.forcePrefSize(button);
-        button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 2);
-        button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 2);
-        return button;
-    }
-
-    public void scrollToTopLeft()
-    {
-        grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, -Double.MAX_VALUE);
-    }
-
-    private static Node makeButtonArrow()
-    {
-        Region s = new Region();
-        s.getStyleClass().add("stable-view-button-arrow");
-        return s;
-    }
-
-    public Node getNode()
-    {
-        return stackPane;
-    }
-
-    public void setPlaceholderText(@Localized String text)
-    {
-        placeholderLabel.setText(text);
-    }
-
-    private void appendColumn()
-    {
-        if (operations == null || operations.appendColumn == null)
-            return; // Shouldn't happen, but if it does, append no longer valid
-
-        withNewColumnDetails(operations.appendColumn);
-    }
-
-    protected void withNewColumnDetails(AppendColumn appendColumn)
-    {
-        // Default behaviour is to do nothing
-    }
-
-    private void appendRow(int newRowIndex)
-    {
-        if (operations == null || operations.appendRows == null)
-            return; // Shouldn't happen, but if it does, append no longer valid
-
-        @NonNull AppendRows append = operations.appendRows;
-        Workers.onWorkerThread("Appending row", Priority.SAVE_ENTRY, () -> append.appendRows(1));
-    }
-
-    // See setColumns for description of append
-    public void clear(@Nullable TableOperations operations)
-    {
-        // Clears rows, too:
-        setColumnsAndRows(ImmutableList.of(), operations, null, i -> false);
-    }
-
-    // If append is empty, can't append.  If it's present, can append, and run
-    // this action after appending.
-    public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
-    {
-        final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
-        this.operations = operations;
-        this.extraColumnOperations = extraColumnActions == null ? (c -> ImmutableList.of()) : extraColumnActions;
-        this.columns = columns;
-
-        placeholderLabel.setText(columns.isEmpty() ? messageWhenEmpty.getDisplayMessageNoColumns() : messageWhenEmpty.getDisplayMessageNoRows());
-
-        nonEmptyProperty.set(!columns.isEmpty());
-
-        grid.setData(isRowValid,
-            operations != null && operations.appendColumn != null ? FXUtility.mouse(this)::appendColumn : null,
-            operations != null && operations.appendRows != null ? FXUtility.mouse(this)::appendRow : null,
-            Doubles.toArray(Utility.replicate(columns.size(), DEFAULT_COLUMN_WIDTH)));
-
-        scrollToTopLeft();
-    }
-
-    public DoubleExpression topHeightProperty()
-    {
-        return headerItemsContainer.getNode().heightProperty();
-    }
-
-    // Column Index, Row Index
-    public ObjectExpression<@Nullable CellSelection> selectionProperty()
-    {
-        return grid.selectionProperty();
-    }
-
-    public int getColumnCount()
-    {
-        return columns.size();
-    }
-
-    /**
-     * Makes the table editable.  Setting this to true only makes the columns editable if they themselves are marked
-     * as editable.  But setting it to false makes the columns read-only regardless of their marking.
-     */
-    public void setEditable(boolean editable)
-    {
-        this.tableEditable = editable;
-    }
-
-    public DoubleExpression widthEstimateProperty()
-    {
-        // Includes line number width:
-        return widthEstimate;
-    }
-
-    public ObservableDoubleValue heightEstimateProperty()
-    {
-        // Includes header items height:
-        return heightEstimate;
-    }
-
-    public void bindScroll(StableView scrollSrc, ScrollLock scrollLock)
-    {
-        grid.bindScroll(scrollSrc.grid, scrollLock);
-    }
-
-    public void loadColumnWidths(double[] newColWidths)
-    {
-        for (int i = 0; i < newColWidths.length; i++)
-        {
-            grid.setColumnWidth(i, newColWidths[i]);
-        }
-
-    }
-
-    public double getColumnWidth(int columnIndex)
-    {
-        return grid.getColumnWidth(columnIndex);
-    }
-
-    public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
-    {
-        for (ColumnDetails column : columns)
-        {
-            column.columnHandler.removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
-        }
-
-        if (removedRowsCount > 0)
-            grid.removedRows(startRowIncl, removedRowsCount);
-
-        if (addedRowsCount > 0)
-            grid.addedRows(startRowIncl, addedRowsCount);
-    }
-
-    public void setRowLabelsVisible(boolean visible)
-    {
-        lineNumberShowing.set(visible);
-        contentLayout.requestLayout();
-    }
-
-    public void setVerticalScrollVisible(boolean visible)
-    {
-        rightVertScroll.setVisible(visible);
-        contentLayout.requestLayout();
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static interface ColumnHandler extends RecordSetListener
-    {
-        // Called to fetch a value.  Once available, receiver should be called.
-        // Until then it will be blank.  You can call receiver multiple times though,
-        // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent);
-
-        // Called when the column gets resized (graphically).  Width is in pixels
-        public void columnResized(double width);
-
-        // Should return an InputMap, if any, to put on the parent node of the display.
-        // Useful if you want to be able to press keys directly without beginning editing
-        //public @Nullable InputMap<?> getInputMapForParent(int rowIndex);
-
-        // Called when the user initiates an error, either by double-clicking
-        // (in which case the point is passed) or by pressing enter (in which case
-        // point is null).
-        // Will only be called if isEditable returns true
-        //public void edit(int rowIndex, @Nullable Point2D scenePoint);
-
-        // Can this column be edited?
-        public boolean isEditable();
-
-        // Is this column value currently being edited?
-        //public boolean editHasFocus(int rowIndex);
-    }
-
-    private List<RowOperation> getRowOperationsForSingleRow(int rowIndex)
-    {
-        List<RowOperation> r = new ArrayList<>();
-        if (operations != null)
-        {
-            @NonNull TableOperations ops = this.operations;
-            if (ops.insertRows != null)
+            @Override
+            public @OnThread(Tag.Simulation) void execute()
             {
-                @NonNull InsertRows insertRows = ops.insertRows;
-                r.add(new RowOperation("stableView.row.insertBefore")
+                if (operations != null)
                 {
-                    @Override
-                    public @OnThread(Tag.Simulation) void execute()
-                    {
-                        insertRows.insertRows(rowIndex, 1);
-                    }
-                });
-                r.add(new RowOperation("stableView.row.insertAfter")
-                {
-                    @Override
-                    public @OnThread(Tag.Simulation) void execute()
-                    {
-                        insertRows.insertRows(rowIndex + 1, 1);
-                    }
+                    @Nullable DeleteColumn deleteColumn = operations.deleteColumn.apply(columnId);
+                    if (deleteColumn != null)
+                        deleteColumn.deleteColumn(columnId);
+                }
+            }
+        });
+    }
+
+    if (hideColumnOperation() != null)
+    {
+        r.add(new ColumnOperation("stableView.column.hide")
+        {
+            @Override
+            public @OnThread(Tag.Simulation) void execute()
+            {
+                Platform.runLater(() -> {
+                    @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation = hideColumnOperation();
+                    if (hideColumnOperation != null)
+                        hideColumnOperation.consume(columnId);
                 });
             }
-            if (ops.deleteRows != null)
-            {
-                TableOperations.@NonNull DeleteRows deleteRows = ops.deleteRows;
-                r.add(new RowOperation("stableView.row.delete")
-                {
-                    @Override
-                    public @OnThread(Tag.Simulation) void execute()
-                    {
-                        deleteRows.deleteRows(rowIndex, 1);
-                    }
-                });
-            }
-        }
-        return r;
+        });
     }
 
-    public static class ScrollPosition
+    // Heavy-handed way to add a divider:
+    r.add(new ColumnOperation("stableView.column.hide") // Arbitrary label, we are just a separator
     {
-        private final int visRow;
-        private final double offset;
-
-        private ScrollPosition(int visRow, double offset)
+        @Override
+        public @OnThread(Tag.Simulation) void execute()
         {
-            this.visRow = visRow;
-            this.offset = offset;
-        }
-
-    }
-
-    public ScrollPosition saveScrollPositionFromTop()
-    {
-        return new ScrollPosition(grid.getFirstDisplayRow(), grid.getFirstVisibleRowOffset());
-    }
-
-    public VirtScrollStrTextGrid _test_getGrid()
-    {
-        return grid;
-    }
-
-    /**
-     * This is similar to a BorderPane, but not quite.
-     */
-    private class ContentLayout extends Region
-    {
-        private final Region dataGrid;
-        // Note: colHeaders also includes the top-left item.
-        private final Region colHeaders;
-        private final Region rightVertScroll;
-        private final Region bottomHorizScroll;
-        private final Region rowHeaders;
-
-        public ContentLayout(Region dataGrid, Pane colHeaders, BorderPane rightVertScroll, BorderPane bottomHorizScroll, BorderPane rowHeaders)
-        {
-            this.dataGrid = dataGrid;
-            this.colHeaders = colHeaders;
-            this.rightVertScroll = rightVertScroll;
-            this.bottomHorizScroll = bottomHorizScroll;
-            this.rowHeaders = rowHeaders;
-
-            getChildren().addAll(dataGrid, colHeaders, rightVertScroll, bottomHorizScroll, rowHeaders);
         }
 
         @Override
-        protected void layoutChildren()
+        public @OnThread(Tag.FXPlatform) MenuItem makeMenuItem()
         {
-            double width = getWidth();
-            double height = getHeight();
-
-            // Column headers extends all the way across top at
-            // its preferred height:
-            double colHeaderHeight = colHeaders.prefHeight(width);
-
-            // Right-hand side scroll is at far right, takes room from col header width:
-            double rightScrollWidth = rightVertScroll.isVisible() ? rightVertScroll.prefWidth(height - colHeaderHeight) : 0.0;
-            double colHeaderWidth = width - rightScrollWidth;
-            colHeaders.resizeRelocate(0, 0, colHeaderWidth, colHeaderHeight);
-            // Then row headers is all the way down the left beneath
-            // that, at its preferred width:
-            double rowHeaderWidth = lineNumberShowing.get() ? rowHeaders.prefWidth(height - colHeaderHeight) : 0.0;
-            double bottomScrollHeight = bottomHorizScroll.prefHeight(width - rowHeaderWidth - rightScrollWidth);
-            double rowHeaderHeight = height - colHeaderHeight - bottomScrollHeight;
-            rowHeaders.resizeRelocate(0, colHeaderHeight, rowHeaderWidth, rowHeaderHeight);
-            // Then scroll bars are at far sides, leaving
-            // space in bottom left, but they also take space from headers and grid:
-
-
-            rightVertScroll.resizeRelocate(width - rightScrollWidth, colHeaderHeight, rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
-            bottomHorizScroll.resizeRelocate(rowHeaderWidth, height - bottomScrollHeight, width - rowHeaderWidth - rightScrollWidth, bottomScrollHeight);
-            dataGrid.resizeRelocate(rowHeaderWidth, colHeaderHeight, width - rowHeaderWidth - rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
+            return new SeparatorMenuItem();
         }
-    }
+    });
 
-    public static class ColumnDetails
+    // TODO: quick transforms, e.g. sort-by, filter, summarise
+    r.addAll(extraColumnOperations.apply(columnId));
+
+    return r;
+}
+
+@Pure
+protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
+{
+    return null;
+}
+
+// Can be overridden by subclasses
+protected void columnWidthChanged(int columnIndex, double newWidth)
+{
+}
+
+private void updateWidthEstimate(@UnknownInitialization(Object.class) StableView this)
+{
+    if (widthEstimate != null && grid != null && lineNumbers != null)
     {
-        private final ColumnHandler columnHandler;
-        private final ColumnId columnId;
+        widthEstimate.set(grid.sumColumnWidths(0, grid.getNumColumns()) + lineNumbers.getNode().getWidth());
+    }
+}
 
-        public ColumnDetails(ColumnId columnId, ColumnHandler columnHandler)
-        {
-            this.columnId = columnId;
-            this.columnHandler = columnHandler;
-        }
+private static Button makeScrollEndButton()
+{
+    Button button = new Button("", makeButtonArrow());
+    FXUtility.forcePrefSize(button);
+    button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 2);
+    button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 2);
+    return button;
+}
 
-        @OnThread(Tag.FXPlatform)
-        protected ImmutableList<Node> makeHeaderContent()
-        {
-            return ImmutableList.of(
-                GUI.labelRaw(columnId.getRaw(), "stable-view-column-title")
-            );
-        }
+public void scrollToTopLeft()
+{
+    grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, -Double.MAX_VALUE);
+}
 
-        public final ColumnId getColumnId()
+private static Node makeButtonArrow()
+{
+    Region s = new Region();
+    s.getStyleClass().add("stable-view-button-arrow");
+    return s;
+}
+
+public Node getNode()
+{
+    return stackPane;
+}
+
+public void setPlaceholderText(@Localized String text)
+{
+    placeholderLabel.setText(text);
+}
+
+private void appendColumn()
+{
+    if (operations == null || operations.appendColumn == null)
+        return; // Shouldn't happen, but if it does, append no longer valid
+
+    withNewColumnDetails(operations.appendColumn);
+}
+
+protected void withNewColumnDetails(AppendColumn appendColumn)
+{
+    // Default behaviour is to do nothing
+}
+
+private void appendRow(int newRowIndex)
+{
+    if (operations == null || operations.appendRows == null)
+        return; // Shouldn't happen, but if it does, append no longer valid
+
+    @NonNull AppendRows append = operations.appendRows;
+    Workers.onWorkerThread("Appending row", Priority.SAVE_ENTRY, () -> append.appendRows(1));
+}
+
+// See setColumns for description of append
+public void clear(@Nullable TableOperations operations)
+{
+    // Clears rows, too:
+    setColumnsAndRows(ImmutableList.of(), operations, null, i -> false);
+}
+
+// If append is empty, can't append.  If it's present, can append, and run
+// this action after appending.
+public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
+{
+    final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
+    this.operations = operations;
+    this.extraColumnOperations = extraColumnActions == null ? (c -> ImmutableList.of()) : extraColumnActions;
+    this.columns = columns;
+
+    placeholderLabel.setText(columns.isEmpty() ? messageWhenEmpty.getDisplayMessageNoColumns() : messageWhenEmpty.getDisplayMessageNoRows());
+
+    nonEmptyProperty.set(!columns.isEmpty());
+
+    grid.setData(isRowValid,
+        operations != null && operations.appendColumn != null ? FXUtility.mouse(this)::appendColumn : null,
+        operations != null && operations.appendRows != null ? FXUtility.mouse(this)::appendRow : null,
+        Doubles.toArray(Utility.replicate(columns.size(), DEFAULT_COLUMN_WIDTH)));
+
+    scrollToTopLeft();
+}
+
+public DoubleExpression topHeightProperty()
+{
+    return headerItemsContainer.getNode().heightProperty();
+}
+
+// Column Index, Row Index
+public ObjectExpression<@Nullable CellSelection> selectionProperty()
+{
+    return grid.selectionProperty();
+}
+
+public int getColumnCount()
+{
+    return columns.size();
+}
+
+//Makes the table editable.  Setting this to true only makes the columns editable if they themselves are marked
+//as editable.  But setting it to false makes the columns read-only regardless of their marking.     
+public void setEditable(boolean editable)
+{
+    this.tableEditable = editable;
+}
+
+public DoubleExpression widthEstimateProperty()
+{
+    // Includes line number width:
+    return widthEstimate;
+}
+
+public ObservableDoubleValue heightEstimateProperty()
+{
+    // Includes header items height:
+    return heightEstimate;
+}
+
+public void bindScroll(StableView scrollSrc, ScrollLock scrollLock)
+{
+    grid.bindScroll(scrollSrc.grid, scrollLock);
+}
+
+public void loadColumnWidths(double[] newColWidths)
+{
+    for (int i = 0; i < newColWidths.length; i++)
+    {
+        grid.setColumnWidth(i, newColWidths[i]);
+    }
+
+}
+
+public double getColumnWidth(int columnIndex)
+{
+    return grid.getColumnWidth(columnIndex);
+}
+
+public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+{
+    for (ColumnDetails column : columns)
+    {
+        column.columnHandler.removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
+    }
+
+    if (removedRowsCount > 0)
+        grid.removedRows(startRowIncl, removedRowsCount);
+
+    if (addedRowsCount > 0)
+        grid.addedRows(startRowIncl, addedRowsCount);
+}
+
+public void setRowLabelsVisible(boolean visible)
+{
+    lineNumberShowing.set(visible);
+    contentLayout.requestLayout();
+}
+
+public void setVerticalScrollVisible(boolean visible)
+{
+    rightVertScroll.setVisible(visible);
+    contentLayout.requestLayout();
+}
+
+private List<RowOperation> getRowOperationsForSingleRow(int rowIndex)
+{
+    List<RowOperation> r = new ArrayList<>();
+    if (operations != null)
+    {
+        @NonNull TableOperations ops = this.operations;
+        if (ops.insertRows != null)
         {
-            return columnId;
+            @NonNull InsertRows insertRows = ops.insertRows;
+            r.add(new RowOperation("stableView.row.insertBefore")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) void execute()
+                {
+                    insertRows.insertRows(rowIndex, 1);
+                }
+            });
+            r.add(new RowOperation("stableView.row.insertAfter")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) void execute()
+                {
+                    insertRows.insertRows(rowIndex + 1, 1);
+                }
+            });
         }
-        
-        public final ColumnHandler getColumnHandler()
+        if (ops.deleteRows != null)
         {
-            return columnHandler;
+            TableOperations.@NonNull DeleteRows deleteRows = ops.deleteRows;
+            r.add(new RowOperation("stableView.row.delete")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) void execute()
+                {
+                    deleteRows.deleteRows(rowIndex, 1);
+                }
+            });
         }
     }
+    return r;
+}
+
+public static class ScrollPosition
+{
+    private final int visRow;
+    private final double offset;
+
+    private ScrollPosition(int visRow, double offset)
+    {
+        this.visRow = visRow;
+        this.offset = offset;
+    }
+
+}
+
+public ScrollPosition saveScrollPositionFromTop()
+{
+    return new ScrollPosition(grid.getFirstDisplayRow(), grid.getFirstVisibleRowOffset());
+}
+
+public VirtScrollStrTextGrid _test_getGrid()
+{
+    return grid;
+}
+
+// This is similar to a BorderPane, but not quite.
+private class ContentLayout extends Region
+{
+    private final Region dataGrid;
+    // Note: colHeaders also includes the top-left item.
+    private final Region colHeaders;
+    private final Region rightVertScroll;
+    private final Region bottomHorizScroll;
+    private final Region rowHeaders;
+
+    public ContentLayout(Region dataGrid, Pane colHeaders, BorderPane rightVertScroll, BorderPane bottomHorizScroll, BorderPane rowHeaders)
+    {
+        this.dataGrid = dataGrid;
+        this.colHeaders = colHeaders;
+        this.rightVertScroll = rightVertScroll;
+        this.bottomHorizScroll = bottomHorizScroll;
+        this.rowHeaders = rowHeaders;
+
+        getChildren().addAll(dataGrid, colHeaders, rightVertScroll, bottomHorizScroll, rowHeaders);
+    }
+
+    @Override
+    protected void layoutChildren()
+    {
+        double width = getWidth();
+        double height = getHeight();
+
+        // Column headers extends all the way across top at
+        // its preferred height:
+        double colHeaderHeight = colHeaders.prefHeight(width);
+
+        // Right-hand side scroll is at far right, takes room from col header width:
+        double rightScrollWidth = rightVertScroll.isVisible() ? rightVertScroll.prefWidth(height - colHeaderHeight) : 0.0;
+        double colHeaderWidth = width - rightScrollWidth;
+        colHeaders.resizeRelocate(0, 0, colHeaderWidth, colHeaderHeight);
+        // Then row headers is all the way down the left beneath
+        // that, at its preferred width:
+        double rowHeaderWidth = lineNumberShowing.get() ? rowHeaders.prefWidth(height - colHeaderHeight) : 0.0;
+        double bottomScrollHeight = bottomHorizScroll.prefHeight(width - rowHeaderWidth - rightScrollWidth);
+        double rowHeaderHeight = height - colHeaderHeight - bottomScrollHeight;
+        rowHeaders.resizeRelocate(0, colHeaderHeight, rowHeaderWidth, rowHeaderHeight);
+        // Then scroll bars are at far sides, leaving
+        // space in bottom left, but they also take space from headers and grid:
+
+
+        rightVertScroll.resizeRelocate(width - rightScrollWidth, colHeaderHeight, rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
+        bottomHorizScroll.resizeRelocate(rowHeaderWidth, height - bottomScrollHeight, width - rowHeaderWidth - rightScrollWidth, bottomScrollHeight);
+        dataGrid.resizeRelocate(rowHeaderWidth, colHeaderHeight, width - rowHeaderWidth - rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
+    }
+}
+*/
 }

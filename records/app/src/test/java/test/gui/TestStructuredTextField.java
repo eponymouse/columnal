@@ -42,9 +42,12 @@ import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataDisplay;
+import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.StableView;
-import records.gui.stable.StableView.ColumnDetails;
+import records.gui.stable.ColumnDetails;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -55,6 +58,7 @@ import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
@@ -112,7 +116,7 @@ import static test.TestUtil.sim;
 @RunWith(JUnitQuickcheck.class)
 public class TestStructuredTextField extends ApplicationTest
 {
-    private StableView stableView;
+    private DataDisplay dataDisplay;
     private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
     private TextField dummy;
 
@@ -120,9 +124,26 @@ public class TestStructuredTextField extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
-        stableView = new StableView(new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY));
+        VirtualGrid virtualGrid = new VirtualGrid(null);
+        VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
+        virtualGrid.addNodeSupplier(columnHeaderSupplier);
+        dataDisplay = new DataDisplay("TestTable", new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), columnHeaderSupplier)
+        {
+            @Override
+            protected int getCurrentKnownRows()
+            {
+                return 1;
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            {
+                return 1;
+            }
+        };
+        virtualGrid.addGridArea(dataDisplay);
         dummy = new TextField();
-        Scene scene = new Scene(new VBox(dummy, stableView.getNode()));
+        Scene scene = new Scene(new VBox(dummy, virtualGrid.getNode()));
         stage.setScene(scene);
         stage.setMinWidth(800);
         stage.setMinHeight(300);
@@ -247,8 +268,8 @@ public class TestStructuredTextField extends ApplicationTest
             try
             {
                 EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(0, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> {});
-                stableView.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), cacheSTF)), null, null, i -> i == 0);
-                stableView.loadColumnWidths(new double[]{600.0});
+                dataDisplay.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), cacheSTF)), null, null);
+                //stableView.loadColumnWidths(new double[]{600.0});
             }
             catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)
             {
@@ -260,8 +281,8 @@ public class TestStructuredTextField extends ApplicationTest
         for (int i = 0; i < 5; i++)
         {
             @Nullable StructuredTextField stf = fx(() -> {
-                stableView.getNode().applyCss();
-                @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) stableView.getNode().lookup(".structured-text-field");
+                targetWindow().getScene().getRoot().applyCss();
+                @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) targetWindow().getScene().getRoot().lookup(".structured-text-field");
                 if (structuredTextField != null)
                     structuredTextField.requestFocus();
                 return structuredTextField;

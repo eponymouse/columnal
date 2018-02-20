@@ -4,10 +4,13 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.dataflow.qual.Pure;
 
 // Pretty much all methods in JavaFX can be treated as UnknownInitialization
-// because they only require initialisation of their own class, which we can't
-// touch anyway, so to us it's always initialised.  Ideally we'd annotate as
-// UnknownInitialization(Node.class) etc, but Checker Framework doesn't yet
-// allow the class parameter in a stubs file.
+// because they only require initialisation of their own class.
+
+package javafx.beans.property;
+class SimpleObjectProperty<T>
+{
+    @Pure T get();
+}
 
 package javafx.css;
 class Styleable

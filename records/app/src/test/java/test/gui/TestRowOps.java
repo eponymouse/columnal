@@ -38,7 +38,6 @@ import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.TableDisplay;
 import records.gui.grid.VirtualGrid;
-import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stf.StructuredTextField;
 import records.transformations.Sort;
 import records.transformations.Transform;

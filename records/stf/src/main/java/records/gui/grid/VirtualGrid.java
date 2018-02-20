@@ -23,11 +23,8 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
-import log.Log;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,18 +33,17 @@ import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.CellPosition;
-import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
+import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stable.ScrollResult;
-import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
-import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -58,7 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 @OnThread(Tag.FXPlatform)
-public abstract class VirtualGrid implements ScrollBindable
+public class VirtualGrid implements ScrollBindable
 {
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
@@ -67,7 +63,6 @@ public abstract class VirtualGrid implements ScrollBindable
     private static final int MAX_EXTRA_ROW_COLS = 12;
     private final ScrollBar hBar;
     private final ScrollBar vBar;
-    private final CreateTableButtonSupplier createTableButtonSupplier;
     private final ScrollGroup scrollGroup;
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
@@ -110,15 +105,15 @@ public abstract class VirtualGrid implements ScrollBindable
     private final IntegerProperty extraRowsForScrolling = new SimpleIntegerProperty(0);
     private final IntegerProperty extraColsForScrolling = new SimpleIntegerProperty(0);
     
-    public VirtualGrid()
+    public VirtualGrid(@Nullable FXPlatformBiConsumer<CellPosition, Point2D> createTable)
     {
-        this.createTableButtonSupplier = new CreateTableButtonSupplier();
-        nodeSuppliers.add(createTableButtonSupplier);
+        if (createTable != null)
+            nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
         scrollGroup = new ScrollGroup(
-                FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
+                FXUtility.mouse(this)::scrollLayoutXBy, MAX_EXTRA_ROW_COLS, targetX -> {
             // Count column widths in that direction until we reach target:
             double curX;
             int startCol;
@@ -507,6 +502,11 @@ public abstract class VirtualGrid implements ScrollBindable
         container.redoLayout();
     }
 
+    public ScrollGroup getScrollGroup()
+    {
+        return scrollGroup;
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {
@@ -807,7 +807,14 @@ public abstract class VirtualGrid implements ScrollBindable
     private class CreateTableButtonSupplier extends VirtualGridSupplier<Button>
     {
         private @MonotonicNonNull Button button;
-        
+        // Button position, last mouse position on screen:
+        private final FXPlatformBiConsumer<CellPosition, Point2D> createTable;
+
+        private CreateTableButtonSupplier(FXPlatformBiConsumer<CellPosition, Point2D> createTable)
+        {
+            this.createTable = createTable;
+        }
+
         @Override
         void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
         {
@@ -824,7 +831,7 @@ public abstract class VirtualGrid implements ScrollBindable
                     if (curSel instanceof EmptyCellSelection)
                     {
                         // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
-                        createTable(((EmptyCellSelection)curSel).position, lastMousePos[0]);
+                        createTable.consume(((EmptyCellSelection)curSel).position, lastMousePos[0]);
                     }
                 });
                 containerChildren.add(button, ViewOrder.STANDARD);
@@ -850,8 +857,6 @@ public abstract class VirtualGrid implements ScrollBindable
             }
         }
     }
-
-    protected abstract void createTable(CellPosition cellPosition, Point2D mouseScreenPos);
     
     private class EmptyCellSelection implements CellSelection
     {

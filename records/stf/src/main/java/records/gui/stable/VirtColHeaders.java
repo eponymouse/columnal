@@ -1,50 +1,16 @@
 package records.gui.stable;
 
-import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.DoubleExpression;
-import javafx.beans.property.ReadOnlyDoubleWrapper;
-import javafx.beans.value.ObservableValue;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import org.checkerframework.checker.nullness.qual.KeyFor;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
-import records.gui.stable.CellSelection.SelectionStatus;
-import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
-import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * The column headers that sit above a {@link VirtScrollStrTextGrid}.  Support arbitrary content,
  * and resizing.
  */
 @OnThread(Tag.FXPlatform)
-public class VirtColHeaders implements ScrollBindable
+public class VirtColHeaders //implements ScrollBindable
 {
+    /*
     // Each StackPane will have a VBox as first child.
     private final Map<Integer, StackPane> visibleCells = new HashMap<>();
     private final List<StackPane> spareCells = new ArrayList<>();
@@ -76,12 +42,11 @@ public class VirtColHeaders implements ScrollBindable
 
     //package-visible
 
-    /**
-     *
-     * @param grid The grid these column headers are for
-     * @param makeContextMenuItems Make context menu for that column index (in displayed columns)
-     * @param getContent Gets the content of the column header for that column index (in displayed columns)
-     */
+     //
+     // @param grid The grid these column headers are for
+     // @param makeContextMenuItems Make context menu for that column index (in displayed columns)
+     // @param getContent Gets the content of the column header for that column index (in displayed columns)
+     
     VirtColHeaders(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getContent)
     {
         this.grid = grid;
@@ -130,12 +95,11 @@ public class VirtColHeaders implements ScrollBindable
         });
     }
 
-    /**
-     * Calculates the X position, in container's local coords, to
-     * the left hand side of the given header index.  Note that
-     * the position may not actually be visible on-screen,
-     * i.e. it may be <= 0 or >= container.getWidth()
-     */
+    
+     // Calculates the X position, in container's local coords, to
+     // the left hand side of the given header index.  Note that
+     // the position may not actually be visible on-screen,
+     // i.e. it may be <= 0 or >= container.getWidth()
     private double calculatePositionOfColumnLHS(int headerIndex)
     {
         // If off to left, count backwards from there:
@@ -332,4 +296,5 @@ public class VirtColHeaders implements ScrollBindable
         addColumnButtons.add(button);
         return button;
     }
+    */
 }

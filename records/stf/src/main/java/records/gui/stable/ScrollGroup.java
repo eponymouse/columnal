@@ -7,8 +7,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.input.ScrollEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
-import records.gui.stable.VirtScrollStrTextGrid.SmoothScroller;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiFunction;
@@ -32,9 +30,8 @@ import java.util.IdentityHashMap;
 public class ScrollGroup
 {
     private @Nullable Pair<ScrollGroup, ScrollLock> parent;
-    private VirtScrollStrTextGrid.SmoothScroller smoothScrollX;
-
-    private VirtScrollStrTextGrid.SmoothScroller smoothScrollY;
+    private SmoothScroller smoothScrollX;
+    private SmoothScroller smoothScrollY;
     final DoubleProperty translateXProperty = new SimpleDoubleProperty(0.0);
     final DoubleProperty translateYProperty = new SimpleDoubleProperty(0.0);
     final IntegerProperty extraRows = new SimpleIntegerProperty(0);
@@ -44,14 +41,14 @@ public class ScrollGroup
     private final IdentityHashMap<ScrollGroup, ScrollLock> dependentGroups = new IdentityHashMap<>();
     private boolean inUpdateClip;
 
-    public ScrollGroup(FXPlatformBiFunction<Double, Token, ScrollResult> scrollLayoutXBy, FXPlatformFunction<Double, Integer> calcExtraCols, FXPlatformBiFunction<Double, Token, ScrollResult> scrollLayoutYBy, FXPlatformFunction<Double, Integer> calcExtraRows)
+    public ScrollGroup(FXPlatformBiFunction<Double, Token, ScrollResult> scrollLayoutXBy, int maxExtraItems, FXPlatformFunction<Double, Integer> calcExtraCols, FXPlatformBiFunction<Double, Token, ScrollResult> scrollLayoutYBy, FXPlatformFunction<Double, Integer> calcExtraRows)
     {
-        smoothScrollX = new SmoothScroller(translateXProperty, extraCols, d -> {
+        smoothScrollX = new SmoothScroller(translateXProperty, maxExtraItems, extraCols, d -> {
             ScrollResult r = scrollLayoutXBy.apply(d, new Token());
             FXUtility.mouse(this).doShowAtOffset(null, r.scrollPosition);
             return r.scrolledByPixels;
         }, calcExtraCols, FXUtility.mouse(this)::updateClip);
-        smoothScrollY = new SmoothScroller(translateYProperty, extraRows, d -> {
+        smoothScrollY = new SmoothScroller(translateYProperty, maxExtraItems, extraRows, d -> {
             ScrollResult r = scrollLayoutYBy.apply(d, new Token());
             FXUtility.mouse(this).doShowAtOffset(r.scrollPosition, null);
             return r.scrolledByPixels;
@@ -149,5 +146,20 @@ public class ScrollGroup
     public DoubleProperty translateYProperty()
     {
         return translateYProperty;
+    }
+
+    public static enum ScrollLock
+    {
+        HORIZONTAL, VERTICAL, BOTH;
+
+        public boolean includesVertical()
+        {
+            return this == VERTICAL || this == BOTH;
+        }
+
+        public boolean includesHorizontal()
+        {
+            return this == HORIZONTAL || this == BOTH;
+        }
     }
 }

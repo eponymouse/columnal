@@ -1,6 +1,5 @@
 package records.importers.gui;
 
-import annotation.recorded.qual.RecordedBottom;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -11,6 +10,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -31,6 +31,7 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.Table.MessageWhenEmpty;
@@ -39,13 +40,16 @@ import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
-import records.gui.stable.StableView.ColumnDetails;
+import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.stable.ColumnDetails;
+import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stf.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView;
-import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.Options;
@@ -53,11 +57,13 @@ import records.importers.Choices;
 import records.importers.Format;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.ImportInfo;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Workers;
@@ -90,10 +96,87 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
     public ImportChoicesDialog(TableManager mgr, String suggestedName, ChoicePoint<?, FORMAT> choicePoints, SimulationFunction<FORMAT, ? extends @Nullable RecordSet> loadData, SimulationFunction<Choices, @Nullable SourceInfo> srcData)
     {
-        StableView tableView = new StableView(new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
-        tableView.setEditable(false);
-        StableView srcTableView = new StableView(new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"));
-        srcTableView.bindScroll(tableView, ScrollLock.VERTICAL);
+        SimpleObjectProperty<@Nullable RecordSet> destRecordSet = new SimpleObjectProperty<>(null);
+        VirtualGrid destGrid = new VirtualGrid(null);
+            //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
+        VirtualGridSupplierFloating destColumnHeaderSupplier = new VirtualGridSupplierFloating();
+        destGrid.addNodeSupplier(destColumnHeaderSupplier);
+        DataDisplay destData = new DataDisplay(suggestedName, new MessageWhenEmpty(StyledString.s("...")), destColumnHeaderSupplier) {
+            boolean currentKnownRowsIsFinal;
+            int currentKnownRows = 0;
+            @Override
+            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            {
+                final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
+                final RecordSet recordSet = destRecordSet.get();
+                if (recordSet == null)
+                    return 0;
+                final @NonNull RecordSet recordSetNonNull = recordSet;
+                if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
+                {
+                    Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
+                        try
+                        {
+                            // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
+                            boolean lastRowValid = recordSetNonNull.indexValid(checkUpToRowIncl);
+                            if (lastRowValid)
+                            {
+                                Platform.runLater(() -> {
+                                    currentKnownRows = checkUpToRowIncl;
+                                    currentKnownRowsIsFinal = false;
+                                    updateSizeAndPositions.run();
+                                });
+                            } else
+                            {
+                                // Just a matter of working out where it ends.  Since we know end is close,
+                                // just force with getLength:
+                                int length = recordSetNonNull.getLength();
+                                Platform.runLater(() -> {
+                                    currentKnownRows = length;
+                                    currentKnownRowsIsFinal = true;
+                                    updateSizeAndPositions.run();
+                                });
+                            }
+                        }
+                        catch (InternalException | UserException e)
+                        {
+                            Log.log(e);
+                            // We just don't call back the update function
+                        }
+                    });
+                }
+                return currentKnownRows + HEADER_ROWS;
+            }
+
+            @Override
+            protected int getCurrentKnownRows()
+            {
+                return currentKnownRows + HEADER_ROWS;
+            }
+        };
+        destGrid.addGridArea(destData);
+        //destGrid.setEditable(false);
+        VirtualGrid srcGrid = new VirtualGrid(null);
+            //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
+        destGrid.getScrollGroup().add(srcGrid, ScrollLock.VERTICAL);
+        SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
+        VirtualGridSupplierFloating srcColumnHeaderSupplier = new VirtualGridSupplierFloating();
+        srcGrid.addNodeSupplier(srcColumnHeaderSupplier);
+        DataDisplay srcDataDisplay = new DataDisplay(suggestedName, new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier) {
+
+            @Override
+            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            {
+                return srcInfo.get() == null ? 0 : srcInfo.get().numRows;
+            }
+
+            @Override
+            protected int getCurrentKnownRows()
+            {
+                return srcInfo.get() == null ? 0 : srcInfo.get().numRows;
+            }
+        };
+        srcGrid.addGridArea(srcDataDisplay);
 
 
         LabelledGrid choices = new LabelledGrid();
@@ -117,21 +200,25 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         {
                             @NonNull RecordSet recordSetNonNull = recordSet;
                             Platform.runLater(() -> {
-                                tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), null), null, null, recordSetNonNull::indexValid);
+                                destRecordSet.set(recordSetNonNull);
+                                destData.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), null), null, null);
                             });
                         }
                     }
                     catch (InternalException | UserException e)
                     {
                         Log.log(e);
-                        Platform.runLater(() -> tableView.setPlaceholderText(e.getLocalizedMessage()));
+                        Platform.runLater(() -> {
+                            destData.setColumnsAndRows(ImmutableList.of(), null, null);
+                            destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                        });
 
                     }
                 });
             }
             else
             {
-                tableView.setColumnsAndRows(ImmutableList.of(), null, null, i -> false);
+                destData.setColumnsAndRows(ImmutableList.of(), null, null);
             }
         });
         SimpleObjectProperty<@Nullable Choices> choicesProperty = new SimpleObjectProperty<>(null);
@@ -145,7 +232,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                     {
                         @NonNull SourceInfo sourceInfoNonNull = sourceInfo;
                         Platform.runLater(() -> {
-                            srcTableView.setColumnsAndRows(sourceInfoNonNull.srcColumns, null, null, i -> i < sourceInfoNonNull.numRows);
+                            srcInfo.set(sourceInfoNonNull);
+                            srcDataDisplay.setColumnsAndRows(sourceInfoNonNull.srcColumns, null, null);
                         });
                     }
                 }));
@@ -156,7 +244,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         {
             Choices bestGuess = GuessFormat.findBestGuess(choicePoints);
 
-            makeGUI(mgr.getTypeManager(), choicePoints, bestGuess, Choices.FINISHED, choices, tableView, formatProperty, choicesProperty);
+            makeGUI(mgr.getTypeManager(), choicePoints, bestGuess, Choices.FINISHED, choices, destData, formatProperty, choicesProperty);
         }
         catch (InternalException e)
         {
@@ -165,7 +253,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
 
 
-        SplitPane splitPane = new SplitPane(srcTableView.getNode(), tableView.getNode());
+        SplitPane splitPane = new SplitPane(srcGrid.getNode(), destGrid.getNode());
         Pane content = new BorderPane(splitPane, choices, null, null, null);
         content.getStyleClass().add("guess-format-content");
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
@@ -204,7 +292,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice, FORMAT extends Format> void makeGUI(TypeManager typeManager, final ChoicePoint<C, FORMAT> rawChoicePoint, Choices previousChoices, Choices currentChoices, LabelledGrid controlGrid, StableView tableView, ObjectProperty<@Nullable FORMAT> destProperty, ObjectProperty<@Nullable Choices> choicesProperty) throws InternalException
+    private static <C extends Choice, FORMAT extends Format> void makeGUI(TypeManager typeManager, final ChoicePoint<C, FORMAT> rawChoicePoint, Choices previousChoices, Choices currentChoices, LabelledGrid controlGrid, DataDisplay tableView, ObjectProperty<@Nullable FORMAT> destProperty, ObjectProperty<@Nullable Choices> choicesProperty) throws InternalException
     {
         final Options<C> options = rawChoicePoint.getOptions();
         if (options == null)
@@ -217,7 +305,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             catch (UserException e)
             {
-                tableView.setPlaceholderText(e.getLocalizedMessage());
+                tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
             }
             return;
         }
@@ -296,8 +385,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         FXPlatformConsumer<@Nullable C> pick = item -> {
             if (item == null)
             {
-                tableView.clear(null);
-                tableView.setPlaceholderText(TranslationUtility.getString("need.valid.option"));
+                tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                tableView.setMessageWhenEmpty(new MessageWhenEmpty(TranslationUtility.getString("need.valid.option")));
                 return;
             }
             try
@@ -309,8 +398,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             catch (InternalException e)
             {
                 Log.log(e);
-                tableView.clear(null);
-                tableView.setPlaceholderText(e.getLocalizedMessage());
+                tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
             }
         };
 

@@ -34,7 +34,6 @@ import records.data.Table.MessageWhenEmpty;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
-import records.data.TableOperations;
 import records.data.TableOperations.AppendColumn;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -45,14 +44,13 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
-import records.gui.stable.StableView.ColumnDetails;
+import records.gui.stable.ColumnDetails;
 import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -109,18 +107,14 @@ public class TableDisplay implements TableDisplayBase
     private final Either<StyledString, RecordSet> recordSetOrError;
     private final Table table;
     private final View parent;
-    private final GridArea tableDataDisplay;
-    private final VirtualGridSupplierFloating columnHeaderSupplier;
+    private final TableDataDisplay tableDataDisplay;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private int currentKnownRows = 0;
     private boolean currentKnownRowsIsFinal = false;// Table title, column title, column type
-    // Not final because it changes if user changes the display item:
-    @OnThread(Tag.FXPlatform)
-    private ImmutableList<ColumnDetails> displayColumns;
-    public static final int HEADER_ROWS = 3;
+    
 
     /**
      * Finds the closest point on the edge of this rectangle to the given point.
@@ -271,13 +265,13 @@ public class TableDisplay implements TableDisplayBase
     @OnThread(Tag.FXPlatform)
     public int getFirstDataDisplayRowIncl()
     {
-        return getPosition().rowIndex + HEADER_ROWS;
+        return getPosition().rowIndex + DataDisplay.HEADER_ROWS;
     }
 
     @OnThread(Tag.FXPlatform)
     public int getLastDataDisplayRowIncl()
     {
-        return getPosition().rowIndex + HEADER_ROWS + currentKnownRows - 1;
+        return getPosition().rowIndex + DataDisplay.HEADER_ROWS + currentKnownRows - 1;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -289,27 +283,26 @@ public class TableDisplay implements TableDisplayBase
     @OnThread(Tag.FXPlatform)
     public int getLastDataDisplayColumnIncl()
     {
-        return getPosition().columnIndex + displayColumns.size() - 1;
+        return getPosition().columnIndex + tableDataDisplay.getColumnCount() - 1;
     }
 
     @OnThread(Tag.FXPlatform)
-    private class TableDataDisplay extends GridArea implements RecordSetListener, TableSelectionLimits
+    private class TableDataDisplay extends DataDisplay implements RecordSetListener
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
-        private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
-        private final FloatingItem tableHeaderItem;
+        private final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
 
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(RecordSet recordSet, MessageWhenEmpty messageNoColumns, FXPlatformRunnable onModify)
+        public TableDataDisplay(Pair<@Nullable RecordSet, MessageWhenEmpty> recordSetMessageWhenEmptyPair, VirtualGridSupplierFloating columnHeaderSupplier, FXPlatformRunnable onModify)
         {
-            super(messageNoColumns);
-            this.recordSet = recordSet;
+            super(getTable().getId().getOutput(), recordSetMessageWhenEmptyPair.getSecond(), columnHeaderSupplier);
+            this.recordSet = recordSetMessageWhenEmptyPair.getFirst();
             this.onModify = onModify;
             recordSet.setListener(this);
             ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify);
-            setColumnsAndRows(displayColumns, table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+            setColumnsAndRows(displayColumns, table.getOperations(), c -> getExtraColumnActions(c));
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
             //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
@@ -339,34 +332,36 @@ public class TableDisplay implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+                setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> getExtraColumnActions(c));
             });
             
-            this.tableHeaderItem = new FloatingItem() {
+            this.dataSelectionLimits = new TableSelectionLimits()
+            {
+                //TODO
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+                public int getFirstPossibleRowIncl()
                 {
-                    double x = columnBounds.getItemCoord(getPosition().columnIndex);
-                    double y = rowBounds.getItemCoord(getPosition().rowIndex);
-                    double width = columnBounds.getItemCoord(getPosition().columnIndex + displayColumns.size()) - x;
-                    double height = rowBounds.getItemCoord(getPosition().rowIndex + 1) - y;
-                    return Optional.of(new BoundingBox(
-                            x,
-                            y,
-                            width,
-                            height
-                    ));
+                    return 0;
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public Pair<ViewOrder, Node> makeCell()
+                public int getLastPossibleRowIncl()
                 {
-                    return new Pair<>(ViewOrder.FLOATING, new Label(getTable().getId().getOutput()));
+                    return 0;
+                }
+
+                @Override
+                public int getFirstPossibleColumnIncl()
+                {
+                    return 0;
+                }
+
+                @Override
+                public int getLastPossibleColumnIncl()
+                {
+                    return 0;
                 }
             };
-            columnHeaderSupplier.addItem(tableHeaderItem);
         }
 
 
@@ -397,7 +392,7 @@ public class TableDisplay implements TableDisplayBase
                         displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
                             rowIndexWithinTable,
                             b -> {},
-                            c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, TableDataDisplay.this)),
+                            c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits)),
                             (rowIndex, colIndex, editorKit) -> {
                                 // The rowIndex and colIndex are in table data terms, so we must translate:
                                 @Nullable StructuredTextField cell = getCell.apply(new CellPosition(TableDisplay.this.getPosition().rowIndex + HEADER_ROWS + rowIndex, getPosition().columnIndex + colIndex));
@@ -494,13 +489,13 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c));
         }
 
         @Override
         public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
         {
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c), recordSet::indexValid);
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c));
         }
 
         //TODO @Override
@@ -538,53 +533,12 @@ public class TableDisplay implements TableDisplayBase
             };
         }
 
-        @OnThread(Tag.FXPlatform)
-        public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions, SimulationFunction<Integer, Boolean> isRowValid)
+        @Override
+        protected int getCurrentKnownRows()
         {
-            // Remove old columns:
-            columnHeaderItems.forEach(columnHeaderSupplier::removeItem);
-            columnHeaderItems.clear();
-            TableDisplay.this.displayColumns = columns;
-            for (int i = 0; i < columns.size(); i++)
-            {
-                final int columnIndex = i;
-                ColumnDetails column = columns.get(i);
-                // Item for column name:
-                FloatingItem item = new FloatingItem()
-                {
-                    @Override
-                    @OnThread(Tag.FXPlatform)
-                    public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
-                    {
-                        double x = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex);
-                        double y = rowBounds.getItemCoord(getPosition().rowIndex + 1);
-                        double width = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x;
-                        double height = rowBounds.getItemCoord(getPosition().rowIndex + 2) - y;
-                        
-                        double lastY = Math.max(y, rowBounds.getItemCoord(TableDisplay.this.getPosition().rowIndex + HEADER_ROWS + currentKnownRows - 2));
-                        return Optional.of(new BoundingBox(
-                                x,
-                                Math.min(Math.max(0, y), lastY),
-                                width,
-                                height
-                        ));
-                    }
-
-                    @Override
-                    @OnThread(Tag.FXPlatform)
-                    public Pair<VirtualGridSupplier.ViewOrder, Node> makeCell()
-                    {
-                        return new Pair<>(ViewOrder.FLOATING_PINNED, new Label(column.getColumnId().getOutput()));
-                    }
-                };
-                columnHeaderItems.add(item);
-                columnHeaderSupplier.addItem(item);
-            }
-            
-            super.updateParent();
-            
+            return currentKnownRows + HEADER_ROWS + (getTable().getOperations().appendRows != null ? 1 : 0);
         }
-
+        /*
         @Override
         public int getFirstPossibleRowIncl()
         {
@@ -594,7 +548,7 @@ public class TableDisplay implements TableDisplayBase
         @Override
         public int getLastPossibleRowIncl()
         {
-            return TableDisplay.this.getPosition().rowIndex + 10 /* TODO */;
+            return TableDisplay.this.getPosition().rowIndex + 10; // TODO
         }
 
         @Override
@@ -608,6 +562,7 @@ public class TableDisplay implements TableDisplayBase
         {
             return TableDisplay.this.getPosition().columnIndex + displayColumns.size() - 1;
         }
+        */
     }
 
     @OnThread(Tag.FXPlatform)
@@ -615,8 +570,6 @@ public class TableDisplay implements TableDisplayBase
     {
         this.parent = parent;
         this.table = table;
-        this.columnHeaderSupplier = columnHeaderSupplier;
-        this.displayColumns = ImmutableList.of();
         Either<StyledString, RecordSet> recordSetOrError;
         try
         {
@@ -627,13 +580,11 @@ public class TableDisplay implements TableDisplayBase
             recordSetOrError = Either.left(e.getStyledMessage());
         }
         this.recordSetOrError = recordSetOrError;
-        tableDataDisplay = this.recordSetOrError.<GridArea>either(err -> makeErrorDisplay(err),
-                recordSet -> 
-                    new TableDataDisplay(recordSet, table.getDisplayMessageWhenEmpty(), () -> {
-                        parent.modified();
-                        Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
-                    })
-                );
+        tableDataDisplay = new TableDataDisplay(this.recordSetOrError.<Pair<@Nullable RecordSet, MessageWhenEmpty>>either(err -> new Pair<@Nullable RecordSet, MessageWhenEmpty>(null, new MessageWhenEmpty(err)),
+                recordSet -> new Pair<>(recordSet, table.getDisplayMessageWhenEmpty())), columnHeaderSupplier, () -> {
+            parent.modified();
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
+        });
         Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu());
 
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {

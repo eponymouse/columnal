@@ -22,27 +22,22 @@ import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ReadOnlyStringColumnHandler;
-import records.gui.stable.StableView.ColumnDetails;
-import records.gui.stable.StableView.ColumnHandler;
+import records.gui.stable.ColumnDetails;
 import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
-import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ImporterUtility

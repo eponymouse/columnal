@@ -19,10 +19,12 @@ import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledText;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
+import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn.TextFileColumnListener;
@@ -36,12 +38,14 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stable.CellSelection;
-import records.gui.stable.StableView.ColumnDetails;
-import records.gui.stf.TableDisplayUtility;
-import records.gui.stable.StableView.ColumnHandler;
+import records.gui.DataDisplay;
+import records.gui.grid.CellSelection;
+import records.gui.grid.VirtualGrid;
+import records.gui.stable.ColumnDetails;
+import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCallback;
-import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
+import records.gui.stable.StableView;
+import records.gui.stf.TableDisplayUtility;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
 import records.importers.ChoicePoint.Options;
@@ -58,7 +62,6 @@ import utility.Utility;
 import utility.Utility.IndexRange;
 import utility.Workers;
 import utility.Workers.Priority;
-import records.gui.stable.StableView;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -788,7 +791,7 @@ public class GuessFormat
     private static class GUI_Items implements ChangeListener<@Nullable CellSelection>
     {
         public final StyleClassedTextArea textArea;
-        public final StableView tableView;
+        public final DataDisplay tableView;
         public final int numHeaderRows;
         // This structure needs to store data proportional to the size of the text file, so we
         // use a large flat array.  It's size is columns*rows*2, where
@@ -798,14 +801,15 @@ public class GuessFormat
 
         @OnThread(Tag.FXPlatform)
         @SuppressWarnings("initialization") // For passing this as change listener
-        private GUI_Items(StyleClassedTextArea textArea, StableView tableView, int numHeaderRows)
+        private GUI_Items(StyleClassedTextArea textArea, DataDisplay tableView, int numHeaderRows)
         {
             this.textArea = textArea;
             this.tableView = tableView;
             this.numHeaderRows = numHeaderRows;
             this.usedRanges = new int[100000];
             Arrays.fill(usedRanges, -1);
-            tableView.selectionProperty().addListener(this);
+            // TODO
+            //tableView.selectionProperty().addListener(this);
         }
 
 
@@ -828,6 +832,7 @@ public class GuessFormat
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends @Nullable CellSelection> prop, @Nullable CellSelection oldFocus, @Nullable CellSelection newFocus)
         {
+            /* TODO
             if (oldFocus != null)
             {
                 int usedIndex = (oldFocus.editPosition().rowIndex*tableView.getColumnCount() + oldFocus.editPosition().columnIndex) * 2;
@@ -840,6 +845,7 @@ public class GuessFormat
                 if (usedRanges[usedIndex] != -1)
                     overlayStyle(textArea, numHeaderRows, newFocus.editPosition().rowIndex, new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.union(a, b));
             }
+            */
         }
     }
 
@@ -847,7 +853,7 @@ public class GuessFormat
     private static void previewFormat(TypeManager typeManager, File file, List<String> initialLines, TextFormat t, GUI_Items gui)
     {
         gui.textArea.replaceText(initialLines.stream().collect(Collectors.joining("\n")));
-        gui.tableView.clear(null);
+        gui.tableView.setColumnsAndRows(ImmutableList.of(), null, null);
         TextAreaFiller textAreaFiller = new TextAreaFiller(gui);
 
         gui.textArea.setParagraphGraphicFactory(sourceLine -> {
@@ -861,13 +867,16 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImporter.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), null), null, null, recordSet::indexValid);
+                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), null), null, null);
                 });
             }
             catch (IOException | InternalException | UserException e)
             {
                 Log.log(e);
-                Platform.runLater(() -> gui.tableView.setPlaceholderText(e.getLocalizedMessage()));
+                Platform.runLater(() -> {
+                    gui.tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                    gui.tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                });
 
             }
         });

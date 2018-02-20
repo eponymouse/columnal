@@ -339,6 +339,12 @@ public abstract class Table
             this.noColumns = err.toPlain();
             this.noRows = noColumns;
         }
+        
+        public MessageWhenEmpty(@Localized String message)
+        {
+            this.noColumns = message;
+            this.noRows = message;
+        }
 
         /** Message to show when the table has no columns */
         public @Localized String getDisplayMessageNoColumns()

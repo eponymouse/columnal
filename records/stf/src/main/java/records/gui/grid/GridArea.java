@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -38,7 +39,7 @@ public abstract class GridArea
         this.topLeft = new CellPosition(1, 1);
     }
 
-    public final CellPosition getPosition()
+    public final CellPosition getPosition(@UnknownInitialization(GridArea.class) GridArea this)
     {
         return topLeft;
     }
@@ -82,5 +83,10 @@ public abstract class GridArea
     {
         //TODO
         return false;
+    }
+
+    public void setMessageWhenEmpty(MessageWhenEmpty messageWhenEmpty)
+    {
+        this.messageWhenEmpty = messageWhenEmpty;
     }
 }

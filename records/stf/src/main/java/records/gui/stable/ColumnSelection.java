@@ -1,10 +1,11 @@
 package records.gui.stable;
 
-import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
+import records.data.CellPosition;
 import utility.Utility;
 
-public class ColumnSelection implements CellSelection
+public class ColumnSelection //implements CellSelection
 {
+    /*
     private final int anchorColumn;
     private final int columnIndex;
 
@@ -24,12 +25,6 @@ public class ColumnSelection implements CellSelection
     public CellSelection atEnd(boolean extendSelection, int maxRows, int maxColumns)
     {
         return new ColumnSelection(extendSelection ? columnIndex : maxColumns - 1, maxColumns - 1);
-    }
-
-    @Override
-    public CellPosition editPosition()
-    {
-        return new CellPosition(0, columnIndex);
     }
 
     @Override
@@ -71,4 +66,5 @@ public class ColumnSelection implements CellSelection
     {
         return SelectionStatus.UNSELECTED;
     }
+    */
 }
