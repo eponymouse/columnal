@@ -5,7 +5,6 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -14,7 +13,6 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
 import records.gui.grid.GridArea;
-import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -25,7 +23,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
-import utility.SimulationFunction;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -77,11 +74,17 @@ public abstract class DataDisplay extends GridArea
               {
                   ErrorableTextField<TableId> tableNameField = new TableNameTextField(tableManager, initialTableName);
                   tableNameField.sizeToFit(30.0, 30.0);
-                  // TODO support dragging to move table
                   BorderPane borderPane = new BorderPane(tableNameField.getNode());
                   borderPane.getStyleClass().add("table-display-table-title");
                   BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
                   BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
+                  borderPane.setOnMouseClicked(e -> {
+                      withParent(g -> g.select(new EntireTableSelection(FXUtility.mouse(DataDisplay.this))));
+                      FXUtility.setPseudoclass(borderPane, "table-selected", true);
+                      withParent(g -> g.onNextSelectionChange(s -> FXUtility.setPseudoclass(borderPane, "table-selected", false)));
+                  });
+
+                  // TODO support dragging to move table
                   return new Pair<>(ViewOrder.FLOATING, borderPane);
               }
           }  

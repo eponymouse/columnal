@@ -8,6 +8,8 @@ import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformBiConsumer;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 
 /**
@@ -54,6 +56,13 @@ public abstract class GridArea
         if (parent != null)
             parent.positionOrAreaChanged(this);
     }
+    
+    // Calls the consumer, iff we have a non-null parent
+    protected void withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformConsumer<VirtualGrid> withVirtualGrid)
+    {
+        if (parent != null)
+            withVirtualGrid.consume(parent);
+    }    
 
     public final void addedToGrid(VirtualGrid parent)
     {

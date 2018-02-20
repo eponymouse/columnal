@@ -10,6 +10,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
@@ -43,6 +45,7 @@ import records.gui.stable.ScrollResult;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiConsumer;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -506,6 +509,20 @@ public class VirtualGrid implements ScrollBindable
     public ScrollGroup getScrollGroup()
     {
         return scrollGroup;
+    }
+
+    public void onNextSelectionChange(FXPlatformConsumer<@Nullable CellSelection> onChange)
+    {
+        selection.addListener(new ChangeListener<@Nullable CellSelection>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends @Nullable CellSelection> a, @Nullable CellSelection b, @Nullable CellSelection newVal)
+            {
+                onChange.consume(newVal);
+                selection.removeListener(this);
+            }
+        });
     }
 
     @OnThread(Tag.FXPlatform)

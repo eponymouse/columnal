@@ -6,6 +6,12 @@
     &:table-selected {
         -fx-cursor: move;
         -fx-background-color: $table-header-background-color-selected;
+        . text-field {
+            -fx-background-color: $table-header-background-color-selected, $table-header-background-color-selected;
+            &:focused, &:hover {
+                -fx-background-color: grey(65%), $table-header-background-color-selected;
+            }
+        }
     }
     .text-field {
         -fx-text-fill: $table-header-text-color;
