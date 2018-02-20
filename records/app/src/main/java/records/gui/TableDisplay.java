@@ -283,7 +283,7 @@ public class TableDisplay implements TableDisplayBase
     @OnThread(Tag.FXPlatform)
     public int getLastDataDisplayColumnIncl()
     {
-        return getPosition().columnIndex + tableDataDisplay.getColumnCount() - 1;
+        return getPosition().columnIndex + tableDataDisplay.displayColumns.size() - 1;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -406,7 +406,7 @@ public class TableDisplay implements TableDisplayBase
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
         {
             final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
             if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
@@ -442,8 +442,6 @@ public class TableDisplay implements TableDisplayBase
                     }
                 });
             }
-            // Add one if we need append arrows:
-            return currentKnownRows + HEADER_ROWS + (getTable().getOperations().appendRows != null ? 1 : 0);
         }
 
         @Override
@@ -534,10 +532,17 @@ public class TableDisplay implements TableDisplayBase
         }
 
         @Override
-        protected int getCurrentKnownRows()
+        public int getCurrentKnownRows()
         {
             return currentKnownRows + HEADER_ROWS + (getTable().getOperations().appendRows != null ? 1 : 0);
         }
+
+        @Override
+        public int getColumnCount()
+        {
+            return displayColumns.size() + (getTable().getOperations().appendColumn != null ? 1 : 0);
+        }
+        
         /*
         @Override
         public int getFirstPossibleRowIncl()
@@ -606,17 +611,9 @@ public class TableDisplay implements TableDisplayBase
         this.table.setDisplay(usInit);
     }
 
-    @RequiresNonNull({"parent", "table"})
-    private GridArea makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, StyledString err)
+    //@RequiresNonNull({"parent", "table"})
+    //private GridArea makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, StyledString err)
     {
-        return new GridArea(new MessageWhenEmpty(err)) {
-            @Override
-            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
-            {
-                // Enough size to display our error:
-                return 5;
-            }
-        };
         /* TODO have a floating message with the below
         if (table instanceof TransformationEditable)
             return new VBox(new TextFlow(err.toGUI().toArray(new Node[0])), GUI.button("transformation.edit", () -> parent.editTransform((TransformationEditable)table)));

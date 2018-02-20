@@ -122,8 +122,6 @@ public abstract class DataDisplay extends GridArea
         
     }
 
-    protected abstract int getCurrentKnownRows();
-
     public int getColumnCount()
     {
         return displayColumns.size();

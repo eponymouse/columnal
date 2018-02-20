@@ -77,13 +77,22 @@ public abstract class GridArea
      * @return The current known row size.
      */
     @OnThread(Tag.FXPlatform)
-    public abstract int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
+    protected abstract void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
 
-    public boolean contains(CellPosition cellPosition)
+    public final int getAndUpdateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
     {
-        //TODO
-        return false;
+        updateKnownRows(checkUpToRowIncl, updateSizeAndPositions);
+        return getCurrentKnownRows();
     }
+
+    public final boolean contains(CellPosition cellPosition)
+    {
+        return cellPosition.rowIndex >= topLeft.rowIndex && cellPosition.rowIndex < topLeft.rowIndex + getCurrentKnownRows()
+            && cellPosition.columnIndex >= topLeft.columnIndex && cellPosition.columnIndex < topLeft.columnIndex + getColumnCount();
+    }
+    
+    public abstract int getColumnCount();
+    public abstract int getCurrentKnownRows();
 
     public void setMessageWhenEmpty(MessageWhenEmpty messageWhenEmpty)
     {

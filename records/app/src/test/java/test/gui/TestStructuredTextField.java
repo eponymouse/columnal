@@ -130,15 +130,14 @@ public class TestStructuredTextField extends ApplicationTest
         dataDisplay = new DataDisplay("TestTable", new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), columnHeaderSupplier)
         {
             @Override
-            protected int getCurrentKnownRows()
+            public int getCurrentKnownRows()
             {
                 return 1;
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
-                return 1;
             }
         };
         virtualGrid.addGridArea(dataDisplay);

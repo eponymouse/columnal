@@ -105,12 +105,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             boolean currentKnownRowsIsFinal;
             int currentKnownRows = 0;
             @Override
-            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
                 final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
                 final RecordSet recordSet = destRecordSet.get();
                 if (recordSet == null)
-                    return 0;
+                    return;
                 final @NonNull RecordSet recordSetNonNull = recordSet;
                 if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
                 {
@@ -145,11 +145,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         }
                     });
                 }
-                return currentKnownRows + HEADER_ROWS;
             }
 
             @Override
-            protected int getCurrentKnownRows()
+            public int getCurrentKnownRows()
             {
                 return currentKnownRows + HEADER_ROWS;
             }
@@ -165,13 +164,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         DataDisplay srcDataDisplay = new DataDisplay(suggestedName, new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier) {
 
             @Override
-            public @OnThread(Tag.FXPlatform) int updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
-                return srcInfo.get() == null ? 0 : srcInfo.get().numRows;
             }
 
             @Override
-            protected int getCurrentKnownRows()
+            public int getCurrentKnownRows()
             {
                 return srcInfo.get() == null ? 0 : srcInfo.get().numRows;
             }
