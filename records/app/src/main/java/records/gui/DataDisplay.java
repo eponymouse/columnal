@@ -3,10 +3,16 @@ package records.gui;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
 import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
@@ -28,6 +34,7 @@ import utility.gui.FXUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A DataDisplay is a GridArea that can be used to display some table data.  Crucially, it does
@@ -58,7 +65,7 @@ public abstract class DataDisplay extends GridArea
               {
                   double x = columnBounds.getItemCoord(getPosition().columnIndex);
                   double y = rowBounds.getItemCoord(getPosition().rowIndex);
-                  double width = columnBounds.getItemCoord(getPosition().columnIndex + (displayColumns == null ? 0 : displayColumns.size())) - x;
+                  double width = columnBounds.getItemCoord(getPosition().columnIndex + getColumnCount()) - x;
                   double height = rowBounds.getItemCoord(getPosition().rowIndex + 1) - y;
                   return Optional.of(new BoundingBox(
                       x,
@@ -82,6 +89,30 @@ public abstract class DataDisplay extends GridArea
                       withParent(g -> g.select(new EntireTableSelection(FXUtility.mouse(DataDisplay.this))));
                       FXUtility.setPseudoclass(borderPane, "table-selected", true);
                       withParent(g -> g.onNextSelectionChange(s -> FXUtility.setPseudoclass(borderPane, "table-selected", false)));
+                  });
+                  @Nullable DestRectangleOverlay overlay[] = new DestRectangleOverlay[1]; 
+                  borderPane.setOnMouseDragged(e -> {
+                      e.consume();
+                      if (overlay[0] != null)
+                      {
+                          overlay[0].mouseMovedToScreenPos(e.getScreenX(), e.getScreenY());
+                          FXUtility.mouse(DataDisplay.this).updateParent();
+                          return;
+                      }
+                      overlay[0] = new DestRectangleOverlay(e.getScreenX(), e.getScreenY());
+                      Log.debug("Adding rectangle");
+                      columnHeaderSupplier.addItem(overlay[0]);
+                      FXUtility.mouse(DataDisplay.this).updateParent();
+                  });
+                  borderPane.setOnMouseReleased(e -> {
+                      if (overlay[0] != null)
+                      {
+                          Log.debug("Removing rectangle");
+                          columnHeaderSupplier.removeItem(overlay[0]);
+                          FXUtility.mouse(DataDisplay.this).updateParent();
+                          overlay[0] = null;
+                      }
+                      e.consume();
                   });
 
                   // TODO support dragging to move table
@@ -144,8 +175,63 @@ public abstract class DataDisplay extends GridArea
         
     }
 
-    public int getColumnCount()
+    public int getColumnCount(@UnknownInitialization(GridArea.class) DataDisplay this)
     {
-        return displayColumns.size();
+        return displayColumns == null ? 0 : displayColumns.size();
+    }
+
+    private class DestRectangleOverlay implements FloatingItem
+    {
+        private Point2D lastMousePosScreen;
+
+        private DestRectangleOverlay(double screenX, double screenY)
+        {
+            this.lastMousePosScreen = new Point2D(screenX, screenY);
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+        {
+            OptionalInt columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen);
+            OptionalInt rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen);
+            if (columnIndex.isPresent() && rowIndex.isPresent())
+            {
+                double x = columnBounds.getItemCoord(columnIndex.getAsInt());
+                double y = rowBounds.getItemCoord(rowIndex.getAsInt());
+                double width = columnBounds.getItemCoord(columnIndex.getAsInt() + getColumnCount()) - x;
+                double height = rowBounds.getItemCoord(rowIndex.getAsInt() + getCurrentKnownRows()) - y;
+                return Optional.of(new BoundingBox(x, y, width, height));
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public Pair<ViewOrder, Node> makeCell()
+        {
+            Rectangle r = new Rectangle() {
+                @Override
+                public void resize(double width, double height)
+                {
+                    setWidth(width);
+                    setHeight(height);
+                }
+
+                @Override
+                public boolean isResizable()
+                {
+                    return true;
+                }
+            };
+            r.setStroke(Color.BLACK);
+            r.setFill(Color.TRANSPARENT);
+            r.setMouseTransparent(true);
+            return new Pair<>(ViewOrder.OVERLAY, r);
+        }
+
+        public void mouseMovedToScreenPos(double screenX, double screenY)
+        {
+            lastMousePosScreen = new Point2D(screenX, screenY);
+        }
     }
 }

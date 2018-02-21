@@ -65,6 +65,8 @@ class Node
     SimpleObjectProperty boundsInParentProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
     @Pure Point2D localToParent(@UnknownInitialization(javafx.scene.Node.class) Node this, Point2D p);
     @Pure Point2D sceneToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, double x, double y);
+    @Pure Point2D screenToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, double x, double y);
+    @Pure Point2D screenToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, Point2D p);
     void setLayoutX(@UnknownInitialization(javafx.scene.Node.class) Node this, double x);
     void setLayoutY(@UnknownInitialization(javafx.scene.Node.class) Node this, double y);
     

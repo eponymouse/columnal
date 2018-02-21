@@ -73,6 +73,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             toRemove.add(removed.get());
     }
 
+    @OnThread(Tag.FXPlatform)
     public static interface FloatingItem
     {
         // If empty is returned, means not visible.  Otherwise, coords in parent are returned.

@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 
 @OnThread(Tag.FXPlatform)
 public class VirtualGrid implements ScrollBindable
@@ -708,6 +709,22 @@ public class VirtualGrid implements ScrollBindable
                 {
                     return firstVisibleColumnOffset + sumColumnWidths(firstDisplayCol, itemIndex);
                 }
+
+                @Override
+                @OnThread(Tag.FXPlatform)
+                public OptionalInt getItemIndexForScreenPos(Point2D screenPos)
+                {
+                    Point2D localCoord = screenToLocal(screenPos);
+                    double x = firstVisibleColumnOffset;
+                    for (int i = firstVisibleColumnIndex; i < lastDisplayColExcl; i++)
+                    {
+                        double nextX = x + getColumnWidth(i);
+                        if (x <= localCoord.getX() && localCoord.getX() < nextX)
+                            return OptionalInt.of(i);
+                        x = nextX;
+                    }
+                    return OptionalInt.empty();
+                }
             };
             VisibleDetails rowBounds = new VisibleDetails(firstDisplayRow, lastDisplayRowExcl - 1)
             {
@@ -715,6 +732,17 @@ public class VirtualGrid implements ScrollBindable
                 public double getItemCoord(int itemIndex)
                 {
                     return firstVisibleRowOffset + rowHeight * (itemIndex - firstDisplayRow);
+                }
+
+                @Override
+                public OptionalInt getItemIndexForScreenPos(Point2D screenPos)
+                {
+                    Point2D localCoord = screenToLocal(screenPos);
+                    int theoretical = (int)Math.floor((localCoord.getY() - firstVisibleRowOffset) / rowHeight) + firstDisplayRow;
+                    if (firstVisibleRowIndex <= theoretical && theoretical < lastDisplayRowExcl)
+                        return OptionalInt.of(theoretical);
+                    else
+                        return OptionalInt.empty();
                 }
             };
 

@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Predicate;
 
 /**
@@ -55,9 +57,10 @@ public abstract class VirtualGridSupplier<T extends Node>
         public void remove(Node node);
     }
     
-    public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED }
+    public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED, OVERLAY }
     
     // Used for both rows and columns, to specify visible extents and divider positions
+    @OnThread(Tag.FXPlatform)
     public static abstract class VisibleDetails
     {
         // Index of the first column/row visible (inclusive)
@@ -74,5 +77,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         // The X/Y position of the left/top of the given item index
         @OnThread(Tag.FXPlatform)
         public abstract double getItemCoord(int itemIndex);
+
+        // The item index that contains the given screen X/Y position
+        public abstract OptionalInt getItemIndexForScreenPos(Point2D screenPos);
     }
 }

@@ -6,7 +6,7 @@
     &:table-selected {
         -fx-cursor: move;
         -fx-background-color: $table-header-background-color-selected;
-        . text-field {
+        .text-field {
             -fx-background-color: $table-header-background-color-selected, $table-header-background-color-selected;
             &:focused, &:hover {
                 -fx-background-color: grey(65%), $table-header-background-color-selected;
