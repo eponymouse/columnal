@@ -6,8 +6,6 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.geometry.BoundingBox;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -46,10 +44,7 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
-import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.ColumnDetails;
@@ -88,7 +83,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -274,6 +268,16 @@ public class TableDisplay implements TableDisplayBase
         return getPosition().columnIndex + tableDataDisplay.displayColumns.size() - 1;
     }
 
+    public void addCellStyle(CellStyle cellStyle)
+    {
+        tableDataDisplay.addCellStyle(cellStyle);
+    }
+
+    public void removeCellStyle(CellStyle cellStyle)
+    {
+        tableDataDisplay.removeCellStyle(cellStyle);
+    }
+
     @OnThread(Tag.FXPlatform)
     private class TableDataDisplay extends DataDisplay implements RecordSetListener
     {
@@ -394,7 +398,7 @@ public class TableDisplay implements TableDisplayBase
                 @Override
                 public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
                 {
-                    return cellStyle;
+                    return cellStyles;
                 }
             };
         }

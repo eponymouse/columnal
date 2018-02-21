@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.scene.Node;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
@@ -9,6 +10,7 @@ import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.FXUtility;
 
 import java.util.Arrays;
 
@@ -16,7 +18,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
 {
     public DataCellSupplier()
     {
-        super(Arrays.asList(new CellStyle()));
+        super(Arrays.asList(CellStyle.values()));
     }
     
     @Override
@@ -27,29 +29,40 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
         return stf;
     }
 
-    public static class CellStyle
+    public static enum CellStyle
     {
-        @Override
-        public int hashCode()
+        TABLE_DRAG_SOURCE
         {
-            return 0;
-        }
+            @Override
+            public void applyStyle(Node item, boolean on)
+            {
+                item.setEffect(on ? new GaussianBlur() : null);
+            }
+        },
+        HOVERING_EXPAND_DOWN
+        {
+            @Override
+            public void applyStyle(Node item, boolean on)
+            {
+                FXUtility.setPseudoclass(item, "hovering-expand-down", on);
+            }
+        },
+        HOVERING_EXPAND_RIGHT
+        {
+            @Override
+            public void applyStyle(Node item, boolean on)
+            {
+                FXUtility.setPseudoclass(item, "hovering-expand-right", on);
+            }
+        };
 
-        @Override
-        public boolean equals(@Nullable Object obj)
-        {
-            return true;
-        }
-
-        public Effect getEffect()
-        {
-            return new GaussianBlur();
-        }
+        @OnThread(Tag.FX)
+        public abstract void applyStyle(Node item, boolean on);
     }
 
     @Override
     protected @OnThread(Tag.FX) void adjustStyle(StructuredTextField item, CellStyle style, boolean on)
     {
-        item.setEffect(on ? style.getEffect() : null);
+        style.applyStyle(item, on);
     }
 }

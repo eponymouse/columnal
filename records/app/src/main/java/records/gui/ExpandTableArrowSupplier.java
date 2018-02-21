@@ -27,7 +27,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
 {
     public ExpandTableArrowSupplier()
     {
-        super(Arrays.asList(new CellStyle()));
+        super(Arrays.asList(CellStyle.values()));
     }
     
     @Override
@@ -46,7 +46,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     @Override
     protected @OnThread(Tag.FX) void adjustStyle(Button item, CellStyle style, boolean on)
     {
-        item.setEffect(on ? style.getEffect() : null);
+        style.applyStyle(item, on);
     }
     
     public void addTable(TableDisplay tableDisplay)
@@ -101,6 +101,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                                 appendOp.appendColumn(null, DataType.toInfer(), DataTypeUtility.value(""));
                         });
                     });
+                    FXUtility.addChangeListenerPlatformNN(item.hoverProperty(), hover -> {
+                        if (hover)
+                            tableDisplay.addCellStyle(CellStyle.HOVERING_EXPAND_RIGHT);
+                        else
+                            tableDisplay.removeCellStyle(CellStyle.HOVERING_EXPAND_RIGHT);
+                    });
                 }
                 else if (hasAddRowArrow(cellPosition))
                 {
@@ -115,6 +121,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                             if (appendOp != null)
                                 appendOp.appendRows(1);
                         });
+                    });
+                    FXUtility.addChangeListenerPlatformNN(item.hoverProperty(), hover -> {
+                        if (hover)
+                            tableDisplay.addCellStyle(CellStyle.HOVERING_EXPAND_DOWN);
+                        else
+                            tableDisplay.removeCellStyle(CellStyle.HOVERING_EXPAND_DOWN);
                     });
                 }
                 else
