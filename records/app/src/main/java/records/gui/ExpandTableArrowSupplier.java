@@ -1,25 +1,33 @@
 package records.gui;
 
+import javafx.beans.binding.ObjectExpression;
 import javafx.scene.control.Button;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.ColumnId;
 import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
-import utility.FXPlatformSupplier;
 import utility.Workers;
 import utility.Workers.Priority;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 @OnThread(Tag.FXPlatform)
-public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button>
+public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button, CellStyle>
 {
+    public ExpandTableArrowSupplier()
+    {
+        super(Arrays.asList(new CellStyle()));
+    }
+    
     @Override
     protected Button makeNewItem()
     {
@@ -31,10 +39,16 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
         button.setMaxHeight(Double.MAX_VALUE);
         return button;
     }
+
+    @Override
+    protected @OnThread(Tag.FX) void adjustStyle(Button item, CellStyle style, boolean on)
+    {
+        item.setEffect(on ? style.getEffect() : null);
+    }
     
     public void addTable(TableDisplay tableDisplay)
     {
-        super.addGrid(tableDisplay.getGridArea(), new GridCellInfo<Button>()
+        super.addGrid(tableDisplay.getGridArea(), new GridCellInfo<Button, CellStyle>()
         {
             @Override
             public boolean hasCellAt(CellPosition cellPosition)
@@ -103,6 +117,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     // Panic -- hide it:
                     item.setVisible(false);
                 }
+            }
+            
+            @Override
+            public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
+            {
+                return tableDisplay.getDataGridCellInfo().styleForAllCells();
             }
         });
     }

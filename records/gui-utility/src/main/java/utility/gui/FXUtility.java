@@ -363,6 +363,7 @@ public class FXUtility
      * so it's safe to assume the item is initialized.
      */
     @SuppressWarnings("initialization")
+    @OnThread(Tag.FX)
     @Pure
     public static <T> T mouse(@UnknownInitialization T item)
     {

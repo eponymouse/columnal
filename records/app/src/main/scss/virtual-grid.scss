@@ -1,6 +1,10 @@
 @import 'colors';
 @import 'fonts';
 
+.main-view-grid {
+    -fx-background-color: $table-empty-background;
+}
+
 .table-display-table-title {
     -fx-background-color: $table-header-background-color;
     &:table-selected {
@@ -34,5 +38,12 @@
         }
         -fx-background-insets: 0, 1;
         -fx-padding: -1 1 -1 1;
+    }
+}
+
+.table-data-cell {
+    -fx-background-color: $table-cell;
+    &:table-drag-source {
+        -fx-effect: blur;
     }
 }

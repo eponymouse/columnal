@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -19,6 +20,7 @@ import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
+import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
@@ -33,6 +35,9 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -54,6 +59,8 @@ public abstract class DataDisplay extends GridArea
     // Not final because it may changes if user changes the display item or preview options change:
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
+
+    protected final SimpleObjectProperty<ImmutableList<CellStyle>> cellStyle = new SimpleObjectProperty<>(ImmutableList.of());
     
     public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, VirtualGridSupplierFloating columnHeaderSupplier)
     {
@@ -103,6 +110,12 @@ public abstract class DataDisplay extends GridArea
                       overlay[0] = new DestRectangleOverlay(borderPane.localToScreen(borderPane.getBoundsInLocal()), e.getScreenX(), e.getScreenY());
                       Log.debug("Adding rectangle");
                       columnHeaderSupplier.addItem(overlay[0]);
+                      ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
+                      newStyles.addAll(FXUtility.mouse(DataDisplay.this).cellStyle.get());
+                      CellStyle blurStyle = new CellStyle();
+                      newStyles.add(blurStyle);
+                      FXUtility.mouse(DataDisplay.this).cellStyle.set(newStyles.build());
+                      borderPane.setEffect(blurStyle.getEffect());
                       FXUtility.mouse(DataDisplay.this).updateParent();
                   });
                   borderPane.setOnMouseReleased(e -> {
@@ -110,6 +123,8 @@ public abstract class DataDisplay extends GridArea
                       {
                           Log.debug("Removing rectangle");
                           columnHeaderSupplier.removeItem(overlay[0]);
+                          FXUtility.mouse(DataDisplay.this).cellStyle.set(ImmutableList.of());
+                          borderPane.setEffect(null);
                           FXUtility.mouse(DataDisplay.this).updateParent();
                           overlay[0] = null;
                       }
@@ -165,6 +180,13 @@ public abstract class DataDisplay extends GridArea
                     borderPane.getStyleClass().add("table-display-column-title");
                     BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
                     BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
+                    FXUtility.addChangeListenerPlatformNN(cellStyle, cellStyles -> {
+                        borderPane.setEffect(null);
+                        for (CellStyle style : cellStyles)
+                        {
+                            borderPane.setEffect(style.getEffect());
+                        }
+                    });
                     return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
                 }
             };
@@ -228,6 +250,7 @@ public abstract class DataDisplay extends GridArea
             };
             r.setStroke(Color.BLACK);
             r.setFill(Color.TRANSPARENT);
+            r.setStrokeWidth(3.0);
             r.setMouseTransparent(true);
             return new Pair<>(ViewOrder.OVERLAY, r);
         }

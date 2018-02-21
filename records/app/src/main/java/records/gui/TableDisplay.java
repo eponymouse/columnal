@@ -2,6 +2,7 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -40,6 +41,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
@@ -84,7 +86,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -241,25 +245,9 @@ public class TableDisplay implements TableDisplayBase
         return tableDataDisplay;
     }
 
-    public GridCellInfo<StructuredTextField> getDataGridCellInfo()
+    public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
     {
-        if (tableDataDisplay instanceof TableDataDisplay)
-            return ((TableDataDisplay)tableDataDisplay).getDataGridCellInfo();
-        else
-            return new GridCellInfo<StructuredTextField>()
-            {
-                @Override
-                public boolean hasCellAt(CellPosition cellPosition)
-                {
-                    return false;
-                }
-
-                @Override
-                public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
-                {
-                    
-                }
-            };
+        return tableDataDisplay.getDataGridCellInfo();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -365,9 +353,9 @@ public class TableDisplay implements TableDisplayBase
         }
 
 
-        public GridCellInfo<StructuredTextField> getDataGridCellInfo()
+        public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
         {
-            return new GridCellInfo<StructuredTextField>()
+            return new GridCellInfo<StructuredTextField, CellStyle>()
             {
                 @Override
                 public boolean hasCellAt(CellPosition cellPosition)
@@ -401,6 +389,12 @@ public class TableDisplay implements TableDisplayBase
                             }
                         );
                     }
+                }
+
+                @Override
+                public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
+                {
+                    return cellStyle;
                 }
             };
         }
@@ -538,9 +532,9 @@ public class TableDisplay implements TableDisplayBase
         }
 
         @Override
-        public int getColumnCount()
+        public int getColumnCount(@UnknownInitialization(GridArea.class) TableDataDisplay this)
         {
-            return displayColumns.size() + (getTable().getOperations().appendColumn != null ? 1 : 0);
+            return (displayColumns == null ? 0 : displayColumns.size()) + (getTable().getOperations().appendColumn != null ? 1 : 0);
         }
         
         /*

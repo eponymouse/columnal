@@ -682,6 +682,7 @@ public class View extends StackPane
                     }
                 }
         });
+        mainPane.getNode().getStyleClass().add("main-view-grid");
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(columnHeaderSupplier);
