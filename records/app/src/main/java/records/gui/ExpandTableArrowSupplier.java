@@ -2,6 +2,7 @@ package records.gui;
 
 import javafx.beans.binding.ObjectExpression;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -16,6 +17,7 @@ import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,6 +39,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
         button.setMaxWidth(Double.MAX_VALUE);
         button.setMinHeight(0.0);
         button.setMaxHeight(Double.MAX_VALUE);
+        button.getStyleClass().add("expand-arrow");
         return button;
     }
 
@@ -86,8 +89,11 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 
                 if (hasAddColumnArrow(cellPosition))
                 {
+                    FXUtility.setPseudoclass(item, "expand-right", true);
+                    FXUtility.setPseudoclass(item, "expand-down", false);
+                    item.setTooltip(new Tooltip("Click to add column"));
                     item.setVisible(true);
-                    item.setText("->");
+                    item.setText("\u27F6");
                     item.setOnAction(e -> {
                         Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
                             @Nullable AppendColumn appendOp = tableDisplay.getTable().getOperations().appendColumn;
@@ -98,8 +104,11 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 }
                 else if (hasAddRowArrow(cellPosition))
                 {
+                    FXUtility.setPseudoclass(item, "expand-right", false);
+                    FXUtility.setPseudoclass(item, "expand-down", true);
+                    item.setTooltip(new Tooltip("Click to add row"));
                     item.setVisible(true);
-                    item.setText("v");
+                    item.setText("\u2193");
                     item.setOnAction(e -> {
                         Workers.onWorkerThread("Adding row", Priority.SAVE_ENTRY, () -> {
                             @Nullable AppendRows appendOp = tableDisplay.getTable().getOperations().appendRows;

@@ -43,7 +43,20 @@
 
 .table-data-cell {
     -fx-background-color: $table-cell;
+    &:hover {
+        -fx-background-color: $table-cell-hover;
+    } 
     &:table-drag-source {
         -fx-effect: blur;
     }
+}
+
+.expand-arrow {
+    -fx-padding: 0;
+    -fx-background-color: $table-cell;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    &:hovering-any {
+        -fx-background-color: white;
+    } 
 }
