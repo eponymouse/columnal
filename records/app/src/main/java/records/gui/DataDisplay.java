@@ -2,6 +2,7 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -99,7 +100,7 @@ public abstract class DataDisplay extends GridArea
                           FXUtility.mouse(DataDisplay.this).updateParent();
                           return;
                       }
-                      overlay[0] = new DestRectangleOverlay(e.getScreenX(), e.getScreenY());
+                      overlay[0] = new DestRectangleOverlay(borderPane.localToScreen(borderPane.getBoundsInLocal()), e.getScreenX(), e.getScreenY());
                       Log.debug("Adding rectangle");
                       columnHeaderSupplier.addItem(overlay[0]);
                       FXUtility.mouse(DataDisplay.this).updateParent();
@@ -182,19 +183,21 @@ public abstract class DataDisplay extends GridArea
 
     private class DestRectangleOverlay implements FloatingItem
     {
+        private final Point2D offsetFromTopLeftOfSource;
         private Point2D lastMousePosScreen;
 
-        private DestRectangleOverlay(double screenX, double screenY)
+        private DestRectangleOverlay(Bounds originalBoundsOnScreen, double screenX, double screenY)
         {
             this.lastMousePosScreen = new Point2D(screenX, screenY);
+            this.offsetFromTopLeftOfSource = new Point2D(screenX - originalBoundsOnScreen.getMinX(), screenY - originalBoundsOnScreen.getMinY());
         }
 
         @Override
         @OnThread(Tag.FXPlatform)
         public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
         {
-            OptionalInt columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen);
-            OptionalInt rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen);
+            OptionalInt columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
+            OptionalInt rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
             if (columnIndex.isPresent() && rowIndex.isPresent())
             {
                 double x = columnBounds.getItemCoord(columnIndex.getAsInt());
