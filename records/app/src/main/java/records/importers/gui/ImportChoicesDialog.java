@@ -153,7 +153,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 return currentKnownRows + HEADER_ROWS;
             }
         };
-        destGrid.addGridArea(destData);
+        destGrid.addGridAreas(ImmutableList.of(destData));
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
@@ -174,7 +174,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 return srcInfo.get() == null ? 0 : srcInfo.get().numRows;
             }
         };
-        srcGrid.addGridArea(srcDataDisplay);
+        srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
 
 
         LabelledGrid choices = new LabelledGrid();

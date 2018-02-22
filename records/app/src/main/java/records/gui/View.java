@@ -430,16 +430,6 @@ public class View extends StackPane
             return ImmutableList.of();
     }
 
-    /**
-     * Checks if the two ranges aMin--aMax and bMin--bMax overlap by at least overlapAmount (true = they do overlap by that much or more)
-     */
-    private static boolean rangeOverlaps(double overlapAmount, double aMin, double aMax, double bMin, double bMax)
-    {
-        // From https://stackoverflow.com/questions/2953967/built-in-function-for-computing-overlap-in-python
-
-        return Math.max(0, Math.min(aMax, bMax)) - Math.max(aMin, bMin) >= overlapAmount;
-    }
-
     // Doesn't really need to be generic in both, but better type safety checking this way:
     private static <A,B> Pair<@Nullable A, @Nullable B> findFirstLeftAndFirstRight(Stream<Either<A, B>> stream)
     {
@@ -778,7 +768,7 @@ public class View extends StackPane
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
         dataCellSupplier.addGrid(tableDisplay.getGridArea(), tableDisplay.getDataGridCellInfo());
-        mainPane.addGridArea(tableDisplay.getGridArea());
+        mainPane.addGridAreas(ImmutableList.of(tableDisplay.getGridArea()));
         @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
         if (tableOps.appendColumn != null || tableOps.appendRows != null)
         {

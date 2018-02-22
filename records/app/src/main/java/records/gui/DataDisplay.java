@@ -124,7 +124,7 @@ public abstract class DataDisplay extends GridArea
                               FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.toImmutableList())
                           );
                           CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
-                          withParent(p -> p.move(FXUtility.mouse(DataDisplay.this), dest));
+                          withParent(p -> FXUtility.mouse(DataDisplay.this).setPosition(dest));
                           FXUtility.mouse(DataDisplay.this).updateParent();
                           overlay[0] = null;
                       }

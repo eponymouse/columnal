@@ -4,6 +4,8 @@ import annotation.help.qual.UnknownIfHelp;
 import annotation.qual.UnknownIfValue;
 import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.userindex.qual.UnknownIfUserIndex;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -27,6 +29,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -52,10 +55,13 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
 public class VirtualGrid implements ScrollBindable
@@ -108,7 +114,9 @@ public class VirtualGrid implements ScrollBindable
     // Negative means we need them left/above, positive means we need them below/right:
     private final IntegerProperty extraRowsForScrolling = new SimpleIntegerProperty(0);
     private final IntegerProperty extraColsForScrolling = new SimpleIntegerProperty(0);
-    
+    // A sort of mutex to stop re-entrance to the updateSizeAndPositions() method:
+    private boolean updatingSizeAndPositions = false;
+
     public VirtualGrid(@Nullable FXPlatformBiConsumer<CellPosition, Point2D> createTable)
     {
         if (createTable != null)
@@ -784,19 +792,99 @@ public class VirtualGrid implements ScrollBindable
 
     private void updateSizeAndPositions()
     {
+        if (updatingSizeAndPositions)
+            return;
+        updatingSizeAndPositions = true;
+        
         // Three things to do:
         //   - Get each grid area to update its known size (which may involve calling us back)
         //   - Check for overlaps between tables, and reshuffle if needed
         //   - Update our known overall grid size
 
         List<Integer> rowSizes = Utility.mapList(gridAreas, gridArea -> gridArea.getPosition().rowIndex + gridArea.getAndUpdateKnownRows(currentKnownRows.get() + MAX_EXTRA_ROW_COLS, this::updateSizeAndPositions));
+                
+        // The plan to fix overlaps: we go from the left-most column across to
+        // the right-most, keeping track of which tables exist in this column.
+        // If for any given column, we find an overlap, we pick one table
+        // to remain in this column, then punt any overlappers to the right
+        // until they no longer overlap.  Then we continue this process,
+        // making sure to take account that tables may have moved, and thus the
+        // furthest column may also have changed.
         
-        // TODO check for overlaps and do reshuffle
+        // Pairs each grid area with its integer priority.  Starts in order of table left-most index:
+        ArrayList<Pair<Long, GridArea>> gridAreas = new ArrayList<>(
+                Streams.mapWithIndex(this.gridAreas.stream().sorted(Comparator.comparing(t -> t.getPosition().columnIndex)),
+                        (x, i) -> new Pair<> (i, x))
+            .collect(Collectors.toList()));
+
+        // Any currently open grid areas.  These will not overlap with each other vertically:
+        ArrayList<Pair<Long, GridArea>> openGridAreas = new ArrayList<>();
+        
+        // Note: gridAreas.size() may change during the loop!  But nothing at position
+        // before i will be modified or looked at.
+        gridAreaLoop: for (int i = 0; i < gridAreas.size(); i++)
+        {
+            Pair<Long, GridArea> cur = gridAreas.get(i);
+            
+            // Check for overlap with open grid areas:
+            for (Pair<Long, GridArea> openGridArea : openGridAreas)
+            {
+                if (overlap(openGridArea.getSecond(), cur.getSecond()))
+                {
+                    // Shunt us sideways so that we don't overlap, and add to right point in list
+                    // We may overlap more tables, but that is fine, we will get shunted again
+                    // next time round if needed
+                    CellPosition curPos = cur.getSecond().getPosition();
+                    curPos = new CellPosition(curPos.rowIndex, openGridArea.getSecond().getPosition().columnIndex + openGridArea.getSecond().getColumnCount());
+                    cur.getSecond().setPosition(curPos);
+                    
+                    // Now need to add us to the gridAreas list at correct place.  We don't
+                    // worry about removing ourselves as it's more hassle than it's worth.
+                    
+                    // The right place is the end, or the first time that we compare less
+                    // when comparing left-hand edge coordinates (and secondarily, priority)
+                    for (int j = i + 1; j < gridAreas.size(); j++)
+                    {
+                        int lhs = gridAreas.get(j).getSecond().getPosition().columnIndex;
+                        if (curPos.columnIndex < lhs
+                                 || (curPos.columnIndex == lhs && cur.getFirst() < gridAreas.get(j).getFirst()))
+                        {
+                            gridAreas.add(j, cur);
+                            continue gridAreaLoop;
+                        }
+                    }
+                    
+                    gridAreas.add(cur);
+                    continue gridAreaLoop;
+                }
+            }
+            // Close any grid areas that we have gone to the right of:
+            openGridAreas.removeIf(p -> p.getSecond().getPosition().columnIndex + p.getSecond().getColumnCount() <= cur.getSecond().getPosition().columnIndex);
+            
+            // Add ourselves to the open areas:
+            openGridAreas.add(cur);
+        }
         
         currentKnownRows.setValue(Math.max(MIN_ROWS, rowSizes.stream().mapToInt(x -> x).max().orElse(0)));
         container.redoLayout();
+        updatingSizeAndPositions = false;
     }
-    
+
+    private boolean overlap(GridArea a, GridArea b)
+    {
+        int aLeftIncl = a.getPosition().columnIndex;
+        int aRightIncl = a.getPosition().columnIndex + a.getColumnCount() - 1;
+        int aTopIncl = a.getPosition().rowIndex;
+        int aBottomIncl = a.getPosition().rowIndex + a.getCurrentKnownRows() - 1;
+        
+        int bLeftIncl = b.getPosition().columnIndex;
+        int bRightIncl = b.getPosition().columnIndex + b.getColumnCount() - 1;
+        int bTopIncl = b.getPosition().rowIndex;
+        int bBottomIncl = b.getPosition().rowIndex + b.getCurrentKnownRows() - 1;
+        return !(aLeftIncl > bRightIncl || bLeftIncl > aRightIncl
+            || aTopIncl > bBottomIncl || bTopIncl > aBottomIncl);
+    }
+
     private void activateCell(@Nullable CellSelection cellPosition)
     {
         // TODO
@@ -841,10 +929,13 @@ public class VirtualGrid implements ScrollBindable
             scrollGroup.requestScrollBy(deltaX, deltaY);
     }
     
-    public void addGridArea(GridArea gridArea)
+    public void addGridAreas(Collection<GridArea> gridAreas)
     {
-        gridAreas.add(gridArea);
-        gridArea.addedToGrid(this);
+        this.gridAreas.addAll(gridAreas);
+        for (GridArea gridArea : gridAreas)
+        {
+            gridArea.addedToGrid(this);
+        }
         updateSizeAndPositions();
     }
 

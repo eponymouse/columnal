@@ -49,6 +49,7 @@ public abstract class GridArea
     public final void setPosition(CellPosition cellPosition)
     {
         topLeft = cellPosition;
+        updateParent();
     }
 
     protected void updateParent()
@@ -67,7 +68,6 @@ public abstract class GridArea
     public final void addedToGrid(VirtualGrid parent)
     {
         this.parent = parent;
-        updateParent();
     }
 
     public final VirtualGrid _test_getParent()

@@ -141,7 +141,7 @@ public class TestStructuredTextField extends ApplicationTest
             {
             }
         };
-        virtualGrid.addGridArea(dataDisplay);
+        virtualGrid.addGridAreas(ImmutableList.of(dataDisplay));
         dummy = new TextField();
         Scene scene = new Scene(new VBox(dummy, virtualGrid.getNode()));
         stage.setScene(scene);

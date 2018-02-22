@@ -1050,6 +1050,16 @@ public class Utility
         return num;
     }
 
+    /**
+     * Checks if the two ranges aMin--aMax and bMin--bMax overlap by at least overlapAmount (true = they do overlap by that much or more)
+     */
+    public static boolean rangeOverlaps(double overlapAmount, double aMin, double aMax, double bMin, double bMax)
+    {
+        // From https://stackoverflow.com/questions/2953967/built-in-function-for-computing-overlap-in-python
+
+        return Math.max(0, Math.min(aMax, bMax)) - Math.max(aMin, bMin) >= overlapAmount;
+    }
+
     public static class ReadState
     {
         private final File file;

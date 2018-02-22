@@ -25,7 +25,7 @@ public class GenGridAreaList extends Generator<GridAreaList>
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public GridAreaList generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        int length = sourceOfRandomness.nextInt(2, 30);
+        int length = sourceOfRandomness.nextInt(2, 40);
         ImmutableList.Builder<GridArea> r = ImmutableList.builder();
         for (int i = 0; i < length; i++)
         {
