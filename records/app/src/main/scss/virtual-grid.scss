@@ -56,7 +56,11 @@
     -fx-background-color: $table-cell;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
+    -fx-text-fill: $expand-arrow-color;
     &:expand-down:hovering-expand-down, &:expand-right:hovering-expand-right {
         -fx-background-color: white;
     } 
+    &:expand-right-header {
+        -fx-background-color: $column-header-background-color;
+    }
 }

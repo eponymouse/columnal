@@ -72,7 +72,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @OnThread(Tag.FXPlatform)
             public boolean hasAddColumnArrow(CellPosition cellPosition)
             {
-                int firstRow = tableDisplay.getFirstDataDisplayRowIncl();
+                int firstRow = tableDisplay.getPosition().rowIndex + 1;
                 int lastRow = tableDisplay.getLastDataDisplayRowIncl();
                 return tableDisplay.getTable().getOperations().appendColumn != null
                     && cellPosition.columnIndex == tableDisplay.getLastDataDisplayColumnIncl() + 1
@@ -89,6 +89,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 
                 if (hasAddColumnArrow(cellPosition))
                 {
+                    FXUtility.setPseudoclass(item, "expand-right-header", cellPosition.rowIndex < tableDisplay.getFirstDataDisplayRowIncl());
                     FXUtility.setPseudoclass(item, "expand-right", true);
                     FXUtility.setPseudoclass(item, "expand-down", false);
                     item.setTooltip(new Tooltip("Click to add column"));
@@ -110,6 +111,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 }
                 else if (hasAddRowArrow(cellPosition))
                 {
+                    FXUtility.setPseudoclass(item, "expand-right-header", false);
                     FXUtility.setPseudoclass(item, "expand-right", false);
                     FXUtility.setPseudoclass(item, "expand-down", true);
                     item.setTooltip(new Tooltip("Click to add row"));
