@@ -526,6 +526,11 @@ public class VirtualGrid implements ScrollBindable
         });
     }
 
+    public void move(GridArea gridArea, CellPosition destinationPosition)
+    {
+        // TODO rearrange
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {

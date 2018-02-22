@@ -41,4 +41,10 @@ public class CellPosition
         result = 31 * result + columnIndex;
         return result;
     }
+
+    @Override
+    public String toString()
+    {
+        return "(" + columnIndex + ", " + rowIndex + ")";
+    }
 }

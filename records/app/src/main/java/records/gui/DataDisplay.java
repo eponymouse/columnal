@@ -14,6 +14,7 @@ import javafx.scene.shape.Rectangle;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
@@ -104,8 +105,7 @@ public abstract class DataDisplay extends GridArea
                           FXUtility.mouse(DataDisplay.this).updateParent();
                           return;
                       }
-                      overlay[0] = new DestRectangleOverlay(borderPane.localToScreen(borderPane.getBoundsInLocal()), e.getScreenX(), e.getScreenY());
-                      Log.debug("Adding rectangle");
+                      overlay[0] = new DestRectangleOverlay(getPosition(), borderPane.localToScreen(borderPane.getBoundsInLocal()), e.getScreenX(), e.getScreenY());
                       columnHeaderSupplier.addItem(overlay[0]);
                       ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
                       newStyles.addAll(FXUtility.mouse(DataDisplay.this).cellStyles.get());
@@ -118,12 +118,13 @@ public abstract class DataDisplay extends GridArea
                   borderPane.setOnMouseReleased(e -> {
                       if (overlay[0] != null)
                       {
-                          Log.debug("Removing rectangle");
+                          CellPosition dest = overlay[0].getDestinationPosition();
                           columnHeaderSupplier.removeItem(overlay[0]);
                           FXUtility.mouse(DataDisplay.this).cellStyles.set(
                               FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.toImmutableList())
                           );
                           CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
+                          withParent(p -> p.move(FXUtility.mouse(DataDisplay.this), dest));
                           FXUtility.mouse(DataDisplay.this).updateParent();
                           overlay[0] = null;
                       }
@@ -214,10 +215,12 @@ public abstract class DataDisplay extends GridArea
     private class DestRectangleOverlay implements FloatingItem
     {
         private final Point2D offsetFromTopLeftOfSource;
+        private CellPosition destPosition;
         private Point2D lastMousePosScreen;
 
-        private DestRectangleOverlay(Bounds originalBoundsOnScreen, double screenX, double screenY)
+        private DestRectangleOverlay(CellPosition curPosition, Bounds originalBoundsOnScreen, double screenX, double screenY)
         {
+            this.destPosition = curPosition;
             this.lastMousePosScreen = new Point2D(screenX, screenY);
             this.offsetFromTopLeftOfSource = new Point2D(screenX - originalBoundsOnScreen.getMinX(), screenY - originalBoundsOnScreen.getMinY());
         }
@@ -230,6 +233,7 @@ public abstract class DataDisplay extends GridArea
             OptionalInt rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
             if (columnIndex.isPresent() && rowIndex.isPresent())
             {
+                destPosition = new CellPosition(rowIndex.getAsInt(), columnIndex.getAsInt()); 
                 double x = columnBounds.getItemCoord(columnIndex.getAsInt());
                 double y = rowBounds.getItemCoord(rowIndex.getAsInt());
                 double width = columnBounds.getItemCoord(columnIndex.getAsInt() + getColumnCount()) - x;
@@ -266,6 +270,11 @@ public abstract class DataDisplay extends GridArea
         public void mouseMovedToScreenPos(double screenX, double screenY)
         {
             lastMousePosScreen = new Point2D(screenX, screenY);
+        }
+
+        public CellPosition getDestinationPosition()
+        {
+            return destPosition;
         }
     }
 }
