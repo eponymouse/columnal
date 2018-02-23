@@ -56,14 +56,16 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, Pair<T, StyleUpdater>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
         {
             Entry<@KeyFor("this.visibleItems") CellPosition, Pair<T, StyleUpdater>> vis = iterator.next();
-            CellPosition pos = vis.getKey();
+            // Note that due to current checker framework bug, it's important
+            // this variable name is not re-used anywhere else in this method:
+            CellPosition posToCheck = vis.getKey();
 
             boolean shouldBeVisible =
-                    pos.rowIndex >= rowBounds.firstItemIncl &&
-                            pos.rowIndex <= rowBounds.lastItemIncl &&
-                            pos.columnIndex >= columnBounds.firstItemIncl &&
-                            pos.columnIndex <= columnBounds.lastItemIncl &&
-                            gridAreas.values().stream().anyMatch(a -> a.hasCellAt(pos));
+                    posToCheck.rowIndex >= rowBounds.firstItemIncl &&
+                            posToCheck.rowIndex <= rowBounds.lastItemIncl &&
+                            posToCheck.columnIndex >= columnBounds.firstItemIncl &&
+                            posToCheck.columnIndex <= columnBounds.lastItemIncl &&
+                            gridAreas.values().stream().anyMatch(a -> a.hasCellAt(posToCheck));
             if (!shouldBeVisible)
             {
                 spareItems.add(vis.getValue().getFirst());
@@ -101,7 +103,10 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                     }
 
                     visibleItems.put(cellPosition, cell);
-                    gridForItem.get().fetchFor(cellPosition, pos -> visibleItems.get(pos).getFirst());
+                    gridForItem.get().fetchFor(cellPosition, pos -> {
+                        Pair<T, StyleUpdater> item = visibleItems.get(pos);
+                        return item == null ? null : item.getFirst();
+                    });
                 }
                 cell.getFirst().setVisible(true);
                 double nextX = columnBounds.getItemCoord(columnIndex + 1);
