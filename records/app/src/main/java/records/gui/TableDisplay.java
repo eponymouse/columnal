@@ -247,25 +247,25 @@ public class TableDisplay implements TableDisplayBase
     @OnThread(Tag.FXPlatform)
     public int getFirstDataDisplayRowIncl()
     {
-        return getPosition().rowIndex + DataDisplay.HEADER_ROWS;
+        return tableDataDisplay.getPosition().rowIndex + DataDisplay.HEADER_ROWS;
     }
 
     @OnThread(Tag.FXPlatform)
     public int getLastDataDisplayRowIncl()
     {
-        return getPosition().rowIndex + DataDisplay.HEADER_ROWS + currentKnownRows - 1;
+        return tableDataDisplay.getPosition().rowIndex + DataDisplay.HEADER_ROWS + currentKnownRows - 1;
     }
 
     @OnThread(Tag.FXPlatform)
     public int getFirstDataDisplayColumnIncl()
     {
-        return getPosition().columnIndex;
+        return tableDataDisplay.getPosition().columnIndex;
     }
 
     @OnThread(Tag.FXPlatform)
     public int getLastDataDisplayColumnIncl()
     {
-        return getPosition().columnIndex + tableDataDisplay.displayColumns.size() - 1;
+        return tableDataDisplay.getPosition().columnIndex + tableDataDisplay.displayColumns.size() - 1;
     }
 
     public void addCellStyle(CellStyle cellStyle)
@@ -377,8 +377,8 @@ public class TableDisplay implements TableDisplayBase
                     StructuredTextField orig = getCell.apply(cellPosition);
                     if (orig != null)
                         orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
-                    int columnIndexWithinTable = cellPosition.columnIndex - TableDisplay.this.getPosition().columnIndex;
-                    int rowIndexWithinTable = cellPosition.rowIndex - (TableDisplay.this.getPosition().rowIndex + HEADER_ROWS);
+                    int columnIndexWithinTable = cellPosition.columnIndex - getPosition().columnIndex;
+                    int rowIndexWithinTable = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
                     if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                     {
                         displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
@@ -387,7 +387,7 @@ public class TableDisplay implements TableDisplayBase
                             c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits)),
                             (rowIndex, colIndex, editorKit) -> {
                                 // The rowIndex and colIndex are in table data terms, so we must translate:
-                                @Nullable StructuredTextField cell = getCell.apply(new CellPosition(TableDisplay.this.getPosition().rowIndex + HEADER_ROWS + rowIndex, getPosition().columnIndex + colIndex));
+                                @Nullable StructuredTextField cell = getCell.apply(new CellPosition(getPosition().rowIndex + HEADER_ROWS + rowIndex, getPosition().columnIndex + colIndex));
                                 if (cell != null)
                                     cell.resetContent(editorKit);
                             }
@@ -539,6 +539,13 @@ public class TableDisplay implements TableDisplayBase
         public int getColumnCount(@UnknownInitialization(GridArea.class) TableDataDisplay this)
         {
             return (displayColumns == null ? 0 : displayColumns.size()) + (getTable().getOperations().appendColumn != null ? 1 : 0);
+        }
+
+        @Override
+        public void setPosition(CellPosition cellPosition)
+        {
+            super.setPosition(cellPosition);
+            mostRecentBounds.set(cellPosition);
         }
         
         /*
@@ -741,7 +748,7 @@ public class TableDisplay implements TableDisplayBase
 
     @OnThread(Tag.Any)
     @Override
-    public CellPosition getPosition()
+    public CellPosition getMostRecentPosition()
     {
         return mostRecentBounds.get();
     }

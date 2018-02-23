@@ -788,7 +788,7 @@ public class View extends StackPane
     public void editTransform(TransformationEditable existing)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
-        showEditDialog(dialog, existing, existing.getPosition());
+        showEditDialog(dialog, existing, existing.getMostRecentPosition());
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window

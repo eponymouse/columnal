@@ -72,7 +72,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @OnThread(Tag.FXPlatform)
             public boolean hasAddColumnArrow(CellPosition cellPosition)
             {
-                int firstRow = tableDisplay.getPosition().rowIndex + 1;
+                int firstRow = tableDisplay.getGridArea().getPosition().rowIndex + 1;
                 int lastRow = tableDisplay.getLastDataDisplayRowIncl();
                 return tableDisplay.getTable().getOperations().appendColumn != null
                     && cellPosition.columnIndex == tableDisplay.getLastDataDisplayColumnIncl() + 1

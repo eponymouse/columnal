@@ -232,9 +232,9 @@ public abstract class Table
     }
     
     @OnThread(Tag.Any)
-    public synchronized final @Nullable CellPosition getPosition()
+    public synchronized final @Nullable CellPosition getMostRecentPosition()
     {
-        return display == null ? null : display.getPosition();
+        return display == null ? null : display.getMostRecentPosition();
     }
 
     @OnThread(Tag.Any)
@@ -242,7 +242,7 @@ public abstract class Table
     {
         if (display != null)
         {
-            prevPosition = display.getPosition();
+            prevPosition = display.getMostRecentPosition();
         }
         out.t(MainLexer.POSITION).n(prevPosition.columnIndex).n(prevPosition.rowIndex).nl();
         out.t(MainLexer.SHOWCOLUMNS);
@@ -375,6 +375,6 @@ public abstract class Table
         public void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display);
 
         @OnThread(Tag.Any)
-        public CellPosition getPosition();
+        public CellPosition getMostRecentPosition();
     }
 }

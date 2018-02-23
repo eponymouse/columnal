@@ -46,7 +46,7 @@ public abstract class GridArea
         return topLeft;
     }
     
-    public final void setPosition(CellPosition cellPosition)
+    public void setPosition(CellPosition cellPosition)
     {
         topLeft = cellPosition;
         updateParent();
