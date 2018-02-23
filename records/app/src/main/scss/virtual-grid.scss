@@ -41,11 +41,17 @@
     }
 }
 
+.virt-grid-line {
+    -fx-stroke-width: 1;
+    -fx-stroke: $table-divider;
+}
+
 .table-data-cell {
-    -fx-background-color: $table-cell;
+    -fx-background-color: $table-divider, $table-cell;
+    -fx-background-insets: 0, 0 1 1 0;
     &:hover {
         -fx-background-color: $table-cell-hover;
-    } 
+    }
     &:table-drag-source {
         -fx-effect: blur;
     }
@@ -57,10 +63,22 @@
     -fx-background-insets: 0;
     -fx-background-radius: 0;
     -fx-text-fill: $expand-arrow-color;
+    -fx-cursor: hand;
     &:expand-down:hovering-expand-down, &:expand-right:hovering-expand-right {
         -fx-background-color: white;
     } 
     &:expand-right-header {
         -fx-background-color: $column-header-background-color;
     }
+}
+.create-table-grid-button {
+    -fx-padding: 0;
+    -fx-background-color: $focus-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    &:hover {
+        -fx-background-color: $table-cell-hover;
+    }
+    -fx-text-fill: $focus-color-text;
+    -fx-cursor: hand;
 }

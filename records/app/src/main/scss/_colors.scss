@@ -7,7 +7,7 @@
 }
 
 /* General: */
-$focus-color: rgb(75, 54, 150);
+$focus-color: rgb(81, 27, 186) /*rgb(75, 54, 150)*/;
 $focus-color-secondary: rgb(130, 109, 206);
 $focus-color-row-col: rgb(237, 236, 243);
 $focus-color-text: white;
@@ -32,8 +32,8 @@ $table-header-hover: grey(90%);
 $table-header-divider: grey(60%);
 $table-header-border: grey(60%);
 $table-header-text-color: white;
-$table-header-background-color: cornflowerblue;
+$table-header-background-color: rgb(154, 183, 237);
 $table-header-background-color-selected: $focus-color;
-$column-header-background-color: rgb(164, 175, 193);
+$column-header-background-color: rgb(204, 213, 228);
 $column-header-text-color: black;
 $expand-arrow-color: grey(80%);
