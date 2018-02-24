@@ -15,6 +15,9 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 import log.Log;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -44,6 +47,7 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
@@ -290,6 +294,33 @@ public class TableDisplay implements TableDisplayBase
         public TableDataDisplay(TableManager tableManager, Pair<@Nullable RecordSet, MessageWhenEmpty> recordSetMessageWhenEmptyPair, VirtualGridSupplierFloating columnHeaderSupplier, FXPlatformRunnable onModify)
         {
             super(tableManager, getTable().getId(), recordSetMessageWhenEmptyPair.getSecond(), columnHeaderSupplier);
+            // Border overlay:
+            columnHeaderSupplier.addItem(new RectangleOverlayItem()
+            {
+                @Override
+                protected Optional<RectangleBounds> calculateBounds(VisibleDetails rowBounds, VisibleDetails columnBounds)
+                {
+                    return Optional.of(new RectangleBounds(
+                        getPosition(),
+                        getPosition().offsetByRowCols(getCurrentKnownRows() - 1, getColumnCount() - 1)    
+                    ));
+                }
+
+                @Override
+                protected void style(Rectangle r)
+                {
+                    r.getStyleClass().add("table-border-overlay");
+                    Rectangle clip = new Rectangle();
+                    clip.setStrokeType(StrokeType.OUTSIDE);
+                    clip.setStrokeWidth(20.0);
+                    clip.setFill(null);
+                    clip.setStroke(Color.BLACK);
+                    clip.widthProperty().bind(r.widthProperty());
+                    clip.heightProperty().bind(r.heightProperty());
+                    r.clipProperty().set(clip);
+                    // TODO we should adjust clip if there are tables touching us
+                }
+            });
             this.recordSet = recordSetMessageWhenEmptyPair.getFirst();
             this.onModify = onModify;
             recordSet.setListener(this);

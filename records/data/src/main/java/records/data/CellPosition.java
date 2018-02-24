@@ -47,4 +47,9 @@ public class CellPosition
     {
         return "(" + columnIndex + ", " + rowIndex + ")";
     }
+
+    public CellPosition offsetByRowCols(int rows, int cols)
+    {
+        return new CellPosition(rowIndex + rows, columnIndex + cols);
+    }
 }

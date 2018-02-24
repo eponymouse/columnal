@@ -9,9 +9,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -212,7 +210,7 @@ public abstract class DataDisplay extends GridArea
         cellStyles.set(cellStyles.get().stream().filter(s -> !s.equals(cellStyle)).collect(ImmutableList.toImmutableList()));
     }
 
-    private class DestRectangleOverlay implements FloatingItem
+    private class DestRectangleOverlay extends RectangleOverlayItem
     {
         private final Point2D offsetFromTopLeftOfSource;
         private CellPosition destPosition;
@@ -227,44 +225,25 @@ public abstract class DataDisplay extends GridArea
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+        public Optional<RectangleBounds> calculateBounds(VisibleDetails rowBounds, VisibleDetails columnBounds)
         {
             OptionalInt columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
             OptionalInt rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
             if (columnIndex.isPresent() && rowIndex.isPresent())
             {
                 destPosition = new CellPosition(rowIndex.getAsInt(), columnIndex.getAsInt()); 
-                double x = columnBounds.getItemCoord(columnIndex.getAsInt());
-                double y = rowBounds.getItemCoord(rowIndex.getAsInt());
-                double width = columnBounds.getItemCoord(columnIndex.getAsInt() + getColumnCount()) - x;
-                double height = rowBounds.getItemCoord(rowIndex.getAsInt() + getCurrentKnownRows()) - y;
-                return Optional.of(new BoundingBox(x, y, width, height));
+                return Optional.of(new RectangleBounds(
+                    new CellPosition(rowIndex.getAsInt(), columnIndex.getAsInt()),
+                    new CellPosition(columnIndex.getAsInt() + getColumnCount() - 1, rowIndex.getAsInt() + getCurrentKnownRows() - 1)
+                ));
             }
             return Optional.empty();
         }
 
         @Override
-        public Pair<ViewOrder, Node> makeCell()
+        protected void style(Rectangle r)
         {
-            Rectangle r = new Rectangle() {
-                @Override
-                public void resize(double width, double height)
-                {
-                    setWidth(width);
-                    setHeight(height);
-                }
-
-                @Override
-                public boolean isResizable()
-                {
-                    return true;
-                }
-            };
-            r.setStroke(Color.BLACK);
-            r.setFill(Color.TRANSPARENT);
-            r.setStrokeWidth(3.0);
-            r.setMouseTransparent(true);
-            return new Pair<>(ViewOrder.OVERLAY, r);
+            r.getStyleClass().add("move-table-dest-overlay");
         }
 
         public void mouseMovedToScreenPos(double screenX, double screenY)

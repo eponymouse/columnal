@@ -82,3 +82,11 @@
     -fx-text-fill: $focus-color-text;
     -fx-cursor: hand;
 }
+
+.table-border-overlay {
+    -fx-fill: transparent;
+    -fx-stroke: grey(50%);
+    -fx-stroke-width: 1;
+    -fx-stroke-type: outside;
+    -fx-effect: dropshadow(gaussian, grey(40%), 15, 0.7, 2, 2);
+}
