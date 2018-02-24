@@ -432,6 +432,14 @@ public class TableDisplay implements TableDisplayBase
                 }
 
                 @Override
+                public boolean checkCellUpToDate(CellPosition cellPosition, StructuredTextField cellFirst)
+                {
+                    // TODO we need to somehow store the column&row with the field, so we know
+                    // if either has changed and thus we need to update:
+                    return false;
+                }
+
+                @Override
                 public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
                 {
                     return cellStyles;

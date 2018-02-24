@@ -111,6 +111,13 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                 else
                 {
                     cell.getSecond().listenTo(gridForItem.get().styleForAllCells());
+                    if (!gridForItem.get().checkCellUpToDate(cellPosition, cell.getFirst()))
+                    {
+                        gridForItem.get().fetchFor(cellPosition, pos -> {
+                            Pair<T, StyleUpdater> item = visibleItems.get(pos);
+                            return item == null ? null : item.getFirst();
+                        });
+                    }
                 }
                 cell.getFirst().setVisible(true);
                 double nextX = columnBounds.getItemCoord(columnIndex + 1);
@@ -183,6 +190,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         // What styles should currently be applied to all cells?  All style items not
         // in this set (but in the range for S) will be removed.
         public ObjectExpression<? extends Collection<S>> styleForAllCells();
+
+        // Check whether a cell which is already in use for that
+        // position is up-to-date.  It might not be, for example, if
+        // the table has changed bounds or column layout
+        boolean checkCellUpToDate(CellPosition cellPosition, T cellFirst);
     }
 
     private class StyleUpdater implements ChangeListener<Collection<S>>

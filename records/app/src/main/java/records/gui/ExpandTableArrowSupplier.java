@@ -16,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -27,6 +28,8 @@ import java.util.WeakHashMap;
 @OnThread(Tag.FXPlatform)
 public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button, CellStyle>
 {
+    public static final String RIGHT_ARROW = "\u27F6";
+    public static final String DOWN_ARROW = "\u2193";
     private WeakHashMap<Button, Pair<TableDisplay, CellStyle>> buttonTableDisplaysAndHoverStyles = new WeakHashMap<>();
     
     public ExpandTableArrowSupplier()
@@ -97,6 +100,16 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
 
             @Override
+            public boolean checkCellUpToDate(CellPosition cellPosition, Button item)
+            {
+                // The only thing we really need to check is whether a column arrow
+                // has become row, or vice versa:
+                return Utility.getIfPresent(buttonTableDisplaysAndHoverStyles, item).map(p -> p.getFirst() == tableDisplay).orElse(false)
+                    && (item.getText().equals(RIGHT_ARROW) == hasAddColumnArrow(cellPosition))
+                    && (item.getText().equals(DOWN_ARROW) == hasAddRowArrow(cellPosition));
+            }
+
+            @Override
             public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell)
             {
                 @Nullable Button item = getCell.apply(cellPosition);
@@ -110,7 +123,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     FXUtility.setPseudoclass(item, "expand-down", false);
                     item.setTooltip(new Tooltip("Click to add column"));
                     item.setVisible(true);
-                    item.setText("\u27F6");
+                    item.setText(RIGHT_ARROW);
                     item.setOnAction(e -> {
                         Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
                             @Nullable AppendColumn appendOp = tableDisplay.getTable().getOperations().appendColumn;
@@ -127,7 +140,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     FXUtility.setPseudoclass(item, "expand-down", true);
                     item.setTooltip(new Tooltip("Click to add row"));
                     item.setVisible(true);
-                    item.setText("\u2193");
+                    item.setText(DOWN_ARROW);
                     item.setOnAction(e -> {
                         Workers.onWorkerThread("Adding row", Priority.SAVE_ENTRY, () -> {
                             @Nullable AppendRows appendOp = tableDisplay.getTable().getOperations().appendRows;

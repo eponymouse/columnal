@@ -32,6 +32,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Modality;
 import log.Log;
@@ -1058,6 +1059,18 @@ public class Utility
         // From https://stackoverflow.com/questions/2953967/built-in-function-for-computing-overlap-in-python
 
         return Math.max(0, Math.min(aMax, bMax)) - Math.max(aMin, bMin) >= overlapAmount;
+    }
+
+    // If item present in map, wrap it in optional, otherwise return empty optional
+    // Added bonus: this method is type-safe in the key type, unlike Map.get.
+    public static <K, V> Optional<V> getIfPresent(Map<K, V> map, K key)
+    {
+        // We can't use Optional.ofNullable because the checker (wrongly IMO) rejects that:
+        @Nullable V value = map.get(key);
+        if (value != null)
+            return Optional.of(value);
+        else
+            return Optional.empty();
     }
 
     public static class ReadState
