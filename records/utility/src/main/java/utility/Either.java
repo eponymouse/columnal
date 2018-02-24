@@ -237,4 +237,9 @@ public class Either<A, B>
     {
         return this.<@Nullable B>either(l -> null, r -> r);
     }
+    
+    public void ifRight(Consumer<B> withRight)
+    {
+        either_(a -> {}, withRight);
+    }
 }

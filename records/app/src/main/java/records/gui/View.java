@@ -200,8 +200,8 @@ public class View extends StackPane
             TableDisplay display = (TableDisplay) t.getDisplay();
             if (display != null)
             {
-                dataCellSupplier.removeGrid(display.getGridArea());
-                mainPane.removeGridArea(display.getGridArea());
+                dataCellSupplier.removeGrid(display);
+                mainPane.removeGridArea(display);
             }
             emptyListener.consume(remainingCount == 0);
         });
@@ -767,8 +767,8 @@ public class View extends StackPane
 
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
-        dataCellSupplier.addGrid(tableDisplay.getGridArea(), tableDisplay.getDataGridCellInfo());
-        mainPane.addGridAreas(ImmutableList.of(tableDisplay.getGridArea()));
+        dataCellSupplier.addGrid(tableDisplay, tableDisplay.getDataGridCellInfo());
+        mainPane.addGridAreas(ImmutableList.of(tableDisplay));
         @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
         if (tableOps.appendColumn != null || tableOps.appendRows != null)
         {

@@ -139,7 +139,7 @@ public abstract class DataDisplay extends GridArea
     }
 
     @OnThread(Tag.FXPlatform)
-    public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions)
+    public void setColumnsAndRows(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions)
     {
         // Remove old columns:
         columnHeaderItems.forEach(columnHeaderSupplier::removeItem);
@@ -161,7 +161,7 @@ public abstract class DataDisplay extends GridArea
                     double width = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x;
                     double height = rowBounds.getItemCoord(getPosition().rowIndex + 2) - y;
                     
-                    double lastY = Math.max(y, rowBounds.getItemCoord(getPosition().rowIndex + HEADER_ROWS + getCurrentKnownRows() - 2));
+                    double lastY = Math.max(y, rowBounds.getItemCoord(getLastDataDisplayRowIncl() - 1));
                     return Optional.of(new BoundingBox(
                             x,
                             Math.min(Math.max(0, y), lastY),
@@ -216,6 +216,16 @@ public abstract class DataDisplay extends GridArea
     {
         return cellStyles;
     }
+
+    // The first data row in absolute position terms (not relative
+    // to table), not including any headers
+    @OnThread(Tag.FXPlatform)
+    public abstract int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
+
+    // The last data row in absolute position terms (not relative
+    // to table), not including any append buttons
+    @OnThread(Tag.FXPlatform)
+    public abstract int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
 
     private class DestRectangleOverlay extends RectangleOverlayItem
     {

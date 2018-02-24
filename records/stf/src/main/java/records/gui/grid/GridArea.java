@@ -52,10 +52,10 @@ public abstract class GridArea
         updateParent();
     }
 
-    protected void updateParent()
+    protected void updateParent(@UnknownInitialization(GridArea.class) GridArea this)
     {
         if (parent != null)
-            parent.positionOrAreaChanged(this);
+            parent.positionOrAreaChanged();
     }
     
     // Calls the consumer, iff we have a non-null parent
@@ -101,6 +101,7 @@ public abstract class GridArea
     }
     
     public abstract int getColumnCount();
+    // Remember -- including all headers:
     public abstract int getCurrentKnownRows();
 
     public void setMessageWhenEmpty(MessageWhenEmpty messageWhenEmpty)

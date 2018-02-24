@@ -28,6 +28,7 @@ import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -43,6 +44,7 @@ import records.error.UserException;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.ColumnDetails;
@@ -101,58 +103,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         VirtualGridSupplierFloating destColumnHeaderSupplier = new VirtualGridSupplierFloating();
         destGrid.addNodeSupplier(destColumnHeaderSupplier);
-        DataDisplay destData = new DataDisplay(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), destColumnHeaderSupplier) {
-            boolean currentKnownRowsIsFinal;
-            int currentKnownRows = 0;
-            @Override
-            public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
-            {
-                final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
-                final RecordSet recordSet = destRecordSet.get();
-                if (recordSet == null)
-                    return;
-                final @NonNull RecordSet recordSetNonNull = recordSet;
-                if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
-                {
-                    Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
-                        try
-                        {
-                            // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
-                            boolean lastRowValid = recordSetNonNull.indexValid(checkUpToRowIncl);
-                            if (lastRowValid)
-                            {
-                                Platform.runLater(() -> {
-                                    currentKnownRows = checkUpToRowIncl;
-                                    currentKnownRowsIsFinal = false;
-                                    updateSizeAndPositions.run();
-                                });
-                            } else
-                            {
-                                // Just a matter of working out where it ends.  Since we know end is close,
-                                // just force with getLength:
-                                int length = recordSetNonNull.getLength();
-                                Platform.runLater(() -> {
-                                    currentKnownRows = length;
-                                    currentKnownRowsIsFinal = true;
-                                    updateSizeAndPositions.run();
-                                });
-                            }
-                        }
-                        catch (InternalException | UserException e)
-                        {
-                            Log.log(e);
-                            // We just don't call back the update function
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public int getCurrentKnownRows()
-            {
-                return currentKnownRows + HEADER_ROWS;
-            }
-        };
+        DataDisplay destData = new DestDataDisplay(suggestedName, destColumnHeaderSupplier, destRecordSet);
         destGrid.addGridAreas(ImmutableList.of(destData));
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null);
@@ -161,19 +112,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         VirtualGridSupplierFloating srcColumnHeaderSupplier = new VirtualGridSupplierFloating();
         srcGrid.addNodeSupplier(srcColumnHeaderSupplier);
-        DataDisplay srcDataDisplay = new DataDisplay(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier) {
-
-            @Override
-            public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
-            {
-            }
-
-            @Override
-            public int getCurrentKnownRows()
-            {
-                return srcInfo.get() == null ? 0 : srcInfo.get().numRows;
-            }
-        };
+        DataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcColumnHeaderSupplier, srcInfo);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
 
 
@@ -439,6 +378,120 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         public @Localized String toString()
         {
             return value == null ? TranslationUtility.getString("import.choice.specify") : value.toString();
+        }
+    }
+
+    private static class DestDataDisplay extends DataDisplay
+    {
+        private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
+        boolean currentKnownRowsIsFinal;
+        int currentKnownRows;
+
+        public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
+        {
+            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), destColumnHeaderSupplier);
+            this.destRecordSet = destRecordSet;
+            currentKnownRows = 0;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        {
+            final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
+            final RecordSet recordSet = destRecordSet.get();
+            if (recordSet == null)
+                return;
+            final @NonNull RecordSet recordSetNonNull = recordSet;
+            if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
+            {
+                Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
+                    try
+                    {
+                        // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
+                        boolean lastRowValid = recordSetNonNull.indexValid(checkUpToRowIncl);
+                        if (lastRowValid)
+                        {
+                            Platform.runLater(() -> {
+                                currentKnownRows = checkUpToRowIncl;
+                                currentKnownRowsIsFinal = false;
+                                updateSizeAndPositions.run();
+                            });
+                        } else
+                        {
+                            // Just a matter of working out where it ends.  Since we know end is close,
+                            // just force with getLength:
+                            int length = recordSetNonNull.getLength();
+                            Platform.runLater(() -> {
+                                currentKnownRows = length;
+                                currentKnownRowsIsFinal = true;
+                                updateSizeAndPositions.run();
+                            });
+                        }
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        Log.log(e);
+                        // We just don't call back the update function
+                    }
+                });
+            }
+        }
+
+        @Override
+        public int getCurrentKnownRows()
+        {
+            return currentKnownRows + HEADER_ROWS;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
+        {
+            return getPosition().rowIndex + HEADER_ROWS;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
+        {
+            return getPosition().rowIndex + HEADER_ROWS + currentKnownRows - 1;
+        }
+    }
+
+    private static class SrcDataDisplay extends DataDisplay
+    {
+        private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
+
+        public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
+        {
+            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier);
+            this.srcInfo = srcInfo;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        {
+        }
+
+        @Override
+        public int getCurrentKnownRows()
+        {
+            return internal_getCurrentKnownRows();
+        }
+
+        private int internal_getCurrentKnownRows(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
+        {
+            return srcInfo == null || srcInfo.get() == null ? 0 : srcInfo.get().numRows;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
+        {
+            return getPosition().rowIndex + HEADER_ROWS;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
+        {
+            return getPosition().rowIndex + HEADER_ROWS + internal_getCurrentKnownRows() - 1;
         }
     }
 }

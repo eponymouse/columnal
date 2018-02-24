@@ -5,6 +5,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
@@ -70,7 +71,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     
     public void addTable(TableDisplay tableDisplay)
     {
-        super.addGrid(tableDisplay.getGridArea(), new GridCellInfo<Button, CellStyle>()
+        super.addGrid(tableDisplay, new GridCellInfo<Button, CellStyle>()
         {
             @Override
             public boolean hasCellAt(CellPosition cellPosition)
@@ -91,7 +92,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @OnThread(Tag.FXPlatform)
             public boolean hasAddColumnArrow(CellPosition cellPosition)
             {
-                int firstRow = tableDisplay.getGridArea().getPosition().rowIndex + 1;
+                int firstRow = tableDisplay.getPosition().rowIndex + 1;
                 int lastRow = tableDisplay.getLastDataDisplayRowIncl();
                 return tableDisplay.getTable().getOperations().appendColumn != null
                     && cellPosition.columnIndex == tableDisplay.getLastDataDisplayColumnIncl() + 1
@@ -164,7 +165,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @Override
             public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
             {
-                return tableDisplay.getStyleForAllCells();
+                return tableDisplay.styleForAllCells();
             }
         });
     }

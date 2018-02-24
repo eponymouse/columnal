@@ -140,6 +140,18 @@ public class TestStructuredTextField extends ApplicationTest
             public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
             }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) int getFirstDataDisplayRowIncl()
+            {
+                return 0;
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) int getLastDataDisplayRowIncl()
+            {
+                return 0;
+            }
         };
         virtualGrid.addGridAreas(ImmutableList.of(dataDisplay));
         dummy = new TextField();
