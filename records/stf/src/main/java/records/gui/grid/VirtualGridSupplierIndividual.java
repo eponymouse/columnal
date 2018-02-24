@@ -108,6 +108,10 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                         return item == null ? null : item.getFirst();
                     });
                 }
+                else
+                {
+                    cell.getSecond().listenTo(gridForItem.get().styleForAllCells());
+                }
                 cell.getFirst().setVisible(true);
                 double nextX = columnBounds.getItemCoord(columnIndex + 1);
                 cell.getFirst().resizeRelocate(x, y, nextX - x, rowHeight);
@@ -206,6 +210,16 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         void stopListening()
         {
             styleExpression.removeListener(this);
+        }
+
+        public void listenTo(ObjectExpression<? extends Collection<S>> newStyleExpression)
+        {
+            if (newStyleExpression != styleExpression)
+            {
+                stopListening();
+                newStyleExpression.addListener(this);
+                changed(newStyleExpression, possibleStyles, newStyleExpression.getValue());
+            }
         }
     }
 

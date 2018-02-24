@@ -15,16 +15,20 @@ import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.Pair;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
 public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button, CellStyle>
 {
+    private WeakHashMap<Button, Pair<TableDisplay, CellStyle>> buttonTableDisplaysAndHoverStyles = new WeakHashMap<>();
+    
     public ExpandTableArrowSupplier()
     {
         super(Arrays.asList(CellStyle.values()));
@@ -40,6 +44,18 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
         button.setMinHeight(0.0);
         button.setMaxHeight(Double.MAX_VALUE);
         button.getStyleClass().add("expand-arrow");
+        
+        // We only want one hover listener:
+        FXUtility.addChangeListenerPlatformNN(button.hoverProperty(), hover -> {
+            Pair<TableDisplay, CellStyle> tableDisplayAndHoverStyle = buttonTableDisplaysAndHoverStyles.get(button);
+            if (tableDisplayAndHoverStyle == null)
+                return;
+            if (hover)
+                tableDisplayAndHoverStyle.getFirst().addCellStyle(tableDisplayAndHoverStyle.getSecond());
+            else
+                tableDisplayAndHoverStyle.getFirst().removeCellStyle(tableDisplayAndHoverStyle.getSecond());
+        });
+        
         return button;
     }
 
@@ -102,12 +118,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                                 appendOp.appendColumn(null, DataType.toInfer(), DataTypeUtility.value(""));
                         });
                     });
-                    FXUtility.addChangeListenerPlatformNN(item.hoverProperty(), hover -> {
-                        if (hover)
-                            tableDisplay.addCellStyle(CellStyle.HOVERING_EXPAND_RIGHT);
-                        else
-                            tableDisplay.removeCellStyle(CellStyle.HOVERING_EXPAND_RIGHT);
-                    });
+                    buttonTableDisplaysAndHoverStyles.put(item, new Pair<>(tableDisplay, CellStyle.HOVERING_EXPAND_RIGHT));
                 }
                 else if (hasAddRowArrow(cellPosition))
                 {
@@ -124,12 +135,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                                 appendOp.appendRows(1);
                         });
                     });
-                    FXUtility.addChangeListenerPlatformNN(item.hoverProperty(), hover -> {
-                        if (hover)
-                            tableDisplay.addCellStyle(CellStyle.HOVERING_EXPAND_DOWN);
-                        else
-                            tableDisplay.removeCellStyle(CellStyle.HOVERING_EXPAND_DOWN);
-                    });
+                    buttonTableDisplaysAndHoverStyles.put(item, new Pair<>(tableDisplay, CellStyle.HOVERING_EXPAND_DOWN));
                 }
                 else
                 {
@@ -145,7 +151,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @Override
             public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
             {
-                return tableDisplay.getDataGridCellInfo().styleForAllCells();
+                return tableDisplay.getStyleForAllCells();
             }
         });
     }

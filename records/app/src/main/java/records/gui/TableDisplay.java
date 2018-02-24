@@ -282,6 +282,11 @@ public class TableDisplay implements TableDisplayBase
         tableDataDisplay.removeCellStyle(cellStyle);
     }
 
+    public ObjectExpression<? extends Collection<CellStyle>> getStyleForAllCells()
+    {
+        return tableDataDisplay.styleForAllCells();
+    }
+
     @OnThread(Tag.FXPlatform)
     private class TableDataDisplay extends DataDisplay implements RecordSetListener
     {

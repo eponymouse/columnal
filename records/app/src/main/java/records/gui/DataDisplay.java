@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -34,6 +35,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -208,6 +210,11 @@ public abstract class DataDisplay extends GridArea
     public void removeCellStyle(CellStyle cellStyle)
     {
         cellStyles.set(cellStyles.get().stream().filter(s -> !s.equals(cellStyle)).collect(ImmutableList.toImmutableList()));
+    }
+
+    public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
+    {
+        return cellStyles;
     }
 
     private class DestRectangleOverlay extends RectangleOverlayItem
