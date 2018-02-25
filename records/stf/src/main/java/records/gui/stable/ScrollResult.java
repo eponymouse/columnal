@@ -2,12 +2,12 @@ package records.gui.stable;
 
 import utility.Pair;
 
-public class ScrollResult
+public class ScrollResult<T extends Integer>
 {
     public final double scrolledByPixels;
-    public final Pair<Integer, Double> scrollPosition;
+    public final Pair<T, Double> scrollPosition;
 
-    public ScrollResult(double scrolledByPixels, Pair<Integer, Double> scrollPosition)
+    public ScrollResult(double scrolledByPixels, Pair<T, Double> scrollPosition)
     {
         this.scrolledByPixels = scrolledByPixels;
         this.scrollPosition = scrollPosition;

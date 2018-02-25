@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.units.TableColIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -51,7 +52,8 @@ public class ImporterUtility
             int widest = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
             for (int columnIndex = 0; columnIndex < widest; columnIndex++)
             {
-                int columnIndexFinal = columnIndex;
+                @SuppressWarnings("units")
+                @TableColIndex int columnIndexFinal = columnIndex;
                 columnHandlers.add(new ColumnDetails(new ColumnId("Column " + (columnIndex + 1)), new ReadOnlyStringColumnHandler(columnIndexFinal)
                 {
                     @Override

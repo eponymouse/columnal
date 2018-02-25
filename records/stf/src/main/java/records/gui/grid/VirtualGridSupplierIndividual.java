@@ -1,5 +1,7 @@
 package records.gui.grid;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -50,7 +52,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     
     // package-visible
     @Override
-    final void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    final void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, Pair<T, StyleUpdater>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
@@ -75,11 +77,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         }
 
         // Layout each row:
-        for (int rowIndex = rowBounds.firstItemIncl; rowIndex <= rowBounds.lastItemIncl; rowIndex++)
+        for (@AbsRowIndex int rowIndex = rowBounds.firstItemIncl; rowIndex <= rowBounds.lastItemIncl; rowIndex++)
         {
             final double y = rowBounds.getItemCoord(rowIndex);
-            double rowHeight = rowBounds.getItemCoord(rowIndex + 1) - y;
-            for (int columnIndex = columnBounds.firstItemIncl; columnIndex <= columnBounds.lastItemIncl; columnIndex++)
+            double rowHeight = rowBounds.getItemCoordAfter(rowIndex) - y;
+            for (@AbsColIndex int columnIndex = columnBounds.firstItemIncl; columnIndex <= columnBounds.lastItemIncl; columnIndex++)
             {
                 final double x = columnBounds.getItemCoord(columnIndex);
                 CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
@@ -120,7 +122,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                     }
                 }
                 cell.getFirst().setVisible(true);
-                double nextX = columnBounds.getItemCoord(columnIndex + 1);
+                double nextX = columnBounds.getItemCoordAfter(columnIndex);
                 cell.getFirst().resizeRelocate(x, y, nextX - x, rowHeight);
             }
         }

@@ -1,5 +1,7 @@
 package records.gui.grid;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -47,7 +49,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * @param columnBounds The column bounds (horizontal) of the current visible items (including any needed for scrolling)
      */
     // package-visible
-    abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds);
+    abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
     
     @OnThread(Tag.FXPlatform)
     public static interface ContainerChildren
@@ -60,15 +62,16 @@ public abstract class VirtualGridSupplier<T extends Node>
     public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED, OVERLAY }
     
     // Used for both rows and columns, to specify visible extents and divider positions
+    // Tag the type T with either @AbsRowIndex or @AbsColIndex
     @OnThread(Tag.FXPlatform)
-    public static abstract class VisibleDetails
+    public static abstract class VisibleDetails<T extends Integer>
     {
         // Index of the first column/row visible (inclusive)
-        public final int firstItemIncl;
+        public final T firstItemIncl;
         // Index of the last column/row visible (inclusive)
-        public final int lastItemIncl;
+        public final T lastItemIncl;
 
-        public VisibleDetails(int firstItemIncl, int lastItemIncl)
+        public VisibleDetails(T firstItemIncl, T lastItemIncl)
         {
             this.firstItemIncl = firstItemIncl;
             this.lastItemIncl = lastItemIncl;
@@ -76,9 +79,17 @@ public abstract class VirtualGridSupplier<T extends Node>
 
         // The X/Y position of the left/top of the given item index
         @OnThread(Tag.FXPlatform)
-        public abstract double getItemCoord(int itemIndex);
+        public abstract double getItemCoord(T itemIndex);
+
+        // The X/Y position of the right/bottom of the given item index
+        @SuppressWarnings({"unchecked", "units"})
+        @OnThread(Tag.FXPlatform)
+        public final double getItemCoordAfter(T itemIndex)
+        {
+            return getItemCoord((T)(Integer)(itemIndex.intValue() + 1));
+        }
 
         // The item index that contains the given screen X/Y position
-        public abstract OptionalInt getItemIndexForScreenPos(Point2D screenPos);
+        public abstract Optional<T> getItemIndexForScreenPos(Point2D screenPos);
     }
 }

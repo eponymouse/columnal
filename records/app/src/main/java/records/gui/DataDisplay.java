@@ -1,5 +1,7 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
@@ -67,12 +69,12 @@ public abstract class DataDisplay extends GridArea
         this.columnHeaderSupplier.addItem(new FloatingItem() {
               @Override
               @OnThread(Tag.FXPlatform)
-              public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+              public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
               {
-                  double x = columnBounds.getItemCoord(getPosition().columnIndex);
-                  double y = rowBounds.getItemCoord(getPosition().rowIndex);
-                  double width = columnBounds.getItemCoord(getPosition().columnIndex + getColumnCount()) - x;
-                  double height = rowBounds.getItemCoord(getPosition().rowIndex + 1) - y;
+                  double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
+                  double y = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
+                  double width = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex + CellPosition.col(getColumnCount()))) - x;
+                  double height = rowBounds.getItemCoordAfter(Utility.boxRow(getPosition().rowIndex)) - y;
                   return Optional.of(new BoundingBox(
                       x,
                       y,
@@ -154,14 +156,16 @@ public abstract class DataDisplay extends GridArea
             {
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds)
+                public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
                 {
-                    double x = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex);
-                    double y = rowBounds.getItemCoord(getPosition().rowIndex + 1);
-                    double width = columnBounds.getItemCoord(getPosition().columnIndex + columnIndex + 1) - x;
-                    double height = rowBounds.getItemCoord(getPosition().rowIndex + 2) - y;
+                    @AbsColIndex int calcCol = getPosition().columnIndex + CellPosition.col(columnIndex);
+                    @AbsRowIndex int calcRow = getPosition().rowIndex + CellPosition.row(1);
+                    double x = columnBounds.getItemCoord(Utility.boxCol(calcCol));
+                    double y = rowBounds.getItemCoord(Utility.boxRow(calcRow));
+                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
+                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
                     
-                    double lastY = Math.max(y, rowBounds.getItemCoord(getLastDataDisplayRowIncl() - 1));
+                    double lastY = Math.max(y, rowBounds.getItemCoord(Utility.boxRow(getLastDataDisplayRowIncl() - CellPosition.row(1))));
                     return Optional.of(new BoundingBox(
                             x,
                             Math.min(Math.max(0, y), lastY),
@@ -220,12 +224,12 @@ public abstract class DataDisplay extends GridArea
     // The first data row in absolute position terms (not relative
     // to table), not including any headers
     @OnThread(Tag.FXPlatform)
-    public abstract int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
+    public abstract @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
 
     // The last data row in absolute position terms (not relative
     // to table), not including any append buttons
     @OnThread(Tag.FXPlatform)
-    public abstract int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
+    public abstract @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
 
     private class DestRectangleOverlay extends RectangleOverlayItem
     {
@@ -242,16 +246,16 @@ public abstract class DataDisplay extends GridArea
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Optional<RectangleBounds> calculateBounds(VisibleDetails rowBounds, VisibleDetails columnBounds)
+        public Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
         {
-            OptionalInt columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
-            OptionalInt rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
+            Optional<@AbsColIndex Integer> columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
+            Optional<@AbsRowIndex Integer> rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
             if (columnIndex.isPresent() && rowIndex.isPresent())
             {
-                destPosition = new CellPosition(rowIndex.getAsInt(), columnIndex.getAsInt()); 
+                destPosition = new CellPosition(rowIndex.get(), columnIndex.get()); 
                 return Optional.of(new RectangleBounds(
-                    new CellPosition(rowIndex.getAsInt(), columnIndex.getAsInt()),
-                    new CellPosition(columnIndex.getAsInt() + getColumnCount() - 1, rowIndex.getAsInt() + getCurrentKnownRows() - 1)
+                    new CellPosition(rowIndex.get(), columnIndex.get()),
+                    new CellPosition(rowIndex.get() + CellPosition.row(getCurrentKnownRows() - 1), columnIndex.get() + CellPosition.col(getColumnCount() - 1))
                 ));
             }
             return Optional.empty();

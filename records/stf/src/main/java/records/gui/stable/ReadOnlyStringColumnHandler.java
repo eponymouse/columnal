@@ -1,5 +1,7 @@
 package records.gui.stable;
 
+import annotation.units.TableColIndex;
+import annotation.units.TableRowIndex;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
@@ -11,15 +13,15 @@ import utility.FXPlatformRunnable;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {
-    private final int columnIndex;
+    private final @TableColIndex int columnIndex;
 
-    public ReadOnlyStringColumnHandler(int columnIndex)
+    public ReadOnlyStringColumnHandler(@TableColIndex int columnIndex)
     {
         this.columnIndex = columnIndex;
     }
 
     @Override
-    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+    public void fetchValue(@TableRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
         fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(s)));
     }

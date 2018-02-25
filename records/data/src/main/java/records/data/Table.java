@@ -1,6 +1,9 @@
 package records.data;
 
 import annotation.qual.Value;
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
+import annotation.units.TableColIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.geometry.BoundingBox;
@@ -61,6 +64,7 @@ public abstract class Table
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
+    @SuppressWarnings("units")
     private CellPosition prevPosition = new CellPosition(1, 1);
 
     // The list is the blacklist, only applicable if first is CUSTOM:
@@ -203,9 +207,11 @@ public abstract class Table
     {
         try
         {
-            int x = Integer.parseInt(display.displayTablePosition().item(0).getText());
-            int y = Integer.parseInt(display.displayTablePosition().item(1).getText());
-            prevPosition = new CellPosition(x, y);
+            @SuppressWarnings("units")
+            @AbsColIndex int x = Integer.parseInt(display.displayTablePosition().item(0).getText());
+            @SuppressWarnings("units")
+            @AbsRowIndex int y = Integer.parseInt(display.displayTablePosition().item(1).getText());
+            prevPosition = new CellPosition(y, x);
 
             // Now handle the show-columns:
             if (display.displayShowColumns().ALL() != null)
@@ -376,5 +382,12 @@ public abstract class Table
 
         @OnThread(Tag.Any)
         public CellPosition getMostRecentPosition();
+    }
+    
+    @SuppressWarnings("units")
+    @OnThread(Tag.Any)
+    public static @TableColIndex int relativeCol(int col)
+    {
+        return col;
     }
 }

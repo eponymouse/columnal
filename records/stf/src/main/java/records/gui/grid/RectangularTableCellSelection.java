@@ -1,8 +1,11 @@
 package records.gui.grid;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 /**
  * A rectangular selection is constrained to one table
@@ -19,7 +22,7 @@ public class RectangularTableCellSelection implements CellSelection
 
 
     // Selects a single cell:
-    public RectangularTableCellSelection(int rowIndex, int columnIndex, TableSelectionLimits tableSelectionLimits)
+    public RectangularTableCellSelection(@AbsRowIndex int rowIndex, @AbsColIndex int columnIndex, TableSelectionLimits tableSelectionLimits)
     {
         startAnchor = new CellPosition(rowIndex, columnIndex);
         curFocus = startAnchor;
@@ -48,10 +51,12 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public CellSelection move(boolean extendSelection, int byRows, int byColumns)
+    public CellSelection move(boolean extendSelection, int _byRows, int _byColumns)
     {
-        CellPosition dest = new CellPosition(Math.max(tableSelectionLimits.getFirstPossibleRowIncl(), Math.min(tableSelectionLimits.getLastPossibleRowIncl() - 1, curFocus.rowIndex + byRows)),
-            Math.max(tableSelectionLimits.getFirstPossibleColumnIncl(), Math.min(tableSelectionLimits.getLastPossibleColumnIncl() - 1, curFocus.columnIndex + byColumns)));
+        @AbsRowIndex int byRows = CellPosition.row(_byRows);
+        @AbsColIndex int byColumns = CellPosition.col(_byColumns);
+        CellPosition dest = new CellPosition(Utility.maxRow(tableSelectionLimits.getFirstPossibleRowIncl(), Utility.minRow(tableSelectionLimits.getLastPossibleRowIncl() - CellPosition.row(1), curFocus.rowIndex + byRows)),
+            Utility.maxCol(tableSelectionLimits.getFirstPossibleColumnIncl(), Utility.minCol(tableSelectionLimits.getLastPossibleColumnIncl() - CellPosition.col(1), curFocus.columnIndex + byColumns)));
         // Move from top-left:
         return new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits);
     }
@@ -93,9 +98,9 @@ public class RectangularTableCellSelection implements CellSelection
     @OnThread(Tag.FXPlatform)
     public static interface TableSelectionLimits
     {
-        int getFirstPossibleRowIncl();
-        int getLastPossibleRowIncl();
-        int getFirstPossibleColumnIncl();
-        int getLastPossibleColumnIncl();
+        @AbsRowIndex int getFirstPossibleRowIncl();
+        @AbsRowIndex int getLastPossibleRowIncl();
+        @AbsColIndex int getFirstPossibleColumnIncl();
+        @AbsColIndex int getLastPossibleColumnIncl();
     }
 }

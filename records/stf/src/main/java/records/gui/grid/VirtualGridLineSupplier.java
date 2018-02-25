@@ -1,5 +1,7 @@
 package records.gui.grid;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
@@ -24,17 +26,17 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     private final HashMap<Integer, Line> yLinesInUse = new HashMap<>();
     
     @Override
-    void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
         double lowestX = columnBounds.getItemCoord(columnBounds.firstItemIncl);
-        double highestX = columnBounds.getItemCoord(columnBounds.lastItemIncl + 1);
+        double highestX = columnBounds.getItemCoordAfter(columnBounds.lastItemIncl);
         double lowestY = rowBounds.getItemCoord(rowBounds.firstItemIncl);
-        double highestY = rowBounds.getItemCoord(rowBounds.lastItemIncl + 1);
+        double highestY = rowBounds.getItemCoordAfter(rowBounds.lastItemIncl);
         
         Set<Line> linesToKeep = Sets.newIdentityHashSet();
         
         // Make sure all the intended lines are there:
-        for (int i = columnBounds.firstItemIncl; i <= columnBounds.lastItemIncl; i++)
+        for (@AbsColIndex int i = columnBounds.firstItemIncl; i <= columnBounds.lastItemIncl; i++)
         {
             Line line = xLinesInUse.get(i);
             double x = columnBounds.getItemCoord(i);
@@ -53,7 +55,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             linesToKeep.add(line);
         }
 
-        for (int i = rowBounds.firstItemIncl; i <= rowBounds.lastItemIncl; i++)
+        for (@AbsRowIndex int i = rowBounds.firstItemIncl; i <= rowBounds.lastItemIncl; i++)
         {
             double y = rowBounds.getItemCoord(i);
             Line line = yLinesInUse.get(i);

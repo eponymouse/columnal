@@ -1,5 +1,6 @@
 package records.importers.gui;
 
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -136,7 +137,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                             @NonNull RecordSet recordSetNonNull = recordSet;
                             Platform.runLater(() -> {
                                 destRecordSet.set(recordSetNonNull);
-                                destData.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), null), null, null);
+                                destData.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), () -> CellPosition.ORIGIN, null), null, null);
                             });
                         }
                     }
@@ -444,15 +445,15 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
+        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
         {
-            return getPosition().rowIndex + HEADER_ROWS;
+            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS);
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
+        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
         {
-            return getPosition().rowIndex + HEADER_ROWS + currentKnownRows - 1;
+            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS + currentKnownRows - 1);
         }
     }
 
@@ -483,15 +484,15 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
+        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
         {
-            return getPosition().rowIndex + HEADER_ROWS;
+            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS);
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
+        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
         {
-            return getPosition().rowIndex + HEADER_ROWS + internal_getCurrentKnownRows() - 1;
+            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS + internal_getCurrentKnownRows() - 1);
         }
     }
 }

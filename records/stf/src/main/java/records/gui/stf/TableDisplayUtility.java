@@ -1,6 +1,8 @@
 package records.gui.stf;
 
 import annotation.qual.Value;
+import annotation.units.TableColIndex;
+import annotation.units.TableRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -16,6 +18,7 @@ import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.Table.Display;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -65,10 +68,10 @@ import java.util.function.Predicate;
 public class TableDisplayUtility
 {
 
-    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, @Nullable FXPlatformRunnable onModify)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformSupplier<CellPosition> getTablePos, @Nullable FXPlatformRunnable onModify)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
-        int displayColumnIndex = 0;
+        @TableColIndex int displayColumnIndex = Table.relativeCol(0);
         for (int origColIndex = 0; origColIndex < recordSet.getColumns().size(); origColIndex++)
         {
             Column col = recordSet.getColumns().get(origColIndex);
@@ -77,11 +80,11 @@ public class TableDisplayUtility
                 ColumnDetails item;
                 try
                 {
-                    item = getDisplay(displayColumnIndex, col, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
+                    item = getDisplay(displayColumnIndex, col, getTablePos, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
                 }
                 catch (InternalException | UserException e)
                 {
-                    final int columnIndexFinal = displayColumnIndex;
+                    final @TableColIndex int columnIndexFinal = displayColumnIndex;
                     // Show a dummy column with an error message:
                     item = new ColumnDetails(col.getName(), new ColumnHandler()
                     {
@@ -106,9 +109,9 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+                        public void fetchValue(@TableRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                         {
-                            setCellContent.loadedValue(columnIndexFinal, rowIndex, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
+                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
                         }
 
                         @Override
@@ -125,15 +128,15 @@ public class TableDisplayUtility
                     });
                 }
                 r.add(item);
-                displayColumnIndex += 1;
+                displayColumnIndex += Table.relativeCol(1);
             }
         }
         return r.build();
     }
 
-    private static ColumnDetails getDisplay(int columnIndex, @NonNull Column column, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static ColumnDetails getDisplay(@TableColIndex int columnIndex, @NonNull Column column, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), makeField(columnIndex, column.getType(), column.isEditable(), onModify)) {
+        return new ColumnDetails(column.getName(), makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
             @Override
             protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
             {
@@ -323,21 +326,21 @@ public class TableDisplayUtility
             this.makeComponent = makeComponent;
         }
 
-        public EditorKitCache<T> makeDisplayCache(int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, FXPlatformRunnable onModify)
+        public EditorKitCache<T> makeDisplayCache(@TableColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify)
         {
             return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value, relinquishFocus) -> {
                 return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {
                     Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
-                    onModify.run();} : null, () -> relinquishFocus.consume(new CellPosition(rowIndex, columnIndex)), stfStyles);
+                    onModify.run();} : null, () -> relinquishFocus.consume(getTablePos.get().offsetByRowCols(rowIndex, columnIndex)), stfStyles);
             });
         }
     }
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static EditorKitCache<?> makeField(int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, FXPlatformRunnable onModify) throws InternalException
+    public static EditorKitCache<?> makeField(@TableColIndex int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), onModify);
+        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), getTablePos, onModify);
     }
 
     public static ImmutableList<String> stfStylesFor(DataType dataType) throws InternalException

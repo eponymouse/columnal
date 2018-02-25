@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -1071,6 +1073,38 @@ public class Utility
             return Optional.of(value);
         else
             return Optional.empty();
+    }
+
+    public static @AbsRowIndex int minRow(@AbsRowIndex int a, @AbsRowIndex int b)
+    {
+        return (a <= b) ? a : b;
+    }
+    
+    public static @AbsRowIndex int maxRow(@AbsRowIndex int a, @AbsRowIndex int b)
+    {
+        return (a >= b) ? a : b;
+    }
+
+    public static @AbsColIndex int minCol(@AbsColIndex int a, @AbsColIndex int b)
+    {
+        return (a <= b) ? a : b;
+    }
+
+    public static @AbsColIndex int maxCol(@AbsColIndex int a, @AbsColIndex int b)
+    {
+        return (a >= b) ? a : b;
+    }
+
+    // Checker framework gives weird error when boxing directly, so need this function:
+    public static @AbsRowIndex Integer boxRow(@AbsRowIndex int rowIndex)
+    {
+        return rowIndex;
+    }
+
+    // Checker framework gives weird error when boxing directly, so need this function:
+    public static @AbsColIndex Integer boxCol(@AbsColIndex int colIndex)
+    {
+        return colIndex;
     }
 
     public static class ReadState

@@ -1,5 +1,7 @@
 package records.gui.stable;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -41,15 +43,15 @@ public class ScrollGroup
     private final IdentityHashMap<ScrollGroup, ScrollLock> dependentGroups = new IdentityHashMap<>();
     private boolean inUpdateClip;
 
-    public ScrollGroup(FXPlatformBiFunction<Double, Token, ScrollResult> scrollLayoutXBy, int maxExtraItems, FXPlatformFunction<Double, Integer> calcExtraCols, FXPlatformBiFunction<Double, Token, ScrollResult> scrollLayoutYBy, FXPlatformFunction<Double, Integer> calcExtraRows)
+    public ScrollGroup(FXPlatformBiFunction<Double, Token, ScrollResult<@AbsColIndex Integer>> scrollLayoutXBy, int maxExtraItems, FXPlatformFunction<Double, Integer> calcExtraCols, FXPlatformBiFunction<Double, Token, ScrollResult<@AbsRowIndex Integer>> scrollLayoutYBy, FXPlatformFunction<Double, Integer> calcExtraRows)
     {
         smoothScrollX = new SmoothScroller(translateXProperty, maxExtraItems, extraCols, d -> {
-            ScrollResult r = scrollLayoutXBy.apply(d, new Token());
+            ScrollResult<@AbsColIndex Integer> r = scrollLayoutXBy.apply(d, new Token());
             FXUtility.mouse(this).doShowAtOffset(null, r.scrollPosition);
             return r.scrolledByPixels;
         }, calcExtraCols, FXUtility.mouse(this)::updateClip);
         smoothScrollY = new SmoothScroller(translateYProperty, maxExtraItems, extraRows, d -> {
-            ScrollResult r = scrollLayoutYBy.apply(d, new Token());
+            ScrollResult<@AbsRowIndex Integer> r = scrollLayoutYBy.apply(d, new Token());
             FXUtility.mouse(this).doShowAtOffset(r.scrollPosition, null);
             return r.scrolledByPixels;
         }, calcExtraRows, FXUtility.mouse(this)::updateClip);
@@ -97,16 +99,16 @@ public class ScrollGroup
         // TODO we need to set the scroll to right place immediately
     }
 
-    private void doShowAtOffset(@Nullable Pair<Integer, Double> rowAndPixelOffset, @Nullable Pair<Integer, Double> colAndPixelOffset)
+    private void doShowAtOffset(@Nullable Pair<@AbsRowIndex Integer, Double> rowAndPixelOffset, @Nullable Pair<@AbsColIndex Integer, Double> colAndPixelOffset)
     {
         directScrollDependents.forEach((member, lock) -> {
-            @Nullable Pair<Integer, Double> targetRow = lock.includesVertical() ? rowAndPixelOffset : null;
-            @Nullable Pair<Integer, Double> targetCol = lock.includesHorizontal() ? colAndPixelOffset : null;
+            @Nullable Pair<@AbsRowIndex Integer, Double> targetRow = lock.includesVertical() ? rowAndPixelOffset : null;
+            @Nullable Pair<@AbsColIndex Integer, Double> targetCol = lock.includesHorizontal() ? colAndPixelOffset : null;
             member.showAtOffset(targetRow, targetCol);
         });
         dependentGroups.forEach((member, lock) -> {
-            @Nullable Pair<Integer, Double> targetRow = lock.includesVertical() ? rowAndPixelOffset : null;
-            @Nullable Pair<Integer, Double> targetCol = lock.includesHorizontal() ? colAndPixelOffset : null;
+            @Nullable Pair<@AbsRowIndex Integer, Double> targetRow = lock.includesVertical() ? rowAndPixelOffset : null;
+            @Nullable Pair<@AbsColIndex Integer, Double> targetCol = lock.includesHorizontal() ? colAndPixelOffset : null;
             member.doShowAtOffset(targetRow, targetCol);
         });
     }

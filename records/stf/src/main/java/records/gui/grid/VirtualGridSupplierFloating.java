@@ -1,5 +1,7 @@
 package records.gui.grid;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
@@ -29,7 +31,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     private final List<Node> toRemove = new ArrayList<>();
 
     @Override
-    void layoutItems(ContainerChildren containerChildren, VisibleDetails rowBounds, VisibleDetails columnBounds)
+    void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
         toRemove.forEach(r -> containerChildren.remove(r));
         toRemove.clear();
@@ -77,7 +79,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     public static interface FloatingItem
     {
         // If empty is returned, means not visible.  Otherwise, coords in parent are returned.
-        public Optional<BoundingBox> calculatePosition(VisibleDetails rowBounds, VisibleDetails columnBounds);
+        public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
         
         public Pair<ViewOrder, Node> makeCell();
     }

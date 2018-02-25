@@ -1,5 +1,7 @@
 package records.data;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -13,10 +15,10 @@ import threadchecker.Tag;
 public class CellPosition
 {
     // Both are zero-based:
-    public final int rowIndex;
-    public final int columnIndex;
+    public final @AbsRowIndex int rowIndex;
+    public final @AbsColIndex int columnIndex;
 
-    public CellPosition(int rowIndex, int columnIndex)
+    public CellPosition(@AbsRowIndex int rowIndex, @AbsColIndex int columnIndex)
     {
         this.rowIndex = rowIndex;
         this.columnIndex = columnIndex;
@@ -48,8 +50,23 @@ public class CellPosition
         return "(" + columnIndex + ", " + rowIndex + ")";
     }
 
+    @SuppressWarnings("units")
     public CellPosition offsetByRowCols(int rows, int cols)
     {
         return new CellPosition(rowIndex + rows, columnIndex + cols);
+    }
+    
+    public static final CellPosition ORIGIN = new CellPosition(row(0), col(0)); 
+
+    @SuppressWarnings("units")
+    public static @AbsRowIndex int row(int row)
+    {
+        return row;
+    }
+
+    @SuppressWarnings("units")
+    public static @AbsColIndex int col(int col)
+    {
+        return col;
     }
 }

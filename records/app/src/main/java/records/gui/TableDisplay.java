@@ -1,5 +1,9 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
+import annotation.units.TableColIndex;
+import annotation.units.TableRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
@@ -122,27 +126,27 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @OnThread(Tag.FXPlatform)
-    public int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) TableDisplay this)
+    public @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) TableDisplay this)
     {
-        return getPosition().rowIndex + DataDisplay.HEADER_ROWS;
+        return getPosition().rowIndex + CellPosition.row(DataDisplay.HEADER_ROWS);
     }
 
     @OnThread(Tag.FXPlatform)
-    public int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) TableDisplay this)
+    public @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) TableDisplay this)
     {
-        return getPosition().rowIndex + DataDisplay.HEADER_ROWS + currentKnownRows - 1;
+        return getPosition().rowIndex + CellPosition.row(DataDisplay.HEADER_ROWS + currentKnownRows - 1);
     }
 
     @OnThread(Tag.FXPlatform)
-    public int getFirstDataDisplayColumnIncl()
+    public @AbsColIndex int getFirstDataDisplayColumnIncl()
     {
         return getPosition().columnIndex;
     }
 
     @OnThread(Tag.FXPlatform)
-    public int getLastDataDisplayColumnIncl()
+    public @AbsColIndex int getLastDataDisplayColumnIncl()
     {
-        return getPosition().columnIndex + displayColumns.size() - 1;
+        return getPosition().columnIndex + CellPosition.col(displayColumns.size() - 1);
     }
 
     public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
@@ -165,8 +169,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 StructuredTextField orig = getCell.apply(cellPosition);
                 if (orig != null)
                     orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
-                int columnIndexWithinTable = cellPosition.columnIndex - getPosition().columnIndex;
-                int rowIndexWithinTable = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
+                @SuppressWarnings("units")
+                @TableColIndex int columnIndexWithinTable = cellPosition.columnIndex - getPosition().columnIndex;
+                @SuppressWarnings("units")
+                @TableRowIndex int rowIndexWithinTable = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
                 if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                 {
                     displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
@@ -175,7 +181,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits)),
                         (rowIndex, colIndex, editorKit) -> {
                             // The rowIndex and colIndex are in table data terms, so we must translate:
-                            @Nullable StructuredTextField cell = getCell.apply(new CellPosition(getPosition().rowIndex + HEADER_ROWS + rowIndex, getPosition().columnIndex + colIndex));
+                            @Nullable StructuredTextField cell = getCell.apply(getPosition().offsetByRowCols(HEADER_ROWS + rowIndex, colIndex));
                             if (cell != null)
                                 cell.resetContent(editorKit);
                         }
@@ -282,7 +288,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
         recordSetOrError.ifRight(recordSet ->
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c))
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::getPosition, onModify), table.getOperations(), c -> getExtraColumnActions(c))
         );
     }
 
@@ -290,7 +296,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
         recordSetOrError.ifRight(recordSet -> 
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), c -> getExtraColumnActions(c))
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::getPosition, onModify), table.getOperations(), c -> getExtraColumnActions(c))
         );
     }
 
@@ -442,27 +448,27 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             //TODO
             @Override
-            public int getFirstPossibleRowIncl()
+            public @AbsRowIndex int getFirstPossibleRowIncl()
             {
-                return 0;
+                return CellPosition.row(0);
             }
 
             @Override
-            public int getLastPossibleRowIncl()
+            public @AbsRowIndex int getLastPossibleRowIncl()
             {
-                return 0;
+                return CellPosition.row(0);
             }
 
             @Override
-            public int getFirstPossibleColumnIncl()
+            public @AbsColIndex int getFirstPossibleColumnIncl()
             {
-                return 0;
+                return CellPosition.col(0);
             }
 
             @Override
-            public int getLastPossibleColumnIncl()
+            public @AbsColIndex int getLastPossibleColumnIncl()
             {
-                return 0;
+                return CellPosition.col(0);
             }
         };
         
@@ -490,7 +496,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table, RecordSet recordSet)
     {
-        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify);
+        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::getPosition, onModify);
         setColumnsAndRows(displayColumns, table.getOperations(), c -> FXUtility.mouse(this).getExtraColumnActions(c));
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -521,7 +527,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
 
         FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), c -> FXUtility.mouse(this).getExtraColumnActions(c));
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), this::getPosition, onModify), table.getOperations(), c -> FXUtility.mouse(this).getExtraColumnActions(c));
         });
 
         // Should be done last:

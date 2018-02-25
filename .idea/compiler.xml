@@ -34,7 +34,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="utility" />
       </profile>
       <profile name="Maven default annotation processors profile" enabled="true">
@@ -51,7 +53,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="gui-utility" />
       </profile>
       <profile name="Annotation profile for data" enabled="true">
@@ -61,7 +65,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="data" />
       </profile>
       <profile name="Annotation profile for stf" enabled="true">
@@ -71,7 +77,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="stf" />
       </profile>
       <profile name="Annotation profile for functions" enabled="true">
@@ -81,7 +89,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="functions" />
       </profile>
       <profile name="Annotation profile for expressions" enabled="true">
@@ -91,7 +101,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="expressions" />
       </profile>
       <profile name="Annotation profile for types" enabled="true">
@@ -101,7 +113,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/types/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="types" />
       </profile>
       <profile name="Annotation profile for records" enabled="true">
@@ -111,7 +125,9 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
+        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.TableRowIndex,annotation.units.TableColIndex,annotation.units.RowOrColIndex" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="app" />
       </profile>
     </annotationProcessing>
