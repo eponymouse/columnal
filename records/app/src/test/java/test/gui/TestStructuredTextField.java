@@ -1,6 +1,8 @@
 package test.gui;
 
 import annotation.qual.Value;
+import annotation.units.AbsRowIndex;
+import annotation.units.TableColIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -29,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.Table.MessageWhenEmpty;
@@ -142,15 +145,15 @@ public class TestStructuredTextField extends ApplicationTest
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) int getFirstDataDisplayRowIncl()
+            public @OnThread(Tag.FXPlatform) @AbsRowIndex int getFirstDataDisplayRowIncl()
             {
-                return 0;
+                return CellPosition.ORIGIN.rowIndex;
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) int getLastDataDisplayRowIncl()
+            public @OnThread(Tag.FXPlatform) @AbsRowIndex int getLastDataDisplayRowIncl()
             {
-                return 0;
+                return CellPosition.ORIGIN.rowIndex;
             }
         };
         virtualGrid.addGridAreas(ImmutableList.of(dataDisplay));
@@ -279,7 +282,9 @@ public class TestStructuredTextField extends ApplicationTest
         {
             try
             {
-                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(0, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> {});
+                @SuppressWarnings("units")
+                @TableColIndex int col = 0;
+                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> CellPosition.ORIGIN, () -> {});
                 dataDisplay.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), cacheSTF)), null, null);
                 //stableView.loadColumnWidths(new double[]{600.0});
             }

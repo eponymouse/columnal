@@ -94,11 +94,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
         Table srcData = new ImmediateDataSource(manager, new EditableRecordSet(expressionValue.recordSet));
-        srcData.loadPosition(new CellPosition(1, 1));
+        srcData.loadPosition(CellPosition.ORIGIN);
         manager.record(srcData);
 
         Table calculated = new Transform(manager, null, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
-        calculated.loadPosition(new CellPosition(1, 2 + expressionValue.recordSet.getColumns().size()));
+        calculated.loadPosition(new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())));
         manager.record(calculated);
 
         TestUtil.openDataAsTable(windowToUse, manager).get();
@@ -162,12 +162,12 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         TableManager manager = srcDataAndMgr.mgr;
         Table srcData = srcDataAndMgr.data.get(0);
-        TestUtil.sim_(() -> srcData.loadPosition(new CellPosition(1, 1)));
+        TestUtil.sim_(() -> srcData.loadPosition(CellPosition.ORIGIN));
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         Table calculated = TestUtil.sim(() -> new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName())));
         TestUtil.sim(() -> {
-            calculated.loadPosition(new CellPosition(1, 2 + srcData.getData().getColumns().size()));
+            calculated.loadPosition(new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())));
             manager.record(calculated);
             try
             {

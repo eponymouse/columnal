@@ -83,8 +83,8 @@ public class PropGridOverlap
                 {
                     CellPosition aTopLeft = a.getPosition();
                     CellPosition bTopLeft = b.getPosition();
-                    CellPosition aBottomRightIncl = new CellPosition(aTopLeft.rowIndex + a.getCurrentKnownRows() - 1, aTopLeft.columnIndex + a.getColumnCount() - 1);
-                    CellPosition bBottomRightIncl = new CellPosition(bTopLeft.rowIndex + b.getCurrentKnownRows() - 1, bTopLeft.columnIndex + b.getColumnCount() - 1);
+                    CellPosition aBottomRightIncl = new CellPosition(aTopLeft.rowIndex + CellPosition.row(a.getCurrentKnownRows() - 1), aTopLeft.columnIndex + CellPosition.col(a.getColumnCount() - 1));
+                    CellPosition bBottomRightIncl = new CellPosition(bTopLeft.rowIndex + CellPosition.row(b.getCurrentKnownRows() - 1), bTopLeft.columnIndex + CellPosition.col(b.getColumnCount() - 1));
                     assertFalse("Overlap " + aTopLeft + ", " + aBottomRightIncl + " and " + bTopLeft + ", " + bBottomRightIncl,
                         aTopLeft.columnIndex < bBottomRightIncl.columnIndex && aBottomRightIncl.columnIndex > bTopLeft.columnIndex &&
                         aTopLeft.rowIndex < bBottomRightIncl.rowIndex && aBottomRightIncl.rowIndex > bTopLeft.rowIndex
@@ -104,7 +104,7 @@ public class PropGridOverlap
         //checkHorizSorted(sortedByOriginalX);
         
         gridAreas.gridAreas.get(Math.abs(toMove) % gridAreas.gridAreas.size()).setPosition(
-            new CellPosition(Math.abs(newColumn) % 25, Math.abs(newRow) % 25)
+            new CellPosition(CellPosition.row(Math.abs(newColumn) % 25), CellPosition.col(Math.abs(newRow) % 25))
         );
         
         

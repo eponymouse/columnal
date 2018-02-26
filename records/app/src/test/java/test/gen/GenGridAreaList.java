@@ -53,7 +53,7 @@ public class GenGridAreaList extends Generator<GridAreaList>
                     return y1 - y0 + 1;
                 }
             };
-            gridArea.setPosition(new CellPosition(y0, x0));
+            gridArea.setPosition(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)));
             r.add(gridArea);
         }
         return new GridAreaList(r.build());
