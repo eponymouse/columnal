@@ -86,7 +86,7 @@ public class TableDisplayUtility
                 {
                     final @TableColIndex int columnIndexFinal = displayColumnIndex;
                     // Show a dummy column with an error message:
-                    item = new ColumnDetails(col.getName(), new ColumnHandler()
+                    item = new ColumnDetails(col.getName(), DataType.toInfer(), new ColumnHandler()
                     {
                         @Override
                         public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
@@ -136,7 +136,7 @@ public class TableDisplayUtility
 
     private static ColumnDetails getDisplay(@TableColIndex int columnIndex, @NonNull Column column, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
+        return new ColumnDetails(column.getName(), column.getType(), makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
             @Override
             protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
             {

@@ -4,6 +4,7 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -11,6 +12,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -21,6 +23,7 @@ import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
+import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -40,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 /**
  * A DataDisplay is a GridArea that can be used to display some table data.  Crucially, it does
@@ -54,7 +56,7 @@ public abstract class DataDisplay extends GridArea
     // One for table title, one for column names, one for column types:
     public static final int HEADER_ROWS = 3;
     
-    private final VirtualGridSupplierFloating columnHeaderSupplier;
+    private final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
     // Not final because it may changes if user changes the display item or preview options change:
     @OnThread(Tag.FXPlatform)
@@ -62,11 +64,11 @@ public abstract class DataDisplay extends GridArea
 
     protected final SimpleObjectProperty<ImmutableList<CellStyle>> cellStyles = new SimpleObjectProperty<>(ImmutableList.of());
     
-    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, VirtualGridSupplierFloating columnHeaderSupplier)
+    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, VirtualGridSupplierFloating floatingItems)
     {
         super(messageWhenEmpty);
-        this.columnHeaderSupplier = columnHeaderSupplier;
-        this.columnHeaderSupplier.addItem(new FloatingItem() {
+        this.floatingItems = floatingItems;
+        this.floatingItems.addItem(new FloatingItem() {
               @Override
               @OnThread(Tag.FXPlatform)
               public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
@@ -108,7 +110,7 @@ public abstract class DataDisplay extends GridArea
                           return;
                       }
                       overlay[0] = new DestRectangleOverlay(getPosition(), borderPane.localToScreen(borderPane.getBoundsInLocal()), e.getScreenX(), e.getScreenY());
-                      columnHeaderSupplier.addItem(overlay[0]);
+                      floatingItems.addItem(overlay[0]);
                       ImmutableList.Builder<CellStyle> newStyles = ImmutableList.builder();
                       newStyles.addAll(FXUtility.mouse(DataDisplay.this).cellStyles.get());
                       CellStyle blurStyle = CellStyle.TABLE_DRAG_SOURCE;
@@ -121,7 +123,7 @@ public abstract class DataDisplay extends GridArea
                       if (overlay[0] != null)
                       {
                           CellPosition dest = overlay[0].getDestinationPosition();
-                          columnHeaderSupplier.removeItem(overlay[0]);
+                          floatingItems.removeItem(overlay[0]);
                           FXUtility.mouse(DataDisplay.this).cellStyles.set(
                               FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.toImmutableList())
                           );
@@ -144,7 +146,7 @@ public abstract class DataDisplay extends GridArea
     public void setColumnsAndRows(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions)
     {
         // Remove old columns:
-        columnHeaderItems.forEach(columnHeaderSupplier::removeItem);
+        columnHeaderItems.forEach(floatingItems::removeItem);
         columnHeaderItems.clear();
         this.displayColumns = columns;
         for (int i = 0; i < columns.size(); i++)
@@ -152,7 +154,7 @@ public abstract class DataDisplay extends GridArea
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
             // Item for column name:
-            FloatingItem item = new FloatingItem()
+            FloatingItem columnNameItem = new FloatingItem()
             {
                 @Override
                 @OnThread(Tag.FXPlatform)
@@ -193,8 +195,35 @@ public abstract class DataDisplay extends GridArea
                     return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
                 }
             };
-            columnHeaderItems.add(item);
-            columnHeaderSupplier.addItem(item);
+            // Item for column type:
+            FloatingItem columnTypeItem = new FloatingItem()
+            {
+                @Override
+                public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+                {
+                    @AbsColIndex int calcCol = getPosition().columnIndex + CellPosition.col(columnIndex);
+                    @AbsRowIndex int calcRow = getPosition().rowIndex + CellPosition.row(2);
+                    double x = columnBounds.getItemCoord(Utility.boxCol(calcCol));
+                    double y = rowBounds.getItemCoord(Utility.boxRow(calcRow));
+                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
+                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
+
+                    return Optional.of(new BoundingBox(x, y, width, height));
+                }
+
+                @Override
+                public Pair<ViewOrder, Node> makeCell()
+                {
+                    Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
+                    typeLabel.getStyleClass().add("table-display-column-title");
+                    return new Pair<>(ViewOrder.FLOATING, typeLabel);
+                }
+            };
+            
+            columnHeaderItems.add(columnNameItem);
+            columnHeaderItems.add(columnTypeItem);
+            floatingItems.addItem(columnNameItem);
+            floatingItems.addItem(columnTypeItem);
         }
         
         updateParent();

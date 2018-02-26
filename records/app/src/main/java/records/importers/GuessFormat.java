@@ -34,6 +34,7 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -746,7 +747,7 @@ public class GuessFormat
                 if (charsetChoice == null)
                     return null;
                 else
-                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), columnHandler)), Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0));
+                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), DataType.TEXT, columnHandler)), Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0));
             }).showAndWait().ifPresent(then);
         });
         System.err.println(choicePoints);

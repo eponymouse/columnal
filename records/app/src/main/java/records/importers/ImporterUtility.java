@@ -54,7 +54,7 @@ public class ImporterUtility
             {
                 @SuppressWarnings("units")
                 @TableColIndex int columnIndexFinal = columnIndex;
-                columnHandlers.add(new ColumnDetails(new ColumnId("Column " + (columnIndex + 1)), new ReadOnlyStringColumnHandler(columnIndexFinal)
+                columnHandlers.add(new ColumnDetails(new ColumnId("Column " + (columnIndex + 1)), DataType.TEXT, new ReadOnlyStringColumnHandler(columnIndexFinal)
                 {
                     @Override
                     @OnThread(Tag.FXPlatform)
