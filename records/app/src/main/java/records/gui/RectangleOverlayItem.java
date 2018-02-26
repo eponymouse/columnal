@@ -2,11 +2,11 @@ package records.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
-import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
 import records.data.CellPosition;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
@@ -64,15 +64,4 @@ public abstract class RectangleOverlayItem implements FloatingItem
 
     protected abstract void style(Rectangle r);
 
-    public static class RectangleBounds
-    {
-        private final CellPosition topLeftIncl;
-        private final CellPosition bottomRightIncl;
-        
-        public RectangleBounds(CellPosition topLeftIncl, CellPosition bottomRightIncl)
-        {
-            this.topLeftIncl = topLeftIncl;
-            this.bottomRightIncl = bottomRightIncl;
-        }
-    }
 }

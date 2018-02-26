@@ -44,7 +44,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
                 values.add(makeValue(type));
             }
             final ExFunction<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values, makeValue(type));
-            @SuppressWarnings("keyfor")
+            @SuppressWarnings({"keyfor", "units"})
             RecordSet recordSet = new EditableRecordSet(Collections.singletonList(create), () -> length);
             return (EditableColumn)recordSet.getColumns().get(0);
         }

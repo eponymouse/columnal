@@ -38,6 +38,8 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
+import records.gui.MainWindow.MainWindowActions;
+import records.gui.grid.VirtualGrid;
 import records.importers.ChoicePoint.ChoiceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.function.FunctionDefinition;
@@ -826,21 +828,24 @@ public class TestUtil
      * @throws InvocationTargetException
      */
     @OnThread(Tag.Simulation)
-    public static Supplier<TableManager> openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
+    public static Supplier<Pair<TableManager, VirtualGrid>> openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
     {
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
         String saved = save(mgr);
         System.out.println("Saving: {{{" + saved + "}}}");
-        AtomicReference<TableManager> tableManagerAtomicReference = new AtomicReference<>();
-        Platform.runLater(() -> checkedToRuntime_(() -> tableManagerAtomicReference.set(MainWindow.show(windowToUse, temp, new Pair<>(temp, saved))._test_getTableManager())));
+        AtomicReference<Pair<TableManager, VirtualGrid>> tableManagerAtomicReference = new AtomicReference<>();
+        Platform.runLater(() -> checkedToRuntime_(() -> {
+            MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved));
+            tableManagerAtomicReference.set(new Pair<>(mainWindowActions._test_getTableManager(), mainWindowActions._test_getVirtualGrid()));
+        }));
         return () -> {
             do
             {
                 //System.err.println("Waiting for main window");
                 sleep(1000);
             }
-            while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);
+            while (fx(() -> windowToUse.getScene().lookup(".virt-grid")) == null);
             return tableManagerAtomicReference.get();
         };
     }
@@ -867,7 +872,7 @@ public class TestUtil
         {
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         }
-        return openDataAsTable(windowToUse, manager).get();
+        return openDataAsTable(windowToUse, manager).get().getFirst();
     }
 
     // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.

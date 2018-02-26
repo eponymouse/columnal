@@ -539,6 +539,20 @@ public class VirtualGrid implements ScrollBindable
         // TODO rearrange
     }
 
+    public Bounds _test_getRectangleBoundsScreen(RectangleBounds rectangleBounds)
+    {
+        double adjustX = getCurrentScrollX(null);
+        double adjustY = getCurrentScrollY(null);
+        double x = sumColumnWidths(CellPosition.col(0), rectangleBounds.topLeftIncl.columnIndex);
+        double y = rectangleBounds.topLeftIncl.rowIndex * rowHeight;
+        return container.localToScreen(new BoundingBox(
+            x + adjustX, 
+            y + adjustY, 
+            sumColumnWidths(rectangleBounds.topLeftIncl.columnIndex, rectangleBounds.bottomRightIncl.columnIndex + CellPosition.col(1)),
+            rowHeight * (rectangleBounds.bottomRightIncl.rowIndex + 1 - rectangleBounds.topLeftIncl.rowIndex)
+        ));
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {

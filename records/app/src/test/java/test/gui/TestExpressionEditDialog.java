@@ -72,7 +72,7 @@ public class TestExpressionEditDialog extends ApplicationTest implements ScrollT
         // Need to load up main window with initial table and then open transformation dialog:
         mgr = new DummyManager();
 
-        @SuppressWarnings("keyfor")
+        @SuppressWarnings({"keyfor", "units"})
         EditableRecordSet recordSet = new EditableRecordSet(Arrays.<ExFunction<RecordSet, EditableColumn>>asList(
             (RecordSet rs) -> new MemoryBooleanColumn(rs, new ColumnId("Alfred the Great"), Collections.emptyList(), false),
             (RecordSet rs) -> new MemoryBooleanColumn(rs, new ColumnId("William I"), Collections.emptyList(), false),

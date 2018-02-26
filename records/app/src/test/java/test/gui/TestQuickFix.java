@@ -272,7 +272,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
-            @SuppressWarnings("keyfor")
+            @SuppressWarnings({"keyfor", "units"})
             TableManager tableManager = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             scrollTo(".id-tableDisplay-menu-button");

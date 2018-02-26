@@ -268,7 +268,7 @@ public class TestStructuredTextField extends ApplicationTest
         {
             try
             {
-                @SuppressWarnings({"keyfor", "value"})
+                @SuppressWarnings({"keyfor", "value", "units"})
                 EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<@Value Object>singletonList(value), DataTypeUtility.makeDefaultValue(dataType))), () -> 1);
                 fut.complete(rs.getColumns().get(0).getType());
             }

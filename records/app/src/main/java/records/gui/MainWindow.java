@@ -14,6 +14,7 @@ import records.data.ImmediateDataSource;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.grid.VirtualGrid;
 import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -45,6 +46,9 @@ public class MainWindow
         
         @OnThread(Tag.FXPlatform)
         public TableManager _test_getTableManager();
+
+        @OnThread(Tag.FXPlatform)
+        public VirtualGrid _test_getVirtualGrid();
     }
 
     // If src is null, make new
@@ -125,7 +129,7 @@ public class MainWindow
         }
 
         stage.show();
-        org.scenicview.ScenicView.show(stage.getScene());
+        //org.scenicview.ScenicView.show(stage.getScene());
         return new MainWindowActions()
         {
             @Override
@@ -145,6 +149,12 @@ public class MainWindow
             public @OnThread(Tag.FXPlatform) TableManager _test_getTableManager()
             {
                 return v.getManager();
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) VirtualGrid _test_getVirtualGrid()
+            {
+                return v.getGrid();
             }
         };
     }

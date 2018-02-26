@@ -84,7 +84,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                     columns.add(rs -> (EditableColumn)col.apply(length, rs));
                 }
 
-                @SuppressWarnings("keyfor")
+                @SuppressWarnings({"keyfor", "units"})
                 ImmediateDataSource dataSource = new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> length));
                 mgr.record(dataSource);
                 tables.add(dataSource);

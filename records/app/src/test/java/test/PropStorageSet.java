@@ -41,7 +41,7 @@ public class PropStorageSet
     @OnThread(Tag.Simulation)
     public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
-        @SuppressWarnings("keyfor")
+        @SuppressWarnings({"keyfor", "units"})
         EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(rs -> typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"), Collections.emptyList(), typeAndValueGen.makeValue()).apply(rs)), () -> 0);
         Column c = recordSet.getColumns().get(0);
         assertEquals(0, c.getLength());

@@ -33,6 +33,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.UnitsBottom;
 import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.Table.Display;
@@ -307,8 +308,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract);
             else
             {
-                @SuppressWarnings("keyfor")
-                @KeyForBottom ImmutableList<ObservableValue<?>> fieldList = ImmutableList.of(fieldValue);
+                @SuppressWarnings({"keyfor", "units"})
+                @KeyForBottom @UnitsBottom ImmutableList<ObservableValue<?>> fieldList = ImmutableList.of(fieldValue);
                 choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract, fieldList);
             }
         }
