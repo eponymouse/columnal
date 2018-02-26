@@ -10,15 +10,4 @@ public interface EditorKitCallback
 {
     @OnThread(Tag.FXPlatform)
     public void loadedValue(@TableRowIndex int rowIndex, @TableColIndex int colIndex, EditorKit<?> editorKit);
-    
-    public static class Test
-    {
-        int width;
-        
-        public Test(int height)
-        {
-            this.width = height;
-        }
-        
-    }
 }
