@@ -123,8 +123,6 @@ public class TableManager
         typeManager.loadTypeDecls(file.types());
         List<Table> loaded = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>();
-        // TODO Don't need future any more now that this is all one thread
-        CompletableFuture<Object> allDone = new CompletableFuture<>();
         int total = file.table().size();
         for (TableContext tableContext : file.table())
         {
@@ -139,8 +137,6 @@ public class TableManager
                     Log.log(e);
                     exceptions.add(e);
                 }
-                if (loaded.size() + exceptions.size() == total)
-                    allDone.complete(new Object());
             }
             else if (tableContext.transformation() != null)
             {
@@ -153,17 +149,7 @@ public class TableManager
                     Log.log(e);
                     exceptions.add(e);
                 }
-                if (loaded.size() + exceptions.size() == total)
-                    allDone.complete(new Object());
             }
-        }
-        try
-        {
-            allDone.get();
-        }
-        catch (InterruptedException | ExecutionException e)
-        {
-            Log.log(e);
         }
 
         if (exceptions.isEmpty())
