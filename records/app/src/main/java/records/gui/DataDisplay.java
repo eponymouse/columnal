@@ -3,8 +3,15 @@ package records.gui;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -156,6 +163,12 @@ public abstract class DataDisplay extends GridArea
             // Item for column name:
             FloatingItem columnNameItem = new FloatingItem()
             {
+                // This is like a boolean property, but we store -1 when pinned, 0 when unpinned.
+                // That way we negate the parent's translate when pinned, but let it affect us when not:
+                DoubleProperty translateFactor = new SimpleDoubleProperty(0);
+                DoubleExpression translateX = new ReadOnlyDoubleWrapper(0);
+                DoubleExpression translateY = new ReadOnlyDoubleWrapper(0);
+                
                 @Override
                 @OnThread(Tag.FXPlatform)
                 public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
@@ -167,10 +180,27 @@ public abstract class DataDisplay extends GridArea
                     double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
                     double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
                     
-                    double lastY = Math.max(y, rowBounds.getItemCoord(Utility.boxRow(getLastDataDisplayRowIncl() - CellPosition.row(1))));
+                    double lastY = rowBounds.getItemCoord(Utility.boxRow(getLastDataDisplayRowIncl() - CellPosition.row(1)));
+                    
+                    // We are pinned when y is less than 0 but less than lastY:
+                    if (lastY < 0)
+                    {
+                        y = lastY;
+                        translateFactor.set(0);
+                    }
+                    else if (y < 0)
+                    {
+                        y = 0;
+                        translateFactor.set(-1);
+                    }
+                    else
+                    {
+                        translateFactor.set(0);
+                    }
+                    
                     return Optional.of(new BoundingBox(
                             x,
-                            Math.min(Math.max(0, y), lastY),
+                            y,
                             width,
                             height
                     ));
@@ -193,6 +223,15 @@ public abstract class DataDisplay extends GridArea
                         }
                     });
                     return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
+                }
+
+                @Override
+                public void adjustForContainerTranslation(Node node, Pair<DoubleExpression, DoubleExpression> translateXY)
+                {
+                    translateX = translateXY.getFirst().multiply(translateFactor);
+                    translateY = translateXY.getSecond().multiply(translateFactor);
+                    node.translateXProperty().bind(translateX);
+                    node.translateYProperty().bind(translateY);
                 }
             };
             // Item for column type:

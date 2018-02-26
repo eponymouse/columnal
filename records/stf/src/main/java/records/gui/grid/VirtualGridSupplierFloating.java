@@ -3,6 +3,7 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
+import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -45,7 +46,8 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
                 if (!item.getValue().isPresent())
                 {
                     Pair<ViewOrder, Node> itemAndOrder = item.getKey().makeCell();
-                    containerChildren.add(itemAndOrder.getSecond(), itemAndOrder.getFirst());
+                    Pair<DoubleExpression, DoubleExpression> translateXY = containerChildren.add(itemAndOrder.getSecond(), itemAndOrder.getFirst());
+                    item.getKey().adjustForContainerTranslation(itemAndOrder.getSecond(), translateXY);
                     item.setValue(Optional.of(itemAndOrder.getSecond()));
                 }
                 // Now that there's a cell there, locate it:
@@ -82,5 +84,9 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
         
         public Pair<ViewOrder, Node> makeCell();
+        
+        public default void adjustForContainerTranslation(Node item, Pair<DoubleExpression, DoubleExpression> translateXY)
+        {
+        }
     }
 }

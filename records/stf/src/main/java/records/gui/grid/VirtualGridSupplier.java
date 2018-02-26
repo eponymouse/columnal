@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformSupplier;
+import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -54,7 +56,9 @@ public abstract class VirtualGridSupplier<T extends Node>
     @OnThread(Tag.FXPlatform)
     public static interface ContainerChildren
     {
-        public void add(Node node, ViewOrder viewOrder);
+        // Returns a pair of the translate-X and translate-Y for the container,
+        // so you can fight against it if you want to be properly pinned.
+        public Pair<DoubleExpression, DoubleExpression> add(Node node, ViewOrder viewOrder);
         
         public void remove(Node node);
     }

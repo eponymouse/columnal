@@ -6,8 +6,8 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UnknownIfUserIndex;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -31,7 +31,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -52,12 +51,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
@@ -774,7 +770,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public void add(Node node, ViewOrder viewOrder)
+        public Pair<DoubleExpression, DoubleExpression> add(Node node, ViewOrder viewOrder)
         {
             // Need to insert at right place:
             // Children are kept sorted by view order:
@@ -783,6 +779,7 @@ public class VirtualGrid implements ScrollBindable
                 insertionIndex += 1;
             getChildren().add(insertionIndex, node);
             viewOrders.add(insertionIndex, viewOrder);
+            return new Pair<>(translateXProperty(), translateYProperty());
         }
 
         @Override

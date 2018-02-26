@@ -83,3 +83,7 @@
     -fx-text-fill: grey(40%);
     -fx-font-size: 20pt;
 }
+
+.view {
+    -fx-background-color: $table-empty-background;
+}
