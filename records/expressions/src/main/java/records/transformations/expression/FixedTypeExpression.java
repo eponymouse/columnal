@@ -9,6 +9,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
@@ -84,19 +85,19 @@ public class FixedTypeExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         try
         {
             return "@type {|" + type.eitherInt(
                 text -> "@incomplete \"" + GrammarUtility.escapeChars(text)+ "\"",
-                t -> t.save(new OutputBuilder()).toString()) + "|} " + inner.save(BracketedStatus.MISC);
+                t -> t.save(new OutputBuilder()).toString()) + "|} " + inner.save(BracketedStatus.MISC, renames);
         }
         catch (InternalException e)
         {
             Utility.report(e);
             // Not much else we can do:
-            return inner.save(BracketedStatus.MISC);
+            return inner.save(BracketedStatus.MISC, renames);
         }
     }
 
@@ -113,7 +114,7 @@ public class FixedTypeExpression extends NonOperatorExpression
         {
             Log.log(e);
             // Not much else we can do:
-            return StyledString.s(inner.save(BracketedStatus.MISC));
+            return StyledString.s(inner.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
         }
     }
     

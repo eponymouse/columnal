@@ -131,7 +131,7 @@ public class TestStructuredTextField extends ApplicationTest
         VirtualGrid virtualGrid = new VirtualGrid(null);
         VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
         virtualGrid.addNodeSupplier(columnHeaderSupplier);
-        dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), columnHeaderSupplier)
+        dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), null, columnHeaderSupplier)
         {
             @Override
             public int getCurrentKnownRows()

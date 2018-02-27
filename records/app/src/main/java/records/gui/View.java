@@ -31,6 +31,7 @@ import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.FullSaver;
 import records.data.TableId;
@@ -126,7 +127,7 @@ public class View extends StackPane
             {
                 if (it.hasNext())
                 {
-                    it.next().save(dest, this);
+                    it.next().save(dest, this, TableAndColumnRenames.EMPTY);
                 }
                 else
                 {
@@ -810,7 +811,7 @@ public class View extends StackPane
         dialog.showAndWait().ifPresent(t -> {
             //if (replaceOnOK != null)
             //    overlays.remove(replaceOnOK);
-            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));
+            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position), TableAndColumnRenames.EMPTY)));
         });
         currentlyShowingEditTransformationDialog = null;
     }

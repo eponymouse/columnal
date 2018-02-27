@@ -1,7 +1,6 @@
 package records.data;
 
 import annotation.qual.Value;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -32,18 +31,18 @@ public abstract class Transformation extends Table
 
     @Override
     @OnThread(Tag.Simulation)
-    public final void save(@Nullable File destination, Saver then)
+    public final void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
         // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
-        b.t(MainLexer.TRANSFORMATION).id(getId()).id(getTransformationName()).nl();
+        b.t(MainLexer.TRANSFORMATION).id(renames.tableId(getId())).id(getTransformationName()).nl();
         b.t(MainLexer.SOURCE);
         for (TableId src : getSources())
-            b.id(src);
+            b.id(renames.tableId(src));
         b.nl();
-        b.inner(() -> saveDetail(destination));
+        b.inner(() -> saveDetail(destination, renames));
         savePosition(b);
-        b.end().id(getId()).nl();
+        b.end().id(renames.tableId(getId())).nl();
         then.saveTable(b.toString());
     }
 
@@ -52,7 +51,7 @@ public abstract class Transformation extends Table
     protected abstract String getTransformationName();
 
     @OnThread(Tag.Any)
-    protected abstract List<String> saveDetail(@Nullable File destination);
+    protected abstract List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames);
 
     // hashCode and equals must be implemented properly (used for testing).
     // To make sure we don't forget, we introduce abstract methods which must
@@ -100,7 +99,7 @@ public abstract class Transformation extends Table
             {
                 b.append(typeSrc);
             }
-        });
+        }, TableAndColumnRenames.EMPTY);
         return b.toString();
     }
 
@@ -108,7 +107,7 @@ public abstract class Transformation extends Table
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations(null, c -> null, c -> null, null, null, null);
+        return new TableOperations(getManager().getRenameTableOperation(this), null, c -> null, c -> null, null, null, null);
     }
 
     @Override

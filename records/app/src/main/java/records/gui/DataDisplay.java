@@ -20,6 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -39,6 +40,7 @@ import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
@@ -69,7 +71,7 @@ public abstract class DataDisplay extends GridArea
 
     protected final SimpleObjectProperty<ImmutableList<CellStyle>> cellStyles = new SimpleObjectProperty<>(ImmutableList.of());
     
-    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, VirtualGridSupplierFloating floatingItems)
+    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
     {
         super(messageWhenEmpty);
         this.floatingItems = floatingItems;
@@ -96,6 +98,18 @@ public abstract class DataDisplay extends GridArea
               {
                   ErrorableTextField<TableId> tableNameField = new TableNameTextField(tableManager, initialTableName);
                   tableNameField.sizeToFit(30.0, 30.0);
+                  if (renameTable == null)
+                  {
+                      tableNameField.setEditable(false);
+                  }
+                  else
+                  {
+                      @NonNull FXPlatformConsumer<TableId> renameTableFinal = renameTable;
+                      tableNameField.addOnFocusLoss(newTableId -> {
+                          if (newTableId != null)
+                              renameTableFinal.consume(newTableId);
+                      });
+                  }
                   BorderPane borderPane = new BorderPane(tableNameField.getNode());
                   borderPane.getStyleClass().add("table-display-table-title");
                   BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);

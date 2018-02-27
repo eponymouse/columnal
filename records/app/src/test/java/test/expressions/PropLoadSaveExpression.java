@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 import records.data.Table;
+import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -52,7 +53,7 @@ public class PropLoadSaveExpression
     {
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
         assertEquals(expression, edited);
-        assertEquals(expression.save(BracketedStatus.MISC), edited.save(BracketedStatus.MISC));
+        assertEquals(expression.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
     }
 
     @Property(trials = 1000)
@@ -70,11 +71,11 @@ public class PropLoadSaveExpression
 
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
-        String saved = expression.save(BracketedStatus.MISC);
+        String saved = expression.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
         Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
-        String resaved = reloaded.save(BracketedStatus.MISC);
+        String resaved = reloaded.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);
 
     }

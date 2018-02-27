@@ -16,6 +16,7 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
@@ -91,7 +92,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public String save(BracketedStatus surround)
+        public String save(BracketedStatus surround, TableAndColumnRenames renames)
         {
             return "Testing";
         }
@@ -411,7 +412,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public String save(BracketedStatus surround)
+        public String save(BracketedStatus surround, TableAndColumnRenames renames)
         {
             return "Testing";
         }

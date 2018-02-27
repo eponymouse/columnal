@@ -5,9 +5,6 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.units.TableColIndex;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Bounds;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -20,12 +17,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser.DisplayContext;
-import records.grammar.MainParser.ItemContext;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
@@ -33,11 +28,7 @@ import utility.gui.TranslationUtility;
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -183,7 +174,7 @@ public abstract class Table
     }
 
     @OnThread(Tag.Simulation)
-    public abstract void save(@Nullable File destination, Saver then);
+    public abstract void save(@Nullable File destination, Saver then, TableAndColumnRenames renames);
 
     @OnThread(Tag.FXPlatform)
     public synchronized void setDisplay(TableDisplayBase display)

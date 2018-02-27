@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -7,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.Saver;
+import records.data.TableOperations.RenameTable;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -17,7 +19,9 @@ import records.grammar.MainParser.FileContext;
 import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.GraphUtility;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -26,7 +30,6 @@ import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -126,30 +129,7 @@ public class TableManager
         int total = file.table().size();
         for (TableContext tableContext : file.table())
         {
-            if (tableContext.dataSource() != null)
-            {
-                try
-                {
-                    loaded.add(DataSource.loadOne(this, tableContext));
-                }
-                catch (InternalException | UserException e)
-                {
-                    Log.log(e);
-                    exceptions.add(e);
-                }
-            }
-            else if (tableContext.transformation() != null)
-            {
-                try
-                {
-                    loaded.add(transformationLoader.loadOne(this, tableContext));
-                }
-                catch (InternalException | UserException e)
-                {
-                    Log.log(e);
-                    exceptions.add(e);
-                }
-            }
+            loadOneTable(tableContext).either_(exceptions::add, loaded::add);
         }
 
         if (exceptions.isEmpty())
@@ -160,6 +140,36 @@ public class TableManager
             throw new InternalException("Loading problem", exceptions.get(0));
         else
             throw new InternalException("Unrecognised exception", exceptions.get(0));
+    }
+
+    @OnThread(Tag.Simulation)
+    public Either<Exception, Table> loadOneTable(TableContext tableContext)
+    {
+        if (tableContext.dataSource() != null)
+        {
+            try
+            {
+                return Either.right(DataSource.loadOne(this, tableContext));
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                return Either.left(e);
+            }
+        }
+        else if (tableContext.transformation() != null)
+        {
+            try
+            {
+                return Either.right(transformationLoader.loadOne(this, tableContext));
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                return Either.left(e);
+            }
+        }
+        return Either.left(new UserException("Unknown table type"));
     }
 
     public TypeManager getTypeManager()
@@ -212,7 +222,7 @@ public class TableManager
         {
             for (Table table : tables.tables)
             {
-                table.save(destination, saver);
+                table.save(destination, saver, TableAndColumnRenames.EMPTY);
             }
         }
     }
@@ -237,15 +247,16 @@ public class TableManager
      *
      * @param affectedTableId The TableId which is affected, i.e. the table for which all dependents will need to be re-run
      * @param makeReplacement If null, existing table will be
-     *                        left untouched and only its dependents re-run.  If non-null,
+     *                        left untouched (apart from renames) and only its dependents re-run.  If non-null,
      *                        the table will be replaced by output
-     *                        of this supplier.
+     *                        of this supplier (and its dependents re-run).
+     * @param renames         The tables to rename, and columns within them to rename if you use a reference to them.
      *
      * @throws InternalException
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public void edit(@Nullable TableId affectedTableId, @Nullable SimulationSupplier<? extends Table> makeReplacement) throws InternalException, UserException
+    public void edit(@Nullable TableId affectedTableId, @Nullable SimulationSupplier<? extends Table> makeReplacement, TableAndColumnRenames renames) throws InternalException, UserException
     {
         Map<TableId, List<TableId>> edges = new HashMap<>();
         HashSet<TableId> affected = new HashSet<>();
@@ -277,8 +288,8 @@ public class TableManager
         {
             for (int i = processFrom; i < linearised.size(); i++)
             {
-                // Don't include the original changed transformation itself:
-                if (!affected.contains(linearised.get(i)))
+                // Don't include the original changed transformation itself, unless it got renamed:
+                if (!affected.contains(linearised.get(i)) || renames.isRenamingTableId(linearised.get(i)))
                 {
                     // Add job:
                     toSave.incrementAndGet();
@@ -295,7 +306,7 @@ public class TableManager
                                 savedToReRun.complete(reRun);
                             }
                         }
-                    });
+                    }, renames);
                 }
             }
         }
@@ -309,7 +320,7 @@ public class TableManager
             synchronized (this)
             {
                 if (affectedTableId != null)
-                    removeAndSerialise(affectedTableId, new Table.BlankSaver());
+                    removeAndSerialise(affectedTableId, new Table.BlankSaver(), renames);
             }
             record(makeReplacement.get());
         }
@@ -324,7 +335,7 @@ public class TableManager
      * in the given Saver.
      */
     @OnThread(Tag.Simulation)
-    private void removeAndSerialise(TableId tableId, @Nullable Saver then)
+    private void removeAndSerialise(TableId tableId, @Nullable Saver then, TableAndColumnRenames renames)
     {
         Log.normalStackTrace("Removing table " + tableId + (then == null ? " permanently" : " as part of edit"), 3);
         Table removed = null;
@@ -362,7 +373,7 @@ public class TableManager
         {
             listener.removeTable(removed, remainingCount);
             if (then != null)
-                removed.save(null, then);
+                removed.save(null, then, renames);
         }
     }
     
@@ -370,7 +381,7 @@ public class TableManager
     @OnThread(Tag.Simulation)
     public void remove(TableId tableId)
     {
-        removeAndSerialise(tableId, null);
+        removeAndSerialise(tableId, null, TableAndColumnRenames.EMPTY);
     }
 
     /**
@@ -385,9 +396,8 @@ public class TableManager
         for (String script : scripts)
         {
             FXUtility.alertOnError_(() -> {
-                Transformation transformation = transformationLoader.loadOne(this, script);
+                loadOneTable(Utility.parseAsOne(script, MainLexer::new, MainParser::new, p -> p.table()));
             });
-
         }
     }
 
@@ -409,6 +419,15 @@ public class TableManager
             }
         }
         return !usedIds.containsKey(tableId);
+    }
+
+    public RenameTable getRenameTableOperation(Table table)
+    {
+        return newName -> {
+            FXUtility.alertOnError_(() -> {
+                edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
+            });
+        };
     }
 
     public static interface TableManagerListener

@@ -7,6 +7,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -44,7 +45,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         return Boolean.toString(value);
     }

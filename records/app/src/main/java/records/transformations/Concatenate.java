@@ -2,8 +2,6 @@ package records.transformations;
 
 import annotation.qual.Value;
 import com.google.common.collect.Sets;
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import log.Log;
@@ -16,6 +14,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -268,14 +267,15 @@ public class Concatenate extends TransformationEditable
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         return missingValues.entrySet().stream().map((Entry<@KeyFor("missingValues") ColumnId, Pair<DataType, Optional<@Value Object>>> e) ->
         {
             try
             {
                 OutputBuilder b = new OutputBuilder();
-                b.id(e.getKey()).kw("@TYPE");
+                // TODO this won't deal with renamed columns correctly if they were renamed in previous table:
+                b.id(renames.columnId(getId(), e.getKey())).kw("@TYPE");
                 e.getValue().getFirst().save(b);
                 if (e.getValue().getSecond().isPresent())
                     b.kw("@VALUE").dataValue(e.getValue().getFirst(), e.getValue().getSecond().get());

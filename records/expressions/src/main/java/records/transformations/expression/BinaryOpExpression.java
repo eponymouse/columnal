@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -65,9 +66,9 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = lhs.save(BracketedStatus.MISC) + " " + saveOp() + " " + rhs.save(BracketedStatus.MISC);
+        String inner = lhs.save(BracketedStatus.MISC, renames) + " " + saveOp() + " " + rhs.save(BracketedStatus.MISC, renames);
         if (surround != BracketedStatus.MISC)
             return inner;
         else

@@ -839,13 +839,14 @@ public class TestUtil
             MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved));
             tableManagerAtomicReference.set(new Pair<>(mainWindowActions._test_getTableManager(), mainWindowActions._test_getVirtualGrid()));
         }));
+        // Wait until individual tables are actually loaded:
         return () -> {
             do
             {
                 //System.err.println("Waiting for main window");
                 sleep(1000);
             }
-            while (fx(() -> windowToUse.getScene().lookup(".virt-grid")) == null);
+            while (fx(() -> windowToUse.getScene().lookup(".table-display-table-title")) == null);
             return tableManagerAtomicReference.get();
         };
     }

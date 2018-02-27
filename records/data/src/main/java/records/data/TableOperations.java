@@ -19,6 +19,7 @@ import java.util.function.Function;
  */
 public class TableOperations
 {
+    public final @Nullable RenameTable renameTable;
     // TODO have a sum type here for append which allows for a custom GUI operation
     // so that if it's e.g. a linked table, you can click add and get a prompt about converting.
     public final @Nullable AppendColumn appendColumn;
@@ -31,8 +32,9 @@ public class TableOperations
     public final @Nullable DeleteRows deleteRows;
 
     @OnThread(Tag.Any)
-    public TableOperations(@Nullable AppendColumn appendColumn, Function<ColumnId, @Nullable RenameColumn> renameColumn, Function<ColumnId, @Nullable DeleteColumn> deleteColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
+    public TableOperations(@Nullable RenameTable renameTable, @Nullable AppendColumn appendColumn, Function<ColumnId, @Nullable RenameColumn> renameColumn, Function<ColumnId, @Nullable DeleteColumn> deleteColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
     {
+        this.renameTable = renameTable;
         this.appendColumn = appendColumn;
         this.renameColumn = renameColumn;
         this.deleteColumn = deleteColumn;
@@ -88,5 +90,11 @@ public class TableOperations
     {
         @OnThread(Tag.Simulation)
         public void deleteRows(int rowIndex, int count);
+    }
+    
+    public static interface RenameTable
+    {
+        @OnThread(Tag.Simulation)
+        public void renameTable(TableId newName);
     }
 }

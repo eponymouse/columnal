@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -92,17 +93,21 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
                 Sort sort = new Sort(dummyManager, new TableId("Sorted"), src.getId(), ImmutableList.of(new ColumnId("B")));
                 sort.loadPosition(transformTopLeft);
                 dummyManager.record(sort);
-                Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(stage, dummyManager).get();
-                this.tableManager = details.getFirst();
-                virtualGrid = details.getSecond();
-                finish.complete(Optional.empty());
+                @OnThread(Tag.Simulation) Supplier<Pair<TableManager, VirtualGrid>> supplier = TestUtil.openDataAsTable(stage, dummyManager);
+                new Thread(() -> {
+                    Pair<TableManager, VirtualGrid> details = supplier.get();
+                    this.tableManager = details.getFirst();
+                    virtualGrid = details.getSecond();
+                    finish.complete(Optional.empty());
+                    Platform.runLater(() -> com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
+                }).start();
             }
             catch (Exception e)
             {
                 Log.log(e);
                 finish.complete(Optional.of(e));
+                Platform.runLater(() -> com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
             }
-            Platform.runLater(() -> com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
         });
         com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(finish);
         //assertNull(finish.get(5, TimeUnit.SECONDS).orElse(null));
@@ -112,7 +117,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(0, originalColumns));
-        clickOnItemInBounds(lookup(".table-display-table-title"), virtualGrid, rectangleBounds);
+        clickOnItemInBounds(lookup(".table-display-table-title .text-field"), virtualGrid, rectangleBounds);
         deleteAll();
         write(newTableId.getRaw());
         // Different ways of exiting:
@@ -121,6 +126,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         Bounds headerBox = virtualGrid._test_getRectangleBoundsScreen(rectangleBounds);
         clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
 
+        // Renaming involves thread hopping, so wait for a bit:
+        TestUtil.sleep(1000);
+        
         assertEquals(ImmutableSet.of("Sorted", newTableId.getRaw()), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
     }
          
@@ -128,7 +136,8 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     private void deleteAll()
     {
         press(KeyCode.END);
-        press(KeyCode.SHIFT, KeyCode.HOME);
+        // TODO: ain't gonna work on Mac
+        press(KeyCode.CONTROL, KeyCode.A);
         press(KeyCode.DELETE);
     }
 }

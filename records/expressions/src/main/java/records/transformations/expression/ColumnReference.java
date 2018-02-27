@@ -11,6 +11,7 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -130,9 +131,10 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@wholecolumn " : "@column ") + OutputBuilder.quotedIfNecessary(columnName.getOutput());
+        return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@wholecolumn " : "@column ")
+            + OutputBuilder.quotedIfNecessary(renames.columnId(tableName, columnName).getOutput());
     }
 
     @Override

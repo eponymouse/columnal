@@ -10,6 +10,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -154,12 +155,12 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (param instanceof TupleExpression)
-            return functionName + param.save(BracketedStatus.MISC);
+            return functionName + param.save(BracketedStatus.MISC, renames);
         else
-            return functionName + "(" + param.save(BracketedStatus.DIRECT_ROUND_BRACKETED) + ")";
+            return functionName + "(" + param.save(BracketedStatus.DIRECT_ROUND_BRACKETED, renames) + ")";
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
@@ -66,7 +67,7 @@ public abstract class NaryOpExpression extends Expression
     public abstract NaryOpExpression copyNoNull(List<@Recorded Expression> replacements);
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         StringBuilder s = new StringBuilder(surround == BracketedStatus.MISC ? "(" : "");
         s.append(getSpecialPrefix());
@@ -74,7 +75,7 @@ public abstract class NaryOpExpression extends Expression
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save(BracketedStatus.MISC));
+            s.append(expressions.get(i).save(BracketedStatus.MISC, renames));
         }
         if (surround == BracketedStatus.MISC)
             s.append(")");

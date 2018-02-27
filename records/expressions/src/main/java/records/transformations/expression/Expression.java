@@ -16,6 +16,7 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -125,7 +126,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();
 
-    public abstract String save(BracketedStatus surround);
+    public abstract String save(BracketedStatus surround, TableAndColumnRenames renames);
 
     public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager) throws UserException, InternalException
     {
@@ -195,9 +196,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitColumnRef(ColumnRefContext ctx)
         {
             TableIdContext tableIdContext = ctx.tableId();
-            if (ctx.columnId() == null)
+            if (tableIdContext == null || ctx.columnId() == null)
                 throw new RuntimeException("Error processing column reference");
-            return new ColumnReference(tableIdContext == null ? null : new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
+            return new ColumnReference(new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
         }
 
         @Override
@@ -468,7 +469,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @Override
     public String toString()
     {
-        return save(BracketedStatus.TOP_LEVEL);
+        return save(BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

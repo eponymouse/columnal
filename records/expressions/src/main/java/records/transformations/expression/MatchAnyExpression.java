@@ -7,6 +7,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -62,7 +63,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "@any";
     }

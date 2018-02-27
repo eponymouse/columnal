@@ -10,6 +10,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
@@ -173,13 +174,13 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         String tag = this.tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
         if (inner == null)
             return tag;
         else
-            return tag + ":" + inner.save(BracketedStatus.MISC);
+            return tag + ":" + inner.save(BracketedStatus.MISC, renames);
     }
 
     @Override

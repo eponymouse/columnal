@@ -1,9 +1,6 @@
 package records.transformations;
 
 import annotation.qual.Value;
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
@@ -27,6 +24,7 @@ import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.NumericColumnStorage;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -662,11 +660,11 @@ public class Sort extends TransformationEditable
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : originalSortBy)
-            b.kw("ASCENDING").id(c).nl();
+            b.kw("ASCENDING").id(renames.columnId(srcTableId, c)).nl();
         return b.toLines();
     }
 

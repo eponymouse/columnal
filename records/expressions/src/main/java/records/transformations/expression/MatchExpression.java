@@ -8,6 +8,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
@@ -109,9 +110,9 @@ public class MatchExpression extends NonOperatorExpression
             return null;
         }
 
-        public String save()
+        public String save(TableAndColumnRenames renames)
         {
-            return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(BracketedStatus.MISC);
+            return " @case " + patterns.stream().map(p -> p.save(renames)).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(BracketedStatus.MISC, renames);
         }
 
         public StyledString toDisplay()
@@ -206,9 +207,9 @@ public class MatchExpression extends NonOperatorExpression
             return newState;
         }
 
-        public String save()
+        public String save(TableAndColumnRenames renames)
         {
-            return pattern.save(BracketedStatus.MISC) + (guard == null ? "" : " @given " + guard.save(BracketedStatus.MISC));
+            return pattern.save(BracketedStatus.MISC, renames) + (guard == null ? "" : " @given " + guard.save(BracketedStatus.MISC, renames));
         }
 
         public StyledString toDisplay()
@@ -287,7 +288,7 @@ public class MatchExpression extends NonOperatorExpression
                 return clause.outcome.getValue(rowIndex, newState);
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(BracketedStatus.MISC) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");
     }
 
     @Override
@@ -297,9 +298,9 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = "@match " + expression.save(BracketedStatus.MISC) + clauses.stream().map(c -> c.save()).collect(Collectors.joining(""));
+        String inner = "@match " + expression.save(BracketedStatus.MISC, renames) + clauses.stream().map(c -> c.save(renames)).collect(Collectors.joining(""));
         return (surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : ("(" + inner + ")");
     }
 

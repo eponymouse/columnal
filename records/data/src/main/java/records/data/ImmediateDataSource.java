@@ -42,19 +42,19 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then)
+    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
     {
         //dataSourceImmedate : DATA tableId BEGIN NEWLINE;
         //immediateDataLine : ITEM+ NEWLINE;
         //dataSource : (dataSourceLinkHeader | (dataSourceImmedate immediateDataLine* END DATA NEWLINE)) dataFormat;
 
         OutputBuilder b = new OutputBuilder();
-        b.t(MainLexer.DATA).id(getId()).t(MainLexer.FORMAT).begin().nl();
+        b.t(MainLexer.DATA).id(renames.tableId(getId())).t(MainLexer.FORMAT).begin().nl();
         FXUtility.alertOnError_(() ->
         {
             for (Column c : data.getColumns())
             {
-                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getName());
+                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(renames.columnId(getId(), c.getName()));
                 c.getType().save(b);
 
                 @Nullable @Value Object defaultValue = c.getDefaultValue();
@@ -79,14 +79,14 @@ public class ImmediateDataSource extends DataSource
         });
         b.end().t(MainLexer.VALUES).nl();
         savePosition(b);
-        b.end().id(getId()).nl();
+        b.end().id(renames.tableId(getId())).nl();
         then.saveTable(b.toString());
     }
 
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations((newColumnName, newColumnType, defaultValue) -> {
+        return new TableOperations(getManager().getRenameTableOperation(this), (newColumnName, newColumnType, defaultValue) -> {
             FXUtility.alertOnError_(() -> {
                 @MonotonicNonNull ColumnId name = newColumnName;
                 if (name == null)

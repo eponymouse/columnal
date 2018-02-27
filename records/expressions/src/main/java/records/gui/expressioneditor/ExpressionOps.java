@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
@@ -317,9 +318,9 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public String save(Expression child)
+    public String save(Expression child, TableAndColumnRenames renames)
     {
-        return child.save(BracketedStatus.MISC);
+        return child.save(BracketedStatus.MISC, renames);
     }
 
     @Override

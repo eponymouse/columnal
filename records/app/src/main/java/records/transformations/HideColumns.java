@@ -1,33 +1,14 @@
 package records.transformations;
 
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.css.PseudoClass;
-import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.TransferMode;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -47,19 +28,13 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.DeletableListView;
-import utility.gui.FXUtility;
-import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;
-import utility.gui.SlidableListCell;
-import utility.gui.SmallDeleteButton;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -178,11 +153,11 @@ public class HideColumns extends TransformationEditable
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : hideIds)
-            b.kw("HIDE").id(c).nl();
+            b.kw("HIDE").id(renames.columnId(getId(), c)).nl();
         return b.toLines();
     }
 

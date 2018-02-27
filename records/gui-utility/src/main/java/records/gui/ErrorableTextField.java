@@ -23,6 +23,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -149,6 +150,22 @@ public class ErrorableTextField<T>
     public void sizeToFit(@Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused)
     {
         FXUtility.sizeToFit(field, minSizeFocused, minSizeUnfocused);
+    }
+
+    public void setEditable(boolean editable)
+    {
+        field.setEditable(editable);
+    }
+
+    // When focus is lost from field, the given item is called with the new value 
+    public void addOnFocusLoss(FXPlatformConsumer<@Nullable T> updateValue)
+    {
+        FXUtility.addChangeListenerPlatformNN(field.focusedProperty(), focused -> {
+            if (!focused)
+            {
+                updateValue.consume(value.get());
+            }
+        });
     }
 
     public static class ConversionResult<T>

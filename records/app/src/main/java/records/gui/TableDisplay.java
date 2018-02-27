@@ -26,6 +26,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
@@ -33,12 +34,14 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.RecordSet.RecordSetListener;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations.AppendColumn;
+import records.data.TableOperations.RenameTable;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -395,7 +398,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, VirtualGridSupplierFloating columnHeaderSupplier, Table table)
     {
-        super(parent.getManager(), table.getId(), table.getDisplayMessageWhenEmpty(), columnHeaderSupplier);
+        super(parent.getManager(), table.getId(), table.getDisplayMessageWhenEmpty(), renameTableSim(table), columnHeaderSupplier);
         this.parent = parent;
         this.table = table;
         Either<StyledString, RecordSet> recordSetOrError;
@@ -439,7 +442,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         });
         this.onModify = () -> {
             parent.modified();
-            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, TableAndColumnRenames.EMPTY)));
         };
 
         this.dataSelectionLimits = new TableSelectionLimits()
@@ -490,6 +493,17 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
+    }
+
+    public static @Nullable FXPlatformConsumer<TableId> renameTableSim(Table table)
+    {
+        @Nullable RenameTable renameTable = table.getOperations().renameTable;
+        if (renameTable == null)
+            return null;
+        @NonNull RenameTable renameTableFinal = renameTable;
+        return newName -> {
+            Workers.onWorkerThread("Renaming table", Priority.SAVE_ENTRY, () -> renameTableFinal.renameTable(newName));
+        };
     }
 
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table, RecordSet recordSet)

@@ -2,6 +2,7 @@ package test.expressions;
 
 import org.junit.Test;
 import records.data.ColumnId;
+import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -113,6 +114,6 @@ public class TestLoadSaveExpression
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
         assertEquals(expression, Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
-        assertEquals(src, expression.save(BracketedStatus.TOP_LEVEL));
+        assertEquals(src, expression.save(BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY));
     }
 }

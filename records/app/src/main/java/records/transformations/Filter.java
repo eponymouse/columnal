@@ -1,8 +1,6 @@
 package records.transformations;
 
 import annotation.qual.Value;
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -37,6 +35,7 @@ import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.NumericColumnStorage;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -222,9 +221,9 @@ public class Filter extends TransformationEditable
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return Collections.singletonList(PREFIX + " " + filterExpression.save(BracketedStatus.MISC));
+        return Collections.singletonList(PREFIX + " " + filterExpression.save(BracketedStatus.MISC, renames));
     }
 
     @Override

@@ -1,10 +1,7 @@
 package records.transformations;
 
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -23,6 +20,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -533,20 +531,20 @@ public class SummaryStatistics extends TransformationEditable
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
         for (Pair<ColumnId, Expression> entry : summaries)
         {
             b.kw("SUMMARY");
-            b.id(entry.getFirst());
+            b.id(renames.columnId(getId(), entry.getFirst()));
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
-            b.raw(entry.getSecond().save(BracketedStatus.MISC));
+            b.raw(entry.getSecond().save(BracketedStatus.MISC, renames));
             b.nl();
         }
         for (ColumnId c : splitBy)
         {
-            b.kw("SPLIT").id(c).nl();
+            b.kw("SPLIT").id(renames.columnId(srcTableId, c)).nl();
         }
         return b.toLines();
     }

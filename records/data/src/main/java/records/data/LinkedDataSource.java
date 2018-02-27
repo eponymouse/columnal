@@ -37,11 +37,11 @@ public abstract class LinkedDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then)
+    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then, TableAndColumnRenames renames)
     {
         //dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
         OutputBuilder b = new OutputBuilder();
-        b.t(MainLexer.DATA).id(getId()).t(MainLexer.LINKED).t(this.typeToken);
+        b.t(MainLexer.DATA).id(renames.tableId(getId())).t(MainLexer.LINKED).t(this.typeToken);
         Path path = this.path.toPath();
         if (destination != null)
         {
@@ -63,7 +63,7 @@ public abstract class LinkedDataSource extends DataSource
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
         // TODO prompt to transform to non-linked table
-        return new TableOperations(null, c -> null, c -> null, null, null, null);
+        return new TableOperations(null, null, c -> null, c -> null, null, null, null);
     }
 
     @Override

@@ -2,7 +2,6 @@ package records.transformations;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.scene.layout.Pane;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -12,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
@@ -37,7 +37,6 @@ import records.transformations.expression.TypeState;
 import records.types.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
-import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -45,7 +44,6 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -53,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -196,13 +193,13 @@ public class Transform extends TransformationEditable
     }
 
     @Override
-    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         return newColumns.stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
-            b.kw("CALCULATE").id(entry.getFirst());
+            b.kw("CALCULATE").id(renames.columnId(getId(), entry.getFirst()));
             b.kw("@EXPRESSION");
-            b.raw(entry.getSecond().save(BracketedStatus.MISC));
+            b.raw(entry.getSecond().save(BracketedStatus.MISC, renames.withDefaultTableId(srcTableId)));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }
@@ -221,26 +218,12 @@ public class Transform extends TransformationEditable
         // Renames and deletes are valid, if they refer to
         // columns derived from us.
         // TODO allow renames backwards through dependencies
-        return new TableOperations(null, renameId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(renameId)) ? this::renameColumn : null, deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
+        return new TableOperations(getManager().getRenameTableOperation(this), null, c -> null, deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
     }
 
     private void deleteColumn(ColumnId columnId)
     {
         //TODO
-    }
-
-    private void renameColumn(ColumnId oldColumnId, ColumnId newColumnId)
-    {
-        FXUtility.alertOnError_(() -> {
-            getManager().edit(getId(), () -> {
-                return new Transform(getManager(), getId(), srcTableId, Utility.mapListI(newColumns, p -> {
-                    if (p.getFirst().equals(oldColumnId))
-                        return new Pair<>(newColumnId, p.getSecond());
-                    else
-                        return p;
-                }));
-            });
-        });
     }
 
     @Override

@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.jetbrains.annotations.NotNull;
+import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -572,7 +573,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
                 {
                     @SuppressWarnings("recorded")
                     EXPRESSION saved = ((OperandNode<EXPRESSION, SEMANTIC_PARENT>) child).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
-                    return operations.save(saved);
+                    return operations.save(saved, TableAndColumnRenames.EMPTY);
                 }
             }), startIsOperator);
     }

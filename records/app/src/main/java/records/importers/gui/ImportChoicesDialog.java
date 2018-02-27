@@ -391,7 +391,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
         {
-            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), destColumnHeaderSupplier);
+            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), null, destColumnHeaderSupplier);
             this.destRecordSet = destRecordSet;
             currentKnownRows = 0;
         }
@@ -464,7 +464,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
         {
-            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), srcColumnHeaderSupplier);
+            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), null, srcColumnHeaderSupplier);
             this.srcInfo = srcInfo;
         }
 

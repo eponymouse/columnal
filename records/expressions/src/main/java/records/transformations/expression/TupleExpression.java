@@ -9,6 +9,7 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -127,9 +128,9 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public String save(BracketedStatus surround)
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "(" + members.stream().map(e -> e.save(BracketedStatus.MISC)).collect(Collectors.joining(", ")) + ")";
+        return "(" + members.stream().map(e -> e.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override
