@@ -53,9 +53,9 @@ public class TableAndColumnRenames
         return new TableAndColumnRenames(tableId, renames);
     }
 
+    // Are we renaming the given table, or any of its columns?
     public boolean isRenamingTableId(TableId tableId)
     {
-        Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>> info = renames.get(tableId);
-        return info != null && info.getFirst() != null;
+        return renames.containsKey(tableId);
     }
 }

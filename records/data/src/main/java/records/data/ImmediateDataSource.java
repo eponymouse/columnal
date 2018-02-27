@@ -106,9 +106,8 @@ public class ImmediateDataSource extends DataSource
                 data.addColumn(newColumnType.makeImmediateColumn(name, defaultValue));
             });
             // All columns in ImmediateDataSource can be renamed:
-        }, _c -> null /*((oldColumnName, newColumnName) -> {
-            data.renameColumn(oldColumnName, newColumnName);
-        })*/, _c -> new DeleteColumn()
+        }, oldId -> getManager().getRenameColumnOperation(this, oldId)
+        , _c -> new DeleteColumn()
         {
             @Override
             public @OnThread(Tag.Simulation) void deleteColumn(ColumnId deleteColumnName)

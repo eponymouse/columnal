@@ -28,6 +28,7 @@ import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
+import records.data.TableOperations.RenameColumn;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
@@ -224,6 +225,18 @@ public abstract class DataDisplay extends GridArea
                 {
                     ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
                     textField.sizeToFit(30.0, 30.0);
+                    @Nullable FXPlatformConsumer<ColumnId> renameColumn = column.getRenameColumn();
+                    if (renameColumn == null)
+                        textField.setEditable(false);
+                    else
+                    {
+                        @NonNull FXPlatformConsumer<ColumnId> renameColumnFinal = renameColumn;
+                        textField.addOnFocusLoss(newColumnId -> {
+                            if (newColumnId != null)
+                                renameColumnFinal.consume(newColumnId);
+                        });
+                    }
+                    
                     BorderPane borderPane = new BorderPane(textField.getNode());
                     borderPane.getStyleClass().add("table-display-column-title");
                     BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);

@@ -747,7 +747,7 @@ public class GuessFormat
                 if (charsetChoice == null)
                     return null;
                 else
-                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), DataType.TEXT, columnHandler)), Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0));
+                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), DataType.TEXT, null, columnHandler)), Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0));
             }).showAndWait().ifPresent(then);
         });
         System.err.println(choicePoints);
@@ -868,7 +868,7 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImporter.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), () -> CellPosition.ORIGIN, null), null, null);
+                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), c -> null, () -> CellPosition.ORIGIN, null), null, null);
                 });
             }
             catch (IOException | InternalException | UserException e)

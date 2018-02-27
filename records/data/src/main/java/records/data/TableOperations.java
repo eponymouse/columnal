@@ -55,8 +55,9 @@ public class TableOperations
     @FunctionalInterface
     public static interface RenameColumn
     {
+        // Don't need old column name because that will have already been passed:
         @OnThread(Tag.Simulation)
-        public void renameColumn(ColumnId oldColumnName, ColumnId newColumnName);
+        public void renameColumn(ColumnId newColumnName);
     }
 
     // Delete column (only available if this is source of the column)

@@ -8,6 +8,8 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
@@ -34,6 +36,7 @@ import records.gui.grid.VirtualGrid;
 import records.transformations.Sort;
 import test.DummyManager;
 import test.TestUtil;
+import test.gen.GenColumnId;
 import test.gen.GenTableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -43,10 +46,12 @@ import utility.Workers;
 import utility.Workers.Priority;
 
 import java.awt.Toolkit;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -90,7 +95,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new EditableRecordSet(columns, () -> 3));
                 src.loadPosition(originalTableTopLeft);
                 dummyManager.record(src);
-                Sort sort = new Sort(dummyManager, new TableId("Sorted"), src.getId(), ImmutableList.of(new ColumnId("B")));
+                Sort sort = new Sort(dummyManager, new TableId("Sorted"), src.getId(), ImmutableList.of(new ColumnId("B"), new ColumnId("A")));
                 sort.loadPosition(transformTopLeft);
                 dummyManager.record(sort);
                 @OnThread(Tag.Simulation) Supplier<Pair<TableManager, VirtualGrid>> supplier = TestUtil.openDataAsTable(stage, dummyManager);
@@ -128,8 +133,28 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
 
         // Renaming involves thread hopping, so wait for a bit:
         TestUtil.sleep(1000);
-        
+
         assertEquals(ImmutableSet.of("Sorted", newTableId.getRaw()), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
+    }
+
+    @Property(trials = 3)
+    public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
+    {
+        RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
+        clickOnItemInBounds(lookup(".table-display-column-title .text-field").lookup((Predicate<Node>) n -> ((TextField)n).getText().equals("A")), virtualGrid, rectangleBounds);
+        deleteAll();
+        write(newColumnId.getRaw());
+        // Different ways of exiting:
+
+        // Click on right-hand end of table header:
+        Bounds headerBox = virtualGrid._test_getRectangleBoundsScreen(rectangleBounds);
+        clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
+
+        // Renaming involves thread hopping, so wait for a bit:
+        TestUtil.sleep(1000);
+
+        // Fetch the sorted transformation and check the column names (checks rename, and propagation):
+        assertEquals(ImmutableSet.<ColumnId>of(new ColumnId("B"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(new TableId("Sorted")).getData().getColumnIds()));
     }
          
 

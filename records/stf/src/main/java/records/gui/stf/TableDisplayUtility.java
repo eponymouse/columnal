@@ -68,7 +68,7 @@ import java.util.function.Predicate;
 public class TableDisplayUtility
 {
 
-    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformSupplier<CellPosition> getTablePos, @Nullable FXPlatformRunnable onModify)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformFunction<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, FXPlatformSupplier<CellPosition> getTablePos, @Nullable FXPlatformRunnable onModify)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
         @TableColIndex int displayColumnIndex = Table.relativeCol(0);
@@ -80,13 +80,13 @@ public class TableDisplayUtility
                 ColumnDetails item;
                 try
                 {
-                    item = getDisplay(displayColumnIndex, col, getTablePos, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
+                    item = getDisplay(displayColumnIndex, col, renameColumn.apply(col.getName()), getTablePos, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
                 }
                 catch (InternalException | UserException e)
                 {
                     final @TableColIndex int columnIndexFinal = displayColumnIndex;
                     // Show a dummy column with an error message:
-                    item = new ColumnDetails(col.getName(), DataType.toInfer(), new ColumnHandler()
+                    item = new ColumnDetails(col.getName(), DataType.toInfer(), null, new ColumnHandler()
                     {
                         @Override
                         public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
@@ -134,9 +134,9 @@ public class TableDisplayUtility
         return r.build();
     }
 
-    private static ColumnDetails getDisplay(@TableColIndex int columnIndex, @NonNull Column column, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static ColumnDetails getDisplay(@TableColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new ColumnDetails(column.getName(), column.getType(), makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
+        return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
             @Override
             protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
             {

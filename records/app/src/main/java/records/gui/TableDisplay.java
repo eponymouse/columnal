@@ -41,6 +41,7 @@ import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations.AppendColumn;
+import records.data.TableOperations.RenameColumn;
 import records.data.TableOperations.RenameTable;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -289,15 +290,29 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
         recordSetOrError.ifRight(recordSet ->
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::getPosition, onModify), table.getOperations(), c -> getExtraColumnActions(c))
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getPosition, onModify), table.getOperations(), c -> getExtraColumnActions(c))
         );
+    }
+
+    private @Nullable FXPlatformConsumer<ColumnId> renameColumn(ColumnId columnId)
+    {
+        return renameColumnForTable(getTable(), columnId);
+    }
+    
+    private static @Nullable FXPlatformConsumer<ColumnId> renameColumnForTable(Table table, ColumnId columnId)
+    {
+        RenameColumn renameColumn = table.getOperations().renameColumn.apply(columnId);
+        if (renameColumn == null)
+            return null;
+        final @NonNull RenameColumn renameColumnFinal = renameColumn;
+        return newColumnId -> Workers.onWorkerThread("Renaming column", Priority.SAVE_ENTRY, () -> renameColumnFinal.renameColumn(newColumnId));
     }
 
     @Override
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
         recordSetOrError.ifRight(recordSet -> 
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::getPosition, onModify), table.getOperations(), c -> getExtraColumnActions(c))
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getPosition, onModify), table.getOperations(), c -> getExtraColumnActions(c))
         );
     }
 
@@ -508,7 +523,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table, RecordSet recordSet)
     {
-        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::getPosition, onModify);
+        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> renameColumnForTable(table, c), this::getPosition, onModify);
         setColumnsAndRows(displayColumns, table.getOperations(), c -> FXUtility.mouse(this).getExtraColumnActions(c));
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -539,7 +554,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
 
         FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), this::getPosition, onModify), table.getOperations(), c -> FXUtility.mouse(this).getExtraColumnActions(c));
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> renameColumnForTable(table, c), this::getPosition, onModify), table.getOperations(), c -> FXUtility.mouse(this).getExtraColumnActions(c));
         });
 
         // Should be done last:

@@ -138,7 +138,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                             @NonNull RecordSet recordSetNonNull = recordSet;
                             Platform.runLater(() -> {
                                 destRecordSet.set(recordSetNonNull);
-                                destData.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), () -> CellPosition.ORIGIN, null), null, null);
+                                destData.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, () -> CellPosition.ORIGIN, null), null, null);
                             });
                         }
                     }
