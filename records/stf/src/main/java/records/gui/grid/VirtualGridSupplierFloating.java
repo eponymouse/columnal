@@ -65,9 +65,10 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
     }
     
-    public final void addItem(FloatingItem item)
+    public final FloatingItem addItem(FloatingItem item)
     {
         items.put(item, Optional.empty());
+        return item;
     }
     
     public final void removeItem(FloatingItem item)

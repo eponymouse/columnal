@@ -201,8 +201,11 @@ public class View extends StackPane
             TableDisplay display = (TableDisplay) t.getDisplay();
             if (display != null)
             {
+                // Call this first so that the nodes are actually removed when we call removeGridArea:
+                display.cleanupFloatingItems();
                 dataCellSupplier.removeGrid(display);
                 mainPane.removeGridArea(display);
+                
             }
             emptyListener.consume(remainingCount == 0);
         });

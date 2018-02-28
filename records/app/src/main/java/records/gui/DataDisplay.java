@@ -66,6 +66,8 @@ public abstract class DataDisplay extends GridArea
     
     private final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
+    private final FloatingItem tableHeaderItem;
+
     // Not final because it may changes if user changes the display item or preview options change:
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
@@ -76,7 +78,7 @@ public abstract class DataDisplay extends GridArea
     {
         super(messageWhenEmpty);
         this.floatingItems = floatingItems;
-        this.floatingItems.addItem(new FloatingItem() {
+        this.floatingItems.addItem(tableHeaderItem = new FloatingItem() {
               @Override
               @OnThread(Tag.FXPlatform)
               public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
@@ -323,6 +325,15 @@ public abstract class DataDisplay extends GridArea
     // to table), not including any append buttons
     @OnThread(Tag.FXPlatform)
     public abstract @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
+
+    public void cleanupFloatingItems()
+    {
+        for (FloatingItem columnHeaderItem : columnHeaderItems)
+        {
+            floatingItems.removeItem(columnHeaderItem);
+        }
+        floatingItems.removeItem(tableHeaderItem);
+    }
 
     private class DestRectangleOverlay extends RectangleOverlayItem
     {

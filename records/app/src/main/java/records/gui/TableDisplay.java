@@ -748,7 +748,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
         };
     }
-    
+
     @OnThread(Tag.FXPlatform)
     private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
     {

@@ -121,6 +121,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     @Property(trials = 3)
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
+        // 2 tables, 2 columns, each with 2 header rows:
+        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(0, originalColumns));
         clickOnItemInBounds(lookup(".table-display-table-title .text-field"), virtualGrid, rectangleBounds);
         deleteAll();
@@ -135,11 +138,17 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         TestUtil.sleep(1000);
 
         assertEquals(ImmutableSet.of("Sorted", newTableId.getRaw()), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
+        // Check we haven't amassed multiple tables during the rename re-runs:
+        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
     }
 
     @Property(trials = 3)
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
+        // 2 tables, 2 columns, each with 2 header rows:
+        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
         clickOnItemInBounds(lookup(".table-display-column-title .text-field").lookup((Predicate<Node>) n -> ((TextField)n).getText().equals("A")), virtualGrid, rectangleBounds);
         deleteAll();
@@ -155,6 +164,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
 
         // Fetch the sorted transformation and check the column names (checks rename, and propagation):
         assertEquals(ImmutableSet.<ColumnId>of(new ColumnId("B"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(new TableId("Sorted")).getData().getColumnIds()));
+        // Check we haven't amassed multiple tables during the rename re-runs:
+        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
     }
          
 
