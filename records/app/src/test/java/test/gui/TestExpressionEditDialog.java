@@ -22,6 +22,7 @@ import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.MemoryBooleanColumn;
 import records.data.RecordSet;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.gui.EditTransformationDialog;
@@ -78,7 +79,7 @@ public class TestExpressionEditDialog extends ApplicationTest implements ScrollT
             (RecordSet rs) -> new MemoryBooleanColumn(rs, new ColumnId("William I"), Collections.emptyList(), false),
             (RecordSet rs) -> new MemoryBooleanColumn(rs, new ColumnId("William II"), Collections.emptyList(), false)
         ), () -> 0);
-        mgr.record(new ImmediateDataSource(mgr, recordSet));
+        mgr.record(new ImmediateDataSource(mgr, new InitialLoadDetails(null, null, null), recordSet));
         TestUtil.openDataAsTable(windowToUse, mgr.getTypeManager(), recordSet);
 
         scrollTo(".id-tableDisplay-menu-button");

@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
@@ -40,7 +41,7 @@ public class GenNonsenseHideColumns extends Generator<Transformation_Mgr>
         try
         {
             DummyManager mgr = new DummyManager();
-            return new Transformation_Mgr(mgr, new HideColumns(mgr, ids.getFirst(), ids.getSecond(), ImmutableList.copyOf(cols)));
+            return new Transformation_Mgr(mgr, new HideColumns(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(cols)));
         }
         catch (InternalException | UserException e)
         {

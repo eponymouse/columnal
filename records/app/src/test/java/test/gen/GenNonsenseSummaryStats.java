@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
@@ -45,7 +46,7 @@ public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
             DummyManager mgr = new DummyManager();
             List<Pair<ColumnId, Expression>> summaries = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness),
                 new CallExpression(mgr.getUnitManager(),"count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness), ColumnReferenceType.WHOLE_COLUMN))));
-            return new Transformation_Mgr(mgr, new SummaryStatistics(mgr, ids.getFirst(), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
+            return new Transformation_Mgr(mgr, new SummaryStatistics(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
         }
         catch (InternalException | UserException e)
         {

@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
@@ -35,7 +36,7 @@ public class GenNonsenseFilter extends Generator<Transformation_Mgr>
             DummyManager mgr = new DummyManager();
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-            return new Transformation_Mgr(mgr, new Filter(mgr, ids.getFirst(), ids.getSecond(), nonsenseExpression));
+            return new Transformation_Mgr(mgr, new Filter(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), nonsenseExpression));
         }
         catch (InternalException | UserException e)
         {

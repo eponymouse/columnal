@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -79,7 +80,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
 
         try
         {
-            return new Transformation_Mgr(mgr, new Concatenate(mgr, ourId, srcIds, missing));
+            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null), srcIds, missing));
         }
         catch (InternalException e)
         {

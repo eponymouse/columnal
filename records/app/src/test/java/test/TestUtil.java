@@ -97,6 +97,7 @@ import static org.junit.Assert.fail;
 public class TestUtil
 {
     public static final @LocalizableKey String EMPTY_KEY = makeEmptyKey();
+    public static final InitialLoadDetails ILD = new InitialLoadDetails(null, null, null);
 
     private static @LocalizableKey String makeEmptyKey()
     {

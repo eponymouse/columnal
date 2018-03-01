@@ -78,10 +78,10 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
-        Table srcData = new ImmediateDataSource(manager, new EditableRecordSet(expressionValue.recordSet));
+        Table srcData = new ImmediateDataSource(manager, TestUtil.ILD, new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
-        Table calculated = new Transform(manager, null, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
+        Table calculated = new Transform(manager, TestUtil.ILD, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
         TestUtil.openDataAsTable(windowToUse, manager).get();

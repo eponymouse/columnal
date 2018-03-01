@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
@@ -205,6 +206,13 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             assertEquals(DataType.toInfer(), columns.get(2).getType());
         }
     }
+    
+    @Property(trials=4)
+    public void testAddColumnAnywhere()
+    {
+        fail("TODO!");
+    }
+    
     
          
 

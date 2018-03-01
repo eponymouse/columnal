@@ -10,6 +10,7 @@ import javafx.scene.control.ScrollPane;
 import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.Table.FullSaver;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
@@ -113,7 +114,7 @@ public class PropLoadSaveTransformation
             {
                 throw new RuntimeException(e);
             }
-            f.complete(Optional.ofNullable(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, original.transformation.getId())));
+            f.complete(Optional.ofNullable(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, new InitialLoadDetails(original.transformation.getId(), null, null))));
         });
         Optional<SimulationSupplier<Transformation>> maker = f.get(10, TimeUnit.SECONDS);
         assertTrue("Not valid after no-op edit: " + original.transformation, maker.isPresent());

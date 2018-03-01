@@ -21,6 +21,7 @@ import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
@@ -93,12 +94,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
-        Table srcData = new ImmediateDataSource(manager, new EditableRecordSet(expressionValue.recordSet));
-        srcData.loadPosition(CellPosition.ORIGIN);
+        Table srcData = new ImmediateDataSource(manager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
-        Table calculated = new Transform(manager, null, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
-        calculated.loadPosition(new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())));
+        InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())), null);
+        Table calculated = new Transform(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
         TestUtil.openDataAsTable(windowToUse, manager).get();
@@ -162,12 +162,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         TableManager manager = srcDataAndMgr.mgr;
         Table srcData = srcDataAndMgr.data.get(0);
-        TestUtil.sim_(() -> srcData.loadPosition(CellPosition.ORIGIN));
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
-        Table calculated = TestUtil.sim(() -> new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName())));
+        InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
+        Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(sortBy.getName())));
         TestUtil.sim(() -> {
-            calculated.loadPosition(new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())));
             manager.record(calculated);
             try
             {

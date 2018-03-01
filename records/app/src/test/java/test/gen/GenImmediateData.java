@@ -11,10 +11,12 @@ import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import test.TestUtil;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -85,7 +87,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 }
 
                 @SuppressWarnings({"keyfor", "units"})
-                ImmediateDataSource dataSource = new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> length));
+                ImmediateDataSource dataSource = new ImmediateDataSource(mgr, TestUtil.ILD, new EditableRecordSet(columns, () -> length));
                 mgr.record(dataSource);
                 tables.add(dataSource);
             }
