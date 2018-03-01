@@ -111,9 +111,9 @@ public class SummaryStatistics extends TransformationEditable
         }
     }
 
-    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> summaries, ImmutableList<ColumnId> splitBy) throws InternalException
+    public SummaryStatistics(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> summaries, ImmutableList<ColumnId> splitBy) throws InternalException
     {
-        super(mgr, thisTableId);
+        super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
         this.summaries = summaries;
@@ -329,7 +329,7 @@ public class SummaryStatistics extends TransformationEditable
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             SummaryContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::summary);
 
@@ -339,7 +339,7 @@ public class SummaryStatistics extends TransformationEditable
                 summaryTypes.add(new Pair<>(new ColumnId(sumType.column.getText()), Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
             ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.toImmutableList());
-            return new SummaryStatistics(mgr, tableId, srcTableId, summaryTypes.build(), splits);
+            return new SummaryStatistics(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);
         }
     }
 
@@ -513,7 +513,7 @@ public class SummaryStatistics extends TransformationEditable
         }
 */
         @Override
-        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
+        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             ImmutableList.Builder<Pair<ColumnId, Expression>> cols = ImmutableList.builder();
@@ -525,7 +525,7 @@ public class SummaryStatistics extends TransformationEditable
                 cols.add(new Pair<>(columnId, col.getSecond().getValue()));
             }
             return () -> {
-                return new SummaryStatistics(mgr, thisTableId, srcId.get(), cols.build(), ImmutableList.copyOf(splitBy));
+                return new SummaryStatistics(mgr, initialLoadDetails, srcId.get(), cols.build(), ImmutableList.copyOf(splitBy));
             };
         }
     }

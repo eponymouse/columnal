@@ -97,9 +97,9 @@ public class Filter extends TransformationEditable
     private boolean typeChecked = false;
 
     @SuppressWarnings("initialization")
-    public Filter(TableManager mgr, @Nullable TableId tableId, TableId srcTableId, Expression filterExpression) throws InternalException
+    public Filter(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression filterExpression) throws InternalException
     {
-        super(mgr, tableId);
+        super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
         this.indexMap = new NumericColumnStorage();
@@ -472,10 +472,10 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            return () -> new Filter(mgr, thisTableId, srcId.get(), expression);
+            return () -> new Filter(mgr, initialLoadDetails, srcId.get(), expression);
         }
 
         @Override
@@ -493,9 +493,9 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            return new Filter(mgr, tableId, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
+            return new Filter(mgr, initialLoadDetails, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
         }
 
         @Override

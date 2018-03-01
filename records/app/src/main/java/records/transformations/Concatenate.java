@@ -85,9 +85,9 @@ public class Concatenate extends TransformationEditable
     private final @Nullable RecordSet recordSet;
 
     @SuppressWarnings("initialization")
-    public Concatenate(TableManager mgr, @Nullable TableId tableId, List<TableId> sources, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals) throws InternalException
+    public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> sources, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals) throws InternalException
     {
-        super(mgr, tableId);
+        super(mgr, initialLoadDetails);
         this.sources = sources;
         this.missingValues = new HashMap<>(missingVals);
 
@@ -350,9 +350,9 @@ public class Concatenate extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId tableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
-            return () -> new Concatenate(mgr, tableId, srcTableIds, missingVals);
+            return () -> new Concatenate(mgr, initialLoadDetails, srcTableIds, missingVals);
         }
 
         @Override
@@ -370,7 +370,7 @@ public class Concatenate extends TransformationEditable
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException
         {
             Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingInstr = new HashMap<>();
             ConcatMissingContext ctx = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.concatMissing());
@@ -387,7 +387,7 @@ public class Concatenate extends TransformationEditable
                 }
                 missingInstr.put(new ColumnId(columnName), instruction);
             }
-            return new Concatenate(mgr, tableId, source, missingInstr);
+            return new Concatenate(mgr, initialLoadDetails, source, missingInstr);
         }
 
         @Override

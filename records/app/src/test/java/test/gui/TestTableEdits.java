@@ -29,6 +29,7 @@ import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
@@ -101,12 +102,10 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
                 ExFunction<RecordSet, ? extends EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("B"), NumberInfo.DEFAULT, ImmutableList.of(5, 4, 3), 6);
                 @SuppressWarnings({"units", "keyfor"})
                 @KeyForBottom @UnitsBottom ImmutableList<ExFunction<RecordSet, ? extends EditableColumn>> columns = ImmutableList.of(a, b);
-                ImmediateDataSource src = new ImmediateDataSource(dummyManager, new EditableRecordSet(columns, () -> 3));
+                ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
-                src.loadPosition(originalTableTopLeft);
                 dummyManager.record(src);
-                Sort sort = new Sort(dummyManager, new TableId("Sorted"), src.getId(), ImmutableList.of(new ColumnId("B"), new ColumnId("A")));
-                sort.loadPosition(transformTopLeft);
+                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), ImmutableList.of(new ColumnId("B"), new ColumnId("A")));
                 dummyManager.record(sort);
                 @OnThread(Tag.Simulation) Supplier<Pair<TableManager, VirtualGrid>> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {

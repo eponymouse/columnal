@@ -81,11 +81,13 @@ public class MainWindow
                 GUI.menuItem("menu.project.close", () -> {stage.hide();}),
                 GUI.menuItem("menu.exit", () -> {closeAll();})
             ),
+            /*
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v)),
                 GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage)),
                 GUI.menuItem("menu.data.import.link", () -> chooseAndImportURL(v, stage))
             ),
+            */
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
                 GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
@@ -184,6 +186,7 @@ public class MainWindow
         });
     }
 
+    /*
     private static void newTable(View v)
     {
         Workers.onWorkerThread("Create new table", Priority.SAVE_ENTRY, () -> {
@@ -199,6 +202,7 @@ public class MainWindow
             }
         });
     }
+    */
 
     public static Map<View, Stage> _test_getViews()
     {

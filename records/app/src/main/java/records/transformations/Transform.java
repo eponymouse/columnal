@@ -69,12 +69,12 @@ public class Transform extends TransformationEditable
     @OnThread(Tag.Any)
     private StyledString error = StyledString.s("");
 
-    public Transform(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
+    public Transform(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
     {
-        super(mgr, thisTableId);
+        super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
-        this.error = StyledString.s("Unknown error with table \"" + thisTableId + "\"");
+        this.error = StyledString.s("Unknown error with table \"" + getId() + "\"");
         this.newColumns = toCalculate;
         if (this.src == null)
         {
@@ -256,7 +256,7 @@ public class Transform extends TransformationEditable
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException
         {
             ImmutableList.Builder<Pair<ColumnId, Expression>> columns = ImmutableList.builder();
 
@@ -266,7 +266,7 @@ public class Transform extends TransformationEditable
                 columns.add(new Pair<>(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
 
-            return new Transform(mgr, tableId, source.get(0), columns.build());
+            return new Transform(mgr, initialLoadDetails, source.get(0), columns.build());
         }
 
         @Override
@@ -315,7 +315,7 @@ public class Transform extends TransformationEditable
         }
         
         @Override
-        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId ourId)
+        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             ImmutableList.Builder<Pair<ColumnId, Expression>> cols = ImmutableList.builder();
@@ -326,7 +326,7 @@ public class Transform extends TransformationEditable
                     return null;
                 cols.add(new Pair<>(columnId, col.getSecond().getValue()));
             }
-            return () -> new Transform(mgr, ourId, srcId.get(), cols.build());
+            return () -> new Transform(mgr, initialLoadDetails, srcId.get(), cols.build());
         }
 
         @Override

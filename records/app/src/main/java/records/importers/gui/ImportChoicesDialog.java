@@ -37,6 +37,7 @@ import org.checkerframework.checker.units.qual.UnitsBottom;
 import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.Table.Display;
+import records.data.Table.InitialLoadDetails;
 import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
@@ -209,7 +210,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             @Nullable FORMAT format = formatProperty.get();
             if (bt == ButtonType.OK && format != null)
             {
-                return new Pair<>(new ImportInfo(null/*, linkCopyButtons.valueProperty().get()*/), format);
+                return new Pair<>(new ImportInfo(new InitialLoadDetails(null, null, null)/*, linkCopyButtons.valueProperty().get()*/), format);
             }
             return null;
         });

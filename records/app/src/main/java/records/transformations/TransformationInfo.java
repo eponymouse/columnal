@@ -2,6 +2,7 @@ package records.transformations;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
@@ -56,7 +57,7 @@ public abstract class TransformationInfo
     }
 
     @OnThread(Tag.Simulation)
-    public abstract Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException;
+    public abstract Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException;
 
     @OnThread(Tag.FXPlatform)
     public abstract TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src);

@@ -13,9 +13,9 @@ import threadchecker.Tag;
  */
 public abstract class TransformationEditable extends Transformation
 {
-    public TransformationEditable(TableManager mgr, @Nullable TableId tableId)
+    public TransformationEditable(TableManager mgr, InitialLoadDetails initialLoadDetails)
     {
-        super(mgr, tableId);
+        super(mgr, initialLoadDetails);
     }
 
     @OnThread(Tag.FXPlatform)

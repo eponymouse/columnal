@@ -17,9 +17,9 @@ import java.util.List;
  */
 public abstract class Transformation extends Table
 {
-    public Transformation(TableManager mgr, @Nullable TableId tableId)
+    public Transformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
     {
-        super(mgr, tableId);
+        super(mgr, initialLoadDetails);
     }
 
     // Label to show between arrows:

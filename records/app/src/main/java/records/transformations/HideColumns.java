@@ -55,12 +55,12 @@ public class HideColumns extends TransformationEditable
     @OnThread(Tag.Any)
     private String error;
 
-    public HideColumns(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<ColumnId> toHide) throws InternalException
+    public HideColumns(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<ColumnId> toHide) throws InternalException
     {
-        super(mgr, thisTableId);
+        super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
-        this.error = "Unknown error with table \"" + thisTableId + "\"";
+        this.error = "Unknown error with table \"" + getId() + "\"";
         this.hideIds = toHide;
         if (this.src == null)
         {
@@ -207,11 +207,11 @@ public class HideColumns extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId tableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             ImmutableList<ColumnId> hiddenCols = columnsPanel.getHiddenColumns();
-            return () -> new HideColumns(mgr, tableId, srcId.get(), hiddenCols);
+            return () -> new HideColumns(mgr, initialLoadDetails, srcId.get(), hiddenCols);
         }
 
         @Override
@@ -229,11 +229,11 @@ public class HideColumns extends TransformationEditable
         }
 
         @Override
-        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
+        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             HideColumnsContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::hideColumns);
 
-            return new HideColumns(mgr, tableId, srcTableId, loaded.hideColumn().stream().map(hc -> new ColumnId(hc.column.getText())).collect(ImmutableList.toImmutableList()));
+            return new HideColumns(mgr, initialLoadDetails, srcTableId, loaded.hideColumn().stream().map(hc -> new ColumnId(hc.column.getText())).collect(ImmutableList.toImmutableList()));
         }
 
         @Override

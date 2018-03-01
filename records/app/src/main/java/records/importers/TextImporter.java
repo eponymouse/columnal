@@ -13,6 +13,7 @@ import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn;
@@ -119,7 +120,7 @@ public class TextImporter implements Importer
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
             try
             {
-                return makeDataSource(mgr, textFile, new ImportInfo(new TableId(textFile.getName())/*, link*/), format);
+                return makeDataSource(mgr, textFile, new ImportInfo(new InitialLoadDetails(new TableId(textFile.getName()), null, null)/*, link*/), format);
             }
             catch (IOException e)
             {
@@ -135,7 +136,7 @@ public class TextImporter implements Importer
         //if (importInfo.linkFile)
             //return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         //else
-            return new ImmediateDataSource(mgr, importInfo.tableName, new EditableRecordSet(rs));
+            return new ImmediateDataSource(mgr, importInfo.initialLoadDetails, new EditableRecordSet(rs));
     }
 
     @OnThread(Tag.Simulation)

@@ -20,15 +20,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.EditableRecordSet;
-import records.data.ImmediateDataSource;
-import records.data.RecordSet;
-import records.data.Table;
+import records.data.*;
 import records.data.Table.FullSaver;
-import records.data.TableId;
-import records.data.TableManager;
+import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataTypeUtility;
@@ -50,7 +44,6 @@ import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.GenString;
 import utility.*;
-import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -868,7 +861,7 @@ public class TestUtil
     public static TableManager openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
     {
         TableManager manager = new DummyManager();
-        Table t = new ImmediateDataSource(manager, new EditableRecordSet(data));
+        Table t = new ImmediateDataSource(manager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), new EditableRecordSet(data));
         manager.record(t);
         if (typeManager != null)
         {

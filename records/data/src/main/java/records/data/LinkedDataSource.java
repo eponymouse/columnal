@@ -23,7 +23,7 @@ public abstract class LinkedDataSource extends DataSource
 
     public LinkedDataSource(TableManager mgr, TableId tableId, RecordSet rs, int typeToken, File path)
     {
-        super(mgr, tableId);
+        super(mgr, new InitialLoadDetails(tableId, null, null));
         this.data = rs;
         this.typeToken = typeToken;
         this.path = path;

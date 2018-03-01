@@ -24,6 +24,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
+import records.data.Table.InitialLoadDetails;
 import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
@@ -686,12 +687,12 @@ public class GuessFormat
     public static class ImportInfo
     {
         // Null means auto-assign
-        public final @Nullable TableId tableName;
+        public final InitialLoadDetails initialLoadDetails;
         //public final boolean linkFile;
 
-        public ImportInfo(@Nullable TableId tableName/*, boolean linkFile*/)
+        public ImportInfo(InitialLoadDetails initialLoadDetails/*, boolean linkFile*/)
         {
-            this.tableName = tableName;
+            this.initialLoadDetails = initialLoadDetails;
             //this.linkFile = linkFile;
         }
     }

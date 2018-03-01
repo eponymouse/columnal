@@ -119,7 +119,7 @@ public class HTMLImporter implements Importer
                 if (outcome != null)
                 {
                     @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
-                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, loadData.apply(outcomeNonNull.getSecond()));
+                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().initialLoadDetails, loadData.apply(outcomeNonNull.getSecond()));
                     return makeDataSource;
                 } else
                     return null;

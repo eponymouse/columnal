@@ -22,6 +22,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
@@ -71,7 +72,7 @@ public abstract class TransformationEditor
      * is returned, it is not valid to press OK at the moment, and an error should
      * be displayed.
      */
-    public abstract @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId newId);
+    public abstract @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails);
 
     public abstract @Nullable TableId getSourceId();
 

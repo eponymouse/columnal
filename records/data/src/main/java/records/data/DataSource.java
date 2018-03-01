@@ -37,9 +37,9 @@ import java.util.List;
  */
 public abstract class DataSource extends Table
 {
-    public DataSource(TableManager mgr, @Nullable TableId id)
+    public DataSource(TableManager mgr, InitialLoadDetails initialLoadDetails)
     {
-        super(mgr, id);
+        super(mgr, initialLoadDetails);
     }
 
     public static Table loadOne(TableManager manager, String src) throws UserException, InternalException
@@ -75,8 +75,7 @@ public abstract class DataSource extends Table
                 columns.add(t.makeImmediateColumn(columnId, defaultValue));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
-            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
-            immediateDataSource.loadPosition(table.display());
+            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, loadDetails(new TableId(immed.tableId().getText()), table.display()), recordSet);
             manager.record(immediateDataSource);
             return immediateDataSource;
         }

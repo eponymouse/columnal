@@ -1,5 +1,6 @@
 package records.transformations;
 
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
@@ -22,13 +23,13 @@ public abstract class SingleSourceTransformationInfo extends TransformationInfo
 
     @Override
     @OnThread(Tag.Simulation)
-    public final Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
+    public final Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException
     {
         if (source.size() > 1)
             throw new UserException("Transformation " + getCanonicalName() + " cannot have multiple sources. (If source name has a space, make sure to quote it.)");
-        return loadSingle(mgr, tableId, source.get(0), detail);
+        return loadSingle(mgr, initialLoadDetails, source.get(0), detail);
     }
 
     @OnThread(Tag.Simulation)
-    protected abstract Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException;
+    protected abstract Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException;
 }

@@ -34,6 +34,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.RecordSet.RecordSetListener;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.Display;
@@ -703,11 +704,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             if (type.isNumber())
             {
                 r.add(columnQuickTransform("recipe.sum", "sum", c, newId -> {
-                    return new SummaryStatistics(parent.getManager(), null, table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "sum", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new SummaryStatistics(parent.getManager(), new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "sum", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
 
                 r.add(columnQuickTransform("recipe.average", "average", c, newId -> {
-                    return new SummaryStatistics(parent.getManager(), null, table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "average", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
+                    return new SummaryStatistics(parent.getManager(), new InitialLoadDetails(null, null/*TODO*/, null), table.getId(), ImmutableList.of(new Pair<>(newId, new CallExpression(parent.getManager().getUnitManager(), "average", new ColumnReference(c, ColumnReferenceType.WHOLE_COLUMN)))), ImmutableList.of());
                 }));
             }
         }

@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
@@ -49,7 +50,7 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
                 Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
                 columns.add(new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), nonsenseExpression));
             }
-            return new Transformation_Mgr(mgr, new Transform(mgr, ids.getFirst(), ids.getSecond(), ImmutableList.copyOf(columns)));
+            return new Transformation_Mgr(mgr, new Transform(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(columns)));
         }
         catch (InternalException | UserException e)
         {

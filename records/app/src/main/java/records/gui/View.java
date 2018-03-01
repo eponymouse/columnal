@@ -23,6 +23,7 @@ import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,6 +32,7 @@ import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.FullSaver;
@@ -45,6 +47,7 @@ import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.transformations.Transform;
 import records.transformations.TransformationEditable;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
@@ -592,26 +595,30 @@ public class View extends StackPane
     */
 
     // The type of the listener really throws off the checkers so suppress them all:
-    @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype", "helpfile"})
+    @SuppressWarnings({"keyfor", "interning", "userindex", "valuetype", "helpfile"})
     public View(File location, FXPlatformConsumer<Boolean> emptyListener) throws InternalException, UserException
     {
         this.emptyListener = emptyListener;
         diskFile = new SimpleObjectProperty<>(location);
         tableManager = new TableManager(TransformationManager.getInstance(), new TableManagerListener()
         {
+            // No-one will add tables after the constructor, so this is okay:
+            @SuppressWarnings("initialization")
+            private final View thisView = View.this;
+            
             @Override
             public void removeTable(Table t, int tablesRemaining)
             {
-                View.this.removeTable(t, tablesRemaining);
+                thisView.removeTable(t, tablesRemaining);
             }
 
             @Override
             public void addSource(DataSource dataSource)
             {
                 FXUtility.runFX(() -> {
-                    View.this.emptyListener.consume(false);
-                    addDisplay(new TableDisplay(View.this, columnHeaderSupplier, dataSource), null);
-                    save();
+                    thisView.emptyListener.consume(false);
+                    thisView.addDisplay(new TableDisplay(thisView, thisView.columnHeaderSupplier, dataSource), null);
+                    thisView.save();
                 });
             }
 
@@ -620,14 +627,14 @@ public class View extends StackPane
             {
                 FXUtility.runFX(() ->
                 {
-                    View.this.emptyListener.consume(false);
-                    TableDisplay tableDisplay = new TableDisplay(View.this, columnHeaderSupplier, transformation);
-                    addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
+                    thisView.emptyListener.consume(false);
+                    TableDisplay tableDisplay = new TableDisplay(thisView, thisView.columnHeaderSupplier, transformation);
+                    thisView.addDisplay(tableDisplay, thisView.getTableDisplayOrNull(transformation.getSources().get(0)));
         
                     List<TableDisplay> sourceDisplays = new ArrayList<>();
                     for (TableId t : transformation.getSources())
                     {
-                        TableDisplay td = getTableDisplayOrNull(t);
+                        TableDisplay td = thisView.getTableDisplayOrNull(t);
                         if (td != null)
                             sourceDisplays.add(td);
                     }
@@ -636,7 +643,7 @@ public class View extends StackPane
                         View.this.editTransform((TransformationEditable)transformation);
                     }));*/
         
-                    save();
+                    thisView.save();
                 });
             }
         });
@@ -647,28 +654,28 @@ public class View extends StackPane
                 if (!tableManager.getAllTables().isEmpty())
                 {
                     // Ask what they want
-                    choice = new DataOrTransformChoice(getWindow()).showAndWaitCentredOn(mouseScreenPos);
+                    choice = new DataOrTransformChoice(FXUtility.mouse(this).getWindow()).showAndWaitCentredOn(mouseScreenPos);
                 }
                 if (choice.isPresent())
                 {
+                    InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
                     switch (choice.get())
                     {
                         case DATA:
                             Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
                                 FXUtility.alertOnError_(() -> {
-                                    ImmediateDataSource data = new ImmediateDataSource(tableManager, EditableRecordSet.newRecordSetSingleColumn());
-                                    data.loadPosition(cellPosition);
+                                    
+                                    ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn());
                                     tableManager.record(data);
                                 });
                             });
                             break;
                         case TRANSFORM:
-                            Optional<SimulationSupplier<Transformation>> optTrans = new EditTransformationDialog(getWindow(), View.this, null).showAndWait();
-                            
+                            Optional<SimulationSupplier<Transformation>> optTrans = new EditTransformationDialog(FXUtility.mouse(this).getWindow(), FXUtility.mouse(View.this), null, initialLoadDetails, new Transform.Info().editNew(FXUtility.mouse(View.this), FXUtility.mouse(this).getManager(), null, null)).showAndWait();
+                                                        
                             optTrans.ifPresent(createTrans -> Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
                                 FXUtility.alertOnError_(() -> {
                                     Transformation trans = createTrans.get();
-                                    trans.loadPosition(cellPosition);
                                     tableManager.record(trans);
                                 });
                             }));
@@ -710,7 +717,7 @@ public class View extends StackPane
         });
 
         pickPaneMouse.setOnMouseMoved(e -> {
-            @Nullable Table table = pickAt(e.getX(), e.getY());
+            @Nullable Table table = FXUtility.mouse(this).pickAt(e.getX(), e.getY());
             currentPick.setValue(table);
         });
         pickPaneMouse.setOnMouseClicked(e -> {
@@ -791,8 +798,8 @@ public class View extends StackPane
 
     public void editTransform(TransformationEditable existing)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
-        showEditDialog(dialog, existing, existing.getMostRecentPosition());
+        //EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
+        //showEditDialog(dialog, existing, existing.getMostRecentPosition());
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window
@@ -803,8 +810,8 @@ public class View extends StackPane
 
     public void newTransformFromSrc(Table src)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, src.getId());
-        showEditDialog(dialog, null, null);
+        //EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, src.getId());
+        //showEditDialog(dialog, null, null);
     }
 
     private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable CellPosition position)
@@ -814,7 +821,10 @@ public class View extends StackPane
         dialog.showAndWait().ifPresent(t -> {
             //if (replaceOnOK != null)
             //    overlays.remove(replaceOnOK);
-            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position), TableAndColumnRenames.EMPTY)));
+            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                @Nullable TableId tableId = replaceOnOK == null ? null : replaceOnOK.getId();
+                tableManager.edit(tableId, t, TableAndColumnRenames.EMPTY);
+            }));
         });
         currentlyShowingEditTransformationDialog = null;
     }

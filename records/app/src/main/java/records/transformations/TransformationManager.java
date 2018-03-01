@@ -2,6 +2,7 @@ package records.transformations;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableManager.TransformationLoader;
@@ -75,8 +76,7 @@ public class TransformationManager implements TransformationLoader
             String detail = detailContext.DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining(""));
             List<TableId> source = Utility.<SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
             TableIdContext tableIdContext = transformationContext.tableId();
-            Transformation transformation = t.load(mgr, new TableId(tableIdContext.getText()), source, detail);
-            transformation.loadPosition(table.display());
+            Transformation transformation = t.load(mgr, Table.loadDetails(new TableId(tableIdContext.getText()), table.display()), source, detail);
             mgr.record(transformation);
             return transformation;
         }

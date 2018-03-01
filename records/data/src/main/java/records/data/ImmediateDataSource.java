@@ -22,16 +22,10 @@ import java.io.File;
 public class ImmediateDataSource extends DataSource
 {
     private final EditableRecordSet data;
-
-    public ImmediateDataSource(TableManager mgr, EditableRecordSet data)
+    
+    public ImmediateDataSource(TableManager mgr, InitialLoadDetails initialLoadDetails, EditableRecordSet data)
     {
-        super(mgr, null);
-        this.data = data;
-    }
-
-    public ImmediateDataSource(TableManager mgr, @Nullable TableId tableId, EditableRecordSet data)
-    {
-        super(mgr, tableId);
+        super(mgr, initialLoadDetails);
         this.data = data;
     }
 

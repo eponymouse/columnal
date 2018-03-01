@@ -63,20 +63,39 @@ public abstract class Table
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private Pair<Display, ImmutableList<ColumnId>> showColumns = new Pair<>(Display.ALL, ImmutableList.of());
 
+    public static class InitialLoadDetails
+    {
+        private final @Nullable TableId tableId;
+        private final @Nullable CellPosition initialPosition;
+        private final @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns;
+
+        @OnThread(Tag.Any)
+        public InitialLoadDetails(@Nullable TableId tableId, @Nullable CellPosition initialPosition, @Nullable Pair<Display, ImmutableList<ColumnId>> initialShowColumns)
+        {
+            this.tableId = tableId;
+            this.initialPosition = initialPosition;
+            this.initialShowColumns = initialShowColumns;
+        }
+    }
+    
     /**
      * If id is null, an arbitrary free id is taken
      * @param mgr
      * @param id
      */
-    protected Table(TableManager mgr, @Nullable TableId id)
+    protected Table(TableManager mgr, InitialLoadDetails initialLoadDetails)
     {
         this.mgr = mgr;
-        if (id == null)
+        if (initialLoadDetails.tableId == null)
             this.id = mgr.registerNextFreeId();
         else
         {
-            this.id = id;
+            this.id = initialLoadDetails.tableId;
         }
+        if (initialLoadDetails.initialPosition != null)
+            prevPosition = initialLoadDetails.initialPosition;
+        if (initialLoadDetails.initialShowColumns != null)
+            showColumns = initialLoadDetails.initialShowColumns;
     }
 
     @OnThread(Tag.Any)
@@ -88,18 +107,6 @@ public abstract class Table
     @NotNull
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
-
-    @OnThread(Tag.FXPlatform)
-    public final synchronized Table loadPosition(@Nullable CellPosition position)
-    {
-        if (position != null)
-        {
-            prevPosition = position;
-            if (display != null)
-                display.loadPosition(prevPosition, showColumns);
-        }
-        return this;
-    }
 
     public static interface Saver
     {
@@ -195,38 +202,35 @@ public abstract class Table
         display.loadPosition(prevPosition, showColumns);
     }
 
-    public synchronized final void loadPosition(DisplayContext display) throws UserException
+    public static InitialLoadDetails loadDetails(TableId tableId, DisplayContext displayContext) throws UserException
     {
         try
         {
             @SuppressWarnings("units")
-            @AbsColIndex int x = Integer.parseInt(display.displayTablePosition().item(0).getText());
+            @AbsColIndex int x = Integer.parseInt(displayContext.displayTablePosition().item(0).getText());
             @SuppressWarnings("units")
-            @AbsRowIndex int y = Integer.parseInt(display.displayTablePosition().item(1).getText());
-            prevPosition = new CellPosition(y, x);
+            @AbsRowIndex int y = Integer.parseInt(displayContext.displayTablePosition().item(1).getText());
+            CellPosition initialPosition = new CellPosition(y, x);
 
+            Pair<Display, ImmutableList<ColumnId>> initialShowColumns;
             // Now handle the show-columns:
-            if (display.displayShowColumns().ALL() != null)
-                showColumns = new Pair<>(Display.ALL, ImmutableList.of());
-            else if (display.displayShowColumns().ALTERED() != null)
-                showColumns = new Pair<>(Display.ALTERED, ImmutableList.of());
-            else if (display.displayShowColumns().COLLAPSED() != null)
-                showColumns = new Pair<>(Display.COLLAPSED, ImmutableList.of());
+            if (displayContext.displayShowColumns().ALL() != null)
+                initialShowColumns = new Pair<>(Display.ALL, ImmutableList.of());
+            else if (displayContext.displayShowColumns().ALTERED() != null)
+                initialShowColumns = new Pair<>(Display.ALTERED, ImmutableList.of());
+            else if (displayContext.displayShowColumns().COLLAPSED() != null)
+                initialShowColumns = new Pair<>(Display.COLLAPSED, ImmutableList.of());
             else
             {
-                ImmutableList<ColumnId> blackList = display.displayShowColumns().item().stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.toImmutableList());
-                showColumns = new Pair<>(Display.CUSTOM, blackList);
+                ImmutableList<ColumnId> blackList = displayContext.displayShowColumns().item().stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.toImmutableList());
+                initialShowColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
-            if (this.display != null)
-            {
-                TableDisplayBase displayFinal = this.display;
-                FXUtility.runFX(() -> displayFinal.loadPosition(prevPosition, showColumns));
-            }
+            return new InitialLoadDetails(tableId, initialPosition, initialShowColumns);
         }
         catch (Exception e)
         {
-            throw new UserException("Could not parse position: \"" + display.getText() + "\"");
+            throw new UserException("Could not parse position: \"" + displayContext.getText() + "\"");
         }
     }
     

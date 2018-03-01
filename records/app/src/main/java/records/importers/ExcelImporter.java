@@ -103,7 +103,7 @@ public class ExcelImporter implements Importer
             if (outcome != null)
             {
                 @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, loadData.apply(outcomeNonNull.getSecond()));
+                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().initialLoadDetails, loadData.apply(outcomeNonNull.getSecond()));
                 Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> {
                     DataSource dataSource = makeDataSource.get();
                     Platform.runLater(() -> onLoad.consume(dataSource));

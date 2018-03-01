@@ -39,6 +39,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.Transformation;
 import records.transformations.TransformationEditor;
@@ -80,7 +81,7 @@ public class EditTransformationDialog
      * @param srcId The source table of the transformation, if any
      * @param existing The existing table-id and transformation, if any
      */
-    private EditTransformationDialog(Window owner, View parentView, @Nullable TableId srcId, @Nullable Pair<TableId, TransformationEditor> existing)
+    public EditTransformationDialog(Window owner, View parentView, @Nullable TableId srcId, InitialLoadDetails initialLoadDetails, TransformationEditor chosenEditor)
     {
         dialog = new Dialog<>();
         dialog.initOwner(owner);
@@ -109,10 +110,10 @@ public class EditTransformationDialog
         dialog.getDialogPane().setPrefWidth(850.0);
         dialog.getDialogPane().setPrefHeight(700.0);
 
-        if (existing != null)
-        {
-            editors.put(existing.getSecond().getInfo().getCanonicalName(), existing.getSecond());
-        }
+        //if (existing != null)
+        //{
+        //    editors.put(existing.getSecond().getInfo().getCanonicalName(), existing.getSecond());
+        //}
         BorderPane content = new BorderPane();
         ListView<TransformationInfo> transformationTypeList = makeTransformationTypeList(TransformationManager.getInstance().getTransformations());
         Label transformTypeLabel = GUI.label("transformEditor.transform.type");
@@ -175,7 +176,7 @@ public class EditTransformationDialog
                 infoPane.getChildren().add(infoPane.getChildren().size(), parameterDisplay);
             }
         });
-        editor.set(existing == null ? Optional.empty() : Optional.of(existing.getSecond()));
+        editor.set(Optional.of(chosenEditor));
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getStylesheets().add(FXUtility.getStylesheet("general.css"));
         dialog.getDialogPane().getStylesheets().add(FXUtility.getStylesheet("transformation.css"));
@@ -194,7 +195,7 @@ public class EditTransformationDialog
                     if (ed.isPresent())
                     {
                         Log.debug("Returning transformation");
-                        return ed.get().getTransformation(parentView.getManager(), null);
+                        return ed.get().getTransformation(parentView.getManager(), initialLoadDetails);
                     }
                     Log.debug("Falling through OK");
                 }
@@ -203,10 +204,7 @@ public class EditTransformationDialog
         });
 
         // Wait until everything is set up to execute this:
-        if (existing == null)
-            transformationTypeList.getSelectionModel().selectFirst();
-        else
-            transformationTypeList.getSelectionModel().select(existing.getSecond().getInfo());
+        transformationTypeList.getSelectionModel().select(chosenEditor.getInfo());
     }
 
     private static ListView<TransformationInfo> makeTransformationTypeList(List<TransformationInfo> available)
@@ -266,18 +264,6 @@ public class EditTransformationDialog
     {
         Pair<@LocalizableKey String, @LocalizableKey String> descriptionKeys = editor.getDescriptionKeys();
         return Utility.concatLocal(TranslationUtility.getString(descriptionKeys.getFirst()), showingMoreDescription.get() ? TranslationUtility.getString(descriptionKeys.getSecond()) : "");
-    }
-
-    // Make a new transformation with the given source table
-    public EditTransformationDialog(Window owner, View parentView, TableId src)
-    {
-        this(owner, parentView, src, (Pair<TableId, TransformationEditor>)null);
-
-    }
-
-    public EditTransformationDialog(Window window, View parentView, TableId existingTableId, TransformationEditor editor)
-    {
-        this(window, parentView, editor.getSourceId(), new Pair<>(existingTableId, editor));
     }
 
     private void showError(@UnknownInitialization(Object.class) EditTransformationDialog this, Exception e)

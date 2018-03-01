@@ -109,13 +109,13 @@ public class Sort extends TransformationEditable
     private final @NonNull List<ColumnId> originalSortBy;
     private final @Nullable List<Column> sortBy;
 
-    public Sort(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, List<ColumnId> sortBy) throws InternalException
+    public Sort(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, List<ColumnId> sortBy) throws InternalException
     {
-        super(mgr, thisTableId);
+        super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
         this.originalSortBy = sortBy;
-        this.sortByError = "Unknown error with table \"" + thisTableId + "\"";
+        this.sortByError = "Unknown error with table \"" + getId() + "\"";
         if (this.src == null)
         {
             this.result = null;
@@ -298,11 +298,11 @@ public class Sort extends TransformationEditable
 
         @Override
         @OnThread(Tag.Simulation)
-        public Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
+        public Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             SortContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::sort);
 
-            return new Sort(mgr, tableId, srcTableId, Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
+            return new Sort(mgr, initialLoadDetails, srcTableId, Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }
 
         @Override
@@ -645,7 +645,7 @@ public class Sort extends TransformationEditable
         */
         
         @Override
-        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
+        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {
@@ -654,7 +654,7 @@ public class Sort extends TransformationEditable
                 for (Optional<ColumnId> c : sortBy)
                     if (c.isPresent())
                         presentSortBy.add(c.get());
-                return new Sort(mgr, thisTableId, srcId.get(), presentSortBy);
+                return new Sort(mgr, initialLoadDetails, srcId.get(), presentSortBy);
             };
         }
     }
