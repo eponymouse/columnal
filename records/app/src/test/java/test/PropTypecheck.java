@@ -66,9 +66,10 @@ public class PropTypecheck
     @Test
     public void testTypeComparison() throws InternalException, UserException
     {
-        for (DataType a : distinctTypes)
+        List<DataType> types = Utility.consList(DataType.toInfer(), TestUtil.distinctTypes);
+        for (DataType a : types)
         {
-            for (DataType b : distinctTypes)
+            for (DataType b : types)
             {
                 assertEqualIfSame(a, b);
             }
