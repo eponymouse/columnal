@@ -23,7 +23,6 @@ import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -781,7 +780,7 @@ public class View extends StackPane
         dataCellSupplier.addGrid(tableDisplay, tableDisplay.getDataGridCellInfo());
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
         @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
-        if (tableOps.appendColumn != null || tableOps.appendRows != null)
+        if (tableOps.addColumn != null || tableOps.appendRows != null)
         {
             expandTableArrowSupplier.addTable(tableDisplay);
         }

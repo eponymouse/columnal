@@ -11,11 +11,14 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.units.qual.UnitsBottom;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -47,10 +50,13 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.awt.Toolkit;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -208,9 +214,47 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     }
     
     @Property(trials=4)
-    public void testAddColumnAnywhere()
+    public void testAddColumnBeforeAfter(int positionIndicator) throws InternalException, UserException
     {
-        fail("TODO!");
+        // 2 tables, 2 columns, each with 2 header rows:
+        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
+        // 2 columns which you can add to, 3 rows plus 2 column headers:
+        assertEquals(originalColumns + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
+
+        // If the position is negative, we use add-before.  If it's zero or positive, we use add-after.
+        String targetColumnName = Arrays.asList("A", "B").get(Math.abs(positionIndicator) % originalColumns);
+        // Bring up context menu and click item:
+        RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
+        clickOnItemInBounds(lookup(".text-field").lookup((TextField t) -> t.getText().equals(targetColumnName)), 
+            virtualGrid, rectangleBounds,
+            MouseButton.SECONDARY);
+        clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>tryQuery().get());
+        
+        TestUtil.sleep(500);
+
+        // Should now be one more column in each table:
+        assertEquals(2, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(12, lookup(".table-display-column-title").queryAll().size());
+        // One extra column:
+        assertEquals(originalColumns + 1 + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
+        
+        int newPosition = (Math.abs(positionIndicator) % originalColumns) + (positionIndicator < 0 ? 0 : 1);
+        
+        // Check that the existing columns are at right indexes:
+        for (Table table : tableManager.getAllTables())
+        {
+            // Check that the column count is now right on all tables:
+            List<Column> columns = table.getData().getColumns();
+            assertEquals(originalColumns + 1, columns.size());
+            // Check that the original two columns have the right names:
+            int pos = newPosition > 0 ? 0 : 1;
+            assertEquals("Position: " + pos, new ColumnId("A"), columns.get(pos).getName());
+            pos = newPosition > 1 ? 1 : 2;
+            assertEquals("Position " + pos, new ColumnId("B"), columns.get(pos).getName());
+            // Check that the third column has automatic type:
+            assertEquals(DataType.toInfer(), columns.get(newPosition).getType());
+        }
     }
     
     

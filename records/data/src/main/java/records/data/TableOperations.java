@@ -1,17 +1,11 @@
 package records.data;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -22,7 +16,7 @@ public class TableOperations
     public final @Nullable RenameTable renameTable;
     // TODO have a sum type here for append which allows for a custom GUI operation
     // so that if it's e.g. a linked table, you can click add and get a prompt about converting.
-    public final @Nullable AppendColumn appendColumn;
+    public final @Nullable AddColumn addColumn;
     public final Function<ColumnId, @Nullable RenameColumn> renameColumn;
     public final Function<ColumnId, @Nullable DeleteColumn> deleteColumn;
     public final @Nullable AppendRows appendRows;
@@ -32,10 +26,10 @@ public class TableOperations
     public final @Nullable DeleteRows deleteRows;
 
     @OnThread(Tag.Any)
-    public TableOperations(@Nullable RenameTable renameTable, @Nullable AppendColumn appendColumn, Function<ColumnId, @Nullable RenameColumn> renameColumn, Function<ColumnId, @Nullable DeleteColumn> deleteColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
+    public TableOperations(@Nullable RenameTable renameTable, @Nullable AddColumn addColumn, Function<ColumnId, @Nullable RenameColumn> renameColumn, Function<ColumnId, @Nullable DeleteColumn> deleteColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
     {
         this.renameTable = renameTable;
-        this.appendColumn = appendColumn;
+        this.addColumn = addColumn;
         this.renameColumn = renameColumn;
         this.deleteColumn = deleteColumn;
         this.appendRows = appendRows;
@@ -45,10 +39,11 @@ public class TableOperations
 
     // Add column at end
     @FunctionalInterface
-    public static interface AppendColumn
+    public static interface AddColumn
     {
+        // If before is null, add at end.
         @OnThread(Tag.Simulation)
-        public void appendColumn(@Nullable ColumnId newColumnName, DataType newColumnType, @Value Object defaultValue);
+        public void addColumn(@Nullable ColumnId before, @Nullable ColumnId newColumnName, DataType newColumnType, @Value Object defaultValue);
     }
 
     // Rename column (only available if this is source of the column)

@@ -7,6 +7,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -166,6 +167,11 @@ public class ErrorableTextField<T>
                 updateValue.consume(value.get());
             }
         });
+    }
+
+    public void setContextMenu(ContextMenu contextMenu)
+    {
+        field.setContextMenu(contextMenu);
     }
 
     public static class ConversionResult<T>

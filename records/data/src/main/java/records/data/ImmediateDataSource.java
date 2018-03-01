@@ -80,7 +80,7 @@ public class ImmediateDataSource extends DataSource
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations(getManager().getRenameTableOperation(this), (newColumnName, newColumnType, defaultValue) -> {
+        return new TableOperations(getManager().getRenameTableOperation(this), (addBefore, newColumnName, newColumnType, defaultValue) -> {
             FXUtility.alertOnError_(() -> {
                 @MonotonicNonNull ColumnId name = newColumnName;
                 if (name == null)
@@ -97,7 +97,7 @@ public class ImmediateDataSource extends DataSource
                 if (name == null || getData().getColumnIds().contains(name))
                     throw new UserException("Column name already exists in table: " + name);
                 
-                data.addColumn(newColumnType.makeImmediateColumn(name, defaultValue));
+                data.addColumn(addBefore, newColumnType.makeImmediateColumn(name, defaultValue));
             });
             // All columns in ImmediateDataSource can be renamed:
         }, oldId -> getManager().getRenameColumnOperation(this, oldId)

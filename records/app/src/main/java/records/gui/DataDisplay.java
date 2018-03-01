@@ -16,7 +16,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -165,7 +167,7 @@ public abstract class DataDisplay extends GridArea
     }
 
     @OnThread(Tag.FXPlatform)
-    public void setColumnsAndRows(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> extraColumnActions)
+    public void setColumnsAndRows(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
     {
         // Remove old columns:
         columnHeaderItems.forEach(floatingItems::removeItem);
@@ -249,6 +251,19 @@ public abstract class DataDisplay extends GridArea
                             style.applyStyle(borderPane, cellStyles.contains(style));
                         }
                     });
+
+                    ContextMenu contextMenu = new ContextMenu();
+                    if (columnActions != null)
+                        contextMenu.getItems().setAll(Utility.mapList(columnActions.apply(column.getColumnId()), c -> c.makeMenuItem()));
+                    if (contextMenu.getItems().isEmpty())
+                    {
+                        MenuItem menuItem = new MenuItem("No operations");
+                        menuItem.setDisable(true);
+                        contextMenu.getItems().setAll(menuItem);
+                    }
+                    borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
+                    textField.setContextMenu(contextMenu);
+                    
                     return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
                 }
 

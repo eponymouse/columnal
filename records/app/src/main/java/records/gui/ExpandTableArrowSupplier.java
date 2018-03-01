@@ -5,9 +5,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
-import records.data.TableOperations.AppendColumn;
+import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -94,7 +93,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             {
                 int firstRow = tableDisplay.getPosition().rowIndex + 1;
                 int lastRow = tableDisplay.getLastDataDisplayRowIncl();
-                return tableDisplay.getTable().getOperations().appendColumn != null
+                return tableDisplay.getTable().getOperations().addColumn != null
                     && cellPosition.columnIndex == tableDisplay.getLastDataDisplayColumnIncl() + 1
                     && ((cellPosition.rowIndex >= firstRow && cellPosition.rowIndex <= lastRow)
                         || (lastRow < firstRow && cellPosition.rowIndex == firstRow));
@@ -127,9 +126,9 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     item.setText(RIGHT_ARROW);
                     item.setOnAction(e -> {
                         Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
-                            @Nullable AppendColumn appendOp = tableDisplay.getTable().getOperations().appendColumn;
+                            TableOperations.@Nullable AddColumn appendOp = tableDisplay.getTable().getOperations().addColumn;
                             if (appendOp != null)
-                                appendOp.appendColumn(null, DataType.toInfer(), DataTypeUtility.value(""));
+                                appendOp.addColumn(null, null, DataType.toInfer(), DataTypeUtility.value(""));
                         });
                     });
                     buttonTableDisplaysAndHoverStyles.put(item, new Pair<>(tableDisplay, CellStyle.HOVERING_EXPAND_RIGHT));

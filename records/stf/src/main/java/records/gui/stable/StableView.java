@@ -1,55 +1,7 @@
 package records.gui.stable;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Doubles;
-import com.sun.javafx.scene.control.skin.ScrollBarSkin;
-import javafx.application.Platform;
-import javafx.beans.binding.DoubleExpression;
-import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ObservableDoubleValue;
-import javafx.geometry.Orientation;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
-import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.Pure;
-import records.data.ColumnId;
-import records.data.RecordSet.RecordSetListener;
-import records.data.Table.MessageWhenEmpty;
-import records.data.TableOperations;
-import records.data.TableOperations.AppendColumn;
-import records.data.TableOperations.AppendRows;
-import records.data.TableOperations.DeleteColumn;
-import records.data.TableOperations.InsertRows;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
-import utility.SimulationFunction;
-import utility.Utility;
-import utility.Workers;
-import utility.Workers.Priority;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A customised equivalent of TableView

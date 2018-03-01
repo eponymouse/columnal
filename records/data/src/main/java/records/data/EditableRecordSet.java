@@ -277,12 +277,13 @@ public class EditableRecordSet extends RecordSet
         };
     }
 
-    public void addColumn(SimulationFunction<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
+    public void addColumn(@Nullable ColumnId addBefore, SimulationFunction<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
     {
         EditableColumn col = makeNewColumn.apply(this);
         col.insertRows(0, getLength());
-        columns.add(col);
-        editableColumns.add(col);
+        int targetIndex = addBefore == null ? columns.size() : Utility.findFirstIndex(columns, c -> c.getName().equals(addBefore)).orElse(columns.size());
+        columns.add(targetIndex, col);
+        editableColumns.add(targetIndex, col);
         if (columns.stream().map(Column::getName).distinct().count() != columns.size())
         {
             throw new InternalException("Duplicate column names found");
