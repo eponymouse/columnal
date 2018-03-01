@@ -194,7 +194,7 @@ public class View extends StackPane
     @OnThread(Tag.Simulation)
     private void removeTable(Table t, int remainingCount)
     {
-        Platform.runLater(() ->
+        FXUtility.runFX(() ->
         {
             save();
             //overlays.remove(t); // Listener removes them from display
@@ -608,7 +608,7 @@ public class View extends StackPane
             @Override
             public void addSource(DataSource dataSource)
             {
-                Platform.runLater(() -> {
+                FXUtility.runFX(() -> {
                     View.this.emptyListener.consume(false);
                     addDisplay(new TableDisplay(View.this, columnHeaderSupplier, dataSource), null);
                     save();
@@ -618,7 +618,7 @@ public class View extends StackPane
             @Override
             public void addTransformation(Transformation transformation)
             {
-                Platform.runLater(() ->
+                FXUtility.runFX(() ->
                 {
                     View.this.emptyListener.consume(false);
                     TableDisplay tableDisplay = new TableDisplay(View.this, columnHeaderSupplier, transformation);

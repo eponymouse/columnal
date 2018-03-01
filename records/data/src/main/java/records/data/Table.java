@@ -23,6 +23,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import javax.validation.constraints.NotNull;
@@ -88,7 +89,7 @@ public abstract class Table
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     public final synchronized Table loadPosition(@Nullable CellPosition position)
     {
         if (position != null)
@@ -219,7 +220,8 @@ public abstract class Table
 
             if (this.display != null)
             {
-                this.display.loadPosition(prevPosition, showColumns);
+                TableDisplayBase displayFinal = this.display;
+                FXUtility.runFX(() -> displayFinal.loadPosition(prevPosition, showColumns));
             }
         }
         catch (Exception e)
@@ -368,7 +370,7 @@ public abstract class Table
      */
     public static interface TableDisplayBase
     {
-        @OnThread(Tag.Any)
+        @OnThread(Tag.FXPlatform)
         public void loadPosition(CellPosition position, Pair<Display, ImmutableList<ColumnId>> display);
 
         @OnThread(Tag.Any)

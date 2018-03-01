@@ -72,6 +72,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility.ListEx;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -835,7 +836,7 @@ public class TestUtil
         String saved = save(mgr);
         System.out.println("Saving: {{{" + saved + "}}}");
         AtomicReference<Pair<TableManager, VirtualGrid>> tableManagerAtomicReference = new AtomicReference<>();
-        Platform.runLater(() -> checkedToRuntime_(() -> {
+        FXUtility.runFX(() -> checkedToRuntime_(() -> {
             MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved));
             tableManagerAtomicReference.set(new Pair<>(mainWindowActions._test_getTableManager(), mainWindowActions._test_getVirtualGrid()));
         }));

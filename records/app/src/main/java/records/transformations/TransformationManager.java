@@ -76,8 +76,8 @@ public class TransformationManager implements TransformationLoader
             List<TableId> source = Utility.<SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
             TableIdContext tableIdContext = transformationContext.tableId();
             Transformation transformation = t.load(mgr, new TableId(tableIdContext.getText()), source, detail);
-            mgr.record(transformation);
             transformation.loadPosition(table.display());
+            mgr.record(transformation);
             return transformation;
         }
         catch (NullPointerException e)

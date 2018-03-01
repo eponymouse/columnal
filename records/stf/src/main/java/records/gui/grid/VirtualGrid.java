@@ -31,6 +31,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -896,8 +897,17 @@ public class VirtualGrid implements ScrollBindable
         int bRightIncl = b.getPosition().columnIndex + b.getColumnCount() - 1;
         int bTopIncl = b.getPosition().rowIndex;
         int bBottomIncl = b.getPosition().rowIndex + b.getCurrentKnownRows() - 1;
-        return !(aLeftIncl > bRightIncl || bLeftIncl > aRightIncl
-            || aTopIncl > bBottomIncl || bTopIncl > aBottomIncl);
+        boolean distinctHoriz = aLeftIncl > bRightIncl || bLeftIncl > aRightIncl;
+        boolean distinctVert = aTopIncl > bBottomIncl || bTopIncl > aBottomIncl;
+        boolean overlap = !(distinctHoriz || distinctVert);
+        /*
+        if (overlap)
+        {
+            Log.logStackTrace("Found overlap between " + a + " " + a.getPosition() + "-(" + aRightIncl + ", " + aBottomIncl + ")"
+                + " and " + b + " " + b.getPosition() + "-(" + bRightIncl + ", " + bBottomIncl + ")");
+        }
+        */
+        return overlap;
     }
 
     private void activateCell(@Nullable CellSelection cellPosition)

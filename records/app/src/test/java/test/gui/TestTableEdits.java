@@ -16,9 +16,11 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.units.qual.UnitsBottom;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -26,8 +28,10 @@ import records.data.ImmediateDataSource;
 import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
@@ -47,6 +51,7 @@ import utility.Workers.Priority;
 
 import java.awt.Toolkit;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -75,10 +80,14 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     
     private final CellPosition originalTableTopLeft = new CellPosition(CellPosition.row(1), CellPosition.col(2));
     private final CellPosition transformTopLeft = new CellPosition(CellPosition.row(3), CellPosition.col(6));
-    private int originalColumns = 2;
+    private final int originalRows = 3;
+    private final int originalColumns = 2;
     @OnThread(Tag.Any)
     private final CompletableFuture<Optional<Exception>> finish = new CompletableFuture<>();
-    
+    @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
+    private TableId srcId;
+
 
     @Override
     public void start(Stage stage) throws Exception
@@ -93,6 +102,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
                 @SuppressWarnings({"units", "keyfor"})
                 @KeyForBottom @UnitsBottom ImmutableList<ExFunction<RecordSet, ? extends EditableColumn>> columns = ImmutableList.of(a, b);
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new EditableRecordSet(columns, () -> 3));
+                srcId = src.getId();
                 src.loadPosition(originalTableTopLeft);
                 dummyManager.record(src);
                 Sort sort = new Sort(dummyManager, new TableId("Sorted"), src.getId(), ImmutableList.of(new ColumnId("B"), new ColumnId("A")));
@@ -117,7 +127,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(finish);
         //assertNull(finish.get(5, TimeUnit.SECONDS).orElse(null));
     }
-
+    
     @Property(trials = 3)
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
@@ -168,6 +178,35 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
         assertEquals(8, lookup(".table-display-column-title").queryAll().size());
     }
+    
+    @Property(trials=2)
+    public void testAddColumnAtRight(int n) throws InternalException, UserException
+    {
+        for (Table table : tableManager.getAllTables())
+        {
+            assertEquals(originalColumns, table.getData().getColumns().size());
+        }
+        int row = Math.abs(n) % (originalRows + 2); 
+        clickOnItemInBounds(lookup(".expand-arrow"), virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(row, 0), originalTableTopLeft.offsetByRowCols(row, originalColumns)));
+        TestUtil.sleep(500);
+        
+        // Check neither table moved:
+        assertEquals(originalTableTopLeft, tableManager.getSingleTableOrThrow(srcId).getMostRecentPosition());
+        assertEquals(transformTopLeft, tableManager.getSingleTableOrThrow(new TableId("Sorted")).getMostRecentPosition());
+        
+        for (Table table : tableManager.getAllTables())
+        {
+            // Check that the column count is now right on all tables:
+            List<Column> columns = table.getData().getColumns();
+            assertEquals(originalColumns + 1, columns.size());
+            // Check that the original two columns have the right names:
+            assertEquals(new ColumnId("A"), columns.get(0).getName());
+            assertEquals(new ColumnId("B"), columns.get(1).getName());
+            // Check that the third column has automatic type:
+            assertEquals(DataType.toInfer(), columns.get(2).getType());
+        }
+    }
+    
          
 
     private void deleteAll()

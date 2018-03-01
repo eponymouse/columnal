@@ -678,18 +678,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return "\"" + original.replace("\"", "\"\"\"") + "\"";
     }
     
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     @Override
     public void loadPosition(CellPosition cellPosition, Pair<Display, ImmutableList<ColumnId>> display)
     {
-        // Important we do this now, not in runLater, as if we then save,
-        // it will be valid:
         mostRecentBounds.set(cellPosition);
-        
-        Platform.runLater(() -> {
-            this.setPosition(cellPosition);
-            this.columnDisplay.set(display);
-        });
+        this.setPosition(cellPosition);
+        this.columnDisplay.set(display);
     }
 
     @OnThread(Tag.Any)
@@ -747,6 +742,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 });
             }
         };
+    }
+
+    @Override
+    public String toString()
+    {
+        return super.toString() + "[" + getTable().getId() + "]";
     }
 
     @OnThread(Tag.FXPlatform)
