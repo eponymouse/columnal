@@ -121,25 +121,6 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
     }
 
-    @Test
-    @SuppressWarnings("nullness")
-    public void testAddColumnRequiresName() throws UserException, InternalException
-    {
-        testNewEntryTable();
-        clickOn(".virt-grid-add-column");
-        Window dialog = lookup(".ok-button").<Node>query().getScene().getWindow();
-        assertTrue(dialog.isShowing());
-        assertTrue(lookup(".new-column-name").<TextField>query().getText().isEmpty());
-        assertTrue(lookup(".error-label").<Text>query().getText().isEmpty());
-        clickOn(".ok-button");
-        assertTrue(dialog.isShowing());
-        assertFalse(lookup(".error-label").<Text>query().getText().isEmpty());
-        clickOn(".new-column-name");
-        write("C");
-        clickOn(".ok-button");
-        assertFalse(dialog.isShowing());
-    }
-
     @Property(trials = 5)
     @OnThread(Tag.Any)
     public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
