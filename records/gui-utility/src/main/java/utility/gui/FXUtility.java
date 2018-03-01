@@ -315,6 +315,19 @@ public class FXUtility
         t.play();
         return t::stop;
     }
+    
+    // Like Platform.runLater from Simulation thread, but also stores caller for logging.
+    @OnThread(Tag.Simulation)
+    public static void runFX(FXPlatformRunnable runnable)
+    {
+        ImmutableList<StackTraceElement[]> callerStack = Log.getTotalStack();
+        Platform.runLater(() -> {
+            Log.storeThreadedCaller(callerStack);
+            runnable.run();
+            // Blank stack afterwards, to avoid confusion:
+            Log.storeThreadedCaller(null);
+        });
+    }
 
     // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate
     // from the invalidionlistener overload in ObservableList

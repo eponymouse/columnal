@@ -55,9 +55,9 @@ public class Workers
         private final String title;
         private final long timeReady;
         private final Priority priority;
-        private final StackTraceElement[] caller;
+        private final ImmutableList<StackTraceElement[]> caller;
 
-        public WorkChunk(String title, Priority priority, Worker work, long timeReady, StackTraceElement[] caller)
+        public WorkChunk(String title, Priority priority, Worker work, long timeReady, ImmutableList<StackTraceElement[]> caller)
         {
             this.title = title;
             this.priority = priority;
@@ -147,7 +147,7 @@ public class Workers
             // We ask for current time.  If we just used 0, then all immediates
             // would queue-jump all timed ones.  Giving new immediates a larger
             // ready time than old delayed ones makes sure the delayed ones aren't starved.
-            workQueue.add(new WorkChunk(title, priority, runnable, System.currentTimeMillis() + delay, Thread.currentThread().getStackTrace()));
+            workQueue.add(new WorkChunk(title, priority, runnable, System.currentTimeMillis() + delay, Log.getTotalStack()));
 
             // TODO this isn't right if we actually use the delay feature:
             runnable.addedToQueue(finished, finished + workQueue.size());
@@ -223,6 +223,7 @@ public class Workers
         {
             Log.storeThreadedCaller(work.caller);
             work.work.run();
+            Log.storeThreadedCaller(null);
         }
         catch (Throwable t)
         {

@@ -1,5 +1,7 @@
 package log;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,9 +18,10 @@ public class Log
 {
     private static Logger logger = LogManager.getRootLogger();
     
-    // Used to remember which thread set off which runnable:
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private static final Map<Thread, StackTraceElement[]> threadedCallers = new WeakHashMap<>();
+    // Used to remember which thread set off which runnable.  Each thread can only manipulate
+    // its own caller state.
+    @OnThread(Tag.Any)
+    private static final ThreadLocal<@Nullable ImmutableList<StackTraceElement[]>> threadCaller = new ThreadLocal<>();
 
     public static void normal(String message)
     {
@@ -29,41 +32,43 @@ public class Log
     public static void log(String info, Throwable e)
     {
         logger.log(Level.ERROR, info, e);
-
+        
         // Print suppressed exceptions, if any
         for (Throwable se : e.getSuppressed())
-            log("Suppressed:", se);
+            logger.log(Level.ERROR, "Suppressed:", se);
 
         // Print cause, if any
         Throwable ourCause = e.getCause();
         if (ourCause != null)
-            log("Caused by:", ourCause);
+            logger.log(Level.ERROR, "Caused by:", ourCause);
 
-        synchronized (Log.class)
-        {
-            StackTraceElement[] el = threadedCallers.get(Thread.currentThread());
-            if (el != null)
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Original caller:\n");
-                for (StackTraceElement traceElement : el)
-                    sb.append("\tat " + traceElement + "\n");
-                logger.log(Level.ERROR, sb);
-            }
-        }
+        StringBuilder sb = new StringBuilder();
+        logCallers(sb);
+        String s = sb.toString();
+        if (!s.isEmpty())
+            logger.log(Level.ERROR, sb);        
     }
 
     /**
-     * For the current thread, store the stack as extra info that will be printed
-     * if an exception is logged in this thread.  Will be overwritten by another
-     * call to this same method on the same thread.
+     * For the current thread, store the stack (which comes from another thread that
+     * spawned us) as extra info that will be printed if an exception is logged in this thread.
+     * Will be overwritten by another call to this same method on the same thread.
      */
-    public synchronized static void storeThreadedCaller(StackTraceElement @Nullable [] stack)
+    public static void storeThreadedCaller(@Nullable ImmutableList<StackTraceElement[]> stack)
     {
         if (stack != null)
-            threadedCallers.put(Thread.currentThread(), stack);
+            threadCaller.set(stack);
         else
-            threadedCallers.remove(Thread.currentThread());
+            threadCaller.remove();
+    }
+    
+    // Gets the current stack trace, plus any stack trace of our caller, as recorded in storeThreadedCaller
+    // for the current thread.
+    public static ImmutableList<StackTraceElement[]> getTotalStack()
+    {
+        StackTraceElement[] ourStack = Thread.currentThread().getStackTrace();
+        @Nullable ImmutableList<StackTraceElement[]> prev = threadCaller.get();
+        return prev == null ? ImmutableList.of(ourStack) : Utility.consList(ourStack, prev);
     }
 
     public static void log(Exception e)
@@ -96,17 +101,22 @@ public class Log
             sb.append("\tat " + ourStack[i] + "\n");
         }
 
-        synchronized (Log.class)
+        logCallers(sb);
+        return sb.toString();
+    }
+
+    private static void logCallers(StringBuilder sb)
+    {
+        @Nullable ImmutableList<StackTraceElement[]> traces = threadCaller.get();
+        if (traces != null)
         {
-            StackTraceElement[] el = threadedCallers.get(Thread.currentThread());
-            if (el != null)
+            for (StackTraceElement[] el : traces)
             {
-                sb.append("Original caller:\n");
+                sb.append("Called from another thread by:\n");
                 for (StackTraceElement traceElement : el)
                     sb.append("\tat " + traceElement + "\n");
             }
         }
-        return sb.toString();
     }
 
     public static void error(String s)
