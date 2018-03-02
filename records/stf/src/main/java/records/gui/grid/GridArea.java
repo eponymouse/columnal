@@ -1,7 +1,9 @@
 package records.gui.grid;
 
+import javafx.geometry.Point2D;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
 import threadchecker.OnThread;
@@ -97,6 +99,7 @@ public abstract class GridArea
             && cellPosition.columnIndex >= topLeft.columnIndex && cellPosition.columnIndex < topLeft.columnIndex + getColumnCount();
     }
     
+    // Including any expand arrows, etc:
     public abstract int getColumnCount();
     // Remember -- including all headers:
     public abstract int getCurrentKnownRows();
@@ -105,4 +108,7 @@ public abstract class GridArea
     {
         this.messageWhenEmpty = messageWhenEmpty;
     }
+
+    // Return true if click has been handled:
+    public abstract boolean clicked(Point2D screenPosition, CellPosition cellPosition);
 }

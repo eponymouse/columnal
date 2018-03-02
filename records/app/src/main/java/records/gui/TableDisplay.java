@@ -53,8 +53,8 @@ import records.error.UserException;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
-import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -122,7 +122,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private boolean currentKnownRowsIsFinal = false;// Table title, column title, column type
 
     private final FXPlatformRunnable onModify;
-    private final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
+    
 
     @OnThread(Tag.Any)
     public Table getTable()
@@ -446,36 +446,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         this.onModify = () -> {
             parent.modified();
             Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, TableAndColumnRenames.EMPTY)));
-        };
-
-        this.dataSelectionLimits = new TableSelectionLimits()
-        {
-            //TODO
-            @Override
-            public @AbsRowIndex int getFirstPossibleRowIncl()
-            {
-                return CellPosition.row(0);
-            }
-
-            @Override
-            public @AbsRowIndex int getLastPossibleRowIncl()
-            {
-                return CellPosition.row(0);
-            }
-
-            @Override
-            public @AbsColIndex int getFirstPossibleColumnIncl()
-            {
-                return CellPosition.col(0);
-            }
-
-            @Override
-            public @AbsColIndex int getLastPossibleColumnIncl()
-            {
-                return CellPosition.col(0);
-            }
-        };
-        
+        };        
         
         Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu());
 

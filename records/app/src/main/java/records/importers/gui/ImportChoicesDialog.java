@@ -104,18 +104,14 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         SimpleObjectProperty<@Nullable RecordSet> destRecordSet = new SimpleObjectProperty<>(null);
         VirtualGrid destGrid = new VirtualGrid(null);
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
-        VirtualGridSupplierFloating destColumnHeaderSupplier = new VirtualGridSupplierFloating();
-        destGrid.addNodeSupplier(destColumnHeaderSupplier);
-        DataDisplay destData = new DestDataDisplay(suggestedName, destColumnHeaderSupplier, destRecordSet);
+        DataDisplay destData = new DestDataDisplay(suggestedName, destGrid.getFloatingSupplier(), destRecordSet);
         destGrid.addGridAreas(ImmutableList.of(destData));
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
         destGrid.getScrollGroup().add(srcGrid, ScrollLock.VERTICAL);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
-        VirtualGridSupplierFloating srcColumnHeaderSupplier = new VirtualGridSupplierFloating();
-        srcGrid.addNodeSupplier(srcColumnHeaderSupplier);
-        DataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcColumnHeaderSupplier, srcInfo);
+        DataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
 
 

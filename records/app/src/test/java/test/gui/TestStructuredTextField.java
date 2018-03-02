@@ -129,9 +129,7 @@ public class TestStructuredTextField extends ApplicationTest
     public void start(Stage stage) throws Exception
     {
         VirtualGrid virtualGrid = new VirtualGrid(null);
-        VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
-        virtualGrid.addNodeSupplier(columnHeaderSupplier);
-        dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), null, columnHeaderSupplier)
+        dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), null, virtualGrid.getFloatingSupplier())
         {
             @Override
             public int getCurrentKnownRows()

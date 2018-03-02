@@ -95,3 +95,10 @@
     -fx-stroke-type: outside;
     -fx-effect: dropshadow(gaussian, grey(40%), 15, 0.7, 2, 2);
 }
+
+.virt-grid-selection-overlay {
+    -fx-fill: transparent;
+    -fx-stroke-width: 2;
+    -fx-stroke: $focus-color;
+    -fx-stroke-type: outside;
+}

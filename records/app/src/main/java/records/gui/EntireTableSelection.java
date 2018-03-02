@@ -2,6 +2,7 @@ package records.gui;
 
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
+import records.gui.grid.RectangleBounds;
 
 public class EntireTableSelection implements CellSelection
 {
@@ -35,5 +36,11 @@ public class EntireTableSelection implements CellSelection
     public CellPosition positionToEnsureInView()
     {
         return selected.getPosition();
+    }
+
+    @Override
+    public RectangleBounds getSelectionDisplayRectangle()
+    {
+        return new RectangleBounds(selected.getPosition(), selected.getPosition().offsetByRowCols(selected.getCurrentKnownRows(), selected.getColumnCount()));
     }
 }

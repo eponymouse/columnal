@@ -79,8 +79,6 @@ public class View extends StackPane
     private final Pane snapGuidePane;
     // The STF supplier for the main pane:
     private final DataCellSupplier dataCellSupplier = new DataCellSupplier();
-    // The column header supplier:
-    private final VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
     // The supplier for buttons to add rows and columns:
     private final ExpandTableArrowSupplier expandTableArrowSupplier = new ExpandTableArrowSupplier();
     // The supplier for row labels:
@@ -607,7 +605,7 @@ public class View extends StackPane
             // No-one will add tables after the constructor, so this is okay:
             @SuppressWarnings("initialization")
             private final View thisView = View.this;
-            
+
             @Override
             public void removeTable(Table t, int tablesRemaining)
             {
@@ -619,7 +617,8 @@ public class View extends StackPane
             {
                 FXUtility.runFX(() -> {
                     thisView.emptyListener.consume(false);
-                    thisView.addDisplay(new TableDisplay(thisView, thisView.columnHeaderSupplier, dataSource), null);
+                    VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
+                    thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource), null);
                     thisView.save();
                 });
             }
@@ -630,9 +629,10 @@ public class View extends StackPane
                 FXUtility.runFX(() ->
                 {
                     thisView.emptyListener.consume(false);
-                    TableDisplay tableDisplay = new TableDisplay(thisView, thisView.columnHeaderSupplier, transformation);
+                    VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
+                    TableDisplay tableDisplay = new TableDisplay(thisView, floatingSupplier, transformation);
                     thisView.addDisplay(tableDisplay, thisView.getTableDisplayOrNull(transformation.getSources().get(0)));
-        
+
                     List<TableDisplay> sourceDisplays = new ArrayList<>();
                     for (TableId t : transformation.getSources())
                     {
@@ -644,7 +644,7 @@ public class View extends StackPane
                     {
                         View.this.editTransform((TransformationEditable)transformation);
                     }));*/
-        
+
                     thisView.save();
                 });
             }
@@ -688,7 +688,6 @@ public class View extends StackPane
         mainPane.getNode().getStyleClass().add("main-view-grid");
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
-        mainPane.addNodeSupplier(columnHeaderSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
         mainPane.addNodeSupplier(rowLabelSupplier);
         overlayPane = new Pane();

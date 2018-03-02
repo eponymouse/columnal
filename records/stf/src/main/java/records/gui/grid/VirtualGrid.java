@@ -7,6 +7,7 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UnknownIfUserIndex;
 import com.google.common.collect.Streams;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -32,11 +33,14 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.checker.units.qual.UnknownUnits;
+import org.checkerframework.dataflow.qual.Pure;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -120,11 +124,15 @@ public class VirtualGrid implements ScrollBindable
     private final IntegerProperty extraColsForScrolling = new SimpleIntegerProperty(0);
     // A sort of mutex to stop re-entrance to the updateSizeAndPositions() method:
     private boolean updatingSizeAndPositions = false;
+    
+    private final VirtualGridSupplierFloating supplierFloating = new VirtualGridSupplierFloating();
 
+    @OnThread(Tag.FXPlatform)
     public VirtualGrid(@Nullable FXPlatformBiConsumer<CellPosition, Point2D> createTable)
     {
         if (createTable != null)
             nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
+        nodeSuppliers.add(supplierFloating);
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
@@ -183,6 +191,32 @@ public class VirtualGrid implements ScrollBindable
             scrollGroup.requestScroll(scrollEvent);
             scrollEvent.consume();
         });
+
+
+        @Initialized @NonNull ObjectProperty<@Nullable CellSelection> selectionFinal = this.selection;
+        RectangleOverlayItem selectionRectangleOverlayItem = new RectangleOverlayItem()
+        {
+            private final BooleanExpression hasSelection = selectionFinal.isNotNull();
+            
+            @Override
+            protected Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+            {
+                CellSelection selection = selectionFinal.get();
+                if (selection == null)
+                    return Optional.empty();
+                else
+                    return Optional.of(selection.getSelectionDisplayRectangle());
+            }
+
+            @Override
+            protected void style(Rectangle r)
+            {
+                r.getStyleClass().add("virt-grid-selection-overlay");
+                r.visibleProperty().bind(hasSelection);
+            }
+        };
+        supplierFloating.addItem(selectionRectangleOverlayItem);
+        
         FXUtility.addChangeListenerPlatform(selection, s -> {
             if (s != null)
             {
@@ -191,7 +225,7 @@ public class VirtualGrid implements ScrollBindable
             container.redoLayout();
         });
     }
-    
+
     private @Nullable CellPosition getCellPositionAt(double x, double y)
     {
         @AbsColIndex int colIndex;
@@ -554,6 +588,11 @@ public class VirtualGrid implements ScrollBindable
         ));
     }
 
+    public final @Pure VirtualGridSupplierFloating getFloatingSupplier()
+    {
+        return supplierFloating;
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {
@@ -578,17 +617,22 @@ public class VirtualGrid implements ScrollBindable
                 
                 if (cellPosition != null)
                 {
+                    boolean inTable = false;
                     // Go through each grid area and see if it contains the position:
                     for (GridArea gridArea : gridAreas)
                     {
-                        if (gridArea.contains(cellPosition))
+                        if (gridArea.clicked(new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY()), cellPosition))
                         {
-                            return;
+                            inTable = true;
+                            break;
                         }
                     }
-                    // Belongs to no-one; we must handle it:
-                    select(new EmptyCellSelection(cellPosition));
-                    FXUtility.mouse(this).requestFocus();
+                    if (!inTable)
+                    {
+                        // Belongs to no-one; we must handle it:
+                        select(new EmptyCellSelection(cellPosition));
+                        FXUtility.mouse(this).requestFocus();
+                    }
                     redoLayout();
                 }
                 
@@ -615,8 +659,8 @@ public class VirtualGrid implements ScrollBindable
                 */
             };
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
-            addEventFilter(MouseEvent.MOUSE_PRESSED, clickHandler);
-            addEventFilter(MouseEvent.MOUSE_RELEASED, clickHandler);
+            //addEventFilter(MouseEvent.MOUSE_PRESSED, clickHandler);
+            //addEventFilter(MouseEvent.MOUSE_RELEASED, clickHandler);
             
 
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
@@ -1073,6 +1117,12 @@ public class VirtualGrid implements ScrollBindable
         public CellPosition positionToEnsureInView()
         {
             return position;
+        }
+
+        @Override
+        public RectangleBounds getSelectionDisplayRectangle()
+        {
+            return new RectangleBounds(position, position);
         }
     }
 }

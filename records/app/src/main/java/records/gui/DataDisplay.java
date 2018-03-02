@@ -30,11 +30,13 @@ import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
-import records.data.TableOperations.RenameColumn;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.RectangleOverlayItem;
+import records.gui.grid.RectangularTableCellSelection;
+import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -69,12 +71,14 @@ public abstract class DataDisplay extends GridArea
     private final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
     private final FloatingItem tableHeaderItem;
-
+    
     // Not final because it may changes if user changes the display item or preview options change:
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
 
     protected final SimpleObjectProperty<ImmutableList<CellStyle>> cellStyles = new SimpleObjectProperty<>(ImmutableList.of());
+
+    protected final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
     
     public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
     {
@@ -164,6 +168,34 @@ public abstract class DataDisplay extends GridArea
               }
           }  
         );
+
+        this.dataSelectionLimits = new TableSelectionLimits()
+        {
+            //TODO
+            @Override
+            public @AbsRowIndex int getFirstPossibleRowIncl()
+            {
+                return CellPosition.row(0);
+            }
+
+            @Override
+            public @AbsRowIndex int getLastPossibleRowIncl()
+            {
+                return CellPosition.row(0);
+            }
+
+            @Override
+            public @AbsColIndex int getFirstPossibleColumnIncl()
+            {
+                return CellPosition.col(0);
+            }
+
+            @Override
+            public @AbsColIndex int getLastPossibleColumnIncl()
+            {
+                return CellPosition.col(0);
+            }
+        };
     }
 
     @OnThread(Tag.FXPlatform)
@@ -348,6 +380,29 @@ public abstract class DataDisplay extends GridArea
             floatingItems.removeItem(columnHeaderItem);
         }
         floatingItems.removeItem(tableHeaderItem);
+    }
+
+    @Override
+    public boolean clicked(Point2D screenPosition, CellPosition cellPosition)
+    {
+        CellPosition pos = getPosition();
+        if (!contains(cellPosition))
+            return false;
+        // In header?
+        if (cellPosition.rowIndex == pos.rowIndex)
+        {
+            withParent(v -> v.select(new EntireTableSelection(this)));
+        }
+        // In data cells?
+        else if (cellPosition.rowIndex >= pos.rowIndex + HEADER_ROWS)
+        {
+            withParent(v -> v.select(new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits)));
+        }
+        // TODO column headers
+        
+        // If in expand arrows, no selection to be done (although should we trigger here?)
+        
+        return true;
     }
 
     private class DestRectangleOverlay extends RectangleOverlayItem

@@ -1,4 +1,4 @@
-package records.gui;
+package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
@@ -59,7 +59,7 @@ public abstract class RectangleOverlayItem implements FloatingItem
         };
         r.setMouseTransparent(true);
         style(r);
-        return new Pair<>(ViewOrder.OVERLAY, r);
+        return new Pair<>(ViewOrder.PASSIVE_OVERLAY, r);
     }
 
     protected abstract void style(Rectangle r);

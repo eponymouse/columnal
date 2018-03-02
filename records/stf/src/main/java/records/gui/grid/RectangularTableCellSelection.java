@@ -67,6 +67,21 @@ public class RectangularTableCellSelection implements CellSelection
         return curFocus;
     }
 
+    @Override
+    public RectangleBounds getSelectionDisplayRectangle()
+    {
+        return new RectangleBounds(
+            new CellPosition(
+                Utility.minRow(startAnchor.rowIndex, curFocus.rowIndex),
+                Utility.minCol(startAnchor.columnIndex, curFocus.columnIndex)
+            ),
+            new CellPosition(
+                Utility.maxRow(startAnchor.rowIndex, curFocus.rowIndex),
+                Utility.maxCol(startAnchor.columnIndex, curFocus.columnIndex)
+            )
+        );
+    }
+
     /*
         @Override
         public SelectionStatus selectionStatus(CellPosition cellPosition)

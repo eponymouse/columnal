@@ -31,6 +31,11 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     private final Map<FloatingItem, Optional<Node>> items = new IdentityHashMap<>();
     private final List<Node> toRemove = new ArrayList<>();
 
+    // Prevent creation from outside the package:
+    VirtualGridSupplierFloating()
+    {
+    }
+    
     @Override
     void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {

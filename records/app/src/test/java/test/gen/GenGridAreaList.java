@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import javafx.geometry.Point2D;
 import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
 import records.gui.grid.GridArea;
@@ -51,6 +52,12 @@ public class GenGridAreaList extends Generator<GridAreaList>
                 public int getCurrentKnownRows()
                 {
                     return y1 - y0 + 1;
+                }
+
+                @Override
+                public boolean clicked(Point2D screenPosition, CellPosition cellPosition)
+                {
+                    return false;
                 }
             };
             gridArea.setPosition(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)));

@@ -31,4 +31,6 @@ public interface CellSelection
     public CellSelection move(boolean extendSelection, int byRows, int byColumns);
     
     public CellPosition positionToEnsureInView();
+    
+    public RectangleBounds getSelectionDisplayRectangle();
 }

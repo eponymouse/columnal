@@ -63,7 +63,7 @@ public abstract class VirtualGridSupplier<T extends Node>
         public void remove(Node node);
     }
     
-    public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED, OVERLAY }
+    public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED, PASSIVE_OVERLAY, ACTIVE_OVERLAY }
     
     // Used for both rows and columns, to specify visible extents and divider positions
     // Tag the type T with either @AbsRowIndex or @AbsColIndex
