@@ -1,9 +1,11 @@
 package test.gui;
 
 import annotation.qual.Value;
+import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -11,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.NodeQuery;
@@ -67,6 +70,10 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private Stage windowToUse;
+    
+    @OnThread(Tag.Any)
+    @SuppressWarnings("nullness")
+    private VirtualGrid virtualGrid;
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -83,8 +90,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propTestDeleteRow(
-        @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
-        @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @When(seed=1L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
+        @When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
@@ -101,9 +108,10 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         Table calculated = new Transform(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
-        TestUtil.openDataAsTable(windowToUse, manager).get();
+        virtualGrid = TestUtil.openDataAsTable(windowToUse, manager).get().getSecond();
 
-        int randomRow = r.nextInt(expressionValue.recordSet.getLength());
+        @SuppressWarnings("units")
+        @AbsRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
         scrollToRow(calculated.getId(), randomRow);
         scrollToRow(srcData.getId(), randomRow);
@@ -154,8 +162,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @Property(trials = 10)
     @OnThread(Tag.Any)
     public void propTestInsertRow(
-        @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
-        @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @When(seed=1L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
+        @When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
             return; // Can't insert if there's no table or no columns
@@ -166,7 +174,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
         Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(sortBy.getName())));
-        TestUtil.sim(() -> {
+        virtualGrid = TestUtil.sim(() -> {
             manager.record(calculated);
             try
             {
@@ -176,10 +184,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             {
                 throw new RuntimeException(e);
             }
-        }).get();
+        }).get().getSecond();
 
         int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
-        int targetNewRow = r.nextInt(srcLength + 1);
+        @SuppressWarnings("units")
+        @AbsRowIndex int targetNewRow = r.nextInt(srcLength + 1);
         boolean originalWasEmpty = false;
 
         // Can't do insert-after if target is first row. Can't do insert-before if it's last row
@@ -195,9 +204,10 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         else if (targetNewRow > 0)
         {
             // Insert-after:
-            scrollToRow(calculated.getId(), targetNewRow - 1);
-            scrollToRow(srcData.getId(), targetNewRow - 1);
-            rightClickRowLabel(srcData.getId(), targetNewRow - 1);
+            @AbsRowIndex int beforeTargetRow = targetNewRow - CellPosition.row(1);
+            scrollToRow(calculated.getId(), beforeTargetRow);
+            scrollToRow(srcData.getId(), beforeTargetRow);
+            rightClickRowLabel(srcData.getId(), beforeTargetRow);
             clickOn(".id-stableView-row-insertAfter");
             TestUtil.delay(500);
         }
@@ -218,7 +228,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         // - Ditto for calculated
 
         // Work out positions in sorted data:
-        int beforeDefault = 0;
+        @AbsRowIndex int beforeDefault = CellPosition.row(0);
         @Nullable Pair<Integer, @Value Object> firstAfterDefault = null;
         @Nullable @Value Object sortDefault_ = TestUtil.<@Nullable @Value Object>sim(() -> sortBy.getDefaultValue());
         if (sortDefault_ == null)
@@ -238,7 +248,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             // and it started before us.
             if (cmp < 0 || (i < targetNewRow && cmp == 0))
             {
-                beforeDefault += 1;
+                beforeDefault += CellPosition.row(1);
             }
             else
             {
@@ -254,7 +264,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         // TODO check for default data in inserted spot
 
-        scrollToRow(srcData.getId(), targetNewRow - 1);
+        scrollToRow(srcData.getId(), targetNewRow - CellPosition.row(1));
         TestUtil.sleep(1000);
         // Row still there, but data from the row after it:
         if (targetNewRow < newSrcLength)
@@ -263,7 +273,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             TestUtil.sim_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow)));
             if (firstAfterDefault != null)
             {
-                scrollToRow(calculated.getId(), beforeDefault + 1);
+                scrollToRow(calculated.getId(), beforeDefault + CellPosition.row(1));
                 Pair<Integer, @Value Object> firstAfterDefaultFinal = firstAfterDefault;
                 TestUtil.sim_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + 1, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst())));
             }
@@ -380,28 +390,17 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     }
 
     @OnThread(Tag.Any)
-    private void scrollToRow(TableId id, int targetRow)
+    private void scrollToRow(TableId id, @AbsRowIndex int targetRow)
     {
-        // Bring table to front:
-        //clickOn("#id-menu-view").clickOn(".id-menu-view-find");
-        //write(id.getRaw());
-        //push(KeyCode.ENTER);
-
-        Node tableDisplay = queryTableDisplay(id).query();
-        if (tableDisplay == null)
-            throw new RuntimeException("Table " + id + " not found");
-        @NonNull Node tableDisplayFinal = tableDisplay;
-        // TODO this is broken:
-        VirtualGrid grid = TestUtil.fx(() -> ((TableDisplay)(Object)tableDisplayFinal)._test_getParent());
-        Node cell = from(TestUtil.fx(() -> grid.getNode())).lookup(".virt-grid-cell").<Node>query();
+        Node cell = from(TestUtil.fx(() -> virtualGrid.getNode())).lookup(".virt-grid-cell").<Node>query();
         if (cell != null)
             clickOn(cell);
         // Avoid infinite loop in case of test failure -- limit amount of scrolls:
-        for (int scrolls = 0; targetRow < TestUtil.fx(() -> grid._test_getFirstLogicalVisibleRowIncl()) && scrolls < targetRow; scrolls++)
+        for (int scrolls = 0; targetRow < TestUtil.fx(() -> virtualGrid._test_getFirstLogicalVisibleRowIncl()) && scrolls < targetRow; scrolls++)
         {
             push(KeyCode.PAGE_UP);
         }
-        for (int scrolls = 0; targetRow >= TestUtil.fx(() -> grid._test_getLastLogicalVisibleRowExcl()) && scrolls < targetRow; scrolls++)
+        for (int scrolls = 0; targetRow >= TestUtil.fx(() -> virtualGrid._test_getLastLogicalVisibleRowExcl()) && scrolls < targetRow; scrolls++)
         {
             push(KeyCode.PAGE_DOWN);
         }

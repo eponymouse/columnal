@@ -18,7 +18,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
 {
     public DataCellSupplier()
     {
-        super(Arrays.asList(CellStyle.values()));
+        super(ViewOrder.STANDARD, Arrays.asList(CellStyle.values()));
     }
     
     @Override

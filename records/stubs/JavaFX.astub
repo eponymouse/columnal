@@ -194,8 +194,11 @@ package javafx.scene.layout;
 class BorderPane
 {
     BorderPane(@Nullable Node a, @Nullable Node b, @Nullable Node c, @Nullable Node d, @Nullable Node e);
-    @UnknownInitialization void setTop(@Nullable Node a);
     void setCenter(@UnknownInitialization(javafx.scene.layout.BorderPane.class) BorderPane this, @Nullable Node a);
+    void setRight(@UnknownInitialization(javafx.scene.layout.BorderPane.class) BorderPane this, @Nullable Node a);
+    void setTop(@UnknownInitialization(javafx.scene.layout.BorderPane.class) BorderPane this, @Nullable Node a);
+    void setBottom(@UnknownInitialization(javafx.scene.layout.BorderPane.class) BorderPane this, @Nullable Node a);
+    void setLeft(@UnknownInitialization(javafx.scene.layout.BorderPane.class) BorderPane this, @Nullable Node a);
     //@UnknownInitialization ObservableList<String> getStyleClass();
 }
 class GridPane

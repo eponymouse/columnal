@@ -196,9 +196,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitColumnRef(ColumnRefContext ctx)
         {
             TableIdContext tableIdContext = ctx.tableId();
-            if (tableIdContext == null || ctx.columnId() == null)
+            if (ctx.columnId() == null)
                 throw new RuntimeException("Error processing column reference");
-            return new ColumnReference(new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
+            return new ColumnReference(tableIdContext == null ? null : new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
         }
 
         @Override

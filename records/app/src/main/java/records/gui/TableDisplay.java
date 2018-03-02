@@ -177,7 +177,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 @SuppressWarnings("units")
                 @TableColIndex int columnIndexWithinTable = cellPosition.columnIndex - getPosition().columnIndex;
                 @SuppressWarnings("units")
-                @TableRowIndex int rowIndexWithinTable = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
+                @TableRowIndex int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
                 if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                 {
                     displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
@@ -208,6 +208,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 return cellStyles;
             }
         };
+    }
+
+    @SuppressWarnings("units")
+    public @TableRowIndex int getRowIndexWithinTable(@AbsRowIndex int absRowIndex)
+    {
+        return absRowIndex - (getPosition().rowIndex + HEADER_ROWS);
     }
 
     @Override

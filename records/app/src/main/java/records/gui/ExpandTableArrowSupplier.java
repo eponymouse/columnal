@@ -34,7 +34,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     
     public ExpandTableArrowSupplier()
     {
-        super(Arrays.asList(CellStyle.values()));
+        super(ViewOrder.STANDARD, Arrays.asList(CellStyle.values()));
     }
     
     @Override

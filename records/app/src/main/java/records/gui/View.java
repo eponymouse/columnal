@@ -83,6 +83,8 @@ public class View extends StackPane
     private final VirtualGridSupplierFloating columnHeaderSupplier = new VirtualGridSupplierFloating();
     // The supplier for buttons to add rows and columns:
     private final ExpandTableArrowSupplier expandTableArrowSupplier = new ExpandTableArrowSupplier();
+    // The supplier for row labels:
+    private final RowLabelSupplier rowLabelSupplier = new RowLabelSupplier();
     
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
@@ -207,7 +209,8 @@ public class View extends StackPane
                 display.cleanupFloatingItems();
                 dataCellSupplier.removeGrid(display);
                 mainPane.removeGridArea(display);
-                
+                expandTableArrowSupplier.removeGrid(display);
+                rowLabelSupplier.removeGrid(display);
             }
             emptyListener.consume(remainingCount == 0);
         });
@@ -687,6 +690,7 @@ public class View extends StackPane
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(columnHeaderSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
+        mainPane.addNodeSupplier(rowLabelSupplier);
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
         snapGuidePane = new Pane();
@@ -779,6 +783,7 @@ public class View extends StackPane
     {
         dataCellSupplier.addGrid(tableDisplay, tableDisplay.getDataGridCellInfo());
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
+        rowLabelSupplier.addTable(tableDisplay);
         @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
         if (tableOps.addColumn != null || tableOps.appendRows != null)
         {

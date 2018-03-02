@@ -29,7 +29,8 @@ import java.util.Optional;
 /**
  * An implementation of {@link VirtualGridSupplier} that has one node per cell position, and re-uses
  * nodes when scrolling occurs.  Can be used by multiple grid-areas, but assumes that they do not overlap.
- * @param <T>
+ * @param <T> The GUI nodes which will be placed and re-used
+ * @param <S> The possible styles for that GUI node (usually best to use an enum, but not required)
  */
 @OnThread(Tag.FXPlatform)
 public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends VirtualGridSupplier<T>
@@ -45,9 +46,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     // All items that are in the parent container, but invisible:
     private final List<T> spareItems = new ArrayList<>();
     private final Collection<S> possibleStyles;
+    private final ViewOrder viewOrder;
 
-    public VirtualGridSupplierIndividual(Collection<S> styleValues)
+    protected VirtualGridSupplierIndividual(ViewOrder viewOrder, Collection<S> styleValues)
     {
+        this.viewOrder = viewOrder;
         this.possibleStyles = styleValues;
     }
     
@@ -102,7 +105,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                     else
                     {
                         cell = withStyle(makeNewItem(), gridForItem.get().styleForAllCells());
-                        containerChildren.add(cell.getFirst(), ViewOrder.STANDARD);
+                        containerChildren.add(cell.getFirst(), viewOrder);
                     }
 
                     visibleItems.put(cellPosition, cell);
@@ -199,7 +202,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         // Check whether a cell which is already in use for that
         // position is up-to-date.  It might not be, for example, if
         // the table has changed bounds or column layout
-        boolean checkCellUpToDate(CellPosition cellPosition, T cellFirst);
+        public boolean checkCellUpToDate(CellPosition cellPosition, T cellFirst);
     }
 
     private class StyleUpdater implements ChangeListener<Collection<S>>
