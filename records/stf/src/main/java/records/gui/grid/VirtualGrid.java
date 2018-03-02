@@ -32,7 +32,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -54,6 +53,7 @@ import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stable.ScrollResult;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -194,7 +194,7 @@ public class VirtualGrid implements ScrollBindable
 
 
         @Initialized @NonNull ObjectProperty<@Nullable CellSelection> selectionFinal = this.selection;
-        RectangleOverlayItem selectionRectangleOverlayItem = new RectangleOverlayItem()
+        RectangleOverlayItem selectionRectangleOverlayItem = new RectangleOverlayItem(ViewOrder.OVERLAY_ACTIVE)
         {
             private final BooleanExpression hasSelection = selectionFinal.isNotNull();
             
@@ -476,7 +476,6 @@ public class VirtualGrid implements ScrollBindable
         return sumColumnWidths(CellPosition.col(0), pos == null ? firstVisibleColumnIndex : pos.getFirst()) - (pos == null ? firstVisibleColumnOffset : pos.getSecond());
     }
 
-    // Selects cell so that you can navigate around with keyboard
     public void select(@Nullable CellSelection cellSelection)
     {
         // TODO make sure cell is visible
@@ -488,9 +487,29 @@ public class VirtualGrid implements ScrollBindable
             FXUtility.setPseudoclass(visCell, "secondary-selected-cell", status == SelectionStatus.SECONDARY_SELECTION);
         });
         */
+        
         selection.set(cellSelection);
         if (cellSelection != null)
             container.requestFocus();
+    }
+    
+    // Selects cell so that you can navigate around with keyboard
+    public void findAndSelect(@Nullable Either<CellPosition, CellSelection> target)
+    {
+        select(target == null ? null : target.<@Nullable CellSelection>either(
+            p -> {
+                // See if the position is in a grid area:
+                for (GridArea gridArea : gridAreas)
+                {
+                    if (gridArea.contains(p))
+                    {
+                        return gridArea.select(p);
+                    }
+                }
+                return new EmptyCellSelection(p);
+            },
+            s -> s
+        ));
     }
 
     public Node getNode()
@@ -666,7 +685,7 @@ public class VirtualGrid implements ScrollBindable
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
-                    select(null);
+                    //select(null);
                     redoLayout();
                 }
             });
@@ -730,7 +749,7 @@ public class VirtualGrid implements ScrollBindable
             @Nullable CellSelection focusedCellPos = selection.get();
             if (focusedCellPos != null)
             {
-                select(focusedCellPos.move(extendSelection, rows, columns));
+                findAndSelect(focusedCellPos.move(extendSelection, rows, columns));
             }
         }
 
@@ -1092,7 +1111,7 @@ public class VirtualGrid implements ScrollBindable
         }
         
         @Override
-        public CellSelection move(boolean extendSelection, int _byRows, int _byColumns)
+        public Either<CellPosition, CellSelection> move(boolean extendSelection, int _byRows, int _byColumns)
         {
             @AbsRowIndex int byRows = CellPosition.row(_byRows);
             @AbsColIndex int byColumns = CellPosition.col(_byColumns);
@@ -1101,16 +1120,16 @@ public class VirtualGrid implements ScrollBindable
                 Utility.minCol(currentColumns.get() - CellPosition.col(1), Utility.maxCol(position.columnIndex + byColumns, CellPosition.col(0)))
             );
             if (newPos.equals(position))
-                return this; // Not moving
+                return Either.right(this); // Not moving
             // Go through each grid area and see if it contains the position:
             for (GridArea gridArea : gridAreas)
             {
                 if (gridArea.contains(newPos))
                 {
-                    return this; // TODO select in table
+                    return Either.left(newPos);
                 }
             }
-            return new EmptyCellSelection(newPos);
+            return Either.right(new EmptyCellSelection(newPos));
         }
 
         @Override

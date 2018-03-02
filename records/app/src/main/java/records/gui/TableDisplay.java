@@ -55,6 +55,7 @@ import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -118,6 +119,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
+    // Only data rows, not related to display:
     private int currentKnownRows = 0;
     private boolean currentKnownRowsIsFinal = false;// Table title, column title, column type
 
@@ -417,7 +419,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         recordSetOrError.ifRight(rs -> setupWithRecordSet(parent.getManager(), table, rs));
         
         // Border overlay:
-        columnHeaderSupplier.addItem(new RectangleOverlayItem()
+        columnHeaderSupplier.addItem(new RectangleOverlayItem(ViewOrder.OVERLAY_PASSIVE)
         {
             @Override
             protected Optional<RectangleBounds> calculateBounds(VisibleDetails rowBounds, VisibleDetails columnBounds)

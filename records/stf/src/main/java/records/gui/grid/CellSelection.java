@@ -3,6 +3,7 @@ package records.gui.grid;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 
 /**
  * A selection of cells.  This might be, for example:
@@ -27,8 +28,13 @@ public interface CellSelection
      * Gets a new selection that is the result of pressing end on this one.
      */
     public CellSelection atEnd(boolean extendSelection);
-    
-    public CellSelection move(boolean extendSelection, int byRows, int byColumns);
+
+    /**
+     * Move the selection by that number of rows and columns.  If this would result in moving outside
+     * the current selection, the new position is returned in Either.left.  Otherwise, a new selection
+     * is returned in Either.right
+     */
+    public Either<CellPosition, CellSelection> move(boolean extendSelection, int byRows, int byColumns);
     
     public CellPosition positionToEnsureInView();
     

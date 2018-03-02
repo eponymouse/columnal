@@ -574,6 +574,15 @@ public class FXUtility
         }
     }
 
+    // Like Node's resizeRelocate, but doesn't account for the bounds size.  Places the Node *EXACTLY* where
+    // it is requested.
+    public static void resizeRelocate(Node node, double x, double y, double width, double height)
+    {
+        node.setLayoutX(x);
+        node.setLayoutY(y);
+        node.resize(width, height);
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)

@@ -5,6 +5,7 @@ import annotation.units.AbsRowIndex;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Utility;
 
 /**
@@ -51,14 +52,14 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public CellSelection move(boolean extendSelection, int _byRows, int _byColumns)
+    public Either<CellPosition, CellSelection> move(boolean extendSelection, int _byRows, int _byColumns)
     {
         @AbsRowIndex int byRows = CellPosition.row(_byRows);
         @AbsColIndex int byColumns = CellPosition.col(_byColumns);
-        CellPosition dest = new CellPosition(Utility.maxRow(tableSelectionLimits.getFirstPossibleRowIncl(), Utility.minRow(tableSelectionLimits.getLastPossibleRowIncl() - CellPosition.row(1), curFocus.rowIndex + byRows)),
-            Utility.maxCol(tableSelectionLimits.getFirstPossibleColumnIncl(), Utility.minCol(tableSelectionLimits.getLastPossibleColumnIncl() - CellPosition.col(1), curFocus.columnIndex + byColumns)));
+        CellPosition dest = new CellPosition(Utility.maxRow(tableSelectionLimits.getFirstPossibleRowIncl(), Utility.minRow(tableSelectionLimits.getLastPossibleRowIncl(), curFocus.rowIndex + byRows)),
+            Utility.maxCol(tableSelectionLimits.getFirstPossibleColumnIncl(), Utility.minCol(tableSelectionLimits.getLastPossibleColumnIncl(), curFocus.columnIndex + byColumns)));
         // Move from top-left:
-        return new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits);
+        return Either.right(new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits));
     }
 
     @Override

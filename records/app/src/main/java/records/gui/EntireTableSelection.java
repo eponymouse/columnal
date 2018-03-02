@@ -3,6 +3,7 @@ package records.gui;
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.RectangleBounds;
+import utility.Either;
 
 public class EntireTableSelection implements CellSelection
 {
@@ -26,10 +27,10 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
-    public CellSelection move(boolean extendSelection, int byRows, int byColumns)
+    public Either<CellPosition, CellSelection> move(boolean extendSelection, int byRows, int byColumns)
     {
         // TODO allow moving out
-        return this;
+        return Either.right(this);
     }
 
     @Override

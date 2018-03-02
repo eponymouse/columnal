@@ -127,7 +127,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                 }
                 cell.getFirst().setVisible(true);
                 double nextX = columnBounds.getItemCoordAfter(columnIndex);
-                cell.getFirst().resizeRelocate(x, y, nextX - x, rowHeight);
+                FXUtility.resizeRelocate(cell.getFirst(), x, y, nextX - x, rowHeight);
             }
         }
 

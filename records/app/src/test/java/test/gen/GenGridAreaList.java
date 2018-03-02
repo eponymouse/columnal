@@ -5,8 +5,10 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import javafx.geometry.Point2D;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
+import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import styled.StyledString;
 import test.gen.GenGridAreaList.GridAreaList;
@@ -58,6 +60,12 @@ public class GenGridAreaList extends Generator<GridAreaList>
                 public boolean clicked(Point2D screenPosition, CellPosition cellPosition)
                 {
                     return false;
+                }
+
+                @Override
+                public @Nullable CellSelection select(CellPosition cellPosition)
+                {
+                    return null;
                 }
             };
             gridArea.setPosition(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)));

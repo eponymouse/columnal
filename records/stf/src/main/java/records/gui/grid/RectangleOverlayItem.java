@@ -6,7 +6,6 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
 import records.data.CellPosition;
-import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
@@ -20,6 +19,13 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public abstract class RectangleOverlayItem implements FloatingItem
 {
+    private final ViewOrder viewOrder;
+
+    protected RectangleOverlayItem(ViewOrder viewOrder)
+    {
+        this.viewOrder = viewOrder;
+    }
+
     @Override
     public final Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
@@ -59,7 +65,7 @@ public abstract class RectangleOverlayItem implements FloatingItem
         };
         r.setMouseTransparent(true);
         style(r);
-        return new Pair<>(ViewOrder.PASSIVE_OVERLAY, r);
+        return new Pair<>(viewOrder, r);
     }
 
     protected abstract void style(Rectangle r);

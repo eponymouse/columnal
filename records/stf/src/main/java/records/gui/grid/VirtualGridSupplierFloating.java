@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -56,7 +57,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
                     item.setValue(Optional.of(itemAndOrder.getSecond()));
                 }
                 // Now that there's a cell there, locate it:
-                item.getValue().get().resizeRelocate(pos.get().getMinX(), pos.get().getMinY(), pos.get().getWidth(), pos.get().getHeight());
+                FXUtility.resizeRelocate(item.getValue().get(), pos.get().getMinX(), pos.get().getMinY(), pos.get().getWidth(), pos.get().getHeight());
             }
             else
             {

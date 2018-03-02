@@ -32,6 +32,7 @@ import records.data.TableManager;
 import records.data.TableOperations;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
+import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
@@ -171,29 +172,28 @@ public abstract class DataDisplay extends GridArea
 
         this.dataSelectionLimits = new TableSelectionLimits()
         {
-            //TODO
             @Override
             public @AbsRowIndex int getFirstPossibleRowIncl()
             {
-                return CellPosition.row(0);
+                return DataDisplay.this.getFirstDataDisplayRowIncl();
             }
 
             @Override
             public @AbsRowIndex int getLastPossibleRowIncl()
             {
-                return CellPosition.row(0);
+                return DataDisplay.this.getLastDataDisplayRowIncl();
             }
 
             @Override
             public @AbsColIndex int getFirstPossibleColumnIncl()
             {
-                return CellPosition.col(0);
+                return DataDisplay.this.getPosition().columnIndex;
             }
 
             @Override
             public @AbsColIndex int getLastPossibleColumnIncl()
             {
-                return CellPosition.col(0);
+                return DataDisplay.this.getPosition().columnIndex + CellPosition.col(displayColumns == null ? 0 : displayColumns.size() - 1);
             }
         };
     }
@@ -385,24 +385,37 @@ public abstract class DataDisplay extends GridArea
     @Override
     public boolean clicked(Point2D screenPosition, CellPosition cellPosition)
     {
-        CellPosition pos = getPosition();
-        if (!contains(cellPosition))
-            return false;
-        // In header?
-        if (cellPosition.rowIndex == pos.rowIndex)
+        @Nullable CellSelection selection = select(cellPosition);
+        if (selection != null)
         {
-            withParent(v -> v.select(new EntireTableSelection(this)));
+            withParent(v -> v.select(selection));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public @Nullable CellSelection select(CellPosition cellPosition)
+    {
+        if (!contains(cellPosition))
+            return null;
+        CellPosition us = getPosition();
+        // In header?
+        if (cellPosition.rowIndex == us.rowIndex)
+        {
+            return new EntireTableSelection(this);
         }
         // In data cells?
-        else if (cellPosition.rowIndex >= pos.rowIndex + HEADER_ROWS)
+        else if (cellPosition.rowIndex >= us.rowIndex + HEADER_ROWS)
         {
-            withParent(v -> v.select(new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits)));
+            return new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits);
         }
+
         // TODO column headers
-        
+
         // If in expand arrows, no selection to be done (although should we trigger here?)
-        
-        return true;
+
+        return null;
     }
 
     private class DestRectangleOverlay extends RectangleOverlayItem
@@ -413,6 +426,7 @@ public abstract class DataDisplay extends GridArea
 
         private DestRectangleOverlay(CellPosition curPosition, Bounds originalBoundsOnScreen, double screenX, double screenY)
         {
+            super(ViewOrder.OVERLAY_ACTIVE);
             this.destPosition = curPosition;
             this.lastMousePosScreen = new Point2D(screenX, screenY);
             this.offsetFromTopLeftOfSource = new Point2D(screenX - originalBoundsOnScreen.getMinX(), screenY - originalBoundsOnScreen.getMinY());
