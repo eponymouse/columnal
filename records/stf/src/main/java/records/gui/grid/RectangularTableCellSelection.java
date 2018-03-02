@@ -83,34 +83,40 @@ public class RectangularTableCellSelection implements CellSelection
         );
     }
 
+    @Override
+    public boolean isExactly(CellPosition cellPosition)
+    {
+        return startAnchor.equals(cellPosition) && curFocus.equals(cellPosition);
+    }
+
     /*
-        @Override
-        public SelectionStatus selectionStatus(CellPosition cellPosition)
-        {
-            if (cellPosition.equals(curFocus))
-                return SelectionStatus.PRIMARY_SELECTION;
-    
-            int minRow = Math.min(startAnchor.rowIndex, curFocus.rowIndex);
-            int maxRow = Math.max(startAnchor.rowIndex, curFocus.rowIndex);
-            int minColumn = Math.min(startAnchor.columnIndex, curFocus.columnIndex);
-            int maxColumn = Math.max(startAnchor.columnIndex, curFocus.columnIndex);
-            
-            return (minRow <= cellPosition.rowIndex && cellPosition.rowIndex <= maxRow
-                && minColumn <= cellPosition.columnIndex && cellPosition.columnIndex <= maxColumn) ? SelectionStatus.SECONDARY_SELECTION : SelectionStatus.UNSELECTED;
-        }
-    
-        @Override
-        public SelectionStatus rowSelectionStatus(int rowIndex)
-        {
-            return SelectionStatus.UNSELECTED;
-        }
-    
-        @Override
-        public SelectionStatus columnSelectionStatus(int rowIndex)
-        {
-            return SelectionStatus.UNSELECTED;
-        }
-    */
+            @Override
+            public SelectionStatus selectionStatus(CellPosition cellPosition)
+            {
+                if (cellPosition.equals(curFocus))
+                    return SelectionStatus.PRIMARY_SELECTION;
+        
+                int minRow = Math.min(startAnchor.rowIndex, curFocus.rowIndex);
+                int maxRow = Math.max(startAnchor.rowIndex, curFocus.rowIndex);
+                int minColumn = Math.min(startAnchor.columnIndex, curFocus.columnIndex);
+                int maxColumn = Math.max(startAnchor.columnIndex, curFocus.columnIndex);
+                
+                return (minRow <= cellPosition.rowIndex && cellPosition.rowIndex <= maxRow
+                    && minColumn <= cellPosition.columnIndex && cellPosition.columnIndex <= maxColumn) ? SelectionStatus.SECONDARY_SELECTION : SelectionStatus.UNSELECTED;
+            }
+        
+            @Override
+            public SelectionStatus rowSelectionStatus(int rowIndex)
+            {
+                return SelectionStatus.UNSELECTED;
+            }
+        
+            @Override
+            public SelectionStatus columnSelectionStatus(int rowIndex)
+            {
+                return SelectionStatus.UNSELECTED;
+            }
+        */
     @OnThread(Tag.FXPlatform)
     public static interface TableSelectionLimits
     {

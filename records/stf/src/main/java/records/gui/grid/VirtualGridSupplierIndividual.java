@@ -14,6 +14,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -245,4 +246,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
 
     @OnThread(Tag.FX)
     protected abstract void adjustStyle(T item, S style, boolean on);
+    
+    protected final @Nullable T getItemAt(CellPosition cellPosition)
+    {
+        return Utility.getIfPresent(visibleItems, cellPosition).map(p -> p.getFirst()).orElse(null);
+    }
 }

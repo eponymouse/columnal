@@ -5,6 +5,7 @@ import javafx.scene.effect.BoxBlur;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.stf.StructuredTextField;
@@ -27,6 +28,13 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
         StructuredTextField stf = new StructuredTextField();
         stf.getStyleClass().add("table-data-cell");
         return stf;
+    }
+
+    @Override
+    protected boolean isEditing(CellPosition cellPosition)
+    {
+        @Nullable StructuredTextField stf = getItemAt(cellPosition);
+        return stf != null && stf.isFocused();
     }
 
     public static enum CellStyle

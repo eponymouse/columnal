@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import records.data.CellPosition;
 import threadchecker.OnThread;
 
 import java.util.HashMap;
@@ -92,5 +93,12 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
                 iterator.remove();
             }
         }
+    }
+
+    @Override
+    public boolean isEditing(CellPosition cellPosition)
+    {
+        // Lines can't be edited:
+        return false;
     }
 }

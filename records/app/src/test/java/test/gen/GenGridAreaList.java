@@ -63,7 +63,7 @@ public class GenGridAreaList extends Generator<GridAreaList>
                 }
 
                 @Override
-                public @Nullable CellSelection select(CellPosition cellPosition)
+                public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
                 {
                     return null;
                 }

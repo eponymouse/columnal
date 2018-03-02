@@ -8,6 +8,7 @@ import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -70,7 +71,14 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             }
         }
     }
-    
+
+    @Override
+    public boolean isEditing(CellPosition cellPosition)
+    {
+        // Floating items don't get edited in our sense:
+        return false;
+    }
+
     public final FloatingItem addItem(FloatingItem item)
     {
         items.put(item, Optional.empty());

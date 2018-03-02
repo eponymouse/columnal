@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -39,4 +40,7 @@ public interface CellSelection
     public CellPosition positionToEnsureInView();
     
     public RectangleBounds getSelectionDisplayRectangle();
+
+    // Is the current selection the single cell supplied?
+    public boolean isExactly(CellPosition cellPosition);
 }

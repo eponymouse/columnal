@@ -44,4 +44,11 @@ public class EntireTableSelection implements CellSelection
     {
         return new RectangleBounds(selected.getPosition(), selected.getPosition().offsetByRowCols(selected.getCurrentKnownRows(), selected.getColumnCount()));
     }
+
+    @Override
+    public boolean isExactly(CellPosition cellPosition)
+    {
+        // Whole table, so won't be single cell:
+        return false;
+    }
 }

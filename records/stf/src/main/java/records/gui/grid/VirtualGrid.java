@@ -32,6 +32,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -503,7 +504,7 @@ public class VirtualGrid implements ScrollBindable
                 {
                     if (gridArea.contains(p))
                     {
-                        return gridArea.select(p);
+                        return gridArea.getSelectionForSingleCell(p);
                     }
                 }
                 return new EmptyCellSelection(p);
@@ -636,6 +637,11 @@ public class VirtualGrid implements ScrollBindable
                 
                 if (cellPosition != null)
                 {
+                    @NonNull CellPosition cellPositionFinal = cellPosition;
+                    boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal));
+                    if (editing)
+                        return; // Don't interfere with editing 
+                    
                     boolean inTable = false;
                     // Go through each grid area and see if it contains the position:
                     for (GridArea gridArea : gridAreas)
@@ -652,7 +658,8 @@ public class VirtualGrid implements ScrollBindable
                         select(new EmptyCellSelection(cellPosition));
                         FXUtility.mouse(this).requestFocus();
                     }
-                    redoLayout();
+                    mouseEvent.consume();
+                    FXUtility.runAfter(() -> redoLayout());
                 }
                 
                 /*
@@ -678,14 +685,34 @@ public class VirtualGrid implements ScrollBindable
                 */
             };
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
-            //addEventFilter(MouseEvent.MOUSE_PRESSED, clickHandler);
-            //addEventFilter(MouseEvent.MOUSE_RELEASED, clickHandler);
+
+            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits MouseEvent> capture = mouseEvent -> {
+                @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+
+                if (cellPosition != null)
+                {
+                    // We want to capture the events to prevent clicks reaching the underlying cell, if:
+                    //  - The cell is not currently editing
+                    //  - AND the cell is not currently selected by itself
+                    @NonNull CellPosition cellPositionFinal = cellPosition;
+                    boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal));
+                    @Nullable CellSelection curSel = VirtualGrid.this.selection.get();
+                    boolean selectedByItself = curSel != null && curSel.isExactly(cellPosition); 
+                    if (!editing && !selectedByItself)
+                        mouseEvent.consume();
+                }
+            };
+            addEventFilter(MouseEvent.MOUSE_PRESSED, capture);
+            addEventFilter(MouseEvent.MOUSE_RELEASED, capture);
             
+            addEventFilter(MouseEvent.ANY, e -> {
+                Log.debug("Mouse event: " + e);
+            });
 
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
-                    //select(null);
+                    select(null);
                     redoLayout();
                 }
             });
@@ -1085,6 +1112,13 @@ public class VirtualGrid implements ScrollBindable
                 button.setVisible(false);
             }
         }
+
+        @Override
+        public boolean isEditing(CellPosition cellPosition)
+        {
+            // No editing possition with the buttons:
+            return false;
+        }
     }
     
     private class EmptyCellSelection implements CellSelection
@@ -1142,6 +1176,12 @@ public class VirtualGrid implements ScrollBindable
         public RectangleBounds getSelectionDisplayRectangle()
         {
             return new RectangleBounds(position, position);
+        }
+
+        @Override
+        public boolean isExactly(CellPosition cellPosition)
+        {
+            return position.equals(cellPosition);
         }
     }
 }

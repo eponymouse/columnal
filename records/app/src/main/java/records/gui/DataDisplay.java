@@ -385,7 +385,7 @@ public abstract class DataDisplay extends GridArea
     @Override
     public boolean clicked(Point2D screenPosition, CellPosition cellPosition)
     {
-        @Nullable CellSelection selection = select(cellPosition);
+        @Nullable CellSelection selection = getSelectionForSingleCell(cellPosition);
         if (selection != null)
         {
             withParent(v -> v.select(selection));
@@ -395,7 +395,7 @@ public abstract class DataDisplay extends GridArea
     }
 
     @Override
-    public @Nullable CellSelection select(CellPosition cellPosition)
+    public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
     {
         if (!contains(cellPosition))
             return null;

@@ -168,5 +168,10 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
         });
     }
-    
+
+    @Override
+    protected boolean isEditing(CellPosition cellPosition)
+    {
+        return false;
+    }
 }

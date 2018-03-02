@@ -75,7 +75,13 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             }
         });
     }
-    
+
+    @Override
+    protected boolean isEditing(CellPosition cellPosition)
+    {
+        return false;
+    }
+
 
     public static enum Visible { VISIBLE }
     

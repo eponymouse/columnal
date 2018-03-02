@@ -113,5 +113,5 @@ public abstract class GridArea
     public abstract boolean clicked(Point2D screenPosition, CellPosition cellPosition);
     
     // Select a cell by moving to it using the keyboard.  Return null if not possible
-    public abstract @Nullable CellSelection select(CellPosition cellPosition);
+    public abstract @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition);
 }
