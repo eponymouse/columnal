@@ -66,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -82,6 +83,7 @@ public class VirtualGrid implements ScrollBindable
     private final ScrollBar hBar;
     private final ScrollBar vBar;
     private final ScrollGroup scrollGroup;
+    private final ArrayList<SelectionListener> selectionListeners = new ArrayList<>();
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
 
@@ -218,12 +220,24 @@ public class VirtualGrid implements ScrollBindable
         };
         supplierFloating.addItem(selectionRectangleOverlayItem);
         
-        FXUtility.addChangeListenerPlatform(selection, s -> {
-            if (s != null)
+        selection.addListener(new ChangeListener<@Nullable CellSelection>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends @Nullable CellSelection> prop, @Nullable CellSelection oldVal, @Nullable CellSelection s)
             {
-                FXUtility.mouse(this).smoothScrollToEnsureVisible(s.positionToEnsureInView());
+                if (s != null)
+                {
+                    FXUtility.mouse(VirtualGrid.this).smoothScrollToEnsureVisible(s.positionToEnsureInView());
+                }
+                for (Iterator<SelectionListener> iterator = FXUtility.mouse(VirtualGrid.this).selectionListeners.iterator(); iterator.hasNext(); )
+                {
+                    SelectionListener selectionListener = iterator.next();
+                    if (selectionListener.selectionChanged(oldVal, s) == ListenerOutcome.REMOVE)
+                        iterator.remove();
+                }
+                FXUtility.mouse(VirtualGrid.this).container.redoLayout();
             }
-            container.redoLayout();
         });
     }
 
@@ -577,15 +591,9 @@ public class VirtualGrid implements ScrollBindable
 
     public void onNextSelectionChange(FXPlatformConsumer<@Nullable CellSelection> onChange)
     {
-        selection.addListener(new ChangeListener<@Nullable CellSelection>()
-        {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends @Nullable CellSelection> a, @Nullable CellSelection b, @Nullable CellSelection newVal)
-            {
-                onChange.consume(newVal);
-                selection.removeListener(this);
-            }
+        selectionListeners.add((old, s) -> {
+            onChange.consume(s);
+            return ListenerOutcome.REMOVE;
         });
     }
 
@@ -611,6 +619,11 @@ public class VirtualGrid implements ScrollBindable
     public final @Pure VirtualGridSupplierFloating getFloatingSupplier()
     {
         return supplierFloating;
+    }
+
+    public final void addSelectionListener(SelectionListener selectionListener)
+    {
+        selectionListeners.add(selectionListener);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1183,5 +1196,19 @@ public class VirtualGrid implements ScrollBindable
         {
             return position.equals(cellPosition);
         }
+
+        @Override
+        public boolean includes(GridArea tableDisplay)
+        {
+            // Empty cell overlaps no grid area:
+            return false;
+        }
+    }
+    
+    public static enum ListenerOutcome { KEEP, REMOVE }
+    
+    public static interface SelectionListener
+    {
+        public ListenerOutcome selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
     }
 }

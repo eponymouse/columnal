@@ -782,7 +782,7 @@ public class View extends StackPane
     {
         dataCellSupplier.addGrid(tableDisplay, tableDisplay.getDataGridCellInfo());
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
-        rowLabelSupplier.addTable(tableDisplay);
+        rowLabelSupplier.addTable(mainPane, tableDisplay);
         @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
         if (tableOps.addColumn != null || tableOps.appendRows != null)
         {

@@ -9,14 +9,19 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.DataItemPosition;
 import records.gui.RowLabelSupplier.LabelPane;
 import records.gui.RowLabelSupplier.Visible;
+import records.gui.grid.CellSelection;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGrid.ListenerOutcome;
+import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -42,16 +47,16 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     @Override
     protected void adjustStyle(LabelPane item, Visible style, boolean on)
     {
-        item.setVisible(on);
+        // Must set visibility on inner label, as outer item will get manipulated by VirtualGrid:
+        item.label.setVisible(on);
     }
 
     @OnThread(Tag.FXPlatform)
-    public void addTable(TableDisplay tableDisplay)
+    public void addTable(VirtualGrid virtualGrid, TableDisplay tableDisplay)
     {
+        final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(ImmutableList.of());
         addGrid(tableDisplay, new GridCellInfo<LabelPane, Visible>()
         {
-            private final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(ImmutableList.of()); 
-            
             @Override
             public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
@@ -88,8 +93,11 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
             }
         });
+        virtualGrid.addSelectionListener((oldSel, newSel) -> {
+            visible.set(newSel != null && newSel.includes(tableDisplay) ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
+            return ListenerOutcome.KEEP;
+        });
     }
-
 
     public static enum Visible { VISIBLE }
     

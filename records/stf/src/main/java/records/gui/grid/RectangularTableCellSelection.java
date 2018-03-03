@@ -89,6 +89,13 @@ public class RectangularTableCellSelection implements CellSelection
         return startAnchor.equals(cellPosition) && curFocus.equals(cellPosition);
     }
 
+    @Override
+    public boolean includes(GridArea tableDisplay)
+    {
+        // Rely on non-overlap of grid areas, and the way that our selection won't span multiple tables:
+        return tableDisplay.contains(startAnchor); 
+    }
+
     /*
             @Override
             public SelectionStatus selectionStatus(CellPosition cellPosition)

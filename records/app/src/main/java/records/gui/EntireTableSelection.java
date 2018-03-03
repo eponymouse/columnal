@@ -2,6 +2,7 @@ package records.gui;
 
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
+import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import utility.Either;
 
@@ -50,5 +51,11 @@ public class EntireTableSelection implements CellSelection
     {
         // Whole table, so won't be single cell:
         return false;
+    }
+
+    @Override
+    public boolean includes(GridArea tableDisplay)
+    {
+        return this.selected == tableDisplay;
     }
 }

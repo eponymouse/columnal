@@ -36,11 +36,23 @@ public interface CellSelection
      * is returned in Either.right
      */
     public Either<CellPosition, CellSelection> move(boolean extendSelection, int byRows, int byColumns);
-    
+
+    /**
+     * What cell should we scroll to, to ensure that the focus part of the selection is visible?
+     */
     public CellPosition positionToEnsureInView();
-    
+
+    /**
+     * What are the display bounds of this rectangle for drawing on screen?  Only used for drawing.
+     */
     public RectangleBounds getSelectionDisplayRectangle();
 
-    // Is the current selection the single cell supplied?
+    // Is the current selection the single cell supplied and nothing more?
     public boolean isExactly(CellPosition cellPosition);
+
+    /**
+     * Does the selection include the given grid area?  Can either be worked out by
+     * looking at physical area, or by casting and checking against a known table.
+     */
+    public boolean includes(GridArea tableDisplay);
 }
