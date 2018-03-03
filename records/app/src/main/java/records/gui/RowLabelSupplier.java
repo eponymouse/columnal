@@ -6,6 +6,7 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -103,6 +104,10 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         public LabelPane()
         {
             setRight(label);
+            getStyleClass().add("virt-grid-row-label-pane");
+            label.getStyleClass().add("virt-grid-row-label");
+            label.setMaxHeight(Double.MAX_VALUE);
+            BorderPane.setAlignment(label, Pos.CENTER_RIGHT);
         }
         
         public boolean isTableRow(TableDisplay tableDisplay, @TableDataRowIndex int row)

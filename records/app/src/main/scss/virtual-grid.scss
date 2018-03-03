@@ -90,7 +90,7 @@
 
 .table-border-overlay {
     -fx-fill: transparent;
-    -fx-stroke: grey(50%);
+    -fx-stroke: $table-border-color;
     -fx-stroke-width: 1;
     -fx-stroke-type: outside;
     -fx-effect: dropshadow(gaussian, grey(40%), 15, 0.7, 2, 2);
@@ -101,4 +101,14 @@
     -fx-stroke-width: 3;
     -fx-stroke: $focus-color;
     -fx-stroke-type: outside;
+}
+
+.virt-grid-row-label {
+    -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
+    -fx-background-insets: 0, 0 1 0 1;
+    -fx-label-padding: 0 2 0 4;
+    -fx-text-fill: $table-row-label-text-color;
+    -fx-font-size: 10px;
+    -fx-alignment: baseline-right;
+    -fx-font-family: "Droid Sans Mono";
 }
