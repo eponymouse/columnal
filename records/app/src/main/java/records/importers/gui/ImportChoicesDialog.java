@@ -1,6 +1,8 @@
 package records.importers.gui;
 
 import annotation.units.AbsRowIndex;
+import annotation.units.GridAreaRowIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -90,9 +92,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     public static class SourceInfo
     {
         private final ImmutableList<ColumnDetails> srcColumns;
-        private final int numRows;
+        private final @TableDataRowIndex int numRows;
 
-        public SourceInfo(ImmutableList<ColumnDetails> srcColumns, int numRows)
+        public SourceInfo(ImmutableList<ColumnDetails> srcColumns, @TableDataRowIndex int numRows)
         {
             this.srcColumns = srcColumns;
             this.numRows = numRows;
@@ -384,23 +386,21 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     {
         private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
         boolean currentKnownRowsIsFinal;
-        int currentKnownRows;
 
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
         {
             super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), null, destColumnHeaderSupplier);
             this.destRecordSet = destRecordSet;
-            currentKnownRows = 0;
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
         {
-            final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
             final RecordSet recordSet = destRecordSet.get();
             if (recordSet == null)
                 return;
             final @NonNull RecordSet recordSetNonNull = recordSet;
+            @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
             if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
             {
                 Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
@@ -419,7 +419,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         {
                             // Just a matter of working out where it ends.  Since we know end is close,
                             // just force with getLength:
-                            int length = recordSetNonNull.getLength();
+                            @SuppressWarnings("units")
+                            @TableDataRowIndex int length = recordSetNonNull.getLength();
                             Platform.runLater(() -> {
                                 currentKnownRows = length;
                                 currentKnownRowsIsFinal = true;
@@ -435,24 +436,6 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 });
             }
         }
-
-        @Override
-        public int getCurrentKnownRows()
-        {
-            return currentKnownRows + HEADER_ROWS;
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
-        {
-            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS);
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DestDataDisplay this)
-        {
-            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS + currentKnownRows - 1);
-        }
     }
 
     private static class SrcDataDisplay extends DataDisplay
@@ -466,31 +449,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+        public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
         {
-        }
-
-        @Override
-        public int getCurrentKnownRows()
-        {
-            return internal_getCurrentKnownRows();
-        }
-
-        private int internal_getCurrentKnownRows(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
-        {
-            return srcInfo == null || srcInfo.get() == null ? 0 : srcInfo.get().numRows;
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
-        {
-            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS);
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) SrcDataDisplay this)
-        {
-            return getPosition().rowIndex + CellPosition.row(HEADER_ROWS + internal_getCurrentKnownRows() - 1);
+            @Nullable SourceInfo sourceInfo = srcInfo.get();
+            @SuppressWarnings("units")
+            @TableDataRowIndex int zero = 0;
+            currentKnownRows = sourceInfo == null ? zero : sourceInfo.numRows;
         }
     }
 }

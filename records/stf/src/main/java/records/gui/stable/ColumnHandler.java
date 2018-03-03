@@ -1,6 +1,6 @@
 package records.gui.stable;
 
-import annotation.units.TableRowIndex;
+import annotation.units.TableDataRowIndex;
 import records.data.CellPosition;
 import records.data.RecordSet.RecordSetListener;
 import threadchecker.OnThread;
@@ -13,7 +13,7 @@ public interface ColumnHandler extends RecordSetListener
     // Called to fetch a value.  Once available, receiver should be called.
     // Until then it will be blank.  You can call receiver multiple times though,
     // so you can just call it with a placeholder before returning.
-    public void fetchValue(@TableRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent);
+    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent);
 
     // Called when the column gets resized (graphically).  Width is in pixels
     public void columnResized(double width);

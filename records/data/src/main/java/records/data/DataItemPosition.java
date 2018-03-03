@@ -1,7 +1,7 @@
 package records.data;
 
-import annotation.units.TableColIndex;
-import annotation.units.TableRowIndex;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -12,13 +12,13 @@ import threadchecker.Tag;
  */
 /* package-visible */
 @OnThread(Tag.Any)
-public class TableDataPosition
+public class DataItemPosition
 {
     // Both are zero-based:
-    public final @TableRowIndex int rowIndex;
-    public final @TableColIndex int columnIndex;
+    public final @TableDataRowIndex int rowIndex;
+    public final @TableDataColIndex int columnIndex;
 
-    public TableDataPosition(@TableRowIndex int rowIndex, @TableColIndex int columnIndex)
+    public DataItemPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
     {
         this.rowIndex = rowIndex;
         this.columnIndex = columnIndex;
@@ -30,7 +30,7 @@ public class TableDataPosition
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TableDataPosition that = (TableDataPosition) o;
+        DataItemPosition that = (DataItemPosition) o;
 
         if (rowIndex != that.rowIndex) return false;
         return columnIndex == that.columnIndex;
@@ -49,22 +49,23 @@ public class TableDataPosition
     {
         return "(" + columnIndex + ", " + rowIndex + ")";
     }
-
+    /*
     @SuppressWarnings("units")
-    public TableDataPosition offsetByRowCols(int rows, int cols)
+    public DataItemPosition offsetByRowCols(int rows, int cols)
     {
-        return new TableDataPosition(rowIndex + rows, columnIndex + cols);
+        return new DataItemPosition(rowIndex + rows, columnIndex + cols);
     }
     
     @SuppressWarnings("units")
-    public static @TableRowIndex int row(int row)
+    public static @TableDataRowIndex int row(int row)
     {
         return row;
     }
 
     @SuppressWarnings("units")
-    public static @TableColIndex int col(int col)
+    public static @TableDataColIndex int col(int col)
     {
         return col;
     }
+    */
 }

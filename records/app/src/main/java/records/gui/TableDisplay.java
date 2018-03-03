@@ -2,8 +2,10 @@ package records.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
-import annotation.units.TableColIndex;
-import annotation.units.TableRowIndex;
+import annotation.units.GridAreaColIndex;
+import annotation.units.GridAreaRowIndex;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
@@ -39,7 +41,7 @@ import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
-import records.data.TableDataPosition;
+import records.data.DataItemPosition;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
@@ -53,6 +55,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridArea;
+import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
@@ -120,9 +123,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
-    // Only data rows, not related to display:
-    private int currentKnownRows = 0;
-    private boolean currentKnownRowsIsFinal = false;// Table title, column title, column type
+    private boolean currentKnownRowsIsFinal = false;
 
     private final FXPlatformRunnable onModify;
     
@@ -133,61 +134,37 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return table;
     }
 
-    @OnThread(Tag.FXPlatform)
-    public @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) TableDisplay this)
-    {
-        return getPosition().rowIndex + CellPosition.row(DataDisplay.HEADER_ROWS);
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) TableDisplay this)
-    {
-        return getPosition().rowIndex + CellPosition.row(DataDisplay.HEADER_ROWS + currentKnownRows - 1);
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public @AbsColIndex int getFirstDataDisplayColumnIncl()
-    {
-        return getPosition().columnIndex;
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public @AbsColIndex int getLastDataDisplayColumnIncl()
-    {
-        return getPosition().columnIndex + CellPosition.col(displayColumns.size() - 1);
-    }
-
     public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
     {
         return new GridCellInfo<StructuredTextField, CellStyle>()
         {
             @Override
-            public @Nullable TableDataPosition cellAt(CellPosition cellPosition)
+            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
-                int row = cellPosition.rowIndex - getPosition().rowIndex;
-                int col = cellPosition.columnIndex - getPosition().columnIndex;
-                
-                if (0 <= col && col < displayColumns.size() && 0 <= row && row < currentKnownRows)
+                int tableDataRow = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
+                int tableDataColumn = cellPosition.columnIndex - getPosition().columnIndex;
+                if (0 <= tableDataRow && tableDataRow < currentKnownRows &&
+                    0 <= tableDataColumn && tableDataColumn < displayColumns.size())
                 {
-                    @SuppressWarnings("units")
-                    TableDataPosition tableDataPosition = new TableDataPosition(row, col);
-                    return tableDataPosition;
+                    return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
                 }
                 else
+                {
                     return null;
+                }
             }
 
             @Override
-            public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
             {
                 // Blank then queue fetch:
-                StructuredTextField orig = getCell.apply(cellPosition);
+                StructuredTextField orig = getCell.apply(cellPosition.from(getPosition()));
                 if (orig != null)
                     orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
                 @SuppressWarnings("units")
-                @TableColIndex int columnIndexWithinTable = cellPosition.columnIndex - getPosition().columnIndex;
+                @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
                 @SuppressWarnings("units")
-                @TableRowIndex int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
+                @TableDataRowIndex int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
                 if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                 {
                     displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
@@ -196,8 +173,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits)),
                         (rowIndex, colIndex, editorKit) -> {
                             // The rowIndex and colIndex are in table data terms, so we must translate:
-                            @Nullable StructuredTextField cell = getCell.apply(getPosition().offsetByRowCols(HEADER_ROWS + rowIndex, colIndex));
-                            if (cell != null)
+                            @Nullable StructuredTextField cell = getCell.apply(cellPosition.from(getPosition()));
+                            if (cell != null)// && cell == orig)
                                 cell.resetContent(editorKit);
                         }
                     );
@@ -205,7 +182,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
 
             @Override
-            public boolean checkCellUpToDate(CellPosition cellPosition, StructuredTextField cellFirst)
+            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, StructuredTextField cellFirst)
             {
                 // If we are for the right position, we haven't been scrolled out of view.
                 // If the table is re-run, we'll get reset separately, so we are always up to date:
@@ -220,16 +197,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         };
     }
 
-    @SuppressWarnings("units")
-    public @TableRowIndex int getRowIndexWithinTable(@AbsRowIndex int absRowIndex)
-    {
-        return absRowIndex - (getPosition().rowIndex + HEADER_ROWS);
-    }
-
     @Override
-    public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToOverallRowIncl, FXPlatformRunnable updateSizeAndPositions)
+    public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
     {
-        final int checkUpToRowIncl = checkUpToOverallRowIncl - getPosition().rowIndex;
+        @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
         if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl && recordSetOrError.isRight())
         {
             Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
@@ -248,7 +219,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         // Just a matter of working out where it ends.  Since we know end is close,
                         // just force with getLength:
-                        int length = recordSetOrError.getRight().getLength();
+                        @SuppressWarnings("units")
+                        @TableDataRowIndex int length = recordSetOrError.getRight().getLength();
                         Platform.runLater(() -> {
                             currentKnownRows = length;
                             currentKnownRowsIsFinal = true;
@@ -277,7 +249,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         if (startRowIncl < currentKnownRows)
         {
-            currentKnownRows += addedRowsCount - removedRowsCount;
+            @SuppressWarnings("units")
+            @TableDataRowIndex int difference = addedRowsCount - removedRowsCount;
+            this.currentKnownRows += difference;
         }
         currentKnownRowsIsFinal = false;
         updateParent();
@@ -349,30 +323,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         };
     }
 
-    @Override
-    public int getCurrentKnownRows()
-    {
-        return internal_getCurrentKnownRows(table);
-    }
-
-    // The implementation of getCurrentKnownRows, but with weaker pre-conditions
     private int internal_getCurrentKnownRows(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
         return currentKnownRows + HEADER_ROWS + (table.getOperations().appendRows != null ? 1 : 0);
     }
 
-    @Override
-    public int getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this)
-    {
-        if (table == null)
-            return 0;
-        return internal_getColumnCount(table);
-    }
-
-    // Implementation of getColumnCount but with weaker pre-conditions
     private int internal_getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
     {
         return (displayColumns == null ? 0 : displayColumns.size()) + (table.getOperations().addColumn != null ? 1 : 0);
+    }
+
+    @Override
+    protected CellPosition recalculateBottomRightIncl()
+    {
+        return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1);
     }
 
     @Override

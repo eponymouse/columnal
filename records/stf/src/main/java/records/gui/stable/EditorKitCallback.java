@@ -1,7 +1,7 @@
 package records.gui.stable;
 
-import annotation.units.TableColIndex;
-import annotation.units.TableRowIndex;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -9,5 +9,5 @@ import threadchecker.Tag;
 public interface EditorKitCallback
 {
     @OnThread(Tag.FXPlatform)
-    public void loadedValue(@TableRowIndex int rowIndex, @TableColIndex int colIndex, EditorKit<?> editorKit);
+    public void loadedValue(@TableDataRowIndex int rowIndex, @TableDataColIndex int colIndex, EditorKit<?> editorKit);
 }

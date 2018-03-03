@@ -1,7 +1,7 @@
 package records.gui.stable;
 
-import annotation.units.TableColIndex;
-import annotation.units.TableRowIndex;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import javafx.application.Platform;
@@ -62,11 +62,11 @@ public final class EditorKitCache<V> implements ColumnHandler
     private final GetValue<V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
     private final MakeEditorKit<V> makeEditorKit;
-    private final @TableColIndex int columnIndex;
+    private final @TableDataColIndex int columnIndex;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public EditorKitCache(@TableColIndex int columnIndex, GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, MakeEditorKit<V> makeEditorKit)
+    public EditorKitCache(@TableDataColIndex int columnIndex, GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, MakeEditorKit<V> makeEditorKit)
     {
         this.columnIndex = columnIndex;
         this.getValue = getValue;
@@ -81,7 +81,7 @@ public final class EditorKitCache<V> implements ColumnHandler
     public static interface MakeEditorKit<V>
     {
         @OnThread(Tag.FXPlatform)
-        public EditorKit<V> makeKit(@TableRowIndex int rowIndex, V initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
+        public EditorKit<V> makeKit(@TableDataRowIndex int rowIndex, V initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
     }
 
 /*
@@ -132,7 +132,7 @@ public final class EditorKitCache<V> implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(@TableRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
         try
         {
@@ -239,7 +239,7 @@ public final class EditorKitCache<V> implements ColumnHandler
         // The loader which is fetching the item
         private final ValueLoader loader;
         // The row index (fixed) of this item
-        private final @TableRowIndex int rowIndex;
+        private final @TableDataRowIndex int rowIndex;
         // The result of loading: either value or error.  If null, still loading
         @OnThread(Tag.FXPlatform)
         private @MonotonicNonNull Either<Pair<V, EditorKit<V>>, @Localized String> loadedItemOrError;
@@ -250,7 +250,7 @@ public final class EditorKitCache<V> implements ColumnHandler
         private final FXPlatformConsumer<CellPosition> relinquishFocus;
 
         @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
-        public DisplayCacheItem(@TableRowIndex int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback callbackSetCellContent)
+        public DisplayCacheItem(@TableDataRowIndex int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback callbackSetCellContent)
         {
             this.rowIndex = index;
             loader = new ValueLoader(index, this);

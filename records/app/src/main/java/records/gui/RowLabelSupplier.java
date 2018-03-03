@@ -1,6 +1,8 @@
 package records.gui;
 
-import annotation.units.TableRowIndex;
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
@@ -9,9 +11,11 @@ import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.TableDataPosition;
+import records.data.DataItemPosition;
 import records.gui.RowLabelSupplier.LabelPane;
 import records.gui.RowLabelSupplier.Visible;
+import records.gui.grid.GridAreaCellPosition;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -48,24 +52,18 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             private final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(ImmutableList.of()); 
             
             @Override
-            public @Nullable TableDataPosition cellAt(CellPosition cellPosition)
+            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
-                if (cellPosition.columnIndex == tableDisplay.getPosition().columnIndex - CellPosition.col(1)
-                    && cellPosition.rowIndex >= tableDisplay.getFirstDataDisplayRowIncl()
-                    && cellPosition.rowIndex <= tableDisplay.getLastDataDisplayRowIncl())
-                {
-                    return new TableDataPosition(TableDataPosition.row(cellPosition.rowIndex - tableDisplay.getFirstDataDisplayRowIncl()), TableDataPosition.col(0));
-                }
-                else
-                {
-                    return null;
-                }
+                @AbsColIndex int columnForRowLabels = tableDisplay.getPosition().columnIndex - CellPosition.col(1);
+                @AbsRowIndex int topRowLabel = tableDisplay.getDataDisplayTopLeftIncl().from(tableDisplay.getPosition()).rowIndex;
+                @AbsRowIndex int bottomRowLabel = tableDisplay.getDataDisplayBottomRightIncl().from(tableDisplay.getPosition()).rowIndex;
+                return GridAreaCellPosition.offsetInside(new RectangleBounds(new CellPosition(topRowLabel, columnForRowLabels), new CellPosition(bottomRowLabel, columnForRowLabels)), cellPosition);
             }
 
             @Override
-            public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable LabelPane> getCell)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable LabelPane> getCell)
             {
-                @Nullable LabelPane labelPane = getCell.apply(cellPosition);
+                @Nullable LabelPane labelPane = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
                 if (labelPane != null)
                     labelPane.setRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
             }
@@ -77,7 +75,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             }
 
             @Override
-            public boolean checkCellUpToDate(CellPosition cellPosition, LabelPane cell)
+            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, LabelPane cell)
             {
                 return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
             }
@@ -91,7 +89,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     public class LabelPane extends BorderPane
     {
         // Zero based row
-        private @TableRowIndex int row;
+        private @TableDataRowIndex int row;
         private final Label label = new Label();
         private @MonotonicNonNull TableDisplay tableDisplay;
 
@@ -100,12 +98,12 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             setRight(label);
         }
         
-        public boolean isTableRow(TableDisplay tableDisplay, @TableRowIndex int row)
+        public boolean isTableRow(TableDisplay tableDisplay, @TableDataRowIndex int row)
         {
             return this.tableDisplay == tableDisplay && this.row == row;
         }
         
-        public void setRow(TableDisplay tableDisplay, @TableRowIndex int row)
+        public void setRow(TableDisplay tableDisplay, @TableDataRowIndex int row)
         {
             this.tableDisplay = tableDisplay;
             this.row = row;

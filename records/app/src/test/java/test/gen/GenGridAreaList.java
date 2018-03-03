@@ -45,17 +45,11 @@ public class GenGridAreaList extends Generator<GridAreaList>
                 }
 
                 @Override
-                public int getColumnCount()
+                protected CellPosition recalculateBottomRightIncl()
                 {
-                    return x1 - x0 + 1;
+                    return getPosition().offsetByRowCols(x1 - x0, y1 - y0);
                 }
-
-                @Override
-                public int getCurrentKnownRows()
-                {
-                    return y1 - y0 + 1;
-                }
-
+                
                 @Override
                 public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
                 {

@@ -2,6 +2,8 @@ package records.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import annotation.units.GridAreaRowIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
@@ -34,6 +36,7 @@ import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
+import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
@@ -73,6 +76,8 @@ public abstract class DataDisplay extends GridArea
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
     private final FloatingItem tableHeaderItem;
     
+    protected @TableDataRowIndex int currentKnownRows; 
+    
     // Not final because it may changes if user changes the display item or preview options change:
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
@@ -92,7 +97,7 @@ public abstract class DataDisplay extends GridArea
               {
                   double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
                   double y = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
-                  double width = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex + CellPosition.col(getColumnCount()))) - x;
+                  double width = columnBounds.getItemCoordAfter(Utility.boxCol(getBottomRightIncl().columnIndex)) - x;
                   double height = rowBounds.getItemCoordAfter(Utility.boxRow(getPosition().rowIndex)) - y;
                   return Optional.of(new BoundingBox(
                       x,
@@ -173,27 +178,15 @@ public abstract class DataDisplay extends GridArea
         this.dataSelectionLimits = new TableSelectionLimits()
         {
             @Override
-            public @AbsRowIndex int getFirstPossibleRowIncl()
+            public CellPosition getTopLeftIncl()
             {
-                return DataDisplay.this.getFirstDataDisplayRowIncl();
+                return getDataDisplayTopLeftIncl().from(getPosition());
             }
 
             @Override
-            public @AbsRowIndex int getLastPossibleRowIncl()
+            public CellPosition getBottomRightIncl()
             {
-                return DataDisplay.this.getLastDataDisplayRowIncl();
-            }
-
-            @Override
-            public @AbsColIndex int getFirstPossibleColumnIncl()
-            {
-                return DataDisplay.this.getPosition().columnIndex;
-            }
-
-            @Override
-            public @AbsColIndex int getLastPossibleColumnIncl()
-            {
-                return DataDisplay.this.getPosition().columnIndex + CellPosition.col(displayColumns == null ? 0 : displayColumns.size() - 1);
+                return getDataDisplayBottomRightIncl().from(getPosition());
             }
         };
     }
@@ -229,7 +222,7 @@ public abstract class DataDisplay extends GridArea
                     double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
                     double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
                     
-                    double lastY = rowBounds.getItemCoord(Utility.boxRow(getLastDataDisplayRowIncl() - CellPosition.row(1)));
+                    double lastY = rowBounds.getItemCoord(Utility.boxRow(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)));
                     
                     // We are pinned when y is less than 0 but less than lastY:
                     if (lastY < 0)
@@ -343,11 +336,6 @@ public abstract class DataDisplay extends GridArea
         
     }
 
-    public int getColumnCount(@UnknownInitialization(GridArea.class) DataDisplay this)
-    {
-        return displayColumns == null ? 0 : displayColumns.size();
-    }
-
     public void addCellStyle(CellStyle cellStyle)
     {
         cellStyles.set(Utility.consList(cellStyle, cellStyles.get()));
@@ -363,15 +351,33 @@ public abstract class DataDisplay extends GridArea
         return cellStyles;
     }
 
-    // The first data row in absolute position terms (not relative
-    // to table), not including any headers
-    @OnThread(Tag.FXPlatform)
-    public abstract @AbsRowIndex int getFirstDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
+    @SuppressWarnings("units")
+    protected @TableDataRowIndex int getRowIndexWithinTable(@GridAreaRowIndex int gridRowIndex)
+    {
+        return gridRowIndex - HEADER_ROWS;
+    }
 
-    // The last data row in absolute position terms (not relative
-    // to table), not including any append buttons
+    @Override
+    protected CellPosition recalculateBottomRightIncl()
+    {
+        return getPosition().offsetByRowCols(currentKnownRows + HEADER_ROWS, displayColumns.size());
+    }
+
+    // The top left data item in grid area terms, not including any headers
+    @SuppressWarnings("units")
     @OnThread(Tag.FXPlatform)
-    public abstract @AbsRowIndex int getLastDataDisplayRowIncl(@UnknownInitialization(GridArea.class) DataDisplay this);
+    public final GridAreaCellPosition getDataDisplayTopLeftIncl(@UnknownInitialization(GridArea.class) DataDisplay this)
+    {
+        return new GridAreaCellPosition(HEADER_ROWS, 0);
+    }
+
+    // The last data row in grid area terms, not including any append buttons
+    @SuppressWarnings("units")
+    @OnThread(Tag.FXPlatform)
+    public final GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(GridArea.class) DataDisplay this)
+    {
+        return new GridAreaCellPosition(HEADER_ROWS + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
+    }
 
     public void cleanupFloatingItems()
     {
@@ -430,8 +436,8 @@ public abstract class DataDisplay extends GridArea
             {
                 destPosition = new CellPosition(rowIndex.get(), columnIndex.get()); 
                 return Optional.of(new RectangleBounds(
-                    new CellPosition(rowIndex.get(), columnIndex.get()),
-                    new CellPosition(rowIndex.get() + CellPosition.row(getCurrentKnownRows() - 1), columnIndex.get() + CellPosition.col(getColumnCount() - 1))
+                    destPosition,
+                    destPosition.offsetByRowCols(getBottomRightIncl().rowIndex - getPosition().rowIndex, getBottomRightIncl().columnIndex - getPosition().columnIndex)
                 ));
             }
             return Optional.empty();

@@ -912,7 +912,9 @@ public class VirtualGrid implements ScrollBindable
         //   - Check for overlaps between tables, and reshuffle if needed
         //   - Update our known overall grid size
 
-        List<@AbsRowIndex Integer> rowSizes = Utility.<GridArea, @AbsRowIndex Integer>mapList(gridAreas, gridArea -> gridArea.getPosition().rowIndex + CellPosition.row(gridArea.getAndUpdateKnownRows(currentKnownRows.get() + MAX_EXTRA_ROW_COLS, this::updateSizeAndPositions)));
+        @SuppressWarnings("units")
+        @AbsRowIndex int maxExtra = MAX_EXTRA_ROW_COLS;
+        List<@AbsRowIndex Integer> rowSizes = Utility.<GridArea, @AbsRowIndex Integer>mapList(gridAreas, gridArea -> gridArea.getAndUpdateBottomRow(currentKnownRows.get() + maxExtra, this::updateSizeAndPositions));
                 
         // The plan to fix overlaps: we go from the left-most column across to
         // the right-most, keeping track of which tables exist in this column.
@@ -946,7 +948,7 @@ public class VirtualGrid implements ScrollBindable
                     // We may overlap more tables, but that is fine, we will get shunted again
                     // next time round if needed
                     CellPosition curPos = cur.getSecond().getPosition();
-                    curPos = new CellPosition(curPos.rowIndex, openGridArea.getSecond().getPosition().columnIndex + CellPosition.col(openGridArea.getSecond().getColumnCount()));
+                    curPos = new CellPosition(curPos.rowIndex, openGridArea.getSecond().getBottomRightIncl().columnIndex);
                     cur.getSecond().setPosition(curPos);
                     
                     // Now need to add us to the gridAreas list at correct place.  We don't
@@ -970,13 +972,13 @@ public class VirtualGrid implements ScrollBindable
                 }
             }
             // Close any grid areas that we have gone to the right of:
-            openGridAreas.removeIf(p -> p.getSecond().getPosition().columnIndex + p.getSecond().getColumnCount() <= cur.getSecond().getPosition().columnIndex);
+            openGridAreas.removeIf(p -> p.getSecond().getBottomRightIncl().columnIndex <= cur.getSecond().getPosition().columnIndex);
             
             // Add ourselves to the open areas:
             openGridAreas.add(cur);
         }
         
-        currentKnownRows.setValue(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0))));
+        currentKnownRows.setValue(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(1)));
         container.redoLayout();
         updatingSizeAndPositions = false;
     }
@@ -984,14 +986,14 @@ public class VirtualGrid implements ScrollBindable
     private boolean overlap(GridArea a, GridArea b)
     {
         int aLeftIncl = a.getPosition().columnIndex;
-        int aRightIncl = a.getPosition().columnIndex + a.getColumnCount() - 1;
+        int aRightIncl = a.getBottomRightIncl().columnIndex;
         int aTopIncl = a.getPosition().rowIndex;
-        int aBottomIncl = a.getPosition().rowIndex + a.getCurrentKnownRows() - 1;
+        int aBottomIncl = a.getBottomRightIncl().rowIndex;
         
         int bLeftIncl = b.getPosition().columnIndex;
-        int bRightIncl = b.getPosition().columnIndex + b.getColumnCount() - 1;
+        int bRightIncl = b.getBottomRightIncl().columnIndex;
         int bTopIncl = b.getPosition().rowIndex;
-        int bBottomIncl = b.getPosition().rowIndex + b.getCurrentKnownRows() - 1;
+        int bBottomIncl = b.getBottomRightIncl().rowIndex;
         boolean distinctHoriz = aLeftIncl > bRightIncl || bLeftIncl > aRightIncl;
         boolean distinctVert = aTopIncl > bBottomIncl || bTopIncl > aBottomIncl;
         boolean overlap = !(distinctHoriz || distinctVert);

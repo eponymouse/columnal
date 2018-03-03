@@ -73,6 +73,7 @@
                             <configuration>
                                 <annotationProcessors>
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                    <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
                                 </annotationProcessors>
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->
@@ -80,6 +81,7 @@
                                     <arg>-AprintErrorStack</arg>
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
+                                    <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex</arg>
                                     <arg>-Xplugin:threadchecker.TCPlugin</arg>
                                     <arg>-Werror</arg>
                                 </compilerArgs>
@@ -110,6 +112,7 @@
                                 <annotationProcessors>
                                     <!-- Add all the checkers you want to enable here -->
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                    <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
                                     <!-- <annotationProcessor>org.checkerframework.checker.lock.LockChecker</annotationProcessor> -->
                                     <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
@@ -131,6 +134,7 @@
                                     <arg>-AprintErrorStack</arg>
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
+                                    <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex</arg>
                                     <arg>-Apropfiles=${project.basedir}/../app/src/main/resources/transformations_en.properties:${project.basedir}/../app/src/main/resources/expression_en.properties:${project.basedir}/../app/src/main/resources/function_en.properties:${project.basedir}/../app/src/main/resources/newcolumn_en.properties:${project.basedir}/../app/src/main/resources/dataentry_en.properties:${project.basedir}/../app/src/main/resources/main_en.properties:${project.basedir}/../app/src/main/resources/import_en.properties</arg>
                                     <arg>-Ahelpfiles=${project.basedir}/../app/src/main/help/guess-format.xml</arg>
                                     <arg>-Xplugin:threadchecker.TCPlugin</arg>

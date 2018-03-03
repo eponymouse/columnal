@@ -1,5 +1,8 @@
 package records.gui.grid;
 
+import annotation.units.AbsRowIndex;
+import annotation.units.GridAreaRowIndex;
+import annotation.units.TableDataRowIndex;
 import javafx.geometry.Point2D;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -29,6 +32,7 @@ public abstract class GridArea
 {
     // The top left cell, which is probably a column header.
     private CellPosition topLeft;
+    private CellPosition bottomRight;
     
     private MessageWhenEmpty messageWhenEmpty;
     private @MonotonicNonNull VirtualGrid parent;
@@ -38,6 +42,7 @@ public abstract class GridArea
         this.messageWhenEmpty = messageWhenEmpty;
         // Default position:
         this.topLeft = new CellPosition(CellPosition.row(1), CellPosition.col(1));
+        this.bottomRight = topLeft;
     }
 
     public final CellPosition getPosition(@UnknownInitialization(GridArea.class) GridArea this)
@@ -85,24 +90,29 @@ public abstract class GridArea
      * @return The current known row size.
      */
     @OnThread(Tag.FXPlatform)
-    protected abstract void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
+    protected abstract void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions);
 
-    public final int getAndUpdateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+    public final @AbsRowIndex int getAndUpdateBottomRow(@AbsRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
     {
-        updateKnownRows(checkUpToRowIncl, updateSizeAndPositions);
-        return getCurrentKnownRows();
+        @SuppressWarnings("units")
+        @GridAreaRowIndex int gridAreaRow = checkUpToRowIncl - getPosition().rowIndex;
+        updateKnownRows(gridAreaRow, updateSizeAndPositions);
+        bottomRight = recalculateBottomRightIncl();
+        return bottomRight.rowIndex;
     }
+
+    protected abstract CellPosition recalculateBottomRightIncl();
 
     public final boolean contains(CellPosition cellPosition)
     {
-        return cellPosition.rowIndex >= topLeft.rowIndex && cellPosition.rowIndex < topLeft.rowIndex + getCurrentKnownRows()
-            && cellPosition.columnIndex >= topLeft.columnIndex && cellPosition.columnIndex < topLeft.columnIndex + getColumnCount();
+        return topLeft.rowIndex <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRight.rowIndex
+            && topLeft.columnIndex  <= cellPosition.columnIndex && cellPosition.columnIndex < bottomRight.columnIndex;
     }
     
-    // Including any expand arrows, etc:
-    public abstract int getColumnCount();
-    // Remember -- including all headers:
-    public abstract int getCurrentKnownRows();
+    public final CellPosition getBottomRightIncl(@UnknownInitialization(GridArea.class) GridArea this)
+    {
+        return bottomRight;
+    }
 
     public void setMessageWhenEmpty(MessageWhenEmpty messageWhenEmpty)
     {

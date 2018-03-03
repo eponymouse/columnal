@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.units.TableDataRowIndex;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -748,7 +749,11 @@ public class GuessFormat
                 if (charsetChoice == null)
                     return null;
                 else
-                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), DataType.TEXT, null, columnHandler)), Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0));
+                {
+                    @SuppressWarnings("units")
+                    @TableDataRowIndex int rows = Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0);
+                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), DataType.TEXT, null, columnHandler)), rows);
+                }
             }).showAndWait().ifPresent(then);
         });
         System.err.println(choicePoints);
@@ -818,7 +823,7 @@ public class GuessFormat
         @OnThread(Tag.FXPlatform)
         public void setUsedRange(int columnIndex, int rowIndex, int start, int end)
         {
-            int usedIndex = (rowIndex*tableView.getColumnCount() + columnIndex) * 2;
+            int usedIndex = (rowIndex*(tableView.getDataDisplayBottomRightIncl().columnIndex - tableView.getDataDisplayTopLeftIncl().columnIndex) + columnIndex) * 2;
             // Poor man's array list:
             if (usedRanges.length <= usedIndex)
             {

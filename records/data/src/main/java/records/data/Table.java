@@ -3,7 +3,7 @@ package records.data;
 import annotation.qual.Value;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
-import annotation.units.TableColIndex;
+import annotation.units.TableDataColIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -23,7 +23,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import javax.validation.constraints.NotNull;
@@ -380,11 +379,5 @@ public abstract class Table
         @OnThread(Tag.Any)
         public CellPosition getMostRecentPosition();
     }
-    
-    @SuppressWarnings("units")
-    @OnThread(Tag.Any)
-    public static @TableColIndex int relativeCol(int col)
-    {
-        return col;
-    }
+
 }

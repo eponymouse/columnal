@@ -1,7 +1,7 @@
 package records.gui.stable;
 
-import annotation.units.TableColIndex;
-import annotation.units.TableRowIndex;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
@@ -9,19 +9,18 @@ import records.gui.stf.EditorKitSimpleLabel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {
-    private final @TableColIndex int columnIndex;
+    private final @TableDataColIndex int columnIndex;
 
-    public ReadOnlyStringColumnHandler(@TableColIndex int columnIndex)
+    public ReadOnlyStringColumnHandler(@TableDataColIndex int columnIndex)
     {
         this.columnIndex = columnIndex;
     }
 
     @Override
-    public void fetchValue(@TableRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
+    public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
     {
         fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(s)));
     }

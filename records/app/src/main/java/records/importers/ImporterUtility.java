@@ -1,6 +1,7 @@
 package records.importers;
 
-import annotation.units.TableColIndex;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -54,7 +55,7 @@ public class ImporterUtility
             for (int columnIndex = 0; columnIndex < widest; columnIndex++)
             {
                 @SuppressWarnings("units")
-                @TableColIndex int columnIndexFinal = columnIndex;
+                @TableDataColIndex int columnIndexFinal = columnIndex;
                 columnHandlers.add(new ColumnDetails(new ColumnId("Column " + (columnIndex + 1)), DataType.TEXT, null, new ReadOnlyStringColumnHandler(columnIndexFinal)
                 {
                     @Override
@@ -75,7 +76,9 @@ public class ImporterUtility
                 }));
             }
         }
-        return new SourceInfo(columnHandlers.build(), vals.size());
+        @SuppressWarnings("units")
+        @TableDataRowIndex int valSize = vals.size();
+        return new SourceInfo(columnHandlers.build(), valSize);
     }
 
     // Pads each row with extra blanks so that all rows have the same length

@@ -2,7 +2,7 @@ package test.gui;
 
 import annotation.qual.Value;
 import annotation.units.AbsRowIndex;
-import annotation.units.TableColIndex;
+import annotation.units.TableDataColIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -48,9 +48,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataDisplay;
 import records.gui.grid.VirtualGrid;
-import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.EditorKitCache;
-import records.gui.stable.StableView;
 import records.gui.stable.ColumnDetails;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
@@ -132,26 +130,14 @@ public class TestStructuredTextField extends ApplicationTest
         dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), null, virtualGrid.getFloatingSupplier())
         {
             @Override
-            public int getCurrentKnownRows()
+            protected CellPosition recalculateBottomRightIncl()
             {
-                return 1;
+                return getPosition().offsetByRowCols(HEADER_ROWS, 0);
             }
 
             @Override
             public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
             {
-            }
-
-            @Override
-            public @OnThread(Tag.FXPlatform) @AbsRowIndex int getFirstDataDisplayRowIncl()
-            {
-                return CellPosition.ORIGIN.rowIndex;
-            }
-
-            @Override
-            public @OnThread(Tag.FXPlatform) @AbsRowIndex int getLastDataDisplayRowIncl()
-            {
-                return CellPosition.ORIGIN.rowIndex;
             }
         };
         virtualGrid.addGridAreas(ImmutableList.of(dataDisplay));
@@ -281,7 +267,7 @@ public class TestStructuredTextField extends ApplicationTest
             try
             {
                 @SuppressWarnings("units")
-                @TableColIndex int col = 0;
+                @TableDataColIndex int col = 0;
                 EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> CellPosition.ORIGIN, () -> {});
                 dataDisplay.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
                 //stableView.loadColumnWidths(new double[]{600.0});

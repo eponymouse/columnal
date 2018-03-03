@@ -6,12 +6,13 @@ import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.TableDataPosition;
+import records.data.DataItemPosition;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.gui.DataCellSupplier.CellStyle;
+import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -74,42 +75,37 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
         super.addGrid(tableDisplay, new GridCellInfo<Button, CellStyle>()
         {
             @Override
-            public @Nullable TableDataPosition cellAt(CellPosition cellPosition)
+            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
+                GridAreaCellPosition gridAreaCellPosition = GridAreaCellPosition.relativeFrom(cellPosition, tableDisplay.getPosition());
                 // Work out if the cell is either just to the right, or just below:
-                if (hasAddColumnArrow(cellPosition) || hasAddRowArrow(cellPosition))
+                if (hasAddColumnArrow(gridAreaCellPosition) || hasAddRowArrow(gridAreaCellPosition))
                 {
-                    return new TableDataPosition(
-                        TableDataPosition.row(cellPosition.rowIndex - tableDisplay.getPosition().rowIndex),
-                        TableDataPosition.col(cellPosition.columnIndex - tableDisplay.getPosition().columnIndex)
-                    );
+                    return gridAreaCellPosition;
                 }
                 else
                     return null;
             }
 
             @OnThread(Tag.FXPlatform)
-            private boolean hasAddRowArrow(CellPosition cellPosition)
+            private boolean hasAddRowArrow(GridAreaCellPosition cellPosition)
             {
                 return tableDisplay.getTable().getOperations().appendRows != null
-                    && cellPosition.rowIndex == tableDisplay.getLastDataDisplayRowIncl() + 1
-                    && cellPosition.columnIndex >= tableDisplay.getFirstDataDisplayColumnIncl()
-                    && cellPosition.columnIndex <= tableDisplay.getLastDataDisplayColumnIncl();
+                    && cellPosition.rowIndex == tableDisplay.getDataDisplayBottomRightIncl().rowIndex + 1
+                    && cellPosition.columnIndex >= tableDisplay.getDataDisplayTopLeftIncl().columnIndex
+                    && cellPosition.columnIndex <= tableDisplay.getDataDisplayBottomRightIncl().columnIndex;
             }
 
             @OnThread(Tag.FXPlatform)
-            public boolean hasAddColumnArrow(CellPosition cellPosition)
+            public boolean hasAddColumnArrow(GridAreaCellPosition cellPosition)
             {
-                int firstRow = tableDisplay.getPosition().rowIndex + 1;
-                int lastRow = tableDisplay.getLastDataDisplayRowIncl();
                 return tableDisplay.getTable().getOperations().addColumn != null
-                    && cellPosition.columnIndex == tableDisplay.getLastDataDisplayColumnIncl() + 1
-                    && ((cellPosition.rowIndex >= firstRow && cellPosition.rowIndex <= lastRow)
-                        || (lastRow < firstRow && cellPosition.rowIndex == firstRow));
+                    && cellPosition.columnIndex == tableDisplay.getDataDisplayBottomRightIncl().columnIndex + 1
+                    && (cellPosition.rowIndex >= 1 && cellPosition.rowIndex <= tableDisplay.getDataDisplayBottomRightIncl().rowIndex);
             }
 
             @Override
-            public boolean checkCellUpToDate(CellPosition cellPosition, Button item)
+            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, Button item)
             {
                 // The only thing we really need to check is whether a column arrow
                 // has become row, or vice versa:
@@ -119,15 +115,15 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
 
             @Override
-            public void fetchFor(CellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Button> getCell)
             {
-                @Nullable Button item = getCell.apply(cellPosition);
+                @Nullable Button item = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
                 if (item == null)
                     return;
                 
                 if (hasAddColumnArrow(cellPosition))
                 {
-                    FXUtility.setPseudoclass(item, "expand-right-header", cellPosition.rowIndex < tableDisplay.getFirstDataDisplayRowIncl());
+                    FXUtility.setPseudoclass(item, "expand-right-header", cellPosition.rowIndex < tableDisplay.getDataDisplayTopLeftIncl().rowIndex);
                     FXUtility.setPseudoclass(item, "expand-right", true);
                     FXUtility.setPseudoclass(item, "expand-down", false);
                     item.setTooltip(new Tooltip("Click to add column"));
@@ -163,8 +159,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 {
                     Log.error("Table arrow button found but not for column or for row! "
                         + "Position: " + cellPosition
-                        + "Rows: " + tableDisplay.getFirstDataDisplayRowIncl() + " to " + tableDisplay.getLastDataDisplayRowIncl()
-                        + "Columns: " + tableDisplay.getFirstDataDisplayColumnIncl() + " to " + tableDisplay.getLastDataDisplayColumnIncl());
+                        + "Data: " + tableDisplay.getDataDisplayTopLeftIncl() + " to " + tableDisplay.getDataDisplayBottomRightIncl());
                     // Panic -- hide it:
                     item.setVisible(false);
                 }

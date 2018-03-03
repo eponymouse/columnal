@@ -58,7 +58,7 @@ public class PropGridOverlap
             for (int j = i; j < sortedByOriginalX.size(); j++)
             {
                 CellPosition jPos = sortedByOriginalX.get(j).getPosition();
-                if (Utility.rangeOverlaps(0, iPos.rowIndex, iPos.rowIndex + sortedByOriginalX.get(i).getCurrentKnownRows() - 1, jPos.rowIndex, jPos.rowIndex + sortedByOriginalX.get(j).getCurrentKnownRows()))
+                if (Utility.rangeOverlaps(0, iPos.rowIndex, sortedByOriginalX.get(i).getBottomRightIncl().rowIndex, jPos.rowIndex, sortedByOriginalX.get(j).getBottomRightIncl().rowIndex))
                 {
                     assertThat("Comparing " + sortedByOriginalX.get(i) + " to " + sortedByOriginalX.get(j), iPos.columnIndex,
                             Matchers.lessThanOrEqualTo(jPos.columnIndex));
@@ -83,8 +83,8 @@ public class PropGridOverlap
                 {
                     CellPosition aTopLeft = a.getPosition();
                     CellPosition bTopLeft = b.getPosition();
-                    CellPosition aBottomRightIncl = new CellPosition(aTopLeft.rowIndex + CellPosition.row(a.getCurrentKnownRows() - 1), aTopLeft.columnIndex + CellPosition.col(a.getColumnCount() - 1));
-                    CellPosition bBottomRightIncl = new CellPosition(bTopLeft.rowIndex + CellPosition.row(b.getCurrentKnownRows() - 1), bTopLeft.columnIndex + CellPosition.col(b.getColumnCount() - 1));
+                    CellPosition aBottomRightIncl = a.getBottomRightIncl();
+                    CellPosition bBottomRightIncl = b.getBottomRightIncl();
                     assertFalse("Overlap " + aTopLeft + ", " + aBottomRightIncl + " and " + bTopLeft + ", " + bBottomRightIncl,
                         aTopLeft.columnIndex < bBottomRightIncl.columnIndex && aBottomRightIncl.columnIndex > bTopLeft.columnIndex &&
                         aTopLeft.rowIndex < bBottomRightIncl.rowIndex && aBottomRightIncl.rowIndex > bTopLeft.rowIndex

@@ -42,7 +42,7 @@ public class EntireTableSelection implements CellSelection
     @Override
     public RectangleBounds getSelectionDisplayRectangle()
     {
-        return new RectangleBounds(selected.getPosition(), selected.getPosition().offsetByRowCols(selected.getCurrentKnownRows(), selected.getColumnCount()));
+        return new RectangleBounds(selected.getPosition(), selected.getBottomRightIncl());
     }
 
     @Override

@@ -8,6 +8,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * A column index (X position) in the VirtualGrid system.  Absolute: does not relate to any individual table,
+ * only to the overall grid.  Starts at 0 on the left.
+ */
 @Documented
 @SubtypeOf(RowOrColIndex.class)
 @Retention(RetentionPolicy.RUNTIME)

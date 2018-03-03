@@ -40,14 +40,14 @@ public class RectangularTableCellSelection implements CellSelection
     @Override
     public CellSelection atHome(boolean extendSelection)
     {
-        CellPosition dest = new CellPosition(tableSelectionLimits.getFirstPossibleRowIncl(), curFocus.columnIndex);
+        CellPosition dest = new CellPosition(tableSelectionLimits.getTopLeftIncl().rowIndex, curFocus.columnIndex);
         return new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits);
     }
 
     @Override
     public CellSelection atEnd(boolean extendSelection)
     {
-        CellPosition dest = new CellPosition(tableSelectionLimits.getLastPossibleRowIncl(), curFocus.columnIndex);
+        CellPosition dest = new CellPosition(tableSelectionLimits.getBottomRightIncl().rowIndex, curFocus.columnIndex);
         return new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits);
     }
 
@@ -56,8 +56,8 @@ public class RectangularTableCellSelection implements CellSelection
     {
         @AbsRowIndex int byRows = CellPosition.row(_byRows);
         @AbsColIndex int byColumns = CellPosition.col(_byColumns);
-        CellPosition dest = new CellPosition(Utility.maxRow(tableSelectionLimits.getFirstPossibleRowIncl(), Utility.minRow(tableSelectionLimits.getLastPossibleRowIncl(), curFocus.rowIndex + byRows)),
-            Utility.maxCol(tableSelectionLimits.getFirstPossibleColumnIncl(), Utility.minCol(tableSelectionLimits.getLastPossibleColumnIncl(), curFocus.columnIndex + byColumns)));
+        CellPosition dest = new CellPosition(Utility.maxRow(tableSelectionLimits.getTopLeftIncl().rowIndex, Utility.minRow(tableSelectionLimits.getBottomRightIncl().rowIndex, curFocus.rowIndex + byRows)),
+            Utility.maxCol(tableSelectionLimits.getTopLeftIncl().columnIndex, Utility.minCol(tableSelectionLimits.getBottomRightIncl().columnIndex, curFocus.columnIndex + byColumns)));
         // Move from top-left:
         return Either.right(new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits));
     }
@@ -120,9 +120,7 @@ public class RectangularTableCellSelection implements CellSelection
     @OnThread(Tag.FXPlatform)
     public static interface TableSelectionLimits
     {
-        @AbsRowIndex int getFirstPossibleRowIncl();
-        @AbsRowIndex int getLastPossibleRowIncl();
-        @AbsColIndex int getFirstPossibleColumnIncl();
-        @AbsColIndex int getLastPossibleColumnIncl();
+        CellPosition getTopLeftIncl();
+        CellPosition getBottomRightIncl();
     }
 }
