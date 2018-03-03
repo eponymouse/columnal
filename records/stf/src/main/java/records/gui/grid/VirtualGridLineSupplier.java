@@ -40,7 +40,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
         for (@AbsColIndex int i = columnBounds.firstItemIncl; i <= columnBounds.lastItemIncl; i++)
         {
             Line line = xLinesInUse.get(i);
-            double x = columnBounds.getItemCoord(i);
+            double x = columnBounds.getItemCoordAfter(i) - 1.0;
             if (line == null)
             {
                 line = new Line();
@@ -58,8 +58,8 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
 
         for (@AbsRowIndex int i = rowBounds.firstItemIncl; i <= rowBounds.lastItemIncl; i++)
         {
-            double y = rowBounds.getItemCoord(i);
             Line line = yLinesInUse.get(i);
+            double y = rowBounds.getItemCoordAfter(i) - 1.0;
             if (line == null)
             {
                 line = new Line();
