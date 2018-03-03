@@ -57,7 +57,14 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 @AbsColIndex int columnForRowLabels = tableDisplay.getPosition().columnIndex - CellPosition.col(1);
                 @AbsRowIndex int topRowLabel = tableDisplay.getDataDisplayTopLeftIncl().from(tableDisplay.getPosition()).rowIndex;
                 @AbsRowIndex int bottomRowLabel = tableDisplay.getDataDisplayBottomRightIncl().from(tableDisplay.getPosition()).rowIndex;
-                return GridAreaCellPosition.offsetInside(new RectangleBounds(new CellPosition(topRowLabel, columnForRowLabels), new CellPosition(bottomRowLabel, columnForRowLabels)), cellPosition);
+                if (cellPosition.columnIndex == columnForRowLabels && topRowLabel <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRowLabel)
+                {
+                    return GridAreaCellPosition.relativeFrom(cellPosition, tableDisplay.getPosition());
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             @Override

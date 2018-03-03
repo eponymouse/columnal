@@ -68,23 +68,6 @@ public class GridAreaCellPosition
         return position.offsetByRowCols(rowIndex, columnIndex);
     }
 
-    /**
-     * If the target is in the rectangle described by rectangleBounds, it's relative position to top-left
-     * is returned.  Otherwise, null is returned.
-     */
-    public static @Nullable GridAreaCellPosition offsetInside(RectangleBounds rectangleBounds, CellPosition target)
-    {
-        if (rectangleBounds.topLeftIncl.rowIndex <= target.rowIndex
-            && target.rowIndex <= rectangleBounds.bottomRightIncl.rowIndex
-            && rectangleBounds.topLeftIncl.columnIndex <= target.columnIndex
-            && target.columnIndex <= rectangleBounds.bottomRightIncl.columnIndex)
-        {
-            return relativeFrom(target, rectangleBounds.topLeftIncl);
-        }
-        else
-            return null;
-    }
-
     /*
     @SuppressWarnings("units")
     public GridAreaCellPosition offsetByRowCols(int rows, int cols)
