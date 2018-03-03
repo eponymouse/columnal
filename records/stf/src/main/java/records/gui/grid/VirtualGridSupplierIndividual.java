@@ -2,14 +2,17 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import annotation.units.TableColIndex;
+import annotation.units.TableRowIndex;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
-import log.Log;
+import org.checkerframework.checker.nullness.Opt;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.data.TableDataPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -43,11 +46,27 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     private final Map<GridArea, GridCellInfo<T, S>> gridAreas = new IdentityHashMap<>();
 
     // All items that are currently in the parent container and laid out properly:
-    private final Map<CellPosition, Pair<T, StyleUpdater>> visibleItems = new HashMap<>();
+    private final Map<CellPosition, ItemDetails<T>> visibleItems = new HashMap<>();
     // All items that are in the parent container, but invisible:
     private final List<T> spareItems = new ArrayList<>();
     private final Collection<S> possibleStyles;
     private final ViewOrder viewOrder;
+    
+    private class ItemDetails<T>
+    {
+        private final T node;
+        private final StyleUpdater styleUpdater;
+        private final TableDataPosition tableDataPosition;
+        private final GridCellInfo<T, ?> originator;
+
+        private ItemDetails(T node, StyleUpdater styleUpdater, GridCellInfo<T, ?> originator, TableDataPosition tableDataPosition)
+        {
+            this.node = node;
+            this.styleUpdater = styleUpdater;
+            this.tableDataPosition = tableDataPosition;
+            this.originator = originator;
+        }
+    }
 
     protected VirtualGridSupplierIndividual(ViewOrder viewOrder, Collection<S> styleValues)
     {
@@ -60,9 +79,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     final void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
         // Remove not-visible cells and put them in spare cells:
-        for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, Pair<T, StyleUpdater>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, ItemDetails<T>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<@KeyFor("this.visibleItems") CellPosition, Pair<T, StyleUpdater>> vis = iterator.next();
+            Entry<@KeyFor("this.visibleItems") CellPosition, ItemDetails<T>> vis = iterator.next();
             // Note that due to current checker framework bug, it's important
             // this variable name is not re-used anywhere else in this method:
             CellPosition posToCheck = vis.getKey();
@@ -72,11 +91,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                             posToCheck.rowIndex <= rowBounds.lastItemIncl &&
                             posToCheck.columnIndex >= columnBounds.firstItemIncl &&
                             posToCheck.columnIndex <= columnBounds.lastItemIncl &&
-                            gridAreas.values().stream().anyMatch(a -> a.hasCellAt(posToCheck));
+                            gridAreas.values().stream().anyMatch(a -> a.cellAt(posToCheck) != null);
             if (!shouldBeVisible)
             {
-                spareItems.add(vis.getValue().getFirst());
-                vis.getValue().getSecond().stopListening();
+                spareItems.add(vis.getValue().node);
+                vis.getValue().styleUpdater.stopListening();
                 iterator.remove();
             }
         }
@@ -90,45 +109,51 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
             {
                 final double x = columnBounds.getItemCoord(columnIndex);
                 CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
-                Optional<GridCellInfo<T, S>> gridForItem = gridAreas.values().stream().filter(a -> a.hasCellAt(cellPosition)).findFirst();
-                if (!gridForItem.isPresent())
+                Optional<Pair<GridCellInfo<T, S>, TableDataPosition>> gridForItemResult = gridAreas.values().stream().flatMap(a -> Utility.streamNullable(a.cellAt(cellPosition)).map(c -> new Pair<>(a, c))).findFirst();
+                if (!gridForItemResult.isPresent())
                     continue;
 
-                Pair<T, StyleUpdater> cell = visibleItems.get(cellPosition);
+                GridCellInfo<T, S> gridForItem = gridForItemResult.get().getFirst();
+
+                ItemDetails<T> cell = visibleItems.get(cellPosition);
                 // If cell isn't present, grab from spareCells:
                 if (cell == null)
                 {
+                    Pair<T, StyleUpdater> newCell;
                     if (!spareItems.isEmpty())
                     {
-                        cell = withStyle(spareItems.remove(spareItems.size() - 1), gridForItem.get().styleForAllCells());
-                        resetForReuse(cell.getFirst());
+                        newCell = withStyle(spareItems.remove(spareItems.size() - 1), gridForItem.styleForAllCells());
+                        resetForReuse(newCell.getFirst());
                     }
                     else
                     {
-                        cell = withStyle(makeNewItem(), gridForItem.get().styleForAllCells());
-                        containerChildren.add(cell.getFirst(), viewOrder);
+                        newCell = withStyle(makeNewItem(), gridForItem.styleForAllCells());
+                        containerChildren.add(newCell.getFirst(), viewOrder);
                     }
+                    cell = new ItemDetails<>(newCell.getFirst(), newCell.getSecond(), gridForItem, gridForItemResult.get().getSecond());
 
                     visibleItems.put(cellPosition, cell);
-                    gridForItem.get().fetchFor(cellPosition, pos -> {
-                        Pair<T, StyleUpdater> item = visibleItems.get(pos);
-                        return item == null ? null : item.getFirst();
+                    gridForItem.fetchFor(cellPosition, pos -> {
+                        ItemDetails<T> item = visibleItems.get(pos);
+                        return item == null ? null : item.node;
                     });
                 }
                 else
                 {
-                    cell.getSecond().listenTo(gridForItem.get().styleForAllCells());
-                    if (!gridForItem.get().checkCellUpToDate(cellPosition, cell.getFirst()))
+                    cell.styleUpdater.listenTo(gridForItem.styleForAllCells());
+                    if (cell.originator != gridForItem 
+                        || !cell.tableDataPosition.equals(gridForItemResult.get().getSecond())
+                        || !gridForItem.checkCellUpToDate(cellPosition, cell.node))
                     {
-                        gridForItem.get().fetchFor(cellPosition, pos -> {
-                            Pair<T, StyleUpdater> item = visibleItems.get(pos);
-                            return item == null ? null : item.getFirst();
+                        gridForItem.fetchFor(cellPosition, pos -> {
+                            ItemDetails<T> item = visibleItems.get(pos);
+                            return item == null ? null : item.node;
                         });
                     }
                 }
-                cell.getFirst().setVisible(true);
+                cell.node.setVisible(true);
                 double nextX = columnBounds.getItemCoordAfter(columnIndex);
-                FXUtility.resizeRelocate(cell.getFirst(), x, y, nextX - x, rowHeight);
+                FXUtility.resizeRelocate(cell.node, x, y, nextX - x, rowHeight);
             }
         }
 
@@ -188,8 +213,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     public static interface GridCellInfo<T, S>
     {
         // Does the GridArea have a cell at the given position?  No assumptions are made
-        // about contiguity of grid areas.
-        public boolean hasCellAt(CellPosition cellPosition);
+        // about contiguity of grid areas, we ask all grid cell infos for all positions.
+        // If there is a cell, return its position, else return null
+        public @Nullable TableDataPosition cellAt(CellPosition cellPosition);
 
         // Takes a position,then sets the content of that cell to match whatever should
         // be shown at that position.  The callback lets you fetch the right cell now or in the
@@ -249,6 +275,6 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     
     protected final @Nullable T getItemAt(CellPosition cellPosition)
     {
-        return Utility.getIfPresent(visibleItems, cellPosition).map(p -> p.getFirst()).orElse(null);
+        return Utility.getIfPresent(visibleItems, cellPosition).map(p -> p.node).orElse(null);
     }
 }

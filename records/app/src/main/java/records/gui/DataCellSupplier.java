@@ -1,10 +1,14 @@
 package records.gui;
 
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.CharacterHit;
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.VirtualGridSupplierIndividual;
@@ -37,6 +41,19 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
         return stf != null && stf.isFocused();
     }
 
+    @Override
+    protected void startEditing(Point2D screenPosition, CellPosition cellPosition)
+    {
+        @Nullable StructuredTextField stf = getItemAt(cellPosition);
+        if (stf != null)
+        {
+            stf.requestFocus();
+            Point2D localPos = stf.screenToLocal(screenPosition);
+            CharacterHit hit = stf.hit(localPos.getX(), localPos.getY());
+            stf.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+        }
+    }
+    
     public static enum CellStyle
     {
         TABLE_DRAG_SOURCE

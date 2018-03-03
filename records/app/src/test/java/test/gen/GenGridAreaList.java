@@ -57,12 +57,6 @@ public class GenGridAreaList extends Generator<GridAreaList>
                 }
 
                 @Override
-                public boolean clicked(Point2D screenPosition, CellPosition cellPosition)
-                {
-                    return false;
-                }
-
-                @Override
                 public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
                 {
                     return null;

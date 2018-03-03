@@ -6,6 +6,7 @@ import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.data.TableDataPosition;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
@@ -73,10 +74,18 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
         super.addGrid(tableDisplay, new GridCellInfo<Button, CellStyle>()
         {
             @Override
-            public boolean hasCellAt(CellPosition cellPosition)
+            public @Nullable TableDataPosition cellAt(CellPosition cellPosition)
             {
                 // Work out if the cell is either just to the right, or just below:
-                return hasAddColumnArrow(cellPosition) || hasAddRowArrow(cellPosition);
+                if (hasAddColumnArrow(cellPosition) || hasAddRowArrow(cellPosition))
+                {
+                    return new TableDataPosition(
+                        TableDataPosition.row(cellPosition.rowIndex - tableDisplay.getPosition().rowIndex),
+                        TableDataPosition.col(cellPosition.columnIndex - tableDisplay.getPosition().columnIndex)
+                    );
+                }
+                else
+                    return null;
             }
 
             @OnThread(Tag.FXPlatform)
@@ -167,11 +176,5 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                 return tableDisplay.styleForAllCells();
             }
         });
-    }
-
-    @Override
-    protected boolean isEditing(CellPosition cellPosition)
-    {
-        return false;
     }
 }

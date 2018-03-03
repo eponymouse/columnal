@@ -94,11 +94,4 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             }
         }
     }
-
-    @Override
-    public boolean isEditing(CellPosition cellPosition)
-    {
-        // Lines can't be edited:
-        return false;
-    }
 }

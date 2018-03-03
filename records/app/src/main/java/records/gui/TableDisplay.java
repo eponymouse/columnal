@@ -39,6 +39,7 @@ import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
+import records.data.TableDataPosition;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
@@ -161,12 +162,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return new GridCellInfo<StructuredTextField, CellStyle>()
         {
             @Override
-            public boolean hasCellAt(CellPosition cellPosition)
+            public @Nullable TableDataPosition cellAt(CellPosition cellPosition)
             {
-                return cellPosition.columnIndex >= getPosition().columnIndex
-                    && cellPosition.columnIndex < getPosition().columnIndex + displayColumns.size()
-                    && cellPosition.rowIndex >= getPosition().rowIndex + HEADER_ROWS
-                    && cellPosition.rowIndex < getPosition().rowIndex + HEADER_ROWS + currentKnownRows;
+                int row = cellPosition.rowIndex - getPosition().rowIndex;
+                int col = cellPosition.columnIndex - getPosition().columnIndex;
+                
+                if (0 <= col && col < displayColumns.size() && 0 <= row && row < currentKnownRows)
+                {
+                    @SuppressWarnings("units")
+                    TableDataPosition tableDataPosition = new TableDataPosition(row, col);
+                    return tableDataPosition;
+                }
+                else
+                    return null;
             }
 
             @Override
@@ -199,9 +207,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             @Override
             public boolean checkCellUpToDate(CellPosition cellPosition, StructuredTextField cellFirst)
             {
-                // TODO we need to somehow store the column&row with the field, so we know
-                // if either has changed and thus we need to update:
-                return false;
+                // If we are for the right position, we haven't been scrolled out of view.
+                // If the table is re-run, we'll get reset separately, so we are always up to date:
+                return true;
             }
 
             @Override

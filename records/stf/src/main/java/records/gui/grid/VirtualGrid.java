@@ -631,6 +631,22 @@ public class VirtualGrid implements ScrollBindable
             FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> {updateHBar(); redoLayout();});
             FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> {updateVBar(); redoLayout();});
 
+            /* 
+             * The logic for mouse events is as follows.
+             * 
+             * - If the cell is being edited already, we let add mouse events pass through unfiltered
+             *   to the underlying component.
+             * - Else if the cell is currently a single cell selection, a single click
+             *   will be passed to the cell with an instruction to start editing at that location
+             *   (e.g. by setting the caret location).
+             * - Else if the cell is not currently a single cell selection, how many clicks?
+             *   - Double click: start editing at given point
+             *   - Single click: become a single cell selection
+             * 
+             * To do the first two steps we talk to the node suppliers as they know which cell is at whic
+             * location.  For the third one we find the relevant grid area.
+             */
+            
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits MouseEvent> clickHandler = mouseEvent -> {
 
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
@@ -640,49 +656,45 @@ public class VirtualGrid implements ScrollBindable
                     @NonNull CellPosition cellPositionFinal = cellPosition;
                     boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal));
                     if (editing)
-                        return; // Don't interfere with editing 
+                        return; // Don't capture the events
                     
-                    boolean inTable = false;
-                    // Go through each grid area and see if it contains the position:
-                    for (GridArea gridArea : gridAreas)
+                    // Not editing, is the cell currently part of a single cell selection:
+                    @Nullable CellSelection curSel = VirtualGrid.this.selection.get();
+                    boolean selectedByItself = curSel != null && curSel.isExactly(cellPosition);
+                    
+                    if (selectedByItself || mouseEvent.getClickCount() == 2)
                     {
-                        if (gridArea.clicked(new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY()), cellPosition))
+                        for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
                         {
-                            inTable = true;
-                            break;
+                            nodeSupplier.startEditing(new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY()), cellPositionFinal);
                         }
                     }
-                    if (!inTable)
+                    else
                     {
-                        // Belongs to no-one; we must handle it:
-                        select(new EmptyCellSelection(cellPosition));
-                        FXUtility.mouse(this).requestFocus();
-                    }
-                    mouseEvent.consume();
-                    FXUtility.runAfter(() -> redoLayout());
-                }
-                
-                /*
-                @Nullable StructuredTextField cell = cellPosition == null ? null : visibleCells.get(cellPosition.editPosition());
-                // This check may not be right now we have selections larger than one cell
-                boolean positionIsFocusedCellWrapper = Objects.equals(selection.get(), cellPosition);
-                if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 1 && !cell.isFocused() && !positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
-                {
-                    select(cellPosition);
-                }
-                if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 2 && !cell.isFocused() && isFocused() && positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
-                {
-                    cell.edit(new Point2D(mouseEvent.getSceneX(), mouseEvent.getSceneY()));
-                }
+                        boolean foundInGrid = false;
+                        // Become a single cell selection:
+                        for (GridArea gridArea : gridAreas)
+                        {
+                            @Nullable CellSelection singleCellSelection = gridArea.getSelectionForSingleCell(cellPosition);
+                            if (singleCellSelection != null)
+                            {
+                                select(singleCellSelection);
+                                foundInGrid = true;
+                                break;
+                            }
+                        }
 
-                // We want to let event through if either:
-                //   - we are already focusing the cell wrapper at that position
-                //   - OR the STF itself is already focused.
-                // Applying De Morgan's, mask the event if the cell wrapper isn't focused at that position
-                // AND the STF is not focused
-                if (cell != null && !cell.isFocused() && !(isFocused() && positionIsFocusedCellWrapper))
+                        if (!foundInGrid)
+                        {
+                            // Belongs to no-one; we must handle it:
+                            select(new EmptyCellSelection(cellPosition));
+                            FXUtility.mouse(this).requestFocus();
+                        }
+                    }
+                    
                     mouseEvent.consume();
-                */
+                    redoLayout();
+                }
             };
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
 
@@ -691,24 +703,17 @@ public class VirtualGrid implements ScrollBindable
 
                 if (cellPosition != null)
                 {
-                    // We want to capture the events to prevent clicks reaching the underlying cell, if:
-                    //  - The cell is not currently editing
-                    //  - AND the cell is not currently selected by itself
+                    // We want to capture the events to prevent clicks reaching the underlying cell,
+                    // if the cell is not currently editing
                     @NonNull CellPosition cellPositionFinal = cellPosition;
-                    boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal));
-                    @Nullable CellSelection curSel = VirtualGrid.this.selection.get();
-                    boolean selectedByItself = curSel != null && curSel.isExactly(cellPosition); 
-                    if (!editing && !selectedByItself)
+                    boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal)); 
+                    if (!editing)
                         mouseEvent.consume();
                 }
             };
             addEventFilter(MouseEvent.MOUSE_PRESSED, capture);
             addEventFilter(MouseEvent.MOUSE_RELEASED, capture);
             
-            addEventFilter(MouseEvent.ANY, e -> {
-                Log.debug("Mouse event: " + e);
-            });
-
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
@@ -1111,13 +1116,6 @@ public class VirtualGrid implements ScrollBindable
             {
                 button.setVisible(false);
             }
-        }
-
-        @Override
-        public boolean isEditing(CellPosition cellPosition)
-        {
-            // No editing possition with the buttons:
-            return false;
         }
     }
     

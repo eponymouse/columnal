@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -57,7 +58,17 @@ public abstract class VirtualGridSupplier<T extends Node>
     /**
      * Is there a cell at the current position which is being edited?
      */
-    protected abstract boolean isEditing(CellPosition cellPosition);
+    protected boolean isEditing(CellPosition cellPosition)
+    {
+        return false;
+    }
+
+    /**
+     * Start editing that cell, if possible
+     */
+    protected void startEditing(Point2D screenPosition, CellPosition cellPosition)
+    {
+    }
 
     @OnThread(Tag.FXPlatform)
     public static interface ContainerChildren

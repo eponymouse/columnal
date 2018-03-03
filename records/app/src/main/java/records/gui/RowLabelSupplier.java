@@ -9,6 +9,7 @@ import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.data.TableDataPosition;
 import records.gui.RowLabelSupplier.LabelPane;
 import records.gui.RowLabelSupplier.Visible;
 import records.gui.grid.VirtualGridSupplierIndividual;
@@ -47,11 +48,18 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             private final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(ImmutableList.of()); 
             
             @Override
-            public boolean hasCellAt(CellPosition cellPosition)
+            public @Nullable TableDataPosition cellAt(CellPosition cellPosition)
             {
-                return cellPosition.columnIndex == tableDisplay.getPosition().columnIndex - CellPosition.col(1)
+                if (cellPosition.columnIndex == tableDisplay.getPosition().columnIndex - CellPosition.col(1)
                     && cellPosition.rowIndex >= tableDisplay.getFirstDataDisplayRowIncl()
-                    && cellPosition.rowIndex <= tableDisplay.getLastDataDisplayRowIncl();
+                    && cellPosition.rowIndex <= tableDisplay.getLastDataDisplayRowIncl())
+                {
+                    return new TableDataPosition(TableDataPosition.row(cellPosition.rowIndex - tableDisplay.getFirstDataDisplayRowIncl()), TableDataPosition.col(0));
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             @Override
@@ -74,12 +82,6 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
             }
         });
-    }
-
-    @Override
-    protected boolean isEditing(CellPosition cellPosition)
-    {
-        return false;
     }
 
 

@@ -108,9 +108,6 @@ public abstract class GridArea
     {
         this.messageWhenEmpty = messageWhenEmpty;
     }
-
-    // Return true if click has been handled:
-    public abstract boolean clicked(Point2D screenPosition, CellPosition cellPosition);
     
     // Select a cell by moving to it using the keyboard.  Return null if not possible
     public abstract @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition);
