@@ -3,6 +3,7 @@ package records.gui;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.units.TableDataRowIndex;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
@@ -26,6 +27,7 @@ import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +51,41 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     {
         // Must set visibility on inner label, as outer item will get manipulated by VirtualGrid:
         item.label.setVisible(on);
+    }
+
+    @Override
+    protected void styleTogether(ImmutableList<LabelPane> visibleNodes)
+    {
+        double topY = Double.MAX_VALUE;
+        @Nullable LabelPane topItem = null;
+        double bottomY = -Double.MAX_VALUE;
+        @Nullable LabelPane bottomItem = null;
+        // Find highest row number:
+        int highestRow = visibleNodes.stream().mapToInt(p -> p.row).max().orElse(1);
+        // Find number of digits, min 2:
+        int numDigits = Math.max(2, Integer.toString(highestRow).length());
+        for (LabelPane visibleNode : visibleNodes)
+        {
+            visibleNode.setMinDigits(numDigits);
+            visibleNode.setIsTop(false);
+            visibleNode.setIsBottom(false);
+            // All Layout Y will be comparable, so no need to transform to screen pos:
+            if (visibleNode.getLayoutY() < topY)
+            {
+                topY = visibleNode.getLayoutY();
+                topItem = visibleNode;
+            }
+            if (visibleNode.getLayoutY() > bottomY)
+            {
+                bottomY = visibleNode.getLayoutY();
+                bottomItem = visibleNode;
+            }
+        }
+        if (topItem != null)
+            topItem.setIsTop(true);
+        if (bottomItem != null)
+            bottomItem.setIsBottom(true);
+        
     }
 
     @OnThread(Tag.FXPlatform)
@@ -108,6 +145,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         private @TableDataRowIndex int row;
         private final Label label = new Label();
         private @MonotonicNonNull TableDisplay tableDisplay;
+        private int curMinDigits = 1;
 
         public LabelPane()
         {
@@ -128,7 +166,26 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             this.tableDisplay = tableDisplay;
             this.row = row;
             // User rows begin with 1:
-            label.setText(Integer.toString(row + 1));
+            label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
+        }
+        
+        public void setMinDigits(int minDigits)
+        {
+            if (curMinDigits != minDigits && tableDisplay != null)
+            {
+                curMinDigits = minDigits;
+                setRow(tableDisplay, row);
+            }
+        }
+
+        public void setIsTop(boolean top)
+        {
+            FXUtility.setPseudoclass(label, "top-visible-row", top);
+        }
+
+        public void setIsBottom(boolean bottom)
+        {
+            FXUtility.setPseudoclass(label, "bottom-visible-row", bottom);
         }
     }
 }

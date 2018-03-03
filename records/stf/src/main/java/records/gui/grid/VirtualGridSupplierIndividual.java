@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -164,8 +165,14 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         {
             hideItem(spareCell);
         }
-
+        
+        styleTogether(visibleItems.values().stream().map(d -> d.node).collect(ImmutableList.toImmutableList()));
+        
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
+    }
+
+    protected void styleTogether(ImmutableList<T> visibleNodes)
+    {
     }
 
     private Pair<T, StyleUpdater> withStyle(T t, ObjectExpression<? extends Collection<S>> enumSetObjectExpression)

@@ -106,7 +106,13 @@
 .virt-grid-row-label {
     -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
     -fx-background-insets: 0, 0 1 0 1;
-    -fx-label-padding: 0 2 0 4;
+    &:top-visible-row {
+        -fx-background-insets: -1 0 0 0, 0 1 0 1;
+    }
+    &:bottom-visible-row {
+        -fx-background-insets: 0, 0 1 1 1;
+    }
+    -fx-label-padding: 0 2 0 5;
     -fx-text-fill: $table-row-label-text-color;
     -fx-font-size: 10px;
     -fx-alignment: baseline-right;
