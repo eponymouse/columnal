@@ -10,10 +10,8 @@ import com.google.common.collect.Streams;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -51,6 +49,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollGroup.ScrollLock;
+import records.gui.stable.ScrollGroup.Token;
 import records.gui.stable.ScrollResult;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -87,20 +86,26 @@ public class VirtualGrid implements ScrollBindable
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
 
-    // The first index logically visible.  This is not actually necessarily the same
-    // as first really-visible, if we are currently doing some smooth scrolling:
-    private @AbsColIndex int firstVisibleColumnIndex;
-    private @AbsRowIndex int firstVisibleRowIndex;
-    // Offset of top visible cell.  Always -rowHeight <= y <= 0
-    private double firstVisibleColumnOffset;
-    private double firstVisibleRowOffset;
-    private int visibleRowCount;
-    private int visibleColumnCount;
-    // How many extra rows to show off-screen, to account for scrolling (when actual display can lag logical display).
-    // Negative means we need them left/above, positive means we need them below/right:
-    private final IntegerProperty extraRowsForSmoothScroll = new SimpleIntegerProperty(0);
-    private final IntegerProperty extraColsForSmoothScroll = new SimpleIntegerProperty(0);
-
+    // The first index to render.  This is not actually necessarily the same
+    // as first really-visible, if we are currently doing some smooth scrolling,
+    // which may require rendering some items which are slightly off-screen:
+    private @AbsColIndex int firstRenderColumnIndex;
+    private @AbsRowIndex int firstRenderRowIndex;
+    // Offset of first cell being rendered.  Always zero or negative:
+    private double firstRenderColumnOffset;
+    private double firstRenderRowOffset;
+    private int renderRowCount;
+    private int renderColumnCount;
+    // Where is our theoretical scroll position?   We don't use this for any rendering,
+    // only for knowing where to scroll to on next scroll (because we may need to render
+    // extra portions outside the logical scroll position).
+    private @AbsColIndex int logicalScrollColumnIndex;
+    private @AbsRowIndex int logicalScrollRowIndex;
+    // What is the offset of first item?  Always between negative width of current item and zero.  Never positive.
+    private double logicalScrollColumnOffset;
+    private double logicalScrollRowOffset;
+    
+    
     private static final @AbsRowIndex int MIN_ROWS = CellPosition.row(10);
     private static final @AbsColIndex int MIN_COLS = CellPosition.col(10);
     
@@ -121,10 +126,6 @@ public class VirtualGrid implements ScrollBindable
     private final BooleanProperty atTopProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atBottomProperty = new SimpleBooleanProperty(false);
     
-    // How many extra rows to show off-screen, to account for scrolling (when actual display can lag logical display).
-    // Negative means we need them left/above, positive means we need them below/right:
-    private final IntegerProperty extraRowsForScrolling = new SimpleIntegerProperty(0);
-    private final IntegerProperty extraColsForScrolling = new SimpleIntegerProperty(0);
     // A sort of mutex to stop re-entrance to the updateSizeAndPositions() method:
     private boolean updatingSizeAndPositions = false;
     
@@ -140,8 +141,10 @@ public class VirtualGrid implements ScrollBindable
         this.vBar = new ScrollBar();
         this.container = new Container();
         this.container.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
-        scrollGroup = new ScrollGroup(
-                FXUtility.mouse(this)::scrollLayoutXBy, MAX_EXTRA_ROW_COLS, targetX -> {
+        scrollGroup = new ScrollGroup(FXUtility.mouse(this)::scrollClampX, FXUtility.mouse(this)::scrollClampY);
+/*
+
+                scrollLayoutXBy, MAX_EXTRA_ROW_COLS, targetX -> {
             // Count column widths in that direction until we reach target:
             double curX;
             int startCol;
@@ -150,7 +153,7 @@ public class VirtualGrid implements ScrollBindable
                 // If it's negative, we're scrolling left, and we need to show extra
                 // rows to the right until they scroll out of view.
                 double w = 0;
-                for (startCol = firstVisibleColumnIndex; startCol < currentColumns.get(); startCol++)
+                for (startCol = firstRenderColumnIndex; startCol < currentColumns.get(); startCol++)
                 {
                     w += getColumnWidth(startCol);
                     if (w >= container.getWidth())
@@ -158,7 +161,7 @@ public class VirtualGrid implements ScrollBindable
                         break;
                     }
                 }
-                curX = w + firstVisibleColumnOffset - container.getWidth();
+                curX = w + firstRenderColumnOffset - container.getWidth();
                 int col;
                 for (col = startCol + 1; curX < -targetX; col++)
                 {
@@ -172,9 +175,9 @@ public class VirtualGrid implements ScrollBindable
             else
             {
                 // Opposite: scrolling right, need extra rows left until scroll out of view:
-                startCol = firstVisibleColumnIndex;
+                startCol = firstRenderColumnIndex;
                 int col;
-                curX = firstVisibleColumnOffset;
+                curX = firstRenderColumnOffset;
                 for (col = startCol - 1; curX > -targetX; col--)
                 {
                     if (col < 0)
@@ -186,7 +189,7 @@ public class VirtualGrid implements ScrollBindable
             }
         }
                 , FXUtility.mouse(this)::scrollLayoutYBy
-                , y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight)));
+                , y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight))); */
         scrollGroup.add(FXUtility.mouse(this), ScrollLock.BOTH);
         container.translateXProperty().bind(scrollGroup.translateXProperty());
         container.translateYProperty().bind(scrollGroup.translateYProperty());
@@ -241,11 +244,81 @@ public class VirtualGrid implements ScrollBindable
         });
     }
 
+    private double scrollClampX(double idealScrollBy)
+    {
+        idealScrollBy = -idealScrollBy;
+        if (idealScrollBy < 0)
+        {
+            // Scrolling the position to the left:
+            
+            // We can scroll to the left edge of the current item, for sure.
+            // We add the offset because it's negative:
+            double maxScroll = getColumnWidth(logicalScrollColumnIndex) + logicalScrollColumnOffset;
+            for (int index = logicalScrollColumnIndex - 1; index >= 0; index--)
+            {
+                maxScroll -= getColumnWidth(index);
+                // Short-circuit: if we already showed we can scroll as far as we want to, stop:
+                if (maxScroll < idealScrollBy)
+                    return -idealScrollBy;
+            }
+            // Math.max gets us the least-negative number:
+            return -Math.max(maxScroll, idealScrollBy);
+        }
+        else if (idealScrollBy > 0)
+        {
+            // Scrolling the position to the right:
+            // We measure distance to the very right hand edge of all columns, then subtract
+            // our own width to work out where the left edge can go:
+            
+            // The right edge is at least scrolling to right of current first item:
+            double distToRightEdge = -logicalScrollColumnOffset;
+
+            @AbsColIndex int curColumns = currentColumns.get();
+            double paneWidth = container.getWidth();
+            for (int index = logicalScrollColumnIndex + 1; index < curColumns; index++)
+            {
+                distToRightEdge += getColumnWidth(index);
+                // Short-circuit if we already know we can scroll far enough:
+                if (distToRightEdge - paneWidth < idealScrollBy)
+                    return -idealScrollBy;
+            }
+            return -Math.max(distToRightEdge - paneWidth, idealScrollBy);
+        }
+        return -idealScrollBy;
+    }
+
+    /**
+     * What's the most we can scroll by in the given direction?  If less than param, return
+     * the clamped value.
+     */
+    private double scrollClampY(double idealScrollBy)
+    {
+        if (idealScrollBy > 0)
+        {
+            // Furthest we could scroll is all the way to the top:
+            double maxScroll = logicalScrollRowIndex * rowHeight + logicalScrollRowOffset;
+            return Math.min(maxScroll, idealScrollBy);
+        }
+        else if (idealScrollBy < 0)
+        {
+            // The furthest we scroll is until the last row rests at the bottom of the window:
+            double lastScrollPos = currentKnownRows.get() * rowHeight - container.getHeight();
+            double maxScroll = -(lastScrollPos - (logicalScrollRowIndex * rowHeight + logicalScrollRowOffset));
+            // Don't start scrolling backwards, though:
+            if (maxScroll > 0)
+                maxScroll = 0;
+            // We are both negative, so Math.max gets us the least-negative item:
+            return Math.max(maxScroll, idealScrollBy);
+        }
+        // Must be zero; no need to clamp:
+        return idealScrollBy;
+    }
+
     private @Nullable CellPosition getCellPositionAt(double x, double y)
     {
         @AbsColIndex int colIndex;
-        x -= firstVisibleColumnOffset;
-        for (colIndex = firstVisibleColumnIndex; colIndex < currentColumns.get(); colIndex++)
+        x -= firstRenderColumnOffset;
+        for (colIndex = firstRenderColumnIndex; colIndex < currentColumns.get(); colIndex++)
         {
             x -= getColumnWidth(colIndex);
             if (x < 0.0)
@@ -255,53 +328,149 @@ public class VirtualGrid implements ScrollBindable
         }
         if (x > 0.0)
             return null;
-        y -= firstVisibleRowOffset;
+        y -= firstRenderRowOffset;
         @SuppressWarnings("units")
-        @AbsRowIndex int rowIndex = (int) Math.floor(y / rowHeight) + firstVisibleRowIndex;
+        @AbsRowIndex int rowIndex = (int) Math.floor(y / rowHeight) + firstRenderRowIndex;
         if (rowIndex >= getLastSelectableRowGlobal())
             return null;
         return new CellPosition(rowIndex, colIndex);
     }
 
-    // This is the canonical scroll method which all scroll
-    // attempts should pass through, to avoid duplicating the
-    // update code
     @Override
-    public void showAtOffset(@Nullable Pair<@AbsRowIndex Integer, Double> rowAndPixelOffset, @Nullable Pair<@AbsColIndex Integer, Double> colAndPixelOffset)
+    public void scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
     {
-        if (rowAndPixelOffset != null)
+        // We basically do two scrolls.  One to scroll from existing logical position by the given number of pixels,
+        // and store that in logical position.  Then a second to scroll from new logical position by
+        // the extra number of pixels before, to get the first render.  Finally, we calculate how many
+        // items we need to render in the pane overall.
+        int curCol = logicalScrollColumnIndex;
+        double curOffset = logicalScrollColumnOffset;
+        @AbsColIndex int totalColumns = currentColumns.get();
+        
+        for (int miniScroll = 0; miniScroll < 2; miniScroll++)
         {
-            @AbsRowIndex int row = rowAndPixelOffset.getFirst();
-            double rowPixelOffset = rowAndPixelOffset.getSecond();
-            if (row < 0)
-            {
-                row = CellPosition.row(0);
-                // Can't scroll above top of first item:
-                rowPixelOffset = 0.0;
-            }
-            else if (row > Math.max(0, currentKnownRows.get() - 1))
-            {
-                // Can't scroll beyond showing the last cell at the top of the window:
-                row = Utility.maxRow(CellPosition.row(0), currentKnownRows.get() - CellPosition.row(1));
-                rowPixelOffset = 0;
-            }
-            this.firstVisibleRowOffset = rowPixelOffset;
-            this.firstVisibleRowIndex = row;
-            updateVBar();
+            double remainingScroll = miniScroll == 0 ? scrollBy : -extraPixelsToShowBefore;
 
-            boolean atTop = firstVisibleRowIndex == 0 && firstVisibleRowOffset >= -5;
-            //FXUtility.setPseudoclass(glass, "top-shadow", !atTop);
+            // Remember here how the scrolling offsets work.  If you have column 5 with content ABCDE, and you
+            // have a curOffset of minus 2, then we render like this:
+            //   |
+            // AB CDE
+            //   |
+            // If you move to a curOffset of minus 4 then you get:
+            //     |
+            // ABCD E
+            //     |
+            // That is, making curOffset more negative scrolls *right*.  So if your remainingScroll is negative
+            // (meaning a request to scroll left), you should actually make curOffset more positive
+            
+            // Can we just do the scroll within the given column?
+            double startColumnWidth = getColumnWidth(curCol);
+            if (remainingScroll == 0.0 || (-startColumnWidth < curOffset + remainingScroll && curOffset + remainingScroll <= 0))
+            {
+                curOffset += remainingScroll;
+            }
+            else
+            {
+                // The first thing we do is scroll in the right direction so that we are at the left edge of a column,
+                // because that makes the loop afterwards a hell of a lot simpler:
+                int dir;
+                if (remainingScroll > 0)
+                {
+                    remainingScroll += curOffset;
+                    dir = -1;
+                }
+                else
+                {
+                    remainingScroll += startColumnWidth + curOffset;
+                    curCol += 1;
+                    dir = 1;                    
+                }
+                
+                // Now we head through the columns until we've used up all our scroll.
+                // We'll know we're finished when the remainingScroll is between -curColumnWidth, and zero
+                while (curCol >= 0 && curCol < totalColumns)
+                {
+                    double curColumnWidth = getColumnWidth(curCol);
+                    if (-curColumnWidth <= remainingScroll && remainingScroll <= 0)
+                    {
+                        break;
+                    }
+                    remainingScroll += dir * curColumnWidth;
+                    curCol += dir;
+                }
+                curOffset = remainingScroll;
+            }
+            
+            if (miniScroll == 0)
+            {
+                logicalScrollColumnIndex = CellPosition.col(curCol);
+                logicalScrollColumnOffset = curOffset;
+            }
+            else
+            {
+                firstRenderColumnOffset = curOffset;
+                firstRenderColumnIndex = CellPosition.col(curCol);
+            }
         }
-        if (colAndPixelOffset != null)
+        
+        // Now we work out how many columns we need to render:
+        @AbsColIndex int lastRenderIndex = firstRenderColumnIndex;
+        
+        double remainingPixels = extraPixelsToShowBefore + container.getWidth() + extraPixelsToShowAfter;
+        
+        while (remainingPixels > 0.0 && lastRenderIndex < totalColumns)
         {
-            @AbsColIndex int col = Utility.maxCol(colAndPixelOffset.getFirst(), CellPosition.col(0));
-            this.firstVisibleColumnOffset = colAndPixelOffset.getSecond();
-            this.firstVisibleColumnIndex = col;
-            updateHBar();
-
-            boolean atLeft = firstVisibleColumnIndex == 0 && firstVisibleColumnOffset >= -5;
-            //FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
+            remainingPixels -= getColumnWidth(lastRenderIndex);
+            lastRenderIndex += CellPosition.col(1);
         }
+        
+        renderColumnCount = lastRenderIndex - firstRenderColumnIndex + 1;
+        
+        updateHBar();
+
+        boolean atLeft = firstRenderColumnIndex == 0 && firstRenderColumnOffset >= -5;
+        //FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
+
+        container.redoLayout();
+    }
+    
+    @Override
+    public void scrollYLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
+    {
+        // First scroll to the right logical position:
+        class ScrollResult
+        {
+            private final @AbsRowIndex int row;
+            private final double offset;
+            
+            // Slight abuse of a constructor, but it's only local.  Calculate new scroll result:
+            ScrollResult(@AbsRowIndex int existingIndex, double existingOffset, double scrollBy)
+            {
+                if (scrollBy <= 0.0)
+                {
+                    int newRows = (int)Math.floor(Math.max(existingOffset -scrollBy, 0.0) / rowHeight);
+                    row = existingIndex + CellPosition.row(newRows);
+                    offset = newRows * rowHeight - (existingOffset - scrollBy);
+                }
+                else
+                {
+                    int newRows = (int)Math.floor(Math.max(Math.abs(scrollBy - (rowHeight + existingOffset)), 0.0) / rowHeight);
+                    row = existingIndex - CellPosition.row(newRows);
+                    offset = existingOffset - scrollBy + newRows * rowHeight;
+                }
+            }
+        }
+        ScrollResult logicalPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollBy);
+        logicalScrollRowIndex = logicalPos.row;
+        logicalScrollRowOffset = logicalPos.offset;
+        ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, -extraPixelsToShowBefore);
+        firstRenderRowIndex = renderPos.row;
+        firstRenderRowOffset = renderPos.offset;
+        ScrollResult bottomVisible = new ScrollResult(firstRenderRowIndex, firstRenderRowOffset, extraPixelsToShowBefore + container.getHeight() + extraPixelsToShowAfter);
+        renderRowCount = bottomVisible.row - firstRenderRowIndex + 1;
+        
+        updateVBar();
+        
         container.redoLayout();
     }
 
@@ -316,106 +485,6 @@ public class VirtualGrid implements ScrollBindable
             container.clip.setHeight(container.getHeight());
             //scrollGroup.updateClip();
         }
-    }
-
-    // This scrolls just the layout, without smooth scrolling
-    private ScrollResult<@AbsColIndex Integer> scrollLayoutXBy(double x, ScrollGroup.Token token)
-    {
-        double prevScroll = getCurrentScrollX(null);
-        Pair<@AbsColIndex Integer, Double> pos = scrollXToPixel(prevScroll + x, token);
-        return new ScrollResult<>(getCurrentScrollX(pos) - prevScroll, pos);
-    }
-
-    // This scrolls just the layout, without smooth scrolling
-    // Returns the amount that we actually scrolled by, which will either
-    // be given parameter, or otherwise it will have been clamped because we tried
-    // to scroll at the very top or very bottom
-    private ScrollResult<@AbsRowIndex Integer> scrollLayoutYBy(double y, ScrollGroup.Token token)
-    {
-        double prevScroll = getCurrentScrollY(null);
-        Pair<@AbsRowIndex Integer, Double> pos = scrollYToPixel(prevScroll + y, token);
-        return new ScrollResult<>(getCurrentScrollY(pos) - prevScroll, pos);
-    }
-
-    // This method should only be called by ScrollGroup, hence the magic token:
-    private Pair<@AbsColIndex Integer, Double> scrollXToPixel(double targetX, ScrollGroup.Token token)
-    {
-        double lhs = Math.max(targetX, 0.0);
-        for (int lhsCol = 0; lhsCol < currentColumns.get(); lhsCol++)
-        {
-            double lhsColWidth = getColumnWidth(lhsCol);
-            if (lhsCol == currentColumns.get() - 1 && lhs > lhsColWidth)
-            {
-                // Clamp:
-                lhs = lhsColWidth;
-            }
-
-            if (lhs <= lhsColWidth)
-            {
-                // Stop here, possibly clamping to RHS if needed:
-                double clampedLHS = container.getWidth();
-                for (int clampedLHSCol = currentColumns.get() - 1; clampedLHSCol >= 0; clampedLHSCol--)
-                {
-                    if (clampedLHS < lhsColWidth)
-                    {
-                        // We've found furthest place we could
-                        // scroll to, so go to the leftmost out of
-                        // furthest place, and ideal place:
-
-                        // clampedLHS was from right, make it from left:
-                        clampedLHS = lhsColWidth - clampedLHS;
-                        if (clampedLHSCol < lhsCol || (clampedLHSCol == lhsCol && clampedLHS < lhs))
-                            return new Pair<>(CellPosition.col(clampedLHSCol), -clampedLHS);
-                        else
-                            return new Pair<>(CellPosition.col(lhsCol), -lhs);
-                    }
-                    clampedLHS -= getColumnWidth(clampedLHSCol);
-                }
-                // If we get here, column widths are smaller than
-                // container, so stay at left:
-                return new Pair<>(CellPosition.col(0), 0.0);
-            }
-            lhs -= lhsColWidth;
-        }
-        // Should be impossible to reach here unless there are no columns:
-        return new Pair<>(CellPosition.col(0), 0.0);
-    }
-
-    // This method should only be called by ScrollGroup, hence the magic token:
-    // Immediately scrolls with no animation
-    public Pair<@AbsRowIndex Integer, Double> scrollYToPixel(double y, ScrollGroup.Token token)
-    {
-        // Can't scroll to negative:
-        if (y < 0)
-            y = 0;
-
-        // So, if y == 0 then we make first cell the top and offset == 0
-        // If y < 1*rowHeight, still first cell, and offset == -y
-        // If y < 2*rowHeight, second cell, and offset == rowHeight - y
-        // General pattern: divide by rowHeight and round down to get topCell
-        // Then offset is topCell*rowHeight - y
-        int topCell = (int) Math.floor(y / rowHeight);
-        double rowPixelOffset = (topCell * rowHeight) - y;
-
-        int bottomCell = (int)Math.floor((y + container.getHeight()) / rowHeight);
-        int rows = getLastSelectableRowGlobal();
-        // Don't let them scroll beyond bottom:
-        if (bottomCell >= rows)
-        {
-            topCell = rows - 1 - (int)Math.floor(container.getHeight() / rowHeight);
-            rowPixelOffset = container.getHeight() - (rows - topCell) * rowHeight;
-
-            // But if whole table is visible, can't avoid scrolling beyond bottom;
-            // avoid over-compensating by scrolling above top:
-            if (topCell < 0)
-            {
-                topCell = 0;
-                rowPixelOffset = 0.0;
-            }
-        }
-
-        Pair<@AbsRowIndex Integer, Double> scrollDest = new Pair<>(CellPosition.row(topCell), rowPixelOffset);
-        return scrollDest;
     }
 
     /**
@@ -437,9 +506,9 @@ public class VirtualGrid implements ScrollBindable
         return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
     }
 
-    private int getLastSelectableRowGlobal()
+    private @AbsRowIndex int getLastSelectableRowGlobal()
     {
-        return 100; // TODO
+        return CellPosition.row(currentKnownRows.get() - 1);
     }
 
     private double getMaxScrollX()
@@ -482,13 +551,13 @@ public class VirtualGrid implements ScrollBindable
     // If param is non-null, overrides our own data
     private double getCurrentScrollY(@Nullable Pair<@AbsRowIndex Integer, Double> pos)
     {
-        return (pos == null ? firstVisibleRowIndex : pos.getFirst()) * rowHeight - (pos == null ? firstVisibleRowOffset : pos.getSecond());
+        return (pos == null ? logicalScrollRowIndex : pos.getFirst()) * rowHeight - (pos == null ? logicalScrollRowOffset : pos.getSecond());
     }
 
     // If param is non-null, overrides our own data
     private double getCurrentScrollX(@Nullable Pair<@AbsColIndex Integer, Double> pos)
     {
-        return sumColumnWidths(CellPosition.col(0), pos == null ? firstVisibleColumnIndex : pos.getFirst()) - (pos == null ? firstVisibleColumnOffset : pos.getSecond());
+        return sumColumnWidths(CellPosition.col(0), pos == null ? logicalScrollColumnIndex : pos.getFirst()) - (pos == null ? logicalScrollColumnOffset : pos.getSecond());
     }
 
     public void select(@Nullable CellSelection cellSelection)
@@ -527,7 +596,7 @@ public class VirtualGrid implements ScrollBindable
         ));
     }
 
-    public Node getNode()
+    public Region getNode()
     {
         return container;
     }
@@ -541,42 +610,18 @@ public class VirtualGrid implements ScrollBindable
     public int _test_getFirstLogicalVisibleRowIncl()
     {
         // This is first row with middle visible, so check for that:
-        if (firstVisibleRowOffset < -rowHeight / 2.0)
-            return firstVisibleRowIndex + 1;
+        if (firstRenderRowOffset < -rowHeight / 2.0)
+            return firstRenderRowIndex + 1;
         else
-            return firstVisibleRowIndex;
+            return firstRenderRowIndex;
     }
 
     public int _test_getLastLogicalVisibleRowExcl()
     {
         int numVisible = (int)Math.round((double)container.getHeight() / rowHeight);
-        return firstVisibleRowIndex + numVisible;
+        return firstRenderRowIndex + numVisible;
     }
 
-
-    // The last actual display column (exclusive), including any needed for displaying smooth scrolling
-    @AbsColIndex int getLastDisplayColExcl()
-    {
-        return Utility.minCol(currentColumns.get(), firstVisibleColumnIndex + CellPosition.col(visibleColumnCount) + Utility.maxCol(CellPosition.col(0), CellPosition.col(extraColsForSmoothScroll.get())));
-    }
-
-    // The first actual display column, including any needed for displaying smooth scrolling
-    @AbsColIndex int getFirstDisplayCol()
-    {
-        return Utility.maxCol(CellPosition.col(0), firstVisibleColumnIndex + Utility.minCol(CellPosition.col(0), CellPosition.col(extraColsForSmoothScroll.get())));
-    }
-
-    // The last actual display row (exclusive), including any needed for displaying smooth scrolling
-    @AbsRowIndex int getLastDisplayRowExcl()
-    {
-        return Utility.minRow(currentKnownRows.get(), firstVisibleRowIndex + CellPosition.row(visibleRowCount) + Utility.maxRow(CellPosition.row(0), CellPosition.row(extraRowsForSmoothScroll.get())));
-    }
-
-    // The first actual display row, including any needed for displaying smooth scrolling
-    @AbsRowIndex int getFirstDisplayRow()
-    {
-        return Utility.maxRow(CellPosition.row(0), firstVisibleRowIndex + Utility.minRow(CellPosition.row(0), CellPosition.row(extraRowsForSmoothScroll.get())));
-    }
 
     public void addNodeSupplier(VirtualGridSupplier<?> cellSupplier)
     {
@@ -624,6 +669,16 @@ public class VirtualGrid implements ScrollBindable
     public final void addSelectionListener(SelectionListener selectionListener)
     {
         selectionListeners.add(selectionListener);
+    }
+
+    public double _test_getScrollXPos()
+    {
+        return getCurrentScrollX(null);
+    }
+
+    public double _test_getScrollYPos()
+    {
+        return getCurrentScrollY(null);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -818,32 +873,34 @@ public class VirtualGrid implements ScrollBindable
 
         private void redoLayout(@UnknownInitialization(Region.class) Container this)
         {
-            double x = firstVisibleColumnOffset;
-            double y = firstVisibleRowOffset;
+            double x = firstRenderColumnOffset;
+            double y = firstRenderRowOffset;
 
             // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstVisibleRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
             int newNumVisibleCols = 0;
-            for (int column = firstVisibleColumnIndex; x < getWidth() && column < currentColumns.get(); column++)
+            for (int column = firstRenderColumnIndex; x < getWidth() && column < currentColumns.get(); column++)
             {
                 newNumVisibleCols += 1;
                 x += getColumnWidth(column);
             }
-            VirtualGrid.this.visibleRowCount = newNumVisibleRows;
-            VirtualGrid.this.visibleColumnCount = newNumVisibleCols;
+            VirtualGrid.this.renderRowCount = newNumVisibleRows;
+            VirtualGrid.this.renderColumnCount = newNumVisibleCols;
 
             // This includes extra rows needed for smooth scrolling:
-            @AbsRowIndex int firstDisplayRow = getFirstDisplayRow();
-            @AbsRowIndex int lastDisplayRowExcl = getLastDisplayRowExcl();
-            @AbsColIndex int firstDisplayCol = getFirstDisplayCol();
-            @AbsColIndex int lastDisplayColExcl = getLastDisplayColExcl();
+            @AbsRowIndex int firstDisplayRow = firstRenderRowIndex;
+            @AbsRowIndex int lastDisplayRowExcl = firstRenderRowIndex + CellPosition.row(renderRowCount);
+            @AbsColIndex int firstDisplayCol = firstRenderColumnIndex;
+            @AbsColIndex int lastDisplayColExcl = firstRenderColumnIndex + CellPosition.col(renderColumnCount);
+            
+            //Log.debug("Rows: " + firstDisplayRow + " to " + (lastDisplayRowExcl - 1) + " incl extra: " + extraRowsForSmoothScroll.get() + " ideal first: " + firstRenderRowIndex);
 
             VisibleDetails<@AbsColIndex Integer> columnBounds = new VisibleDetails<@AbsColIndex Integer>(firstDisplayCol, lastDisplayColExcl - CellPosition.col(1))
             {
                 @Override
                 public double getItemCoord(@AbsColIndex Integer itemIndex)
                 {
-                    return firstVisibleColumnOffset + sumColumnWidths(firstDisplayCol, itemIndex);
+                    return firstRenderColumnOffset + sumColumnWidths(firstDisplayCol, itemIndex);
                 }
 
                 @Override
@@ -851,8 +908,8 @@ public class VirtualGrid implements ScrollBindable
                 public Optional<@AbsColIndex Integer> getItemIndexForScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = screenToLocal(screenPos);
-                    double x = firstVisibleColumnOffset;
-                    for (@AbsColIndex int i = firstVisibleColumnIndex; i < lastDisplayColExcl; i++)
+                    double x = firstRenderColumnOffset;
+                    for (@AbsColIndex int i = firstRenderColumnIndex; i < lastDisplayColExcl; i++)
                     {
                         double nextX = x + getColumnWidth(i);
                         if (x <= localCoord.getX() && localCoord.getX() < nextX)
@@ -867,15 +924,15 @@ public class VirtualGrid implements ScrollBindable
                 @Override
                 public double getItemCoord(@AbsRowIndex Integer itemIndex)
                 {
-                    return firstVisibleRowOffset + rowHeight * (itemIndex - firstDisplayRow);
+                    return firstRenderRowOffset + rowHeight * (itemIndex - firstDisplayRow);
                 }
 
                 @Override
                 public Optional<@AbsRowIndex Integer> getItemIndexForScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = screenToLocal(screenPos);
-                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - firstVisibleRowOffset) / rowHeight)) + firstDisplayRow;
-                    if (firstVisibleRowIndex <= theoretical && theoretical < lastDisplayRowExcl)
+                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - firstRenderRowOffset) / rowHeight)) + firstDisplayRow;
+                    if (firstRenderRowIndex <= theoretical && theoretical < lastDisplayRowExcl)
                         return Optional.of(theoretical);
                     else
                         return Optional.empty();
@@ -991,7 +1048,14 @@ public class VirtualGrid implements ScrollBindable
             openGridAreas.add(cur);
         }
         
-        currentKnownRows.setValue(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(1)));
+        currentColumns.set(
+            Utility.maxCol(MIN_COLS, 
+                gridAreas.stream()
+                        .<@AbsColIndex Integer>map(g -> Utility.boxCol(g.getSecond().getBottomRightIncl().columnIndex))
+                        .max(Comparator.comparingInt(x -> x))
+                    .<@AbsColIndex Integer>orElse(CellPosition.col(0))
+                    + CellPosition.col(2)));
+        currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(2)));
         container.redoLayout();
         updatingSizeAndPositions = false;
     }

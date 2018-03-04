@@ -4,18 +4,31 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 
-// Smooth scrolling class.  Handles smooth scrolling on a single axis:
+/**
+ * Smooth scrolling class.  Handles smooth scrolling on a single axis
+ * 
+ * Does not have an idea of absolute scroll position, only relative positions.
+ * 
+ * Its main job is that when a scroll is triggered, let's say 100 pixels down, 
+ * it immediately scrolls the layout down 100 pixels.  Then it applies a translate
+ * of -100 so that initially, nothing looks like it has moved.  Then it scrolls
+ * the translate property towards zero, so that the scroll is animated without
+ * needing to do multiple layout passes.
+ * 
+ */
 @OnThread(Tag.FXPlatform)
-class SmoothScroller
+public class SmoothScroller
 {
     // AnimationTimer is run every frame, and so lets us do smooth scrolling:
-    private @MonotonicNonNull AnimationTimer scroller;
+    private @MonotonicNonNull AnimationTimer scrollTimer;
     // Start time of current animation (scrolling again resets this) and target end time:
     private long scrollStartNanos;
     private long scrollEndNanos;
@@ -25,34 +38,42 @@ class SmoothScroller
     private double scrollOffset;
     // Scroll offset at scrollStartNanos
     private double scrollStartOffset;
-    private static final long SCROLL_TIME_NANOS = 300_000_000L;
+    public static final long SCROLL_TIME_NANOS = 300_000_000L;
 
     // The translateX/translateY of container, depending on which axis we are:
     private final DoubleProperty translateProperty;
-    // extraRows/extraCols, depending on which axis we are:
-    private final IntegerProperty extraRowCols;
+    private final ScrollClamp scrollClamp;
     // Reference to scrollLayoutXBy/scrollLayoutYBy, depending on axis:
-    private final FXPlatformFunction<Double, Double> scrollLayoutBy;
-    // Given a scroll offset, works out how many extra rows/cols we need:
-    private final FXPlatformFunction<Double, Integer> calcExtraRowCols;
-    private final FXPlatformRunnable updateClip;
-    private final int maxSmoothScrollItems;
+    private final Scroller scroller;
+    private double MAX_SCROLL_OFFSET = 500.0;
 
-    SmoothScroller(DoubleProperty translateProperty, int maxSmoothScrollItems, IntegerProperty extraRowCols, FXPlatformFunction<Double, Double> scrollLayoutBy, FXPlatformFunction<Double, Integer> calcExtraRowCols, FXPlatformRunnable updateClip)
+    public static interface ScrollClamp
+    {
+        // Given an ideal amount of pixels to scroll, clamps it in the case that we are reaching the edge:
+        double clampScroll(double amount);
+    }
+    
+    public static interface Scroller
+    {
+        /**
+         * Scrolls layout by scrollBy, but also instructs the renderer to render margins before and/or after
+         * the current node for smooth scrolling purposes.  Both may be zero.
+         */
+        void scrollLayoutBy(double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
+    }
+    
+    SmoothScroller(DoubleProperty translateProperty, ScrollClamp scrollClamp, Scroller scroller)
     {
         this.translateProperty = translateProperty;
-        this.extraRowCols = extraRowCols;
-        this.scrollLayoutBy = scrollLayoutBy;
-        this.calcExtraRowCols = calcExtraRowCols;
-        this.updateClip = updateClip;
-        this.maxSmoothScrollItems = maxSmoothScrollItems;
+        this.scrollClamp = scrollClamp;
+        this.scroller = scroller;
     }
 
     public void smoothScroll(double delta)
     {
-        if (scroller == null)
+        if (scrollTimer == null)
         {
-            scroller = new AnimationTimer()
+            scrollTimer = new AnimationTimer()
             {
                 @Override
                 public void handle(long now)
@@ -67,10 +88,8 @@ class SmoothScroller
                     {
                         translateProperty.set(0.0);
                         scrollOffset = 0.0;
-                        extraRowCols.set(0);
                         stop();
                     }
-                    updateClip.run();
                 }
             };
         }
@@ -87,26 +106,28 @@ class SmoothScroller
             // We subtract from current offset, because we may already be mid-scroll in which
             // case we don't want to jump, just want to add on (we will go faster to cover this
             // because scroll will be same duration but longer):
-            scrollOffset += scrollLayoutBy.apply(delta);
-            int extra = calcExtraRowCols.apply(scrollOffset);
+            double clamped = scrollClamp.clampScroll(delta);
+            this.scrollOffset += clamped;
             // Don't let offset get too large or we will need too many extra rows:
-            if (Math.abs(extra) > maxSmoothScrollItems)
+            if (Math.abs(this.scrollOffset) > MAX_SCROLL_OFFSET)
             {
                 // Jump to the destination:
-                scrollOffset = 0;
-                extraRowCols.set(0);
+                this.scrollOffset = 0.0;
+                translateProperty.set(0.0);
+                scrollTimer.stop();
             }
             else
             {
-                extraRowCols.set(extra);
+                if (justStarted)
+                    scrollStartOffset = this.scrollOffset;
+                // Start the smooth scrolling animation:
+                if (scrollOffset != 0.0)
+                    scrollTimer.start();
             }
-            if (justStarted)
-                scrollStartOffset = scrollOffset;
-            translateProperty.set(scrollOffset);
+            scroller.scrollLayoutBy(Math.min(this.scrollOffset, 0), clamped, Math.max(this.scrollOffset, 0));
+            translateProperty.set(this.scrollOffset);
         }
 
-        // Start the smooth scrolling animation:
-        if (scrollOffset != 0.0)
-            scroller.start();
+        
     }
 }
