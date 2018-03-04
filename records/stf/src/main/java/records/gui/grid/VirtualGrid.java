@@ -268,32 +268,35 @@ public class VirtualGrid implements ScrollBindable
 
     private double scrollClampX(double idealScrollBy)
     {
-        idealScrollBy = -idealScrollBy;
-        if (idealScrollBy < 0)
+        if (idealScrollBy > 0)
         {
-            // Scrolling the position to the left:
+            // Scrolling the document rightwards, so that the view is moving towards the left of the document
+            // Scrolling the offset positive, which means index numbers come down
             
             // We can scroll to the left edge of the current item, for sure.
-            // We add the offset because it's negative:
-            double maxScroll = getColumnWidth(logicalScrollColumnIndex) + logicalScrollColumnOffset;
+            // Note that maxScroll will be positive.
+            double maxScroll = -logicalScrollColumnOffset;
+            // Can we also scroll into any other items?
             for (int index = logicalScrollColumnIndex - 1; index >= 0; index--)
             {
-                maxScroll -= getColumnWidth(index);
+                maxScroll += getColumnWidth(index);
                 // Short-circuit: if we already showed we can scroll as far as we want to, stop:
-                if (maxScroll < idealScrollBy)
-                    return -idealScrollBy;
+                if (maxScroll >= idealScrollBy)
+                    return idealScrollBy;
             }
-            // Math.max gets us the least-negative number:
-            return -Math.max(maxScroll, idealScrollBy);
+            // Math.min gets us the smaller positive number:
+            return Math.min(maxScroll, idealScrollBy);
         }
-        else if (idealScrollBy > 0)
+        else if (idealScrollBy < 0)
         {
-            // Scrolling the position to the right:
+            // Scrolling the document leftwards, so the view is moving towards the right of the document.
+            // Scrolling the offset negative, so index numbers go oup.
+            
             // We measure distance to the very right hand edge of all columns, then subtract
             // our own width to work out where the left edge can go:
             
-            // The right edge is at least scrolling to right of current first item:
-            double distToRightEdge = -logicalScrollColumnOffset;
+            // The right edge is at least scrolling to right of current item:
+            double distToRightEdge = getColumnWidth(logicalScrollColumnIndex) + logicalScrollColumnOffset;
 
             @AbsColIndex int curColumns = currentColumns.get();
             double paneWidth = container.getWidth();
@@ -301,12 +304,13 @@ public class VirtualGrid implements ScrollBindable
             {
                 distToRightEdge += getColumnWidth(index);
                 // Short-circuit if we already know we can scroll far enough:
-                if (distToRightEdge - paneWidth < idealScrollBy)
-                    return -idealScrollBy;
+                if (distToRightEdge - paneWidth > -idealScrollBy)
+                    return idealScrollBy;
             }
-            return -Math.max(distToRightEdge - paneWidth, idealScrollBy);
+            // Math.max gets us the negative number closest to zero:
+            return Math.max(-(distToRightEdge - paneWidth), idealScrollBy);
         }
-        return -idealScrollBy;
+        return idealScrollBy;
     }
 
     /**
@@ -317,16 +321,22 @@ public class VirtualGrid implements ScrollBindable
     {
         if (idealScrollBy > 0)
         {
+            // Scrolling the document downwards, so that the view is moving towards the top of the document
+            // Scrolling the offset positive, which means index numbers come down
+            
             // Furthest we could scroll is all the way to the top:
-            double maxScroll = logicalScrollRowIndex * rowHeight + logicalScrollRowOffset;
+            double maxScroll = logicalScrollRowIndex * rowHeight - logicalScrollRowOffset;
+            //Log.debug("Row #" + logicalScrollRowIndex  + " at " + logicalScrollRowOffset + " Max: " + maxScroll);
+            
+            // Math.min gets us the smallest positive number:
             return Math.min(maxScroll, idealScrollBy);
         }
         else if (idealScrollBy < 0)
         {
             // The furthest we scroll is until the last row rests at the bottom of the window:
             double lastScrollPos = currentKnownRows.get() * rowHeight - container.getHeight();
-            double maxScroll = -(lastScrollPos - (logicalScrollRowIndex * rowHeight + logicalScrollRowOffset));
-            // Don't start scrolling backwards, though:
+            double maxScroll = -(lastScrollPos - (logicalScrollRowIndex * rowHeight - logicalScrollRowOffset));
+            // Don't start scrolling backwards, though.  (Shouldn't, but sanity check):
             if (maxScroll > 0)
                 maxScroll = 0;
             // We are both negative, so Math.max gets us the least-negative item:

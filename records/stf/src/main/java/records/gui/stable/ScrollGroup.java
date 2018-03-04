@@ -51,7 +51,7 @@ public class ScrollGroup
 
     public void requestScroll(ScrollEvent scrollEvent)
     {
-        requestScrollBy(-scrollEvent.getDeltaX(), -scrollEvent.getDeltaY());
+        requestScrollBy(scrollEvent.getDeltaX(), scrollEvent.getDeltaY());
     }
 
     public void requestScrollBy(double deltaX, double deltaY)

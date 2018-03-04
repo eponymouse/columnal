@@ -17,6 +17,7 @@ import log.Log;
 import org.antlr.v4.runtime.atn.SemanticContext.OR;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.Matchers;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
@@ -80,10 +81,6 @@ public class TestVirtualGridScroll extends ApplicationTest
         virtualGrid._test_setColumnWidth(50, 106.0);
         virtualGrid._test_setColumnWidth(51, 52.0);
         virtualGrid._test_setColumnWidth(53, 1.0);
-        
-        // Scroll to the middle to begin with so we don't get clamped:
-        virtualGrid.getScrollGroup().requestScrollBy(-ORIGINAL_SCROLL, -ORIGINAL_SCROLL);
-        TestUtil.sleep(300);
     }
 
     @OnThread(Tag.Any)
@@ -118,10 +115,77 @@ public class TestVirtualGridScroll extends ApplicationTest
         }
     }
     
+    @Property(trials = 5)
+    public void clampTest(@From(GenScrollAmounts.class) ScrollAmounts scrollAmounts)
+    {
+        // We started at top and left, so what we do is scroll out by half the amount, then attempt to scroll back the full amount, then repeat
+
+        for (double amount : scrollAmounts.amounts)
+        {
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(-Math.abs(amount) / 2.0, 0.0);
+            });
+            assertEquals(Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.1);
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(Math.abs(amount), 0.0);
+            });
+            assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.01);
+        }
+
+        for (double amount : scrollAmounts.amounts)
+        {
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(0.0, -Math.abs(amount) / 2.0);
+            });
+            assertEquals(Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.1);
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(0.0, Math.abs(amount));
+            });
+            assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.01);
+        }
+        
+        // Now we need to go to the very bottom/right and try in the other direction:
+        TestUtil.fx_(() -> {
+            virtualGrid.getScrollGroup().requestScrollBy(-Double.MAX_VALUE, -Double.MAX_VALUE);
+        });
+        
+        // We should really calculate these ourselves, rather than trusting the code we are testing...
+        double endX = TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos());
+        double endY = TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos());
+
+        for (double amount : scrollAmounts.amounts)
+        {
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(Math.abs(amount) / 2.0, 0.0);
+            });
+            assertEquals(endX - Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.1);
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(-Math.abs(amount), 0.0);
+            });
+            assertEquals(endX, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.01);
+        }
+
+        for (double amount : scrollAmounts.amounts)
+        {
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(0.0, Math.abs(amount) / 2.0);
+            });
+            assertEquals(endY - Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.1);
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(0.0, -Math.abs(amount));
+            });
+            assertEquals(endY, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.01);
+        }
+    }
+    
     @SuppressWarnings("deprecation")
     @Property(trials = 5)
-    public void scrollXYBy(@When(seed=1L) @From(GenScrollAmounts.class) ScrollAmounts scrollX, @When(seed=1L) @From(GenScrollAmounts.class) ScrollAmounts scrollY)
+    public void scrollXYBy(@From(GenScrollAmounts.class) ScrollAmounts scrollX, @From(GenScrollAmounts.class) ScrollAmounts scrollY)
     {
+        // Scroll to the middle to begin with so we don't get clamped:
+        virtualGrid.getScrollGroup().requestScrollBy(-ORIGINAL_SCROLL, -ORIGINAL_SCROLL);
+        TestUtil.sleep(300);
+        
         // Check window has sized properly:
         assertThat(TestUtil.fx(() -> virtualGrid.getNode().getHeight()), Matchers.greaterThanOrEqualTo(500.0));
         assertThat(TestUtil.fx(() -> virtualGrid.getNode().getWidth()), Matchers.greaterThanOrEqualTo(700.0));
