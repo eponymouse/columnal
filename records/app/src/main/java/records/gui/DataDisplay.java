@@ -7,10 +7,7 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -23,7 +20,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -205,11 +204,12 @@ public abstract class DataDisplay extends GridArea
             // Item for column name:
             FloatingItem columnNameItem = new FloatingItem()
             {
-                // This is like a boolean property, but we store -1 when pinned, 0 when unpinned.
-                // That way we negate the parent's translate when pinned, but let it affect us when not:
-                DoubleProperty translateFactor = new SimpleDoubleProperty(0);
-                DoubleExpression translateX = new ReadOnlyDoubleWrapper(0);
-                DoubleExpression translateY = new ReadOnlyDoubleWrapper(0);
+                private double layoutY;
+                private @MonotonicNonNull BorderPane borderPane;
+                double containerTranslateY;
+                private double y;
+                private double lastY;
+                
                 
                 @Override
                 @OnThread(Tag.FXPlatform)
@@ -218,31 +218,61 @@ public abstract class DataDisplay extends GridArea
                     @AbsColIndex int calcCol = getPosition().columnIndex + CellPosition.col(columnIndex);
                     @AbsRowIndex int calcRow = getPosition().rowIndex + CellPosition.row(1);
                     double x = columnBounds.getItemCoord(Utility.boxCol(calcCol));
-                    double y = rowBounds.getItemCoord(Utility.boxRow(calcRow));
+                    y = rowBounds.getItemCoord(Utility.boxRow(calcRow));
                     double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
                     double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
+
+                    lastY = rowBounds.getItemCoord(Utility.boxRow(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)));
                     
-                    double lastY = rowBounds.getItemCoord(Utility.boxRow(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)));
+                    // So, y and lastY are in the VirtualGrid's coordinate space.  We know that 0 is logically the top
+                    // in the render coordinates we have been given (even if VirtualGrid happens to be rendering more
+                    // above that).
+                    // y is our theoretical placing, if there was no pinning.  lastY is the last (highest Y coordinate) Y
+                    // that we could place when we are pinned.  Therefore, our placement will always be between y and lastY.
                     
-                    // We are pinned when y is less than 0 but less than lastY:
+                    // We also need to plan for the possible translate effect which occurs when virtual grid is smooth scrolling.
+                    // The translate Y on the virtual grid will be positive when scrolling the viewport down, because everything has been drawn
+                    // in the right spot, then translated down to look like it hasn't moved yet, beforeslowly regressing to zero.
+                    // Similarly, translate Y is negative when scrolling viewport up because everything has been translated up
+                    // but the translate regresses to zero.
+                    
+                    // We need to fight this translation because by default, we'll pin to where we should be at the end of the translation,
+                    // but while the translate is non-zero, we will be in the wrong spot.  Not correct when we are not meant
+                    // to scroll while pinned.  So we set our own translate property that ideally would be the negative of
+                    // the container's translate Y to counter-act it.  The confusing thing is that we need to not permanently counter-act
+                    // it, otherwise when the smooth scrolling trips the pinned/unpinned boundary, we'll get weird behaviour.
+                    // So we set limits on the lowest and highest translate Y that we will accept.
+                    
+                    // If we are unpinned at the top, the highest translate Y is unbounded because we can scroll all the way down.
+                    // The lowest is the negation of our Y position.
+                    
+                    // If we are pinned, the lowest translate Y is the negation of our Y position.  The maximum is the
+                    // negation of the last Y.
+
+                    // If lastY is off the screen, we should be exactly there:
                     if (lastY < 0)
                     {
-                        y = lastY;
-                        translateFactor.set(0);
+                        // The pinned header must scroll up out of view:
+                        layoutY = lastY;
                     }
+                    // If y is off the screen (but lastY is not), we should be at the top, pinned:
                     else if (y < 0)
                     {
-                        y = 0;
-                        translateFactor.set(-1);
+                        // Pinned within view:
+                        layoutY = 0;
+                        
                     }
+                    // Otherwise, both y and lastY are on screen, so we should just be at Y
                     else
                     {
-                        translateFactor.set(0);
+                        layoutY = y;
                     }
+                    
+                    updateTranslate();
                     
                     return Optional.of(new BoundingBox(
                             x,
-                            y,
+                        layoutY,
                             width,
                             height
                     ));
@@ -265,15 +295,16 @@ public abstract class DataDisplay extends GridArea
                                 renameColumnFinal.consume(newColumnId);
                         });
                     }
-                    
-                    BorderPane borderPane = new BorderPane(textField.getNode());
+
+                    borderPane = new BorderPane(textField.getNode());
+                    BorderPane borderPaneFinal = borderPane;
                     borderPane.getStyleClass().add("table-display-column-title");
                     BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
                     BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
                     FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
                         for (CellStyle style : CellStyle.values())
                         {
-                            style.applyStyle(borderPane, cellStyles.contains(style));
+                            style.applyStyle(borderPaneFinal, cellStyles.contains(style));
                         }
                     });
 
@@ -286,7 +317,7 @@ public abstract class DataDisplay extends GridArea
                         menuItem.setDisable(true);
                         contextMenu.getItems().setAll(menuItem);
                     }
-                    borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
+                    borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPaneFinal, e.getScreenX(), e.getScreenY()));
                     textField.setContextMenu(contextMenu);
                     
                     return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
@@ -295,10 +326,54 @@ public abstract class DataDisplay extends GridArea
                 @Override
                 public void adjustForContainerTranslation(Node node, Pair<DoubleExpression, DoubleExpression> translateXY)
                 {
-                    translateX = translateXY.getFirst().multiply(translateFactor);
-                    translateY = translateXY.getSecond().multiply(translateFactor);
-                    node.translateXProperty().bind(translateX);
-                    node.translateYProperty().bind(translateY);
+                    FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
+                        containerTranslateY = ty.doubleValue();
+                        updateTranslate();
+                    });
+                }
+                
+                @OnThread(Tag.FX)
+                private void updateTranslate()
+                {
+                    // Negative container translate Y, because we are counter-acting it:
+                    if (borderPane != null)
+                    {
+                        /*
+                        if (lastY < 0)
+                        {
+                            // We should be off the screen.  But if containerTranslateY
+                            // would keep us on screen, we must act like we are pinned
+                            if (containerTranslateY > -lastY)
+                                borderPane.setTranslateY(-lastY - containerTranslateY);
+                            else
+                                borderPane.setTranslateY(0.0);
+                        }
+                        else if (y < 0)
+                        {
+                            // Pinned
+                            if (-containerTranslateY > y)
+                                borderPane.setTranslateY(-containerTranslateY);
+                            else if (containerTranslateY > -lastY)
+                                borderPane.setTranslateY(-lastY - containerTranslateY);
+                            else
+                                borderPane.setTranslateY(y);
+                        }
+                        else
+                        {
+                            // We should be scrolling around, as we are not yet pinned.
+                            // But if the containerTranslateY is less than negative y, we need
+                            // to clamp to prevent ourselves being off-screen when we should appear temporarily pinned
+                            if (containerTranslateY < -y)
+                                borderPane.setTranslateY(-y - containerTranslateY);
+                            else
+                                borderPane.setTranslateY(0.0);
+                        }
+                        */
+                        // We want to be at layoutY.  Our actual position is layoutY + containerTranslateY.
+                        // So we need to translate to counter-act this, but we don't let our resulting position
+                        // stray outside the limits of y and last Y
+                        borderPane.setTranslateY(Utility.clampIncl(y - containerTranslateY, layoutY - containerTranslateY, Math.min(0, lastY) - containerTranslateY) - layoutY);
+                    }
                 }
             };
             // Item for column type:

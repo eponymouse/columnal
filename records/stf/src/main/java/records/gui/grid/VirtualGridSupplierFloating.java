@@ -88,11 +88,13 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     @OnThread(Tag.FXPlatform)
     public static interface FloatingItem
     {
-        // If empty is returned, means not visible.  Otherwise, coords in parent are returned.
+        // If empty is returned, means not visible (and cell is removed).  Otherwise, coords in parent are returned.
         public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
         
+        // Called when a cell is made.  If calculatePosition always returns Optional.of, then this is only called once:
         public Pair<ViewOrder, Node> makeCell();
         
+        // Called once, after makeCell.
         public default void adjustForContainerTranslation(Node item, Pair<DoubleExpression, DoubleExpression> translateXY)
         {
         }

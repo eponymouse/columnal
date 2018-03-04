@@ -1041,6 +1041,16 @@ public class Utility
             return value;
     }
 
+    public static double clampIncl(double lowBoundIncl, double value, double highBoundIncl)
+    {
+        if (value < lowBoundIncl)
+            return lowBoundIncl;
+        else if (value > highBoundIncl)
+            return highBoundIncl;
+        else
+            return value;
+    }
+
     public static String numberToString(Number value)
     {
         String num;

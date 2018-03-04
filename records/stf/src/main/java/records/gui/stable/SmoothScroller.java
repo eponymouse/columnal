@@ -38,7 +38,7 @@ public class SmoothScroller
     private double scrollOffset;
     // Scroll offset at scrollStartNanos
     private double scrollStartOffset;
-    public static final long SCROLL_TIME_NANOS = 200_000_000L;
+    public static final long SCROLL_TIME_NANOS = 2000_000_000L;
 
     // The translateX/translateY of container, depending on which axis we are:
     private final DoubleProperty translateProperty;
