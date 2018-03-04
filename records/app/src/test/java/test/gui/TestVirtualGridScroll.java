@@ -116,7 +116,7 @@ public class TestVirtualGridScroll extends ApplicationTest
     }
     
     @Property(trials = 5)
-    public void clampTest(@From(GenScrollAmounts.class) ScrollAmounts scrollAmounts)
+    public void clampTest(@When(seed=1L) @From(GenScrollAmounts.class) ScrollAmounts scrollAmounts)
     {
         // We started at top and left, so what we do is scroll out by half the amount, then attempt to scroll back the full amount, then repeat
 
@@ -126,10 +126,12 @@ public class TestVirtualGridScroll extends ApplicationTest
                 virtualGrid.getScrollGroup().requestScrollBy(-Math.abs(amount) / 2.0, 0.0);
             });
             assertEquals(Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.1);
+            checkOffsetsNegative();
             TestUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(Math.abs(amount), 0.0);
             });
             assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.01);
+            checkOffsetsNegative();
         }
 
         for (double amount : scrollAmounts.amounts)
@@ -138,6 +140,19 @@ public class TestVirtualGridScroll extends ApplicationTest
                 virtualGrid.getScrollGroup().requestScrollBy(0.0, -Math.abs(amount) / 2.0);
             });
             assertEquals(Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.1);
+            checkOffsetsNegative();
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(0.0, Math.abs(amount));
+            });
+            assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.01);
+            checkOffsetsNegative();
+
+
+            // Now scroll away and then exactly back:
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(0.0, -Math.abs(amount));
+            });
+            assertEquals(Math.abs(amount), (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.1);
             TestUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(0.0, Math.abs(amount));
             });
@@ -159,10 +174,12 @@ public class TestVirtualGridScroll extends ApplicationTest
                 virtualGrid.getScrollGroup().requestScrollBy(Math.abs(amount) / 2.0, 0.0);
             });
             assertEquals(endX - Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.1);
+            checkOffsetsNegative();
             TestUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(-Math.abs(amount), 0.0);
             });
             assertEquals(endX, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.01);
+            checkOffsetsNegative();
         }
 
         for (double amount : scrollAmounts.amounts)
@@ -171,10 +188,12 @@ public class TestVirtualGridScroll extends ApplicationTest
                 virtualGrid.getScrollGroup().requestScrollBy(0.0, Math.abs(amount) / 2.0);
             });
             assertEquals(endY - Math.abs(amount) / 2.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.1);
+            checkOffsetsNegative();
             TestUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(0.0, -Math.abs(amount));
             });
             assertEquals(endY, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.01);
+            checkOffsetsNegative();
         }
     }
     
@@ -237,6 +256,13 @@ public class TestVirtualGridScroll extends ApplicationTest
         {
             assertThat("Offset index " + i, offsetsAndLimits[i][1], Matchers.greaterThanOrEqualTo(offsetsAndLimits[i][0]));
             assertThat("Offset index " + i, offsetsAndLimits[i][1], Matchers.lessThanOrEqualTo(0.0));
+        }
+
+        int[][] indexesAndLimits = virtualGrid._test_getIndexesAndLimits();
+        for (int i = 0; i < indexesAndLimits.length; i++)
+        {
+            assertThat("Index index " + i, indexesAndLimits[i][0], Matchers.greaterThanOrEqualTo(0));
+            assertThat("Index index " + i, indexesAndLimits[i][0], Matchers.lessThan(indexesAndLimits[i][1]));            
         }
     }
 

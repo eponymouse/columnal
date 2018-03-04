@@ -107,7 +107,7 @@ public class SmoothScroller
             // case we don't want to jump, just want to add on (we will go faster to cover this
             // because scroll will be same duration but longer):
             double clamped = scrollClamp.clampScroll(delta);
-            this.scrollOffset += clamped;
+            this.scrollOffset -= clamped;
             // Don't let offset get too large or we will need too many extra rows:
             if (Math.abs(this.scrollOffset) > MAX_SCROLL_OFFSET)
             {
@@ -124,7 +124,8 @@ public class SmoothScroller
                 if (scrollOffset != 0.0)
                     scrollTimer.start();
             }
-            scroller.scrollLayoutBy(Math.min(this.scrollOffset, 0), clamped, Math.max(this.scrollOffset, 0));
+            Log.debug("Scrolling by " + clamped);
+            scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
             translateProperty.set(this.scrollOffset);
         }
 

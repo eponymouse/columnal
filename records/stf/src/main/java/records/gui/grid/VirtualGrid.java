@@ -152,6 +152,8 @@ public class VirtualGrid implements ScrollBindable
     private boolean updatingSizeAndPositions = false;
     
     private final VirtualGridSupplierFloating supplierFloating = new VirtualGridSupplierFloating();
+    private double renderXOffset;
+    private double renderYOffset;
 
     @OnThread(Tag.FXPlatform)
     public VirtualGrid(@Nullable FXPlatformBiConsumer<CellPosition, Point2D> createTable)
@@ -371,6 +373,7 @@ public class VirtualGrid implements ScrollBindable
     @Override
     public void scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
     {
+        renderXOffset = extraPixelsToShowBefore;
         // We basically do two scrolls.  One to scroll from existing logical position by the given number of pixels,
         // and store that in logical position.  Then a second to scroll from new logical position by
         // the extra number of pixels before, to get the first render.  Finally, we calculate how many
@@ -487,8 +490,8 @@ public class VirtualGrid implements ScrollBindable
         // First scroll to the right logical position:
         class ScrollResult
         {
-            private final @AbsRowIndex int row;
-            private final double offset;
+            private @AbsRowIndex int row;
+            private double offset;
             
             // Slight abuse of a constructor, but it's only local.  Calculate new scroll result:
             ScrollResult(@AbsRowIndex int existingIndex, double existingOffset, double scrollBy)
@@ -512,21 +515,33 @@ public class VirtualGrid implements ScrollBindable
                     else
                     {
                         // We need to scroll by -existingOffset to get to next row boundary, then rest of scrollBy
-                        int newRows = 1 + (int) Math.floor(scrollBy + existingOffset / rowHeight);
+                        int newRows = 1 + (int) Math.floor((scrollBy + existingOffset) / rowHeight);
                         row = existingIndex - CellPosition.row(newRows);
                         offset = existingOffset + (scrollBy - newRows * rowHeight);
+                        
+                        // Clamp:
+                        if (row < 0)
+                        {
+                            row = CellPosition.row(0);
+                            offset = 0;
+                        }
                     }
                 }
             }
         }
+        renderYOffset = extraPixelsToShowBefore;
         ScrollResult logicalPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollBy);
         logicalScrollRowIndex = logicalPos.row;
         logicalScrollRowOffset = logicalPos.offset;
-        ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, -extraPixelsToShowBefore);
+        ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollClampY(-extraPixelsToShowBefore));
         firstRenderRowIndex = renderPos.row;
         firstRenderRowOffset = renderPos.offset;
         ScrollResult bottomVisible = new ScrollResult(firstRenderRowIndex, firstRenderRowOffset, extraPixelsToShowBefore + container.getHeight() + extraPixelsToShowAfter);
         renderRowCount = bottomVisible.row - firstRenderRowIndex + 1;
+        Log.debug("Extra: " + extraPixelsToShowBefore + " and " + extraPixelsToShowAfter);
+        Log.debug("Calculated: logical #" + logicalScrollRowIndex + "_" + logicalScrollRowOffset);
+        Log.debug("Calculated: render #" + firstRenderRowIndex + "_" + firstRenderRowOffset);
+        Log.debug("Calculated: render Y offset " + renderYOffset + " row count " + renderRowCount);
         
         updateVBar();
         
@@ -751,6 +766,18 @@ public class VirtualGrid implements ScrollBindable
             new double[] {-rowHeight, logicalScrollRowOffset}
         };
     }
+
+    // List of pairs
+    // Index 0 is actual item, index 1 is limit (excl)
+    public int[][] _test_getIndexesAndLimits()
+    {
+        return new int[][] {
+            new int[] {firstRenderColumnIndex, currentColumns.get()},
+            new int[] {firstRenderRowIndex, currentKnownRows.get()},
+            new int[] {logicalScrollColumnIndex, currentColumns.get()},
+            new int[] {logicalScrollRowIndex, currentKnownRows.get()}
+        };
+    }
     
 
     public void _test_setColumnWidth(int columnIndex, double width)
@@ -950,8 +977,8 @@ public class VirtualGrid implements ScrollBindable
 
         private void redoLayout(@UnknownInitialization(Region.class) Container this)
         {
-            double x = firstRenderColumnOffset;
-            double y = firstRenderRowOffset;
+            double x = firstRenderColumnOffset + renderXOffset;
+            double y = firstRenderRowOffset + renderYOffset;
 
             // We may not need the +1, but play safe:
             int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
@@ -977,7 +1004,7 @@ public class VirtualGrid implements ScrollBindable
                 @Override
                 public double getItemCoord(@AbsColIndex Integer itemIndex)
                 {
-                    return firstRenderColumnOffset + sumColumnWidths(firstDisplayCol, itemIndex);
+                    return firstRenderColumnOffset + renderXOffset + sumColumnWidths(firstDisplayCol, itemIndex);
                 }
 
                 @Override
@@ -985,7 +1012,7 @@ public class VirtualGrid implements ScrollBindable
                 public Optional<@AbsColIndex Integer> getItemIndexForScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = screenToLocal(screenPos);
-                    double x = firstRenderColumnOffset;
+                    double x = firstRenderColumnOffset + renderXOffset;
                     for (@AbsColIndex int i = firstRenderColumnIndex; i < lastDisplayColExcl; i++)
                     {
                         double nextX = x + getColumnWidth(i);
@@ -1001,14 +1028,14 @@ public class VirtualGrid implements ScrollBindable
                 @Override
                 public double getItemCoord(@AbsRowIndex Integer itemIndex)
                 {
-                    return firstRenderRowOffset + rowHeight * (itemIndex - firstDisplayRow);
+                    return firstRenderRowOffset + renderYOffset + rowHeight * (itemIndex - firstDisplayRow);
                 }
 
                 @Override
                 public Optional<@AbsRowIndex Integer> getItemIndexForScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = screenToLocal(screenPos);
-                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - firstRenderRowOffset) / rowHeight)) + firstDisplayRow;
+                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + firstDisplayRow;
                     if (firstRenderRowIndex <= theoretical && theoretical < lastDisplayRowExcl)
                         return Optional.of(theoretical);
                     else
