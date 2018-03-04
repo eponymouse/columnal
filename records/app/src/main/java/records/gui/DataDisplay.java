@@ -204,7 +204,6 @@ public abstract class DataDisplay extends GridArea
             // Item for column name:
             FloatingItem columnNameItem = new FloatingItem()
             {
-                private double layoutY;
                 private @MonotonicNonNull BorderPane borderPane;
                 double containerTranslateY;
                 private double y;
@@ -248,6 +247,8 @@ public abstract class DataDisplay extends GridArea
                     
                     // If we are pinned, the lowest translate Y is the negation of our Y position.  The maximum is the
                     // negation of the last Y.
+                    
+                    double layoutY;
 
                     // If lastY is off the screen, we should be exactly there:
                     if (lastY < 0)
@@ -272,7 +273,7 @@ public abstract class DataDisplay extends GridArea
                     
                     return Optional.of(new BoundingBox(
                             x,
-                        layoutY,
+                            layoutY,
                             width,
                             height
                     ));
@@ -335,10 +336,8 @@ public abstract class DataDisplay extends GridArea
                 @OnThread(Tag.FX)
                 private void updateTranslate()
                 {
-                    // Negative container translate Y, because we are counter-acting it:
                     if (borderPane != null)
                     {
-                        /*
                         if (lastY < 0)
                         {
                             // We should be off the screen.  But if containerTranslateY
@@ -350,13 +349,16 @@ public abstract class DataDisplay extends GridArea
                         }
                         else if (y < 0)
                         {
-                            // Pinned
-                            if (-containerTranslateY > y)
-                                borderPane.setTranslateY(-containerTranslateY);
-                            else if (containerTranslateY > -lastY)
-                                borderPane.setTranslateY(-lastY - containerTranslateY);
-                            else
+                            // Pinned.  Our layoutY is zero
+                            
+                            // If our translate would make us pin to above the top position
+                            // don't let that happen and just let us be translated:
+                            if (-containerTranslateY < y)
                                 borderPane.setTranslateY(y);
+                            else if (-containerTranslateY > lastY)
+                                borderPane.setTranslateY(lastY);
+                            else
+                                borderPane.setTranslateY(-containerTranslateY);
                         }
                         else
                         {
@@ -368,11 +370,6 @@ public abstract class DataDisplay extends GridArea
                             else
                                 borderPane.setTranslateY(0.0);
                         }
-                        */
-                        // We want to be at layoutY.  Our actual position is layoutY + containerTranslateY.
-                        // So we need to translate to counter-act this, but we don't let our resulting position
-                        // stray outside the limits of y and last Y
-                        borderPane.setTranslateY(Utility.clampIncl(y - containerTranslateY, layoutY - containerTranslateY, Math.min(0, lastY) - containerTranslateY) - layoutY);
                     }
                 }
             };
