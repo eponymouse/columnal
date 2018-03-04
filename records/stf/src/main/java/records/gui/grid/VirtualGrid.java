@@ -798,7 +798,7 @@ public class VirtualGrid implements ScrollBindable
             setFocusTraversable(true);
 
             clip = new Rectangle();
-            setClip(clip);
+            //setClip(clip);
 
             FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> {updateHBar(); redoLayout();});
             FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> {updateVBar(); redoLayout();});
