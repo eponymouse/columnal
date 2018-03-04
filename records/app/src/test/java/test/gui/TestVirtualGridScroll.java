@@ -76,7 +76,10 @@ public class TestVirtualGridScroll extends ApplicationTest
             }
         }));
         
-        // TODO set some custom column widths
+        virtualGrid._test_setColumnWidth(48, 37.0);
+        virtualGrid._test_setColumnWidth(50, 106.0);
+        virtualGrid._test_setColumnWidth(51, 52.0);
+        virtualGrid._test_setColumnWidth(53, 1.0);
         
         // Scroll to the middle to begin with so we don't get clamped:
         virtualGrid.getScrollGroup().requestScrollBy(-ORIGINAL_SCROLL, -ORIGINAL_SCROLL);
@@ -122,37 +125,52 @@ public class TestVirtualGridScroll extends ApplicationTest
         // Check window has sized properly:
         assertThat(TestUtil.fx(() -> virtualGrid.getNode().getHeight()), Matchers.greaterThanOrEqualTo(500.0));
         assertThat(TestUtil.fx(() -> virtualGrid.getNode().getWidth()), Matchers.greaterThanOrEqualTo(700.0));
+
+        checkOffsetsNegative();
       
         // We check with and without delay to try with/without smooth scrolling and jumping:
         for (int delay : new int[]{0, (int) (SmoothScroller.SCROLL_TIME_NANOS / 1_000_000L)})
         {
-            double originalXPos = TestUtil.fx(() -> virtualGrid._test_getScrollXPos());
-            assertThat(originalXPos, Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
+            assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
             // Test that scroll and scroll back works:
             for (double amount : scrollX.amounts)
             {
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(amount, 0.0));
                 TestUtil.sleep(delay);
+                checkOffsetsNegative();
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-amount, 0.0));
-                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(originalXPos, 0.1));
+                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 TestUtil.sleep(delay);
+                checkOffsetsNegative();
             }
 
-            double originalYPos = TestUtil.fx(() -> virtualGrid._test_getScrollYPos());
-            assertThat(originalYPos, Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
+            assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollYPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
             // Test that scroll and scroll back works:
             for (double amount : scrollY.amounts)
             {
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(amount, 0.0));
                 TestUtil.sleep(delay);
+                checkOffsetsNegative();
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-amount, 0.0));
-                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollYPos()), Matchers.closeTo(originalYPos, 0.1));
+                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollYPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 TestUtil.sleep(delay);
+                checkOffsetsNegative();
             }
         }
         
         
 
     }
-    
+
+    @SuppressWarnings("deprecation")
+    private void checkOffsetsNegative()
+    {
+        double[][] offsetsAndLimits = virtualGrid._test_getOffsetsAndLimits();
+        for (int i = 0; i < offsetsAndLimits.length; i++)
+        {
+            assertThat("Offset index " + i, offsetsAndLimits[i][1], Matchers.greaterThanOrEqualTo(offsetsAndLimits[i][0]));
+            assertThat("Offset index " + i, offsetsAndLimits[i][1], Matchers.lessThanOrEqualTo(0.0));
+        }
+    }
+
 }

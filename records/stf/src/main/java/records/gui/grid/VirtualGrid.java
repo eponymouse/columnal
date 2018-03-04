@@ -116,7 +116,7 @@ public class VirtualGrid implements ScrollBindable
     static final double rowHeight = 24;
     static final double defaultColumnWidth = 100;
 
-    private final Map<Integer, Double> customisedColumnWidths = new HashMap<>();
+    private final Map<@AbsColIndex Integer, Double> customisedColumnWidths = new HashMap<>();
 
     // null means the grid doesn't have focus:
     private final ObjectProperty<@Nullable CellSelection> selection = new SimpleObjectProperty<>(null);
@@ -448,15 +448,15 @@ public class VirtualGrid implements ScrollBindable
             {
                 if (scrollBy <= 0.0)
                 {
-                    int newRows = (int)Math.floor(Math.max(existingOffset -scrollBy, 0.0) / rowHeight);
+                    int newRows = (int)Math.floor(Math.max(existingOffset - scrollBy, 0.0) / rowHeight);
                     row = existingIndex + CellPosition.row(newRows);
-                    offset = newRows * rowHeight - (existingOffset - scrollBy);
+                    offset = existingOffset + (scrollBy - newRows * rowHeight);
                 }
                 else
                 {
                     int newRows = (int)Math.floor(Math.max(Math.abs(scrollBy - (rowHeight + existingOffset)), 0.0) / rowHeight);
                     row = existingIndex - CellPosition.row(newRows);
-                    offset = existingOffset - scrollBy + newRows * rowHeight;
+                    offset = existingOffset + (scrollBy + newRows * rowHeight);
                 }
             }
         }
@@ -680,6 +680,24 @@ public class VirtualGrid implements ScrollBindable
     {
         return getCurrentScrollY(null);
     }
+    
+    // List of pairs
+    // Index 0 is its negative limit, index 1 is actual item
+    public double[][] _test_getOffsetsAndLimits()
+    {
+        return new double[][] {
+            new double[] {-getColumnWidth(firstRenderColumnIndex), firstRenderColumnOffset},
+            new double[] {-rowHeight, firstRenderRowOffset},
+            new double[] {-getColumnWidth(logicalScrollColumnIndex), logicalScrollColumnOffset},
+            new double[] {-rowHeight, logicalScrollRowOffset}
+        };
+    }
+    
+
+    public void _test_setColumnWidth(int columnIndex, double width)
+    {
+        customisedColumnWidths.put(CellPosition.col(columnIndex), width);
+    }
 
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
@@ -893,7 +911,7 @@ public class VirtualGrid implements ScrollBindable
             @AbsColIndex int firstDisplayCol = firstRenderColumnIndex;
             @AbsColIndex int lastDisplayColExcl = firstRenderColumnIndex + CellPosition.col(renderColumnCount);
             
-            //Log.debug("Rows: " + firstDisplayRow + " to " + (lastDisplayRowExcl - 1) + " incl extra: " + extraRowsForSmoothScroll.get() + " ideal first: " + firstRenderRowIndex);
+            //Log.debug("Rows: " + firstDisplayRow + " to " + (lastDisplayRowExcl - 1) + " incl offset by: " + firstRenderRowOffset);
 
             VisibleDetails<@AbsColIndex Integer> columnBounds = new VisibleDetails<@AbsColIndex Integer>(firstDisplayCol, lastDisplayColExcl - CellPosition.col(1))
             {
