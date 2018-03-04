@@ -137,10 +137,12 @@ public class TestVirtualGridScroll extends ApplicationTest
             {
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(amount, 0.0));
                 TestUtil.sleep(delay);
+                assertThat("Scrolling " + amount, TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL - amount, 0.1));
                 checkOffsetsNegative();
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-amount, 0.0));
-                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 TestUtil.sleep(delay);
+                assertThat("Scrolling " + (-amount), TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
+                
                 checkOffsetsNegative();
             }
 
@@ -150,10 +152,11 @@ public class TestVirtualGridScroll extends ApplicationTest
             {
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(amount, 0.0));
                 TestUtil.sleep(delay);
+                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL - amount, 0.1));
                 checkOffsetsNegative();
                 TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-amount, 0.0));
-                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollYPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 TestUtil.sleep(delay);
+                assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollYPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
                 checkOffsetsNegative();
             }
         }

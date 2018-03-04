@@ -71,6 +71,28 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
+/**
+ * 
+ * Scrolling:
+ * 
+ * A scroll position is held as an item index and offset.  The offset is always negative, and between zero and
+ * negative height of the item.  For example, our rows are 24 pixels tall at the moment.  When you are viewing the
+ * very top of the file, that is item #0 at offset 0.0  If you scroll down one pixel, that is item #0 at offset -1.0
+ * Another 20 pixels and it is #0 at -21.0.  However, another five pixels will show #1 at -2.0  (since -24.0 will
+ * be the whole item, and 2 pixels left over at the end).
+ * 
+ * When you scroll, the scroll-by amount is how many pixels to move the offset.  So negative scroll-by moves the
+ * items up, which as far as the user is concerned, moves down the document.  It's a bit more like the macOS model
+ * of thinking about it (even though I find that confusion): we are moving the *document*, not the viewport.
+ * So remember:
+ *   - Negative scroll-by: offset goes more negative.  Item index goes up as the document moves up.
+ *     Viewport slides down document, in effect.
+ *   - Positive scroll-by: offset goes more positive.  Item index goes down as the document moves down.
+ *     Viewport slides up document, in effect.
+ * 
+ */
+
 @OnThread(Tag.FXPlatform)
 public class VirtualGrid implements ScrollBindable
 {
@@ -371,32 +393,47 @@ public class VirtualGrid implements ScrollBindable
             }
             else
             {
-                // The first thing we do is scroll in the right direction so that we are at the left edge of a column,
+                // The first thing we do is scroll in the appropriate direction so that we are at the left edge of a column,
                 // because that makes the loop afterwards a hell of a lot simpler:
-                int dir;
                 if (remainingScroll > 0)
                 {
+                    // We are scrolling the offset positive, and items are decreasing in index.
+                    // We must go to the right edge by putting the negative offset to zero, and absorbing that from remainingScroll:
                     remainingScroll += curOffset;
-                    dir = -1;
+                    // Now we are already on to the next column in terms of inspecting the widths:
+                    curCol -= 1;
+                    while (curCol >= 0 && curCol < totalColumns)
+                    {
+                        double curColumnWidth = getColumnWidth(curCol);
+                        remainingScroll -= curColumnWidth;
+                        // Is our stopping position in this column?
+                        if (remainingScroll <= 0)
+                        {
+                            break;
+                        }
+                        curCol -= 1;
+                    }
                 }
                 else
                 {
+                    // We are scrolling the offset negative, and items are increasing in index;
+
+                    // First get to the left edge by moving the remainder of the column width: 
                     remainingScroll += startColumnWidth + curOffset;
+                    // That already involves moving to the next item:
                     curCol += 1;
-                    dir = 1;                    
-                }
-                
-                // Now we head through the columns until we've used up all our scroll.
-                // We'll know we're finished when the remainingScroll is between -curColumnWidth, and zero
-                while (curCol >= 0 && curCol < totalColumns)
-                {
-                    double curColumnWidth = getColumnWidth(curCol);
-                    if (-curColumnWidth <= remainingScroll && remainingScroll <= 0)
+                    // Now we head through the columns until we've used up all our scroll.
+                    // We'll know we're finished when the remainingScroll is between -curColumnWidth, and zero
+                    while (curCol >= 0 && curCol < totalColumns)
                     {
-                        break;
+                        double curColumnWidth = getColumnWidth(curCol);
+                        if (-curColumnWidth <= remainingScroll && remainingScroll <= 0)
+                        {
+                            break;
+                        }
+                        remainingScroll += curColumnWidth;
+                        curCol += 1;
                     }
-                    remainingScroll += dir * curColumnWidth;
-                    curCol += dir;
                 }
                 curOffset = remainingScroll;
             }
@@ -446,17 +483,29 @@ public class VirtualGrid implements ScrollBindable
             // Slight abuse of a constructor, but it's only local.  Calculate new scroll result:
             ScrollResult(@AbsRowIndex int existingIndex, double existingOffset, double scrollBy)
             {
-                if (scrollBy <= 0.0)
+                if (0 >= existingOffset + scrollBy && existingOffset + scrollBy >= -rowHeight)
                 {
-                    int newRows = (int)Math.floor(Math.max(existingOffset - scrollBy, 0.0) / rowHeight);
-                    row = existingIndex + CellPosition.row(newRows);
-                    offset = existingOffset + (scrollBy - newRows * rowHeight);
+                    // Can do it without moving row even:
+                    row = existingIndex;
+                    offset = existingOffset + scrollBy;
                 }
                 else
                 {
-                    int newRows = (int)Math.floor(Math.max(Math.abs(scrollBy - (rowHeight + existingOffset)), 0.0) / rowHeight);
-                    row = existingIndex - CellPosition.row(newRows);
-                    offset = existingOffset + (scrollBy + newRows * rowHeight);
+                    if (scrollBy <= 0.0)
+                    {
+                        // We will need to scroll by rowHeight - (-existingOffset) to get to the next row boundary,
+                        // then the rest of scrollBy.  newRows is the positive version:
+                        int newRows = 1 + (int) Math.floor((-scrollBy - (rowHeight + existingOffset)) / rowHeight);
+                        row = existingIndex + CellPosition.row(newRows);
+                        offset = existingOffset + (scrollBy + newRows * rowHeight);
+                    }
+                    else
+                    {
+                        // We need to scroll by -existingOffset to get to next row boundary, then rest of scrollBy
+                        int newRows = 1 + (int) Math.floor(scrollBy + existingOffset / rowHeight);
+                        row = existingIndex - CellPosition.row(newRows);
+                        offset = existingOffset + (scrollBy - newRows * rowHeight);
+                    }
                 }
             }
         }
