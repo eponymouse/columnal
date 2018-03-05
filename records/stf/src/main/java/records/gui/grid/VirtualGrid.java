@@ -811,7 +811,10 @@ public class VirtualGrid implements ScrollBindable
                 if (cellPosition != null)
                 {
                     @NonNull CellPosition cellPositionFinal = cellPosition;
-                    boolean clickable = nodeSuppliers.stream().anyMatch(g -> g.getItemState(cellPositionFinal) != ItemState.NOT_CLICKABLE);
+                    boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
+                        ItemState itemState = g.getItemState(cellPositionFinal);
+                        return itemState != null && itemState != ItemState.NOT_CLICKABLE;
+                    });
                     if (clickable)
                         return; // Don't capture the events
                     
@@ -863,7 +866,10 @@ public class VirtualGrid implements ScrollBindable
                     // We want to capture the events to prevent clicks reaching the underlying cell,
                     // if the cell is not currently editing
                     @NonNull CellPosition cellPositionFinal = cellPosition;
-                    boolean clickable = nodeSuppliers.stream().anyMatch(g -> g.getItemState(cellPositionFinal) != ItemState.NOT_CLICKABLE); 
+                    boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
+                        ItemState itemState = g.getItemState(cellPositionFinal);
+                        return itemState != null && itemState != ItemState.NOT_CLICKABLE;
+                    }); 
                     if (!clickable)
                         mouseEvent.consume();
                 }

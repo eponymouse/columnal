@@ -122,7 +122,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final View parent;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
-    private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private boolean currentKnownRowsIsFinal = false;
 
@@ -421,20 +420,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         this.onModify = () -> {
             parent.modified();
             Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, TableAndColumnRenames.EMPTY)));
-        };        
+        };
         
-        Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu());
-
-        Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
-            parent.newTransformFromSrc(table);
-        });
-
         Label title = new Label(table.getId().getOutput());
         GUI.showTooltipWhenAbbrev(title);
         Utility.addStyleClass(title, "table-title");
-        header = new HBox(actionsButton, title);
-        header.getChildren().add(addButton);
-        Utility.addStyleClass(header, "table-header");
 
         mostRecentBounds = new AtomicReference<>();
         updateMostRecentBounds();
@@ -513,8 +503,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         mostRecentBounds.set(getPosition());
     }
 
-    @RequiresNonNull({"columnDisplay", "table", "parent"})
-    private ContextMenu makeTableContextMenu(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    protected ContextMenu getTableHeaderContextMenu()
     {
         List<MenuItem> items = new ArrayList<>();
 

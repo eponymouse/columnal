@@ -167,6 +167,11 @@ public abstract class DataDisplay extends GridArea
                       }
                       e.consume();
                   });
+                  borderPane.setOnContextMenuRequested(e -> {
+                      @Nullable ContextMenu contextMenu = FXUtility.mouse(DataDisplay.this).getTableHeaderContextMenu();
+                      if (contextMenu != null)
+                          contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());
+                  });
 
                   // TODO support dragging to move table
                   return new Pair<>(ViewOrder.FLOATING, borderPane);
@@ -188,6 +193,11 @@ public abstract class DataDisplay extends GridArea
                 return getDataDisplayBottomRightIncl().from(getPosition());
             }
         };
+    }
+
+    protected @Nullable ContextMenu getTableHeaderContextMenu()
+    {
+        return null;
     }
 
     @OnThread(Tag.FXPlatform)

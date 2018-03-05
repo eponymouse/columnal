@@ -2,6 +2,7 @@ package test.gui;
 
 import annotation.qual.Value;
 import annotation.units.AbsRowIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -12,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -68,8 +70,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestRowOps extends ApplicationTest implements CheckCSVTrait
+public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait
 {
+    @SuppressWarnings("units")
+    public static final @TableDataRowIndex int ONE_ROW = 1;
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private Stage windowToUse;
@@ -114,7 +118,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         virtualGrid = TestUtil.openDataAsTable(windowToUse, manager).get().getSecond();
 
         @SuppressWarnings("units")
-        @AbsRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
+        @TableDataRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
         scrollToRow(calculated.getId(), randomRow);
         scrollToRow(srcData.getId(), randomRow);
@@ -191,7 +195,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
         @SuppressWarnings("units")
-        @AbsRowIndex int targetNewRow = r.nextInt(srcLength + 1);
+        @TableDataRowIndex int targetNewRow = r.nextInt(srcLength + 1);
         boolean originalWasEmpty = false;
 
         // Can't do insert-after if target is first row. Can't do insert-before if it's last row
@@ -207,7 +211,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         else if (targetNewRow > 0)
         {
             // Insert-after:
-            @AbsRowIndex int beforeTargetRow = targetNewRow - CellPosition.row(1);
+            @TableDataRowIndex int beforeTargetRow = targetNewRow - ONE_ROW;
             scrollToRow(calculated.getId(), beforeTargetRow);
             scrollToRow(srcData.getId(), beforeTargetRow);
             rightClickRowLabel(srcData.getId(), beforeTargetRow);
@@ -231,7 +235,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         // - Ditto for calculated
 
         // Work out positions in sorted data:
-        @AbsRowIndex int beforeDefault = CellPosition.row(0);
+        @SuppressWarnings("units")
+        @TableDataRowIndex int beforeDefault = 0;
         @Nullable Pair<Integer, @Value Object> firstAfterDefault = null;
         @Nullable @Value Object sortDefault_ = TestUtil.<@Nullable @Value Object>sim(() -> sortBy.getDefaultValue());
         if (sortDefault_ == null)
@@ -251,7 +256,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             // and it started before us.
             if (cmp < 0 || (i < targetNewRow && cmp == 0))
             {
-                beforeDefault += CellPosition.row(1);
+                beforeDefault += ONE_ROW;
             }
             else
             {
@@ -263,22 +268,22 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             }
         }
         // Position when sorted is simply the number before it in sort order:
-        int positionPostSort = beforeDefault;
+        @TableDataRowIndex int positionPostSort = beforeDefault;
 
         // TODO check for default data in inserted spot
 
-        scrollToRow(srcData.getId(), targetNewRow - CellPosition.row(1));
+        scrollToRow(srcData.getId(), targetNewRow - ONE_ROW);
         TestUtil.sleep(1000);
         // Row still there, but data from the row after it:
         if (targetNewRow < newSrcLength)
         {
             String prefix = "Sorted by " + sortBy.getName().getRaw() + " inserted at " + targetNewRow + " before default is " + beforeDefault + " first after default " + (firstAfterDefault == null ? "null" : Integer.toString(firstAfterDefault.getFirst())) + ";";
-            TestUtil.sim_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow)));
+            TestUtil.sim_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + ONE_ROW, getRowVals(srcData.getData(), targetNewRow)));
             if (firstAfterDefault != null)
             {
-                scrollToRow(calculated.getId(), beforeDefault + CellPosition.row(1));
+                scrollToRow(calculated.getId(), beforeDefault + ONE_ROW);
                 Pair<Integer, @Value Object> firstAfterDefaultFinal = firstAfterDefault;
-                TestUtil.sim_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + 1, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst())));
+                TestUtil.sim_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + ONE_ROW, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst())));
             }
         }
 
@@ -328,7 +333,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     }
 
     @OnThread(Tag.Simulation)
-    private void checkVisibleRowData(String prefix, TableId tableId, int targetRow, List<Pair<DataType, @Value Object>> expected) throws InternalException, UserException
+    private void checkVisibleRowData(String prefix, TableId tableId, @TableDataRowIndex int targetRow, List<Pair<DataType, @Value Object>> expected) throws InternalException, UserException
     {
         // This is deliberately low-tech.  We really do want to
         // check the visible data on screen, not what the internals
@@ -336,7 +341,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         // Find the row label.  Should be visible based on previous actions:
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("No row label " + targetRow + " in " + findVisRowLabels(tableId));
+            throw new RuntimeException("No row label for zero-based row " + targetRow + " in " + findVisRowLabels(tableId) + "focused: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TestUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
         List<Node> rowCells = queryTableDisplay(tableId).lookup(".virt-grid-cell").match(n -> Math.abs(TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
@@ -363,11 +368,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     }
 
     @OnThread(Tag.Any)
-    private void rightClickRowLabel(TableId id, int targetRow)
+    private void rightClickRowLabel(TableId id, @TableDataRowIndex int targetRow)
     {
         Node rowLabel = findRowLabel(id, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("Row label "+ targetRow + " not found.  Labels: " + findVisRowLabels(id));
+            throw new RuntimeException("Row label for 0-based " + targetRow + " not found.  Labels: " + findVisRowLabels(id));
         rightClickOn(rowLabel);
     }
 
@@ -380,19 +385,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
     // Note: table ID header will get clicked, to expose the labels
     @OnThread(Tag.Any)
-    private @Nullable Node findRowLabel(TableId id, int targetRow)
+    private @Nullable Node findRowLabel(TableId id, @TableDataRowIndex int targetRow)
     {
         // Click on table header to make row labels visible:
-        Node tableNameField = lookup(".table-display-table-title .table-name-text-field")
-                .match(t -> TestUtil.fx(() -> ((TextField) t).getText().equals(id.getRaw())))
-                .query();
-        if (tableNameField == null)
-            return null;
-        @SuppressWarnings("nullness")
-        Node tableHeader = TestUtil.fx(() -> tableNameField.getParent());
-        Bounds tableHeaderBounds = TestUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));
-        clickOn(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2);
-        return lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> l.isVisible() && ((Label)l).getText().trim().equals(Integer.toString(targetRow)))).query();
+        clickOnTableHeader(id);
+        return lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> l.isVisible() && ((Label)l).getText().trim().equals(Integer.toString(1 + targetRow)))).query();
     }
 
     @OnThread(Tag.Any)
@@ -403,8 +400,9 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     }
 
     @OnThread(Tag.Any)
-    private void scrollToRow(TableId id, @AbsRowIndex int targetRow)
+    private void scrollToRow(TableId id, @TableDataRowIndex int targetRow)
     {
+        /* TODO
         Node cell = from(TestUtil.fx(() -> virtualGrid.getNode())).lookup(".virt-grid-cell").<Node>query();
         if (cell != null)
             clickOn(cell);
@@ -419,5 +417,6 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         }
         // Wait for animated scroll to finish:
         TestUtil.delay(500);
+        */
     }
 }

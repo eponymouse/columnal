@@ -3,6 +3,7 @@ package test.gui;
 import com.google.common.primitives.Ints;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
@@ -32,22 +33,13 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait
+public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnTableHeaderTrait
 {
     @OnThread(Tag.Simulation)
     default void exportToCSVAndCheck(String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
     {
-        // Bring table to front:
-        clickOn("#id-menu-view").clickOn(".id-menu-view-find");
-        write(tableId.getRaw());
-        push(KeyCode.ENTER);
-
-        // TODO this lookup is not unique
-        NodeQuery tableMenuButton = lookup(".id-tableDisplay-menu-button");
-        scrollTo(tableMenuButton);
-        @SuppressWarnings("nullness") // Will throw if null and fail test, which is fine
-        @NonNull Node button = tableMenuButton.<Node>query();
-        clickOn(button).clickOn(".id-tableDisplay-menu-exportToCSV");
+        clickOnTableHeader(tableId, MouseButton.SECONDARY);
+        clickOn(".id-tableDisplay-menu-exportToCSV");
         WaitForAsyncUtils.waitForFxEvents();
 
         File destCSV = File.createTempFile("dest", "csv");
