@@ -308,17 +308,22 @@ public class TestVirtualGridScroll extends ApplicationTest
         // Easier to spot issues with a slower scroll:
         virtualGrid.getScrollGroup()._test_setScrollTimeNanos(1_000_000_000L);
 
+        // Down twice, back up to the top twice, each separate:
         testMonotonicScroll(true);
         testMonotonicScroll(true);
         testMonotonicScroll(false);
         testMonotonicScroll(false);
 
+        // Up to nothing, then down, each separate:
         testMonotonicScroll(false);
         testMonotonicScroll(true);
+        
+        // We are one from top.  Now scroll thrice up in quick succession:
+        testMonotonicScroll(false, false, false);
     }
 
     @SuppressWarnings("deprecation")
-    private void testMonotonicScroll(boolean scrollDocumentUp)
+    private void testMonotonicScroll(boolean... scrollDocumentUp)
     {
         final @Nullable AnimationTimer[] timer = new AnimationTimer[1];
         try
@@ -336,12 +341,15 @@ public class TestVirtualGridScroll extends ApplicationTest
                 };
                 timer[0].start();
             });
-            scroll(3, scrollDocumentUp == SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
+            for (boolean up : scrollDocumentUp)
+            {
+                scroll(3, up == SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
+            }
             TestUtil.sleep(1200);
             TestUtil.fx_(() -> { if (timer[0] != null) timer[0].stop();});
             Function<Double, Matcher<Double>> strictlyAfter;
             Function<Double, Matcher<Double>> afterOrSame;
-            if (scrollDocumentUp == SystemUtils.IS_OS_MAC_OSX)
+            if (scrollDocumentUp[0])
             {
                 strictlyAfter = Matchers::greaterThan;
                 afterOrSame = Matchers::greaterThanOrEqualTo;

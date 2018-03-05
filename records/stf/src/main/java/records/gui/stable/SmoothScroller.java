@@ -44,6 +44,7 @@ public class SmoothScroller
     // Reference to scrollLayoutXBy/scrollLayoutYBy, depending on axis:
     private final Scroller scroller;
     private double MAX_SCROLL_OFFSET = 500.0;
+    private Interpolator interpolator = Interpolator.EASE_BOTH;
 
     public static interface ScrollClamp
     {
@@ -69,6 +70,9 @@ public class SmoothScroller
 
     public void smoothScroll(double delta)
     {
+        if (delta == 0.0)
+            return;
+        
         if (scrollTimer == null)
         {
             scrollTimer = new AnimationTimer()
@@ -79,8 +83,8 @@ public class SmoothScroller
                     // If scroll end time in future, and our target scroll is more than 1/8th pixel away:
                     if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
                     {
-                        scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double) (now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
-                        //Log.debug("Scroll Offset: " + scrollOffset);
+                        scrollOffset = interpolator.interpolate(scrollStartOffset, 0, (double) (now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
+                        //Log.debug("Scroll Offset: " + scrollOffset + " from start " + scrollStartOffset + " and dur " + (now - scrollStartNanos) + " of " + (scrollEndNanos - scrollStartNanos));
                         translateProperty.set(scrollOffset);
                     }
                     else
@@ -96,37 +100,52 @@ public class SmoothScroller
         // Reset start and end time:
         long now = System.nanoTime();
         boolean justStarted = scrollEndNanos < now;
+        scrollStartNanos = now;
         if (justStarted)
-            scrollStartNanos = now;
-        scrollEndNanos = now + scrollTimeNanos;
-
-        if (delta != 0.0)
         {
-            // We subtract from current offset, because we may already be mid-scroll in which
-            // case we don't want to jump, just want to add on (we will go faster to cover this
-            // because scroll will be same duration but longer):
-            double clamped = scrollClamp.clampScroll(delta);
-            this.scrollOffset -= clamped;
-            // Don't let offset get too large or we will need too many extra rows:
-            if (Math.abs(this.scrollOffset) > MAX_SCROLL_OFFSET)
+            interpolator = Interpolator.EASE_BOTH;
+        }
+        else
+        {
+            // If we're already underway, interpolating again with an ease-in makes
+            // a weird bump during scrolling, so we switch to just easing out:
+            interpolator = Interpolator.EASE_OUT;
+        }
+    
+        // We subtract from current offset, because we may already be mid-scroll in which
+        // case we don't want to jump, just want to add on (we will go faster to cover this
+        // because scroll will be same duration but longer):
+        double clamped = scrollClamp.clampScroll(delta);
+        this.scrollOffset -= clamped;
+        // Don't let offset get too large or we will need too many extra rows:
+        if (scrollOffset == 0.0 || Math.abs(this.scrollOffset) > MAX_SCROLL_OFFSET)
+        {
+            // Jump to the destination:
+            this.scrollOffset = 0.0;
+            translateProperty.set(0.0);
+            scrollTimer.stop();
+        }
+        else
+        {
+            if (justStarted)
+                scrollStartOffset = this.scrollOffset;
+
+            if (clamped != delta)
             {
-                // Jump to the destination:
-                this.scrollOffset = 0.0;
-                translateProperty.set(0.0);
-                scrollTimer.stop();
+                double proportionOfRequested = Math.abs(clamped / delta);
+                scrollEndNanos = now + (long)((double)scrollTimeNanos * proportionOfRequested);
             }
             else
             {
-                if (justStarted)
-                    scrollStartOffset = this.scrollOffset;
-                // Start the smooth scrolling animation:
-                if (scrollOffset != 0.0)
-                    scrollTimer.start();
+                scrollEndNanos = now + scrollTimeNanos;
             }
-            Log.debug("Scrolling by " + clamped);
-            scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
-            translateProperty.set(this.scrollOffset);
+            
+            // Start the smooth scrolling animation:
+            scrollTimer.start();
         }
+        //Log.debug("Scrolling by " + clamped);
+        scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
+        translateProperty.set(this.scrollOffset);
     }
     
     public long _test_getScrollTimeNanos()
