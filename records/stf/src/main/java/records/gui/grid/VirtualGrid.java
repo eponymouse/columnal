@@ -116,8 +116,8 @@ public class VirtualGrid implements ScrollBindable
     // Offset of first cell being rendered.  Always zero or negative:
     private double firstRenderColumnOffset;
     private double firstRenderRowOffset;
-    private int renderRowCount;
-    private int renderColumnCount;
+    private double extraRenderXPixels;
+    private double extraRenderYPixels;
     // Where is our theoretical scroll position?   We don't use this for any rendering,
     // only for knowing where to scroll to on next scroll (because we may need to render
     // extra portions outside the logical scroll position).
@@ -463,18 +463,7 @@ public class VirtualGrid implements ScrollBindable
             }
         }
         
-        // Now we work out how many columns we need to render:
-        @AbsColIndex int lastRenderIndex = firstRenderColumnIndex;
-        
-        double remainingPixels = extraPixelsToShowBefore + container.getWidth() + extraPixelsToShowAfter;
-        
-        while (remainingPixels > 0.0 && lastRenderIndex < totalColumns)
-        {
-            remainingPixels -= getColumnWidth(lastRenderIndex);
-            lastRenderIndex += CellPosition.col(1);
-        }
-        
-        renderColumnCount = lastRenderIndex - firstRenderColumnIndex + 1;
+        extraRenderXPixels = extraPixelsToShowAfter;
         
         updateHBar();
 
@@ -536,12 +525,7 @@ public class VirtualGrid implements ScrollBindable
         ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollClampY(-extraPixelsToShowBefore));
         firstRenderRowIndex = renderPos.row;
         firstRenderRowOffset = renderPos.offset;
-        ScrollResult bottomVisible = new ScrollResult(firstRenderRowIndex, firstRenderRowOffset, extraPixelsToShowBefore + container.getHeight() + extraPixelsToShowAfter);
-        renderRowCount = bottomVisible.row - firstRenderRowIndex + 1;
-        Log.debug("Extra: " + extraPixelsToShowBefore + " and " + extraPixelsToShowAfter);
-        Log.debug("Calculated: logical #" + logicalScrollRowIndex + "_" + logicalScrollRowOffset);
-        Log.debug("Calculated: render #" + firstRenderRowIndex + "_" + firstRenderRowOffset);
-        Log.debug("Calculated: render Y offset " + renderYOffset + " row count " + renderRowCount);
+        extraRenderYPixels = extraPixelsToShowAfter;
         
         updateVBar();
         
@@ -981,15 +965,15 @@ public class VirtualGrid implements ScrollBindable
             double y = firstRenderRowOffset + renderYOffset;
 
             // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((-renderYOffset + getHeight() + extraRenderYPixels) / rowHeight) + 1);
             int newNumVisibleCols = 0;
-            for (int column = firstRenderColumnIndex; x < getWidth() && column < currentColumns.get(); column++)
+            for (int column = firstRenderColumnIndex; x < getWidth() + extraRenderXPixels && column < currentColumns.get(); column++)
             {
                 newNumVisibleCols += 1;
                 x += getColumnWidth(column);
             }
-            VirtualGrid.this.renderRowCount = newNumVisibleRows;
-            VirtualGrid.this.renderColumnCount = newNumVisibleCols;
+            final int renderRowCount = newNumVisibleRows;
+            final int renderColumnCount = newNumVisibleCols;
 
             // This includes extra rows needed for smooth scrolling:
             @AbsRowIndex int firstDisplayRow = firstRenderRowIndex;
