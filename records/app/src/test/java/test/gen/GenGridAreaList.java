@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import javafx.geometry.Point2D;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.Table.MessageWhenEmpty;
@@ -36,32 +35,39 @@ public class GenGridAreaList extends Generator<GridAreaList>
             int x1 = x0 + sourceOfRandomness.nextInt(1, 15);
             int y0 = sourceOfRandomness.nextInt(1, 25);
             int y1 = y0 + sourceOfRandomness.nextInt(1, 15);
-            GridArea gridArea = new GridArea(new MessageWhenEmpty(StyledString.s("")))
-            {
-                @Override
-                protected @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
-                {
-                    
-                }
-
-                @Override
-                protected CellPosition recalculateBottomRightIncl()
-                {
-                    return getPosition().offsetByRowCols(x1 - x0, y1 - y0);
-                }
-                
-                @Override
-                public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
-                {
-                    return null;
-                }
-            };
-            gridArea.setPosition(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)));
+            GridArea gridArea = makeGridArea(x0, y0, x1, y1);
             r.add(gridArea);
         }
         return new GridAreaList(r.build());
     }
-    
+
+    @OnThread(Tag.FXPlatform)
+    public static GridArea makeGridArea(int x0, int y0, int x1, int y1)
+    {
+        GridArea gridArea = new GridArea(new MessageWhenEmpty(StyledString.s("")))
+        {
+            @Override
+            protected @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            {
+                
+            }
+
+            @Override
+            protected CellPosition recalculateBottomRightIncl()
+            {
+                return getPosition().offsetByRowCols(x1 - x0, y1 - y0);
+            }
+            
+            @Override
+            public @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition)
+            {
+                return null;
+            }
+        };
+        gridArea.setPosition(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)));
+        return gridArea;
+    }
+
     public static class GridAreaList
     {
         public final ImmutableList<GridArea> gridAreas;
