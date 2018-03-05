@@ -770,6 +770,11 @@ public class VirtualGrid implements ScrollBindable
         customisedColumnWidths.put(CellPosition.col(columnIndex), width);
     }
 
+    public Optional<CellSelection> _test_getSelection()
+    {
+        return Optional.ofNullable(selection.get());
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {
@@ -886,6 +891,16 @@ public class VirtualGrid implements ScrollBindable
             });
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
+                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.HOME, KeyCombination.CONTROL_DOWN), e -> {
+                        for (GridArea gridArea : gridAreas)
+                        {
+                            @Nullable CellSelection possibleSel = gridArea.getSelectionForSingleCell(CellPosition.ORIGIN);
+                            if (possibleSel != null)
+                                select(possibleSel);
+                        }
+                        select(new EmptyCellSelection(CellPosition.ORIGIN));
+                        e.consume();
+                    }),
                     bindS(KeyCode.HOME, (shift, c) -> c.home(shift)),
                     bindS(KeyCode.END, (shift, c) -> c.end(shift)),
                     bindS(KeyCode.UP, (shift, c) -> c.move(shift, -1, 0)),
