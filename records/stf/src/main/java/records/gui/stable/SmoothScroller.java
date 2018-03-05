@@ -3,14 +3,10 @@ package records.gui.stable;
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
-import utility.FXPlatformRunnable;
-import utility.Pair;
 
 /**
  * Smooth scrolling class.  Handles smooth scrolling on a single axis
@@ -38,7 +34,9 @@ public class SmoothScroller
     private double scrollOffset;
     // Scroll offset at scrollStartNanos
     private double scrollStartOffset;
-    public static final long SCROLL_TIME_NANOS = 2000_000_000L;
+
+    // Not static final, because some tests alter it:
+    private long scrollTimeNanos = 200_000_000L;
 
     // The translateX/translateY of container, depending on which axis we are:
     private final DoubleProperty translateProperty;
@@ -82,6 +80,7 @@ public class SmoothScroller
                     if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
                     {
                         scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double) (now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
+                        //Log.debug("Scroll Offset: " + scrollOffset);
                         translateProperty.set(scrollOffset);
                     }
                     else
@@ -99,7 +98,7 @@ public class SmoothScroller
         boolean justStarted = scrollEndNanos < now;
         if (justStarted)
             scrollStartNanos = now;
-        scrollEndNanos = now + SCROLL_TIME_NANOS;
+        scrollEndNanos = now + scrollTimeNanos;
 
         if (delta != 0.0)
         {
@@ -128,7 +127,15 @@ public class SmoothScroller
             scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
             translateProperty.set(this.scrollOffset);
         }
+    }
+    
+    public long _test_getScrollTimeNanos()
+    {
+        return scrollTimeNanos;
+    }
 
-        
+    public void _test_setScrollTimeNanos(long scrollTimeNanos)
+    {
+        this.scrollTimeNanos = scrollTimeNanos;
     }
 }

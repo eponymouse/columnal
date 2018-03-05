@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import threadchecker.OnThread;
@@ -75,7 +76,7 @@ public class TableOperations
     public static interface InsertRows
     {
         @OnThread(Tag.Simulation)
-        public void insertRows(int rowIndex, int count);
+        public void insertRows(@TableDataRowIndex int beforeRowIndex, int count);
 
         // TODO
         //@OnThread(Tag.Simulation)
@@ -85,7 +86,7 @@ public class TableOperations
     public static interface DeleteRows
     {
         @OnThread(Tag.Simulation)
-        public void deleteRows(int rowIndex, int count);
+        public void deleteRows(@TableDataRowIndex int rowIndex, int count);
     }
     
     public static interface RenameTable

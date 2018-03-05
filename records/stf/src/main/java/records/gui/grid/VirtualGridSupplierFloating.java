@@ -12,6 +12,7 @@ import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -85,6 +86,12 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             toRemove.add(removed.get());
     }
 
+    @Override
+    protected @Nullable ItemState getItemState(CellPosition cellPosition)
+    {
+        return Utility.filterOutNulls(items.keySet().stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition))).findFirst().orElse(null);
+    }
+
     @OnThread(Tag.FXPlatform)
     public static interface FloatingItem
     {
@@ -97,6 +104,12 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         // Called once, after makeCell.
         public default void adjustForContainerTranslation(Node item, Pair<DoubleExpression, DoubleExpression> translateXY)
         {
+        }
+
+        // TODO remove the default implementatino once table and column headers implement this
+        public default @Nullable ItemState getItemState(CellPosition cellPosition)
+        {
+            return null;
         }
     }
 }

@@ -89,7 +89,7 @@ public abstract class DataDisplay extends GridArea
     {
         super(messageWhenEmpty);
         this.floatingItems = floatingItems;
-        this.floatingItems.addItem(tableHeaderItem = new FloatingItem() {
+        this.floatingItems.addItem(tableHeaderItem = new FloatingItem() {            
               @Override
               @OnThread(Tag.FXPlatform)
               public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)

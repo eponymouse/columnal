@@ -6,9 +6,9 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
 import records.gui.grid.GridArea;
@@ -16,13 +16,9 @@ import records.gui.grid.VirtualGrid;
 import test.gen.GenGridAreaList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -37,11 +33,10 @@ public class PropGridOverlap
     @Property(trials = 10000)
     public void testLoad(@When(seed=1) @From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
-        Log.debug("\n\n\nStarting\n\n\n");
         VirtualGrid grid = new VirtualGrid(null);
         ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
         grid.addGridAreas(gridAreas.gridAreas);
-        checkNoOverlap(gridAreas);
+        checkNoOverlap(gridAreas.gridAreas);
         //checkHorizSorted(sortedByOriginalX);
 
     }
@@ -72,12 +67,12 @@ public class PropGridOverlap
         return gridAreas.stream().sorted(Comparator.comparing(g -> g.getPosition().columnIndex)).collect(ImmutableList.toImmutableList());
     }
 
-    private void checkNoOverlap(GenGridAreaList.GridAreaList gridAreas)
+    private void checkNoOverlap(ImmutableList<GridArea> gridAreas)
     {
         // Now check that none overlap.  We do a brute force N^2 test as it is simplest:
-        for (GridArea a : gridAreas.gridAreas)
+        for (GridArea a : gridAreas)
         {
-            for (GridArea b : gridAreas.gridAreas)
+            for (GridArea b : gridAreas)
             {
                 if (a != b)
                 {
@@ -100,7 +95,7 @@ public class PropGridOverlap
         VirtualGrid grid = new VirtualGrid(null);
         ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
         grid.addGridAreas(gridAreas.gridAreas);
-        checkNoOverlap(gridAreas);
+        checkNoOverlap(gridAreas.gridAreas);
         //checkHorizSorted(sortedByOriginalX);
         
         gridAreas.gridAreas.get(Math.abs(toMove) % gridAreas.gridAreas.size()).setPosition(
@@ -108,8 +103,22 @@ public class PropGridOverlap
         );
         
         
-        checkNoOverlap(gridAreas);
+        checkNoOverlap(gridAreas.gridAreas);
         // TODO
         //checkHorizSortedBy(gridAreas.gridAreas, originalX);
+    }
+    
+    @Test
+    public void testPair()
+    {
+        // A particular pair which caused an infinite loop:
+        VirtualGrid grid = new VirtualGrid(null);
+        ImmutableList<GridArea> gridAreas = ImmutableList.of(
+            GenGridAreaList.makeGridArea(3, 1, 6, 15),
+            GenGridAreaList.makeGridArea(6, 7, 7, 11)
+            
+        );
+        grid.addGridAreas(gridAreas);
+        checkNoOverlap(gridAreas);
     }
 }

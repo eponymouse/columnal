@@ -35,10 +35,12 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
     }
 
     @Override
-    protected boolean isEditing(CellPosition cellPosition)
+    protected ItemState getItemState(StructuredTextField stf)
     {
-        @Nullable StructuredTextField stf = getItemAt(cellPosition);
-        return stf != null && stf.isFocused();
+        if (stf.isFocused())
+            return ItemState.EDITING;
+        else
+            return ItemState.NOT_CLICKABLE;
     }
 
     @Override

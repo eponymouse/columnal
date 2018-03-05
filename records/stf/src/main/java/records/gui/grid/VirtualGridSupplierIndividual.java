@@ -281,4 +281,13 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     {
         return Utility.getIfPresent(visibleItems, cellPosition).map(p -> p.node).orElse(null);
     }
+
+    @Override
+    protected final @Nullable ItemState getItemState(CellPosition cellPosition)
+    {
+        @Nullable T item = getItemAt(cellPosition);
+        return item == null ? null : getItemState(item);
+    }
+
+    protected abstract ItemState getItemState(T item);
 }

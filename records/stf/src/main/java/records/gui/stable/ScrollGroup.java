@@ -141,6 +141,17 @@ public class ScrollGroup
         }
     }
 
+    public long _test_getScrollTimeNanos()
+    {
+        return smoothScrollX._test_getScrollTimeNanos();
+    }
+    
+    public void _test_setScrollTimeNanos(long nanos)
+    {
+        smoothScrollX._test_setScrollTimeNanos(nanos);
+        smoothScrollY._test_setScrollTimeNanos(nanos);
+    }
+
     public class Token
     {
         private Token() {}

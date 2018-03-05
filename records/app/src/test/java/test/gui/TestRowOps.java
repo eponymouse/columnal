@@ -7,13 +7,16 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.A;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.NodeQuery;
@@ -116,7 +119,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         scrollToRow(calculated.getId(), randomRow);
         scrollToRow(srcData.getId(), randomRow);
         rightClickRowLabel(srcData.getId(), randomRow);
-        clickOn(".id-stableView-row-delete");
+        clickOn(".id-virtGrid-row-delete");
         TestUtil.delay(500);
         scrollToRow(calculated.getId(), randomRow);
 
@@ -198,7 +201,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             scrollToRow(calculated.getId(), targetNewRow);
             scrollToRow(srcData.getId(), targetNewRow);
             rightClickRowLabel(srcData.getId(), targetNewRow);
-            clickOn(".id-stableView-row-insertBefore");
+            clickOn(".id-virtGrid-row-insertBefore");
             TestUtil.delay(500);
         }
         else if (targetNewRow > 0)
@@ -208,7 +211,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             scrollToRow(calculated.getId(), beforeTargetRow);
             scrollToRow(srcData.getId(), beforeTargetRow);
             rightClickRowLabel(srcData.getId(), beforeTargetRow);
-            clickOn(".id-stableView-row-insertAfter");
+            clickOn(".id-virtGrid-row-insertAfter");
             TestUtil.delay(500);
         }
         else
@@ -375,11 +378,21 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         return tableDisplay.lookup((Node l) -> l instanceof Label).<Label>queryAll().stream().map(l -> TestUtil.fx(() -> l.getText())).sorted().collect(Collectors.joining(", "));
     }
 
+    // Note: table ID header will get clicked, to expose the labels
     @OnThread(Tag.Any)
     private @Nullable Node findRowLabel(TableId id, int targetRow)
     {
-        NodeQuery tableDisplay = queryTableDisplay(id);
-        return tableDisplay.lookup((Node l) -> l instanceof Label && TestUtil.fx(() -> ((Label)l).getText()).equals(Integer.toString(targetRow))).query();
+        // Click on table header to make row labels visible:
+        Node tableNameField = lookup(".table-display-table-title .table-name-text-field")
+                .match(t -> TestUtil.fx(() -> ((TextField) t).getText().equals(id.getRaw())))
+                .query();
+        if (tableNameField == null)
+            return null;
+        @SuppressWarnings("nullness")
+        Node tableHeader = TestUtil.fx(() -> tableNameField.getParent());
+        Bounds tableHeaderBounds = TestUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));
+        clickOn(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2);
+        return lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> l.isVisible() && ((Label)l).getText().trim().equals(Integer.toString(targetRow)))).query();
     }
 
     @OnThread(Tag.Any)

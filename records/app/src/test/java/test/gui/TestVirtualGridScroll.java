@@ -1,5 +1,7 @@
 package test.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
@@ -9,13 +11,17 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.scene.Group;
+import javafx.animation.AnimationTimer;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.VerticalDirection;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import log.Log;
-import org.antlr.v4.runtime.atn.SemanticContext.OR;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,15 +31,20 @@ import records.data.Table.MessageWhenEmpty;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
-import records.gui.stable.SmoothScroller;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
+import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import styled.StyledString;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -44,6 +55,8 @@ public class TestVirtualGridScroll extends ApplicationTest
     private final double ORIGINAL_SCROLL = 5001.0;
     @SuppressWarnings("nullness")
     private VirtualGrid virtualGrid;
+    @SuppressWarnings("nullness")
+    private Label node;
 
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     @Override
@@ -81,6 +94,29 @@ public class TestVirtualGridScroll extends ApplicationTest
         virtualGrid._test_setColumnWidth(50, 106.0);
         virtualGrid._test_setColumnWidth(51, 52.0);
         virtualGrid._test_setColumnWidth(53, 1.0);
+        
+        node = new Label("X");
+        // Add node in middle of screen when viewing top left:        
+        virtualGrid.getFloatingSupplier().addItem(new FloatingItem()
+        {
+            @Override
+            public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+            {
+                @AbsColIndex Integer xCell = Utility.boxCol(CellPosition.col(5));
+                @AbsRowIndex Integer yCell = Utility.boxRow(CellPosition.row(10));
+                double x = columnBounds.getItemCoord(xCell);
+                double y = rowBounds.getItemCoord(yCell);
+                double width = columnBounds.getItemCoordAfter(xCell) - x;
+                double height = rowBounds.getItemCoordAfter(yCell) - y;
+                return Optional.of(new BoundingBox(x, y, width, height));
+            }
+
+            @Override
+            public Pair<ViewOrder, Node> makeCell()
+            {
+                return new Pair<>(ViewOrder.STANDARD, node);
+            }
+        });
     }
 
     @OnThread(Tag.Any)
@@ -212,7 +248,7 @@ public class TestVirtualGridScroll extends ApplicationTest
         checkOffsetsNegative();
       
         // We check with and without delay to try with/without smooth scrolling and jumping:
-        for (int delay : new int[]{0, (int) (SmoothScroller.SCROLL_TIME_NANOS / 1_000_000L)})
+        for (int delay : new int[]{0, (int) (virtualGrid.getScrollGroup()._test_getScrollTimeNanos() / 1_000_000L)})
         {
             assertThat(TestUtil.fx(() -> virtualGrid._test_getScrollXPos()), Matchers.closeTo(ORIGINAL_SCROLL, 0.1));
             // Test that scroll and scroll back works:
@@ -266,4 +302,67 @@ public class TestVirtualGridScroll extends ApplicationTest
         }
     }
 
+    @Test
+    public void testSmoothScrollMonotonic()
+    {
+        // Easier to spot issues with a slower scroll:
+        virtualGrid.getScrollGroup()._test_setScrollTimeNanos(1_000_000_000L);
+
+        testMonotonicScroll(true);
+        testMonotonicScroll(true);
+        testMonotonicScroll(false);
+        testMonotonicScroll(false);
+
+        testMonotonicScroll(false);
+        testMonotonicScroll(true);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void testMonotonicScroll(boolean scrollDocumentUp)
+    {
+        final @Nullable AnimationTimer[] timer = new AnimationTimer[1];
+        try
+        {
+            moveTo(node);
+            final ArrayList<Double> yCoords = new ArrayList<>();
+            TestUtil.fx_(() -> {
+                timer[0] = new AnimationTimer()
+                {
+                    @Override
+                    public void handle(long now)
+                    {
+                        yCoords.add(node.localToScreen(node.getBoundsInLocal()).getMinY());
+                    }
+                };
+                timer[0].start();
+            });
+            scroll(3, scrollDocumentUp == SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
+            TestUtil.sleep(1200);
+            TestUtil.fx_(() -> { if (timer[0] != null) timer[0].stop();});
+            Function<Double, Matcher<Double>> strictlyAfter;
+            Function<Double, Matcher<Double>> afterOrSame;
+            if (scrollDocumentUp == SystemUtils.IS_OS_MAC_OSX)
+            {
+                strictlyAfter = Matchers::greaterThan;
+                afterOrSame = Matchers::greaterThanOrEqualTo;
+            }
+            else
+            {
+                strictlyAfter = Matchers::lessThan;
+                afterOrSame = Matchers::lessThanOrEqualTo;
+            }
+            
+            // Check that the node moved:
+            //assertThat(yCoords.get(0), strictlyAfter.apply(yCoords.get(yCoords.size() - 1)));
+            // Check that list is sorted:
+            for (int i = 0; i < yCoords.size() - 1; i++)
+            {
+                assertThat(yCoords.get(i), afterOrSame.apply(yCoords.get(i + 1)));
+            }
+        }
+        finally
+        {
+            TestUtil.fx_(() -> { if (timer[0] != null) timer[0].stop();});
+        }
+    }
 }

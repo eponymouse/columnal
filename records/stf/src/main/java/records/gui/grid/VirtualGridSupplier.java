@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -55,13 +56,13 @@ public abstract class VirtualGridSupplier<T extends Node>
     // package-visible
     abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
+    public static enum ItemState { EDITING, DIRECTLY_CLICKABLE, NOT_CLICKABLE }
+    
     /**
-     * Is there a cell at the current position which is being edited?
+     * Is there a cell at the given position and if so what it is its state?
+     * If none, return null;
      */
-    protected boolean isEditing(CellPosition cellPosition)
-    {
-        return false;
-    }
+    protected abstract @Nullable ItemState getItemState(CellPosition cellPosition);
 
     /**
      * Start editing that cell, if possible
@@ -100,12 +101,12 @@ public abstract class VirtualGridSupplier<T extends Node>
 
         // The X/Y position of the left/top of the given item index
         @OnThread(Tag.FXPlatform)
-        public abstract double getItemCoord(T itemIndex);
+        @Pure public abstract double getItemCoord(T itemIndex);
 
         // The X/Y position of the right/bottom of the given item index
         @SuppressWarnings({"unchecked", "units"})
         @OnThread(Tag.FXPlatform)
-        public final double getItemCoordAfter(T itemIndex)
+        @Pure public final double getItemCoordAfter(T itemIndex)
         {
             return getItemCoord((T)(Integer)(itemIndex.intValue() + 1));
         }

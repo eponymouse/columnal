@@ -69,7 +69,13 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     {
         style.applyStyle(item, on);
     }
-    
+
+    @Override
+    protected ItemState getItemState(Button item)
+    {
+        return ItemState.DIRECTLY_CLICKABLE;
+    }
+
     public void addTable(TableDisplay tableDisplay)
     {
         super.addGrid(tableDisplay, new GridCellInfo<Button, CellStyle>()

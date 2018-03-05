@@ -54,6 +54,13 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     }
 
     @Override
+    protected ItemState getItemState(LabelPane item)
+    {
+        // TODO should take account of location within cell
+        return ItemState.DIRECTLY_CLICKABLE;
+    }
+
+    @Override
     protected void styleTogether(ImmutableList<LabelPane> visibleNodes)
     {
         double topY = Double.MAX_VALUE;
@@ -154,6 +161,10 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             label.getStyleClass().add("virt-grid-row-label");
             label.setMaxHeight(Double.MAX_VALUE);
             BorderPane.setAlignment(label, Pos.CENTER_RIGHT);
+            label.setOnContextMenuRequested(e -> {
+                if (tableDisplay != null)
+                    tableDisplay.makeRowContextMenu(this.row).show(label, e.getScreenX(), e.getScreenY());
+            });
         }
         
         public boolean isTableRow(TableDisplay tableDisplay, @TableDataRowIndex int row)

@@ -44,6 +44,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGridSupplier.ContainerChildren;
+import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.stable.ScrollBindable;
@@ -810,8 +811,8 @@ public class VirtualGrid implements ScrollBindable
                 if (cellPosition != null)
                 {
                     @NonNull CellPosition cellPositionFinal = cellPosition;
-                    boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal));
-                    if (editing)
+                    boolean clickable = nodeSuppliers.stream().anyMatch(g -> g.getItemState(cellPositionFinal) != ItemState.NOT_CLICKABLE);
+                    if (clickable)
                         return; // Don't capture the events
                     
                     // Not editing, is the cell currently part of a single cell selection:
@@ -862,8 +863,8 @@ public class VirtualGrid implements ScrollBindable
                     // We want to capture the events to prevent clicks reaching the underlying cell,
                     // if the cell is not currently editing
                     @NonNull CellPosition cellPositionFinal = cellPosition;
-                    boolean editing = nodeSuppliers.stream().anyMatch(g -> g.isEditing(cellPositionFinal)); 
-                    if (!editing)
+                    boolean clickable = nodeSuppliers.stream().anyMatch(g -> g.getItemState(cellPositionFinal) != ItemState.NOT_CLICKABLE); 
+                    if (!clickable)
                         mouseEvent.consume();
                 }
             };
@@ -1106,7 +1107,7 @@ public class VirtualGrid implements ScrollBindable
                     // We may overlap more tables, but that is fine, we will get shunted again
                     // next time round if needed
                     CellPosition curPos = cur.getSecond().getPosition();
-                    curPos = new CellPosition(curPos.rowIndex, openGridArea.getSecond().getBottomRightIncl().columnIndex);
+                    curPos = new CellPosition(curPos.rowIndex, openGridArea.getSecond().getBottomRightIncl().columnIndex + CellPosition.col(1));
                     cur.getSecond().setPosition(curPos);
                     
                     // Now need to add us to the gridAreas list at correct place.  We don't
@@ -1236,6 +1237,7 @@ public class VirtualGrid implements ScrollBindable
     private class CreateTableButtonSupplier extends VirtualGridSupplier<Button>
     {
         private @MonotonicNonNull Button button;
+        private @Nullable CellPosition buttonPosition;
         // Button position, last mouse position on screen:
         private final FXPlatformBiConsumer<CellPosition, Point2D> createTable;
 
@@ -1270,6 +1272,7 @@ public class VirtualGrid implements ScrollBindable
             {
                 button.setVisible(true);
                 CellPosition pos = ((EmptyCellSelection) curSel).position;
+                buttonPosition = pos;
                 double x = columnBounds.getItemCoord(pos.columnIndex);
                 double y = rowBounds.getItemCoord(pos.rowIndex);
                 button.resizeRelocate(
@@ -1282,7 +1285,14 @@ public class VirtualGrid implements ScrollBindable
             else
             {
                 button.setVisible(false);
+                buttonPosition = null;
             }
+        }
+
+        @Override
+        protected @Nullable ItemState getItemState(CellPosition cellPosition)
+        {
+            return cellPosition.equals(buttonPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
         }
     }
     

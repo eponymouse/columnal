@@ -5,6 +5,7 @@ import annotation.units.AbsRowIndex;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
@@ -70,4 +71,9 @@ public abstract class RectangleOverlayItem implements FloatingItem
 
     protected abstract void style(Rectangle r);
 
+    @Override
+    public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition)
+    {
+        return null;
+    }
 }

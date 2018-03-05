@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 
@@ -93,5 +94,11 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
                 iterator.remove();
             }
         }
+    }
+
+    @Override
+    protected @Nullable ItemState getItemState(CellPosition cellPosition)
+    {
+        return null;
     }
 }

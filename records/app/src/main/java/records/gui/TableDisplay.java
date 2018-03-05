@@ -46,6 +46,7 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
 import records.data.TableOperations.AddColumn;
+import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameColumn;
 import records.data.TableOperations.RenameTable;
 import records.data.Transformation;
@@ -723,6 +724,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public String toString()
     {
         return super.toString() + "[" + getTable().getId() + "]";
+    }
+
+    public ContextMenu makeRowContextMenu(@TableDataRowIndex int row)
+    {
+        ContextMenu contextMenu = new ContextMenu();
+        @Nullable InsertRows insertRows = table.getOperations().insertRows;
+        if (insertRows != null)
+        {
+            @NonNull InsertRows insertRowsFinal = insertRows;
+            contextMenu.getItems().add(
+                GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row, 1)))
+            );
+        }
+        return contextMenu;
     }
 
     @OnThread(Tag.FXPlatform)
