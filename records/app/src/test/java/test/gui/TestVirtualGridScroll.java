@@ -88,6 +88,12 @@ public class TestVirtualGridScroll extends ApplicationTest
             {
                 return null;
             }
+
+            @Override
+            public String getSortKey()
+            {
+                return "";
+            }
         }));
         
         virtualGrid._test_setColumnWidth(48, 37.0);

@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -9,10 +10,14 @@ import utility.Either;
 public class EntireTableSelection implements CellSelection
 {
     private final DataDisplay selected;
+    // Although we select the whole table, if they move out up/down, we stay
+    // in the column they entered from:
+    private final @AbsColIndex int column;
 
-    public EntireTableSelection(DataDisplay selected)
+    public EntireTableSelection(DataDisplay selected, @AbsColIndex int column)
     {
         this.selected = selected;
+        this.column = column;
     }
 
     @Override
@@ -30,7 +35,22 @@ public class EntireTableSelection implements CellSelection
     @Override
     public Either<CellPosition, CellSelection> move(boolean extendSelection, int byRows, int byColumns)
     {
-        // TODO allow moving out
+        if (!extendSelection)
+        {
+            if (byRows != 0)
+            {
+                // Conceieve of this as going up/down first to a single cell, then across:
+                return Either.left(selected.getPosition().offsetByRowCols(byRows, (column - selected.getPosition().columnIndex) + byColumns));
+            }
+            else
+            {
+                // Only going left/right, just move out of the end of the table:
+                if (byColumns <= 0)
+                    return Either.left(selected.getPosition().offsetByRowCols(byRows, byColumns));
+                else
+                    return Either.left(selected.getPosition().offsetByRowCols(byRows, byColumns + selected.getDataDisplayBottomRightIncl().columnIndex));
+            }
+        }
         return Either.right(this);
     }
 

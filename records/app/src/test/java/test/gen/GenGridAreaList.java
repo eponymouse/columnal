@@ -63,6 +63,12 @@ public class GenGridAreaList extends Generator<GridAreaList>
             {
                 return null;
             }
+
+            @Override
+            public String getSortKey()
+            {
+                return "";
+            }
         };
         gridArea.setPosition(new CellPosition(CellPosition.row(y0), CellPosition.col(x0)));
         return gridArea;

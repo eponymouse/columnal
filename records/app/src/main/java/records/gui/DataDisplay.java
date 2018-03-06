@@ -48,6 +48,7 @@ import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -74,7 +75,8 @@ public abstract class DataDisplay extends GridArea
     private final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
     private final FloatingItem tableHeaderItem;
-    
+    private TableId curTableId;
+
     protected @TableDataRowIndex int currentKnownRows; 
     
     // Not final because it may changes if user changes the display item or preview options change:
@@ -88,6 +90,7 @@ public abstract class DataDisplay extends GridArea
     public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
     {
         super(messageWhenEmpty);
+        this.curTableId = initialTableName;
         this.floatingItems = floatingItems;
         this.floatingItems.addItem(tableHeaderItem = new FloatingItem() {            
               @Override
@@ -122,6 +125,10 @@ public abstract class DataDisplay extends GridArea
                       tableNameField.addOnFocusLoss(newTableId -> {
                           if (newTableId != null)
                               renameTableFinal.consume(newTableId);
+
+                          @Nullable TableId newVal = tableNameField.valueProperty().getValue();
+                          if (newVal != null)
+                            curTableId = newVal;
                       });
                   }
                   BorderPane borderPane = new BorderPane(tableNameField.getNode());
@@ -129,7 +136,7 @@ public abstract class DataDisplay extends GridArea
                   BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
                   BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
                   borderPane.setOnMouseClicked(e -> {
-                      withParent(g -> g.select(new EntireTableSelection(FXUtility.mouse(DataDisplay.this))));
+                      withParent(g -> g.select(new EntireTableSelection(FXUtility.mouse(DataDisplay.this), getPosition().columnIndex)));
                       FXUtility.setPseudoclass(borderPane, "table-selected", true);
                       withParent(g -> g.onNextSelectionChange(s -> FXUtility.setPseudoclass(borderPane, "table-selected", false)));
                   });
@@ -433,6 +440,13 @@ public abstract class DataDisplay extends GridArea
         return cellStyles;
     }
 
+    @Override
+    public String getSortKey()
+    {
+        // At least makes it consistent when ordering jumbled up tables during tests:
+        return curTableId.getRaw();
+    }
+
     @SuppressWarnings("units")
     protected @TableDataRowIndex int getRowIndexWithinTable(@GridAreaRowIndex int gridRowIndex)
     {
@@ -479,19 +493,21 @@ public abstract class DataDisplay extends GridArea
         // In header?
         if (cellPosition.rowIndex == us.rowIndex)
         {
-            return new EntireTableSelection(this);
+            return new EntireTableSelection(this, cellPosition.columnIndex);
         }
         // In data cells?
         else if (cellPosition.rowIndex >= us.rowIndex + HEADER_ROWS)
         {
             return new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits);
         }
-
-        // TODO column headers
+        //else if (cellPosition.rowIndex == us.rowIndex + 1)
+        {
+            // Column name
+            return new ColumnHeaderItemSelection(cellPosition);
+        }
 
         // If in expand arrows, no selection to be done (although should we trigger here?)
-
-        return null;
+        //return null;
     }
 
     private class DestRectangleOverlay extends RectangleOverlayItem
@@ -539,6 +555,60 @@ public abstract class DataDisplay extends GridArea
         public CellPosition getDestinationPosition()
         {
             return destPosition;
+        }
+    }
+
+    private class ColumnHeaderItemSelection implements CellSelection
+    {
+        private final CellPosition pos;
+
+        public ColumnHeaderItemSelection(CellPosition cellPosition)
+        {
+            this.pos = cellPosition;
+        }
+
+        @Override
+        public CellSelection atHome(boolean extendSelection)
+        {
+            return this;
+        }
+
+        @Override
+        public CellSelection atEnd(boolean extendSelection)
+        {
+            return this;
+        }
+
+        @Override
+        public Either<CellPosition, CellSelection> move(boolean extendSelection, int byRows, int byColumns)
+        {
+            if (!extendSelection)
+                return Either.left(pos.offsetByRowCols(byRows, byColumns));
+            return Either.right(this);
+        }
+
+        @Override
+        public CellPosition positionToEnsureInView()
+        {
+            return pos;
+        }
+
+        @Override
+        public RectangleBounds getSelectionDisplayRectangle()
+        {
+            return new RectangleBounds(pos, pos);
+        }
+
+        @Override
+        public boolean isExactly(CellPosition cellPosition)
+        {
+            return pos.equals(cellPosition);
+        }
+
+        @Override
+        public boolean includes(GridArea tableDisplay)
+        {
+            return false;
         }
     }
 }

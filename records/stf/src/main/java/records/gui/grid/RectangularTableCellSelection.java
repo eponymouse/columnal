@@ -56,10 +56,23 @@ public class RectangularTableCellSelection implements CellSelection
     {
         @AbsRowIndex int byRows = CellPosition.row(_byRows);
         @AbsColIndex int byColumns = CellPosition.col(_byColumns);
-        CellPosition dest = new CellPosition(Utility.maxRow(tableSelectionLimits.getTopLeftIncl().rowIndex, Utility.minRow(tableSelectionLimits.getBottomRightIncl().rowIndex, curFocus.rowIndex + byRows)),
-            Utility.maxCol(tableSelectionLimits.getTopLeftIncl().columnIndex, Utility.minCol(tableSelectionLimits.getBottomRightIncl().columnIndex, curFocus.columnIndex + byColumns)));
-        // Move from top-left:
-        return Either.right(new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits));
+        @AbsRowIndex int targetRow = curFocus.rowIndex + byRows;
+        @AbsRowIndex int clampedRow = Utility.maxRow(tableSelectionLimits.getTopLeftIncl().rowIndex, Utility.minRow(tableSelectionLimits.getBottomRightIncl().rowIndex, targetRow));
+        @AbsColIndex int targetColumn = curFocus.columnIndex + byColumns;
+        @AbsColIndex int clampedColumn = Utility.maxCol(tableSelectionLimits.getTopLeftIncl().columnIndex, Utility.minCol(tableSelectionLimits.getBottomRightIncl().columnIndex, targetColumn));
+        
+        // If we're trying to move outside without holding shift, do so:
+        if ((clampedRow != targetRow || clampedColumn != targetColumn) && !extendSelection)
+        {
+            return Either.left(new CellPosition(targetRow, targetColumn));
+        }
+        else
+        {
+            // If we are all within bounds, or doing shift-selection, we stay in the table:
+            CellPosition dest = new CellPosition(clampedRow, clampedColumn);
+            // Move from top-left:
+            return Either.right(new RectangularTableCellSelection(extendSelection ? startAnchor : dest, dest, tableSelectionLimits));
+        }
     }
 
     @Override
@@ -127,7 +140,7 @@ public class RectangularTableCellSelection implements CellSelection
     @OnThread(Tag.FXPlatform)
     public static interface TableSelectionLimits
     {
-        CellPosition getTopLeftIncl();
-        CellPosition getBottomRightIncl();
+        public CellPosition getTopLeftIncl();
+        public CellPosition getBottomRightIncl();
     }
 }

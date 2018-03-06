@@ -12,6 +12,7 @@ import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.InitialLoadDetails;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -38,6 +39,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
 {
     private @Nullable NumTables numTables;
     private boolean mustIncludeNumber = false;
+    private int nextTableNum = 0;
 
     public GenImmediateData()
     {
@@ -87,7 +89,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 }
 
                 @SuppressWarnings({"keyfor", "units"})
-                ImmediateDataSource dataSource = new ImmediateDataSource(mgr, TestUtil.ILD, new EditableRecordSet(columns, () -> length));
+                ImmediateDataSource dataSource = new ImmediateDataSource(mgr, new InitialLoadDetails(new TableId("Test" + nextTableNum++), null, null), new EditableRecordSet(columns, () -> length));
                 mgr.record(dataSource);
                 tables.add(dataSource);
             }

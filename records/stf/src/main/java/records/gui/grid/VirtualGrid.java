@@ -1094,7 +1094,8 @@ public class VirtualGrid implements ScrollBindable
 
         @SuppressWarnings("units")
         @AbsRowIndex int maxExtra = MAX_EXTRA_ROW_COLS;
-        List<@AbsRowIndex Integer> rowSizes = Utility.<GridArea, @AbsRowIndex Integer>mapList(gridAreas, gridArea -> gridArea.getAndUpdateBottomRow(currentKnownRows.get() + maxExtra, this::updateSizeAndPositions));
+        @AbsRowIndex int currentLastVisibleRow = CellPosition.row((int)(container.getHeight() / rowHeight)) + logicalScrollRowIndex;
+        List<@AbsRowIndex Integer> rowSizes = Utility.<GridArea, @AbsRowIndex Integer>mapList(gridAreas, gridArea -> gridArea.getAndUpdateBottomRow(currentLastVisibleRow + maxExtra, this::updateSizeAndPositions));
                 
         // The plan to fix overlaps: we go from the left-most column across to
         // the right-most, keeping track of which tables exist in this column.
@@ -1106,7 +1107,8 @@ public class VirtualGrid implements ScrollBindable
         
         // Pairs each grid area with its integer priority.  Starts in order of table left-most index:
         ArrayList<Pair<Long, GridArea>> gridAreas = new ArrayList<>(
-                Streams.mapWithIndex(this.gridAreas.stream().sorted(Comparator.comparing(t -> t.getPosition().columnIndex)),
+                Streams.mapWithIndex(this.gridAreas.stream()
+                        .sorted(Comparator.<GridArea, Integer>comparing(t -> t.getPosition().columnIndex).thenComparing(t -> t.getSortKey())),
                         (x, i) -> new Pair<> (i, x))
             .collect(Collectors.toList()));
 
@@ -1235,7 +1237,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         if (deltaX != 0.0 || deltaY != 0.0)
-            scrollGroup.requestScrollBy(deltaX, deltaY);
+            scrollGroup.requestScrollBy(-deltaX, -deltaY);
     }
     
     public void addGridAreas(Collection<GridArea> gridAreas)

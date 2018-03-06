@@ -121,4 +121,7 @@ public abstract class GridArea
     
     // Select a cell by moving to it using the keyboard.  Return null if not possible
     public abstract @Nullable CellSelection getSelectionForSingleCell(CellPosition cellPosition);
+
+    // When sorting grid areas, ones with a lower sort key will be put to the left.
+    public abstract String getSortKey();
 }
