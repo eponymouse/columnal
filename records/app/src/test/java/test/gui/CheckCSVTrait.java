@@ -11,11 +11,13 @@ import org.testfx.service.query.NodeQuery;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.Table;
 import records.data.TableId;
+import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplay;
+import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -36,9 +38,9 @@ import static org.junit.Assert.assertEquals;
 public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnTableHeaderTrait
 {
     @OnThread(Tag.Simulation)
-    default void exportToCSVAndCheck(String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
+    default void exportToCSVAndCheck(VirtualGrid virtualGrid, TableManager tableManager, String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
     {
-        clickOnTableHeader(tableId, MouseButton.SECONDARY);
+        clickOnTableHeader(virtualGrid, tableManager, tableId, MouseButton.SECONDARY);
         clickOn(".id-tableDisplay-menu-exportToCSV");
         WaitForAsyncUtils.waitForFxEvents();
 

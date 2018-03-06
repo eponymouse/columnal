@@ -6,10 +6,13 @@ import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
+import records.data.CellPosition;
+import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -79,5 +82,21 @@ public interface ScrollToTrait extends FxRobotInterface
             clickOn(".main-scroll > .scroll-bar:vertical > .decrement-button");
         }
         assertTrue(viewBounds.contains(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()))));
+    }
+    
+    @OnThread(Tag.Any)
+    default void keyboardMoveTo(VirtualGrid virtualGrid, CellPosition target)
+    {
+        push(KeyCode.CONTROL, KeyCode.HOME);
+        // First go to correct row:
+        for (int i = 0; i < target.rowIndex; i++)
+        {
+            push(KeyCode.DOWN);
+        }
+        
+        while (TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.positionToEnsureInView().columnIndex).orElse(Integer.MAX_VALUE)) < target.columnIndex)
+        {
+            push(KeyCode.RIGHT);
+        }
     }
 }

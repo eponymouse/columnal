@@ -81,6 +81,9 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private VirtualGrid virtualGrid;
+    @OnThread(Tag.Any)
+    @SuppressWarnings("nullness")
+    private TableManager tableManager;
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -115,7 +118,9 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         Table calculated = new Transform(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
-        virtualGrid = TestUtil.openDataAsTable(windowToUse, manager).get().getSecond();
+        Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(windowToUse, manager).get();
+        tableManager = details.getFirst();
+        virtualGrid = details.getSecond();
 
         @SuppressWarnings("units")
         @TableDataRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
@@ -162,8 +167,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
             }
         }
         expectedCalcContent.add(new Pair<>("Result", calcValuesFiltered));
-        exportToCSVAndCheck("After deleting " + randomRow, expectedSrcContent, srcData.getId());
-        exportToCSVAndCheck("After deleting " + randomRow, expectedCalcContent, calculated.getId());
+        exportToCSVAndCheck(virtualGrid, details.getFirst(),"After deleting " + randomRow, expectedSrcContent, srcData.getId());
+        exportToCSVAndCheck(virtualGrid, details.getFirst(),"After deleting " + randomRow, expectedCalcContent, calculated.getId());
     }
 
     @Property(trials = 10)
@@ -181,17 +186,18 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
         Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(sortBy.getName())));
-        virtualGrid = TestUtil.sim(() -> {
+        Pair<TableManager, VirtualGrid> details = TestUtil.sim(() -> {
             manager.record(calculated);
             try
             {
                 return TestUtil.openDataAsTable(windowToUse, manager);
-            }
-            catch (Exception e)
+            } catch (Exception e)
             {
                 throw new RuntimeException(e);
             }
-        }).get().getSecond();
+        }).get();
+        tableManager = details.getFirst();
+        virtualGrid = details.getSecond();
 
         int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
         @SuppressWarnings("units")
@@ -320,7 +326,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         TestUtil.sim_(() -> {
             try
             {
-                exportToCSVAndCheck("After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
+                exportToCSVAndCheck(virtualGrid, details.getFirst(),"After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
             }
             catch (IOException e)
             {
@@ -368,7 +374,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     }
 
     @OnThread(Tag.Any)
-    private void rightClickRowLabel(TableId id, @TableDataRowIndex int targetRow)
+    private void rightClickRowLabel(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
         Node rowLabel = findRowLabel(id, targetRow);
         if (rowLabel == null)
@@ -385,10 +391,10 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
 
     // Note: table ID header will get clicked, to expose the labels
     @OnThread(Tag.Any)
-    private @Nullable Node findRowLabel(TableId id, @TableDataRowIndex int targetRow)
+    private @Nullable Node findRowLabel(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
         // Click on table header to make row labels visible:
-        clickOnTableHeader(id);
+        clickOnTableHeader(virtualGrid, tableManager, id);
         return lookup(".virt-grid-row-label-pane").match(Node::isVisible)
             .lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> ((Label)l).getText().trim().equals(Integer.toString(1 + targetRow)))).query();
     }

@@ -197,8 +197,8 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         TestUtil.sleep(500);
         
         // Check neither table moved:
-        assertEquals(originalTableTopLeft, tableManager.getSingleTableOrThrow(srcId).getMostRecentPosition());
-        assertEquals(transformTopLeft, tableManager.getSingleTableOrThrow(new TableId("Sorted")).getMostRecentPosition());
+        assertEquals(originalTableTopLeft, TestUtil.checkNonNull(tableManager.getSingleTableOrThrow(srcId).getDisplay()).getMostRecentPosition());
+        assertEquals(transformTopLeft, TestUtil.checkNonNull(tableManager.getSingleTableOrThrow(new TableId("Sorted")).getDisplay()).getMostRecentPosition());
         
         for (Table table : tableManager.getAllTables())
         {

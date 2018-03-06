@@ -89,6 +89,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -1075,6 +1076,14 @@ public class TestUtil
                 return UnitType.UNIT;
             }
         });
+    }
+
+    // If null, assertion failure.  Otherwise returns as non-null.
+    @SuppressWarnings("nullness")
+    public static <T> @NonNull T checkNonNull(@Nullable T t)
+    {
+        assertNotNull(t);
+        return t;
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
