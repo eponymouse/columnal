@@ -27,7 +27,6 @@ import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.Table.InitialLoadDetails;
 import records.data.Table.MessageWhenEmpty;
-import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn.TextFileColumnListener;
 import records.data.columntype.BlankColumnType;
@@ -43,11 +42,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataDisplay;
 import records.gui.grid.CellSelection;
-import records.gui.grid.VirtualGrid;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCallback;
-import records.gui.stable.StableView;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
@@ -860,7 +857,7 @@ public class GuessFormat
     private static void previewFormat(TypeManager typeManager, File file, List<String> initialLines, TextFormat t, GUI_Items gui)
     {
         gui.textArea.replaceText(initialLines.stream().collect(Collectors.joining("\n")));
-        gui.tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+        gui.tableView.setColumns(ImmutableList.of(), null, null);
         TextAreaFiller textAreaFiller = new TextAreaFiller(gui);
 
         gui.textArea.setParagraphGraphicFactory(sourceLine -> {
@@ -874,14 +871,14 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImporter.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), c -> null, () -> CellPosition.ORIGIN, null), null, null);
+                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), c -> null, () -> CellPosition.ORIGIN, null), null, null);
                 });
             }
             catch (IOException | InternalException | UserException e)
             {
                 Log.log(e);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                    gui.tableView.setColumns(ImmutableList.of(), null, null);
                     gui.tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
                 });
 

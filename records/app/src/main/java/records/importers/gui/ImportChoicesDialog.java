@@ -1,6 +1,5 @@
 package records.importers.gui;
 
-import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
@@ -13,7 +12,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -31,7 +29,6 @@ import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -49,14 +46,11 @@ import records.error.UserException;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
-import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stf.TableDisplayUtility;
-import records.gui.TableNameTextField;
-import records.gui.stable.StableView;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.Options;
@@ -83,7 +77,6 @@ import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 @OnThread(Tag.FXPlatform)
@@ -137,7 +130,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                             @NonNull RecordSet recordSetNonNull = recordSet;
                             Platform.runLater(() -> {
                                 destRecordSet.set(recordSetNonNull);
-                                destData.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, () -> CellPosition.ORIGIN, null), null, null);
+                                destData.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, () -> CellPosition.ORIGIN, null), null, null);
                             });
                         }
                     }
@@ -145,7 +138,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                     {
                         Log.log(e);
                         Platform.runLater(() -> {
-                            destData.setColumnsAndRows(ImmutableList.of(), null, null);
+                            destData.setColumns(ImmutableList.of(), null, null);
                             destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
                         });
 
@@ -154,7 +147,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             else
             {
-                destData.setColumnsAndRows(ImmutableList.of(), null, null);
+                destData.setColumns(ImmutableList.of(), null, null);
             }
         });
         SimpleObjectProperty<@Nullable Choices> choicesProperty = new SimpleObjectProperty<>(null);
@@ -169,7 +162,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         @NonNull SourceInfo sourceInfoNonNull = sourceInfo;
                         Platform.runLater(() -> {
                             srcInfo.set(sourceInfoNonNull);
-                            srcDataDisplay.setColumnsAndRows(sourceInfoNonNull.srcColumns, null, null);
+                            srcDataDisplay.setColumns(sourceInfoNonNull.srcColumns, null, null);
                         });
                     }
                 }));
@@ -236,7 +229,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             catch (UserException e)
             {
-                tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                tableView.setColumns(ImmutableList.of(), null, null);
                 tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
             }
             return;
@@ -316,7 +309,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         FXPlatformConsumer<@Nullable C> pick = item -> {
             if (item == null)
             {
-                tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                tableView.setColumns(ImmutableList.of(), null, null);
                 tableView.setMessageWhenEmpty(new MessageWhenEmpty(TranslationUtility.getString("need.valid.option")));
                 return;
             }
@@ -329,7 +322,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             catch (InternalException e)
             {
                 Log.log(e);
-                tableView.setColumnsAndRows(ImmutableList.of(), null, null);
+                tableView.setColumns(ImmutableList.of(), null, null);
                 tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
             }
         };

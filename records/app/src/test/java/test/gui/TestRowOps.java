@@ -389,7 +389,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     {
         // Click on table header to make row labels visible:
         clickOnTableHeader(id);
-        return lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> l.isVisible() && ((Label)l).getText().trim().equals(Integer.toString(1 + targetRow)))).query();
+        return lookup(".virt-grid-row-label-pane").match(Node::isVisible)
+            .lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> ((Label)l).getText().trim().equals(Integer.toString(1 + targetRow)))).query();
     }
 
     @OnThread(Tag.Any)

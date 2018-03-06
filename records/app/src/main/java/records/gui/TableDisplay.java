@@ -1,8 +1,5 @@
 package records.gui;
 
-import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
-import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -12,7 +9,6 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Dialog;
@@ -20,7 +16,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
@@ -41,11 +36,11 @@ import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
-import records.data.DataItemPosition;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
 import records.data.TableOperations.AddColumn;
+import records.data.TableOperations.DeleteRows;
 import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameColumn;
 import records.data.TableOperations.RenameTable;
@@ -262,7 +257,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
         recordSetOrError.ifRight(recordSet ->
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c))
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c))
         );
     }
 
@@ -284,7 +279,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
         recordSetOrError.ifRight(recordSet -> 
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c))
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c))
         );
     }
 
@@ -448,7 +443,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, RecordSet recordSet)
     {
         ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> renameColumnForTable(table, c), this::getPosition, onModify);
-        setColumnsAndRows(displayColumns, table.getOperations(), c -> getColumnActions(tableManager, table, c));
+        setColumns(displayColumns, table.getOperations(), c -> getColumnActions(tableManager, table, c));
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
         //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
@@ -478,7 +473,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
 
         FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> renameColumnForTable(table, c), this::getPosition, onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> renameColumnForTable(table, c), this::getPosition, onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
         });
 
         // Should be done last:
@@ -724,6 +719,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             @NonNull InsertRows insertRowsFinal = insertRows;
             contextMenu.getItems().add(
                 GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row, 1)))
+            );
+        }
+        @Nullable DeleteRows deleteRows = table.getOperations().deleteRows;
+        if (deleteRows != null)
+        {
+            @NonNull DeleteRows deleteRowsFinal = deleteRows;
+            contextMenu.getItems().add(
+                GUI.menuItem("virtGrid.row.delete", () -> Workers.onWorkerThread("Deleting row", Priority.SAVE_ENTRY, () -> deleteRowsFinal.deleteRows(row, 1)))
             );
         }
         return contextMenu;

@@ -1,7 +1,6 @@
 package test.gui;
 
 import annotation.qual.Value;
-import annotation.units.AbsRowIndex;
 import annotation.units.TableDataColIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
@@ -269,7 +268,7 @@ public class TestStructuredTextField extends ApplicationTest
                 @SuppressWarnings("units")
                 @TableDataColIndex int col = 0;
                 EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> CellPosition.ORIGIN, () -> {});
-                dataDisplay.setColumnsAndRows(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
+                dataDisplay.setColumns(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
                 //stableView.loadColumnWidths(new double[]{600.0});
             }
             catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)

@@ -27,6 +27,7 @@ import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Arrays;
@@ -104,7 +105,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             @Override
             public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
-                @AbsColIndex int columnForRowLabels = tableDisplay.getPosition().columnIndex - CellPosition.col(1);
+                @AbsColIndex int columnForRowLabels = Utility.maxCol(CellPosition.col(0), tableDisplay.getPosition().columnIndex - CellPosition.col(1));
                 @AbsRowIndex int topRowLabel = tableDisplay.getDataDisplayTopLeftIncl().from(tableDisplay.getPosition()).rowIndex;
                 @AbsRowIndex int bottomRowLabel = tableDisplay.getDataDisplayBottomRightIncl().from(tableDisplay.getPosition()).rowIndex;
                 if (cellPosition.columnIndex == columnForRowLabels && topRowLabel <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRowLabel)
@@ -134,7 +135,8 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             @Override
             public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, LabelPane cell)
             {
-                return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
+                return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex))
+                    && cellAt(tableDisplay.getPosition().offsetByRowCols(cellPosition.rowIndex, cellPosition.columnIndex)) != null;
             }
         });
         virtualGrid.addSelectionListener((oldSel, newSel) -> {

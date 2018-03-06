@@ -89,7 +89,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                             posToCheck.rowIndex <= rowBounds.lastItemIncl &&
                             posToCheck.columnIndex >= columnBounds.firstItemIncl &&
                             posToCheck.columnIndex <= columnBounds.lastItemIncl &&
-                            gridAreas.values().stream().anyMatch(a -> a.cellAt(posToCheck) != null);
+                            vis.getValue().originator.cellAt(posToCheck) != null;
             if (!shouldBeVisible)
             {
                 spareItems.add(vis.getValue().node);

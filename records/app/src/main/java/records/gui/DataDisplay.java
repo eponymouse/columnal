@@ -20,7 +20,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -208,12 +207,13 @@ public abstract class DataDisplay extends GridArea
     }
 
     @OnThread(Tag.FXPlatform)
-    public void setColumnsAndRows(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
+    public void setColumns(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
     {
         // Remove old columns:
         columnHeaderItems.forEach(floatingItems::removeItem);
         columnHeaderItems.clear();
-        this.displayColumns = columns;
+        this.displayColumns = columns;        
+        
         for (int i = 0; i < columns.size(); i++)
         {
             final int columnIndex = i;
@@ -500,14 +500,8 @@ public abstract class DataDisplay extends GridArea
         {
             return new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits);
         }
-        //else if (cellPosition.rowIndex == us.rowIndex + 1)
-        {
-            // Column name
-            return new ColumnHeaderItemSelection(cellPosition);
-        }
-
-        // If in expand arrows, no selection to be done (although should we trigger here?)
-        //return null;
+        // Column name or expand arrow
+        return new SingleCellSelection(cellPosition);
     }
 
     private class DestRectangleOverlay extends RectangleOverlayItem
@@ -558,11 +552,11 @@ public abstract class DataDisplay extends GridArea
         }
     }
 
-    private class ColumnHeaderItemSelection implements CellSelection
+    private class SingleCellSelection implements CellSelection
     {
         private final CellPosition pos;
 
-        public ColumnHeaderItemSelection(CellPosition cellPosition)
+        public SingleCellSelection(CellPosition cellPosition)
         {
             this.pos = cellPosition;
         }
