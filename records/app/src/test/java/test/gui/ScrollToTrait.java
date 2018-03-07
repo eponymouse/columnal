@@ -98,5 +98,7 @@ public interface ScrollToTrait extends FxRobotInterface
         {
             push(KeyCode.RIGHT);
         }
+        // Wait for smooth scroll to finish:
+        TestUtil.sleep(300);
     }
 }
