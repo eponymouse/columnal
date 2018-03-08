@@ -11,6 +11,7 @@ import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.DataSource.LoadedFormat;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -124,24 +125,32 @@ public class ClipboardUtils
                 }
             });
             b.end().t(MainLexer.FORMAT).nl();
+            StringBuilder plainText = new StringBuilder();
             FXUtility.alertOnError_(() -> {
                 b.t(MainLexer.VALUES).begin().nl();
                 RowRange rowRange = rowRangeSupplier.get();
                 for (int i = rowRange.startRowIncl; i <= rowRange.endRowIncl; i++)
                 {
                     b.indent();
+                    boolean firstValueInRow = true;
                     for (Pair<ColumnId, DataTypeValue> c : columns)
+                    {
                         b.data(c.getSecond(), i);
+                        if (!firstValueInRow)
+                            plainText.append("\t");
+                        plainText.append(DataTypeUtility.valueToString(c.getSecond(), c.getSecond().getCollapsed(i), null));
+                        firstValueInRow = false;
+                    }
+                    if (i < rowRange.endRowIncl)
+                        plainText.append("\n");
                     b.nl();
                 }
             });
             b.end().t(MainLexer.VALUES).nl();
             String str = b.toString();
-            // TODO also copy a text version which will paste into Excel (and Word?)
             Map<DataFormat, Object> copyData = new HashMap<>();
             copyData.put(DATA_FORMAT, str);
-            // For debugging:
-            copyData.put(DataFormat.PLAIN_TEXT, str);
+            copyData.put(DataFormat.PLAIN_TEXT, plainText.toString());
             System.out.println("Copying: {{{\n" + str + "\n}}}");
             Platform.runLater(() -> Clipboard.getSystemClipboard().setContent(copyData));
         });
