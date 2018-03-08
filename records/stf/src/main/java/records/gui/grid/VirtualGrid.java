@@ -522,6 +522,7 @@ public class VirtualGrid implements ScrollBindable
         }
         renderYOffset = extraPixelsToShowBefore;
         ScrollResult logicalPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollBy);
+        int oldRowIndex = logicalScrollRowIndex;
         logicalScrollRowIndex = logicalPos.row;
         logicalScrollRowOffset = logicalPos.offset;
         ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollClampY(-extraPixelsToShowBefore));
@@ -531,6 +532,9 @@ public class VirtualGrid implements ScrollBindable
         
         updateVBar();
         
+        // May need to adjust our visible row count if we scrolled down:
+        if (extraPixelsToShowAfter > 0 || logicalScrollRowIndex > oldRowIndex)
+            updateSizeAndPositions();
         container.redoLayout();
     }
 
