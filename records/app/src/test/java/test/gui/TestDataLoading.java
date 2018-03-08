@@ -76,7 +76,7 @@ public class TestDataLoading extends ApplicationTest implements ScrollToTrait
             keyboardMoveTo(virtualGrid, TestUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay())).getMostRecentPosition().offsetByRowCols(row + 3, column));
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
-            push(KeyCode.COPY);
+            push(KeyCode.CONTROL, KeyCode.C);
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             String valueFromData = DataTypeUtility.valueToString(columnDTV, columnDTV.getCollapsed(row), null);
