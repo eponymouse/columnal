@@ -17,9 +17,6 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.units.qual.UnitsBottom;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
@@ -50,19 +47,13 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
-import utility.gui.FXUtility;
 
-import java.awt.Toolkit;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -197,8 +188,8 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         TestUtil.sleep(500);
         
         // Check neither table moved:
-        assertEquals(originalTableTopLeft, TestUtil.checkNonNull(tableManager.getSingleTableOrThrow(srcId).getDisplay()).getMostRecentPosition());
-        assertEquals(transformTopLeft, TestUtil.checkNonNull(tableManager.getSingleTableOrThrow(new TableId("Sorted")).getDisplay()).getMostRecentPosition());
+        assertEquals(originalTableTopLeft, TestUtil.tablePosition(tableManager, srcId));
+        assertEquals(transformTopLeft, TestUtil.tablePosition(tableManager, new TableId("Sorted")));
         
         for (Table table : tableManager.getAllTables())
         {
@@ -212,7 +203,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             assertEquals(DataType.toInfer(), columns.get(2).getType());
         }
     }
-    
+
     @Property(trials=4)
     public void testAddColumnBeforeAfter(int positionIndicator) throws InternalException, UserException
     {

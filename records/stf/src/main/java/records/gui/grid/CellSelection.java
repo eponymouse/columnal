@@ -16,6 +16,9 @@ import utility.Either;
 @OnThread(Tag.FXPlatform)
 public interface CellSelection
 {
+    // Copy the value of the selection to the clipboard, if that operation makes sense.
+    public void doCopy();
+
     // Primary selection means the single cell/row/column being moved around,
     // secondary selection means cells that are also selected but not primary.
     public static enum SelectionStatus { UNSELECTED, SECONDARY_SELECTION, PRIMARY_SELECTION}

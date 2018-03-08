@@ -46,6 +46,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataDisplay;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.ColumnDetails;
@@ -136,6 +137,11 @@ public class TestStructuredTextField extends ApplicationTest
 
             @Override
             public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            {
+            }
+
+            @Override
+            protected void doCopy(@Nullable RectangleBounds dataBounds)
             {
             }
         };

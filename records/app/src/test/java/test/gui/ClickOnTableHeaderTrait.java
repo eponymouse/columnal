@@ -22,8 +22,7 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
     @OnThread(Tag.Any)
     public default void clickOnTableHeader(VirtualGrid virtualGrid, TableManager tableManager, TableId id, MouseButton... buttons) throws UserException
     {
-        @NonNull TableDisplayBase display = TestUtil.checkNonNull(TestUtil.<@Nullable TableDisplayBase>fx(() -> tableManager.getSingleTableOrThrow(id).getDisplay()));
-        keyboardMoveTo(virtualGrid, display.getMostRecentPosition());
+        keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager, id));
         
         Node tableNameField = lookup(".table-display-table-title .table-name-text-field")
             .match(t -> TestUtil.fx(() -> ((TextField) t).getText().equals(id.getRaw())))

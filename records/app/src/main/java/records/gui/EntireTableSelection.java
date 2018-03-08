@@ -21,6 +21,12 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
+    public void doCopy()
+    {
+        selected.doCopy(null);
+    }
+
+    @Override
     public CellSelection atHome(boolean extendSelection)
     {
         return this;

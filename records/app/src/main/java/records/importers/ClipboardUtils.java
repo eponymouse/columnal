@@ -1,17 +1,17 @@
 package records.importers;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.DataSource.LoadedFormat;
-import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -24,6 +24,7 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -85,9 +86,21 @@ public class ClipboardUtils
         });
         return cols;
     }
+    
+    public static class RowRange
+    {
+        private final @TableDataRowIndex int startRowIncl;
+        private final @TableDataRowIndex int endRowIncl;
+
+        public RowRange(@TableDataRowIndex int startRowIncl, @TableDataRowIndex int endRowIncl)
+        {
+            this.startRowIncl = startRowIncl;
+            this.endRowIncl = endRowIncl;
+        }
+    }
 
     @OnThread(Tag.FXPlatform)
-    public static void copyValuesToClipboard(UnitManager unitManager, TypeManager typeManager, List<Column> columns)
+    public static void copyValuesToClipboard(UnitManager unitManager, TypeManager typeManager, List<Pair<ColumnId, DataTypeValue>> columns, SimulationSupplier<RowRange> rowRangeSupplier)
     {
         if (columns.isEmpty())
             return;
@@ -103,22 +116,22 @@ public class ClipboardUtils
             b.t(MainLexer.FORMAT).begin().nl();
             FXUtility.alertOnError_(() ->
             {
-                for (Column c : columns)
+                for (Pair<ColumnId, DataTypeValue> c : columns)
                 {
-                    b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getName());
-                    c.getType().save(b);
+                    b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getFirst());
+                    c.getSecond().save(b);
                     b.nl();
                 }
             });
             b.end().t(MainLexer.FORMAT).nl();
-            RecordSet data = columns.get(0).getRecordSet();
             FXUtility.alertOnError_(() -> {
                 b.t(MainLexer.VALUES).begin().nl();
-                for (int i = 0; data.indexValid(i); i++)
+                RowRange rowRange = rowRangeSupplier.get();
+                for (int i = rowRange.startRowIncl; i <= rowRange.endRowIncl; i++)
                 {
                     b.indent();
-                    for (Column c : data.getColumns())
-                        b.data(c.getType(), i);
+                    for (Pair<ColumnId, DataTypeValue> c : columns)
+                        b.data(c.getSecond(), i);
                     b.nl();
                 }
             });

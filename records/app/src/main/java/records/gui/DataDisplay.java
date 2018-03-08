@@ -198,6 +198,12 @@ public abstract class DataDisplay extends GridArea
             {
                 return getDataDisplayBottomRightIncl().from(getPosition());
             }
+
+            @Override
+            public void doCopy(CellPosition topLeftIncl, CellPosition bottomRightIncl)
+            {
+                DataDisplay.this.doCopy(new RectangleBounds(topLeftIncl, bottomRightIncl));
+            }
         };
     }
 
@@ -604,5 +610,19 @@ public abstract class DataDisplay extends GridArea
         {
             return false;
         }
+
+        @Override
+        public void doCopy()
+        {
+            DataDisplay.this.doCopy(new RectangleBounds(pos, pos));
+        }
     }
+
+    /**
+     * Copies the given region to clipboard, if possible.
+     * 
+     * @param dataBounds The bounds of the data region.  May extend beyond the actual data display
+     *                   portion.  If null, copy all data, including that which is not loaded yet.
+     */
+    protected abstract void doCopy(@Nullable RectangleBounds dataBounds);
 }

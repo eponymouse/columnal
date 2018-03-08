@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
@@ -72,6 +73,13 @@ public class ImporterUtility
                             s = "<Missing>";
                         }
                         withValue.consume(s);
+                    }
+
+                    @OnThread(Tag.Simulation)
+                    @Override
+                    public @Value Object getValue(int rowIndex) throws InternalException, UserException
+                    {
+                        return vals.get(rowIndex).get(columnIndexFinal);
                     }
                 }));
             }

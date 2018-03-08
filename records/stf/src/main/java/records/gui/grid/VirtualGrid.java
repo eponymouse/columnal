@@ -25,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -909,6 +910,12 @@ public class VirtualGrid implements ScrollBindable
                     bindS(KeyCode.RIGHT, (shift, c) -> c.move(shift, 0, 1)),
                     bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
                     bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, (int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
+                    InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.COPY), EventPattern.keyPressed(KeyCode.C, KeyCombination.SHORTCUT_DOWN)), e -> {
+                        @Nullable CellSelection focusedCellPosition = selection.get();
+                        if (focusedCellPosition != null)
+                            focusedCellPosition.doCopy();
+                        e.consume();
+                    }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
                         @Nullable CellSelection focusedCellPosition = selection.get();
                         if (focusedCellPosition != null)
@@ -1326,6 +1333,12 @@ public class VirtualGrid implements ScrollBindable
         public EmptyCellSelection(CellPosition position)
         {
             this.position = position;
+        }
+
+        @Override
+        public void doCopy()
+        {
+            // Can't copy an empty cell
         }
 
         @Override

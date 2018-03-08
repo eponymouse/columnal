@@ -73,7 +73,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
 
     // TODO this test seems to cause later tests to fail
     @Property(trials = 10)
-    public void testEntry(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws InterruptedException, ExecutionException, InternalException, IOException, UserException, InvocationTargetException
+    public void testEntry(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
         try

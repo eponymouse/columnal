@@ -824,7 +824,7 @@ public class TestUtil
      * @throws InvocationTargetException
      */
     @OnThread(Tag.Simulation)
-    public static Supplier<Pair<TableManager, VirtualGrid>> openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
+    public static Supplier<Pair<TableManager, VirtualGrid>> openDataAsTable(Stage windowToUse, TableManager mgr) throws Exception
     {
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
@@ -860,7 +860,7 @@ public class TestUtil
     }*/
 
     @OnThread(Tag.Simulation)
-    public static TableManager openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
+    public static TableManager openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
     {
         TableManager manager = new DummyManager();
         Table t = new ImmediateDataSource(manager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), new EditableRecordSet(data));
@@ -1084,6 +1084,13 @@ public class TestUtil
     {
         assertNotNull(t);
         return t;
+    }
+
+    public @OnThread(Tag.Any)
+    static CellPosition tablePosition(TableManager tableManager, TableId srcId) throws UserException
+    {
+        Table table = tableManager.getSingleTableOrThrow(srcId);
+        return checkNonNull(fx(() -> table.getDisplay())).getMostRecentPosition();
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

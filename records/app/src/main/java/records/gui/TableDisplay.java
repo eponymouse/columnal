@@ -47,6 +47,7 @@ import records.data.TableOperations.RenameTable;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.CellStyle;
@@ -66,6 +67,7 @@ import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
+import records.importers.ClipboardUtils.RowRange;
 import records.transformations.HideColumnsPanel;
 import records.transformations.SummaryStatistics;
 import records.transformations.TransformationEditable;
@@ -81,6 +83,7 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -335,6 +338,42 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
+    protected void doCopy(@Nullable RectangleBounds bounds)
+    {
+        int firstColumn = bounds == null ? 0 : Math.max(0, bounds.topLeftIncl.columnIndex - getPosition().columnIndex);
+        if (firstColumn >= displayColumns.size())
+            return; // No valid data to copy
+        int lastColumnIncl = bounds == null ? displayColumns.size() - 1 : Math.min(displayColumns.size() - 1, bounds.bottomRightIncl.columnIndex - getPosition().columnIndex);
+        if (lastColumnIncl < firstColumn)
+            return; // No valid data range to copy
+
+        final SimulationSupplier<RowRange> calcRowRange;
+        if (bounds == null)
+        {
+            calcRowRange = new CompleteRowRangeSupplier();
+        }
+        else
+        {
+            @SuppressWarnings("units")
+            @TableDataRowIndex int firstRowIncl = Math.max(0, bounds.topLeftIncl.rowIndex - (getPosition().rowIndex + HEADER_ROWS));
+            @SuppressWarnings("units")
+            @TableDataRowIndex int lastRowIncl = Math.min(getBottomRightIncl().rowIndex, bounds.bottomRightIncl.rowIndex) - (getPosition().rowIndex + HEADER_ROWS);
+            calcRowRange = () -> new RowRange(firstRowIncl, lastRowIncl);
+        }
+        
+        try
+        {
+            List<Pair<ColumnId, DataTypeValue>> columns = Utility.mapListEx(displayColumns.subList(firstColumn, lastColumnIncl + 1), c -> new Pair<>(c.getColumnId(), c.getColumnType().fromCollapsed((i, prog) -> c.getColumnHandler().getValue(i))));
+
+            ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), columns, calcRowRange);
+        }
+        catch (UserException | InternalException e)
+        {
+            Log.log(e);
+        }
+    }
+
+    @Override
     public void setPosition(CellPosition cellPosition)
     {
         super.setPosition(cellPosition);
@@ -522,7 +561,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
             ),
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
-            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns()))),
+            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier()))),
             GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
                 File file = FXUtility.getFileSaveAs(parent);
                 if (file != null)
@@ -717,8 +756,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         if (insertRows != null)
         {
             @NonNull InsertRows insertRowsFinal = insertRows;
-            contextMenu.getItems().add(
-                GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row, 1)))
+            @SuppressWarnings("units")
+            @TableDataRowIndex final int ONE = 1;
+            contextMenu.getItems().addAll(
+                GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row, 1))),
+                GUI.menuItem("virtGrid.row.insertAfter", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row + ONE, 1)))
             );
         }
         @Nullable DeleteRows deleteRows = table.getOperations().deleteRows;
@@ -762,5 +804,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         @OnThread(Tag.FXPlatform)
         public void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit);
+    }
+
+    private class CompleteRowRangeSupplier implements SimulationSupplier<RowRange>
+    {
+        @SuppressWarnings("units")
+        @OnThread(Tag.Simulation)
+        @Override
+        public RowRange get() throws InternalException, UserException
+        {
+            return new RowRange(0, recordSetOrError.<Integer>eitherEx(err -> 0, rs -> rs.getLength()));
+        }
     }
 }

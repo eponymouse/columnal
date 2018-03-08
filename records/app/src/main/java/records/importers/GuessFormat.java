@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultiset;
@@ -36,6 +37,7 @@ import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -727,6 +729,13 @@ public class GuessFormat
                 public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                 {
                     // TODO
+                }
+
+                @Override
+                public @OnThread(Tag.Simulation) @Value Object getValue(int index) throws InternalException, UserException
+                {
+                    //TODO
+                    return DataTypeUtility.value("");
                 }
 
                 @Override

@@ -124,6 +124,12 @@ public class TableDisplayUtility
                         {
                             return false;
                         }
+
+                        @Override
+                        public @OnThread(Tag.Simulation) @Value Object getValue(int index) throws InternalException, UserException
+                        {
+                            throw new UserException("No values");
+                        }
                     });
                 }
                 r.add(item);

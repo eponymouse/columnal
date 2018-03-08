@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import org.jetbrains.annotations.NotNull;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -35,6 +36,12 @@ public class RectangularTableCellSelection implements CellSelection
         this.startAnchor = anchor;
         this.curFocus = focus;
         this.tableSelectionLimits = tableSelectionLimits;
+    }
+
+    @Override
+    public void doCopy()
+    {
+        tableSelectionLimits.doCopy(calcTopLeftIncl(), calcBottomRightIncl());
     }
 
     @Override
@@ -85,14 +92,26 @@ public class RectangularTableCellSelection implements CellSelection
     public RectangleBounds getSelectionDisplayRectangle()
     {
         return new RectangleBounds(
-            new CellPosition(
-                Utility.minRow(startAnchor.rowIndex, curFocus.rowIndex),
-                Utility.minCol(startAnchor.columnIndex, curFocus.columnIndex)
-            ),
-            new CellPosition(
-                Utility.maxRow(startAnchor.rowIndex, curFocus.rowIndex),
-                Utility.maxCol(startAnchor.columnIndex, curFocus.columnIndex)
-            )
+                calcTopLeftIncl(),
+                calcBottomRightIncl()
+        );
+    }
+
+    @NotNull
+    public CellPosition calcBottomRightIncl()
+    {
+        return new CellPosition(
+            Utility.maxRow(startAnchor.rowIndex, curFocus.rowIndex),
+            Utility.maxCol(startAnchor.columnIndex, curFocus.columnIndex)
+        );
+    }
+
+    @NotNull
+    public CellPosition calcTopLeftIncl()
+    {
+        return new CellPosition(
+            Utility.minRow(startAnchor.rowIndex, curFocus.rowIndex),
+            Utility.minCol(startAnchor.columnIndex, curFocus.columnIndex)
         );
     }
 
@@ -142,5 +161,7 @@ public class RectangularTableCellSelection implements CellSelection
     {
         public CellPosition getTopLeftIncl();
         public CellPosition getBottomRightIncl();
+        
+        public void doCopy(CellPosition topLeftIncl, CellPosition bottomRightIncl);
     }
 }

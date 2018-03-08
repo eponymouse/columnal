@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.cache.Cache;
@@ -144,6 +145,12 @@ public final class EditorKitCache<V> implements ColumnHandler
             setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel<>(e.getLocalizedMessage()));
         }
         formatVisible(OptionalInt.of(rowIndex));
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) @Value Object getValue(int index) throws InternalException, UserException
+    {
+        return getValue.getWithProgress(index, null);
     }
 
     @Override

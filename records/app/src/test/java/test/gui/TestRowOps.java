@@ -101,7 +101,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     @OnThread(Tag.Simulation)
     public void propTestDeleteRow(
         @When(seed=1L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
-        @When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
@@ -125,7 +125,6 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         @SuppressWarnings("units")
         @TableDataRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
-        scrollToRow(calculated.getId(), randomRow);
         scrollToRow(srcData.getId(), randomRow);
         rightClickRowLabel(srcData.getId(), randomRow);
         clickOn(".id-virtGrid-row-delete");
@@ -208,7 +207,6 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         if (targetNewRow < srcLength && (targetNewRow == 0 || r.nextBoolean()))
         {
             // Let's do insert-before to get the new row
-            scrollToRow(calculated.getId(), targetNewRow);
             scrollToRow(srcData.getId(), targetNewRow);
             rightClickRowLabel(srcData.getId(), targetNewRow);
             clickOn(".id-virtGrid-row-insertBefore");
@@ -218,7 +216,6 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         {
             // Insert-after:
             @TableDataRowIndex int beforeTargetRow = targetNewRow - ONE_ROW;
-            scrollToRow(calculated.getId(), beforeTargetRow);
             scrollToRow(srcData.getId(), beforeTargetRow);
             rightClickRowLabel(srcData.getId(), beforeTargetRow);
             clickOn(".id-virtGrid-row-insertAfter");
@@ -393,8 +390,9 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     @OnThread(Tag.Any)
     private @Nullable Node findRowLabel(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
-        // Click on table header to make row labels visible:
-        clickOnTableHeader(virtualGrid, tableManager, id);
+        // Move to first cell in that row, which will make row labels visible
+        // and ensure we are at correct Y position
+        keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager,id).offsetByRowCols(3 + targetRow, 0));
         return lookup(".virt-grid-row-label-pane").match(Node::isVisible)
             .lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> ((Label)l).getText().trim().equals(Integer.toString(1 + targetRow)))).query();
     }
@@ -407,23 +405,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     }
 
     @OnThread(Tag.Any)
-    private void scrollToRow(TableId id, @TableDataRowIndex int targetRow)
+    private void scrollToRow(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
-        /* TODO
-        Node cell = from(TestUtil.fx(() -> virtualGrid.getNode())).lookup(".virt-grid-cell").<Node>query();
-        if (cell != null)
-            clickOn(cell);
-        // Avoid infinite loop in case of test failure -- limit amount of scrolls:
-        for (int scrolls = 0; targetRow < TestUtil.fx(() -> virtualGrid._test_getFirstLogicalVisibleRowIncl()) && scrolls < targetRow; scrolls++)
-        {
-            push(KeyCode.PAGE_UP);
-        }
-        for (int scrolls = 0; targetRow >= TestUtil.fx(() -> virtualGrid._test_getLastLogicalVisibleRowExcl()) && scrolls < targetRow; scrolls++)
-        {
-            push(KeyCode.PAGE_DOWN);
-        }
-        // Wait for animated scroll to finish:
-        TestUtil.delay(500);
-        */
+        keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager, id).offsetByRowCols(targetRow + 3, 0));
     }
 }

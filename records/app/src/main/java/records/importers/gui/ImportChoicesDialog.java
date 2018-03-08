@@ -46,6 +46,7 @@ import records.error.UserException;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.ColumnDetails;
@@ -429,6 +430,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 });
             }
         }
+
+        @Override
+        protected void doCopy(@Nullable RectangleBounds rectangleBounds)
+        {
+            // We don't currently support copy on this table
+        }
     }
 
     private static class SrcDataDisplay extends DataDisplay
@@ -448,6 +455,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             @SuppressWarnings("units")
             @TableDataRowIndex int zero = 0;
             currentKnownRows = sourceInfo == null ? zero : sourceInfo.numRows;
+        }
+
+        @Override
+        protected void doCopy(@Nullable RectangleBounds rectangleBounds)
+        {
+            // We don't currently support copy on this table
         }
     }
 }

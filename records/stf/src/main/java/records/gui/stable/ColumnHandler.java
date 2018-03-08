@@ -1,8 +1,11 @@
 package records.gui.stable;
 
+import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import records.data.CellPosition;
 import records.data.RecordSet.RecordSetListener;
+import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -33,4 +36,8 @@ public interface ColumnHandler extends RecordSetListener
 
     // Is this column value currently being edited?
     //public boolean editHasFocus(int rowIndex);
+    
+    // Used for doing a copy-to-clipboard of table content:
+    @OnThread(Tag.Simulation)
+    public @Value Object getValue(int index) throws InternalException, UserException;
 }
