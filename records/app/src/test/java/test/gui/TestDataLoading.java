@@ -72,7 +72,10 @@ public class TestDataLoading extends ApplicationTest implements ScrollToTrait
             Table table = allTables.get(r.nextInt(allTables.size()));
             // Random location in table:
             int column = r.nextInt(table.getData().getColumns().size());
-            int row = r.nextInt(table.getData().getLength());
+            int tableLen = table.getData().getLength();
+            if (tableLen == 0)
+                continue;
+            int row = r.nextInt(tableLen);
             keyboardMoveTo(virtualGrid, TestUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay())).getMostRecentPosition().offsetByRowCols(row + 3, column));
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
