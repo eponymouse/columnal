@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
@@ -87,6 +88,8 @@ public interface ScrollToTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default void keyboardMoveTo(VirtualGrid virtualGrid, CellPosition target)
     {
+        Log.debug("Moving to position " + target);
+        
         push(KeyCode.CONTROL, KeyCode.HOME);
         // First go to correct row:
         for (int i = 0; i < target.rowIndex; i++)

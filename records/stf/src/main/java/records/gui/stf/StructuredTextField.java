@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -110,7 +111,7 @@ public final class StructuredTextField extends StyleClassedTextArea
         });
 
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
-            //Utility.logStackTrace("Selection now: " + sel);
+            //Log.logStackTrace("Selection now: " + sel);
             StructuredTextField us = FXUtility.mouse(this);
             if (!inSuperReplace && editorKit != null)
             {

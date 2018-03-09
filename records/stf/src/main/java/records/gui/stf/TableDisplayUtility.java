@@ -33,6 +33,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
+import records.gui.stable.EditorKitCache.MakeEditorKit;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stable.ColumnDetails;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -67,7 +68,7 @@ import java.util.function.Predicate;
 public class TableDisplayUtility
 {
 
-    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformFunction<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, FXPlatformSupplier<CellPosition> getTablePos, @Nullable FXPlatformRunnable onModify)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformFunction<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
         @TableDataColIndex int displayColumnIndex = displayCol(0);
@@ -139,7 +140,7 @@ public class TableDisplayUtility
         return r.build();
     }
 
-    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
         return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
             @Override
@@ -326,7 +327,13 @@ public class TableDisplayUtility
         @OnThread(Tag.FXPlatform)
         public Component<T> makeComponent(ImmutableList<Component<?>> parents, T value) throws InternalException, UserException;
     }
-
+    
+    public interface GetDataPosition
+    {
+        @OnThread(Tag.FXPlatform)
+        public CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex);
+    }
+    
     public static class GetValueAndComponent<T>
     {
         public final GetValue<T> g;
@@ -337,20 +344,24 @@ public class TableDisplayUtility
             this.g = g;
             this.makeComponent = makeComponent;
         }
-
-        public EditorKitCache<T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify)
+        
+        public EditorKitCache<T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
-            return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value, relinquishFocus) -> {
-                return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {
+            MakeEditorKit<T> makeEditorKit = (rowIndex, value, relinquishFocus) -> {
+                FXPlatformConsumer<Pair<String, T>> saveChange = isEditable ? (Pair<String, T> p) -> {
                     Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
-                    onModify.run();} : null, () -> relinquishFocus.consume(getTablePos.get().offsetByRowCols(rowIndex, columnIndex)), stfStyles);
-            });
+                    onModify.run();
+                } : null;
+                FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
+                return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
+            };
+            return new EditorKitCache<T>(columnIndex, g, vis -> {}, makeEditorKit);
         }
     }
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, FXPlatformSupplier<CellPosition> getTablePos, FXPlatformRunnable onModify) throws InternalException
+    public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
         return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), getTablePos, onModify);
     }

@@ -273,7 +273,7 @@ public class TestStructuredTextField extends ApplicationTest
             {
                 @SuppressWarnings("units")
                 @TableDataColIndex int col = 0;
-                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> CellPosition.ORIGIN, () -> {});
+                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, (r, c) -> CellPosition.ORIGIN, () -> {});
                 dataDisplay.setColumns(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
                 //stableView.loadColumnWidths(new double[]{600.0});
             }
