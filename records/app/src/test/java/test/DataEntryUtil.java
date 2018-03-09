@@ -25,26 +25,31 @@ import java.util.Random;
 
 public class DataEntryUtil
 {
+    private static final int DELAY = 5;
+
     @OnThread(Tag.Simulation)
     public static void enterValue(FxRobotInterface robot, Random random, DataType dataType, @Value Object value, boolean nested) throws UserException, InternalException
     {
-        robot.push(TestUtil.ctrlCmd(), KeyCode.A);
-        robot.push(KeyCode.DELETE);
-        robot.push(KeyCode.HOME);
+        if (!nested)
+        {
+            robot.push(TestUtil.ctrlCmd(), KeyCode.A);
+            robot.push(KeyCode.DELETE);
+            robot.push(KeyCode.HOME);
+        }
         dataType.apply(new DataTypeVisitor<UnitType>()
         {
             @Override
             public UnitType number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 String num = Utility.toBigDecimal(Utility.cast(value, Number.class)).toPlainString();
-                robot.write(num);
+                robot.write(num, DELAY);
                 return UnitType.UNIT;
             }
 
             @Override
             public UnitType text() throws InternalException, UserException
             {
-                robot.write("\"" + Utility.cast(value, String.class) + (nested || random.nextBoolean() ? "\"" : ""));
+                robot.write("\"" + Utility.cast(value, String.class) + (nested || random.nextBoolean() ? "\"" : ""), DELAY);
                 return UnitType.UNIT;
             }
 
@@ -58,7 +63,7 @@ public class DataEntryUtil
             @Override
             public UnitType bool() throws InternalException, UserException
             {
-                robot.write(Boolean.toString(Utility.cast(value, Boolean.class)));
+                robot.write(Boolean.toString(Utility.cast(value, Boolean.class)), DELAY);
                 return UnitType.UNIT;
             }
 
