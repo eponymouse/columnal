@@ -253,9 +253,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
 
     private void deleteAll()
     {
-        press(KeyCode.END);
+        push(KeyCode.END);
         // TODO: ain't gonna work on Mac
-        press(KeyCode.CONTROL, KeyCode.A);
-        press(KeyCode.DELETE);
+        push(KeyCode.CONTROL, KeyCode.A);
+        push(KeyCode.DELETE);
     }
 }

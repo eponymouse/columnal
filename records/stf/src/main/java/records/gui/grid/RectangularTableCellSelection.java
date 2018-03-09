@@ -45,6 +45,12 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
+    public CellPosition getActivateTarget()
+    {
+        return curFocus;
+    }
+
+    @Override
     public CellSelection atHome(boolean extendSelection)
     {
         CellPosition dest = new CellPosition(tableSelectionLimits.getTopLeftIncl().rowIndex, curFocus.columnIndex);

@@ -15,6 +15,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -1091,6 +1092,11 @@ public class TestUtil
     {
         Table table = tableManager.getSingleTableOrThrow(srcId);
         return checkNonNull(fx(() -> table.getDisplay())).getMostRecentPosition();
+    }
+
+    public static KeyCode ctrlCmd()
+    {
+        return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

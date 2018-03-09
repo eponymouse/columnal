@@ -616,6 +616,12 @@ public abstract class DataDisplay extends GridArea
         {
             DataDisplay.this.doCopy(new RectangleBounds(pos, pos));
         }
+
+        @Override
+        public CellPosition getActivateTarget()
+        {
+            return pos;
+        }
     }
 
     /**

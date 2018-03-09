@@ -641,7 +641,7 @@ public class TestStructuredTextField extends ApplicationTest
         if (SystemUtils.IS_OS_MAC_OSX)
             fx_(() -> f.get().selectAll());
         else
-            push(ctrlCmd(), KeyCode.A);
+            push(TestUtil.ctrlCmd(), KeyCode.A);
     }
 
     public void targetF()
@@ -1202,11 +1202,6 @@ public class TestStructuredTextField extends ApplicationTest
         assertNotNull(lookup(".invalid-data-input-popup .invalid-data-fix").<Label>queryAll().stream().map(l -> l.getText()).collect(Collectors.joining(" | ")),fix);
         clickOn(fix);
         type("", suggestedFix + "$");
-    }
-
-    private KeyCode ctrlCmd()
-    {
-        return SystemUtils.IS_OS_MAC_OSX ? KeyCode.SHORTCUT : KeyCode.CONTROL;
     }
 
     private void type(String entry, String expected)

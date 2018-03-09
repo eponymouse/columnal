@@ -27,6 +27,12 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
+    public CellPosition getActivateTarget()
+    {
+        return selected.getPosition();
+    }
+
+    @Override
     public CellSelection atHome(boolean extendSelection)
     {
         return this;

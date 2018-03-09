@@ -44,15 +44,22 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
     }
 
     @Override
-    protected void startEditing(Point2D screenPosition, CellPosition cellPosition)
+    protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition)
     {
         @Nullable StructuredTextField stf = getItemAt(cellPosition);
         if (stf != null)
         {
             stf.requestFocus();
-            Point2D localPos = stf.screenToLocal(screenPosition);
-            CharacterHit hit = stf.hit(localPos.getX(), localPos.getY());
-            stf.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+            if (screenPosition != null)
+            {
+                Point2D localPos = stf.screenToLocal(screenPosition);
+                CharacterHit hit = stf.hit(localPos.getX(), localPos.getY());
+                stf.moveTo(hit.getInsertionIndex(), SelectionPolicy.CLEAR);
+            }
+            else
+            {
+                stf.selectRange(0, 0);
+            }
         }
     }
     

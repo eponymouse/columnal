@@ -914,25 +914,25 @@ public class VirtualGrid implements ScrollBindable
                     bindS(KeyCode.RIGHT, (shift, c) -> c.move(shift, 0, 1)),
                     bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
                     bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, (int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
-                    InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.COPY), EventPattern.keyPressed(KeyCode.C, KeyCombination.SHORTCUT_DOWN)), e -> {
+                    InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.F11), EventPattern.keyPressed(KeyCode.C, KeyCombination.SHORTCUT_DOWN)), e -> {
                         @Nullable CellSelection focusedCellPosition = selection.get();
                         if (focusedCellPosition != null)
                             focusedCellPosition.doCopy();
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                        @Nullable CellSelection focusedCellPosition = selection.get();
-                        if (focusedCellPosition != null)
+                        @Nullable CellSelection sel = selection.get();
+                        if (sel != null)
                         {
-                            activateCell(focusedCellPosition);
+                            activateCell(sel.getActivateTarget());
                         }
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.SPACE), e -> {
-                        @Nullable CellSelection focusedCellPosition = selection.get();
-                        if (focusedCellPosition != null)
+                        @Nullable CellSelection sel = selection.get();
+                        if (sel != null)
                         {
-                            activateCell(focusedCellPosition);
+                            activateCell(sel.getActivateTarget());
                         }
                         e.consume();
                     })
@@ -1207,9 +1207,12 @@ public class VirtualGrid implements ScrollBindable
         return overlap;
     }
 
-    private void activateCell(@Nullable CellSelection cellPosition)
+    private void activateCell(CellPosition cellPosition)
     {
-        // TODO
+        for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+        {
+            nodeSupplier.startEditing(null, cellPosition);
+        }
     }
 
     private Bounds getPixelPosition(CellPosition target)
@@ -1343,6 +1346,12 @@ public class VirtualGrid implements ScrollBindable
         public void doCopy()
         {
             // Can't copy an empty cell
+        }
+
+        @Override
+        public CellPosition getActivateTarget()
+        {
+            return position;
         }
 
         @Override

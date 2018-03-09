@@ -8,7 +8,8 @@ import records.error.UserException;
 import test.TestUtil;
 
 /**
- * Created by neil on 07/02/2017.
+ * Generates a value of any type (decided by randomness,
+ * not by caller)
  */
 public class GenValueAnyType extends GenValueBase<@Value Object>
 {
