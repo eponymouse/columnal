@@ -293,7 +293,7 @@ public class Sort extends TransformationEditable
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, "Sort rows", "preview-sort.png", Collections.emptyList());
+            super(NAME, "Sort rows", "preview-sort.png", "sort.explanation.short",Collections.emptyList());
         }
 
         @Override

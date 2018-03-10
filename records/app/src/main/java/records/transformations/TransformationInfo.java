@@ -1,5 +1,6 @@
 package records.transformations;
 
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.Table.InitialLoadDetails;
@@ -36,14 +37,20 @@ public abstract class TransformationInfo
      */
     protected final List<String> keywords;
 
+    /**
+     * The key for the text explaining this transformation
+     */
+    private final @LocalizableKey String explanationKey;
+
 
     @OnThread(Tag.Any)
-    public TransformationInfo(String canonicalName, String displayName, String imageFileName, List<String> keywords)
+    public TransformationInfo(String canonicalName, String displayName, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
     {
         this.canonicalName = canonicalName;
         this.displayName = displayName;
         this.imageFileName = imageFileName;
         this.keywords = keywords;
+        this.explanationKey = explanationKey;
     }
 
     public final String getCanonicalName()
@@ -79,5 +86,10 @@ public abstract class TransformationInfo
     public final boolean equals(@Nullable Object obj)
     {
         return obj instanceof TransformationInfo && obj != null && getCanonicalName().equals(((TransformationInfo)obj).getCanonicalName());
+    }
+
+    public final @LocalizableKey String getExplanationKey()
+    {
+        return explanationKey;
     }
 }

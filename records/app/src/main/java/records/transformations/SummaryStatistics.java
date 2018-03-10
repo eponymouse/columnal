@@ -319,7 +319,7 @@ public class SummaryStatistics extends TransformationEditable
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, "Aggregate", "preview-aggregate.png", Arrays.asList("min", "max"));
+            super(NAME, "Aggregate", "preview-aggregate.png", "aggregate.explanation.short",Arrays.asList("min", "max"));
         }
 
         @Override

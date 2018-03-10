@@ -662,7 +662,7 @@ public class View extends StackPane
                     blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
                     setEffect(blur);
                     choice = new DataOrTransformChoice(FXUtility.mouse(this).getWindow()).showAndWaitCentredOn(mouseScreenPos);
-                    setEffect(null);
+                    
                 }
                 if (choice.isPresent())
                 {
@@ -679,7 +679,10 @@ public class View extends StackPane
                             });
                             break;
                         case TRANSFORM:
-                            Optional<SimulationSupplier<Transformation>> optTrans = new EditTransformationDialog(FXUtility.mouse(this).getWindow(), FXUtility.mouse(View.this), null, initialLoadDetails, new Transform.Info().editNew(FXUtility.mouse(View.this), FXUtility.mouse(this).getManager(), null, null)).showAndWait();
+                            
+                            Optional<SimulationSupplier<Transformation>> optTrans =
+                                new PickTransformationDialog(FXUtility.mouse(this).getWindow()).showAndWaitCentredOn(mouseScreenPos);
+                                //new EditTransformationDialog(FXUtility.mouse(this).getWindow(), FXUtility.mouse(View.this), null, initialLoadDetails, new Transform.Info().editNew(FXUtility.mouse(View.this), FXUtility.mouse(this).getManager(), null, null)).showAndWait();
                                                         
                             optTrans.ifPresent(createTrans -> Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
                                 FXUtility.alertOnError_(() -> {
@@ -690,6 +693,7 @@ public class View extends StackPane
                             break;
                     }
                 }
+                setEffect(null);
         });
         mainPane.getNode().getStyleClass().add("main-view-grid");
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());

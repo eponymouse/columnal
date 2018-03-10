@@ -1,5 +1,6 @@
 package records.transformations;
 
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
@@ -16,9 +17,9 @@ import java.util.List;
  */
 public abstract class SingleSourceTransformationInfo extends TransformationInfo
 {
-    public SingleSourceTransformationInfo(String canonicalName, String displayName, String imageFileName, List<String> keywords)
+    public SingleSourceTransformationInfo(String canonicalName, String displayName, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
     {
-        super(canonicalName, displayName, imageFileName, keywords);
+        super(canonicalName, displayName, imageFileName, explanationKey, keywords);
     }
 
     @Override

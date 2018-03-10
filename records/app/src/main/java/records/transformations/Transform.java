@@ -252,7 +252,7 @@ public class Transform extends TransformationEditable
     {
         public Info()
         {
-            super("calculate", "Calculate", "preview-calculate.png", Arrays.asList("transform"));
+            super("calculate", "Calculate", "preview-calculate.png", "calculate.explanation.short", Arrays.asList("transform"));
         }
 
         @Override

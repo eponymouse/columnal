@@ -489,7 +489,7 @@ public class Filter extends TransformationEditable
     {
         public Info()
         {
-            super(NAME, "Filter rows", "preview-filter.png", Arrays.asList("remove", "delete"));
+            super(NAME, "Filter rows", "preview-filter.png", "filter.explanation.short", Arrays.asList("remove", "delete"));
         }
 
         @Override

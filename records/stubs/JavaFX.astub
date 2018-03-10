@@ -49,6 +49,8 @@ class Node
     void setOnMouseClicked(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
     void setOnMouseMoved(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
     void setOnMouseDragged(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
+    void setOnMouseEntered(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
+    void setOnMouseExited(@UnknownInitialization(javafx.scene.Node.class) Node this, EventHandler<? super MouseEvent> value);
 
     void setScaleX(@UnknownInitialization(javafx.scene.Node.class) Node this, double x);
 
@@ -78,6 +80,8 @@ class Node
     DoubleProperty translateYProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
 
     WritableImage snapshot(@UnknownInitialization(javafx.scene.Node.class) Node this, @Nullable SnapshotParameters params, @Nullable WritableImage image);
+    
+    void setAccessibleText(@UnknownInitialization(javafx.scene.Node.class) Node this, String value);
 }
 class Scene
 {
@@ -105,6 +109,7 @@ class Labeled
     void setContentDisplay(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, ContentDisplay contentDisplay);
     void setText(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, String s);
     void setGraphic(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Node graphic);
+    void setAlignment(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Pos value);
 }
 class Button
 {
