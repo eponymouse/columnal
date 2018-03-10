@@ -25,7 +25,7 @@ import java.util.Random;
 
 public class DataEntryUtil
 {
-    private static final int DELAY = 5;
+    private static final int DELAY = 1;
 
     @OnThread(Tag.Simulation)
     public static void enterValue(FxRobotInterface robot, Random random, DataType dataType, @Value Object value, boolean nested) throws UserException, InternalException
@@ -54,9 +54,10 @@ public class DataEntryUtil
             }
 
             @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                // TODO
+                robot.write(DataTypeUtility.valueToString(dataType, value, null));
                 return UnitType.UNIT;
             }
 
@@ -66,11 +67,12 @@ public class DataEntryUtil
                 robot.write(Boolean.toString(Utility.cast(value, Boolean.class)), DELAY);
                 return UnitType.UNIT;
             }
-
+            
             @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                // TODO
+                robot.write(DataTypeUtility.valueToString(dataType, value, null));
                 return UnitType.UNIT;
             }
 

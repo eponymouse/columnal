@@ -9,6 +9,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -105,7 +106,7 @@ public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait
     {
 
         Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
-        TestUtil.sleep(1000);
+        TestUtil.sleep(3000);
         tableManager = details.getFirst();
         virtualGrid = details.getSecond();
         List<Table> allTables = tableManager.getAllTables();
@@ -127,10 +128,12 @@ public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait
             keyboardMoveTo(virtualGrid, target);
             push(KeyCode.ENTER);
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
+            Log.debug("Making value for type " + columnDTV);
             @Value Object value = valueGenerator.makeValue(table.getData().getColumns().get(column).getType());
             DataEntryUtil.enterValue(this, r, columnDTV, value, false);
             push(KeyCode.ENTER);
-            
+
+            Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + target);
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
