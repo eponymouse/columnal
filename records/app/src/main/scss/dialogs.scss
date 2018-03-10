@@ -1,3 +1,5 @@
+@import 'colors';
+
 .label, .text-field, .hbox-row {
     -fx-alignment: baseline-left;
 }
@@ -7,4 +9,20 @@
 }
 .hbox-row {
     -fx-spacing: 1em;
+}
+
+.light-dialog-pane {
+    -fx-padding: 20;
+    -fx-background-insets: 20, 21;
+    -fx-background-color: grey(40%), white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,.2), 5.0, 0.3, 5.0, 5.0) !important;
+}
+
+/* Should perhaps move these to specific file for the new table dialog: */
+.explanation-button-explanation {
+    -fx-font-size: 10px;
+    -fx-text-fill: grey(60%);
+}
+.new-button-list {
+    -fx-spacing: 10px;
 }

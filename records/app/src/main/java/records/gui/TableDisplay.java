@@ -345,6 +345,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     protected void doCopy(@Nullable RectangleBounds bounds)
     {
+        Log.debug("Copying from " + bounds);
         int firstColumn = bounds == null ? 0 : Math.max(0, bounds.topLeftIncl.columnIndex - getPosition().columnIndex);
         if (firstColumn >= displayColumns.size())
             return; // No valid data to copy

@@ -156,7 +156,7 @@ public class GUI
     /**
      * Like label but the text is permitted to wrap (by using a TextFlow)
      */
-    public static Node labelWrap(@LocalizableKey String contentKey, String... styleClasses)
+    public static Label labelWrap(@LocalizableKey String contentKey, String... styleClasses)
     {
         Label label = new Label(TranslationUtility.getString(contentKey));
         label.setWrapText(true);

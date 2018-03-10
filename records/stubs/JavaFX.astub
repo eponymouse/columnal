@@ -64,6 +64,8 @@ class Node
     Bounds getBoundsInParent(@UnknownInitialization(javafx.scene.Node.class) Node this);
     SimpleObjectProperty boundsInParentProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
     @Pure Point2D localToParent(@UnknownInitialization(javafx.scene.Node.class) Node this, Point2D p);
+    @Pure Point2D localToScreen(@UnknownInitialization(javafx.scene.Node.class) Node this, Point2D p);
+    @Pure Bounds localToScreen(@UnknownInitialization(javafx.scene.Node.class) Node this, Bounds b);
     @Pure Point2D sceneToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, double x, double y);
     @Pure Point2D screenToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, double x, double y);
     @Pure Point2D screenToLocal(@UnknownInitialization(javafx.scene.Node.class) Node this, Point2D p);
@@ -80,6 +82,7 @@ class Node
 class Scene
 {
     @Pure @Nullable Window getWindow();
+    void setFill(@Nullable Paint paint);
 }
 
 package javafx.scene.control;
@@ -97,21 +100,25 @@ class Dialog<T>
     void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, String s);
     void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
 }
+class Labeled
+{
+    void setContentDisplay(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, ContentDisplay contentDisplay);
+    void setText(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, String s);
+    void setGraphic(@UnknownInitialization(javafx.scene.control.Labeled.class) Labeled this, Node graphic);
+}
 class Button
 {
     void setOnAction(@UnknownInitialization(javafx.scene.control.Button.class) Button this, @NonNull EventHandler<ActionEvent> ev);
 }
-
 class Label
 {
-    void setText(@UnknownInitialization(javafx.scene.control.Label.class) Label this, String s);
+    
 }
 class ToggleButton
 {
     ToggleButton(@Localized String text);
     ToggleButton(@Localized String text, Node graphic);
-    void setGraphic(@UnknownInitialization(javafx.scene.control.ToggleButton.class) ToggleButton this, Node graphic);
-    BooleanProperty selectedProperty(@UnknownInitialization(javafx.scene.control.ToggleButton.class) ToggleButton this);
+    BooleanProperty selectedProperty(@UnknownInitialization(javafx.scene.control.ToggleButton.class) ToggleButton this); 
 }
 class ScrollPane
 {

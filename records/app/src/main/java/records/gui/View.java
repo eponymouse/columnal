@@ -15,6 +15,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -652,16 +654,20 @@ public class View extends StackPane
         mainPane = new VirtualGrid((CellPosition cellPosition, Point2D mouseScreenPos) -> {
                 // Data table if there are none, or if we ask and they say data
                 
-                Optional<DataOrTransform> choice = Optional.of(DataOrTransform.DATA);
+                Optional<Pair<Point2D, DataOrTransform>> choice = Optional.of(new Pair<>(mouseScreenPos, DataOrTransform.DATA));
                 if (!tableManager.getAllTables().isEmpty())
                 {
                     // Ask what they want
+                    GaussianBlur blur = new GaussianBlur(4.0);
+                    blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
+                    setEffect(blur);
                     choice = new DataOrTransformChoice(FXUtility.mouse(this).getWindow()).showAndWaitCentredOn(mouseScreenPos);
+                    setEffect(null);
                 }
                 if (choice.isPresent())
                 {
                     InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
-                    switch (choice.get())
+                    switch (choice.get().getSecond())
                     {
                         case DATA:
                             Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
