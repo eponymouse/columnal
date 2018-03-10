@@ -75,27 +75,11 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
         org.scenicview.ScenicView.show(getDialogPane().getScene());
     }
 
-    private void centreDialogButtons(@UnknownInitialization(Dialog.class) DataOrTransformChoice this)
-    {
-        // Hack!
-        // Taken from https://stackoverflow.com/questions/36009764/how-to-align-ok-button-of-a-dialog-pane-in-javafx
-        Region spacer = new Region();
-        ButtonBar.setButtonData(spacer, ButtonBar.ButtonData.BIG_GAP);
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        getDialogPane().applyCss();
-        HBox hbox = (HBox) getDialogPane().lookup(".container");
-        hbox.getChildren().add(spacer);
-    }
-
     public Optional<Pair<Point2D, DataOrTransform>> showAndWaitCentredOn(Point2D mouseScreenPos)
     {
-        // This only centres the content pane on the mouse, not the whole dialog
-        // (which also includes the cancel button), but that works well enough:
-        setX(mouseScreenPos.getX() - WIDTH*0.5);
-        setY(mouseScreenPos.getY() - HEIGHT*0.5);
-        return showAndWait();
+        return super.showAndWaitCentredOn(mouseScreenPos, WIDTH, HEIGHT);
     }
-    
+
     public static enum DataOrTransform {DATA, TRANSFORM, IMPORT_FILE };
     
     @OnThread(Tag.FXPlatform)
