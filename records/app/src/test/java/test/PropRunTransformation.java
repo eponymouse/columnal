@@ -75,7 +75,7 @@ public class PropRunTransformation
         RecordSet src = srcTable.data().getData();
         Column sortBy = src.getColumns().get(r.nextInt(src.getColumns().size()));
 
-        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), Collections.singletonList(sortBy.getName()));
+        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), ImmutableList.of(sortBy.getName()));
 
         // TODO sort by multiple columns, too
 

@@ -529,18 +529,13 @@ public class View extends StackPane
                             });
                             break;
                         case TRANSFORM:
-                            
-                            Optional<Pair<Point2D, TransformationInfo>> optTrans =
-                                new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos);
-                                //new EditTransformationDialog(FXUtility.mouse(this).getWindow(), FXUtility.mouse(View.this), null, initialLoadDetails, new Transform.Info().editNew(FXUtility.mouse(View.this), FXUtility.mouse(this).getManager(), null, null)).showAndWait();
-                                                                                    
-                            optTrans.ifPresent(createTrans -> {
-                                Optional<Table> optSource = new PickTableDialog(thisView, createTrans.getFirst()).showAndWait();
-                                
-                                Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
-                                    FXUtility.alertOnError_(() -> {
-                                        Transformation trans = createTrans.getSecond().makeWithSource(thisView, thisView.getManager(), cellPosition, optSource.get());
-                                        tableManager.record(trans);
+                            new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
+                                new PickTableDialog(thisView, createTrans.getFirst()).showAndWait().ifPresent(srcTable -> {
+                                    Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
+                                        FXUtility.alertOnError_(() -> {
+                                            Transformation trans = createTrans.getSecond().makeWithSource(thisView, thisView.getManager(), cellPosition, srcTable);
+                                            tableManager.record(trans);
+                                        });
                                     });
                                 });
                             });

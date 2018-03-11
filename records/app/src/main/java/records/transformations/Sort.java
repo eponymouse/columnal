@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
@@ -19,6 +20,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
@@ -106,10 +108,10 @@ public class Sort extends TransformationEditable
     // 3 : 4 [now stillToOrder], etc
     private int @Nullable [] stillToOrder;
     @OnThread(Tag.Any)
-    private final @NonNull List<ColumnId> originalSortBy;
-    private final @Nullable List<Column> sortBy;
+    private final @NonNull ImmutableList<ColumnId> originalSortBy;
+    private final @Nullable ImmutableList<Column> sortBy;
 
-    public Sort(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, List<ColumnId> sortBy) throws InternalException
+    public Sort(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<ColumnId> sortBy) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
@@ -195,7 +197,7 @@ public class Sort extends TransformationEditable
         }
         this.result = theResult;
         this.sortMap = new NumericColumnStorage(NumberInfo.DEFAULT);
-        this.sortBy = theSortBy;
+        this.sortBy = theSortBy != null ? ImmutableList.copyOf(theSortBy) : null;
     }
 
     private void fillSortMapTo(int target, @Nullable ProgressListener prog) throws InternalException, UserException
@@ -302,13 +304,14 @@ public class Sort extends TransformationEditable
         {
             SortContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::sort);
 
-            return new Sort(mgr, initialLoadDetails, srcTableId, Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
+            return new Sort(mgr, initialLoadDetails, srcTableId, Utility.<OrderByContext, ColumnId>mapListI(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }
 
         @Override
-        public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
+        @OnThread(Tag.Simulation)
+        public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Editor(view, mgr, srcTableId, Collections.emptyList());
+            return new Sort(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), ImmutableList.of());
         }
     }
 
@@ -654,7 +657,7 @@ public class Sort extends TransformationEditable
                 for (Optional<ColumnId> c : sortBy)
                     if (c.isPresent())
                         presentSortBy.add(c.get());
-                return new Sort(mgr, initialLoadDetails, srcId.get(), presentSortBy);
+                return new Sort(mgr, initialLoadDetails, srcId.get(), ImmutableList.copyOf(presentSortBy));
             };
         }
     }

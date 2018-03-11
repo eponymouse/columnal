@@ -196,6 +196,8 @@ public class VirtualGrid implements ScrollBindable
             }
         };
         this.activeOverlayPane.setMouseTransparent(true);
+        this.activeOverlayPane.translateXProperty().bind(container.translateXProperty());
+        this.activeOverlayPane.translateYProperty().bind(container.translateYProperty());
         this.stackPane = new StackPane(container, activeOverlayPane) {
             @Override
             public void requestFocus()

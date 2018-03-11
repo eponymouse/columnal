@@ -69,11 +69,14 @@ public abstract class TransformationInfo
 
 
     @OnThread(Tag.FXPlatform)
-    public abstract TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src);
+    public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
+    {
+        throw new RuntimeException("");
+    }
 
     // TODO make this abstract and remove editNew
     @OnThread(Tag.Simulation)
-    public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable)
+    public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
     {
         throw new RuntimeException("");
     }
