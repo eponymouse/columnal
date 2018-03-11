@@ -5,6 +5,7 @@ import annotation.units.AbsRowIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
@@ -58,42 +59,43 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     protected ItemState getItemState(LabelPane item)
     {
         // TODO should take account of location within cell
-        return ItemState.DIRECTLY_CLICKABLE;
+        return item.label.isVisible() ? ItemState.DIRECTLY_CLICKABLE : ItemState.NOT_CLICKABLE;
     }
 
     @Override
-    protected void styleTogether(ImmutableList<LabelPane> visibleNodes)
+    protected void styleTogether(ImmutableMap<GridCellInfo<LabelPane, Visible>, Collection<LabelPane>> visibleNodesByTable)
     {
-        double topY = Double.MAX_VALUE;
-        @Nullable LabelPane topItem = null;
-        double bottomY = -Double.MAX_VALUE;
-        @Nullable LabelPane bottomItem = null;
-        // Find highest row number:
-        int highestRow = visibleNodes.stream().mapToInt(p -> p.row).max().orElse(1);
-        // Find number of digits, min 2:
-        int numDigits = Math.max(2, Integer.toString(highestRow).length());
-        for (LabelPane visibleNode : visibleNodes)
-        {
-            visibleNode.setMinDigits(numDigits);
-            visibleNode.setIsTop(false);
-            visibleNode.setIsBottom(false);
-            // All Layout Y will be comparable, so no need to transform to screen pos:
-            if (visibleNode.getLayoutY() < topY)
+        visibleNodesByTable.forEach((table, visibleNodes) -> {
+            double topY = Double.MAX_VALUE;
+            @Nullable LabelPane topItem = null;
+            double bottomY = -Double.MAX_VALUE;
+            @Nullable LabelPane bottomItem = null;
+            // Find highest row number:
+            int highestRow = visibleNodes.stream().mapToInt(p -> p.row).max().orElse(1);
+            // Find number of digits, min 2:
+            int numDigits = Math.max(2, Integer.toString(highestRow).length());
+            for (LabelPane visibleNode : visibleNodes)
             {
-                topY = visibleNode.getLayoutY();
-                topItem = visibleNode;
+                visibleNode.setMinDigits(numDigits);
+                visibleNode.setIsTop(false);
+                visibleNode.setIsBottom(false);
+                // All Layout Y will be comparable, so no need to transform to screen pos:
+                if (visibleNode.getLayoutY() < topY)
+                {
+                    topY = visibleNode.getLayoutY();
+                    topItem = visibleNode;
+                }
+                if (visibleNode.getLayoutY() > bottomY)
+                {
+                    bottomY = visibleNode.getLayoutY();
+                    bottomItem = visibleNode;
+                }
             }
-            if (visibleNode.getLayoutY() > bottomY)
-            {
-                bottomY = visibleNode.getLayoutY();
-                bottomItem = visibleNode;
-            }
-        }
-        if (topItem != null)
-            topItem.setIsTop(true);
-        if (bottomItem != null)
-            bottomItem.setIsBottom(true);
-        
+            if (topItem != null)
+                topItem.setIsTop(true);
+            if (bottomItem != null)
+                bottomItem.setIsBottom(true);
+        });
     }
 
     @OnThread(Tag.FXPlatform)

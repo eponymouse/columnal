@@ -3,6 +3,8 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * An implementation of {@link VirtualGridSupplier} that has one node per cell position, and re-uses
@@ -55,9 +58,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         private final T node;
         private final StyleUpdater styleUpdater;
         private final GridAreaCellPosition gridAreaCellPosition;
-        private final GridCellInfo<T, ?> originator;
+        private final GridCellInfo<T, S> originator;
 
-        private ItemDetails(T node, StyleUpdater styleUpdater, GridCellInfo<T, ?> originator, GridAreaCellPosition gridAreaCellPosition)
+        private ItemDetails(T node, StyleUpdater styleUpdater, GridCellInfo<T, S> originator, GridAreaCellPosition gridAreaCellPosition)
         {
             this.node = node;
             this.styleUpdater = styleUpdater;
@@ -166,12 +169,12 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
             hideItem(spareCell);
         }
         
-        styleTogether(visibleItems.values().stream().map(d -> d.node).collect(ImmutableList.toImmutableList()));
+        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GridCellInfo<T, S>, T>flatteningToImmutableListMultimap(d -> d.originator, d -> Stream.of(d.node))).asMap());
         
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
     }
 
-    protected void styleTogether(ImmutableList<T> visibleNodes)
+    protected void styleTogether(ImmutableMap<GridCellInfo<T, S>, Collection<T>> visibleNodes)
     {
     }
 
@@ -211,8 +214,10 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         gridAreas.remove(gridArea);
     }
 
-    // Used to see if a grid area has a cell *OF OUR TYPE* at the given location
-    // (This will vary between different suppliers)
+    /**
+     * Used to see if a grid area has a cell *OF OUR TYPE* at the given location
+     * T and S are same as for {@link VirtualGridSupplierIndividual}
+     */
     @OnThread(Tag.FXPlatform)
     public static interface GridCellInfo<T, S>
     {
