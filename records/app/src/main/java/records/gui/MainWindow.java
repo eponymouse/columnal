@@ -148,19 +148,21 @@ public class MainWindow
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) TableManager _test_getTableManager()
+            @OnThread(Tag.FXPlatform)
+            public TableManager _test_getTableManager()
             {
                 return v.getManager();
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) VirtualGrid _test_getVirtualGrid()
+            @OnThread(Tag.FXPlatform)
+            public VirtualGrid _test_getVirtualGrid()
             {
                 return v.getGrid();
             }
         };
     }
-
+/*
     private static void chooseAndImportFile(View v, Stage stage)
     {
         ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> recordTable(v, ds));
@@ -170,7 +172,7 @@ public class MainWindow
     {
         ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> recordTable(v, ds));
     }
-
+*/
     @OnThread(Tag.Any)
     private static void recordTable(View v, DataSource ds)
     {
@@ -185,24 +187,6 @@ public class MainWindow
             s.hide();
         });
     }
-
-    /*
-    private static void newTable(View v)
-    {
-        Workers.onWorkerThread("Create new table", Priority.SAVE_ENTRY, () -> {
-            try
-            {
-                EditableRecordSet newRecordSet = EditableRecordSet.newRecordSetSingleColumn();
-                ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), newRecordSet);
-                v.getManager().record(ds);
-            }
-            catch (InternalException | UserException ex)
-            {
-                FXUtility.logAndShowError("newtable.error", ex);
-            }
-        });
-    }
-    */
 
     public static Map<View, Stage> _test_getViews()
     {
