@@ -17,6 +17,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -45,6 +46,7 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
+import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -258,9 +260,15 @@ public class View extends StackPane
         final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
         
         pickPaneMouseFinal.setPickOnBounds(true);
+        @Nullable Table[] picked = new @Nullable Table[1];
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            mainPane.highlightGridAreaAtScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);
+            @Nullable TableDisplay tableDisplay = (TableDisplay)mainPane.highlightGridAreaAtScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);
+            picked[0] = tableDisplay != null ? tableDisplay.getTable() : null;
             e.consume();
+        });
+        pickPaneMouseFinal.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && picked[0] != null)
+                onPick.consume(picked[0]);
         });
         getChildren().add(pickPaneMouseFinal);
         mainPane.highlightGridAreaAtScreenPos(screenPos, g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);

@@ -49,6 +49,7 @@ import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.CellPosition;
+import records.data.Table;
 import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -820,16 +821,16 @@ public class VirtualGrid implements ScrollBindable
         if (highlightedGridArea != null)
         {
             supplierFloating.removeItem(highlightedGridArea);
-            FXUtility.setPseudoclass(container, "picking-table", false);
             highlightedGridArea = null;
+            container.redoLayout();
         }
     }
     
-    public void highlightGridAreaAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
+    public @Nullable GridArea highlightGridAreaAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
     {
         if (highlightedGridArea == null)
             highlightedGridArea = supplierFloating.addItem(new GridAreaHighlight());
-        highlightedGridArea.highlightAtScreenPos(screenPos, validPick, setCursor);
+        return highlightedGridArea.highlightAtScreenPos(screenPos, validPick, setCursor);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1520,11 +1521,10 @@ public class VirtualGrid implements ScrollBindable
             return new Pair<>(ViewOrder.OVERLAY_ACTIVE, rectangle);
         }
 
-        public void highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
+        public @Nullable GridArea highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
         {
             Point2D localPos = container.screenToLocal(screenPos);
             @Nullable CellPosition cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
-            Log.debug("Highlighting at " + screenPos + " cell pos: " + cellAtScreenPos);
             @Nullable GridArea oldPicked = picked;
             picked = gridAreas.stream().filter(validPick).filter(g -> cellAtScreenPos != null && g.contains(cellAtScreenPos)).findFirst().orElse(null);
             if (picked != oldPicked)
@@ -1532,6 +1532,7 @@ public class VirtualGrid implements ScrollBindable
                 container.redoLayout();
             }
             setCursor.consume(picked != null ? Cursor.HAND : null);
+            return picked;
         }
     }
 }
