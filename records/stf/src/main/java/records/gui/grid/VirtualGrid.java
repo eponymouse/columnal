@@ -306,6 +306,8 @@ public class VirtualGrid implements ScrollBindable
                 FXUtility.mouse(VirtualGrid.this).container.redoLayout();
             }
         });
+
+        //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
     private double scrollClampX(double idealScrollBy)
@@ -391,8 +393,8 @@ public class VirtualGrid implements ScrollBindable
     private @Nullable CellPosition getCellPositionAt(double x, double y)
     {
         @AbsColIndex int colIndex;
-        x -= firstRenderColumnOffset;
-        for (colIndex = firstRenderColumnIndex; colIndex < currentColumns.get(); colIndex++)
+        x -= logicalScrollColumnOffset;
+        for (colIndex = logicalScrollColumnIndex; colIndex < currentColumns.get(); colIndex++)
         {
             x -= getColumnWidth(colIndex);
             if (x < 0.0)
@@ -402,9 +404,9 @@ public class VirtualGrid implements ScrollBindable
         }
         if (x > 0.0)
             return null;
-        y -= firstRenderRowOffset;
+        y -= logicalScrollRowOffset;
         @SuppressWarnings("units")
-        @AbsRowIndex int rowIndex = (int) Math.floor(y / rowHeight) + firstRenderRowIndex;
+        @AbsRowIndex int rowIndex = (int) Math.floor(y / rowHeight) + logicalScrollRowIndex;
         if (rowIndex >= getLastSelectableRowGlobal())
             return null;
         return new CellPosition(rowIndex, colIndex);
