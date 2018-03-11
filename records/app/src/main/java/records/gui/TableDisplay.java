@@ -1,5 +1,7 @@
 package records.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -9,6 +11,8 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.BoundingBox;
+import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Dialog;
@@ -51,14 +55,17 @@ import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.CellStyle;
+import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
+import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.ColumnDetails;
@@ -413,9 +420,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     */
 
     @OnThread(Tag.FXPlatform)
-    public TableDisplay(View parent, VirtualGridSupplierFloating columnHeaderSupplier, Table table)
+    public TableDisplay(View parent, VirtualGridSupplierFloating supplierFloating, Table table)
     {
-        super(parent.getManager(), table.getId(), table.getDisplayMessageWhenEmpty(), renameTableSim(table), columnHeaderSupplier);
+        super(parent.getManager(), table.getId(), table.getDisplayMessageWhenEmpty(), renameTableSim(table), supplierFloating);
         this.parent = parent;
         this.table = table;
         Either<StyledString, RecordSet> recordSetOrError;
@@ -431,7 +438,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         recordSetOrError.ifRight(rs -> setupWithRecordSet(parent.getManager(), table, rs));
         
         // Border overlay:
-        columnHeaderSupplier.addItem(new RectangleOverlayItem(ViewOrder.OVERLAY_PASSIVE)
+        supplierFloating.addItem(new RectangleOverlayItem(ViewOrder.OVERLAY_PASSIVE)
         {
             @Override
             protected Optional<RectangleBounds> calculateBounds(VisibleDetails rowBounds, VisibleDetails columnBounds)
@@ -457,6 +464,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 // TODO we should adjust clip if there are tables touching us
             }
         });
+        // Hat:
+        supplierFloating.addItem(new TableHat(table));
+        
         this.onModify = () -> {
             parent.modified();
             Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, TableAndColumnRenames.EMPTY)));
@@ -820,6 +830,34 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         public RowRange get() throws InternalException, UserException
         {
             return new RowRange(0, recordSetOrError.<Integer>eitherEx(err -> 0, rs -> rs.getLength()));
+        }
+    }
+
+    private class TableHat implements FloatingItem
+    {
+        public TableHat(Table table)
+        {
+        }
+
+        @Override
+        public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        {
+            double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
+            double y = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex - CellPosition.row(1)));
+            double width = columnBounds.getItemCoordAfter(Utility.boxCol(getBottomRightIncl().columnIndex)) - x;
+            double height = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex)) - y;
+            return Optional.of(new BoundingBox(
+                x,
+                y,
+                width,
+                height
+            ));
+        }
+
+        @Override
+        public Pair<ViewOrder, Node> makeCell()
+        {
+            return new Pair<>(ViewOrder.FLOATING, new Label("Hat!"));
         }
     }
 }

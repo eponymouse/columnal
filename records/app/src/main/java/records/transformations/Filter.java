@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -30,6 +31,7 @@ import org.sosy_lab.java_smt.api.ProverEnvironment;
 import org.sosy_lab.java_smt.api.SolverContext;
 import org.sosy_lab.java_smt.api.SolverContext.ProverOptions;
 import org.sosy_lab.java_smt.api.SolverException;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
@@ -499,9 +501,9 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Editor(view, mgr, srcTableId, src, new BooleanLiteral(true));
+            return new Filter(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), new BooleanLiteral(true));
         }
     }
 
