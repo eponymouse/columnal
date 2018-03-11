@@ -213,6 +213,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     {
         gridAreas.remove(gridArea);
     }
+    
+    protected final boolean hasGrid(GridArea gridArea)
+    {
+        return gridAreas.containsKey(gridArea);
+    }
 
     /**
      * Used to see if a grid area has a cell *OF OUR TYPE* at the given location
