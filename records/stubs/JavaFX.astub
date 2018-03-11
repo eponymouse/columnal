@@ -258,6 +258,7 @@ class Window
 {
     boolean isShowing(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void hide(@UnknownInitialization(javafx.stage.Window.class) Window this);
+    void sizeToScene(@UnknownInitialization(javafx.stage.Window.class) Window this);
 
     <T extends Event> void addEventFilter(@UnknownInitialization(javafx.stage.Window.class) Window this,
                 final EventType<T> eventType,

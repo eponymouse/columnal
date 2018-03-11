@@ -35,6 +35,7 @@ import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -43,6 +44,7 @@ import java.util.function.Predicate;
 @OnThread(Tag.FXPlatform)
 public class AutoComplete extends PopupControl
 {
+    private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
     private final ListView<Completion> completions;
     private BorderPane container;
@@ -89,6 +91,10 @@ public class AutoComplete extends PopupControl
             }
         };
         container = new BorderPane(null, null, null, null, completions);
+        
+        FXUtility.listen(completions.getItems(), change -> {
+            updateHeight(completions);
+        });
 
         completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
 
@@ -317,6 +323,14 @@ public class AutoComplete extends PopupControl
         });
     }
 
+    private void updateHeight(@UnknownInitialization(Window.class) AutoComplete this, ListView<?> completions)
+    {
+        // Merging several answers from https://stackoverflow.com/questions/17429508/how-do-you-get-javafx-listview-to-be-the-height-of-its-items
+        double itemHeight = CELL_HEIGHT;
+        completions.setPrefHeight(Math.min(300.0, 2 + itemHeight * completions.getItems().size()));
+        sizeToScene();
+    }
+
     @RequiresNonNull({"completions"})
     private List<Completion> updateCompletions(@UnknownInitialization(Object.class) AutoComplete this, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, String text)
     {
@@ -470,6 +484,13 @@ public class AutoComplete extends PopupControl
 
     private class CompleteCell extends ListCell<Completion>
     {
+        public CompleteCell()
+        {
+            setMinHeight(CELL_HEIGHT);
+            setPrefHeight(CELL_HEIGHT);
+            setMaxHeight(CELL_HEIGHT);
+        }
+
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void updateItem(@Nullable Completion item, boolean empty)
