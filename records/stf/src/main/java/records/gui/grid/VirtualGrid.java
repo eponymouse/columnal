@@ -775,6 +775,11 @@ public class VirtualGrid implements ScrollBindable
         selectionListeners.add(selectionListener);
     }
 
+    public final void removeSelectionListener(SelectionListener selectionListener)
+    {
+        selectionListeners.remove(selectionListener);
+    }
+
     public double _test_getScrollXPos()
     {
         return getCurrentScrollX(null);
@@ -1492,8 +1497,10 @@ public class VirtualGrid implements ScrollBindable
     
     public static enum ListenerOutcome { KEEP, REMOVE }
     
+    @OnThread(Tag.FXPlatform)
     public static interface SelectionListener
     {
+        @OnThread(Tag.FXPlatform)
         public ListenerOutcome selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
     }
     

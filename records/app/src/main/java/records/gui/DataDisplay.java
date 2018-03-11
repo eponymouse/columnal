@@ -39,6 +39,9 @@ import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
+import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGrid.ListenerOutcome;
+import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -66,7 +69,7 @@ import java.util.Optional;
  * RecordSet.
  */
 @OnThread(Tag.FXPlatform)
-public abstract class DataDisplay extends GridArea
+public abstract class DataDisplay extends GridArea implements SelectionListener
 {
     // One for table title, one for column names, one for column types:
     public static final int HEADER_ROWS = 3;
@@ -548,6 +551,8 @@ public abstract class DataDisplay extends GridArea
         private @Nullable final FXPlatformConsumer<TableId> renameTable;
         private final VirtualGridSupplierFloating floatingItems;
         
+        private @MonotonicNonNull BorderPane borderPane;
+
         public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
         {
             this.tableManager = tableManager;
@@ -594,15 +599,10 @@ public abstract class DataDisplay extends GridArea
                       curTableId = newVal;
                 });
             }
-            BorderPane borderPane = new BorderPane(tableNameField.getNode());
+            final BorderPane borderPane = new BorderPane(tableNameField.getNode());
             borderPane.getStyleClass().add("table-display-table-title");
             BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
             BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
-            borderPane.setOnMouseClicked(e -> {
-                withParent(g -> g.select(new EntireTableSelection(FXUtility.mouse(DataDisplay.this), getPosition().columnIndex)));
-                FXUtility.setPseudoclass(borderPane, "table-selected", true);
-                withParent(g -> g.onNextSelectionChange(s -> FXUtility.setPseudoclass(borderPane, "table-selected", false)));
-            });
             DataDisplay.@Nullable DestRectangleOverlay overlay[] = new DestRectangleOverlay[1]; 
             borderPane.setOnMouseDragged(e -> {
                 e.consume();
@@ -643,8 +643,24 @@ public abstract class DataDisplay extends GridArea
                     contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());
             });
 
+            this.borderPane = borderPane;
             // TODO support dragging to move table
             return new Pair<>(ViewOrder.FLOATING, borderPane);
         }
+
+        @OnThread(Tag.FXPlatform)
+        public void setSelected(boolean selected)
+        {
+            if (borderPane != null)
+                FXUtility.setPseudoclass(borderPane, "table-selected", selected);
+        }
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public VirtualGrid.ListenerOutcome selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    {
+        tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
+        return ListenerOutcome.KEEP;
     }
 }

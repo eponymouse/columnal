@@ -206,6 +206,7 @@ public class View extends StackPane
                 display.cleanupFloatingItems();
                 dataCellSupplier.removeGrid(display);
                 mainPane.removeGridArea(display);
+                mainPane.removeSelectionListener(display);
                 expandTableArrowSupplier.removeGrid(display);
                 rowLabelSupplier.removeGrid(display);
             }
@@ -588,6 +589,7 @@ public class View extends StackPane
     {
         dataCellSupplier.addGrid(tableDisplay, tableDisplay.getDataGridCellInfo());
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
+        mainPane.addSelectionListener(tableDisplay);
         rowLabelSupplier.addTable(mainPane, tableDisplay);
         @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
         if (tableOps.addColumn != null || tableOps.appendRows != null)
