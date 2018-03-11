@@ -101,6 +101,8 @@ class Dialog<T>
     void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, @Nullable T t);
     void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
     void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
+    void setOnShowing(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
+    void setOnHiding(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
     void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, String s);
     void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
 }

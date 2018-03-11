@@ -48,6 +48,7 @@ import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollGroup.ScrollLock;
@@ -62,6 +63,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ResizableRectangle;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,6 +73,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
@@ -156,6 +159,7 @@ public class VirtualGrid implements ScrollBindable
     private final VirtualGridSupplierFloating supplierFloating = new VirtualGridSupplierFloating();
     private double renderXOffset;
     private double renderYOffset;
+    private @Nullable GridAreaHighlight highlightedGridArea;
 
     @OnThread(Tag.FXPlatform)
     public VirtualGrid(@Nullable FXPlatformBiConsumer<CellPosition, Point2D> createTable)
@@ -706,23 +710,23 @@ public class VirtualGrid implements ScrollBindable
         });
     }
 
-    public void move(GridArea gridArea, CellPosition destinationPosition)
+    public Bounds _test_getRectangleBoundsScreen(RectangleBounds rectangleBounds)
     {
-        // TODO rearrange
+        return container.localToScreen(getRectangleBoundsInContainer(rectangleBounds));
     }
 
-    public Bounds _test_getRectangleBoundsScreen(RectangleBounds rectangleBounds)
+    private BoundingBox getRectangleBoundsInContainer(RectangleBounds rectangleBounds)
     {
         double adjustX = getCurrentScrollX(null);
         double adjustY = getCurrentScrollY(null);
         double x = sumColumnWidths(CellPosition.col(0), rectangleBounds.topLeftIncl.columnIndex);
         double y = rectangleBounds.topLeftIncl.rowIndex * rowHeight;
-        return container.localToScreen(new BoundingBox(
+        return new BoundingBox(
             x + adjustX, 
             y + adjustY, 
             sumColumnWidths(rectangleBounds.topLeftIncl.columnIndex, rectangleBounds.bottomRightIncl.columnIndex + CellPosition.col(1)),
             rowHeight * (rectangleBounds.bottomRightIncl.rowIndex + 1 - rectangleBounds.topLeftIncl.rowIndex)
-        ));
+        );
     }
 
     public final @Pure VirtualGridSupplierFloating getFloatingSupplier()
@@ -778,6 +782,22 @@ public class VirtualGrid implements ScrollBindable
     public Optional<CellSelection> _test_getSelection()
     {
         return Optional.ofNullable(selection.get());
+    }
+
+    public void stopHighlightingGridArea()
+    {
+        if (highlightedGridArea != null)
+        {
+            supplierFloating.removeItem(highlightedGridArea);
+            highlightedGridArea = null;
+        }
+    }
+    
+    public void highlightGridAreaAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick)
+    {
+        if (highlightedGridArea == null)
+            highlightedGridArea = supplierFloating.addItem(new GridAreaHighlight());
+        highlightedGridArea.highlightAtScreenPos(screenPos, validPick);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1421,5 +1441,45 @@ public class VirtualGrid implements ScrollBindable
     public static interface SelectionListener
     {
         public ListenerOutcome selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
+    }
+    
+    @OnThread(Tag.FXPlatform)
+    private class GridAreaHighlight implements FloatingItem
+    {
+        private @Nullable GridArea picked;
+
+        @Override
+        public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        {
+            if (picked == null)
+                return Optional.empty();
+            else
+            {
+                // Clamp to rendered items:
+                CellPosition renderTopLeftIncl = new CellPosition(rowBounds.firstItemIncl, columnBounds.firstItemIncl);
+                CellPosition renderBottomRightIncl = new CellPosition(rowBounds.lastItemIncl, columnBounds.lastItemIncl);
+                RectangleBounds rectangleBounds = new RectangleBounds(renderTopLeftIncl, renderBottomRightIncl).intersectWith(new RectangleBounds(picked.getPosition(), picked.getBottomRightIncl()));
+                return Optional.of(getRectangleBoundsInContainer(rectangleBounds));
+            }
+        }
+
+        @Override
+        public Pair<ViewOrder, Node> makeCell()
+        {
+            return new Pair<>(ViewOrder.OVERLAY_ACTIVE, new ResizableRectangle());
+        }
+
+        public void highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick)
+        {
+            Point2D localPos = container.screenToLocal(screenPos);
+            @Nullable CellPosition cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
+            Log.debug("Highlighting at " + screenPos + " cell pos: " + cellAtScreenPos);
+            @Nullable GridArea oldPicked = picked;
+            picked = gridAreas.stream().filter(validPick).filter(g -> cellAtScreenPos != null && g.contains(cellAtScreenPos)).findFirst().orElse(null);
+            if (picked != oldPicked)
+            {
+                container.redoLayout();
+            }            
+        }
     }
 }

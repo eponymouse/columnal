@@ -50,6 +50,7 @@ import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.transformations.Transform;
 import records.transformations.TransformationEditable;
+import records.transformations.TransformationInfo;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -86,14 +87,8 @@ public class View extends StackPane
     // The supplier for row labels:
     private final RowLabelSupplier rowLabelSupplier = new RowLabelSupplier();
     
-    // We want a display that dims everything except the hovered-over table
-    // But that requires clipping which messes up the mouse selection.  So we
-    // use two panes: one which is invisible for the mouse events, and one for the
-    // display:
-    private final Pane pickPaneMouse;
-    private final Pane pickPaneDisplay;
-    private final ObjectProperty<@Nullable Table> currentPick;
-    private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
+    // This is only put into our children while we are doing special mouse capture, but it is always non-null.
+    private @Nullable Pane pickPaneMouse;
     @OnThread(Tag.FXPlatform)
     private final ObjectProperty<File> diskFile;
     // Null means modified since last save
@@ -240,193 +235,37 @@ public class View extends StackPane
         save();
     }
 
-    public void tableMovedOrResized(@UnknownInitialization TableDisplay tableDisplay)
-    {
-        // Save new position after delay:
-        if (cancelDelayedSave != null)
-        {
-            cancelDelayedSave.run();
-        }
-        cancelDelayedSave = FXUtility.runAfterDelay(Duration.millis(1000), () -> modified());
-    }
-
-    public void tableDragEnded()
-    {
-        snapGuides.clear();
-    }
-
-    public double getSensibleMaxTableHeight()
-    {
-        return getHeight();
-    }
-
     public VirtualGrid getGrid()
     {
         return mainPane;
     }
 
-    // Basically a pair of a double value for snapping to (X or Y determined by context),
-    // and a guide line to draw (if any) to help the user understand the origin of the snap
-    private static class SnapToAndLine
+    public void disableTablePickingMode()
     {
-        private final double snapTo;
-        private final @Nullable Line guideLine;
-
-        @OnThread(Tag.FXPlatform)
-        public SnapToAndLine(double snapTo, @Nullable Line guideLine)
+        if (pickPaneMouse != null)
         {
-            this.snapTo = snapTo;
-            this.guideLine = guideLine;
-            if (guideLine != null)
-            {
-                guideLine.setMouseTransparent(true);
-                guideLine.getStyleClass().add("line-snap-guide");
-            }
+            mainPane.stopHighlightingGridArea();
+            getChildren().remove(pickPaneMouse);
+            pickPaneMouse = null;
         }
     }
-
-    /**
-     * Snaps the table display position.  There are three types of snapping:
-     *  - One is snapping to the nearest N pixels.  This is always in force.
-     *  - The second is snapping to avoid table headers overlapping.
-     *  - The third is snapping to adjoin nearby tables.  This can be disabled by
-     *    passing true as the second parameter (usually in response to the user
-     *    holding a modifier key while dragging).  If this third form is used,
-     *    the details are included in the snap details.
-     *    
-     * @param tableDisplayGroup The group of snapped-together tables to drag.
-     *                          The first one is the leftmost table in the chain.  If suppressSnapTogether is true, this should be a single item.
-     */
-    /* TODO
-    public SnapDetails snapTableDisplayPositionWhileDragging(List<TableDisplay> tableDisplayGroup, boolean suppressSnapTogether, Point2D position, Dimension2D size)
+    
+    public void enableTablePickingMode(Point2D screenPos, FXPlatformConsumer<Table> onPick)
     {
-        snapGuides.clear();
-
-        double x = position.getX();
-        double y = position.getY();
-
-        // Snap to nearest 5:
-        x = Math.round(x / 5.0) * 5.0;
-        y = Math.round(y / 5.0) * 5.0;
-
-        if (!suppressSnapTogether)
-        {
-            // First, check if we are over an existing table which is our only ancestor,
-            // in which case we will snap to its right:
-            ImmutableList<Table> sources = getSources(tableDisplayGroup.get(0).getTable());
-            if (sources.size() == 1 && sources.get(0).getDisplay() != null)
-            {
-                TableDisplay sourceDisplay = (TableDisplay)sources.get(0).getDisplay();
-                Bounds sourceBounds = sourceDisplay.getBoundsInParent();
-                if (sourceBounds.contains(x, y))
-                {
-                    Rectangle rectangle = new Rectangle(sourceBounds.getMaxX(), sourceBounds.getMinY(), tableDisplayGroup.get(0).getBoundsInLocal().getWidth(), tableDisplayGroup.get(0).getBoundsInLocal().getHeight());
-                    rectangle.getStyleClass().add("rectangle-snap-guide");
-                    snapGuides.add(rectangle);
-                    return new SnapDetails(new Point2D(x, y), new Pair<>(Side.LEFT, sourceDisplay));
-                }
-            }
-
-
-            // This snap is itself subdivided into two kinds:
-            //  - One is an adjacency snap: our left side can snap to nearby right sides
-            //    (and our bottom side to nearby top sides, top to bottom, right to left),
-            //    as long as we the vertical bounds overlap.
-            //  - The other is an alignment snap: our top side can snap to a nearby top side,
-            //    and our left side to a nearby left.  We don't currently alignment snap bottom or right.
-
-            // Closeness for adjacency snap:
-            final double ADJACENCY_THRESHOLD = 30;
-            // Amount that we must overlap in the other dimension to consider an adjacency snap:
-            final double ADJACENCY_OVERLAP_AMOUNT = 30;
-            // Closeness horiz/vert for alignment snap vert/horiz:
-            final double ALIGNMENT_DISTANCE = 200;
-            // Closeness horiz/vert for alignment snap horiz/vert:
-            final double ALIGNMENT_THRESHOLD = 20;
-
-            Pair<@Nullable SnapToAndLine, @Nullable SnapToAndLine> pos = findFirstLeftAndFirstRight(getAllTables().stream()
-                .filter(t -> !tableDisplayGroup.stream().anyMatch(g -> t == g.getTable()))
-                .flatMap(t -> {
-                    @Nullable TableDisplayBase display = t.getDisplay();
-                    if (display == null)
-                        return Stream.empty();
-
-                    Bounds b = ((TableDisplay)display).getBoundsInParent();
-                    // Candidate points and distance.  We will pick lowest distance.
-                    // The snap values are either an X candidate (Left) or a Y candidate (Right).
-                    List<Pair<Double, Either<SnapToAndLine, SnapToAndLine>>> snaps = new ArrayList<>();
-                    // Check for our left adjacent to their right:
-                    if (Math.abs(b.getMaxX() - position.getX()) < ADJACENCY_THRESHOLD
-                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getY(), position.getY() + size.getHeight(), b.getMinY(), b.getMaxY()))
-                    {
-                        snaps.add(new Pair<>(b.getMaxX() - position.getX(), Either.left(new SnapToAndLine(b.getMaxX(), null))));
-                    }
-                    // Check our right adjacent to their left:
-                    if (Math.abs(b.getMinX() - (position.getX() + size.getWidth())) < ADJACENCY_THRESHOLD
-                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getY(), position.getY() + size.getHeight(), b.getMinY(), b.getMaxY()))
-                    {
-                        snaps.add(new Pair<>(b.getMinX() - (position.getX() + size.getWidth()), Either.left(new SnapToAndLine(b.getMinX() - size.getWidth(), null))));
-                    }
-                    // Check for our top adjacent to their bottom:
-                    if (Math.abs(b.getMaxY() - position.getY()) < ADJACENCY_THRESHOLD
-                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getX(), position.getX() + size.getWidth(), b.getMinX(), b.getMaxX()))
-                    {
-                        snaps.add(new Pair<>(b.getMaxY() - position.getY(), Either.right(new SnapToAndLine(b.getMaxY(), null))));
-                    }
-                    // Check our bottom adjacent to their top:
-                    if (Math.abs(b.getMinY() - (position.getY() + size.getHeight())) < ADJACENCY_THRESHOLD
-                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getX(), position.getX() + size.getWidth(), b.getMinX(), b.getMaxX()))
-                    {
-                        snaps.add(new Pair<>(b.getMinY() - (position.getY() + size.getHeight()), Either.right(new SnapToAndLine(b.getMinY() - size.getHeight(), null))));
-                    }
-
-                    // TODO top/bottom adjacency
-
-                    // Check alignment with our top:
-                    if (Math.abs(b.getMinY() - position.getY()) < ALIGNMENT_THRESHOLD
-                        && rangeOverlaps(0, b.getMinX() - ALIGNMENT_DISTANCE, b.getMaxX() + ALIGNMENT_DISTANCE, position.getX(), position.getX() + size.getWidth()))
-                    {
-                        Line guide = new Line(Math.min(b.getMinX(), position.getX()), b.getMinY(), Math.max(b.getMaxX(), position.getX() + size.getWidth()), b.getMinY());
-                        snaps.add(new Pair<>(b.getMinY() - position.getY(), Either.right(new SnapToAndLine(b.getMinY(), guide))));
-                    }
-                    // And with our left:
-                    if (Math.abs(b.getMinX() - position.getX()) < ALIGNMENT_THRESHOLD
-                        && rangeOverlaps(0, b.getMinY() - ALIGNMENT_DISTANCE, b.getMaxY() + ALIGNMENT_DISTANCE, position.getY(), position.getY() + size.getHeight()))
-                    {
-                        Line guide = new Line(b.getMinX(), Math.min(b.getMinY(), position.getY()), b.getMinX(), Math.max(b.getMaxY(), position.getY() + size.getHeight()));
-                        snaps.add(new Pair<>(b.getMinX() - position.getX(), Either.left(new SnapToAndLine(b.getMinX(), guide))));
-                    }
-
-                    return snaps.stream();
-                    
-                }).sorted(Comparator.comparing(p -> Math.abs(p.getFirst()))).map(p -> p.getSecond()));
-            if (pos.getFirst() != null)
-            {
-                x = pos.getFirst().snapTo;
-                if (pos.getFirst().guideLine != null)
-                    snapGuides.add(pos.getFirst().guideLine);
-            }
-            if (pos.getSecond() != null)
-            {
-                y = pos.getSecond().snapTo;
-                if (pos.getSecond().guideLine != null)
-                    snapGuides.add(pos.getSecond().guideLine);
-            }
-        }
-
-        // Prevent infinite loop:
-        int iterations = 0;
-        while (overlapsAnyExcept(tableDisplayGroup, x, y) && iterations < 200)
-        {
-            x += 5;
-            y += 5;
-            iterations += 1;
-        }
-
-        return new SnapDetails(new Point2D(x, y), null);
+        if (pickPaneMouse != null)
+            disableTablePickingMode();
+        
+        final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
+        
+        pickPaneMouseFinal.setPickOnBounds(true);
+        pickPaneMouseFinal.setOnMouseMoved(e -> {
+            mainPane.highlightGridAreaAtScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), g -> g instanceof TableDisplay);
+            e.consume();
+        });
+        getChildren().add(pickPaneMouseFinal);
+        mainPane.highlightGridAreaAtScreenPos(screenPos, g -> g instanceof TableDisplay);
     }
-    */
-
+    
     // If any sources are invalid, they are skipped
     private ImmutableList<Table> getSources(Table table)
     {
@@ -651,8 +490,11 @@ public class View extends StackPane
                 });
             }
         });
+        
         mainPane = new VirtualGrid((CellPosition cellPosition, Point2D mouseScreenPos) -> {
                 // Data table if there are none, or if we ask and they say data
+
+                View thisView = FXUtility.mouse(this);
                 
                 Optional<Pair<Point2D, DataOrTransform>> choice = Optional.of(new Pair<>(mouseScreenPos, DataOrTransform.DATA));
                 if (!tableManager.getAllTables().isEmpty())
@@ -661,7 +503,7 @@ public class View extends StackPane
                     GaussianBlur blur = new GaussianBlur(4.0);
                     blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
                     setEffect(blur);
-                    choice = new DataOrTransformChoice(FXUtility.mouse(this).getWindow()).showAndWaitCentredOn(mouseScreenPos);
+                    choice = new DataOrTransformChoice(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos);
                     
                 }
                 if (choice.isPresent())
@@ -680,16 +522,20 @@ public class View extends StackPane
                             break;
                         case TRANSFORM:
                             
-                            Optional<SimulationSupplier<Transformation>> optTrans =
-                                new PickTransformationDialog(FXUtility.mouse(this).getWindow()).showAndWaitCentredOn(mouseScreenPos);
+                            Optional<Pair<Point2D, TransformationInfo>> optTrans =
+                                new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos);
                                 //new EditTransformationDialog(FXUtility.mouse(this).getWindow(), FXUtility.mouse(View.this), null, initialLoadDetails, new Transform.Info().editNew(FXUtility.mouse(View.this), FXUtility.mouse(this).getManager(), null, null)).showAndWait();
-                                                        
-                            optTrans.ifPresent(createTrans -> Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
-                                FXUtility.alertOnError_(() -> {
-                                    Transformation trans = createTrans.get();
-                                    tableManager.record(trans);
+                                                                                    
+                            optTrans.ifPresent(createTrans -> {
+                                Optional<Table> optSource = new PickTableDialog(thisView, createTrans.getFirst()).showAndWait();
+                                
+                                Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
+                                    FXUtility.alertOnError_(() -> {
+                                        Transformation trans = createTrans.getSecond().makeWithSource(thisView, thisView.getManager(), cellPosition, optSource.get());
+                                        tableManager.record(trans);
+                                    });
                                 });
-                            }));
+                            });
                             break;
                     }
                 }
@@ -705,60 +551,8 @@ public class View extends StackPane
         snapGuidePane = new Pane();
         snapGuidePane.setMouseTransparent(true);
         pickPaneMouse = new Pane();
-        pickPaneDisplay = new Pane();
-        pickPaneDisplay.getStyleClass().add("view-pick-pane");
         getChildren().addAll(mainPane.getNode(), overlayPane, snapGuidePane);
         getStyleClass().add("view");
-        currentPick = new SimpleObjectProperty<>(null);
-        // Needs to pick up mouse events on mouse pane, not display pane:
-        pickPaneMouse.setMouseTransparent(false);
-        pickPaneDisplay.setMouseTransparent(true);
-        FXUtility.addChangeListenerPlatform(currentPick, t -> {
-            if (t != null)
-            {
-                //TODO
-                //Bounds b = ((TableDisplay)t.getDisplay()).getBoundsInParent();
-                //pickPaneDisplay.setClip(Shape.subtract(new Rectangle(mainPane.getWidth(), mainPane.getHeight()), new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight())));
-                pickPaneMouse.setCursor(Cursor.HAND);
-            }
-            else
-            {
-                pickPaneDisplay.setClip(null);
-                pickPaneMouse.setCursor(null);
-            }
-        });
-
-        pickPaneMouse.setOnMouseMoved(e -> {
-            @Nullable Table table = FXUtility.mouse(this).pickAt(e.getX(), e.getY());
-            currentPick.setValue(table);
-        });
-        pickPaneMouse.setOnMouseClicked(e -> {
-            @Nullable Table cur = currentPick.get();
-            if (cur != null)
-            {
-                if (onPick != null)
-                    onPick.consume(cur);
-                getChildren().removeAll(pickPaneMouse, pickPaneDisplay);
-            }
-        });
-        //TODO let escape cancel
-
-        /*
-        // Must use identity hash map as transformations' hash code can change if position changes.
-        overlays = FXCollections.observableMap(new IdentityHashMap<>());
-        overlays.addListener((MapChangeListener<? super @UnknownIfRecorded Transformation, ? super @UnknownIfRecorded Overlays>) c -> {
-            Overlays removed = c.getValueRemoved();
-            if (removed != null)
-            {
-                overlayPane.getChildren().removeAll(removed.arrowFrom, removed.name, removed.arrowTo);
-            }
-            Overlays added = c.getValueAdded();
-            if (added != null)
-            {
-                overlayPane.getChildren().addAll(added.arrowFrom, added.name, added.arrowTo);
-            }
-        });
-        */
 
         snapGuides.addListener((ListChangeListener<Shape>) c -> {
             while (c.next())
@@ -816,7 +610,7 @@ public class View extends StackPane
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window
-    private Window getWindow()
+    Window getWindow()
     {
         return getScene().getWindow();
     }
@@ -847,17 +641,6 @@ public class View extends StackPane
     public void requestFocus()
     {
         // Don't allow focus
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public void pickTable(FXPlatformConsumer<@Nullable Table> whenPicked)
-    {
-        // Reset the clip:
-        pickPaneDisplay.setClip(null);
-        currentPick.setValue(null);
-
-        getChildren().addAll(pickPaneDisplay, pickPaneMouse);
-        onPick = whenPicked;
     }
 
     public ObjectExpression<String> titleProperty()

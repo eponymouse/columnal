@@ -14,6 +14,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.ResizableRectangle;
 
 import java.util.Optional;
 
@@ -50,20 +51,7 @@ public abstract class RectangleOverlayItem implements FloatingItem
     @Override
     public final Pair<ViewOrder, Node> makeCell()
     {
-        Rectangle r = new Rectangle() {
-            @Override
-            public void resize(double width, double height)
-            {
-                setWidth(width);
-                setHeight(height);
-            }
-
-            @Override
-            public boolean isResizable()
-            {
-                return true;
-            }
-        };
+        Rectangle r = new ResizableRectangle();
         r.setMouseTransparent(true);
         style(r);
         return new Pair<>(viewOrder, r);
@@ -76,4 +64,5 @@ public abstract class RectangleOverlayItem implements FloatingItem
     {
         return null;
     }
+
 }

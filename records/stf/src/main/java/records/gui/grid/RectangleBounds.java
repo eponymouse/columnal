@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import utility.Utility;
 
 import java.util.Objects;
 
@@ -42,5 +43,19 @@ public class RectangleBounds
     public String toString()
     {
         return "[" + topLeftIncl + " - " + bottomRightIncl + "]";
+    }
+
+    public RectangleBounds intersectWith(RectangleBounds rectangleBounds)
+    {
+        CellPosition topLeft = new CellPosition(
+            Utility.maxRow(topLeftIncl.rowIndex, rectangleBounds.topLeftIncl.rowIndex),
+            Utility.maxCol(topLeftIncl.columnIndex, rectangleBounds.topLeftIncl.columnIndex)
+        );
+        CellPosition bottomRight = new CellPosition(
+            Utility.minRow(bottomRightIncl.rowIndex, rectangleBounds.bottomRightIncl.rowIndex),
+            Utility.minCol(bottomRightIncl.columnIndex, rectangleBounds.bottomRightIncl.columnIndex)
+        );
+        
+        return new RectangleBounds(topLeft, bottomRight);
     }
 }

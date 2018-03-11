@@ -58,12 +58,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
             {
                 Window window = getScene().getWindow();
                 window.hide(); // Or fold up?
-                view.pickTable(picked ->
-                {
-                    if (picked != null)
-                        selected.setText(picked.getId().getOutput());
-                    ((Stage) window).show();
-                });
+                
             }
         });
         // TODO implement it

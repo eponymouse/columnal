@@ -2,6 +2,7 @@ package records.transformations;
 
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.Table;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
@@ -66,9 +67,17 @@ public abstract class TransformationInfo
     @OnThread(Tag.Simulation)
     public abstract Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException;
 
+
     @OnThread(Tag.FXPlatform)
     public abstract TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src);
 
+    // TODO make this abstract and remove editNew
+    @OnThread(Tag.Simulation)
+    public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable)
+    {
+        throw new RuntimeException("");
+    }
+    
     public final String getImageFileName()
     {
         return imageFileName;

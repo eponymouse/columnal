@@ -5,6 +5,7 @@ import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
 import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -73,7 +74,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
     }
 
-    public final FloatingItem addItem(FloatingItem item)
+    public final <T extends FloatingItem> T addItem(T item)
     {
         items.put(item, Optional.empty());
         return item;
@@ -96,6 +97,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     public static interface FloatingItem
     {
         // If empty is returned, means not visible (and cell is removed).  Otherwise, coords in parent are returned.
+        // BoundingBox not Bounds: should be directly calculated, without passing through a coordinate transformation
         public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
         
         // Called when a cell is made.  If calculatePosition always returns Optional.of, then this is only called once:

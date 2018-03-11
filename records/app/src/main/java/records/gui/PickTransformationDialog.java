@@ -22,7 +22,7 @@ import utility.gui.LightDialog;
 import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
-public class PickTransformationDialog extends LightDialog<SimulationSupplier<Transformation>>
+public class PickTransformationDialog extends LightDialog<Pair<Point2D, TransformationInfo>>
 {
     private static final int BUTTON_WIDTH = 140;
     private static final double WIDTH = BUTTON_WIDTH * 4 + 3 * 10;
@@ -45,7 +45,7 @@ public class PickTransformationDialog extends LightDialog<SimulationSupplier<Tra
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
         setResultConverter(bt -> null);
         centreDialogButtons();
-        org.scenicview.ScenicView.show(getDialogPane().getScene());
+        //org.scenicview.ScenicView.show(getDialogPane().getScene());
     }
 
     private void makeTransformationButtons(@UnknownInitialization(LightDialog.class) PickTransformationDialog this, TilePane tilePane)
@@ -54,12 +54,15 @@ public class PickTransformationDialog extends LightDialog<SimulationSupplier<Tra
 
         for (TransformationInfo transformationInfo : TransformationManager.getInstance().getTransformations())
         {
-            Button button = new ExplainedButton(transformationInfo.getDisplayName(), transformationInfo.getExplanationKey(), transformationInfo.getImageFileName(), BUTTON_WIDTH, p -> {});
+            Button button = new ExplainedButton(transformationInfo.getDisplayName(), transformationInfo.getExplanationKey(), transformationInfo.getImageFileName(), BUTTON_WIDTH, p -> {
+                FXUtility.mouse(this).setResult(new Pair<>(p, transformationInfo));
+                close();
+            });
             tilePane.getChildren().add(button);
         }
     }
 
-    public Optional<SimulationSupplier<Transformation>> showAndWaitCentredOn(Point2D mouseScreenPos)
+    public Optional<Pair<Point2D, TransformationInfo>> showAndWaitCentredOn(Point2D mouseScreenPos)
     {
         return super.showAndWaitCentredOn(mouseScreenPos, WIDTH, HEIGHT);
     }
