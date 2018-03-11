@@ -106,7 +106,7 @@ public abstract class GridArea
     public final boolean contains(CellPosition cellPosition)
     {
         return topLeft.rowIndex <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRight.rowIndex
-            && topLeft.columnIndex  <= cellPosition.columnIndex && cellPosition.columnIndex < bottomRight.columnIndex;
+            && topLeft.columnIndex  <= cellPosition.columnIndex && cellPosition.columnIndex <= bottomRight.columnIndex;
     }
     
     public final CellPosition getBottomRightIncl(@UnknownInitialization(GridArea.class) GridArea this)
