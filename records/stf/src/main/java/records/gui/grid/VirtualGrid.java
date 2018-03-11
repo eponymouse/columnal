@@ -20,16 +20,21 @@ import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.effect.Effect;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -160,9 +165,16 @@ public class VirtualGrid implements ScrollBindable
     private double renderXOffset;
     private double renderYOffset;
     private @Nullable GridAreaHighlight highlightedGridArea;
+    private final StackPane stackPane;
+    private final Pane activeOverlayPane;
 
+    public static interface CreateTable
+    {
+        public void createTable(CellPosition cellPosition, Point2D suitablePoint, VirtualGrid virtualGrid);
+    }
+    
     @OnThread(Tag.FXPlatform)
-    public VirtualGrid(@Nullable FXPlatformBiConsumer<CellPosition, Point2D> createTable)
+    public VirtualGrid(@Nullable CreateTable createTable, String... styleClasses)
     {
         if (createTable != null)
             nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
@@ -170,7 +182,26 @@ public class VirtualGrid implements ScrollBindable
         this.hBar = new ScrollBar();
         this.vBar = new ScrollBar();
         this.container = new Container();
-        this.container.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
+        this.container.getStyleClass().addAll(styleClasses);
+        this.activeOverlayPane = new Pane() {
+            @Override
+            protected void layoutChildren()
+            {
+            }
+
+            @Override
+            public void requestFocus()
+            {
+            }
+        };
+        this.activeOverlayPane.setMouseTransparent(true);
+        this.stackPane = new StackPane(container, activeOverlayPane) {
+            @Override
+            public void requestFocus()
+            {
+            }
+        };
+        this.stackPane.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
         scrollGroup = new ScrollGroup(FXUtility.mouse(this)::scrollClampX, FXUtility.mouse(this)::scrollClampY);
 /*
 
@@ -666,7 +697,7 @@ public class VirtualGrid implements ScrollBindable
 
     public Region getNode()
     {
-        return container;
+        return stackPane;
     }
 
     public void positionOrAreaChanged()
@@ -789,15 +820,16 @@ public class VirtualGrid implements ScrollBindable
         if (highlightedGridArea != null)
         {
             supplierFloating.removeItem(highlightedGridArea);
+            FXUtility.setPseudoclass(container, "picking-table", false);
             highlightedGridArea = null;
         }
     }
     
-    public void highlightGridAreaAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick)
+    public void highlightGridAreaAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
     {
         if (highlightedGridArea == null)
             highlightedGridArea = supplierFloating.addItem(new GridAreaHighlight());
-        highlightedGridArea.highlightAtScreenPos(screenPos, validPick);
+        highlightedGridArea.highlightAtScreenPos(screenPos, validPick, setCursor);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1088,27 +1120,38 @@ public class VirtualGrid implements ScrollBindable
             
             updateClip();
             requestLayout();
+            activeOverlayPane.requestLayout();
         }
 
         @Override
         public Pair<DoubleExpression, DoubleExpression> add(Node node, ViewOrder viewOrder)
         {
-            // Need to insert at right place:
-            // Children are kept sorted by view order:
-            int insertionIndex = 0;
-            while (insertionIndex < viewOrders.size() && viewOrders.get(insertionIndex).ordinal() < viewOrder.ordinal())
-                insertionIndex += 1;
-            getChildren().add(insertionIndex, node);
-            viewOrders.add(insertionIndex, viewOrder);
+            if (viewOrder == ViewOrder.OVERLAY_ACTIVE)
+            {
+                activeOverlayPane.getChildren().add(node);
+            }
+            else
+            {
+                // Need to insert at right place:
+                // Children are kept sorted by view order:
+                int insertionIndex = 0;
+                while (insertionIndex < viewOrders.size() && viewOrders.get(insertionIndex).ordinal() < viewOrder.ordinal())
+                    insertionIndex += 1;
+                getChildren().add(insertionIndex, node);
+                viewOrders.add(insertionIndex, viewOrder);
+            }
             return new Pair<>(translateXProperty(), translateYProperty());
         }
 
         @Override
         public void remove(Node node)
         {
-            int index = getChildren().indexOf(node);
-            getChildren().remove(index);
-            viewOrders.remove(index);
+            if (!activeOverlayPane.getChildren().remove(node))
+            {
+                int index = getChildren().indexOf(node);
+                getChildren().remove(index);
+                viewOrders.remove(index);
+            }
         }
     }
 
@@ -1290,15 +1333,21 @@ public class VirtualGrid implements ScrollBindable
         updateSizeAndPositions();
     }
 
+    public void setEffectOnNonOverlays(@Nullable Effect effect)
+    {
+        container.setEffect(effect);
+    }
+
+
     // A really simple class that manages a single button which is shown when an empty location is focused
     private class CreateTableButtonSupplier extends VirtualGridSupplier<Button>
     {
         private @MonotonicNonNull Button button;
         private @Nullable CellPosition buttonPosition;
         // Button position, last mouse position on screen:
-        private final FXPlatformBiConsumer<CellPosition, Point2D> createTable;
+        private final CreateTable createTable;
 
-        private CreateTableButtonSupplier(FXPlatformBiConsumer<CellPosition, Point2D> createTable)
+        private CreateTableButtonSupplier(CreateTable createTable)
         {
             this.createTable = createTable;
         }
@@ -1314,7 +1363,7 @@ public class VirtualGrid implements ScrollBindable
                     if (curSel instanceof EmptyCellSelection)
                     {
                         // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
-                        createTable.consume(((EmptyCellSelection)curSel).position, lastMousePos[0]);
+                        createTable.createTable(((EmptyCellSelection)curSel).position, lastMousePos[0], FXUtility.mouse(VirtualGrid.this));
                     }
                 }, "create-table-grid-button");
                 button.setFocusTraversable(false);
@@ -1466,10 +1515,12 @@ public class VirtualGrid implements ScrollBindable
         @Override
         public Pair<ViewOrder, Node> makeCell()
         {
-            return new Pair<>(ViewOrder.OVERLAY_ACTIVE, new ResizableRectangle());
+            ResizableRectangle rectangle = new ResizableRectangle();
+            rectangle.getStyleClass().add("pick-table-overlay");
+            return new Pair<>(ViewOrder.OVERLAY_ACTIVE, rectangle);
         }
 
-        public void highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick)
+        public void highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
         {
             Point2D localPos = container.screenToLocal(screenPos);
             @Nullable CellPosition cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
@@ -1479,7 +1530,8 @@ public class VirtualGrid implements ScrollBindable
             if (picked != oldPicked)
             {
                 container.redoLayout();
-            }            
+            }
+            setCursor.consume(picked != null ? Cursor.HAND : null);
         }
     }
 }

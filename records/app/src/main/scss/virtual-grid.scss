@@ -103,6 +103,13 @@
     -fx-stroke-type: outside;
 }
 
+.pick-table-overlay {
+    -fx-fill: $table-pick-overlay-fill;
+    -fx-stroke-width: 3;
+    -fx-stroke: $table-pick-overlay-stroke;
+    -fx-stroke-type: outside;
+}
+
 .virt-grid-row-label {
     -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
     -fx-background-insets: 0, 0 1 0 1;

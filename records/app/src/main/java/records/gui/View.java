@@ -259,11 +259,11 @@ public class View extends StackPane
         
         pickPaneMouseFinal.setPickOnBounds(true);
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            mainPane.highlightGridAreaAtScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), g -> g instanceof TableDisplay);
+            mainPane.highlightGridAreaAtScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);
             e.consume();
         });
         getChildren().add(pickPaneMouseFinal);
-        mainPane.highlightGridAreaAtScreenPos(screenPos, g -> g instanceof TableDisplay);
+        mainPane.highlightGridAreaAtScreenPos(screenPos, g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);
     }
     
     // If any sources are invalid, they are skipped
@@ -491,7 +491,7 @@ public class View extends StackPane
             }
         });
         
-        mainPane = new VirtualGrid((CellPosition cellPosition, Point2D mouseScreenPos) -> {
+        mainPane = new VirtualGrid((CellPosition cellPosition, Point2D mouseScreenPos, VirtualGrid virtualGrid) -> {
                 // Data table if there are none, or if we ask and they say data
 
                 View thisView = FXUtility.mouse(this);
@@ -502,7 +502,7 @@ public class View extends StackPane
                     // Ask what they want
                     GaussianBlur blur = new GaussianBlur(4.0);
                     blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
-                    setEffect(blur);
+                    virtualGrid.setEffectOnNonOverlays(blur);
                     choice = new DataOrTransformChoice(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos);
                     
                 }
@@ -539,9 +539,8 @@ public class View extends StackPane
                             break;
                     }
                 }
-                setEffect(null);
-        });
-        mainPane.getNode().getStyleClass().add("main-view-grid");
+                virtualGrid.setEffectOnNonOverlays(null);
+        }, "main-view-grid");
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);

@@ -2,6 +2,9 @@
 @function grey($amount) {
     @return hsb(0, 0%, $amount)
 }
+@function greya($amount, $alpha) {
+    @return hsba(0, 0%, $amount, $alpha)
+}
 @function gray($amount) {
     @return hsb(0, 0%, $amount)
 }
@@ -38,6 +41,8 @@ $table-border-color: grey(50%);
 $table-row-label-background-color: grey(90%);
 $table-row-label-border-color: grey(70%);
 $table-row-label-text-color: grey(50%);
+$table-pick-overlay-stroke: grey(30%);
+$table-pick-overlay-fill: greya(30%, 0.5);
 $column-header-background-color: rgb(204, 213, 228);
 $column-header-text-color: black;
 $expand-arrow-color: grey(80%);
