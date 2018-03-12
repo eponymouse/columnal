@@ -63,6 +63,7 @@ import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -835,12 +836,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
 
-    private class TableHat implements FloatingItem
+    private class TableHat extends FloatingItem<TextFlow>
     {
         private final StyledString content;
         
         public TableHat(Table table)
         {
+            super(ViewOrder.FLOATING);
             if (table instanceof Filter)
             {
                 Filter filter = (Filter)table;
@@ -873,9 +875,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public Pair<ViewOrder, Node> makeCell()
+        public TextFlow makeCell()
         {
-            return new Pair<>(ViewOrder.FLOATING, new TextFlow(content.toGUI().toArray(new Node[0])));
+            return new TextFlow(content.toGUI().toArray(new Node[0]));
+        }
+
+        @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        {
+            // TODO
+            return null;
         }
     }
 }

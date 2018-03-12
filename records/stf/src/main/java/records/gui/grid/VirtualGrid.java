@@ -1505,9 +1505,14 @@ public class VirtualGrid implements ScrollBindable
     }
     
     @OnThread(Tag.FXPlatform)
-    private class GridAreaHighlight implements FloatingItem
+    private class GridAreaHighlight extends FloatingItem<ResizableRectangle>
     {
         private @Nullable GridArea picked;
+        
+        private GridAreaHighlight()
+        {
+            super(ViewOrder.OVERLAY_ACTIVE);
+        }
 
         @Override
         public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
@@ -1525,11 +1530,17 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public Pair<ViewOrder, Node> makeCell()
+        public ResizableRectangle makeCell()
         {
             ResizableRectangle rectangle = new ResizableRectangle();
             rectangle.getStyleClass().add("pick-table-overlay");
-            return new Pair<>(ViewOrder.OVERLAY_ACTIVE, rectangle);
+            return rectangle;
+        }
+
+        @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        {
+            return null;
         }
 
         public @Nullable GridArea highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)

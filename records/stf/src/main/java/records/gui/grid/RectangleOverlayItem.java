@@ -19,13 +19,11 @@ import utility.gui.ResizableRectangle;
 import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
-public abstract class RectangleOverlayItem implements FloatingItem
+public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectangle>
 {
-    private final ViewOrder viewOrder;
-
     protected RectangleOverlayItem(ViewOrder viewOrder)
     {
-        this.viewOrder = viewOrder;
+        super(viewOrder);
     }
 
     @Override
@@ -49,12 +47,12 @@ public abstract class RectangleOverlayItem implements FloatingItem
     protected abstract Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
     @Override
-    public final Pair<ViewOrder, Node> makeCell()
+    public final ResizableRectangle makeCell()
     {
-        Rectangle r = new ResizableRectangle();
+        ResizableRectangle r = new ResizableRectangle();
         r.setMouseTransparent(true);
         style(r);
-        return new Pair<>(viewOrder, r);
+        return r;
     }
 
     protected abstract void style(Rectangle r);

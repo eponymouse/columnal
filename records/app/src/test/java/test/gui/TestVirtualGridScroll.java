@@ -31,6 +31,7 @@ import records.data.Table.MessageWhenEmpty;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
@@ -103,7 +104,7 @@ public class TestVirtualGridScroll extends ApplicationTest
         
         node = new Label("X");
         // Add node in middle of screen when viewing top left:        
-        virtualGrid.getFloatingSupplier().addItem(new FloatingItem()
+        virtualGrid.getFloatingSupplier().addItem(new FloatingItem<Node>(ViewOrder.STANDARD)
         {
             @Override
             public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
@@ -118,9 +119,15 @@ public class TestVirtualGridScroll extends ApplicationTest
             }
 
             @Override
-            public Pair<ViewOrder, Node> makeCell()
+            public Node makeCell()
             {
-                return new Pair<>(ViewOrder.STANDARD, node);
+                return node;
+            }
+
+            @Override
+            public @Nullable ItemState getItemState(CellPosition cellPosition)
+            {
+                return null;
             }
         });
     }

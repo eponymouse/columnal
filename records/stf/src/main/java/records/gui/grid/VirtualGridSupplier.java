@@ -56,6 +56,12 @@ public abstract class VirtualGridSupplier<T extends Node>
     // package-visible
     abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
+    /**
+     * EDITING means it has focus and should receive all mouse events.
+     * DIRECTLY_CLICKABLE means if you click it should be activated
+     * NOT_CLICKABLE means there is something there, but clicking does nothing.
+     * (nothing there is indicated by null)
+     */
     public static enum ItemState { EDITING, DIRECTLY_CLICKABLE, NOT_CLICKABLE }
     
     /**

@@ -19,6 +19,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -42,6 +43,7 @@ import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
+import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleDetails;
 import records.gui.grid.VirtualGridSupplierFloating;
@@ -137,24 +139,33 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
             // Item for column name:
-            FloatingItem columnNameItem = new FloatingItem()
+            FloatingItem<Pane> columnNameItem = new FloatingItem<Pane>(ViewOrder.FLOATING_PINNED)
             {
-                private @MonotonicNonNull BorderPane borderPane;
-                double containerTranslateY;
+                private double containerTranslateY;
                 private double y;
                 private double lastY;
+
+                @OnThread(Tag.FXPlatform)
+                private CellPosition getFloatingPosition()
+                {
+                    return new CellPosition(getPosition().rowIndex + CellPosition.row(1), getPosition().columnIndex + CellPosition.col(columnIndex));
+                }
                 
-                
+                @Override
+                public @Nullable ItemState getItemState(CellPosition cellPosition)
+                {
+                    return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
+                }
+
                 @Override
                 @OnThread(Tag.FXPlatform)
                 public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
                 {
-                    @AbsColIndex int calcCol = getPosition().columnIndex + CellPosition.col(columnIndex);
-                    @AbsRowIndex int calcRow = getPosition().rowIndex + CellPosition.row(1);
-                    double x = columnBounds.getItemCoord(Utility.boxCol(calcCol));
-                    y = rowBounds.getItemCoord(Utility.boxRow(calcRow));
-                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
-                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
+                    CellPosition pos = getFloatingPosition();
+                    double x = columnBounds.getItemCoord(Utility.boxCol(pos.columnIndex));
+                    y = rowBounds.getItemCoord(Utility.boxRow(pos.rowIndex));
+                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(pos.columnIndex)) - x;
+                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(pos.rowIndex)) - y;
 
                     lastY = rowBounds.getItemCoord(Utility.boxRow(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)));
                     
@@ -204,7 +215,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                         layoutY = y;
                     }
                     
-                    updateTranslate();
+                    updateTranslate(getNode());
                     
                     return Optional.of(new BoundingBox(
                             x,
@@ -216,7 +227,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Pair<ViewOrder, Node> makeCell()
+                public Pane makeCell()
                 {
                     ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
                     textField.sizeToFit(30.0, 30.0);
@@ -232,15 +243,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                         });
                     }
 
-                    borderPane = new BorderPane(textField.getNode());
-                    BorderPane borderPaneFinal = borderPane;
+                    final BorderPane borderPane = new BorderPane(textField.getNode());
                     borderPane.getStyleClass().add("table-display-column-title");
                     BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
                     BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
                     FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
                         for (CellStyle style : CellStyle.values())
                         {
-                            style.applyStyle(borderPaneFinal, cellStyles.contains(style));
+                            style.applyStyle(borderPane, cellStyles.contains(style));
                         }
                     });
 
@@ -253,23 +263,23 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                         menuItem.setDisable(true);
                         contextMenu.getItems().setAll(menuItem);
                     }
-                    borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPaneFinal, e.getScreenX(), e.getScreenY()));
+                    borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
                     textField.setContextMenu(contextMenu);
                     
-                    return new Pair<>(ViewOrder.FLOATING_PINNED, borderPane);
+                    return borderPane;
                 }
 
                 @Override
-                public void adjustForContainerTranslation(Node node, Pair<DoubleExpression, DoubleExpression> translateXY)
+                public void adjustForContainerTranslation(Pane node, Pair<DoubleExpression, DoubleExpression> translateXY)
                 {
                     FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
                         containerTranslateY = ty.doubleValue();
-                        updateTranslate();
+                        updateTranslate(node);
                     });
                 }
                 
                 @OnThread(Tag.FX)
-                private void updateTranslate()
+                private void updateTranslate(@Nullable Pane borderPane)
                 {
                     if (borderPane != null)
                     {
@@ -309,27 +319,38 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 }
             };
             // Item for column type:
-            FloatingItem columnTypeItem = new FloatingItem()
+            FloatingItem<Label> columnTypeItem = new FloatingItem<Label>(ViewOrder.FLOATING)
             {
+                @OnThread(Tag.FXPlatform)
+                private CellPosition getFloatingPosition()
+                {
+                    return new CellPosition(getPosition().rowIndex + CellPosition.row(2), getPosition().columnIndex + CellPosition.col(columnIndex));
+                }
+                
+                @Override
+                public @Nullable ItemState getItemState(CellPosition cellPosition)
+                {
+                    return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
+                }
+
                 @Override
                 public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
                 {
-                    @AbsColIndex int calcCol = getPosition().columnIndex + CellPosition.col(columnIndex);
-                    @AbsRowIndex int calcRow = getPosition().rowIndex + CellPosition.row(2);
-                    double x = columnBounds.getItemCoord(Utility.boxCol(calcCol));
-                    double y = rowBounds.getItemCoord(Utility.boxRow(calcRow));
-                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(calcCol)) - x;
-                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(calcRow)) - y;
+                    CellPosition pos = getFloatingPosition();
+                    double x = columnBounds.getItemCoord(Utility.boxCol(pos.columnIndex));
+                    double y = rowBounds.getItemCoord(Utility.boxRow(pos.rowIndex));
+                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(pos.columnIndex)) - x;
+                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(pos.rowIndex)) - y;
 
                     return Optional.of(new BoundingBox(x, y, width, height));
                 }
 
                 @Override
-                public Pair<ViewOrder, Node> makeCell()
+                public Label makeCell()
                 {
                     Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
                     typeLabel.getStyleClass().add("table-display-column-title");
-                    return new Pair<>(ViewOrder.FLOATING, typeLabel);
+                    return typeLabel;
                 }
             };
             
@@ -544,17 +565,16 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
      */
     protected abstract void doCopy(@Nullable RectangleBounds dataBounds);
 
-    private class TableHeaderItem implements FloatingItem
+    private class TableHeaderItem extends FloatingItem<Pane>
     {
         private @Nullable final TableManager tableManager;
         private final TableId initialTableName;
         private @Nullable final FXPlatformConsumer<TableId> renameTable;
         private final VirtualGridSupplierFloating floatingItems;
         
-        private @MonotonicNonNull BorderPane borderPane;
-
         public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
         {
+            super(ViewOrder.FLOATING);
             this.tableManager = tableManager;
             this.initialTableName = initialTableName;
             this.renameTable = renameTable;
@@ -578,8 +598,15 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        {
+            // TODO
+            return null;
+        }
+
+        @Override
         @OnThread(Tag.FXPlatform)
-        public Pair<ViewOrder, Node> makeCell()
+        public Pane makeCell()
         {
             ErrorableTextField<TableId> tableNameField = new TableNameTextField(tableManager, initialTableName);
             tableNameField.sizeToFit(30.0, 30.0);
@@ -643,16 +670,15 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                     contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());
             });
 
-            this.borderPane = borderPane;
             // TODO support dragging to move table
-            return new Pair<>(ViewOrder.FLOATING, borderPane);
+            return borderPane;
         }
 
         @OnThread(Tag.FXPlatform)
         public void setSelected(boolean selected)
         {
-            if (borderPane != null)
-                FXUtility.setPseudoclass(borderPane, "table-selected", selected);
+            if (getNode() != null)
+                FXUtility.setPseudoclass(getNode(), "table-selected", selected);
         }
     }
 
