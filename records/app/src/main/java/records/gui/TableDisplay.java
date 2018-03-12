@@ -23,6 +23,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -75,6 +76,7 @@ import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
+import records.transformations.Filter;
 import records.transformations.HideColumnsPanel;
 import records.transformations.SummaryStatistics;
 import records.transformations.TransformationEditable;
@@ -835,8 +837,24 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private class TableHat implements FloatingItem
     {
+        private final StyledString content;
+        
         public TableHat(Table table)
         {
+            if (table instanceof Filter)
+            {
+                Filter filter = (Filter)table;
+                content = StyledString.concat(
+                    StyledString.s("Filter "),
+                    filter.getSources().get(0).toStyledString(),
+                    StyledString.s(", keeping rows where: "),
+                    filter.getFilterExpression().toStyledString()
+                );
+            }
+            else
+            {
+                content = StyledString.s("");
+            }
         }
 
         @Override
@@ -857,7 +875,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         @Override
         public Pair<ViewOrder, Node> makeCell()
         {
-            return new Pair<>(ViewOrder.FLOATING, new Label("Hat!"));
+            return new Pair<>(ViewOrder.FLOATING, new TextFlow(content.toGUI().toArray(new Node[0])));
         }
     }
 }

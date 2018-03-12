@@ -2,6 +2,8 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import styled.StyledShowable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -9,7 +11,7 @@ import threadchecker.Tag;
  * Created by neil on 14/11/2016.
  */
 @OnThread(Tag.Any)
-public class TableId implements Comparable<TableId>
+public class TableId implements Comparable<TableId>, StyledShowable
 {
     private final String tableId;
 
@@ -56,5 +58,11 @@ public class TableId implements Comparable<TableId>
     public int compareTo(@NotNull TableId o)
     {
         return tableId.compareTo(o.tableId);
+    }
+
+    @Override
+    public StyledString toStyledString()
+    {
+        return StyledString.s(tableId);
     }
 }

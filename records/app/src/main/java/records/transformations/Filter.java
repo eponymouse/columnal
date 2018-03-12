@@ -236,6 +236,7 @@ public class Filter extends TransformationEditable
         return recordSet;
     }
 
+    @OnThread(Tag.Any)
     public Expression getFilterExpression()
     {
         return filterExpression;
