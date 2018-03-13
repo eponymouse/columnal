@@ -6,11 +6,20 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.animation.Transition;
 import javafx.application.Platform;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -29,10 +38,12 @@ import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -131,9 +142,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private final TableBorderOverlay tableBorderOverlay;
     private final TableRowLabelBorder rowLabelBorder;
+    private final TableHat tableHat;
     private boolean currentKnownRowsIsFinal = false;
 
     private final FXPlatformRunnable onModify;
+    private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
 
     @OnThread(Tag.Any)
     public Table getTable()
@@ -248,6 +261,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
     {
         ListenerOutcome outcome = super.selectionChanged(oldSelection, newSelection).getFirst();
+        boolean includedInNew = newSelection == null ? false : newSelection.includes(this);
+        boolean includedInOld = oldSelection == null ? false : oldSelection.includes(this);
+        if (includedInNew != includedInOld)
+        {
+            slideOutProportion.set(includedInOld ? 1.0 : 0.0);
+            new Timeline(new KeyFrame(Duration.millis(250), new KeyValue(slideOutProportion, 1.0 - slideOutProportion.get()))).playFromStart();
+        }
+        
         return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
@@ -450,7 +471,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         rowLabelBorder = new TableRowLabelBorder();
         supplierFloating.addItem(rowLabelBorder);
         // Hat:
-        supplierFloating.addItem(new TableHat(table));
+        tableHat = new TableHat(table);
+        supplierFloating.addItem(tableHat);
         // Border overlay.  Note this makes use of calculations based on hat and row label border,
         // so it is important that we add this after them (since floating supplier iterates in order of addition):
         tableBorderOverlay = new TableBorderOverlay();
@@ -785,6 +807,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         rowLabelBorder.updateClip();
     }
 
+    public DoubleExpression slideOutProperty()
+    {
+        return slideOutProportion;
+    }
+
     @OnThread(Tag.FXPlatform)
     private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
     {
@@ -838,7 +865,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private class TableHat extends FloatingItem<Node>
     {
         private final StyledString content;
-        
+        private BoundingBox latestBounds = new BoundingBox(0, 0, 0, 0);
+
         public TableHat(Table table)
         {
             super(ViewOrder.FLOATING);
@@ -875,12 +903,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             double bottom = visibleBounds.getYCoord(getPosition().rowIndex);
             double y = bottom - item.prefHeight(width);
             double height = bottom - y;
-            return Optional.of(new BoundingBox(
+            latestBounds = new BoundingBox(
                 x,
                 y,
                 width,
                 height
-            ));
+            );
+            return Optional.of(latestBounds);
         }
 
         @Override
@@ -983,8 +1012,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - ourTopY, 20, rowEndY - rowStartY);
                 clip = Shape.subtract(clip, rowLabelBounds);
             }
+            clip = Shape.subtract(clip, new Rectangle(0, -20, tableHat.latestBounds.getWidth(), 20));
 
-            r.clipProperty().set(clip);
+            r.setClip(clip);
             /* // Debug code to help see what clip looks like:
             if (getPosition().columnIndex == CellPosition.col(7))
             {
@@ -1003,10 +1033,18 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private class TableRowLabelBorder extends FloatingItem<ResizableRectangle>
     {
         private Optional<BoundingBox> currentRowLabelBounds = Optional.empty();
-        
+
         public TableRowLabelBorder()
         {
             super(ViewOrder.OVERLAY_PASSIVE);
+            FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
+                if (getNode() != null)
+                {
+                    double clippedWidth = (1.0 - f.doubleValue()) * getNode().getWidth();
+                    getNode().translateXProperty().set(clippedWidth);
+                    updateClip();
+                }
+            });
         }
 
         @Override
@@ -1036,19 +1074,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             updateClip();
         }
 
-        public void updateClip()
+        public void updateClip(@UnknownInitialization(FloatingItem.class) TableRowLabelBorder this)
         {
             ResizableRectangle cur = getNode();
-            if (cur != null && currentRowLabelBounds.isPresent())
+            if (cur != null && currentRowLabelBounds != null && currentRowLabelBounds.isPresent())
             {
                 BoundingBox r = currentRowLabelBounds.get();
-                cur.setClip(
-                    // Outer (excluding right hand side) minus central inner:
-                    Shape.subtract(
-                        new Rectangle(-20, -20, r.getWidth() + 20, r.getHeight() + 40),
-                        new Rectangle(0, 0, r.getWidth(), r.getHeight())
-                    )
+                double clippedWidth = slideOutProportion.get() * r.getWidth();
+                // Outer (excluding right hand side) minus central inner:
+                Shape clip = Shape.subtract(
+                    new Rectangle(-20, -20, clippedWidth + 20, r.getHeight() + 40),
+                    new Rectangle(0, 0, clippedWidth, r.getHeight())
                 );
+                cur.setClip(clip);
             }
         }
     }

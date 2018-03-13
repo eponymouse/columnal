@@ -7,12 +7,15 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -27,6 +30,8 @@ import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
+import utility.gui.ResizableRectangle;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,6 +81,8 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             
             for (LabelPane visibleNode : visibleNodes)
             {
+                visibleNode.updateClip();
+                
                 visibleNode.setMinDigits(numDigits);
                 visibleNode.label.applyCss();
                 double labelWidth = visibleNode.label.prefWidth(Double.MAX_VALUE);
@@ -114,10 +121,13 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         private @TableDataRowIndex int row;
         private final Label label = new Label();
         private @MonotonicNonNull TableDisplay tableDisplay;
+        private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
         private int curMinDigits = 1;
+        private final ResizableRectangle clip = new ResizableRectangle();
 
         public LabelPane()
         {
+            setClip(clip);
             setRight(label);
             getStyleClass().add("virt-grid-row-label-pane");
             label.getStyleClass().add("virt-grid-row-label");
@@ -126,6 +136,9 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             label.setOnContextMenuRequested(e -> {
                 if (tableDisplay != null)
                     tableDisplay.makeRowContextMenu(this.row).show(label, e.getScreenX(), e.getScreenY());
+            });
+            FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
+                label.translateXProperty().set((1 - f.doubleValue()) * label.prefWidth(Double.MAX_VALUE));
             });
         }
         
@@ -140,6 +153,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             this.row = row;
             // User rows begin with 1:
             label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
+            slideOutProportion.bind(tableDisplay.slideOutProperty());
         }
         
         public void setMinDigits(int minDigits)
@@ -149,6 +163,12 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 curMinDigits = minDigits;
                 setRow(tableDisplay, row);
             }
+        }
+
+        public void updateClip()
+        {
+            clip.setWidth(getWidth());
+            clip.setHeight(getHeight());
         }
     }
 

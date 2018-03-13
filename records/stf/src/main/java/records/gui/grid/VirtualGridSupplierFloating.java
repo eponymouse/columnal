@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.BoundingBox;
 import javafx.scene.Node;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -112,7 +113,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
          */
         public abstract @Nullable ItemState getItemState(CellPosition cellPosition);
         
-        protected final @Pure @Nullable T getNode()
+        protected final @Pure @Nullable T getNode(@UnknownInitialization(FloatingItem.class) FloatingItem<T> this)
         {
             return node;
         }
