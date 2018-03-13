@@ -20,7 +20,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.TextFlow;
@@ -836,7 +841,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
 
-    private class TableHat extends FloatingItem<TextFlow>
+    private class TableHat extends FloatingItem<Node>
     {
         private final StyledString content;
         
@@ -864,10 +869,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             // The first time we are ever added, we will make a cell here and discard it,
             // but there's no good way round this:
-            TextFlow item = getNode() != null ? getNode() : makeCell();
+            Node item = getNode() != null ? getNode() : makeCell();
             
             double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
             double width = columnBounds.getItemCoordAfter(Utility.boxCol(getBottomRightIncl().columnIndex)) - x;
+            x += 10;
+            width -= 20;
             
             double bottom = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
             double y = bottom - item.prefHeight(width);
@@ -881,11 +888,24 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public TextFlow makeCell()
+        public Node makeCell()
         {
             TextFlow textFlow = new TextFlow(content.toGUI().toArray(new Node[0]));
             textFlow.getStyleClass().add("table-hat-text-flow");
-            return textFlow;
+            Node left = new Path(
+                    new MoveTo(10, 0),
+                    new QuadCurveTo(10, 20, 0, 20),
+                    new LineTo(10, 20)
+            );
+            Node right = new Path(
+                new MoveTo(0, 0),
+                new QuadCurveTo(5, 0, 5, 10),
+                new QuadCurveTo(5, 20, 10, 20),
+                new LineTo(0, 20)    
+            );
+            left.getStyleClass().add("table-hat-side");
+            right.getStyleClass().add("table-hat-side");
+            return new BorderPane(textFlow, null, right, null, left);
         }
 
         @Override

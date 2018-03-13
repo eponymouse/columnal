@@ -111,13 +111,14 @@
 }
 
 .virt-grid-row-label {
-    -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
-    -fx-background-insets: 0, 0 1 0 1;
+    /* Middle is colour of vertical separator between rows */
+    -fx-background-color: $table-row-label-border-color, $table-row-label-background-color, $table-row-label-background-color;
+    -fx-background-insets: 0, 0 1 0 1, 0 1 1 1;
     &:top-visible-row {
-        -fx-background-insets: -1 0 0 0, 0 1 0 1;
+        -fx-background-insets: -1 0 0 0, 0 1 0 1, 0 1 1 1;
     }
     &:bottom-visible-row {
-        -fx-background-insets: 0, 0 1 1 1;
+        -fx-background-insets: 0, 0 1 1 1, 0 1 1 1;
     }
     -fx-label-padding: 0 2 0 5;
     -fx-text-fill: $table-row-label-text-color;
@@ -126,10 +127,20 @@
     -fx-font-family: "Droid Sans Mono";
 }
 
+.table-hat-side {
+    -fx-stroke: $table-row-label-border-color;
+    -fx-fill: $table-row-label-background-color;
+}
 .table-hat-text-flow {
+    -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
+    -fx-background-insets: 0, 1 0 0 0;
+    
+
     -fx-font-size: 75%;
     .styled-text {
         /* Without this the font rendering on text is awful at small size on Mac: */
         -fx-font-smoothing-type: lcd;
+        
+        -fx-fill: $table-row-label-text-color;
     }
 }
