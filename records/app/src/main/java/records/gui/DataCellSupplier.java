@@ -2,10 +2,7 @@ package records.gui;
 
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.effect.BoxBlur;
-import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
@@ -24,7 +21,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
 {
     public DataCellSupplier()
     {
-        super(ViewOrder.STANDARD, Arrays.asList(CellStyle.values()));
+        super(ViewOrder.STANDARD_CELLS, Arrays.asList(CellStyle.values()));
     }
     
     @Override

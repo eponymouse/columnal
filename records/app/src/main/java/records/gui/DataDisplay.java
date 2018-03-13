@@ -138,7 +138,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
             // Item for column name:
-            FloatingItem<Pane> columnNameItem = new FloatingItem<Pane>(ViewOrder.FLOATING_PINNED)
+            FloatingItem<Pane> columnNameItem = new FloatingItem<Pane>(ViewOrder.FLOATING)
             {
                 private double containerTranslateY;
                 private double y;
@@ -318,7 +318,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 }
             };
             // Item for column type:
-            FloatingItem<Label> columnTypeItem = new FloatingItem<Label>(ViewOrder.FLOATING)
+            FloatingItem<Label> columnTypeItem = new FloatingItem<Label>(ViewOrder.STANDARD_CELLS)
             {
                 @OnThread(Tag.FXPlatform)
                 private CellPosition getFloatingPosition()
@@ -572,7 +572,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         
         public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
         {
-            super(ViewOrder.FLOATING);
+            super(ViewOrder.STANDARD_CELLS);
             this.tableManager = tableManager;
             this.initialTableName = initialTableName;
             this.renameTable = renameTable;

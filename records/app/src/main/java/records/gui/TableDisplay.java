@@ -1,7 +1,5 @@
 package records.gui;
 
-import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -9,9 +7,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.animation.Transition;
 import javafx.application.Platform;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.DoubleProperty;
@@ -19,9 +15,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -31,10 +25,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
-import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.TextFlow;
@@ -43,7 +33,6 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -869,7 +858,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
         public TableHat(Table table)
         {
-            super(ViewOrder.FLOATING);
+            super(ViewOrder.POPUP);
             if (table instanceof Filter)
             {
                 Filter filter = (Filter)table;
@@ -897,17 +886,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             
             double x = visibleBounds.getXCoord(getPosition().columnIndex);
             double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
-            x += 10;
-            width -= 20;
-            
-            double bottom = visibleBounds.getYCoord(getPosition().rowIndex);
-            double y = bottom - item.prefHeight(width);
-            double height = bottom - y;
+            x += 30;
+            width -= 40;
+
+            double prefHeight = item.prefHeight(width);
+            double y = Math.max(visibleBounds.getYCoord(getPosition().rowIndex) - 10 - prefHeight, visibleBounds.getYCoord(CellPosition.row(0)) + 10);
             latestBounds = new BoundingBox(
                 x,
                 y,
                 width,
-                height
+                prefHeight
             );
             return Optional.of(latestBounds);
         }
@@ -917,20 +905,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             TextFlow textFlow = new TextFlow(content.toGUI().toArray(new Node[0]));
             textFlow.getStyleClass().add("table-hat-text-flow");
-            Node left = new Path(
-                    new MoveTo(10, 0),
-                    new QuadCurveTo(10, 20, 0, 20),
-                    new LineTo(10, 20)
-            );
-            Node right = new Path(
-                new MoveTo(0, 0),
-                new QuadCurveTo(5, 0, 5, 10),
-                new QuadCurveTo(5, 20, 10, 20),
-                new LineTo(0, 20)    
-            );
-            left.getStyleClass().add("table-hat-side");
-            right.getStyleClass().add("table-hat-side");
-            return new BorderPane(textFlow, null, right, null, left);
+            BorderPane borderPane = new BorderPane(textFlow, null, null, null, null);
+            borderPane.getStyleClass().add("table-hat");
+            return borderPane;
         }
 
         @Override
@@ -950,7 +927,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         public TableBorderOverlay()
         {
-            super(ViewOrder.OVERLAY_PASSIVE);
+            super(ViewOrder.TABLE_BORDER);
         }
 
         @Override
@@ -1012,7 +989,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - ourTopY, 20, rowEndY - rowStartY);
                 clip = Shape.subtract(clip, rowLabelBounds);
             }
-            clip = Shape.subtract(clip, new Rectangle(0, -20, tableHat.latestBounds.getWidth(), 20));
 
             r.setClip(clip);
             /* // Debug code to help see what clip looks like:
@@ -1036,7 +1012,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
         public TableRowLabelBorder()
         {
-            super(ViewOrder.OVERLAY_PASSIVE);
+            super(ViewOrder.TABLE_BORDER);
             FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
                 if (getNode() != null)
                 {

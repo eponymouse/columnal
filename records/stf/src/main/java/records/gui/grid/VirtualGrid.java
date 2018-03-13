@@ -1432,7 +1432,7 @@ public class VirtualGrid implements ScrollBindable
                 button.addEventFilter(MouseEvent.ANY, e -> {
                     lastMousePos[0] = new Point2D(e.getScreenX(), e.getScreenY());
                 });
-                containerChildren.add(button, ViewOrder.STANDARD);
+                containerChildren.add(button, ViewOrder.STANDARD_CELLS);
             }
 
             @Nullable CellSelection curSel = selection.get();

@@ -76,7 +76,30 @@ public abstract class VirtualGridSupplier<T extends Node>
         public void remove(Node node);
     }
     
-    public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED, OVERLAY_PASSIVE, OVERLAY_ACTIVE }
+    // The order here is critical.  Early in the list appears underneath later in the list.
+    // OVERLAY_ACTIVE is special as it appears in its own topmost pane.
+    public static enum ViewOrder
+    {
+        // Grid lines appear underneath everything else:
+        GRID_LINES,
+        // This includes normal cells, and any header items that behave like normal cells
+        // (i.e. no floating position, no overlapping other cells)
+        STANDARD_CELLS,
+        // This is any overlay which may need to appear in front of a standard cell,
+        // such as the column name header (which gets pinned as we scroll down)
+        // and the row labels (which can appear in front of other data)
+        FLOATING,
+        // Table borders are separate items that appear in front as an overlay,
+        // because they also cast the drop shadow, and that must appear above
+        // the other table items
+        TABLE_BORDER,
+        // Certain items look like popups, so they must go in front of all else.
+        POPUP,
+        // Final, special category: this is the overlays for selected cell, for
+        // highlighting a table pick.  This goes on its own pane in front of all
+        // else because that way we can blur the rest but keep the pick overlay sharp.
+        OVERLAY_ACTIVE
+    }
 
     /**
      * Specifies the visible extents being rendered.

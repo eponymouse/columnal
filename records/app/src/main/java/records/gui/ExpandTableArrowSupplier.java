@@ -6,7 +6,6 @@ import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.DataItemPosition;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
@@ -37,7 +36,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     
     public ExpandTableArrowSupplier()
     {
-        super(ViewOrder.STANDARD, Arrays.asList(CellStyle.values()));
+        super(ViewOrder.STANDARD_CELLS, Arrays.asList(CellStyle.values()));
     }
     
     @Override

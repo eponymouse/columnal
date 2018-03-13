@@ -40,7 +40,6 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -103,7 +102,7 @@ public class TestVirtualGridScroll extends ApplicationTest
         
         node = new Label("X");
         // Add node in middle of screen when viewing top left:        
-        virtualGrid.getFloatingSupplier().addItem(new FloatingItem<Node>(ViewOrder.STANDARD)
+        virtualGrid.getFloatingSupplier().addItem(new FloatingItem<Node>(ViewOrder.STANDARD_CELLS)
         {
             @Override
             public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
