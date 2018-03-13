@@ -12,6 +12,7 @@ import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.data.CellPosition;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.VirtualGridSupplierIndividual;
+import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -19,7 +20,7 @@ import utility.gui.FXUtility;
 
 import java.util.Arrays;
 
-public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTextField, CellStyle>
+public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTextField, CellStyle, GridCellInfo<StructuredTextField, CellStyle>>
 {
     public DataCellSupplier()
     {

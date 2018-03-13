@@ -25,11 +25,15 @@ import java.util.Set;
  * An implementation of {@link VirtualGridSupplier} that allows nodes to related to a grid area,
  * but to float depending on that grid's position on screen.  This might be a column header,
  * a message when the table is empty, or so on.
+ * 
+ * Note: we offer a guarantee that items are iterated through in order that they were added;
+ * this is made use of by some table overlays.
  */
 @OnThread(Tag.FXPlatform)
 public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
 {
-    private final Set<FloatingItem<?>> items = Sets.newIdentityHashSet();
+    // We want to maintain order of adding for iteration, and removal is quite rare, so list is best:
+    private final List<FloatingItem<?>> items = new ArrayList<>();
     private final List<Node> toRemove = new ArrayList<>();
 
     // Prevent creation from outside the package:

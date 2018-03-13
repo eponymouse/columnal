@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -36,13 +37,13 @@ import java.util.stream.Stream;
  * @param <S> The possible styles for that GUI node (usually best to use an enum, but not required)
  */
 @OnThread(Tag.FXPlatform)
-public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends VirtualGridSupplier<T>
+public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA_INFO extends GridCellInfo<T, S>> extends VirtualGridSupplier<T>
 {
     // Maximum extra rows/cols to keep as spare cells
     private static final int MAX_EXTRA_ROW_COLS = 4;
 
     // Each grid area that we are handling
-    private final Map<GridArea, GridCellInfo<T, S>> gridAreas = new IdentityHashMap<>();
+    private final Map<GridArea, GRID_AREA_INFO> gridAreas = new IdentityHashMap<>();
 
     // All items that are currently in the parent container and laid out properly:
     private final Map<CellPosition, ItemDetails<T>> visibleItems = new HashMap<>();
@@ -56,9 +57,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         private final T node;
         private final StyleUpdater styleUpdater;
         private final GridAreaCellPosition gridAreaCellPosition;
-        private final GridCellInfo<T, S> originator;
+        private final GRID_AREA_INFO originator;
 
-        private ItemDetails(T node, StyleUpdater styleUpdater, GridCellInfo<T, S> originator, GridAreaCellPosition gridAreaCellPosition)
+        private ItemDetails(T node, StyleUpdater styleUpdater, GRID_AREA_INFO originator, GridAreaCellPosition gridAreaCellPosition)
         {
             this.node = node;
             this.styleUpdater = styleUpdater;
@@ -108,11 +109,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
             {
                 final double x = visibleBounds.getXCoord(columnIndex);
                 CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
-                Optional<Pair<GridCellInfo<T, S>, GridAreaCellPosition>> gridForItemResult = gridAreas.values().stream().flatMap(a -> Utility.streamNullable(a.cellAt(cellPosition)).map(c -> new Pair<>(a, c))).findFirst();
+                Optional<Pair<GRID_AREA_INFO, GridAreaCellPosition>> gridForItemResult = gridAreas.values().stream().flatMap(a -> Utility.streamNullable(a.cellAt(cellPosition)).map(c -> new Pair<>(a, c))).findFirst();
                 if (!gridForItemResult.isPresent())
                     continue;
 
-                GridCellInfo<T, S> gridForItem = gridForItemResult.get().getFirst();
+                GRID_AREA_INFO gridForItem = gridForItemResult.get().getFirst();
 
                 ItemDetails<T> cell = visibleItems.get(cellPosition);
                 // If cell isn't present, grab from spareCells:
@@ -167,12 +168,12 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
             hideItem(spareCell);
         }
         
-        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GridCellInfo<T, S>, T>flatteningToImmutableListMultimap(d -> d.originator, d -> Stream.of(d.node))).asMap());
+        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, T>flatteningToImmutableListMultimap(d -> d.originator, d -> Stream.of(d.node))).asMap());
         
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
     }
 
-    protected void styleTogether(ImmutableMap<GridCellInfo<T, S>, Collection<T>> visibleNodes)
+    protected void styleTogether(ImmutableMap<GRID_AREA_INFO, Collection<T>> visibleNodes)
     {
     }
 
@@ -199,7 +200,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     /**
      * Adds the grid (and its associated info) to being managed by this supplier.
      */
-    public final void addGrid(GridArea gridArea, GridCellInfo<T, S> gridCellInfo)
+    public final void addGrid(GridArea gridArea, GRID_AREA_INFO gridCellInfo)
     {
         gridAreas.put(gridArea, gridCellInfo);
     }

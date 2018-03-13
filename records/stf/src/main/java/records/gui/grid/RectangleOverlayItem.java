@@ -1,7 +1,5 @@
 package records.gui.grid;
 
-import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
 import javafx.geometry.BoundingBox;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -11,11 +9,16 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
 import utility.gui.ResizableRectangle;
 
 import java.util.Optional;
 
+/**
+ * A helper class for FloatingItems which are simple rectangle shapes.
+ * 
+ * This implements the positioning conversion from cells to pixels, and implements
+ * makeCell to delegate the relevant setup to styleNewRectangle.
+ */
 @OnThread(Tag.FXPlatform)
 public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectangle>
 {
@@ -48,14 +51,14 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     {
         ResizableRectangle r = new ResizableRectangle();
         r.setMouseTransparent(true);
-        style(r, visibleBounds);
+        styleNewRectangle(r, visibleBounds);
         return r;
     }
 
-    protected abstract void style(Rectangle r, VisibleBounds visibleBounds);
+    protected abstract void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds);
 
     @Override
-    public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition)
+    public final VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition)
     {
         return null;
     }

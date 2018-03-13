@@ -275,7 +275,7 @@ public class VirtualGrid implements ScrollBindable
             }
 
             @Override
-            protected void style(Rectangle r, VisibleBounds visibleBounds)
+            protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
             {
                 r.getStyleClass().add("virt-grid-selection-overlay");
                 r.visibleProperty().bind(hasSelection);
@@ -738,7 +738,8 @@ public class VirtualGrid implements ScrollBindable
 
     public void addNodeSupplier(VirtualGridSupplier<?> cellSupplier)
     {
-        nodeSuppliers.add(cellSupplier);
+        // Keep the floating supplier last in the list:
+        nodeSuppliers.add(nodeSuppliers.size() - 1, cellSupplier);
         container.redoLayout();
     }
 

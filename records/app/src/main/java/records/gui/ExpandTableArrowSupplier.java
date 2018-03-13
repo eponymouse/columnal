@@ -14,6 +14,7 @@ import records.data.datatype.DataTypeUtility;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual;
+import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -28,7 +29,7 @@ import java.util.Collection;
 import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
-public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button, CellStyle>
+public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Button, CellStyle, GridCellInfo<Button, CellStyle>>
 {
     public static final String RIGHT_ARROW = "\u27F6";
     public static final String DOWN_ARROW = "\u2193";

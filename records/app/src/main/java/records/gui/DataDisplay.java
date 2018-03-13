@@ -473,7 +473,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        protected void style(Rectangle r, VisibleBounds visibleBounds)
+        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
         {
             r.getStyleClass().add("move-table-dest-overlay");
         }

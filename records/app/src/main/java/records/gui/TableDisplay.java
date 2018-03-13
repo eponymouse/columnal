@@ -12,6 +12,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -95,6 +96,7 @@ import utility.*;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ResizableRectangle;
 import utility.gui.TranslationUtility;
 
 import java.io.BufferedWriter;
@@ -128,10 +130,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private final TableBorderOverlay tableBorderOverlay;
+    private final TableRowLabelBorder rowLabelBorder;
     private boolean currentKnownRowsIsFinal = false;
 
     private final FXPlatformRunnable onModify;
-
 
     @OnThread(Tag.Any)
     public Table getTable()
@@ -444,11 +446,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         this.recordSetOrError = recordSetOrError;
         recordSetOrError.ifRight(rs -> setupWithRecordSet(parent.getManager(), table, rs));
         
-        // Border overlay:
-        tableBorderOverlay = new TableBorderOverlay(table);
-        supplierFloating.addItem(tableBorderOverlay);
+        // Row label border:
+        rowLabelBorder = new TableRowLabelBorder();
+        supplierFloating.addItem(rowLabelBorder);
         // Hat:
         supplierFloating.addItem(new TableHat(table));
+        // Border overlay.  Note this makes use of calculations based on hat and row label border,
+        // so it is important that we add this after them (since floating supplier iterates in order of addition):
+        tableBorderOverlay = new TableBorderOverlay();
+        supplierFloating.addItem(tableBorderOverlay);
         
         this.onModify = () -> {
             parent.modified();
@@ -773,6 +779,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return contextMenu;
     }
 
+    public void setRowLabelBounds(Optional<BoundingBox> bounds)
+    {
+        rowLabelBorder.currentRowLabelBounds = bounds;
+        rowLabelBorder.updateClip();
+    }
+
     @OnThread(Tag.FXPlatform)
     private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
     {
@@ -907,12 +919,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @OnThread(Tag.FXPlatform)
     private class TableBorderOverlay extends RectangleOverlayItem
     {
-        private final Table table;
-
-        public TableBorderOverlay(Table table)
+        public TableBorderOverlay()
         {
             super(ViewOrder.OVERLAY_PASSIVE);
-            this.table = table;
         }
 
         @Override
@@ -925,7 +934,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        protected void style(Rectangle r, VisibleBounds visibleBounds)
+        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
         {
             r.getStyleClass().add("table-border-overlay");
             calcClip(r, visibleBounds);
@@ -987,6 +996,60 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Clipboard.getSystemClipboard().setContent(clipboardContent);
             }
             */
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private class TableRowLabelBorder extends FloatingItem<ResizableRectangle>
+    {
+        private Optional<BoundingBox> currentRowLabelBounds = Optional.empty();
+        
+        public TableRowLabelBorder()
+        {
+            super(ViewOrder.OVERLAY_PASSIVE);
+        }
+
+        @Override
+        protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        {
+            return currentRowLabelBounds;
+        }
+
+        @Override
+        protected ResizableRectangle makeCell(VisibleBounds visibleBounds)
+        {
+            ResizableRectangle r = new ResizableRectangle();
+            r.setMouseTransparent(true);
+            r.getStyleClass().add("table-row-label-border");
+            return r;
+        }
+
+        @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        {
+            return null;
+        }
+
+        @Override
+        protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
+        {
+            updateClip();
+        }
+
+        public void updateClip()
+        {
+            ResizableRectangle cur = getNode();
+            if (cur != null && currentRowLabelBounds.isPresent())
+            {
+                BoundingBox r = currentRowLabelBounds.get();
+                cur.setClip(
+                    // Outer (excluding right hand side) minus central inner:
+                    Shape.subtract(
+                        new Rectangle(-20, -20, r.getWidth() + 20, r.getHeight() + 40),
+                        new Rectangle(0, 0, r.getWidth(), r.getHeight())
+                    )
+                );
+            }
         }
     }
 }

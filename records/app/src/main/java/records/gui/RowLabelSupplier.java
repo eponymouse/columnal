@@ -8,34 +8,31 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.DataItemPosition;
 import records.gui.RowLabelSupplier.LabelPane;
 import records.gui.RowLabelSupplier.Visible;
-import records.gui.grid.CellSelection;
 import records.gui.grid.GridAreaCellPosition;
-import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
-import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
-public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, Visible>
+public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, Visible, RowLabelSupplier.TableInfo>
 {
     public RowLabelSupplier()
     {
@@ -64,38 +61,35 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     }
 
     @Override
-    protected void styleTogether(ImmutableMap<GridCellInfo<LabelPane, Visible>, Collection<LabelPane>> visibleNodesByTable)
+    protected void styleTogether(ImmutableMap<TableInfo, Collection<LabelPane>> visibleNodesByTable)
     {
         visibleNodesByTable.forEach((table, visibleNodes) -> {
-            double topY = Double.MAX_VALUE;
-            @Nullable LabelPane topItem = null;
-            double bottomY = -Double.MAX_VALUE;
-            @Nullable LabelPane bottomItem = null;
             // Find highest row number:
             int highestRow = visibleNodes.stream().mapToInt(p -> p.row).max().orElse(1);
             // Find number of digits, min 2:
             int numDigits = Math.max(2, Integer.toString(highestRow).length());
+            
+            double minX = Double.MAX_VALUE;
+            double minY = Double.MAX_VALUE;
+            double maxX = -Double.MAX_VALUE;
+            double maxY = -Double.MAX_VALUE;
+            
             for (LabelPane visibleNode : visibleNodes)
             {
                 visibleNode.setMinDigits(numDigits);
-                visibleNode.setIsTop(false);
-                visibleNode.setIsBottom(false);
-                // All Layout Y will be comparable, so no need to transform to screen pos:
-                if (visibleNode.getLayoutY() < topY)
-                {
-                    topY = visibleNode.getLayoutY();
-                    topItem = visibleNode;
-                }
-                if (visibleNode.getLayoutY() > bottomY)
-                {
-                    bottomY = visibleNode.getLayoutY();
-                    bottomItem = visibleNode;
-                }
+                visibleNode.label.applyCss();
+                double labelWidth = visibleNode.label.prefWidth(Double.MAX_VALUE);
+                // Get bounds of wrapper pane:
+                minX = Math.min(visibleNode.getLayoutX() + visibleNode.getWidth() - labelWidth, minX);
+                minY = Math.min(visibleNode.getLayoutY(), minY);
+                maxX = Math.max(visibleNode.getLayoutX() + visibleNode.getWidth(), maxX);
+                maxY = Math.max(visibleNode.getLayoutY() + visibleNode.getHeight() - 1, maxY);
             }
-            if (topItem != null)
-                topItem.setIsTop(true);
-            if (bottomItem != null)
-                bottomItem.setIsBottom(true);
+            
+            if (visibleNodes.isEmpty() || visibleNodes.stream().allMatch(l -> !l.isVisible() || !l.label.isVisible()))
+                table.tableDisplay.setRowLabelBounds(Optional.empty());
+            else
+                table.tableDisplay.setRowLabelBounds(Optional.of(new BoundingBox(minX, minY, maxX - minX, maxY - minY)));
         });
     }
 
@@ -103,45 +97,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     public void addTable(VirtualGrid virtualGrid, TableDisplay tableDisplay)
     {
         final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(ImmutableList.of());
-        addGrid(tableDisplay, new GridCellInfo<LabelPane, Visible>()
-        {
-            @Override
-            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
-            {
-                @AbsColIndex int columnForRowLabels = Utility.maxCol(CellPosition.col(0), tableDisplay.getPosition().columnIndex - CellPosition.col(1));
-                @AbsRowIndex int topRowLabel = tableDisplay.getDataDisplayTopLeftIncl().from(tableDisplay.getPosition()).rowIndex;
-                @AbsRowIndex int bottomRowLabel = tableDisplay.getDataDisplayBottomRightIncl().from(tableDisplay.getPosition()).rowIndex;
-                if (cellPosition.columnIndex == columnForRowLabels && topRowLabel <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRowLabel)
-                {
-                    return GridAreaCellPosition.relativeFrom(cellPosition, tableDisplay.getPosition());
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-            @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable LabelPane> getCell)
-            {
-                @Nullable LabelPane labelPane = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
-                if (labelPane != null)
-                    labelPane.setRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
-            }
-
-            @Override
-            public ObjectExpression<? extends Collection<Visible>> styleForAllCells()
-            {
-                return visible;
-            }
-
-            @Override
-            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, LabelPane cell)
-            {
-                return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex))
-                    && cellAt(tableDisplay.getPosition().offsetByRowCols(cellPosition.rowIndex, cellPosition.columnIndex)) != null;
-            }
-        });
+        addGrid(tableDisplay, new TableInfo(tableDisplay, visible));
         virtualGrid.addSelectionListener((oldSel, newSel) -> {
             visible.set(newSel != null && newSel.includes(tableDisplay) ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
             // Slightly lazy way to tidy up after ourselves if we get removed:
@@ -194,15 +150,54 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 setRow(tableDisplay, row);
             }
         }
+    }
 
-        public void setIsTop(boolean top)
+    public class TableInfo implements VirtualGridSupplierIndividual.GridCellInfo<LabelPane, Visible>
+    {
+        private final TableDisplay tableDisplay;
+        private final SimpleObjectProperty<ImmutableList<Visible>> visible;
+
+        private TableInfo(TableDisplay tableDisplay, SimpleObjectProperty<ImmutableList<Visible>> visible)
         {
-            FXUtility.setPseudoclass(label, "top-visible-row", top);
+            this.tableDisplay = tableDisplay;
+            this.visible = visible;
         }
 
-        public void setIsBottom(boolean bottom)
+        @Override
+        public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
         {
-            FXUtility.setPseudoclass(label, "bottom-visible-row", bottom);
+            @AbsColIndex int columnForRowLabels = Utility.maxCol(CellPosition.col(0), tableDisplay.getPosition().columnIndex - CellPosition.col(1));
+            @AbsRowIndex int topRowLabel = tableDisplay.getDataDisplayTopLeftIncl().from(tableDisplay.getPosition()).rowIndex;
+            @AbsRowIndex int bottomRowLabel = tableDisplay.getDataDisplayBottomRightIncl().from(tableDisplay.getPosition()).rowIndex;
+            if (cellPosition.columnIndex == columnForRowLabels && topRowLabel <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRowLabel)
+            {
+                return GridAreaCellPosition.relativeFrom(cellPosition, tableDisplay.getPosition());
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        @Override
+        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable LabelPane> getCell)
+        {
+            @Nullable LabelPane labelPane = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
+            if (labelPane != null)
+                labelPane.setRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
+        }
+
+        @Override
+        public ObjectExpression<? extends Collection<Visible>> styleForAllCells()
+        {
+            return visible;
+        }
+
+        @Override
+        public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, LabelPane cell)
+        {
+            return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex))
+                && cellAt(tableDisplay.getPosition().offsetByRowCols(cellPosition.rowIndex, cellPosition.columnIndex)) != null;
         }
     }
 }

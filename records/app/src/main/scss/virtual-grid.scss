@@ -93,6 +93,9 @@
     -fx-stroke: $table-border-color;
     -fx-stroke-width: 1;
     -fx-stroke-type: outside;
+}
+
+.table-border-overlay, .table-row-label-border {
     -fx-effect: dropshadow(gaussian, grey(40%), 15, 0.7, 2, 2);
 }
 
@@ -111,24 +114,20 @@
 }
 
 .virt-grid-row-label {
-    /* Middle is colour of vertical separator between rows */
-    -fx-background-color: $table-row-label-border-color, $table-row-label-background-color, $table-row-label-background-color;
-    -fx-background-insets: 0, 0 1 0 1, 0 1 1 1;
-    &:top-visible-row {
-        -fx-background-insets: -1 0 0 0, 0 1 0 1, 0 1 1 1;
-    }
-    &:bottom-visible-row {
-        -fx-background-insets: 0, 0 1 1 1, 0 1 1 1;
-    }
-    /* Single row label is special case: */
-    &:top-visible-row:bottom-visible-row {
-        -fx-background-insets: -1 0 0 0, 0 1 1 1, 0 1 1 1;
-    }
+    /* First is colour of vertical separator between rows */
+    -fx-background-color: $table-row-label-background-color, $table-row-label-background-color;
+    -fx-background-insets: 0, 0 0 1 0;
     -fx-label-padding: 0 2 0 5;
     -fx-text-fill: $table-row-label-text-color;
     -fx-font-size: 10px;
     -fx-alignment: baseline-right;
     -fx-font-family: "Droid Sans Mono";
+}
+.table-row-label-border {
+    -fx-fill: transparent;
+    -fx-stroke: $table-row-label-border-color;
+    -fx-stroke-width: 1;
+    -fx-stroke-type: outside;
 }
 
 .table-hat-side {
