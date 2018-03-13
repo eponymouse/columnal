@@ -73,14 +73,13 @@ public class TestExpressionEditorPosition extends ApplicationTest implements Scr
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
-            List<ExFunction<RecordSet, ? extends EditableColumn>> columns = new ArrayList<>();
+            List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {
                 int iFinal = i;
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
-            @SuppressWarnings({"keyfor", "units"})
             TableManager tableManager = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             scrollTo(".id-tableDisplay-menu-button");

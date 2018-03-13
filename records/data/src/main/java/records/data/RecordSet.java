@@ -1,6 +1,7 @@
 package records.data;
 
 import javafx.application.Platform;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -42,13 +43,13 @@ public abstract class RecordSet
     @OnThread(Tag.FXPlatform)
     protected @MonotonicNonNull RecordSetListener listener;
 
-    @SuppressWarnings("initialization")
-    public RecordSet(List<? extends ExFunction<RecordSet, ? extends Column>> columns) throws InternalException, UserException
+    public <C extends Column> RecordSet(List<ExFunction<RecordSet, C>> columns) throws InternalException, UserException
     {
         this.columns = new ArrayList<>();
         Set<ColumnId> colNames = new HashSet<>();
         for (ExFunction<RecordSet, ? extends Column> f : columns)
         {
+            @SuppressWarnings("initialization")
             Column newCol = f.apply(this);
             this.columns.add(newCol);
             colNames.add(newCol.getName());
@@ -206,7 +207,7 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.Any)
-    public final List<Column> getColumns()
+    public final List<Column> getColumns(@UnknownInitialization(RecordSet.class) RecordSet this)
     {
         return Collections.unmodifiableList(columns);
     }

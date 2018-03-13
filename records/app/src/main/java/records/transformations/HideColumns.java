@@ -24,6 +24,7 @@ import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -89,7 +90,7 @@ public class HideColumns extends TransformationEditable
             if (shownColumns.isEmpty())
                 throw new UserException("Cannot hide all columns");
 
-            theResult = new RecordSet(Utility.mapList(shownColumns, c -> rs -> new Column(rs, c.getName())
+            theResult = new <Column>RecordSet(Utility.mapList(shownColumns, c -> (ExFunction<RecordSet, Column>)(rs -> new Column(rs, c.getName())
             {
                 @Override
                 public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
@@ -102,7 +103,7 @@ public class HideColumns extends TransformationEditable
                 {
                     return false;
                 }
-            }))
+            })))
             {
                 @Override
                 public boolean indexValid(int index) throws UserException, InternalException

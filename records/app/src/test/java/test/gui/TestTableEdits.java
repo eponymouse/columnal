@@ -96,10 +96,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         Workers.onWorkerThread("Making tables", Priority.FETCH, () -> {
             try
             {
-                ExFunction<RecordSet, ? extends EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("A"), ImmutableList.of(true, false, false), false);
-                ExFunction<RecordSet, ? extends EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("B"), NumberInfo.DEFAULT, ImmutableList.of(5, 4, 3), 6);
-                @SuppressWarnings({"units", "keyfor"})
-                @KeyForBottom @UnitsBottom ImmutableList<ExFunction<RecordSet, ? extends EditableColumn>> columns = ImmutableList.of(a, b);
+                ExFunction<RecordSet, EditableColumn> a = rs -> new MemoryBooleanColumn(rs, new ColumnId("A"), ImmutableList.of(true, false, false), false);
+                ExFunction<RecordSet, EditableColumn> b = rs -> new MemoryNumericColumn(rs, new ColumnId("B"), NumberInfo.DEFAULT, ImmutableList.of(5, 4, 3), 6);
+                ImmutableList<ExFunction<RecordSet, EditableColumn>> columns = ImmutableList.of(a, b);
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
                 dummyManager.record(src);

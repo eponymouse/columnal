@@ -106,7 +106,7 @@ public class ImporterUtility
     public static EditableRecordSet makeEditableRecordSet(TableManager mgr, List<List<String>> vals, Format format) throws InternalException, UserException
     {
         @SuppressWarnings({"keyfor", "units"})
-        @KeyForBottom @UnitsBottom List<ExFunction<RecordSet, ? extends EditableColumn>> columns = new ArrayList<>();
+        @KeyForBottom @UnitsBottom List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
         for (int i = 0; i < format.columnTypes.size(); i++)
         {
             ColumnInfo columnInfo = format.columnTypes.get(i);

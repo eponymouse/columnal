@@ -51,8 +51,7 @@ public class EditableRecordSet extends RecordSet
      * @throws InternalException
      * @throws UserException
      */
-    @SuppressWarnings("initialization") // For getColumns()
-    public EditableRecordSet(List<? extends ExFunction<RecordSet, ? extends EditableColumn>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
+    public <C extends EditableColumn> EditableRecordSet(List<ExFunction<RecordSet, C>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
     {
         super(columns);
         // Can't fail given the type we require above:
