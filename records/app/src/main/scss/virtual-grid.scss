@@ -120,6 +120,10 @@
     &:bottom-visible-row {
         -fx-background-insets: 0, 0 1 1 1, 0 1 1 1;
     }
+    /* Single row label is special case: */
+    &:top-visible-row:bottom-visible-row {
+        -fx-background-insets: -1 0 0 0, 0 1 1 1, 0 1 1 1;
+    }
     -fx-label-padding: 0 2 0 5;
     -fx-text-fill: $table-row-label-text-color;
     -fx-font-size: 10px;
