@@ -49,6 +49,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
+import org.jetbrains.annotations.NotNull;
 import records.data.CellPosition;
 import records.data.Table;
 import records.gui.grid.VirtualGridSupplier.ContainerChildren;
@@ -169,7 +170,7 @@ public class VirtualGrid implements ScrollBindable
     private @Nullable GridAreaHighlight highlightedGridArea;
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
-
+    
     public static interface CreateTable
     {
         public void createTable(CellPosition cellPosition, Point2D suitablePoint, VirtualGrid virtualGrid);
@@ -280,7 +281,7 @@ public class VirtualGrid implements ScrollBindable
             }
 
             @Override
-            protected void style(Rectangle r)
+            protected void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
             {
                 r.getStyleClass().add("virt-grid-selection-overlay");
                 r.visibleProperty().bind(hasSelection);
@@ -298,13 +299,21 @@ public class VirtualGrid implements ScrollBindable
                 {
                     FXUtility.mouse(VirtualGrid.this).smoothScrollToEnsureVisible(s.positionToEnsureInView());
                 }
+                List<FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>>> updaters = new ArrayList<>();
                 for (Iterator<SelectionListener> iterator = FXUtility.mouse(VirtualGrid.this).selectionListeners.iterator(); iterator.hasNext(); )
                 {
                     SelectionListener selectionListener = iterator.next();
-                    if (selectionListener.selectionChanged(oldVal, s) == ListenerOutcome.REMOVE)
+                    @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>>> outcome = selectionListener.selectionChanged(oldVal, s);
+                    if (outcome.getFirst() == ListenerOutcome.REMOVE)
                         iterator.remove();
+                    if (outcome.getSecond() != null)
+                        updaters.add(outcome.getSecond());
                 }
-                FXUtility.mouse(VirtualGrid.this).container.redoLayout();
+                Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> bounds = FXUtility.mouse(VirtualGrid.this).container.redoLayout();
+                for (FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> updater : updaters)
+                {
+                    updater.consume(bounds.getFirst(), bounds.getSecond());
+                }
             }
         });
 
@@ -667,8 +676,6 @@ public class VirtualGrid implements ScrollBindable
 
     public void select(@Nullable CellSelection cellSelection)
     {
-        // TODO make sure cell is visible
-        
         /*
         visibleCells.forEach((visPos, visCell) -> {
             SelectionStatus status = cellSelection == null ? SelectionStatus.UNSELECTED : cellSelection.selectionStatus(visPos);
@@ -681,7 +688,14 @@ public class VirtualGrid implements ScrollBindable
         if (cellSelection != null)
             container.requestFocus();
     }
-    
+
+    public boolean selectionIncludes(@UnknownInitialization(GridArea.class) GridArea gridArea)
+    {
+        @Nullable CellSelection curSel = selection.get();
+        return curSel != null ? curSel.includes(gridArea) : false;
+    }
+
+
     // Selects cell so that you can navigate around with keyboard
     public void findAndSelect(@Nullable Either<CellPosition, CellSelection> target)
     {
@@ -743,7 +757,7 @@ public class VirtualGrid implements ScrollBindable
     {
         selectionListeners.add((old, s) -> {
             onChange.consume(s);
-            return ListenerOutcome.REMOVE;
+            return new Pair<>(ListenerOutcome.REMOVE, null);
         });
     }
 
@@ -1062,7 +1076,25 @@ public class VirtualGrid implements ScrollBindable
             }
         }
 
-        private void redoLayout(@UnknownInitialization(Region.class) Container this)
+        // Note: the returned bounds are only valid until the next scroll or redoLayout
+        // Use immediately and then forget them!
+        private Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> redoLayout(@UnknownInitialization(Region.class) Container this)
+        {
+            Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> bounds = getVisibleBoundDetails();
+
+            for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+            {
+                nodeSupplier.layoutItems(FXUtility.mouse(this), bounds.getFirst(), bounds.getSecond());
+            }
+            //Log.debug("Children: " + getChildren().size());
+            
+            updateClip();
+            requestLayout();
+            activeOverlayPane.requestLayout();
+            return bounds;
+        }
+
+        private Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> getVisibleBoundDetails(@UnknownInitialization(Region.class) Container this)
         {
             double x = firstRenderColumnOffset + renderXOffset;
             double y = firstRenderRowOffset + renderYOffset;
@@ -1079,11 +1111,11 @@ public class VirtualGrid implements ScrollBindable
             final int renderColumnCount = newNumVisibleCols;
 
             // This includes extra rows needed for smooth scrolling:
-            @AbsRowIndex int firstDisplayRow = firstRenderRowIndex;
-            @AbsRowIndex int lastDisplayRowExcl = firstRenderRowIndex + CellPosition.row(renderRowCount);
-            @AbsColIndex int firstDisplayCol = firstRenderColumnIndex;
-            @AbsColIndex int lastDisplayColExcl = firstRenderColumnIndex + CellPosition.col(renderColumnCount);
-            
+            final @AbsRowIndex int firstDisplayRow = firstRenderRowIndex;
+            final @AbsRowIndex int lastDisplayRowExcl = firstRenderRowIndex + CellPosition.row(renderRowCount);
+            final @AbsColIndex int firstDisplayCol = firstRenderColumnIndex;
+            final @AbsColIndex int lastDisplayColExcl = firstRenderColumnIndex + CellPosition.col(renderColumnCount);
+
             //Log.debug("Rows: " + firstDisplayRow + " to " + (lastDisplayRowExcl - 1) + " incl offset by: " + firstRenderRowOffset);
 
             VisibleDetails<@AbsColIndex Integer> columnBounds = new VisibleDetails<@AbsColIndex Integer>(firstDisplayCol, lastDisplayColExcl - CellPosition.col(1))
@@ -1130,15 +1162,7 @@ public class VirtualGrid implements ScrollBindable
                 }
             };
 
-            for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
-            {
-                nodeSupplier.layoutItems(FXUtility.mouse(this), rowBounds, columnBounds);
-            }
-            //Log.debug("Children: " + getChildren().size());
-            
-            updateClip();
-            requestLayout();
-            activeOverlayPane.requestLayout();
+            return new Pair<>(rowBounds, columnBounds);
         }
 
         @Override
@@ -1260,11 +1284,12 @@ public class VirtualGrid implements ScrollBindable
                     .<@AbsColIndex Integer>orElse(CellPosition.col(0))
                     + CellPosition.col(2)));
         currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(2)));
-        container.redoLayout();
+        Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> bounds = container.redoLayout();
         updatingSizeAndPositions = false;
+        
         for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
         {
-             nodeSupplier.sizesOrPositionsChanged();
+             nodeSupplier.sizesOrPositionsChanged(bounds.getFirst(), bounds.getSecond());
         }
     }
 
@@ -1531,7 +1556,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public boolean includes(GridArea tableDisplay)
+        public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
         {
             // Empty cell overlaps no grid area:
             return false;
@@ -1543,8 +1568,15 @@ public class VirtualGrid implements ScrollBindable
     @OnThread(Tag.FXPlatform)
     public static interface SelectionListener
     {
+        /**
+         * Returns whether to keep listener, and an optional updated to be run
+         * once the bounds have been calculated
+         * @param oldSelection
+         * @param newSelection
+         * @return
+         */
         @OnThread(Tag.FXPlatform)
-        public ListenerOutcome selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
+        public Pair<ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer> , VisibleDetails<@AbsColIndex Integer>>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
     }
     
     @OnThread(Tag.FXPlatform)
@@ -1573,7 +1605,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public ResizableRectangle makeCell()
+        public ResizableRectangle makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
         {
             ResizableRectangle rectangle = new ResizableRectangle();
             rectangle.getStyleClass().add("pick-table-overlay");

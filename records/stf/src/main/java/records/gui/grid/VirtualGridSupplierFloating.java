@@ -71,11 +71,11 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
 
     @Override
-    void sizesOrPositionsChanged()
+    void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
         for (FloatingItem<?> item : items)
         {
-            item.sizesOrPositionsChanged();
+            item.sizesOrPositionsChanged(rowBounds, columnBounds);
         }
     }
 
@@ -95,7 +95,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         protected abstract Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
         
         // Called when a cell is made.  If calculatePosition always returns Optional.of, then this is only called once:
-        protected abstract T makeCell();
+        protected abstract T makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
         
         // Called once, after makeCell.
         public void adjustForContainerTranslation(T item, Pair<DoubleExpression, DoubleExpression> translateXY)
@@ -123,7 +123,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
                 final @NonNull T nodeFinal;
                 if (node == null)
                 {
-                    nodeFinal = makeCell();
+                    nodeFinal = makeCell(rowBounds, columnBounds);
                     Pair<DoubleExpression, DoubleExpression> translateXY = containerChildren.add(nodeFinal, viewOrder);
                     adjustForContainerTranslation(nodeFinal, translateXY);
                     this.node = nodeFinal;
@@ -146,7 +146,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             }
         }
 
-        protected void sizesOrPositionsChanged()
+        protected void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
         {
         }
     }

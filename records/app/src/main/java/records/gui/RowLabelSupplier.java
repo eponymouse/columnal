@@ -28,6 +28,7 @@ import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -144,7 +145,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         virtualGrid.addSelectionListener((oldSel, newSel) -> {
             visible.set(newSel != null && newSel.includes(tableDisplay) ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
             // Slightly lazy way to tidy up after ourselves if we get removed:
-            return hasGrid(tableDisplay) ? ListenerOutcome.KEEP : ListenerOutcome.REMOVE;
+            return new Pair<>(hasGrid(tableDisplay) ? ListenerOutcome.KEEP : ListenerOutcome.REMOVE, null);
         });
     }
 

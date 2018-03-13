@@ -47,15 +47,15 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     protected abstract Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
     @Override
-    public final ResizableRectangle makeCell()
+    public final ResizableRectangle makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
         ResizableRectangle r = new ResizableRectangle();
         r.setMouseTransparent(true);
-        style(r);
+        style(r, rowBounds, columnBounds);
         return r;
     }
 
-    protected abstract void style(Rectangle r);
+    protected abstract void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
     @Override
     public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition)

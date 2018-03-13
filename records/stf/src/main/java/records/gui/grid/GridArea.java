@@ -72,12 +72,12 @@ public abstract class GridArea
             withVirtualGrid.consume(parent);
     }
 
-    protected <R> @Nullable R withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformFunction<VirtualGrid, R> withVirtualGrid)
+    protected <R> Optional<R> withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformFunction<VirtualGrid, R> withVirtualGrid)
     {
         if (parent != null)
-            return withVirtualGrid.apply(parent);
+            return Optional.of(withVirtualGrid.apply(parent));
         else
-            return null;
+            return Optional.empty();
     }
 
     public final void addedToGrid(VirtualGrid parent)
@@ -114,7 +114,7 @@ public abstract class GridArea
 
     protected abstract CellPosition recalculateBottomRightIncl();
 
-    public final boolean contains(CellPosition cellPosition)
+    public final boolean contains(@UnknownInitialization(GridArea.class) GridArea this, CellPosition cellPosition)
     {
         return topLeft.rowIndex <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRight.rowIndex
             && topLeft.columnIndex  <= cellPosition.columnIndex && cellPosition.columnIndex <= bottomRight.columnIndex;

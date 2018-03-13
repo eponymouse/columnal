@@ -119,7 +119,7 @@ public class TestVirtualGridScroll extends ApplicationTest
             }
 
             @Override
-            public Node makeCell()
+            public Node makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
             {
                 return node;
             }

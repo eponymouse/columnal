@@ -56,7 +56,7 @@ public abstract class VirtualGridSupplier<T extends Node>
     // package-visible
     abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
-    void sizesOrPositionsChanged()
+    void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
     {
     }
 

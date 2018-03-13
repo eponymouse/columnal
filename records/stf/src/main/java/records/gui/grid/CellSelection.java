@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
@@ -60,5 +61,5 @@ public interface CellSelection
      * Does the selection include the given grid area?  Can either be worked out by
      * looking at physical area, or by casting and checking against a known table.
      */
-    public boolean includes(GridArea tableDisplay);
+    public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay);
 }

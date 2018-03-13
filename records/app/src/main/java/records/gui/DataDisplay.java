@@ -53,6 +53,7 @@ import records.gui.stable.ColumnOperation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -227,7 +228,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Pane makeCell()
+                public Pane makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
                 {
                     ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
                     textField.sizeToFit(30.0, 30.0);
@@ -346,7 +347,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 }
 
                 @Override
-                public Label makeCell()
+                public Label makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
                 {
                     Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
                     typeLabel.getStyleClass().add("table-display-column-title");
@@ -475,7 +476,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        protected void style(Rectangle r)
+        protected void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
         {
             r.getStyleClass().add("move-table-dest-overlay");
         }
@@ -539,7 +540,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        public boolean includes(GridArea tableDisplay)
+        public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
         {
             return false;
         }
@@ -606,7 +607,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane makeCell()
+        public Pane makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
         {
             ErrorableTextField<TableId> tableNameField = new TableNameTextField(tableManager, initialTableName);
             tableNameField.sizeToFit(30.0, 30.0);
@@ -684,9 +685,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public VirtualGrid.ListenerOutcome selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer> , VisibleDetails<@AbsColIndex Integer>>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
     {
         tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
-        return ListenerOutcome.KEEP;
+        return new Pair<>(ListenerOutcome.KEEP, null);
     }
 }

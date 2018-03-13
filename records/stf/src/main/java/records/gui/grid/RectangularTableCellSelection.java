@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.jetbrains.annotations.NotNull;
 import records.data.CellPosition;
 import threadchecker.OnThread;
@@ -128,7 +129,7 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
-    public boolean includes(GridArea tableDisplay)
+    public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
     {
         // Rely on non-overlap of grid areas, and the way that our selection won't span multiple tables:
         return tableDisplay.contains(startAnchor); 

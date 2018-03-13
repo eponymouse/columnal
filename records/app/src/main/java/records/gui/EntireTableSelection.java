@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.units.AbsColIndex;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.data.CellPosition;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -86,7 +87,7 @@ public class EntireTableSelection implements CellSelection
     }
 
     @Override
-    public boolean includes(GridArea tableDisplay)
+    public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
     {
         return this.selected == tableDisplay;
     }
