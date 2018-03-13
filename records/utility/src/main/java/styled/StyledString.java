@@ -80,6 +80,8 @@ public class StyledString
     {
         return Utility.mapList(members, p -> {
             Text t = new Text(p.getSecond());
+            t.getStyleClass().add("styled-text");
+            // TODO move these styles to classes/pseudo-classes
             if (p.getFirst().italic)
             {
                 t.setStyle("-fx-font-style: italic;");

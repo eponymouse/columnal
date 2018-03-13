@@ -125,3 +125,11 @@
     -fx-alignment: baseline-right;
     -fx-font-family: "Droid Sans Mono";
 }
+
+.table-hat-text-flow {
+    -fx-font-size: 75%;
+    .styled-text {
+        /* Without this the font rendering on text is awful at small size on Mac: */
+        -fx-font-smoothing-type: lcd;
+    }
+}

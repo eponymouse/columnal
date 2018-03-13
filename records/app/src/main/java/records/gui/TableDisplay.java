@@ -862,10 +862,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         @Override
         public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
         {
+            // The first time we are ever added, we will make a cell here and discard it,
+            // but there's no good way round this:
+            TextFlow item = getNode() != null ? getNode() : makeCell();
+            
             double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
-            double y = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex - CellPosition.row(1)));
             double width = columnBounds.getItemCoordAfter(Utility.boxCol(getBottomRightIncl().columnIndex)) - x;
-            double height = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex)) - y;
+            
+            double bottom = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
+            double y = bottom - item.prefHeight(width);
+            double height = bottom - y;
             return Optional.of(new BoundingBox(
                 x,
                 y,
@@ -877,7 +883,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         @Override
         public TextFlow makeCell()
         {
-            return new TextFlow(content.toGUI().toArray(new Node[0]));
+            TextFlow textFlow = new TextFlow(content.toGUI().toArray(new Node[0]));
+            textFlow.getStyleClass().add("table-hat-text-flow");
+            return textFlow;
         }
 
         @Override
