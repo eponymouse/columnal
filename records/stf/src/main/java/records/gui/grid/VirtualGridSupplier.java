@@ -56,6 +56,10 @@ public abstract class VirtualGridSupplier<T extends Node>
     // package-visible
     abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
 
+    void sizesOrPositionsChanged()
+    {
+    }
+
     /**
      * EDITING means it has focus and should receive all mouse events.
      * DIRECTLY_CLICKABLE means if you click it should be activated
@@ -68,7 +72,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * Is there a cell at the given position and if so what it is its state?
      * If none, return null;
      */
-    protected abstract @Nullable ItemState getItemState(CellPosition cellPosition);
+    abstract @Nullable ItemState getItemState(CellPosition cellPosition);
 
     /**
      * Start editing that cell, if possible

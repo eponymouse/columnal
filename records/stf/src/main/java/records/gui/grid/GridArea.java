@@ -12,7 +12,10 @@ import records.data.Table.MessageWhenEmpty;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+
+import java.util.Optional;
 
 /**
  * One rectangular table area within a parent VirtualGrid.  Tracks position,
@@ -63,11 +66,19 @@ public abstract class GridArea
     }
     
     // Calls the consumer, iff we have a non-null parent
-    protected void withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformConsumer<VirtualGrid> withVirtualGrid)
+    protected void withParent_(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformConsumer<VirtualGrid> withVirtualGrid)
     {
         if (parent != null)
             withVirtualGrid.consume(parent);
-    }    
+    }
+
+    protected <R> @Nullable R withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformFunction<VirtualGrid, R> withVirtualGrid)
+    {
+        if (parent != null)
+            return withVirtualGrid.apply(parent);
+        else
+            return null;
+    }
 
     public final void addedToGrid(VirtualGrid parent)
     {

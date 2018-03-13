@@ -6,6 +6,7 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UnknownIfUserIndex;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleExpression;
@@ -307,7 +308,7 @@ public class VirtualGrid implements ScrollBindable
             }
         });
 
-        //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+        FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
     private double scrollClampX(double idealScrollBy)
@@ -751,15 +752,22 @@ public class VirtualGrid implements ScrollBindable
         return container.localToScreen(getRectangleBoundsInContainer(rectangleBounds));
     }
 
+    /**
+     * Gets the bounds of the rectangle relative to the grid's current viewport.
+     * May be off-screen.
+     * @param rectangleBounds
+     * @return
+     */
     private BoundingBox getRectangleBoundsInContainer(RectangleBounds rectangleBounds)
     {
         double adjustX = getCurrentScrollX(null);
         double adjustY = getCurrentScrollY(null);
+        // TODO could be cleverer here to avoid summing column widths:
         double x = sumColumnWidths(CellPosition.col(0), rectangleBounds.topLeftIncl.columnIndex);
         double y = rectangleBounds.topLeftIncl.rowIndex * rowHeight;
         return new BoundingBox(
-            x + adjustX, 
-            y + adjustY, 
+            x - adjustX, 
+            y - adjustY, 
             sumColumnWidths(rectangleBounds.topLeftIncl.columnIndex, rectangleBounds.bottomRightIncl.columnIndex + CellPosition.col(1)),
             rowHeight * (rectangleBounds.bottomRightIncl.rowIndex + 1 - rectangleBounds.topLeftIncl.rowIndex)
         );
@@ -1254,6 +1262,10 @@ public class VirtualGrid implements ScrollBindable
         currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(2)));
         container.redoLayout();
         updatingSizeAndPositions = false;
+        for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
+        {
+             nodeSupplier.sizesOrPositionsChanged();
+        }
     }
 
     private boolean overlap(GridArea a, GridArea b)
@@ -1288,7 +1300,10 @@ public class VirtualGrid implements ScrollBindable
         }
     }
 
-    private Bounds getPixelPosition(CellPosition target)
+    /**
+     * Gets position of the cell relative to the origin of the complete grid.
+     */
+    private BoundingBox getPixelPosition(CellPosition target)
     {
         double minX = sumColumnWidths(CellPosition.col(0), target.columnIndex);
         double minY = rowHeight * target.rowIndex;
@@ -1348,6 +1363,34 @@ public class VirtualGrid implements ScrollBindable
         container.setEffect(effect);
     }
 
+    /**
+     * For the given gridArea, find the graphical bounds (in relative coords to that grid area)
+     * of all the other grid areas which touch it.
+     */
+    public ImmutableList<BoundingBox> getTouchingRectangles(@UnknownInitialization(GridArea.class) GridArea gridArea)
+    {
+        // Make a rectangle one bigger in each dimension, and see if that touches:
+        RectangleBounds overSize = new RectangleBounds(
+            gridArea.getPosition().offsetByRowCols(-1, -1),
+            gridArea.getBottomRightIncl().offsetByRowCols(1, 1)
+        );
+        // Could be a bit cleverer here with some of the logic:
+        BoundingBox targetTopLeft = getRectangleBoundsInContainer(new RectangleBounds(gridArea.getPosition(), gridArea.getPosition()));
+        return gridAreas.stream()
+            .filter(g -> g != gridArea)
+            .map(g -> new RectangleBounds(g.getPosition(), g.getBottomRightIncl()))
+            .filter(r -> r.touches(overSize))
+            .map(r -> {
+                BoundingBox box = getRectangleBoundsInContainer(r);
+                return new BoundingBox(
+                    box.getMinX() - targetTopLeft.getMinX(),
+                    box.getMinY() - targetTopLeft.getMinY(),
+                    box.getWidth(),
+                    box.getHeight()    
+                );
+            })
+            .collect(ImmutableList.toImmutableList());
+    }
 
     // A really simple class that manages a single button which is shown when an empty location is focused
     private class CreateTableButtonSupplier extends VirtualGridSupplier<Button>

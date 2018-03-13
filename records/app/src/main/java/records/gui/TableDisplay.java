@@ -12,7 +12,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
+import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Dialog;
@@ -20,6 +22,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.LineTo;
@@ -27,6 +32,7 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.TextFlow;
 import log.Log;
@@ -113,6 +119,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -461,15 +468,47 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             protected void style(Rectangle r)
             {
                 r.getStyleClass().add("table-border-overlay");
-                Rectangle clip = new Rectangle();
-                clip.setStrokeType(StrokeType.OUTSIDE);
-                clip.setStrokeWidth(20.0);
-                clip.setFill(Color.TRANSPARENT);
-                clip.setStroke(Color.BLACK);
-                clip.widthProperty().bind(r.widthProperty());
-                clip.heightProperty().bind(r.heightProperty());
+                calcClip(r);
+            }
+
+            @Override
+            protected void sizesOrPositionsChanged()
+            {
+                if (getNode() != null)
+                    calcClip(getNode());
+            }
+
+            @OnThread(Tag.FXPlatform)
+            private void calcClip(Rectangle r)
+            {
+                Shape originalClip = Shape.subtract(
+                    new Rectangle(-20, -20, r.getWidth() + 40, r.getHeight() + 40),
+                    new Rectangle(0, 0, r.getWidth(), r.getHeight())
+                );
+                // We adjust clip if we have tables touching us:
+                Shape clip = withParent(p -> {
+                    Shape curClip = originalClip;
+                    for (BoundingBox neighbour : p.getTouchingRectangles(TableDisplay.this))
+                    {
+                        curClip = Shape.subtract(curClip, new Rectangle(neighbour.getMinX(), neighbour.getMinY(), neighbour.getWidth(), neighbour.getHeight()));
+                    }
+                    return curClip;
+                });
+
+                if (clip == null)
+                    clip = originalClip;
                 r.clipProperty().set(clip);
-                // TODO we should adjust clip if there are tables touching us
+                /* // Debug code to help see what clip looks like:
+                if (getPosition().columnIndex == CellPosition.col(7))
+                {
+                    // Hack to clone shape:
+                    Shape s = Shape.union(clip, clip);
+                    Scene scene = new Scene(new Group(s));
+                    ClipboardContent clipboardContent = new ClipboardContent();
+                    clipboardContent.putImage(s.snapshot(null, null));
+                    Clipboard.getSystemClipboard().setContent(clipboardContent);
+                }
+                */
             }
         });
         // Hat:

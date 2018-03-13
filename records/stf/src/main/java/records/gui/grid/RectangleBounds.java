@@ -58,4 +58,10 @@ public class RectangleBounds
         
         return new RectangleBounds(topLeft, bottomRight);
     }
+    
+    public boolean touches(RectangleBounds rectangleBounds)
+    {
+        RectangleBounds r = intersectWith(rectangleBounds);
+        return r.contains(r.topLeftIncl);
+    }
 }

@@ -70,6 +70,15 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         return Utility.filterOutNulls(items.stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition))).findFirst().orElse(null);
     }
 
+    @Override
+    void sizesOrPositionsChanged()
+    {
+        for (FloatingItem<?> item : items)
+        {
+            item.sizesOrPositionsChanged();
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
     public static abstract class FloatingItem<T extends Node>
     {
@@ -135,6 +144,10 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
                     node = null;
                 }
             }
+        }
+
+        protected void sizesOrPositionsChanged()
+        {
         }
     }
 }
