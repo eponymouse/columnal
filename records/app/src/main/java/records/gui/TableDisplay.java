@@ -826,7 +826,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             return new RowRange(0, recordSetOrError.<Integer>eitherEx(err -> 0, rs -> rs.getLength()));
         }
     }
+    
+    private StyledString editSourceLink(TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
+    {
+        // TODO make it a clickable link/button
+        return srcTableId.toStyledString();
+    }
 
+    @OnThread(Tag.FXPlatform)
     private class TableHat extends FloatingItem<Node>
     {
         private final StyledString content;
@@ -839,7 +846,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Filter filter = (Filter)table;
                 content = StyledString.concat(
                     StyledString.s("Filter "),
-                    filter.getSources().get(0).toStyledString(),
+                    editSourceLink(filter.getSources().get(0), newSource -> 
+                        FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
+                            table.getDetailsForCopy(), newSource, filter.getFilterExpression()), new TableAndColumnRenames()))),
                     StyledString.s(", keeping rows where: "),
                     filter.getFilterExpression().toStyledString()
                 );

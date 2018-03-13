@@ -361,6 +361,11 @@ public abstract class Table
         return mgr;
     }
 
+    public synchronized InitialLoadDetails getDetailsForCopy()
+    {
+        return new InitialLoadDetails(id, prevPosition, showColumns);
+    }
+    
     /**
      * Slightly ham-fisted way to break the data->gui module dependency
      * while still letting Table store a link to its display.

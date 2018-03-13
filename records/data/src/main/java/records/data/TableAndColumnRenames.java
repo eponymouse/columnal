@@ -26,6 +26,11 @@ public class TableAndColumnRenames
     {
         this(null, renames);
     }
+    
+    public TableAndColumnRenames()
+    {
+        this(null, ImmutableMap.of());
+    }
 
     public TableId tableId(TableId tableId)
     {
