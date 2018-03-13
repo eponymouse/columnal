@@ -3,16 +3,14 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import javafx.geometry.BoundingBox;
-import javafx.scene.Node;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.ResizableRectangle;
 
@@ -27,16 +25,15 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     }
 
     @Override
-    public final Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    public final Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
     {
-        Optional<RectangleBounds> optBounds = calculateBounds(rowBounds, columnBounds);
-        return optBounds.map(bounds -> {
-            double left = columnBounds.getItemCoord(Utility.boxCol(bounds.topLeftIncl.columnIndex));
-            double top = rowBounds.getItemCoord(Utility.boxRow(bounds.topLeftIncl.rowIndex));
+        return calculateBounds(visibleBounds).flatMap(visibleBounds::clampVisible).map(bounds -> {
+            double left = visibleBounds.getXCoord(bounds.topLeftIncl.columnIndex);
+            double top = visibleBounds.getYCoord(bounds.topLeftIncl.rowIndex);
             // Take one pixel off so that we are on top of the right/bottom divider inset
             // rather than showing it just inside the rectangle (which looks weird)
-            double right = columnBounds.getItemCoord(Utility.boxCol(bounds.bottomRightIncl.columnIndex + CellPosition.col(1))) - 1;
-            double bottom = rowBounds.getItemCoord(Utility.boxRow(bounds.bottomRightIncl.rowIndex + CellPosition.row(1))) - 1;
+            double right = visibleBounds.getXCoordAfter(bounds.bottomRightIncl.columnIndex) - 1;
+            double bottom = visibleBounds.getYCoordAfter(bounds.bottomRightIncl.rowIndex) - 1;
 
             return new BoundingBox(
                     left, top, right - left, bottom - top
@@ -44,18 +41,18 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
         });
     }
 
-    protected abstract Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
+    protected abstract Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds);
 
     @Override
-    public final ResizableRectangle makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    public final ResizableRectangle makeCell(VisibleBounds visibleBounds)
     {
         ResizableRectangle r = new ResizableRectangle();
         r.setMouseTransparent(true);
-        style(r, rowBounds, columnBounds);
+        style(r, visibleBounds);
         return r;
     }
 
-    protected abstract void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
+    protected abstract void style(Rectangle r, VisibleBounds visibleBounds);
 
     @Override
     public VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition)

@@ -14,7 +14,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -22,7 +21,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -45,7 +43,7 @@ import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ColumnDetails;
@@ -160,15 +158,15 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+                public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
                 {
                     CellPosition pos = getFloatingPosition();
-                    double x = columnBounds.getItemCoord(Utility.boxCol(pos.columnIndex));
-                    y = rowBounds.getItemCoord(Utility.boxRow(pos.rowIndex));
-                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(pos.columnIndex)) - x;
-                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(pos.rowIndex)) - y;
+                    double x = visibleBounds.getXCoord(pos.columnIndex);
+                    y = visibleBounds.getYCoord(pos.rowIndex);
+                    double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
+                    double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
 
-                    lastY = rowBounds.getItemCoord(Utility.boxRow(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)));
+                    lastY = visibleBounds.getYCoord(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1));
                     
                     // So, y and lastY are in the VirtualGrid's coordinate space.  We know that 0 is logically the top
                     // in the render coordinates we have been given (even if VirtualGrid happens to be rendering more
@@ -228,7 +226,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Pane makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+                public Pane makeCell(VisibleBounds visibleBounds)
                 {
                     ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
                     textField.sizeToFit(30.0, 30.0);
@@ -335,19 +333,19 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 }
 
                 @Override
-                public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+                public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
                 {
                     CellPosition pos = getFloatingPosition();
-                    double x = columnBounds.getItemCoord(Utility.boxCol(pos.columnIndex));
-                    double y = rowBounds.getItemCoord(Utility.boxRow(pos.rowIndex));
-                    double width = columnBounds.getItemCoordAfter(Utility.boxCol(pos.columnIndex)) - x;
-                    double height = rowBounds.getItemCoordAfter(Utility.boxRow(pos.rowIndex)) - y;
+                    double x = visibleBounds.getXCoord(pos.columnIndex);
+                    double y = visibleBounds.getYCoord(pos.rowIndex);
+                    double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
+                    double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
 
                     return Optional.of(new BoundingBox(x, y, width, height));
                 }
 
                 @Override
-                public Label makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+                public Label makeCell(VisibleBounds visibleBounds)
                 {
                     Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
                     typeLabel.getStyleClass().add("table-display-column-title");
@@ -460,14 +458,13 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds)
         {
-            Optional<@AbsColIndex Integer> columnIndex = columnBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
-            Optional<@AbsRowIndex Integer> rowIndex = rowBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
-            if (columnIndex.isPresent() && rowIndex.isPresent())
+            Optional<CellPosition> pos = visibleBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
+            if (pos.isPresent())
             {
-                destPosition = new CellPosition(rowIndex.get(), columnIndex.get()); 
-                return Optional.of(new RectangleBounds(
+                destPosition = pos.get(); 
+                return visibleBounds.clampVisible(new RectangleBounds(
                     destPosition,
                     destPosition.offsetByRowCols(getBottomRightIncl().rowIndex - getPosition().rowIndex, getBottomRightIncl().columnIndex - getPosition().columnIndex)
                 ));
@@ -476,7 +473,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        protected void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        protected void style(Rectangle r, VisibleBounds visibleBounds)
         {
             r.getStyleClass().add("move-table-dest-overlay");
         }
@@ -584,12 +581,13 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
-            double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
-            double y = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
-            double width = columnBounds.getItemCoordAfter(Utility.boxCol(getBottomRightIncl().columnIndex)) - x;
-            double height = rowBounds.getItemCoordAfter(Utility.boxRow(getPosition().rowIndex)) - y;
+            double x = visibleBounds.getXCoord(getPosition().columnIndex);
+            double y = visibleBounds.getYCoord(getPosition().rowIndex);
+            double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
+            // Only one row tall:
+            double height = visibleBounds.getYCoordAfter(getPosition().rowIndex) - y;
             return Optional.of(new BoundingBox(
                 x,
                 y,
@@ -607,7 +605,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public Pane makeCell(VisibleBounds visibleBounds)
         {
             ErrorableTextField<TableId> tableNameField = new TableNameTextField(tableManager, initialTableName);
             tableNameField.sizeToFit(30.0, 30.0);
@@ -685,7 +683,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer> , VisibleDetails<@AbsColIndex Integer>>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
     {
         tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
         return new Pair<>(ListenerOutcome.KEEP, null);

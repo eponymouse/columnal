@@ -5,29 +5,14 @@ import annotation.units.AbsRowIndex;
 import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplier;
 import utility.Pair;
-import utility.gui.FXUtility;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.function.Predicate;
 
 /**
  * A class which manages and supplies nodes of a given type.
@@ -54,9 +39,9 @@ public abstract class VirtualGridSupplier<T extends Node>
      * @param columnBounds The column bounds (horizontal) of the current visible items (including any needed for scrolling)
      */
     // package-visible
-    abstract void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
+    abstract void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds);
 
-    void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    void sizesOrPositionsChanged(VisibleBounds visibleBounds)
     {
     }
 
@@ -92,36 +77,58 @@ public abstract class VirtualGridSupplier<T extends Node>
     }
     
     public static enum ViewOrder { GRID_LINES, STANDARD, FLOATING, FLOATING_PINNED, OVERLAY_PASSIVE, OVERLAY_ACTIVE }
-    
-    // Used for both rows and columns, to specify visible extents and divider positions
-    // Tag the type T with either @AbsRowIndex or @AbsColIndex
+
+    /**
+     * Specifies the visible extents being rendered.
+     */
     @OnThread(Tag.FXPlatform)
-    public static abstract class VisibleDetails<T extends Integer>
+    public static abstract class VisibleBounds
     {
         // Index of the first column/row visible (inclusive)
-        public final T firstItemIncl;
-        // Index of the last column/row visible (inclusive)
-        public final T lastItemIncl;
+        public final @AbsRowIndex int firstRowIncl;
+        public final @AbsRowIndex int lastRowIncl;
+        public final @AbsColIndex int firstColumnIncl;
+        public final @AbsColIndex int lastColumnIncl;
 
-        public VisibleDetails(T firstItemIncl, T lastItemIncl)
+        public VisibleBounds(@AbsRowIndex int firstRowIncl, @AbsRowIndex int lastRowIncl, @AbsColIndex int firstColumnIncl, @AbsColIndex int lastColumnIncl)
         {
-            this.firstItemIncl = firstItemIncl;
-            this.lastItemIncl = lastItemIncl;
+            this.firstRowIncl = firstRowIncl;
+            this.lastRowIncl = lastRowIncl;
+            this.firstColumnIncl = firstColumnIncl;
+            this.lastColumnIncl = lastColumnIncl;
         }
 
-        // The X/Y position of the left/top of the given item index
+        // The X position of the left of the given item index
         @OnThread(Tag.FXPlatform)
-        @Pure public abstract double getItemCoord(T itemIndex);
+        @Pure public abstract double getXCoord(@AbsColIndex int colIndex);
 
-        // The X/Y position of the right/bottom of the given item index
-        @SuppressWarnings({"unchecked", "units"})
+        // The X position of the top of the given item index
         @OnThread(Tag.FXPlatform)
-        @Pure public final double getItemCoordAfter(T itemIndex)
+        @Pure public abstract double getYCoord(@AbsRowIndex int rowIndex);
+        
+        // The X position of the right of the given item index
+        @OnThread(Tag.FXPlatform)
+        @Pure public final double getXCoordAfter(@AbsColIndex int colIndex)
         {
-            return getItemCoord((T)(Integer)(itemIndex.intValue() + 1));
+            return getXCoord(colIndex + CellPosition.col(1));
+        }
+
+        // The Y position of the bottom of the given item index
+        @OnThread(Tag.FXPlatform)
+        @Pure public final double getYCoordAfter(@AbsRowIndex int rowIndex)
+        {
+            return getYCoord(rowIndex + CellPosition.row(1));
         }
 
         // The item index that contains the given screen X/Y position
-        public abstract Optional<T> getItemIndexForScreenPos(Point2D screenPos);
+        public abstract Optional<CellPosition> getItemIndexForScreenPos(Point2D screenPos);
+
+        /**
+         * Takes a rectangle, and clamps it so that its extends fall within the portion being rendered.
+         */
+        public Optional<RectangleBounds> clampVisible(RectangleBounds rectangleBounds)
+        {
+            return rectangleBounds.intersectWith(new RectangleBounds(new CellPosition(firstRowIncl, firstColumnIncl), new CellPosition(lastRowIncl, lastColumnIncl)));
+        }
     }
 }

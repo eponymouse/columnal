@@ -33,14 +33,13 @@ import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import styled.StyledString;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -107,19 +106,19 @@ public class TestVirtualGridScroll extends ApplicationTest
         virtualGrid.getFloatingSupplier().addItem(new FloatingItem<Node>(ViewOrder.STANDARD)
         {
             @Override
-            public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+            public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
             {
-                @AbsColIndex Integer xCell = Utility.boxCol(CellPosition.col(5));
-                @AbsRowIndex Integer yCell = Utility.boxRow(CellPosition.row(10));
-                double x = columnBounds.getItemCoord(xCell);
-                double y = rowBounds.getItemCoord(yCell);
-                double width = columnBounds.getItemCoordAfter(xCell) - x;
-                double height = rowBounds.getItemCoordAfter(yCell) - y;
+                @AbsColIndex int xCell = CellPosition.col(5);
+                @AbsRowIndex int yCell = CellPosition.row(10);
+                double x = visibleBounds.getXCoord(xCell);
+                double y = visibleBounds.getYCoord(yCell);
+                double width = visibleBounds.getXCoordAfter(xCell) - x;
+                double height = visibleBounds.getYCoordAfter(yCell) - y;
                 return Optional.of(new BoundingBox(x, y, width, height));
             }
 
             @Override
-            public Node makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+            public Node makeCell(VisibleBounds visibleBounds)
             {
                 return node;
             }

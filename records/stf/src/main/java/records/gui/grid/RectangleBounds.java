@@ -5,6 +5,7 @@ import records.data.CellPosition;
 import utility.Utility;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class RectangleBounds
 {
@@ -45,7 +46,7 @@ public class RectangleBounds
         return "[" + topLeftIncl + " - " + bottomRightIncl + "]";
     }
 
-    public RectangleBounds intersectWith(RectangleBounds rectangleBounds)
+    public Optional<RectangleBounds> intersectWith(RectangleBounds rectangleBounds)
     {
         CellPosition topLeft = new CellPosition(
             Utility.maxRow(topLeftIncl.rowIndex, rectangleBounds.topLeftIncl.rowIndex),
@@ -56,12 +57,12 @@ public class RectangleBounds
             Utility.minCol(bottomRightIncl.columnIndex, rectangleBounds.bottomRightIncl.columnIndex)
         );
         
-        return new RectangleBounds(topLeft, bottomRight);
+        return topLeft.rowIndex <= bottomRight.rowIndex && topLeft.columnIndex <= bottomRight.columnIndex ?
+            Optional.of(new RectangleBounds(topLeft, bottomRight)) : Optional.empty();
     }
     
     public boolean touches(RectangleBounds rectangleBounds)
     {
-        RectangleBounds r = intersectWith(rectangleBounds);
-        return r.contains(r.topLeftIncl);
+        return intersectWith(rectangleBounds).isPresent();
     }
 }

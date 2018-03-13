@@ -26,10 +26,8 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.effect.Effect;
-import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -37,7 +35,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -49,19 +46,16 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import org.jetbrains.annotations.NotNull;
 import records.data.CellPosition;
-import records.data.Table;
 import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stable.ScrollGroup.Token;
-import records.gui.stable.ScrollResult;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -271,17 +265,17 @@ public class VirtualGrid implements ScrollBindable
             private final BooleanExpression hasSelection = selectionFinal.isNotNull();
             
             @Override
-            protected Optional<RectangleBounds> calculateBounds(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+            protected Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds)
             {
                 CellSelection selection = selectionFinal.get();
                 if (selection == null)
                     return Optional.empty();
                 else
-                    return Optional.of(selection.getSelectionDisplayRectangle());
+                    return visibleBounds.clampVisible(selection.getSelectionDisplayRectangle());
             }
 
             @Override
-            protected void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+            protected void style(Rectangle r, VisibleBounds visibleBounds)
             {
                 r.getStyleClass().add("virt-grid-selection-overlay");
                 r.visibleProperty().bind(hasSelection);
@@ -299,20 +293,20 @@ public class VirtualGrid implements ScrollBindable
                 {
                     FXUtility.mouse(VirtualGrid.this).smoothScrollToEnsureVisible(s.positionToEnsureInView());
                 }
-                List<FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>>> updaters = new ArrayList<>();
+                List<FXPlatformConsumer<VisibleBounds>> updaters = new ArrayList<>();
                 for (Iterator<SelectionListener> iterator = FXUtility.mouse(VirtualGrid.this).selectionListeners.iterator(); iterator.hasNext(); )
                 {
                     SelectionListener selectionListener = iterator.next();
-                    @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>>> outcome = selectionListener.selectionChanged(oldVal, s);
+                    @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> outcome = selectionListener.selectionChanged(oldVal, s);
                     if (outcome.getFirst() == ListenerOutcome.REMOVE)
                         iterator.remove();
                     if (outcome.getSecond() != null)
                         updaters.add(outcome.getSecond());
                 }
-                Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> bounds = FXUtility.mouse(VirtualGrid.this).container.redoLayout();
-                for (FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> updater : updaters)
+                VisibleBounds bounds = FXUtility.mouse(VirtualGrid.this).container.redoLayout();
+                for (FXPlatformConsumer<VisibleBounds> updater : updaters)
                 {
-                    updater.consume(bounds.getFirst(), bounds.getSecond());
+                    updater.consume(bounds);
                 }
             }
         });
@@ -1078,13 +1072,13 @@ public class VirtualGrid implements ScrollBindable
 
         // Note: the returned bounds are only valid until the next scroll or redoLayout
         // Use immediately and then forget them!
-        private Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> redoLayout(@UnknownInitialization(Region.class) Container this)
+        private VisibleBounds redoLayout(@UnknownInitialization(Region.class) Container this)
         {
-            Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> bounds = getVisibleBoundDetails();
+            VisibleBounds bounds = getVisibleBoundDetails();
 
             for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
             {
-                nodeSupplier.layoutItems(FXUtility.mouse(this), bounds.getFirst(), bounds.getSecond());
+                nodeSupplier.layoutItems(FXUtility.mouse(this), bounds);
             }
             //Log.debug("Children: " + getChildren().size());
             
@@ -1094,7 +1088,7 @@ public class VirtualGrid implements ScrollBindable
             return bounds;
         }
 
-        private Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> getVisibleBoundDetails(@UnknownInitialization(Region.class) Container this)
+        private VisibleBounds getVisibleBoundDetails(@UnknownInitialization(Region.class) Container this)
         {
             double x = firstRenderColumnOffset + renderXOffset;
             double y = firstRenderRowOffset + renderYOffset;
@@ -1118,51 +1112,40 @@ public class VirtualGrid implements ScrollBindable
 
             //Log.debug("Rows: " + firstDisplayRow + " to " + (lastDisplayRowExcl - 1) + " incl offset by: " + firstRenderRowOffset);
 
-            VisibleDetails<@AbsColIndex Integer> columnBounds = new VisibleDetails<@AbsColIndex Integer>(firstDisplayCol, lastDisplayColExcl - CellPosition.col(1))
+            return new VisibleBounds(firstDisplayRow, lastDisplayRowExcl - CellPosition.row(1), firstDisplayCol, lastDisplayColExcl - CellPosition.col(1))
             {
                 @Override
-                public double getItemCoord(@AbsColIndex Integer itemIndex)
+                public double getXCoord(@AbsColIndex int itemIndex)
                 {
                     return firstRenderColumnOffset + renderXOffset + sumColumnWidths(firstDisplayCol, itemIndex);
                 }
 
                 @Override
-                @OnThread(Tag.FXPlatform)
-                public Optional<@AbsColIndex Integer> getItemIndexForScreenPos(Point2D screenPos)
-                {
-                    Point2D localCoord = screenToLocal(screenPos);
-                    double x = firstRenderColumnOffset + renderXOffset;
-                    for (@AbsColIndex int i = firstRenderColumnIndex; i < lastDisplayColExcl; i++)
-                    {
-                        double nextX = x + getColumnWidth(i);
-                        if (x <= localCoord.getX() && localCoord.getX() < nextX)
-                            return Optional.of(i);
-                        x = nextX;
-                    }
-                    return Optional.empty();
-                }
-            };
-            VisibleDetails<@AbsRowIndex Integer> rowBounds = new VisibleDetails<@AbsRowIndex Integer>(firstDisplayRow, lastDisplayRowExcl - CellPosition.row(1))
-            {
-                @Override
-                public double getItemCoord(@AbsRowIndex Integer itemIndex)
+                public double getYCoord(@AbsRowIndex int itemIndex)
                 {
                     return firstRenderRowOffset + renderYOffset + rowHeight * (itemIndex - firstDisplayRow);
                 }
 
                 @Override
-                public Optional<@AbsRowIndex Integer> getItemIndexForScreenPos(Point2D screenPos)
+                @OnThread(Tag.FXPlatform)
+                public Optional<CellPosition> getItemIndexForScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = screenToLocal(screenPos);
+                    double x = firstRenderColumnOffset + renderXOffset;
                     @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + firstDisplayRow;
                     if (firstRenderRowIndex <= theoretical && theoretical < lastDisplayRowExcl)
-                        return Optional.of(theoretical);
-                    else
-                        return Optional.empty();
+                    {
+                        for (@AbsColIndex int i = firstRenderColumnIndex; i < lastDisplayColExcl; i++)
+                        {
+                            double nextX = x + getColumnWidth(i);
+                            if (x <= localCoord.getX() && localCoord.getX() < nextX)
+                                return Optional.of(new CellPosition(theoretical, i));
+                            x = nextX;
+                        }
+                    }
+                    return Optional.empty();
                 }
             };
-
-            return new Pair<>(rowBounds, columnBounds);
         }
 
         @Override
@@ -1278,18 +1261,18 @@ public class VirtualGrid implements ScrollBindable
         
         currentColumns.set(
             Utility.maxCol(MIN_COLS, 
-                gridAreas.stream()
-                        .<@AbsColIndex Integer>map(g -> Utility.boxCol(g.getSecond().getBottomRightIncl().columnIndex))
-                        .max(Comparator.comparingInt(x -> x))
-                    .<@AbsColIndex Integer>orElse(CellPosition.col(0))
-                    + CellPosition.col(2)));
+                CellPosition.col(gridAreas.stream()
+                        .mapToInt(g -> g.getSecond().getBottomRightIncl().columnIndex)
+                        .max()
+                    .orElse(0)
+                    + 2)));
         currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(2)));
-        Pair<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> bounds = container.redoLayout();
+        VisibleBounds bounds = container.redoLayout();
         updatingSizeAndPositions = false;
         
         for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
         {
-             nodeSupplier.sizesOrPositionsChanged(bounds.getFirst(), bounds.getSecond());
+             nodeSupplier.sizesOrPositionsChanged(bounds);
         }
     }
 
@@ -1431,7 +1414,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
         {
             if (button == null)
             {
@@ -1457,13 +1440,13 @@ public class VirtualGrid implements ScrollBindable
                 button.setVisible(true);
                 CellPosition pos = ((EmptyCellSelection) curSel).position;
                 buttonPosition = pos;
-                double x = columnBounds.getItemCoord(pos.columnIndex);
-                double y = rowBounds.getItemCoord(pos.rowIndex);
+                double x = visibleBounds.getXCoord(pos.columnIndex);
+                double y = visibleBounds.getYCoord(pos.rowIndex);
                 button.resizeRelocate(
                     x,
                     y,
-                    Math.max(button.minWidth(100.0), columnBounds.getItemCoordAfter(pos.columnIndex) - x),
-                    rowBounds.getItemCoordAfter(pos.rowIndex) - y
+                    Math.max(button.minWidth(100.0), visibleBounds.getXCoordAfter(pos.columnIndex) - x),
+                    visibleBounds.getYCoordAfter(pos.rowIndex) - y
                 );
             }
             else
@@ -1576,7 +1559,7 @@ public class VirtualGrid implements ScrollBindable
          * @return
          */
         @OnThread(Tag.FXPlatform)
-        public Pair<ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer> , VisibleDetails<@AbsColIndex Integer>>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
+        public Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection);
     }
     
     @OnThread(Tag.FXPlatform)
@@ -1590,22 +1573,18 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
             if (picked == null)
                 return Optional.empty();
             else
             {
-                // Clamp to rendered items:
-                CellPosition renderTopLeftIncl = new CellPosition(rowBounds.firstItemIncl, columnBounds.firstItemIncl);
-                CellPosition renderBottomRightIncl = new CellPosition(rowBounds.lastItemIncl, columnBounds.lastItemIncl);
-                RectangleBounds rectangleBounds = new RectangleBounds(renderTopLeftIncl, renderBottomRightIncl).intersectWith(new RectangleBounds(picked.getPosition(), picked.getBottomRightIncl()));
-                return Optional.of(getRectangleBoundsInContainer(rectangleBounds));
+                return visibleBounds.clampVisible(new RectangleBounds(picked.getPosition(), picked.getBottomRightIncl())).map(b -> getRectangleBoundsInContainer(b));
             }
         }
 
         @Override
-        public ResizableRectangle makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public ResizableRectangle makeCell(VisibleBounds visibleBounds)
         {
             ResizableRectangle rectangle = new ResizableRectangle();
             rectangle.getStyleClass().add("pick-table-overlay");

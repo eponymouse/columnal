@@ -3,22 +3,15 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
-import javafx.scene.Node;
-import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import threadchecker.OnThread;
 
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
 {
@@ -28,20 +21,20 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     private final HashMap<Integer, Line> yLinesInUse = new HashMap<>();
     
     @Override
-    void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
-        double lowestX = columnBounds.getItemCoord(columnBounds.firstItemIncl);
-        double highestX = columnBounds.getItemCoordAfter(columnBounds.lastItemIncl);
-        double lowestY = rowBounds.getItemCoord(rowBounds.firstItemIncl);
-        double highestY = rowBounds.getItemCoordAfter(rowBounds.lastItemIncl);
+        double lowestX = visibleBounds.getXCoord(visibleBounds.firstColumnIncl);
+        double highestX = visibleBounds.getXCoordAfter(visibleBounds.lastColumnIncl);
+        double lowestY = visibleBounds.getYCoord(visibleBounds.firstRowIncl);
+        double highestY = visibleBounds.getYCoordAfter(visibleBounds.lastRowIncl);
         
         Set<Line> linesToKeep = Sets.newIdentityHashSet();
         
         // Make sure all the intended lines are there:
-        for (@AbsColIndex int i = columnBounds.firstItemIncl; i <= columnBounds.lastItemIncl; i++)
+        for (@AbsColIndex int i = visibleBounds.firstColumnIncl; i <= visibleBounds.lastColumnIncl; i++)
         {
             Line line = xLinesInUse.get(i);
-            double x = columnBounds.getItemCoordAfter(i) - 1.0;
+            double x = visibleBounds.getXCoordAfter(i) - 1.0;
             if (line == null)
             {
                 line = new Line();
@@ -57,10 +50,10 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
             linesToKeep.add(line);
         }
 
-        for (@AbsRowIndex int i = rowBounds.firstItemIncl; i <= rowBounds.lastItemIncl; i++)
+        for (@AbsRowIndex int i = visibleBounds.firstRowIncl; i <= visibleBounds.lastRowIncl; i++)
         {
             Line line = yLinesInUse.get(i);
-            double y = rowBounds.getItemCoordAfter(i) - 1.0;
+            double y = visibleBounds.getYCoordAfter(i) - 1.0;
             if (line == null)
             {
                 line = new Line();

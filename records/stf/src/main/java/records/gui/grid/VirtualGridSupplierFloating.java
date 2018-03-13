@@ -38,14 +38,14 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
     
     @Override
-    void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
         toRemove.forEach(r -> containerChildren.remove(r));
         toRemove.clear();
         
         for (FloatingItem<?> item : items)
         {
-            item.updatePosition(containerChildren, rowBounds, columnBounds);
+            item.updatePosition(containerChildren, visibleBounds);
         }
     }
 
@@ -71,11 +71,11 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
 
     @Override
-    void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    void sizesOrPositionsChanged(VisibleBounds visibleBounds)
     {
         for (FloatingItem<?> item : items)
         {
-            item.sizesOrPositionsChanged(rowBounds, columnBounds);
+            item.sizesOrPositionsChanged(visibleBounds);
         }
     }
 
@@ -92,10 +92,10 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
 
         // If empty is returned, means not visible (and cell is removed).  Otherwise, coords in parent are returned.
         // BoundingBox not Bounds: should be directly calculated, without passing through a coordinate transformation
-        protected abstract Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
+        protected abstract Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds);
         
         // Called when a cell is made.  If calculatePosition always returns Optional.of, then this is only called once:
-        protected abstract T makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds);
+        protected abstract T makeCell(VisibleBounds visibleBounds);
         
         // Called once, after makeCell.
         public void adjustForContainerTranslation(T item, Pair<DoubleExpression, DoubleExpression> translateXY)
@@ -114,16 +114,16 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
         
         // Only called by outer class, so can be private
-        private void updatePosition(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        private void updatePosition(ContainerChildren containerChildren, VisibleBounds visibleBounds)
         {
-            Optional<BoundingBox> pos = calculatePosition(rowBounds, columnBounds);
+            Optional<BoundingBox> pos = calculatePosition(visibleBounds);
             if (pos.isPresent())
             {
                 // Should be visible; make sure there is a cell and put in right position:
                 final @NonNull T nodeFinal;
                 if (node == null)
                 {
-                    nodeFinal = makeCell(rowBounds, columnBounds);
+                    nodeFinal = makeCell(visibleBounds);
                     Pair<DoubleExpression, DoubleExpression> translateXY = containerChildren.add(nodeFinal, viewOrder);
                     adjustForContainerTranslation(nodeFinal, translateXY);
                     this.node = nodeFinal;
@@ -146,7 +146,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
             }
         }
 
-        protected void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
         {
         }
     }

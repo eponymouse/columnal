@@ -12,9 +12,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
-import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Dialog;
@@ -22,18 +20,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import javafx.scene.shape.StrokeType;
 import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -73,12 +66,10 @@ import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.RectangularTableCellSelection;
-import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
-import records.gui.grid.VirtualGrid.SelectionListener;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
-import records.gui.grid.VirtualGridSupplier.VisibleDetails;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -113,7 +104,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -253,11 +243,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
+    public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
     {
         ListenerOutcome outcome = super.selectionChanged(oldSelection, newSelection).getFirst();
-        FXPlatformBiConsumer<VisibleDetails<@AbsRowIndex Integer>, VisibleDetails<@AbsColIndex Integer>> update = (VisibleDetails<@AbsRowIndex Integer> r, VisibleDetails<@AbsColIndex Integer> c) -> tableBorderOverlay.updateClip(r, c);
-        return new Pair<>(outcome, update);
+        return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
     private CellPosition getDataPosition(@UnknownInitialization(GridArea.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
@@ -860,18 +849,18 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public Optional<BoundingBox> calculatePosition(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
             // The first time we are ever added, we will make a cell here and discard it,
             // but there's no good way round this:
-            Node item = getNode() != null ? getNode() : makeCell(rowBounds, columnBounds);
+            Node item = getNode() != null ? getNode() : makeCell(visibleBounds);
             
-            double x = columnBounds.getItemCoord(Utility.boxCol(getPosition().columnIndex));
-            double width = columnBounds.getItemCoordAfter(Utility.boxCol(getBottomRightIncl().columnIndex)) - x;
+            double x = visibleBounds.getXCoord(getPosition().columnIndex);
+            double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
             x += 10;
             width -= 20;
             
-            double bottom = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
+            double bottom = visibleBounds.getYCoord(getPosition().rowIndex);
             double y = bottom - item.prefHeight(width);
             double height = bottom - y;
             return Optional.of(new BoundingBox(
@@ -883,7 +872,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public Node makeCell(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        public Node makeCell(VisibleBounds visibleBounds)
         {
             TextFlow textFlow = new TextFlow(content.toGUI().toArray(new Node[0]));
             textFlow.getStyleClass().add("table-hat-text-flow");
@@ -927,35 +916,35 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        protected Optional<RectangleBounds> calculateBounds(VisibleDetails rowBounds, VisibleDetails columnBounds)
+        protected Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds)
         {
-            return Optional.of(new RectangleBounds(
+            return visibleBounds.clampVisible(new RectangleBounds(
                     getPosition(),
                     getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1)
             ));
         }
 
         @Override
-        protected void style(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        protected void style(Rectangle r, VisibleBounds visibleBounds)
         {
             r.getStyleClass().add("table-border-overlay");
-            calcClip(r, rowBounds, columnBounds);
+            calcClip(r, visibleBounds);
         }
 
         @Override
-        protected void sizesOrPositionsChanged(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
         {
-            updateClip(rowBounds, columnBounds);
+            updateClip(visibleBounds);
         }
 
-        private void updateClip(VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        private void updateClip(VisibleBounds visibleBounds)
         {
             if (getNode() != null)
-                calcClip(getNode(), rowBounds, columnBounds);
+                calcClip(getNode(), visibleBounds);
         }
 
         @OnThread(Tag.FXPlatform)
-        private void calcClip(Rectangle r, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+        private void calcClip(Rectangle r, VisibleBounds visibleBounds)
         {
             Shape originalClip = Shape.subtract(
                 new Rectangle(-20, -20, r.getWidth() + 40, r.getHeight() + 40),
@@ -978,9 +967,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 @SuppressWarnings("units")
                 @TableDataColIndex int columnZero = 0;
                 // We know where row labels will be, so easy to construct the rectangle:
-                double rowStartY = rowBounds.getItemCoord(Utility.boxRow(getDataPosition(rowZero, columnZero).rowIndex));
-                double rowEndY = rowBounds.getItemCoord(Utility.boxRow(getDataPosition(currentKnownRows, columnZero).rowIndex));
-                double ourTopY = rowBounds.getItemCoord(Utility.boxRow(getPosition().rowIndex));
+                double rowStartY = visibleBounds.getYCoord(getDataPosition(rowZero, columnZero).rowIndex);
+                double rowEndY = visibleBounds.getYCoord(getDataPosition(currentKnownRows, columnZero).rowIndex);
+                double ourTopY = visibleBounds.getYCoord(getPosition().rowIndex);
                 
                 Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - ourTopY, 20, rowEndY - rowStartY);
                 clip = Shape.subtract(clip, rowLabelBounds);

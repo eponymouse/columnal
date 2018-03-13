@@ -1105,18 +1105,6 @@ public class Utility
         return (a >= b) ? a : b;
     }
 
-    // Checker framework gives weird error when boxing directly, so need this function:
-    public static @AbsRowIndex Integer boxRow(@AbsRowIndex int rowIndex)
-    {
-        return rowIndex;
-    }
-
-    // Checker framework gives weird error when boxing directly, so need this function:
-    public static @AbsColIndex Integer boxCol(@AbsColIndex int colIndex)
-    {
-        return colIndex;
-    }
-
     public static class ReadState
     {
         private final File file;

@@ -2,7 +2,6 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
@@ -12,7 +11,6 @@ import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.DataItemPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -77,7 +75,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
     
     // package-visible
     @Override
-    final void layoutItems(ContainerChildren containerChildren, VisibleDetails<@AbsRowIndex Integer> rowBounds, VisibleDetails<@AbsColIndex Integer> columnBounds)
+    final void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, ItemDetails<T>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )
@@ -88,10 +86,10 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
             CellPosition posToCheck = vis.getKey();
 
             boolean shouldBeVisible =
-                    posToCheck.rowIndex >= rowBounds.firstItemIncl &&
-                            posToCheck.rowIndex <= rowBounds.lastItemIncl &&
-                            posToCheck.columnIndex >= columnBounds.firstItemIncl &&
-                            posToCheck.columnIndex <= columnBounds.lastItemIncl &&
+                    posToCheck.rowIndex >= visibleBounds.firstRowIncl &&
+                            posToCheck.rowIndex <= visibleBounds.lastRowIncl &&
+                            posToCheck.columnIndex >= visibleBounds.firstColumnIncl &&
+                            posToCheck.columnIndex <= visibleBounds.lastColumnIncl &&
                             vis.getValue().originator.cellAt(posToCheck) != null;
             if (!shouldBeVisible)
             {
@@ -102,13 +100,13 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
         }
 
         // Layout each row:
-        for (@AbsRowIndex int rowIndex = rowBounds.firstItemIncl; rowIndex <= rowBounds.lastItemIncl; rowIndex++)
+        for (@AbsRowIndex int rowIndex = visibleBounds.firstRowIncl; rowIndex <= visibleBounds.lastRowIncl; rowIndex++)
         {
-            final double y = rowBounds.getItemCoord(rowIndex);
-            double rowHeight = rowBounds.getItemCoordAfter(rowIndex) - y;
-            for (@AbsColIndex int columnIndex = columnBounds.firstItemIncl; columnIndex <= columnBounds.lastItemIncl; columnIndex++)
+            final double y = visibleBounds.getYCoord(rowIndex);
+            double rowHeight = visibleBounds.getYCoordAfter(rowIndex) - y;
+            for (@AbsColIndex int columnIndex = visibleBounds.firstColumnIncl; columnIndex <= visibleBounds.lastColumnIncl; columnIndex++)
             {
-                final double x = columnBounds.getItemCoord(columnIndex);
+                final double x = visibleBounds.getXCoord(columnIndex);
                 CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
                 Optional<Pair<GridCellInfo<T, S>, GridAreaCellPosition>> gridForItemResult = gridAreas.values().stream().flatMap(a -> Utility.streamNullable(a.cellAt(cellPosition)).map(c -> new Pair<>(a, c))).findFirst();
                 if (!gridForItemResult.isPresent())
@@ -153,13 +151,13 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S> extends V
                     }
                 }
                 cell.node.setVisible(true);
-                double nextX = columnBounds.getItemCoordAfter(columnIndex);
+                double nextX = visibleBounds.getXCoordAfter(columnIndex);
                 FXUtility.resizeRelocate(cell.node, x, y, nextX - x, rowHeight);
             }
         }
 
         // Don't let spare cells be more than N visible rows or columns:
-        int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(rowBounds.lastItemIncl - rowBounds.firstItemIncl + 1, columnBounds.lastItemIncl - columnBounds.firstItemIncl + 1);
+        int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(visibleBounds.lastRowIncl - visibleBounds.firstRowIncl + 1, visibleBounds.lastColumnIncl - visibleBounds.firstRowIncl + 1);
 
         while (spareItems.size() > maxSpareCells)
             containerChildren.remove(spareItems.remove(spareItems.size() - 1));
