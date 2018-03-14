@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -59,10 +60,11 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     }
 
     @Override
-    protected ItemState getItemState(LabelPane item)
+    protected ItemState getItemState(LabelPane item, Point2D screenPos)
     {
-        // TODO should take account of location within cell
-        return item.label.isVisible() ? ItemState.DIRECTLY_CLICKABLE : ItemState.NOT_CLICKABLE;
+        Bounds labelScreenBounds = item.label.localToScreen(item.label.getBoundsInLocal());
+        return item.label.isVisible() && labelScreenBounds.contains(screenPos)
+            ? ItemState.DIRECTLY_CLICKABLE : ItemState.NOT_CLICKABLE;
     }
 
     @Override

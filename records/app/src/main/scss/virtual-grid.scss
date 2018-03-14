@@ -146,5 +146,9 @@
         -fx-font-smoothing-type: lcd;
         
         -fx-fill: $table-row-label-text-color;
+        
+        &.styled-text-clickable {
+             -fx-underline: true;
+        }
     }
 }

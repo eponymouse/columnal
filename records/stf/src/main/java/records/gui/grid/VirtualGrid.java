@@ -896,12 +896,13 @@ public class VirtualGrid implements ScrollBindable
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits MouseEvent> clickHandler = mouseEvent -> {
 
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 
                 if (cellPosition != null)
                 {
                     @NonNull CellPosition cellPositionFinal = cellPosition;
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
-                        ItemState itemState = g.getItemState(cellPositionFinal);
+                        ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
                         return itemState != null && itemState != ItemState.NOT_CLICKABLE;
                     });
                     if (clickable)
@@ -915,7 +916,7 @@ public class VirtualGrid implements ScrollBindable
                     {
                         for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
                         {
-                            nodeSupplier.startEditing(new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY()), cellPositionFinal);
+                            nodeSupplier.startEditing(screenPos, cellPositionFinal);
                         }
                     }
                     else
@@ -955,8 +956,9 @@ public class VirtualGrid implements ScrollBindable
                     // We want to capture the events to prevent clicks reaching the underlying cell,
                     // if the cell is not currently editing
                     @NonNull CellPosition cellPositionFinal = cellPosition;
+                    Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
-                        ItemState itemState = g.getItemState(cellPositionFinal);
+                        ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
                         return itemState != null && itemState != ItemState.NOT_CLICKABLE;
                     }); 
                     if (!clickable)
@@ -1458,7 +1460,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        protected @Nullable ItemState getItemState(CellPosition cellPosition)
+        protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return cellPosition.equals(buttonPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
         }
@@ -1593,7 +1595,7 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return null;
         }

@@ -259,8 +259,11 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public void edit(@Nullable TableId affectedTableId, @Nullable SimulationSupplier<? extends Table> makeReplacement, TableAndColumnRenames renames) throws InternalException, UserException
+    public void edit(@Nullable TableId affectedTableId, @Nullable SimulationSupplier<? extends Table> makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException, UserException
     {
+        if (renames == null)
+            renames = TableAndColumnRenames.EMPTY;
+        
         Map<TableId, List<TableId>> edges = new HashMap<>();
         HashSet<TableId> affected = new HashSet<>();
         // If it is null, new table, so nothing should be affected:

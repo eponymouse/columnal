@@ -13,6 +13,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -123,7 +124,7 @@ public class TestVirtualGridScroll extends ApplicationTest
             }
 
             @Override
-            public @Nullable ItemState getItemState(CellPosition cellPosition)
+            public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 return null;
             }

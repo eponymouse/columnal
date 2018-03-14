@@ -1,6 +1,7 @@
 package records.gui;
 
 import javafx.beans.binding.ObjectExpression;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import log.Log;
@@ -71,7 +72,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     }
 
     @Override
-    protected ItemState getItemState(Button item)
+    protected ItemState getItemState(Button item, Point2D screenPos)
     {
         return ItemState.DIRECTLY_CLICKABLE;
     }

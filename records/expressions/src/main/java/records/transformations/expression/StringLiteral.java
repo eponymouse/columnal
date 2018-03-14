@@ -19,6 +19,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
+import styled.CommonStyles;
 import styled.StyledString;
 import utility.Pair;
 
@@ -58,7 +59,7 @@ public class StringLiteral extends Literal
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.monospace(StyledString.s("\"" + value + "\""));
+        return StyledString.s("\"" + value + "\"").withStyle(CommonStyles.MONOSPACE);
     }
 
     @Override

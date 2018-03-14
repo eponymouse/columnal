@@ -1,6 +1,7 @@
 package records.gui.grid;
 
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -58,7 +59,7 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     protected abstract void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds);
 
     @Override
-    public final VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition)
+    public final VirtualGridSupplier.@Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
     }

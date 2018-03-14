@@ -634,7 +634,7 @@ public class View extends StackPane
             //    overlays.remove(replaceOnOK);
             Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                 @Nullable TableId tableId = replaceOnOK == null ? null : replaceOnOK.getId();
-                tableManager.edit(tableId, t, TableAndColumnRenames.EMPTY);
+                tableManager.edit(tableId, t, null);
             }));
         });
         currentlyShowingEditTransformationDialog = null;

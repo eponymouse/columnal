@@ -5,6 +5,7 @@ import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
 import javafx.beans.binding.DoubleExpression;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -70,9 +71,9 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition)
+    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
-        return Utility.filterOutNulls(items.stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition))).findFirst().orElse(null);
+        return Utility.filterOutNulls(items.stream().<@Nullable ItemState>map(f -> f.getItemState(cellPosition, screenPos))).findFirst().orElse(null);
     }
 
     @Override
@@ -111,7 +112,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
          * Is there an item at the given position and if so what it is its state?
          * If none, return null;
          */
-        public abstract @Nullable ItemState getItemState(CellPosition cellPosition);
+        public abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos);
         
         protected final @Pure @Nullable T getNode(@UnknownInitialization(FloatingItem.class) FloatingItem<T> this)
         {

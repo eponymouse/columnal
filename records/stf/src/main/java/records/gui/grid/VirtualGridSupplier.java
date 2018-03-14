@@ -57,7 +57,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * Is there a cell at the given position and if so what it is its state?
      * If none, return null;
      */
-    abstract @Nullable ItemState getItemState(CellPosition cellPosition);
+    abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition);
 
     /**
      * Start editing that cell, if possible

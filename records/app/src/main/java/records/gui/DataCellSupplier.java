@@ -33,7 +33,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
     }
 
     @Override
-    protected ItemState getItemState(StructuredTextField stf)
+    protected ItemState getItemState(StructuredTextField stf, Point2D screenPos)
     {
         if (stf.isFocused())
             return ItemState.EDITING;

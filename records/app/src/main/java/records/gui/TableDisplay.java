@@ -16,6 +16,8 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
@@ -24,9 +26,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import log.Log;
@@ -42,7 +47,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.InitialLoadDetails;
-import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
@@ -89,7 +93,9 @@ import records.transformations.TransformationEditable;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.Expression;
 import styled.StyledString;
+import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -469,7 +475,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         
         this.onModify = () -> {
             parent.modified();
-            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, TableAndColumnRenames.EMPTY)));
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, null)));
         };
         
         Label title = new Label(table.getId().getOutput());
@@ -844,10 +850,57 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
     
+    private static class Clickable extends Style<Clickable>
+    {
+        private final FXPlatformConsumer<Point2D> onClick;
+        
+        public Clickable(FXPlatformConsumer<Point2D> onClick)
+        {
+            super(Clickable.class);
+            this.onClick = onClick;
+        }
+
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        protected void style(Text t)
+        {
+            t.getStyleClass().add("styled-text-clickable");
+            t.setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY)
+                    onClick.consume(new Point2D(e.getScreenX(), e.getScreenY()));
+            });
+            Tooltip tooltip = new Tooltip(TranslationUtility.getString("click.to.change"));
+            Tooltip.install(t, tooltip);
+        }
+
+        @Override
+        protected Clickable combine(Clickable with)
+        {
+            // Cannot combine, so make arbitrary choice:
+            return this;
+        }
+
+        @Override
+        protected boolean equalsStyle(Clickable item)
+        {
+            return false;
+        }
+    }
+    
     private StyledString editSourceLink(TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
     {
+        return srcTableId.toStyledString().withStyle(new Clickable(p -> {
+            new PickTableDialog(parent, p).showAndWait().ifPresent(t -> {
+                Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeSrcTableId.consume(t.getId())));
+            });
+        }));
+    }
+
+    private StyledString editExpressionLink(Expression curExpression, SimulationConsumer<Expression> changeExpression)
+    {
         // TODO make it a clickable link/button
-        return srcTableId.toStyledString();
+        return curExpression.toStyledString();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -865,10 +918,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 content = StyledString.concat(
                     StyledString.s("Filter "),
                     editSourceLink(filter.getSources().get(0), newSource -> 
-                        FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
-                            table.getDetailsForCopy(), newSource, filter.getFilterExpression()), new TableAndColumnRenames()))),
+                        parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
+                            table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                     StyledString.s(", keeping rows where: "),
-                    filter.getFilterExpression().toStyledString()
+                    editExpressionLink(filter.getFilterExpression(),newExp ->
+                        parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
+                            table.getDetailsForCopy(), filter.getSources().get(0), newExp), null))
                 );
             }
             else
@@ -911,9 +966,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
-            // TODO
+            Node node = getNode();
+            if (node != null)
+            {
+                Bounds screenBounds = node.localToScreen(node.getBoundsInLocal());
+                return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
+            }
             return null;
         }
     }
@@ -1039,7 +1099,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return null;
         }

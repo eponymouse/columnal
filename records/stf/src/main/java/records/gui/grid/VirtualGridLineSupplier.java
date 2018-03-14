@@ -3,6 +3,7 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import com.google.common.collect.Sets;
+import javafx.geometry.Point2D;
 import javafx.scene.shape.Line;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -90,7 +91,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     }
 
     @Override
-    protected @Nullable ItemState getItemState(CellPosition cellPosition)
+    protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
     }

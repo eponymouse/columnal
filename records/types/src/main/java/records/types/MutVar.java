@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import styled.CommonStyles;
 import styled.StyledString;
 import styled.StyledString.Style;
 import utility.Either;
@@ -89,8 +90,9 @@ public class MutVar extends TypeExp
     {
         String name = "_t" + id;
         if (pointer == null)
-            return StyledString.styled(name, Style.italic());
+            return StyledString.styled(name, CommonStyles.ITALIC);
         else
-            return StyledString.italicise(StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]")));
+            return StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]"))
+                    .withStyle(CommonStyles.ITALIC);
     }
 }

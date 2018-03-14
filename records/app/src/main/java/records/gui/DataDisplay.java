@@ -20,6 +20,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -151,7 +152,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 }
                 
                 @Override
-                public @Nullable ItemState getItemState(CellPosition cellPosition)
+                public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
                 {
                     return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
                 }
@@ -327,7 +328,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 }
                 
                 @Override
-                public @Nullable ItemState getItemState(CellPosition cellPosition)
+                public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
                 {
                     return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
                 }
@@ -597,9 +598,10 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition)
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             // TODO
+            Log.debug("TODO");
             return null;
         }
 

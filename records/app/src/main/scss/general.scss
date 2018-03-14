@@ -172,3 +172,19 @@
 .fix-list-heading, .quick-fix-row > .label {
     -fx-text-fill: black;
 }
+
+.styled-text {
+     &.styled-text-clickable {
+         -fx-cursor: hand;
+     }
+}
+
+.tooltip {
+    -fx-background-insets: 0, 1;
+    -fx-background-color: hsba(32, 10%, 60%), hsb(32, 5%, 98%);
+    -fx-background-radius: 0;
+    -fx-padding: 1 4 1 4;
+    -fx-text-fill: hsb(32, 10%, 50%);
+    /* Note: if you make shadow too big, the tooltip can steal mouse focus from item and disappear too easily! */
+    -fx-effect: dropshadow( three-pass-box , hsba(32,10%,40%,0.7) , 8, 0.6 , 2 , 2 );
+}

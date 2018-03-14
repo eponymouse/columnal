@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -292,11 +293,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     }
 
     @Override
-    protected final @Nullable ItemState getItemState(CellPosition cellPosition)
+    protected final @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         @Nullable T item = getItemAt(cellPosition);
-        return item == null ? null : getItemState(item);
+        return item == null ? null : getItemState(item, screenPos);
     }
 
-    protected abstract ItemState getItemState(T item);
+    protected abstract ItemState getItemState(T item, Point2D screenPos);
 }
