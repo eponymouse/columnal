@@ -1,18 +1,12 @@
 package styled;
 
-import com.google.common.collect.ImmutableClassToInstanceMap;
-import com.google.common.collect.ImmutableClassToInstanceMap.Builder;
+import com.google.common.reflect.ImmutableTypeToInstanceMap;
 import com.google.common.collect.ImmutableList;
-import javafx.geometry.Point2D;
-import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -20,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -68,14 +61,29 @@ public final class StyledString
         }
     }
     
-    private final ImmutableList<Pair<ImmutableClassToInstanceMap<Style<?>>, String>> members;
+    // I got VerifyError items (14th March 2018) when using Guava's ImmutableClassToInstanceMap, so this is
+    // my own simple equivalent, specialised to Style.  To be honest, it's a lot simpler by being specialised anyway:
+    private static class ImmutableStyleMap
+    {
+        public static final ImmutableStyleMap EMPTY = new ImmutableStyleMap(ImmutableList.of());
+        // Only one style per class type in this list:
+        private final ImmutableList<Style<?>> styleMembers;
+
+        // Warning: do not pass a list which has more than one entry per Style subclass.
+        private ImmutableStyleMap(ImmutableList<Style<?>> styleMembers)
+        {
+            this.styleMembers = styleMembers;
+        }
+    }
+    
+    private final ImmutableList<Pair<ImmutableStyleMap, String>> members;
     
     private StyledString(String normal)
     {
-        members = ImmutableList.of(new Pair<>(ImmutableClassToInstanceMap.of(), normal));
+        members = ImmutableList.of(new Pair<>(ImmutableStyleMap.EMPTY, normal));
     }
     
-    private StyledString(ImmutableList<Pair<ImmutableClassToInstanceMap<Style<?>>, String>> items)
+    private StyledString(ImmutableList<Pair<ImmutableStyleMap, String>> items)
     {
         members = items;
     }
@@ -83,58 +91,38 @@ public final class StyledString
     @Pure
     public static <S extends Style<S>> StyledString styled(String content, S style)
     {
-        return new StyledString(ImmutableList.of(new Pair<>(ImmutableClassToInstanceMap.of(style.thisClass, style), content)));
+        return new StyledString(ImmutableList.of(new Pair<>(new ImmutableStyleMap(ImmutableList.of(style)), content)));
     }
-/*
-    @Pure
-    public static StyledString italicise(StyledString styledString)
-    {
-        return new StyledString(styledString.members.stream().map(p -> p.mapFirst(style -> new Style(true, style.bold, style.monospace, style.size, style.onClick))).collect(ImmutableList.toImmutableList()));
-    }
-
-    public static StyledString monospace(StyledString styledString)
-    {
-        return new StyledString(styledString.members.stream().map(p -> p.mapFirst(style -> new Style(style.italic, style.bold, true, style.size, style.onClick))).collect(ImmutableList.toImmutableList()));
-    }
-    
-    @Pure public StyledString clickable(FXPlatformConsumer<Point2D> onClick)
-    {
-        return new StyledString(members.stream().map(p -> p.mapFirst(style -> style.withClick(onClick))).collect(ImmutableList.toImmutableList()));
-    }
-    */
 
     /**
      * Adds the given style to all our members.  If a style of the same class exists already,
      * they will get merged using the style's combine method.
      */
-    //@SuppressWarnings("all") // Due to recursive type.  TODO report and fix this
-    @Pure public <S extends Style<S>> StyledString withStyle(S style)
+    @Pure public <S extends Style<S>> StyledString withStyle(S newStyle)
     {
-        return new StyledString(Utility.mapListI(members, p -> p.mapFirst(prevMap -> {
-            // We can't put the same key twice into the builder even, so we must proceed carefully:
-            ImmutableClassToInstanceMap.Builder<Style<?>> builder = ImmutableClassToInstanceMap.builder();
-            
-            class DealWithStyle
+        
+        
+        return new StyledString(Utility.mapListI(members, p -> p.mapFirst(prevStyles -> {
+            ImmutableList.Builder<Style<?>> newStyles = ImmutableList.builder();
+            boolean added = false;
+            for (Style<?> prevStyleMember : prevStyles.styleMembers)
             {
-                public <K extends Style<K>> void mergeHelper(Style<K> prevValue)
+                @Nullable S prevStyleAsS = prevStyleMember.as(newStyle.thisClass);
+                if (prevStyleAsS != null)
                 {
-                    @Nullable K prevStyle = prevMap.getInstance(prevValue.thisClass);
-                    // prevStyle should always be null given we are going through the values.  But to satisfy
-                    // null check we must guard:
-                    if (prevStyle != null)
-                    {
-                        @Nullable K styleAsK = style.as(prevValue.thisClass);
-                        if (styleAsK != null)
-                            builder.put(prevValue.thisClass, styleAsK.combine(prevStyle));
-                        else
-                            builder.put(prevValue.thisClass, prevStyle);
-                    }
+                    newStyles.add(prevStyleAsS.combine(newStyle));
+                    added = true;
+                }
+                else
+                {
+                    newStyles.add(prevStyleMember);
                 }
             }
-            
-            // This is a bit weird, but knowing that each value is pointed to by its
-            prevMap.values().forEach(s -> new DealWithStyle().mergeHelper(s));
-            return builder.build();
+            if (!added)
+            {
+                newStyles.add(newStyle);
+            }
+            return new ImmutableStyleMap(newStyles.build());
         })));
     }
 
@@ -154,7 +142,7 @@ public final class StyledString
      */
     public static StyledString intercalate(StyledString divider, List<StyledString> items)
     {
-        ImmutableList.Builder<Pair<ImmutableClassToInstanceMap<Style<?>>, String>> l = ImmutableList.builder();
+        ImmutableList.Builder<Pair<ImmutableStyleMap, String>> l = ImmutableList.builder();
         boolean addDivider = false;
         for (StyledString item : items)
         {
@@ -172,7 +160,7 @@ public final class StyledString
         return Utility.mapList(members, p -> {
             Text t = new Text(p.getSecond());
             t.getStyleClass().add("styled-text");
-            p.getFirst().values().forEach(style -> style.style(t));
+            p.getFirst().styleMembers.forEach(style -> style.style(t));
             return t;
         });
     }
