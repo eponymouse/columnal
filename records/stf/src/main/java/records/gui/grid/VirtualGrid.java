@@ -311,7 +311,7 @@ public class VirtualGrid implements ScrollBindable
             }
         });
 
-        FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+        //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
     private double scrollClampX(double idealScrollBy)

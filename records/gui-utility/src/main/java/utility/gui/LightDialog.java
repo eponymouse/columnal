@@ -5,6 +5,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -14,6 +15,7 @@ import javafx.stage.Modality;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -25,13 +27,16 @@ import java.util.Optional;
  * a drop shadow to make it stand out from item beneath.
  */
 @OnThread(Tag.FXPlatform)
-public class LightDialog<R> extends Dialog<R>
+public abstract class LightDialog<R> extends Dialog<R>
 {
-    public LightDialog(Window parent)
+    protected LightDialog(Window parent, @Nullable DialogPane dialogPane)
     {
         initOwner(parent);
         initStyle(StageStyle.TRANSPARENT);
         initModality(Modality.WINDOW_MODAL);
+        
+        if (dialogPane != null)
+            setDialogPane(dialogPane);
 
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
@@ -50,6 +55,11 @@ public class LightDialog<R> extends Dialog<R>
             scene.setFill(null);
     }
 
+    protected LightDialog(Window parent)
+    {
+        this(parent, null);
+    }
+    
     protected Optional<R> showAndWaitCentredOn(Point2D mouseScreenPos, double contentWidth, double contentHeight)
     {
         // 40 pixels for display padding for drop shadow, and rough guess of 40 more for button bar  

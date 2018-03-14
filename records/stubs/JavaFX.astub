@@ -97,6 +97,7 @@ class Dialog<T>
     void initModality(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Modality m);
     void initOwner(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Window w);
     DialogPane getDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
+    void setDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, DialogPane value);
     void setResultConverter(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Callback<ButtonType, @Nullable T> a);
     void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, @Nullable T t);
     void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
