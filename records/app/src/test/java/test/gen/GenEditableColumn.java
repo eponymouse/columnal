@@ -3,6 +3,7 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -37,7 +38,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
         this.gs = generationStatus;
         try
         {
-            final int length = sourceOfRandomness.nextInt(5000);
+            final @Initialized int length = sourceOfRandomness.nextInt(5000);
             List<@Value Object> values = new ArrayList<>();
             for (int i = 0; i < length; i++)
             {

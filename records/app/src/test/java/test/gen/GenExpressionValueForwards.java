@@ -6,7 +6,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
@@ -121,7 +121,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
         }
     }
 
-    @NotNull
+    @NonNull
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
@@ -129,7 +129,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     }
 
     // Only valid after calling generate
-    @NotNull
+    @NonNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Pair<List<@Value Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
@@ -832,7 +832,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     }
 
     // Pattern and an optional guard
-    @NotNull
+    @NonNull
     private Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, List<Object> actual)
     {
         try

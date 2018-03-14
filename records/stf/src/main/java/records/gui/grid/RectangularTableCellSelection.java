@@ -3,7 +3,7 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.CellPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -104,7 +104,7 @@ public class RectangularTableCellSelection implements CellSelection
         );
     }
 
-    @NotNull
+    @NonNull
     public CellPosition calcBottomRightIncl()
     {
         return new CellPosition(
@@ -113,7 +113,7 @@ public class RectangularTableCellSelection implements CellSelection
         );
     }
 
-    @NotNull
+    @NonNull
     public CellPosition calcTopLeftIncl()
     {
         return new CellPosition(

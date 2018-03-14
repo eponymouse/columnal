@@ -162,7 +162,7 @@ public final class UnitExp implements StyledShowable
         // so no type vars to resolve:
         if (units.isEmpty())
             return true;
-        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap(e -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.empty())).collect(Collectors.toList());
+        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.empty())).collect(Collectors.toList());
         
         // If no type vars (and not empty overall) then we can't unify to one: fail
         if (typeVars.isEmpty())
@@ -171,7 +171,7 @@ public final class UnitExp implements StyledShowable
         if (typeVars.size() == 1)
         {
             int powerOfTypeVar = typeVars.get(0).getSecond();
-            if (units.entrySet().stream().filter(e -> e.getKey().isRight()).allMatch(e -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
+            if (units.entrySet().stream().filter((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().isRight()).allMatch((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
             {
                 // It does divide all remaining fixed units: Do it!
                 UnitExp result = new UnitExp();

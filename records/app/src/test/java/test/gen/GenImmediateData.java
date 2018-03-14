@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.GeneratorConfiguration;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.EditableColumn;
@@ -71,7 +72,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             for (int t = 0; t < numTables; t++)
             {
                 // Bias towards small:
-                final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
+                final @Initialized int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
 
                 int numColumns = r.nextInt(1, 12);
                 List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();

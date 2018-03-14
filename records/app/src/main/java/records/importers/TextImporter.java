@@ -7,7 +7,7 @@ import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
@@ -233,7 +233,7 @@ public class TextImporter implements Importer
         };
     }
 
-    @NotNull
+    @NonNull
     private static Map<Charset, List<String>> getInitial(File textFile) throws IOException
     {
         Map<Charset, List<String>> initial = new LinkedHashMap<>();

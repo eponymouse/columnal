@@ -490,7 +490,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         });
     }
 
-    @NotNull
+    @NonNull
     @OnThread(Tag.FXPlatform)
     private Boolean actuallyVisible(Node original)
     {

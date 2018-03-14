@@ -10,6 +10,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
@@ -25,7 +26,6 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
-import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +103,7 @@ public abstract class Table
         return id;
     }
 
-    @NotNull
+    @NonNull
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 

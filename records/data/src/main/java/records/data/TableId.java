@@ -1,7 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -55,7 +55,7 @@ public class TableId implements Comparable<TableId>, StyledShowable
     }
 
     @Override
-    public int compareTo(@NotNull TableId o)
+    public int compareTo(@NonNull TableId o)
     {
         return tableId.compareTo(o.tableId);
     }

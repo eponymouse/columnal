@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.unit.UnitManager;
@@ -162,7 +162,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
             throw new UserException("Function " + getName() + " could not parse date/time: \"" + src + "\"");
         }
 
-        @NotNull
+        @NonNull
         private List<Pair<DateTimeFormatter, @Value Temporal>> getPossibles(String src, List<DateTimeFormatter> format)
         {
             List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = new ArrayList<>();

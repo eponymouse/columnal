@@ -55,7 +55,6 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
-import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -298,7 +297,7 @@ public class SummaryStatistics extends TransformationEditable
 
 
     @Override
-    @NotNull
+    @NonNull
     @OnThread(Tag.Any)
     public RecordSet getData() throws UserException
     {

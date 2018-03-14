@@ -3,7 +3,6 @@ package utility;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
 import records.error.UserException;
 

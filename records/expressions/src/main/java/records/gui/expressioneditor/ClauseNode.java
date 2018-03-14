@@ -16,7 +16,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -108,7 +108,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
 
     }
 
-    @NotNull
+    @NonNull
     private Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> makeNewCase(@Nullable Expression caseExpression, @Nullable Expression guardExpression)
     {
         Consecutive<Expression, ExpressionNodeParent> pattern = makeConsecutive(SubType.PATTERN, caseExpression);

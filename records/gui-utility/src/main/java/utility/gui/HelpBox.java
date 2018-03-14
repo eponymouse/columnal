@@ -100,8 +100,7 @@ class HelpBox extends StackPane
     }
 
     @OnThread(Tag.FXPlatform)
-    @RequiresNonNull("helpId")
-    private void showPopOver(HelpBox this)
+    private void showPopOver()
     {
         if (popOver == null)
         {

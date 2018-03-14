@@ -1,7 +1,7 @@
 package records.data.unit;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Created by neil on 09/12/2016.
@@ -55,7 +55,7 @@ public class SingleUnit implements Comparable<SingleUnit>
     }
 
     @Override
-    public int compareTo(@NotNull SingleUnit o)
+    public int compareTo(@NonNull SingleUnit o)
     {
         return unitName.compareTo(o.unitName);
     }

@@ -10,6 +10,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jsoup.Jsoup;
@@ -104,7 +105,7 @@ public class HTMLImporter implements Importer
                 }
             }
 
-            SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
+            @Initialized SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
 
             // TODO show a dialog
             SimulationFunction<Format, EditableRecordSet> loadData = format -> {

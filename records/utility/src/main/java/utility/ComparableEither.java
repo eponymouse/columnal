@@ -1,7 +1,7 @@
 package utility;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 
 public class ComparableEither<A extends Comparable<A>, B extends Comparable<B>> extends Either<A, B> implements Comparable<ComparableEither<A, B>>
 {
@@ -22,7 +22,7 @@ public class ComparableEither<A extends Comparable<A>, B extends Comparable<B>> 
 
 
     @Override
-    public int compareTo(@NotNull ComparableEither<A, B> o)
+    public int compareTo(@NonNull ComparableEither<A, B> o)
     {
         return either(l -> o.either(l2 -> l.compareTo(l2), r2 -> -1), r -> o.either(l2 -> 1, r2 -> r.compareTo(r2)));
     }

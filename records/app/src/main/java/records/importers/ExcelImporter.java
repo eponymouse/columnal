@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -97,7 +98,7 @@ public class ExcelImporter implements Importer
             SimulationFunction<Format, EditableRecordSet> loadData = f -> {
                 return ImporterUtility.makeEditableRecordSet(mgr, vals, f);
             };
-            SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
+            @Initialized SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
             @Nullable Pair<ImportInfo, Format> outcome = new ImportChoicesDialog<>(mgr, src.getName(), GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals), loadData, c -> sourceInfo).showAndWait().orElse(null);
 
             if (outcome != null)

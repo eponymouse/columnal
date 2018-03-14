@@ -3,7 +3,7 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -62,7 +62,7 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     }
 
     // Only valid to call after generate has been called at least once
-    @NotNull
+    @NonNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type) throws InternalException
     {

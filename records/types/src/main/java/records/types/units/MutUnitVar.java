@@ -1,7 +1,7 @@
 package records.types.units;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.unit.SingleUnit;
 import styled.CommonStyles;
 import styled.StyledShowable;
@@ -18,7 +18,7 @@ public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
     @Nullable UnitExp pointer;
 
     @Override
-    public int compareTo(@NotNull MutUnitVar o)
+    public int compareTo(@NonNull MutUnitVar o)
     {
         return Long.compare(id, o.id);
     }

@@ -12,7 +12,7 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
 import records.gui.TypeDialog;
@@ -104,7 +104,7 @@ public class ExpressionEditorUtil
      * @param parentStyles
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
-    @NotNull
+    @NonNull
     protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded E>> replaceWithFixed, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
@@ -164,7 +164,7 @@ public class ExpressionEditorUtil
         return expressionInfoDisplay;
     }
 
-    @NotNull
+    @NonNull
     protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded E>> replace, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);

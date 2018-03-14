@@ -15,7 +15,7 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -131,13 +131,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         return Stream.concat(operators.stream(), operands.stream());
     }
 
-    @NotNull
+    @NonNull
     protected OperatorEntry<EXPRESSION, SEMANTIC_PARENT> makeBlankOperator()
     {
         return new OperatorEntry<>(operations.getOperandClass(), this);
     }
 
-    @NotNull
+    @NonNull
     protected OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> makeBlankOperand()
     {
         return operations.makeGeneral(this, getThisAsSemanticParent(), null);

@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
@@ -29,7 +30,7 @@ public class TestSetValue
     @OnThread(Tag.Simulation)
     public void propSetValue(@From(GenTypeAndValueGen.class)TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
-        int length = 1 + r.nextInt(100);
+        @Initialized int length = 1 + r.nextInt(100);
         List<@Value Object> originals = new ArrayList<>();
         List<@Value Object> replacements = new ArrayList<>();
         for (int i = 0; i < length; i++)

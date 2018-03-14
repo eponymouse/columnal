@@ -4,11 +4,12 @@ import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.UnitsBottom;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -101,7 +102,7 @@ public class ImporterUtility
         }
     }
 
-    @NotNull
+    @NonNull
     @OnThread(Tag.Simulation)
     public static EditableRecordSet makeEditableRecordSet(TableManager mgr, List<List<String>> vals, Format format) throws InternalException, UserException
     {
@@ -155,7 +156,7 @@ public class ImporterUtility
             // Maybe if it has title?                }
         }
 
-        int len = vals.size() - format.headerRows - (int)vals.stream().skip(format.headerRows).filter(r -> r.stream().allMatch(String::isEmpty)).count();
+        @Initialized int len = vals.size() - format.headerRows - (int)vals.stream().skip(format.headerRows).filter(r -> r.stream().allMatch(String::isEmpty)).count();
 
         return new EditableRecordSet(columns, () -> len);
     }

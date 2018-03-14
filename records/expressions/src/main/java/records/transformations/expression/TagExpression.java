@@ -5,7 +5,7 @@ import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -104,7 +104,7 @@ public class TagExpression extends NonOperatorExpression
         }
     }
 
-    @NotNull
+    @NonNull
     private String getQualifiedTagName()
     {
         return tag.either(s -> "?:" + s, p -> p.getTypeName() + ":" + p.getTagInfo().getName());

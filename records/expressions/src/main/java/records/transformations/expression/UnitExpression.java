@@ -2,7 +2,9 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -28,6 +30,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,8 +40,8 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     public static @Recorded UnitExpression load(Unit unit)
     {
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
-            .filter(p -> p.getValue() > 0)
-            .<UnitExpression>map(p -> {
+            .filter((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> p.getValue() > 0)
+            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
@@ -46,8 +49,8 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
         
         ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
-            .filter(p -> p.getValue() < 0)
-            .<UnitExpression>map(p -> {
+            .filter((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> p.getValue() < 0)
+            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> {
                 SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());

@@ -15,6 +15,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -676,7 +677,7 @@ public class GuessFormat
         // All must think it's viable, and then pick last one:
         Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream()
             //.filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size())
-            .max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
+            .max(Entry.comparingByKey()).map((Entry<@KeyFor("viableColumnNameRows") Integer, Integer> e) -> initialVals.get(e.getKey()));
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)

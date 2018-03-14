@@ -18,7 +18,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
@@ -723,7 +723,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return tagInfo.getTagInfo().getName().startsWith(input) || getScopedName().startsWith(input);
         }
 
-        @NotNull
+        @NonNull
         private String getScopedName()
         {
             return tagInfo.getTypeName().getRaw() + ":" + tagInfo.getTagInfo().getName();

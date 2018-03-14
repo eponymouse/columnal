@@ -48,7 +48,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
-import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -131,7 +130,7 @@ public class FXUtility
         });
     }
 
-    public static @NotNull DataFormat getTextDataFormat(String subType)
+    public static @NonNull DataFormat getTextDataFormat(String subType)
     {
         String whole = "text/" + subType;
         DataFormat f = DataFormat.lookupMimeType(whole);

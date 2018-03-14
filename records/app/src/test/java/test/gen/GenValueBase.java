@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
@@ -41,6 +42,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -178,7 +180,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         // TODO add UnitRaiseExpression more (don't always split units into single powers)
 
         // Flatten into a list of units, true for numerator, false for denom:
-        List<Pair<SingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap(e -> Utility.replicate(Math.abs(e.getValue()), new Pair<>(e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
+        List<Pair<SingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> e) -> Utility.replicate(Math.abs(e.getValue()), new Pair<>(e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
 
         // Now shuffle them and form a compound expression:
         Collections.shuffle(singleUnits, new Random(r.nextLong()));
