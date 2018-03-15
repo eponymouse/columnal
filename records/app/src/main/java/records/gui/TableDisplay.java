@@ -29,6 +29,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
@@ -38,6 +39,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -128,8 +130,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
+    // Can be null if there is error in initial loading
     @OnThread(Tag.Any)
-    private final Either<StyledString, RecordSet> recordSetOrError;
+    private final @Nullable RecordSet recordSet;
+    // The latest error message:
+    @OnThread(Tag.FXPlatform)
+    private final ObjectProperty<@Nullable StyledString> errorMessage = new SimpleObjectProperty<>(null);
     private final Table table;
     private final View parent;
     @OnThread(Tag.Any)
@@ -138,6 +144,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final TableBorderOverlay tableBorderOverlay;
     private final TableRowLabelBorder rowLabelBorder;
     private final TableHat tableHat;
+    private final TableErrorDisplay tableErrorDisplay;
     private boolean currentKnownRowsIsFinal = false;
 
     private final FXPlatformRunnable onModify;
@@ -218,6 +225,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         super.cleanupFloatingItems();
         floatingItems.removeItem(rowLabelBorder);
         floatingItems.removeItem(tableHat);
+        floatingItems.removeItem(tableErrorDisplay);
         floatingItems.removeItem(tableBorderOverlay);
     }
 
@@ -225,13 +233,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
     {
         @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
-        if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl && recordSetOrError.isRight())
+        if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl && recordSet != null)
         {
+            final @NonNull RecordSet recordSetFinal = recordSet;
             Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
                 try
                 {
                     // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
-                    boolean lastRowValid = recordSetOrError.getRight().indexValid(checkUpToRowIncl);
+                    boolean lastRowValid = recordSetFinal.indexValid(checkUpToRowIncl);
                     if (lastRowValid)
                     {
                         Platform.runLater(() -> {
@@ -244,7 +253,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         // Just a matter of working out where it ends.  Since we know end is close,
                         // just force with getLength:
                         @SuppressWarnings("units")
-                        @TableDataRowIndex int length = recordSetOrError.getRight().getLength();
+                        @TableDataRowIndex int length = recordSetFinal.getLength();
                         Platform.runLater(() -> {
                             currentKnownRows = length;
                             currentKnownRowsIsFinal = true;
@@ -305,9 +314,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
-        recordSetOrError.ifRight(recordSet ->
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c))
-        );
+        if (recordSet != null)
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
     }
 
     private @Nullable FXPlatformConsumer<ColumnId> renameColumn(ColumnId columnId)
@@ -327,9 +335,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
-        recordSetOrError.ifRight(recordSet -> 
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c))
-        );
+        if (recordSet != null) 
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
     }
 
     //TODO @Override
@@ -459,17 +466,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         super(parent.getManager(), table.getId(), table.getDisplayMessageWhenEmpty(), renameTableSim(table), supplierFloating);
         this.parent = parent;
         this.table = table;
-        Either<StyledString, RecordSet> recordSetOrError;
+        @Nullable RecordSet recordSet = null;
         try
         {
-            recordSetOrError = Either.right(table.getData());
+            recordSet = table.getData();
         }
         catch (UserException | InternalException e)
         {
-            recordSetOrError = Either.left(e.getStyledMessage());
+            Log.log(e);
+            errorMessage.set(e.getStyledMessage());
         }
-        this.recordSetOrError = recordSetOrError;
-        recordSetOrError.ifRight(rs -> setupWithRecordSet(parent.getManager(), table, rs));
+        this.recordSet = recordSet;
+        if (recordSet != null)
+            setupWithRecordSet(parent.getManager(), table, recordSet);
         
         // Row label border:
         rowLabelBorder = new TableRowLabelBorder();
@@ -477,6 +486,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // Hat:
         tableHat = new TableHat(table);
         supplierFloating.addItem(tableHat);
+        // Error
+        tableErrorDisplay = new TableErrorDisplay();
+        supplierFloating.addItem(tableErrorDisplay);
+        
         // Border overlay.  Note this makes use of calculations based on hat and row label border,
         // so it is important that we add this after them (since floating supplier iterates in order of addition):
         tableBorderOverlay = new TableBorderOverlay();
@@ -519,7 +532,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
         Workers.onWorkerThread("Determining row count", Priority.FETCH, () -> {
             ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
-            FXUtility.alertOnError_(() -> {
+            watchForError_(() -> {
                 for (int i = 0; i < INITIAL_LOAD; i++)
                 {
                     if (recordSet.indexValid(i))
@@ -549,6 +562,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // Should be done last:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         recordSet.setListener(usInit);
+    }
+
+    @OnThread(Tag.Simulation)
+    @RequiresNonNull("errorMessage")
+    private void watchForError_(@UnknownInitialization(DataDisplay.class) TableDisplay this, SimulationRunnable action)
+    {
+        try
+        {
+            action.run();
+        }
+        catch (UserException | InternalException e)
+        {
+            Log.log(e);
+            Platform.runLater(() -> errorMessage.set(e.getStyledMessage()));
+        }
     }
 
     //@RequiresNonNull({"parent", "table"})
@@ -855,7 +883,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         @Override
         public RowRange get() throws InternalException, UserException
         {
-            return new RowRange(0, recordSetOrError.<Integer>eitherEx(err -> 0, rs -> rs.getLength()));
+            return new RowRange(0, recordSet == null ? 0 :recordSet.getLength() - 1);
         }
     }
     
@@ -1136,6 +1164,68 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 );
                 cur.setClip(clip);
             }
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private class TableErrorDisplay extends FloatingItem<Pane>
+    {
+        private @Nullable BorderPane container;
+        private @Nullable TextFlow textFlow;
+        
+        protected TableErrorDisplay()
+        {
+            super(ViewOrder.POPUP);
+            FXUtility.addChangeListenerPlatform(errorMessage, err -> {
+               withParent_(g -> g.positionOrAreaChanged()); 
+            });
+        }
+
+        @Override
+        protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        {
+            @Nullable StyledString err = errorMessage.get();
+            if (err != null)
+            {
+                // We need a cell to do the calculation:
+                if (textFlow == null || container == null)
+                    makeCell(visibleBounds);
+                final Pane containerFinal = container;
+                textFlow.getChildren().setAll(err.toGUI());
+                containerFinal.applyCss();
+                double x = 20 + visibleBounds.getXCoord(getPosition().columnIndex);
+                double endX = -20 + visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex);
+                double y = visibleBounds.getYCoord(getPosition().rowIndex + CellPosition.row(HEADER_ROWS));
+                double width = endX - x;
+                double height = containerFinal.prefHeight(width);
+                return Optional.of(new BoundingBox(x, y, width, height));
+            }
+            else
+            {
+                return Optional.empty();
+            }
+        }
+
+        @Override
+        @EnsuresNonNull({"container", "textFlow"})
+        protected Pane makeCell(VisibleBounds visibleBounds)
+        {
+            TextFlow textFlow = new TextFlow();
+            textFlow.getStyleClass().add("table-error-message-text-flow");
+            BorderPane container = new BorderPane(textFlow);
+            container.getStyleClass().add("table-error-message-container");
+            this.container = container;
+            this.textFlow = textFlow;
+            return this.container;
+        }
+
+        @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        {
+            if (container == null)
+                return null;
+            Bounds screenBounds = container.localToScreen(container.getBoundsInLocal());
+            return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
         }
     }
 }

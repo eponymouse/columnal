@@ -1,10 +1,13 @@
 package records.error;
 
+import org.checkerframework.dataflow.qual.Pure;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 public class ExceptionWithStyle extends Exception
 {
-    private StyledString styledMessage;
+    private final StyledString styledMessage;
     
     protected ExceptionWithStyle(StyledString styledMessage)
     {
@@ -18,7 +21,8 @@ public class ExceptionWithStyle extends Exception
         this.styledMessage = styledMessage;
     }
 
-    public StyledString getStyledMessage()
+    @OnThread(Tag.Any)
+    @Pure public final StyledString getStyledMessage()
     {
         return styledMessage;
     }

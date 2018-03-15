@@ -95,12 +95,15 @@
     -fx-stroke-type: outside;
 }
 
+/* Drop shadows: */
 .table-border-overlay, .table-row-label-border {
     -fx-effect: dropshadow(gaussian, grey(40%), 15, 0.7, 2, 2);
 }
 .table-hat {
     -fx-effect: dropshadow(gaussian, grey(70%), 6, 0.2, 1, 1);
-    -fx-padding: 4;
+}
+.table-error-message-container {
+    -fx-effect: dropshadow(gaussian, grey(50%), 8, 0.4, 2, 2);
 }
 
 .virt-grid-selection-overlay {
@@ -137,10 +140,11 @@
 .table-hat {
     -fx-background-radius: 5;
     -fx-background-insets: 0, 1;
+    -fx-padding: 4;
     -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
 }
 .table-hat-text-flow {
-    -fx-font-size: 75%;
+    -fx-font-size: 80%;
     .styled-text {
         /* Without this the font rendering on text is awful at small size on Mac: */
         -fx-font-smoothing-type: lcd;
@@ -150,5 +154,16 @@
         &.styled-text-clickable {
              -fx-underline: true;
         }
+    }
+}
+
+.table-error-message-container {
+    -fx-background-color: white, hsb(13, 94%, 43%);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 5;
+    -fx-padding: 5;
+    -fx-font-size: 80%;
+    .table-error-message-text-flow .styled-text {
+        -fx-fill: white;
     }
 }
