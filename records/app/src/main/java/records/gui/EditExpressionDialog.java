@@ -3,6 +3,7 @@ package records.gui;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonType;
+import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.datatype.DataType;
@@ -29,7 +30,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
 
         expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), perRow, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager(), e -> {curValue = e;});
         
-        getDialogPane().setContent(expressionEditor.getContainer());
+        getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> bt == ButtonType.OK ? curValue : initialExpression);
