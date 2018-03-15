@@ -10,6 +10,7 @@ import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.FXUtility;
 import utility.gui.LightDialog;
 
 import java.util.Optional;
@@ -30,6 +31,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
         
         getDialogPane().setContent(expressionEditor.getContainer());
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+        FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> bt == ButtonType.OK ? curValue : initialExpression);
         
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);

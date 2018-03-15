@@ -13,7 +13,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
-import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -104,6 +103,7 @@ public class PickTableDialog extends LightDialog<Table>
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
         setResultConverter(bt -> null);
         centreDialogButtons();
+        FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         
         setOnShowing(e -> {
             view.enableTablePickingMode(lastScreenPos, t -> {

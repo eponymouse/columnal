@@ -28,6 +28,7 @@ import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
@@ -580,6 +581,28 @@ public class FXUtility
         node.setLayoutX(x);
         node.setLayoutY(y);
         node.resize(width, height);
+    }
+
+    /**
+     * Buttons in JavaFX need to see the press and release actions to fire.  But if there is a popup showing,
+     * the first press gets consumed dismissing the popup, even if the press is actually on the button.  So
+     * what this function does is make clicking on any button in the DialogPane fire it anyway, even if we
+     * didn't see the press.  This allows you to directly click cancel or OK, even if there is an autocomplete
+     * showing.  Note: you must call this after you have set the button types in the dialog!
+     */
+    public static void fixButtonsWhenPopupShowing(DialogPane dialogPane)
+    {
+        for (ButtonType buttonType : dialogPane.getButtonTypes())
+        {
+            Button button = (Button) dialogPane.lookupButton(buttonType);
+            button.setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY)
+                {
+                    button.fire();
+                    e.consume();
+                }
+            });
+        }
     }
 
     public static interface DragHandler
