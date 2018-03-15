@@ -252,7 +252,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
         // Must add operand and operator
         int index = Utility.indexOfRef(operators, rightOf);
         
-        if (index < operands.size())
+        if (index + 1 < operands.size())
         {
             if (focus)
                 operands.get(index + 1).focus(Focus.LEFT);
@@ -368,6 +368,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
 
     private void addBlankAtLeft()
     {
+        Log.debug("Adding blank at left");
         atomicEdit.set(true);
         OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankOperand();
         blankOperand.focusWhenShown();
@@ -748,6 +749,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
 
     public void focusChanged()
     {
+        Log.debug("Removing blanks");
         removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
@@ -791,9 +793,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             {
                 if (atomicEdit != null)
                     atomicEdit.set(true);
+                if (all.get(index) instanceof EEDisplayNode)
+                    Log.logStackTrace("Removed blank " + all.get(index - 1) + " and " + all.get(index) + " at " + index);
                 // Both are blank, so remove:
                 // Important to remove later one first so as to not mess with the indexing:
-                    all.remove(index);
+                all.remove(index);
                 if (index - 1 > 0 || all.size() > 1)
                 {
                     withRemoved.accept(all.remove(index - 1));
