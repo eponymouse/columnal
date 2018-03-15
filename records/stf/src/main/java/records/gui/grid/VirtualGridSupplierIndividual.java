@@ -58,9 +58,9 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         private final T node;
         private final StyleUpdater styleUpdater;
         private final GridAreaCellPosition gridAreaCellPosition;
-        private final GRID_AREA_INFO originator;
+        private final Pair<GridArea, GRID_AREA_INFO> originator;
 
-        private ItemDetails(T node, StyleUpdater styleUpdater, GRID_AREA_INFO originator, GridAreaCellPosition gridAreaCellPosition)
+        private ItemDetails(T node, StyleUpdater styleUpdater, Pair<GridArea, GRID_AREA_INFO> originator, GridAreaCellPosition gridAreaCellPosition)
         {
             this.node = node;
             this.styleUpdater = styleUpdater;
@@ -92,7 +92,8 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                             posToCheck.rowIndex <= visibleBounds.lastRowIncl &&
                             posToCheck.columnIndex >= visibleBounds.firstColumnIncl &&
                             posToCheck.columnIndex <= visibleBounds.lastColumnIncl &&
-                            vis.getValue().originator.cellAt(posToCheck) != null;
+                            hasGrid(vis.getValue().originator.getFirst()) &&
+                            vis.getValue().originator.getSecond().cellAt(posToCheck) != null;
             if (!shouldBeVisible)
             {
                 spareItems.add(vis.getValue().node);
@@ -110,11 +111,15 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
             {
                 final double x = visibleBounds.getXCoord(columnIndex);
                 CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
-                Optional<Pair<GRID_AREA_INFO, GridAreaCellPosition>> gridForItemResult = gridAreas.values().stream().flatMap(a -> Utility.streamNullable(a.cellAt(cellPosition)).map(c -> new Pair<>(a, c))).findFirst();
+                Optional<Pair<Pair<GridArea, GRID_AREA_INFO>, GridAreaCellPosition>> gridForItemResult = 
+                    gridAreas.entrySet().stream().flatMap((Entry<@KeyFor("gridAreas") GridArea, GRID_AREA_INFO> e) -> 
+                        Utility.streamNullable(e.getValue().cellAt(cellPosition))
+                            .map(c -> new Pair<>(new Pair<>(e.getKey(), e.getValue()), c)))
+                        .findFirst();
                 if (!gridForItemResult.isPresent())
                     continue;
 
-                GRID_AREA_INFO gridForItem = gridForItemResult.get().getFirst();
+                Pair<GridArea, GRID_AREA_INFO> gridForItem = gridForItemResult.get().getFirst();
 
                 ItemDetails<T> cell = visibleItems.get(cellPosition);
                 // If cell isn't present, grab from spareCells:
@@ -123,30 +128,30 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                     Pair<T, StyleUpdater> newCell;
                     if (!spareItems.isEmpty())
                     {
-                        newCell = withStyle(spareItems.remove(spareItems.size() - 1), gridForItem.styleForAllCells());
+                        newCell = withStyle(spareItems.remove(spareItems.size() - 1), gridForItem.getSecond().styleForAllCells());
                         resetForReuse(newCell.getFirst());
                     }
                     else
                     {
-                        newCell = withStyle(makeNewItem(), gridForItem.styleForAllCells());
+                        newCell = withStyle(makeNewItem(), gridForItem.getSecond().styleForAllCells());
                         containerChildren.add(newCell.getFirst(), viewOrder);
                     }
                     cell = new ItemDetails<>(newCell.getFirst(), newCell.getSecond(), gridForItem, gridForItemResult.get().getSecond());
 
                     visibleItems.put(cellPosition, cell);
-                    gridForItem.fetchFor(cell.gridAreaCellPosition, pos -> {
+                    gridForItem.getSecond().fetchFor(cell.gridAreaCellPosition, pos -> {
                         ItemDetails<T> item = visibleItems.get(pos);
                         return item == null ? null : item.node;
                     });
                 }
                 else
                 {
-                    cell.styleUpdater.listenTo(gridForItem.styleForAllCells());
+                    cell.styleUpdater.listenTo(gridForItem.getSecond().styleForAllCells());
                     if (cell.originator != gridForItem 
                         || !cell.gridAreaCellPosition.equals(gridForItemResult.get().getSecond())
-                        || !gridForItem.checkCellUpToDate(cell.gridAreaCellPosition, cell.node))
+                        || !gridForItem.getSecond().checkCellUpToDate(cell.gridAreaCellPosition, cell.node))
                     {
-                        gridForItem.fetchFor(cell.gridAreaCellPosition, pos -> {
+                        gridForItem.getSecond().fetchFor(cell.gridAreaCellPosition, pos -> {
                             ItemDetails<T> item = visibleItems.get(pos);
                             return item == null ? null : item.node;
                         });
@@ -169,7 +174,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
             hideItem(spareCell);
         }
         
-        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, T>flatteningToImmutableListMultimap(d -> d.originator, d -> Stream.of(d.node))).asMap());
+        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, T>flatteningToImmutableListMultimap(d -> d.originator.getSecond(), d -> Stream.of(d.node))).asMap());
         
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
     }

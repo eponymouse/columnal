@@ -205,10 +205,11 @@ public class View extends StackPane
                 // Call this first so that the nodes are actually removed when we call removeGridArea:
                 display.cleanupFloatingItems();
                 dataCellSupplier.removeGrid(display);
-                mainPane.removeGridArea(display);
                 mainPane.removeSelectionListener(display);
                 expandTableArrowSupplier.removeGrid(display);
                 rowLabelSupplier.removeGrid(display);
+                // This goes last because it will redo layout:
+                mainPane.removeGridArea(display);
             }
             emptyListener.consume(remainingCount == 0);
         });

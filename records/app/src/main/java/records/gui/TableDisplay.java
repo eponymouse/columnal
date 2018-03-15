@@ -213,6 +213,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
+    public void cleanupFloatingItems()
+    {
+        super.cleanupFloatingItems();
+        floatingItems.removeItem(rowLabelBorder);
+        floatingItems.removeItem(tableHat);
+        floatingItems.removeItem(tableBorderOverlay);
+    }
+
+    @Override
     public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
     {
         @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);

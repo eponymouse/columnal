@@ -76,7 +76,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     // One for table title, one for column names, one for column types:
     public static final int HEADER_ROWS = 3;
     
-    private final VirtualGridSupplierFloating floatingItems;
+    protected final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
     private final TableHeaderItem tableHeaderItem;
     private TableId curTableId;
