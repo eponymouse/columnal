@@ -15,7 +15,8 @@ $default-color: rgb(240, 240, 240);
     -fx-alignment: bottom-left;
     -fx-row-valignment: bottom;
     -fx-vgap: 1px;
-    -fx-background-color: $default-color;
+    -fx-background-color: grey(50%), $default-color;
+    -fx-background-insets: 0, 1;
 }
 .mapsto {
     -fx-font-size: 140%;

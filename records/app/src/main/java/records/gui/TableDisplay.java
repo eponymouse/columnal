@@ -897,10 +897,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }));
     }
 
-    private StyledString editExpressionLink(Expression curExpression, SimulationConsumer<Expression> changeExpression)
+    private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, boolean perRow, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
-        // TODO make it a clickable link/button
-        return curExpression.toStyledString();
+        return curExpression.toStyledString().withStyle(new Clickable(p -> {
+            new EditExpressionDialog(parent, srcTable, curExpression, perRow, expectedType).showAndWait().ifPresent(newExp -> {
+                Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeExpression.consume(newExp)));
+            });
+        }));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -921,7 +924,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
                             table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                     StyledString.s(", keeping rows where: "),
-                    editExpressionLink(filter.getFilterExpression(),newExp ->
+                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSources().get(0)), true, DataType.BOOLEAN, newExp ->
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
                             table.getDetailsForCopy(), filter.getSources().get(0), newExp), null))
                 );

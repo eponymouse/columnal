@@ -62,7 +62,7 @@ public class PickTableDialog extends LightDialog<Table>
                 double w = getWidth() - leftPadding - rightPadding;
                 double h = getHeight() - topPadding - bottomPadding;
                 
-                double buttonBarWidth = getButtonBar().minWidth(h);
+                double buttonBarWidth = getButtonBar().prefWidth(h);
                 double buttonBarHeight = getButtonBar().minHeight(buttonBarWidth);
                 // We align button bar to the bottom, to get cancel to line up with text field
                 // Bit of a hack: we adjust for content's padding
