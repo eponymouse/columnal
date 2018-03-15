@@ -11,6 +11,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Window;
 import log.Log;
@@ -173,20 +174,24 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             container.getChildren().setAll(nodes());
         });
         this.onChange = onChangeHandler;
-        FXUtility.addChangeListenerPlatform(container.sceneProperty(), scene -> {
-            // We should only ever be added to one scene, but we will also get removed from it
-            if (scene != null)
-            {
-                FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
-                    //Utility.logStackTrace("Focus now with: " + owner);
-                    FXUtility.runAfter(() -> {
-                        //System.err.println("Focus now with [2]: " + owner);
-                        if (scene.getFocusOwner() == owner)
-                        {
-                            focusChanged();
-                        }
-                    });
+        FXUtility.onceNotNull(container.sceneProperty(), scene -> {
+            FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
+                //Utility.logStackTrace("Focus now with: " + owner);
+                FXUtility.runAfter(() -> {
+                    //Log.debug("Focus now with [2]: " + owner);
+                    // We are in a run-after so check focus hasn't changed again:
+                    if (scene.getFocusOwner() == owner)
+                    {
+                        focusChanged();
+                    }
                 });
+            });
+        });
+        // If they click the background, focus the end:
+        container.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY)
+            {
+                focus(Focus.RIGHT);
             }
         });
 
@@ -490,6 +495,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         getAllChildren().stream().flatMap(c -> c.nodes().stream()).filter(c -> c.isFocused()).findFirst().ifPresent(focused -> {
             focusListeners.forEach(l -> l.consume(focused));
         });
+        FXUtility.setPseudoclass(container, "focus-within", childIsFocused());
     }
     
     public void addFocusListener(FXPlatformConsumer<Node> focusListener)

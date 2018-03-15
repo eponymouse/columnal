@@ -779,7 +779,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         protected String selected(String currentText, @Interned @Nullable Completion c, String rest)
         {
-            return selected(currentText, c, rest, true);
+            // Only move focus if we had it to begin with:
+            return selected(currentText, c, rest, isFocused());
         }
 
         
@@ -1002,6 +1003,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         super.clearAllErrors();
         if (unitSpecifier != null)
             unitSpecifier.clearAllErrors();
+    }
+
+    @Override
+    public String toString()
+    {
+        // Useful for debugging:
+        return super.toString() + ";" + textField;
     }
 
     private class AddUnitCompletion extends Completion

@@ -233,6 +233,13 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         return textField.getText();
     }
 
+    @Override
+    public String toString()
+    {
+        // Useful for debugging:
+        return super.toString() + ";" + textField;
+    }
+    
     private class CompletionListener extends SimpleCompletionListener
     {
         public CompletionListener()
