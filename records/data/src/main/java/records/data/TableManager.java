@@ -241,6 +241,12 @@ public class TableManager
         return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(Collectors.<Table>toList());
     }
 
+    public static interface TableMaker
+    {
+        @OnThread(Tag.Simulation)
+        Table make() throws InternalException;
+    }
+    
     /**
      * When you edit a table, we must update all dependent tables.  The way we do this
      * is to work out what all the dependent tables *are*, then save them as a script.
@@ -259,7 +265,7 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public void edit(@Nullable TableId affectedTableId, @Nullable SimulationSupplier<? extends Table> makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException, UserException
+    public void edit(@Nullable TableId affectedTableId, @Nullable TableMaker makeReplacement, @Nullable TableAndColumnRenames renames) throws InternalException
     {
         if (renames == null)
             renames = TableAndColumnRenames.EMPTY;
@@ -328,7 +334,7 @@ public class TableManager
                 if (affectedTableId != null)
                     removeAndSerialise(affectedTableId, new Table.BlankSaver(), renames);
             }
-            record(makeReplacement.get());
+            record(makeReplacement.make());
         }
 
         savedToReRun.thenAccept(ss -> {
