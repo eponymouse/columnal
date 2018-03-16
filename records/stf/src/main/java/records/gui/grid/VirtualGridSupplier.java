@@ -146,6 +146,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         // The item index that contains the given screen X/Y position
         public abstract Optional<CellPosition> getItemIndexForScreenPos(Point2D screenPos);
 
+        public abstract Point2D screenToLayout(Point2D screen);
+        
         /**
          * Takes a rectangle, and clamps it so that its extends fall within the portion being rendered.
          */

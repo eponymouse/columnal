@@ -10,6 +10,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.gui.ResizableRectangle;
 
 import java.util.Optional;
@@ -31,7 +32,7 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
     @Override
     public final Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
     {
-        return calculateBounds(visibleBounds).flatMap(visibleBounds::clampVisible).map(bounds -> {
+        return calculateBounds(visibleBounds).flatMap(e -> e.either(b -> Optional.of(b), r -> visibleBounds.clampVisible(r).map(bounds -> {
             double left = visibleBounds.getXCoord(bounds.topLeftIncl.columnIndex);
             double top = visibleBounds.getYCoord(bounds.topLeftIncl.rowIndex);
             // Take one pixel off so that we are on top of the right/bottom divider inset
@@ -42,10 +43,15 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
             return new BoundingBox(
                     left, top, right - left, bottom - top
             );
-        });
+        })));
     }
 
-    protected abstract Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds);
+    /**
+     * Note that if right is returned, clampVisible will be called for you before converting to a bounding box.
+     * @param visibleBounds
+     * @return
+     */
+    protected abstract Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds);
 
     @Override
     public final ResizableRectangle makeCell(VisibleBounds visibleBounds)

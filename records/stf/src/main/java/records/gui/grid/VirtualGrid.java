@@ -101,7 +101,7 @@ import java.util.stream.Collectors;
  */
 
 @OnThread(Tag.FXPlatform)
-public class VirtualGrid implements ScrollBindable
+public final class VirtualGrid implements ScrollBindable
 {
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
@@ -164,7 +164,7 @@ public class VirtualGrid implements ScrollBindable
     private @Nullable GridAreaHighlight highlightedGridArea;
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
-    
+
     public static interface CreateTable
     {
         public void createTable(CellPosition cellPosition, Point2D suitablePoint, VirtualGrid virtualGrid);
@@ -265,13 +265,13 @@ public class VirtualGrid implements ScrollBindable
             private final BooleanExpression hasSelection = selectionFinal.isNotNull();
             
             @Override
-            protected Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds)
+            protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
             {
                 CellSelection selection = selectionFinal.get();
                 if (selection == null)
                     return Optional.empty();
                 else
-                    return visibleBounds.clampVisible(selection.getSelectionDisplayRectangle());
+                    return Optional.of(Either.right(selection.getSelectionDisplayRectangle()));
             }
 
             @Override
@@ -960,13 +960,18 @@ public class VirtualGrid implements ScrollBindable
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
                         ItemState itemState = g.getItemState(cellPositionFinal, screenPos);
                         return itemState != null && itemState != ItemState.NOT_CLICKABLE;
-                    }); 
-                    if (!clickable)
+                    });
+                    // If it's the end of a drag, don't steal the event because we
+                    // are looking at drag end location, not drag start, so our calculations
+                    // are invalid:
+                    if (!clickable && (mouseEvent.getEventType() != MouseEvent.MOUSE_RELEASED || mouseEvent.isStillSincePress()))
                         mouseEvent.consume();
                 }
             };
             addEventFilter(MouseEvent.MOUSE_PRESSED, capture);
             addEventFilter(MouseEvent.MOUSE_RELEASED, capture);
+            //addEventFilter(MouseEvent.MOUSE_DRAGGED, capture);
+            addEventFilter(MouseEvent.DRAG_DETECTED, capture);
             
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
@@ -1105,40 +1110,35 @@ public class VirtualGrid implements ScrollBindable
                 x += getColumnWidth(column);
             }
             final int renderRowCount = newNumVisibleRows;
-            final int renderColumnCount = newNumVisibleCols;
-
-            // This includes extra rows needed for smooth scrolling:
-            final @AbsRowIndex int firstDisplayRow = firstRenderRowIndex;
-            final @AbsRowIndex int lastDisplayRowExcl = firstRenderRowIndex + CellPosition.row(renderRowCount);
-            final @AbsColIndex int firstDisplayCol = firstRenderColumnIndex;
-            final @AbsColIndex int lastDisplayColExcl = firstRenderColumnIndex + CellPosition.col(renderColumnCount);
+            final int renderColumnCount = newNumVisibleCols;            
 
             //Log.debug("Rows: " + firstDisplayRow + " to " + (lastDisplayRowExcl - 1) + " incl offset by: " + firstRenderRowOffset);
 
-            return new VisibleBounds(firstDisplayRow, lastDisplayRowExcl - CellPosition.row(1), firstDisplayCol, lastDisplayColExcl - CellPosition.col(1))
+            // This includes extra rows needed for smooth scrolling:
+            return new VisibleBounds(firstRenderRowIndex, firstRenderRowIndex + CellPosition.row(renderRowCount - 1), firstRenderColumnIndex, firstRenderColumnIndex + CellPosition.col(renderColumnCount - 1))
             {
                 @Override
                 public double getXCoord(@AbsColIndex int itemIndex)
                 {
-                    return firstRenderColumnOffset + renderXOffset + sumColumnWidths(firstDisplayCol, itemIndex);
+                    return firstRenderColumnOffset + renderXOffset + sumColumnWidths(firstColumnIncl, itemIndex);
                 }
 
                 @Override
                 public double getYCoord(@AbsRowIndex int itemIndex)
                 {
-                    return firstRenderRowOffset + renderYOffset + rowHeight * (itemIndex - firstDisplayRow);
+                    return firstRenderRowOffset + renderYOffset + rowHeight * (itemIndex - firstRowIncl);
                 }
 
                 @Override
                 @OnThread(Tag.FXPlatform)
                 public Optional<CellPosition> getItemIndexForScreenPos(Point2D screenPos)
                 {
-                    Point2D localCoord = screenToLocal(screenPos);
+                    Point2D localCoord = container.screenToLocal(screenPos);
                     double x = firstRenderColumnOffset + renderXOffset;
-                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + firstDisplayRow;
-                    if (firstRenderRowIndex <= theoretical && theoretical < lastDisplayRowExcl)
+                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + this.firstRowIncl;
+                    if (firstRenderRowIndex <= theoretical && theoretical <= lastRowIncl)
                     {
-                        for (@AbsColIndex int i = firstRenderColumnIndex; i < lastDisplayColExcl; i++)
+                        for (@AbsColIndex int i = firstRenderColumnIndex; i <= lastColumnIncl; i++)
                         {
                             double nextX = x + getColumnWidth(i);
                             if (x <= localCoord.getX() && localCoord.getX() < nextX)
@@ -1147,6 +1147,13 @@ public class VirtualGrid implements ScrollBindable
                         }
                     }
                     return Optional.empty();
+                }
+
+                @Override
+                public Point2D screenToLayout(Point2D screenPos)
+                {
+                    Point2D local = container.screenToLocal(screenPos);
+                    return local;
                 }
             };
         }
@@ -1369,6 +1376,11 @@ public class VirtualGrid implements ScrollBindable
         updateSizeAndPositions();
     }
 
+    public VisibleBounds getVisibleBounds()
+    {
+        return container.getVisibleBoundDetails();
+    }
+
     public void setEffectOnNonOverlays(@Nullable Effect effect)
     {
         container.setEffect(effect);
@@ -1566,7 +1578,7 @@ public class VirtualGrid implements ScrollBindable
     }
     
     @OnThread(Tag.FXPlatform)
-    private class GridAreaHighlight extends FloatingItem<ResizableRectangle>
+    private class GridAreaHighlight extends RectangleOverlayItem
     {
         private @Nullable GridArea picked;
         
@@ -1576,28 +1588,20 @@ public class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        public Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
         {
             if (picked == null)
                 return Optional.empty();
             else
             {
-                return visibleBounds.clampVisible(new RectangleBounds(picked.getPosition(), picked.getBottomRightIncl())).map(b -> getRectangleBoundsInContainer(b));
+                return visibleBounds.clampVisible(new RectangleBounds(picked.getPosition(), picked.getBottomRightIncl())).map(b -> Either.left(getRectangleBoundsInContainer(b)));
             }
         }
 
         @Override
-        public ResizableRectangle makeCell(VisibleBounds visibleBounds)
+        protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
         {
-            ResizableRectangle rectangle = new ResizableRectangle();
-            rectangle.getStyleClass().add("pick-table-overlay");
-            return rectangle;
-        }
-
-        @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
-        {
-            return null;
+            r.getStyleClass().add("pick-table-overlay");
         }
 
         public @Nullable GridArea highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)

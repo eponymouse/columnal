@@ -174,6 +174,11 @@ public class ErrorableTextField<T>
         field.setContextMenu(contextMenu);
     }
 
+    public boolean isFocused()
+    {
+        return field.isFocused();
+    }
+
     public static class ConversionResult<T>
     {
         private final boolean success;

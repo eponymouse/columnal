@@ -1091,12 +1091,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        protected Optional<RectangleBounds> calculateBounds(VisibleBounds visibleBounds)
+        protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
         {
-            return visibleBounds.clampVisible(new RectangleBounds(
+            return Optional.of(Either.right(new RectangleBounds(
                     getPosition(),
                     getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1)
-            ));
+            )));
         }
 
         @Override

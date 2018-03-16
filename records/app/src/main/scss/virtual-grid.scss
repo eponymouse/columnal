@@ -112,6 +112,16 @@
     -fx-stroke: $focus-color;
     -fx-stroke-type: outside;
 }
+.move-table-dest-overlay-snapped {
+    -fx-fill: null;
+    -fx-stroke: black;
+    -fx-stroke-width: 3;
+    -fx-stroke-type: outside;
+}
+.move-table-dest-overlay-free {
+    -fx-fill: hsba(0, 0%, 0%, 0.1);
+    -fx-stroke: null;
+}
 
 .pick-table-overlay {
     -fx-fill: $table-pick-overlay-fill;
