@@ -107,6 +107,7 @@ public class Sort extends TransformationEditable
     // 2 : 4
     // 3 : 4 [now stillToOrder], etc
     private int @Nullable [] stillToOrder;
+
     @OnThread(Tag.Any)
     private final @NonNull ImmutableList<ColumnId> originalSortBy;
     private final @Nullable ImmutableList<Column> sortBy;
@@ -669,6 +670,12 @@ public class Sort extends TransformationEditable
         for (ColumnId c : originalSortBy)
             b.kw("ASCENDING").id(renames.columnId(srcTableId, c)).nl();
         return b.toLines();
+    }
+
+    @OnThread(Tag.Any)
+    public ImmutableList<ColumnId> getSortBy()
+    {
+        return originalSortBy;
     }
 
     @Override

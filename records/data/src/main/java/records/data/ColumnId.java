@@ -2,6 +2,8 @@ package records.data;
 
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import styled.StyledShowable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -14,7 +16,7 @@ import java.io.Serializable;
  * Serializable for interface reasons, for not saving to file
  */
 @OnThread(Tag.Any)
-public class ColumnId implements Comparable<ColumnId>, Serializable
+public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowable
 {
     private static final long serialVersionUID = -6813720608766860501L;
     private final String columnId;
@@ -64,5 +66,9 @@ public class ColumnId implements Comparable<ColumnId>, Serializable
         return columnId.compareTo(o.columnId);
     }
 
-
+    @Override
+    public StyledString toStyledString()
+    {
+        return StyledString.s(columnId);
+    }
 }

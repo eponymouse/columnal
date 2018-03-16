@@ -17,6 +17,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -74,6 +75,7 @@ public class SummaryStatistics extends TransformationEditable
     // ColumnId here is the destination column, not source column:
     @OnThread(Tag.Any)
     private final ImmutableList<Pair<ColumnId, Expression>> summaries;
+
     // Columns to split by:
     @OnThread(Tag.Any)
     private final ImmutableList<ColumnId> splitBy;
@@ -322,9 +324,9 @@ public class SummaryStatistics extends TransformationEditable
         }
 
         @Override
-        public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Editor(view, mgr, srcTableId, src, ImmutableList.of(new Pair<ColumnId, Expression>(new ColumnId(""), new NumericLiteral(0, null))), Collections.emptyList());
+            return new SummaryStatistics(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of(), ImmutableList.of());
         }
 
         @Override
@@ -560,6 +562,19 @@ public class SummaryStatistics extends TransformationEditable
     {
         return Collections.singletonList(srcTableId);
     }
+
+    @OnThread(Tag.Any)
+    public ImmutableList<Pair<ColumnId, Expression>> getColumnExpressions()
+    {
+        return summaries;
+    }
+
+    @OnThread(Tag.Any)
+    public ImmutableList<ColumnId> getSplitBy()
+    {
+        return splitBy;
+    }
+
     /*
     @OnThread(Tag.Simulation)
     private abstract static class MinMaxFold<T> implements FoldOperation<T, T>

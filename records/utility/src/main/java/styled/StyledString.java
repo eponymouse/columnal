@@ -217,7 +217,7 @@ public final class StyledString
         {
         }
         
-        public Builder(Builder lhs, Builder rhs)
+        private Builder(Builder lhs, Builder rhs)
         {
             contents.addAll(lhs.contents);
             contents.addAll(rhs.contents);

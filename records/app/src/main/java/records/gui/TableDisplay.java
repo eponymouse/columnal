@@ -93,6 +93,7 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Filter;
 import records.transformations.HideColumnsPanel;
+import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.TransformationEditable;
 import records.transformations.expression.CallExpression;
@@ -983,6 +984,47 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             table.getDetailsForCopy(), filter.getSources().get(0), newExp), null))
                 );
             }
+            else if (table instanceof Sort)
+            {
+                Sort sort = (Sort)table;
+                content = StyledString.concat(
+                    StyledString.s("Sort "),
+                    editSourceLink(sort.getSources().get(0), newSource ->
+                            parent.getManager().edit(table.getId(), () -> new Sort(parent.getManager(),
+                                    table.getDetailsForCopy(), newSource, sort.getSortBy()), null)),
+                    StyledString.s(" by "),
+                    // TODO make this an edit link once we've decided how to edit:
+                    sort.getSortBy().isEmpty() ?
+                        StyledString.s("original order") :
+                        sort.getSortBy().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", "))
+                );
+            }
+            else if (table instanceof SummaryStatistics)
+            {
+                SummaryStatistics aggregate = (SummaryStatistics)table;
+                StyledString.Builder builder = new StyledString.Builder();
+                builder.append("Aggregate ");
+                builder.append(
+                    editSourceLink(aggregate.getSources().get(0), newSource ->
+                            parent.getManager().edit(table.getId(), () -> new SummaryStatistics(parent.getManager(),
+                                    table.getDetailsForCopy(), newSource, aggregate.getColumnExpressions(), aggregate.getSplitBy()), null))
+                );
+                // TODO should we add the calculations here if there are only one or two?
+                
+                List<ColumnId> splitBy = aggregate.getSplitBy();
+                if (!splitBy.isEmpty())
+                {
+                    builder.append(" splitting by ");
+                    // TODO make this an edit link once we've decided how to edit:
+                    builder.append(splitBy.stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")));
+                }
+                else
+                {
+                    // TODO make this an edit link once we've decided how to edit:
+                    builder.append(" with no splitting.");
+                }
+                content = builder.build();
+            }
             else
             {
                 content = StyledString.s("");
@@ -1000,6 +1042,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
             x += 30;
             width -= 40;
+            width = Math.max(width, 150.0);
 
             double prefHeight = item.prefHeight(width);
             double y = Math.max(visibleBounds.getYCoord(getPosition().rowIndex) - 10 - prefHeight, visibleBounds.getYCoord(CellPosition.row(0)) + 10);
