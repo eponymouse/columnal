@@ -17,14 +17,14 @@ hideColumns : hideColumn*;
 /* Sort: */
 orderKW : {_input.LT(1).getText().equals("ASCENDING") || _input.LT(1).getText().equals("DESCENDING")}? ATOM;
 orderBy : orderKW column=item NEWLINE;
-sort : orderBy+;
+sort : orderBy*;
 
 splitKW : {_input.LT(1).getText().equals("SPLIT")}? ATOM;
 fromKW : {_input.LT(1).getText().equals("SUMMARY")}? ATOM;
 summaryType : item;
 summaryCol : fromKW column=item expression; // No newline because expression consumes it
 splitBy : splitKW column=item NEWLINE;
-summary : summaryCol+ splitBy*;
+summary : summaryCol* splitBy*;
 
 /* Concat: */
 concatMissingColumnName : item;
