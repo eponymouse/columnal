@@ -394,7 +394,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     @Override
     protected CellPosition recalculateBottomRightIncl()
     {
-        return getPosition().offsetByRowCols(currentKnownRows + HEADER_ROWS, displayColumns.size());
+        return getPosition().offsetByRowCols(currentKnownRows + HEADER_ROWS - 1, Math.max(0, displayColumns.size() - 1));
     }
 
     // The top left data item in grid area terms, not including any headers

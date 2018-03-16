@@ -147,7 +147,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private final TableBorderOverlay tableBorderOverlay;
     private final TableRowLabelBorder rowLabelBorder;
-    private final TableHat tableHat;
+    private final @Nullable TableHat tableHat;
     private final TableErrorDisplay tableErrorDisplay;
     private boolean currentKnownRowsIsFinal = false;
 
@@ -228,7 +228,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         super.cleanupFloatingItems();
         floatingItems.removeItem(rowLabelBorder);
-        floatingItems.removeItem(tableHat);
+        if (tableHat != null)
+            floatingItems.removeItem(tableHat);
         floatingItems.removeItem(tableErrorDisplay);
         floatingItems.removeItem(tableBorderOverlay);
     }
@@ -391,7 +392,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     protected CellPosition recalculateBottomRightIncl()
     {
-        return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1);
+        return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, Math.max(0, internal_getColumnCount(table) - 1));
     }
 
     @Override
@@ -488,8 +489,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         rowLabelBorder = new TableRowLabelBorder();
         supplierFloating.addItem(rowLabelBorder);
         // Hat:
-        tableHat = new TableHat(table);
-        supplierFloating.addItem(tableHat);
+        if (table instanceof Transformation)
+        {
+            tableHat = new TableHat((Transformation)table);
+            supplierFloating.addItem(tableHat);
+        }
+        else
+        {
+            // No hat for plain data tables:
+            tableHat = null;
+        }
         // Error
         tableErrorDisplay = new TableErrorDisplay();
         supplierFloating.addItem(tableErrorDisplay);
@@ -967,7 +976,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         private final StyledString content;
         private BoundingBox latestBounds = new BoundingBox(0, 0, 0, 0);
 
-        public TableHat(Table table)
+        public TableHat(Transformation table)
         {
             super(ViewOrder.POPUP);
             if (table instanceof Filter)
