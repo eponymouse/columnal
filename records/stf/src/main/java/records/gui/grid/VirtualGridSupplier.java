@@ -143,8 +143,8 @@ public abstract class VirtualGridSupplier<T extends Node>
             return getYCoord(rowIndex + CellPosition.row(1));
         }
 
-        // The item index that contains the given screen X/Y position
-        public abstract Optional<CellPosition> getItemIndexForScreenPos(Point2D screenPos);
+        // The cell position with the top-left that is nearest the given screen X/Y position
+        public abstract Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos);
 
         public abstract Point2D screenToLayout(Point2D screen);
         

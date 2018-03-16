@@ -1131,18 +1131,23 @@ public final class VirtualGrid implements ScrollBindable
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Optional<CellPosition> getItemIndexForScreenPos(Point2D screenPos)
+                public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = container.screenToLocal(screenPos);
                     double x = firstRenderColumnOffset + renderXOffset;
-                    @AbsRowIndex int theoretical = CellPosition.row((int)Math.floor((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + this.firstRowIncl;
-                    if (firstRenderRowIndex <= theoretical && theoretical <= lastRowIncl)
+                    // Math.round will find us the nearest row:
+                    @AbsRowIndex int row = CellPosition.row((int)Math.round((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + this.firstRowIncl;
+                    
+                    if (firstRowIncl <= row && row <= lastRowIncl)
                     {
                         for (@AbsColIndex int i = firstRenderColumnIndex; i <= lastColumnIncl; i++)
                         {
                             double nextX = x + getColumnWidth(i);
                             if (x <= localCoord.getX() && localCoord.getX() < nextX)
-                                return Optional.of(new CellPosition(theoretical, i));
+                            {
+                                @AbsColIndex int column = Math.abs(localCoord.getX() - x) < Math.abs(localCoord.getX() - nextX) ? i : i + CellPosition.col(1);
+                                return Optional.of(new CellPosition(row, column));
+                            }
                             x = nextX;
                         }
                     }

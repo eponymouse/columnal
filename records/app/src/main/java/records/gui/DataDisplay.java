@@ -506,7 +506,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         @OnThread(Tag.FXPlatform)
         public Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
         {
-            Optional<CellPosition> pos = visibleBounds.getItemIndexForScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
+            Optional<CellPosition> pos = visibleBounds.getNearestTopLeftToScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
             if (pos.isPresent())
             {
                 destPosition = pos.get(); 
@@ -695,7 +695,6 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 e.consume();
             });
             borderPane.setOnMouseDragged(e -> {
-                Log.debug("Drag: " + e);
                 if (!overlays.isEmpty())
                 {
                     overlays.forEach(o -> o.mouseMovedToScreenPos(e.getScreenX(), e.getScreenY()));
@@ -704,7 +703,6 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 e.consume();
             });
             borderPane.setOnMouseReleased(e -> {
-                Log.debug("Release: " + e);
                 if (!overlays.isEmpty())
                 {
                     CellPosition dest = ((MoveDestinationSnapped)overlays.get(0)).getDestinationPosition();
@@ -721,7 +719,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             });
             borderPane.setOnMouseClicked(e -> {
                 withParent_(p -> {
-                    @AbsColIndex int columnIndex = p.getVisibleBounds().getItemIndexForScreenPos(new Point2D(e.getScreenX(), e.getScreenY())).orElse(getPosition()).columnIndex;
+                    @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY())).orElse(getPosition()).columnIndex;
                     p.select(new EntireTableSelection(DataDisplay.this, columnIndex));
                 });
                 e.consume();
