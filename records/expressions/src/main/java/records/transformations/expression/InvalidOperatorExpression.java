@@ -17,6 +17,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.types.TypeExp;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -44,7 +45,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     @Override
     public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // TODO give error and quick fix (bracketing)
+        onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
         return null; // Invalid expressions can't type check
     }
 

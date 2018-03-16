@@ -47,6 +47,8 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.errors.ExpressionErrorException;
+import records.errors.ExpressionErrorException.EditableExpression;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
@@ -176,7 +178,15 @@ public class Filter extends TransformationEditable
                     typeFinal = errors.recordLeftError(filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
-                    throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
+                    throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, true, DataType.BOOLEAN)
+                    {
+                        @Override
+                        @OnThread(Tag.Simulation)
+                        public Table replaceExpression(Expression changed) throws InternalException
+                        {
+                            return new Filter(getManager(), getDetailsForCopy(), srcTableId, changed);
+                        }
+                    });
                 
                 type = typeFinal;
             }

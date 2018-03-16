@@ -97,10 +97,7 @@ public class View extends StackPane
     private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(null);
     // Cancels a delayed save operation:
     private @Nullable FXPlatformRunnable cancelDelayedSave;
-    // Currently only used for testing:
-    private @Nullable EditTransformationDialog currentlyShowingEditTransformationDialog;
 
-    private final ObservableList<Shape> snapGuides = FXCollections.observableArrayList();
     // Pass true when empty
     private final FXPlatformConsumer<Boolean> emptyListener;
 
@@ -557,33 +554,6 @@ public class View extends StackPane
         pickPaneMouse = new Pane();
         getChildren().addAll(mainPane.getNode(), overlayPane, snapGuidePane);
         getStyleClass().add("view");
-
-        snapGuides.addListener((ListChangeListener<Shape>) c -> {
-            while (c.next())
-            {
-                snapGuidePane.getChildren().removeAll(c.getRemoved());
-                snapGuidePane.getChildren().addAll(c.getAddedSubList());
-            }
-        });
-    }
-
-    private @Nullable Table pickAt(double x, double y)
-    {
-        return null; //TODO
-        /*
-        Point2D sceneLocation = localToScene(x, y);
-        @Nullable Table picked = null;
-        // This is paint order, so later nodes are drawn on top
-        // Thus we just need to pick the last node in the list:
-        for (Node node : mainPane.getChildren())
-        {
-            if (node instanceof TableDisplay && node.isVisible() && node.contains(node.sceneToLocal(sceneLocation)))
-            {
-                picked = ((TableDisplay)node).getTable();
-            }
-        }
-        return picked;
-        */
     }
 
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
@@ -608,37 +578,10 @@ public class View extends StackPane
             return (TableDisplay)table.getDisplay();
     }
 
-    public void editTransform(TransformationEditable existing)
-    {
-        //EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
-        //showEditDialog(dialog, existing, existing.getMostRecentPosition());
-    }
-
     @SuppressWarnings("nullness") // Can't be a View without an actual window
     Window getWindow()
     {
         return getScene().getWindow();
-    }
-
-    public void newTransformFromSrc(Table src)
-    {
-        //EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, src.getId());
-        //showEditDialog(dialog, null, null);
-    }
-
-    private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable CellPosition position)
-    {
-        currentlyShowingEditTransformationDialog = dialog;
-        // add will re-run any dependencies:
-        dialog.showAndWait().ifPresent(t -> {
-            //if (replaceOnOK != null)
-            //    overlays.remove(replaceOnOK);
-            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
-                @Nullable TableId tableId = replaceOnOK == null ? null : replaceOnOK.getId();
-                tableManager.edit(tableId, t, null);
-            }));
-        });
-        currentlyShowingEditTransformationDialog = null;
     }
 
     @Override
@@ -652,12 +595,6 @@ public class View extends StackPane
     {
         return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
     }
-
-    public @Nullable EditTransformationDialog _test_getCurrentlyShowingEditTransformationDialog()
-    {
-        return currentlyShowingEditTransformationDialog;
-    }
-
 
     @OnThread(Tag.FXPlatform)
     public class FindEverywhereDialog extends Dialog<Void>

@@ -64,8 +64,11 @@ import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.error.ExceptionWithStyle;
 import records.error.InternalException;
 import records.error.UserException;
+import records.errors.ExpressionErrorException;
+import records.errors.ExpressionErrorException.EditableExpression;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
@@ -135,7 +138,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final @Nullable RecordSet recordSet;
     // The latest error message:
     @OnThread(Tag.FXPlatform)
-    private final ObjectProperty<@Nullable StyledString> errorMessage = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<@Nullable ExceptionWithStyle> errorMessage = new SimpleObjectProperty<>(null);
     private final Table table;
     private final View parent;
     @OnThread(Tag.Any)
@@ -474,7 +477,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         catch (UserException | InternalException e)
         {
             Log.log(e);
-            errorMessage.set(e.getStyledMessage());
+            errorMessage.set(e);
         }
         this.recordSet = recordSet;
         if (recordSet != null)
@@ -575,7 +578,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         catch (UserException | InternalException e)
         {
             Log.log(e);
-            Platform.runLater(() -> errorMessage.set(e.getStyledMessage()));
+            Platform.runLater(() -> errorMessage.set(e));
         }
     }
 
@@ -602,7 +605,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
         if (table instanceof TransformationEditable)
         {
-            items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform((TransformationEditable)table)));
+            //items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform((TransformationEditable)table)));
         }
 
         ToggleGroup show = new ToggleGroup();
@@ -619,7 +622,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             GUI.menu("tableDisplay.menu.showColumns",
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
             ),
-            GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
             GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), Utility.mapListEx(table.getData().getColumns(), c -> new Pair<>(c.getName(), c.getType())), new CompleteRowRangeSupplier()))),
             GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
                 File file = FXUtility.getFileSaveAs(parent);
@@ -942,6 +944,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             });
         }));
     }
+    
+    private StyledString fixExpressionLink(EditableExpression fixer)
+    {
+        return StyledString.styled("Edit expression", new Clickable(p -> {
+            new EditExpressionDialog(parent, parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
+                .showAndWait().ifPresent(newExp -> {
+                    Workers.onWorkerThread("Editing table", Priority.SAVE_ENTRY, () -> 
+                        FXUtility.alertOnError_(() ->
+                            parent.getManager().edit(table.getId(), () -> fixer.replaceExpression(newExp), null)
+                        )
+                    );
+            });
+                    
+        }));
+    }
 
     @OnThread(Tag.FXPlatform)
     private class TableHat extends FloatingItem<Node>
@@ -1184,14 +1201,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         @Override
         protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
         {
-            @Nullable StyledString err = errorMessage.get();
+            @Nullable ExceptionWithStyle err = errorMessage.get();
             if (err != null)
             {
                 // We need a cell to do the calculation:
                 if (textFlow == null || container == null)
                     makeCell(visibleBounds);
                 final Pane containerFinal = container;
-                textFlow.getChildren().setAll(err.toGUI());
+                final TextFlow textFlowFinal = textFlow;
+                StyledString message = err.getStyledMessage();
+                if (err instanceof ExpressionErrorException)
+                {
+                    ExpressionErrorException eee = (ExpressionErrorException) err;
+                    message = StyledString.concat(message, StyledString.s("\n"), fixExpressionLink(eee.editableExpression));
+                }
+                textFlowFinal.getChildren().setAll(message.toGUI());
                 containerFinal.applyCss();
                 double x = 20 + visibleBounds.getXCoord(getPosition().columnIndex);
                 double endX = -20 + visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex);
