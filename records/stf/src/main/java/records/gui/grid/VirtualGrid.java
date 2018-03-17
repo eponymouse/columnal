@@ -1123,7 +1123,7 @@ public final class VirtualGrid implements ScrollBindable
                 @Override
                 public double getXCoord(@AbsColIndex int itemIndex)
                 {
-                    return firstRenderColumnOffset + renderXOffset + sumColumnWidths(firstColumnIncl, itemIndex);
+                    return firstRenderColumnOffset + renderXOffset + (firstColumnIncl <= itemIndex ? sumColumnWidths(firstColumnIncl, itemIndex) : -sumColumnWidths(itemIndex, firstColumnIncl));
                 }
 
                 @Override
