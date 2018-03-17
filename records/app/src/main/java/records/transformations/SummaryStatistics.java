@@ -64,6 +64,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 21/10/2016.
@@ -547,11 +548,24 @@ public class SummaryStatistics extends Transformation
         return b.toLines();
     }
     
+    @OnThread(Tag.Any)
+    public TableId getSource()
+    {
+        return srcTableId;
+    }
+    
     @Override
     @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    public Stream<TableId> getPrimarySources()
     {
-        return ImmutableList.of(srcTableId);
+        return Stream.of(srcTableId);
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Stream<TableId> getSourcesFromExpressions()
+    {
+        return TransformationUtil.tablesFromExpressions(summaries.stream().map(p -> p.getSecond()));
     }
 
     @OnThread(Tag.Any)

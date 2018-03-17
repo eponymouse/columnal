@@ -148,7 +148,7 @@ public class View extends StackPane
             List<Table> allTablesUnordered = getAllTables();
 
             Map<TableId, Table> getById = new HashMap<>();
-            Map<TableId, List<TableId>> edges = new HashMap<>();
+            Map<TableId, Collection<TableId>> edges = new HashMap<>();
             HashSet<TableId> allIds = new HashSet<>();
             for (Table t : allTablesUnordered)
             {
@@ -277,7 +277,7 @@ public class View extends StackPane
     {
         if (table instanceof Transformation)
         {
-            List<TableId> sourceIds = ((Transformation) table).getSources();
+            Collection<TableId> sourceIds = ((Transformation) table).getSources();
             return sourceIds.stream().flatMap(id -> Utility.streamNullable(tableManager.getSingleTableOrNull(id))).collect(ImmutableList.toImmutableList());
         }
         else

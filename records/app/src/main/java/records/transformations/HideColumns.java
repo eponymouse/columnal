@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Keeps all data as-is, but hides a given set of columns from the resulting
@@ -130,9 +131,15 @@ public class HideColumns extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    public Stream<TableId> getPrimarySources()
     {
-        return ImmutableList.of(srcTableId);
+        return Stream.of(srcTableId);
+    }
+
+    @Override
+    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    {
+        return Stream.empty();
     }
 
     @Override

@@ -79,6 +79,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 23/11/2016.
@@ -212,9 +213,16 @@ public class Filter extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    public Stream<TableId> getPrimarySources()
     {
-        return ImmutableList.of(srcTableId);
+        return Stream.of(srcTableId);
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Stream<TableId> getSourcesFromExpressions()
+    {
+        return TransformationUtil.tablesFromExpression(filterExpression);
     }
 
     @Override
@@ -241,6 +249,12 @@ public class Filter extends Transformation
     public Expression getFilterExpression()
     {
         return filterExpression;
+    }
+
+    @OnThread(Tag.Any)
+    public TableId getSource()
+    {
+        return srcTableId;
     }
 
     private static class Editor extends TransformationEditor

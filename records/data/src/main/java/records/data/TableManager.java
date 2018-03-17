@@ -270,7 +270,7 @@ public class TableManager
         if (renames == null)
             renames = TableAndColumnRenames.EMPTY;
         
-        Map<TableId, List<TableId>> edges = new HashMap<>();
+        Map<TableId, Collection<TableId>> edges = new HashMap<>();
         HashSet<TableId> affected = new HashSet<>();
         // If it is null, new table, so nothing should be affected:
         if (affectedTableId != null)

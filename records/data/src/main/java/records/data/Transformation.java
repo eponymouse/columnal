@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -9,9 +10,12 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.io.File;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 21/10/2016.
@@ -24,7 +28,18 @@ public abstract class Transformation extends Table
     }
 
     @OnThread(Tag.Any)
-    public abstract ImmutableList<TableId> getSources();
+    public final ImmutableSet<TableId> getSources()
+    {
+        return Stream.concat(getPrimarySources(), getSourcesFromExpressions()).collect(ImmutableSet.toImmutableSet());
+    }
+
+    // Which tables are used in expressions?
+    @OnThread(Tag.Any)
+    protected abstract Stream<TableId> getSourcesFromExpressions();
+
+    // Which tables are declared as our primary source, if any (for filter, transform, concat, etc)
+    @OnThread(Tag.Any)
+    protected abstract Stream<TableId> getPrimarySources();
 
     @Override
     @OnThread(Tag.Simulation)

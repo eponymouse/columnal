@@ -60,6 +60,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 18/01/2017.
@@ -244,11 +245,17 @@ public class Concatenate extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    public Stream<TableId> getPrimarySources()
     {
-        return sources;
+        return sources.stream();
     }
-    
+
+    @Override
+    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    {
+        return Stream.empty();
+    }
+
     @Override
     protected @OnThread(Tag.Any) String getTransformationName()
     {

@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A transformation which preserves all data from the original table
@@ -271,11 +272,23 @@ public class Sort extends Transformation
         return NAME;
     }
 
+    @OnThread(Tag.Any)
+    public TableId getSource()
+    {
+        return srcTableId;
+    }
+    
     @Override
     @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    public Stream<TableId> getPrimarySources()
     {
-        return ImmutableList.of(srcTableId);
+        return Stream.of(srcTableId);
+    }
+
+    @Override
+    protected @OnThread(Tag.Any) Stream<TableId> getSourcesFromExpressions()
+    {
+        return Stream.empty();
     }
 
     @OnThread(Tag.FXPlatform)

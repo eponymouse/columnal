@@ -54,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A transformation on a single table which calculates a new set of columns
@@ -171,9 +172,16 @@ public class Transform extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    public Stream<TableId> getPrimarySources()
     {
-        return ImmutableList.of(srcTableId);
+        return Stream.of(srcTableId);
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Stream<TableId> getSourcesFromExpressions()
+    {
+        return TransformationUtil.tablesFromExpressions(newColumns.stream().map(p -> p.getSecond()));
     }
 
     @Override

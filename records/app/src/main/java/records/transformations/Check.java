@@ -34,6 +34,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
 public class Check extends Transformation
@@ -102,10 +103,16 @@ public class Check extends Transformation
     }
 
     @Override
-    @OnThread(Tag.Any)
-    public ImmutableList<TableId> getSources()
+    protected @OnThread(Tag.Any) Stream<TableId> getPrimarySources()
     {
-        return Utility.filterOutNulls(checkExpression.allColumnReferences().<@Nullable TableId>map(r -> r.getTableId())).distinct().collect(ImmutableList.toImmutableList());
+        return Stream.empty();
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Stream<TableId> getSourcesFromExpressions()
+    {
+        return TransformationUtil.tablesFromExpression(checkExpression);
     }
 
     @Override

@@ -983,13 +983,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Filter filter = (Filter)table;
                 content = StyledString.concat(
                     StyledString.s("Filter "),
-                    editSourceLink(filter.getSources().get(0), newSource -> 
+                    editSourceLink(filter.getSource(), newSource -> 
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
                             table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                     StyledString.s(", keeping rows where: "),
-                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSources().get(0)), true, DataType.BOOLEAN, newExp ->
+                    editExpressionLink(filter.getFilterExpression(), parent.getManager().getSingleTableOrNull(filter.getSource()), true, DataType.BOOLEAN, newExp ->
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
-                            table.getDetailsForCopy(), filter.getSources().get(0), newExp), null))
+                            table.getDetailsForCopy(), filter.getSource(), newExp), null))
                 );
             }
             else if (table instanceof Sort)
@@ -997,7 +997,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Sort sort = (Sort)table;
                 content = StyledString.concat(
                     StyledString.s("Sort "),
-                    editSourceLink(sort.getSources().get(0), newSource ->
+                    editSourceLink(sort.getSource(), newSource ->
                             parent.getManager().edit(table.getId(), () -> new Sort(parent.getManager(),
                                     table.getDetailsForCopy(), newSource, sort.getSortBy()), null)),
                     StyledString.s(" by "),
@@ -1013,7 +1013,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 StyledString.Builder builder = new StyledString.Builder();
                 builder.append("Aggregate ");
                 builder.append(
-                    editSourceLink(aggregate.getSources().get(0), newSource ->
+                    editSourceLink(aggregate.getSource(), newSource ->
                             parent.getManager().edit(table.getId(), () -> new SummaryStatistics(parent.getManager(),
                                     table.getDetailsForCopy(), newSource, aggregate.getColumnExpressions(), aggregate.getSplitBy()), null))
                 );
