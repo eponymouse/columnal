@@ -88,7 +88,7 @@ import java.util.stream.Stream;
 public class Filter extends Transformation
 {
     private static final String PREFIX = "KEEPIF";
-    public static final String NAME = "keep";
+    public static final String NAME = "filter";
     private final TableId srcTableId;
     private final @Nullable Table src;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:

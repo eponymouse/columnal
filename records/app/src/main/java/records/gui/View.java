@@ -43,6 +43,7 @@ import records.data.TableManager;
 import records.data.TableManager.TableManagerListener;
 import records.data.TableOperations;
 import records.data.Transformation;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
@@ -50,9 +51,11 @@ import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.transformations.Check;
 import records.transformations.Transform;
 import records.transformations.TransformationInfo;
 import records.transformations.TransformationManager;
+import records.transformations.expression.UnfinishedExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -502,16 +505,12 @@ public class View extends StackPane
 
                 View thisView = FXUtility.mouse(this);
                 
-                Optional<Pair<Point2D, DataOrTransform>> choice = Optional.of(new Pair<>(mouseScreenPos, DataOrTransform.DATA));
-                if (!tableManager.getAllTables().isEmpty())
-                {
-                    // Ask what they want
-                    GaussianBlur blur = new GaussianBlur(4.0);
-                    blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
-                    virtualGrid.setEffectOnNonOverlays(blur);
-                    choice = new DataOrTransformChoice(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos);
-                    
-                }
+                // Ask what they want
+                GaussianBlur blur = new GaussianBlur(4.0);
+                blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
+                virtualGrid.setEffectOnNonOverlays(blur);
+                Optional<Pair<Point2D, DataOrTransform>> choice = new DataOrTransformChoice(thisView.getWindow(), !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
+                
                 if (choice.isPresent())
                 {
                     InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
@@ -538,6 +537,17 @@ public class View extends StackPane
                                 });
                             });
                             break;
+                        case CHECK:
+                            new PickTableDialog(thisView, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
+                                new EditExpressionDialog(thisView, srcTable, new UnfinishedExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                                    Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                                        Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
+                                        tableManager.record(check);
+                                    }));
+                                });
+                            });
+                            break;
+                        // TODO support import
                     }
                 }
                 virtualGrid.setEffectOnNonOverlays(null);

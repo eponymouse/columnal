@@ -39,16 +39,19 @@ import java.util.stream.Stream;
 @OnThread(Tag.Simulation)
 public class Check extends Transformation
 {
+    public static final String NAME = "check";
     private static final String PREFIX = "CHECK";
+    private final TableId srcTableId;
     private final @Nullable RecordSet recordSet;
     private final String error;
     @OnThread(Tag.Any)
     private final Expression checkExpression;
     private @MonotonicNonNull DataType type;
     
-    public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, Expression checkExpression) throws InternalException
+    public Check(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, Expression checkExpression) throws InternalException
     {
         super(mgr, initialLoadDetails);
+        this.srcTableId = srcTableId;
         this.checkExpression = checkExpression;
         RecordSet theRecordSet = null;
         String theError = "Unknown error";
@@ -73,7 +76,7 @@ public class Check extends Transformation
         if (type == null)
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable TypeExp checked = checkExpression.check(new MultipleTableLookup(getManager(), null), new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+            @Nullable TypeExp checked = checkExpression.check(new MultipleTableLookup(getManager(), getManager().getSingleTableOrNull(srcTableId)), new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
                 typeFinal = errors.recordLeftError(checkExpression, checked.toConcreteType(getManager().getTypeManager()));
@@ -85,7 +88,7 @@ public class Check extends Transformation
                     @OnThread(Tag.Simulation)
                     public Table replaceExpression(Expression changed) throws InternalException
                     {
-                        return new Check(getManager(), getDetailsForCopy(), changed);
+                        return new Check(getManager(), getDetailsForCopy(), Check.this.srcTableId, changed);
                     }
                 });
 
@@ -141,5 +144,19 @@ public class Check extends Transformation
         if (obj instanceof Check)
             return checkExpression.equals(((Check)obj).checkExpression);
         return false;
+    }
+
+    public static class Info extends SingleSourceTransformationInfo
+    {
+        public Info()
+        {
+            super(NAME, "Check", "preview-check.png", "check.explanation.short", ImmutableList.of("remove", "delete"));
+        }
+        
+        @Override
+        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
+        {
+            return new Check(mgr, initialLoadDetails, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
+        }
     }
 }

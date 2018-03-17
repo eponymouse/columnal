@@ -28,7 +28,7 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
     private static final double WIDTH = 360;
     private static final double HEIGHT = 200;
 
-    public DataOrTransformChoice(Window parent)
+    public DataOrTransformChoice(Window parent, boolean transformIsValid)
     {
         super(parent);
         
@@ -37,6 +37,14 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
             us.setResult(new Pair<>(p, DataOrTransform.TRANSFORM));
             close();
         });
+        transformButton.setDisable(!transformIsValid);
+        VBox.setVgrow(transformButton, Priority.ALWAYS);
+        Button checkButton = new ExplainedButton("new.check", "new.check.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+            us.setResult(new Pair<>(p, DataOrTransform.CHECK));
+            close();
+        });
+        checkButton.setDisable(!transformIsValid);
+
         Button immediateDataButton = new ExplainedButton("new.data", "new.data.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
             us.setResult(new Pair<>(p, DataOrTransform.DATA));
             close();
@@ -47,7 +55,7 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
             us.setResult(new Pair<>(p, DataOrTransform.IMPORT_FILE));
             close();
         });
-        BorderPane content = new BorderPane(null, null, transformButton, null, GUI.vbox("new-button-list", immediateDataButton, importFromFile));
+        BorderPane content = new BorderPane(null, null, GUI.vbox("new-button-list", transformButton, checkButton), null, GUI.vbox("new-button-list", immediateDataButton, importFromFile));
         FXUtility.forcePrefSize(content);
         content.setPrefWidth(WIDTH);
         content.setPrefHeight(HEIGHT);
@@ -63,6 +71,6 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
         return super.showAndWaitCentredOn(mouseScreenPos, WIDTH, HEIGHT);
     }
 
-    public static enum DataOrTransform {DATA, TRANSFORM, IMPORT_FILE };
+    public static enum DataOrTransform {DATA, IMPORT_FILE, TRANSFORM, CHECK };
 
 }
