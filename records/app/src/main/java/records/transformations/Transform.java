@@ -32,6 +32,8 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
@@ -88,6 +90,7 @@ public class Transform extends Transformation
         try
         {
             RecordSet srcRecordSet = this.src.getData();
+            TableLookup tableLookup = new MultipleTableLookup(mgr, src);
             List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
             for (Column c : srcRecordSet.getColumns())
             {
@@ -134,7 +137,7 @@ public class Transform extends Transformation
                         return typeExp;
                     }
                 };
-                @Nullable TypeExp type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+                @Nullable TypeExp type = newCol.getSecond().check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
                 
                 DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
@@ -168,9 +171,9 @@ public class Transform extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public List<TableId> getSources()
+    public ImmutableList<TableId> getSources()
     {
-        return Collections.singletonList(srcTableId);
+        return ImmutableList.of(srcTableId);
     }
 
     @Override

@@ -28,7 +28,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
 
 import java.util.List;
 import java.util.Map;
@@ -85,9 +84,9 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = onError.recordType(this, checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), data, state, onError, p -> {
+        type = onError.recordType(this, checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());

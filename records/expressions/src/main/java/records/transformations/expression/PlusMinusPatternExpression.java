@@ -47,7 +47,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
@@ -62,7 +62,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // The LHS and RHS must be numbers with matching units.  The result is then that same number
         

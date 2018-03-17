@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -23,7 +24,7 @@ public abstract class Transformation extends Table
     }
 
     @OnThread(Tag.Any)
-    public abstract List<TableId> getSources();
+    public abstract ImmutableList<TableId> getSources();
 
     @Override
     @OnThread(Tag.Simulation)
@@ -52,7 +53,7 @@ public abstract class Transformation extends Table
     // hashCode and equals must be implemented properly (used for testing).
     // To make sure we don't forget, we introduce abstract methods which must
     // be overridden.  (We don't make hashCode and equals themselves abstract
-    // because subclasses would then lose access to Table.hashCode which they'd need).
+    // because subclasses would then lose access to Table.hashCode which they'd need to implement their hash code).
     @Override
     public final int hashCode()
     {

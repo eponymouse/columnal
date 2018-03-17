@@ -42,6 +42,8 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
@@ -184,11 +186,12 @@ public class SummaryStatistics extends Transformation
                 }
             }
 
+            TableLookup tableLookup = new MultipleTableLookup(mgr, this.src);
             for (Pair<ColumnId, Expression> e : summaries)
             {
                 Expression expression = e.getSecond();
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                @Nullable TypeExp type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
+                @Nullable TypeExp type = expression.check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 @Nullable DataType concrete = type == null ? null : errors.recordLeftError(expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
@@ -546,9 +549,9 @@ public class SummaryStatistics extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public List<TableId> getSources()
+    public ImmutableList<TableId> getSources()
     {
-        return Collections.singletonList(srcTableId);
+        return ImmutableList.of(srcTableId);
     }
 
     @OnThread(Tag.Any)

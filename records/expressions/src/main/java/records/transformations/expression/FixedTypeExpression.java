@@ -60,9 +60,9 @@ public class FixedTypeExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeExp innerType = inner.check(data, typeState, onError);
+        @Nullable TypeExp innerType = inner.check(dataLookup, typeState, onError);
         if (innerType == null)
             return null;
         else
@@ -79,9 +79,9 @@ public class FixedTypeExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return inner.allColumnNames();
+        return inner.allColumnReferences();
     }
 
     @Override

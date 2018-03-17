@@ -54,12 +54,12 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable TypeExp t = members.get(i).check(data, state, onError);
+            @Nullable TypeExp t = members.get(i).check(dataLookup, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t;
@@ -70,7 +70,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         @NonNull TypeState[] typeStates = new TypeState[members.size()];
@@ -122,9 +122,9 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return members.stream().flatMap(Expression::allColumnNames);
+        return members.stream().flatMap(Expression::allColumnReferences);
     }
 
     @Override

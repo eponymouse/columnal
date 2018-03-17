@@ -43,7 +43,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
         return null; // Invalid expressions can't type check

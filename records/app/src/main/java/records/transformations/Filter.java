@@ -57,6 +57,8 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
 import styled.StyledString;
@@ -117,6 +119,7 @@ public class Filter extends Transformation
             {
                 List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
                 RecordSet data = src.getData();
+                TableLookup tableLookup = new MultipleTableLookup(mgr, src);
                 for (Column c : data.getColumns())
                 {
                     columns.add(rs -> new Column(rs, c.getName())
@@ -127,7 +130,7 @@ public class Filter extends Transformation
                         {
                             return c.getType().copyReorder((i, prog) ->
                             {
-                                fillIndexMapTo(i, data, prog);
+                                fillIndexMapTo(i, tableLookup, data, prog);
                                 return DataTypeUtility.value(indexMap.getInt(i));
                             });
                         }
@@ -148,7 +151,7 @@ public class Filter extends Transformation
                         if (index < indexMap.filled())
                             return true;
 
-                        fillIndexMapTo(index, data, null);
+                        fillIndexMapTo(index, tableLookup, data,null);
                         return index < indexMap.filled();
                     }
                 };
@@ -163,7 +166,7 @@ public class Filter extends Transformation
         this.recordSet = theRecordSet;
     }
 
-    private void fillIndexMapTo(int index, RecordSet data, @Nullable ProgressListener prog) throws UserException, InternalException
+    private void fillIndexMapTo(int index, TableLookup data, RecordSet recordSet, @Nullable ProgressListener prog) throws UserException, InternalException
     {
         if (type == null)
         {
@@ -184,7 +187,7 @@ public class Filter extends Transformation
                         @OnThread(Tag.Simulation)
                         public Table replaceExpression(Expression changed) throws InternalException
                         {
-                            return new Filter(getManager(), getDetailsForCopy(), srcTableId, changed);
+                            return new Filter(getManager(), getDetailsForCopy(), Filter.this.srcTableId, changed);
                         }
                     });
                 
@@ -195,7 +198,7 @@ public class Filter extends Transformation
         }
 
         int start = indexMap.filled();
-        while (indexMap.filled() <= index && data.indexValid(nextIndexToExamine))
+        while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
             boolean keep = filterExpression.getBoolean(nextIndexToExamine, new EvaluateState(), prog);
             if (keep)
@@ -209,9 +212,9 @@ public class Filter extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public List<TableId> getSources()
+    public ImmutableList<TableId> getSources()
     {
-        return Collections.singletonList(srcTableId);
+        return ImmutableList.of(srcTableId);
     }
 
     @Override
@@ -279,7 +282,7 @@ public class Filter extends Transformation
             @Nullable Table src = srcControl.getTableOrNull();
             if (src == null)
                 return;
-            if (expression.check(src.getData(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), new ErrorAndTypeRecorderStorer()) == null)
+            if (expression.check(new MultipleTableLookup(mgr, src), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), new ErrorAndTypeRecorderStorer()) == null)
                 return;
 
             if (allColumns.isEmpty())
@@ -287,7 +290,7 @@ public class Filter extends Transformation
                 allColumns.addAll(src.getData().getColumnIds());
             }
             /*
-            Map<ColumnId, Long> itemToFreq = expression.allColumnNames().collect(Collectors.groupingBy(Function.<ColumnId>identity(), Collectors.<ColumnId>counting()));
+            Map<ColumnId, Long> itemToFreq = expression.allColumnReferences().collect(Collectors.groupingBy(Function.<ColumnId>identity(), Collectors.<ColumnId>counting()));
             List<ColumnId> sortedByFreq = itemToFreq.entrySet().stream().sorted(Entry.<ColumnId, Long>comparingByValue(Comparator.<Long>reverseOrder())).<ColumnId>map(Entry::getKey).limit(3).collect(Collectors.toList());
             if (sortedByFreq.size() < 3)
             {

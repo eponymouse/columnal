@@ -24,11 +24,11 @@ public class ExpressionErrorException extends UserException
     public static abstract class EditableExpression
     {
         public final Expression current;
-        public final TableId srcTableId;
+        public final @Nullable TableId srcTableId;
         public final boolean perRow;
         public final @Nullable DataType expectedType;
 
-        protected EditableExpression(Expression current, TableId srcTableId, boolean perRow, @Nullable DataType expectedType)
+        protected EditableExpression(Expression current, @Nullable TableId srcTableId, boolean perRow, @Nullable DataType expectedType)
         {
             this.current = current;
             this.srcTableId = srcTableId;

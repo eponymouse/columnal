@@ -47,9 +47,9 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return expressions.stream().flatMap(Expression::allColumnNames);
+        return expressions.stream().flatMap(Expression::allColumnReferences);
     }
 
     // Will be same length as expressions, if null use existing
@@ -215,7 +215,7 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameType(TypeExp target, RecordSet data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameType(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());

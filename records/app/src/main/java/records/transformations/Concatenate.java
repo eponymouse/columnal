@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
@@ -67,7 +68,7 @@ import java.util.stream.Collectors;
 public class Concatenate extends Transformation
 {
     @OnThread(Tag.Any)
-    private final List<TableId> sources;
+    private final ImmutableList<TableId> sources;
 
     @OnThread(Tag.Any)
     private final List<Table> sourceTables;
@@ -85,7 +86,7 @@ public class Concatenate extends Transformation
     private final @Nullable RecordSet recordSet;
 
     @SuppressWarnings("initialization")
-    public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> sources, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals) throws InternalException
+    public Concatenate(TableManager mgr, InitialLoadDetails initialLoadDetails, ImmutableList<TableId> sources, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.sources = sources;
@@ -243,7 +244,7 @@ public class Concatenate extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public List<TableId> getSources()
+    public ImmutableList<TableId> getSources()
     {
         return sources;
     }
@@ -340,7 +341,7 @@ public class Concatenate extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
         {
-            return () -> new Concatenate(mgr, initialLoadDetails, srcTableIds, missingVals);
+            return () -> new Concatenate(mgr, initialLoadDetails, ImmutableList.copyOf(srcTableIds), missingVals);
         }
 
         @Override
@@ -375,7 +376,7 @@ public class Concatenate extends Transformation
                 }
                 missingInstr.put(new ColumnId(columnName), instruction);
             }
-            return new Concatenate(mgr, initialLoadDetails, source, missingInstr);
+            return new Concatenate(mgr, initialLoadDetails, ImmutableList.copyOf(source), missingInstr);
         }
 
         @Override

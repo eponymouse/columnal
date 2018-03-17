@@ -465,7 +465,7 @@ public class View extends StackPane
                 FXUtility.runFX(() -> {
                     thisView.emptyListener.consume(false);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
-                    thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource), null);
+                    thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource));
                     thisView.save();
                 });
             }
@@ -478,7 +478,7 @@ public class View extends StackPane
                     thisView.emptyListener.consume(false);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     TableDisplay tableDisplay = new TableDisplay(thisView, floatingSupplier, transformation);
-                    thisView.addDisplay(tableDisplay, thisView.getTableDisplayOrNull(transformation.getSources().get(0)));
+                    thisView.addDisplay(tableDisplay);
 
                     List<TableDisplay> sourceDisplays = new ArrayList<>();
                     for (TableId t : transformation.getSources())
@@ -555,7 +555,7 @@ public class View extends StackPane
         getStyleClass().add("view");
     }
 
-    private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
+    private void addDisplay(TableDisplay tableDisplay)
     {
         dataCellSupplier.addGrid(tableDisplay, tableDisplay.getDataGridCellInfo());
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));

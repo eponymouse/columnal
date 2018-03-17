@@ -5,7 +5,6 @@ import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -70,14 +69,14 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         // Not valid tag; nothing more we can do:
         if (typeAndIndex == null)
             return null;
 
-        innerDerivedType = inner == null ? null : inner.check(data, state, onError);
+        innerDerivedType = inner == null ? null : inner.check(dataLookup, state, onError);
         // We must not pass nulls to checkSame if inner is empty, as that counts as failed checking, not optional items:
         boolean innerExpAndTypeBlank = inner == null && typeAndIndex.getTagInfo().getInner() == null;
         if (innerExpAndTypeBlank)
@@ -111,7 +110,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         if (typeAndIndex == null)
@@ -168,9 +167,9 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return inner == null ? Stream.empty() : inner.allColumnNames();
+        return inner == null ? Stream.empty() : inner.allColumnReferences();
     }
 
     @Override

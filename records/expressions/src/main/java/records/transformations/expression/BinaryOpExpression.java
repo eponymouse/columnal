@@ -3,7 +3,6 @@ package records.transformations.expression;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -88,9 +87,9 @@ public abstract class BinaryOpExpression extends Expression
     protected abstract String saveOp();
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.concat(lhs.allColumnNames(), rhs.allColumnNames());
+        return Stream.concat(lhs.allColumnReferences(), rhs.allColumnReferences());
     }
 
     @Override
@@ -118,17 +117,17 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        lhsType = lhs.check(data, typeState, onError);
-        rhsType = rhs.check(data, typeState, onError);
+        lhsType = lhs.check(dataLookup, typeState, onError);
+        rhsType = rhs.check(dataLookup, typeState, onError);
         if (lhsType == null || rhsType == null)
             return null;
-        return onError.recordType(this, checkBinaryOp(data, typeState, onError));
+        return onError.recordType(this, checkBinaryOp(dataLookup, typeState, onError));
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    protected abstract @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @SuppressWarnings("recorded")
     @Override

@@ -53,6 +53,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
 import org.checkerframework.dataflow.qual.Pure;
@@ -1103,6 +1104,12 @@ public class Utility
     public static @AbsColIndex int maxCol(@AbsColIndex int a, @AbsColIndex int b)
     {
         return (a >= b) ? a : b;
+    }
+
+    @SuppressWarnings("initialization")
+    public static <T> @Initialized T later(@UnknownInitialization T t)
+    {
+        return t;
     }
 
     public static class ReadState

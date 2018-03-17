@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -86,9 +85,12 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        column = data.getColumn(columnName);
+        @Nullable RecordSet recordSet = dataLookup.getTable(tableName);
+        if (recordSet == null)
+            throw new UserException("Could not find source table" + (tableName == null ? "" : tableName.getRaw()));
+        column = recordSet.getColumn(columnName);
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
@@ -147,9 +149,9 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.of(columnName);
+        return Stream.of(this);
     }
 
     @Override

@@ -62,7 +62,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
@@ -70,7 +70,7 @@ public class ArrayExpression extends Expression
         TypeExp[] typeArray = new TypeExp[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable TypeExp t = items.get(i).check(data, state, onError);
+            @Nullable TypeExp t = items.get(i).check(dataLookup, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t;
@@ -83,7 +83,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
@@ -140,9 +140,9 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return items.stream().flatMap(Expression::allColumnNames);
+        return items.stream().flatMap(Expression::allColumnReferences);
     }
 
     @Override

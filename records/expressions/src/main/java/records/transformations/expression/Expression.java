@@ -16,8 +16,10 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
+import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -100,15 +102,22 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         else
             throw new InternalException("Expected boolean but got: " + val.getClass());
     }
+    
+    public static interface TableLookup
+    {
+        // If you pass null, you get the default table (or null if none)
+        // If no such table is found, null is returned
+        public @Nullable RecordSet getTable(@Nullable TableId tableId);
+    }
 
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
-    public abstract @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
     // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // By default, check as normal, and return same TypeState:
         @Nullable @Recorded TypeExp type = check(data, typeState, onError);
@@ -124,7 +133,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public abstract @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
-    public abstract Stream<ColumnId> allColumnNames();
+    public abstract Stream<ColumnReference> allColumnReferences();
 
     public abstract String save(BracketedStatus surround, TableAndColumnRenames renames);
 
@@ -512,5 +521,68 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
         public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
         */
+    }
+
+    public static class SingleTableLookup implements TableLookup
+    {
+        private final @Nullable Table srcTable;
+
+        private SingleTableLookup(Table srcTable)
+        {
+            this.srcTable = srcTable;
+        }
+
+        @Override
+        public @Nullable RecordSet getTable(@Nullable TableId tableName)
+        {
+            try
+            {
+                if (srcTable == null)
+                    return null;
+                else if (tableName == null || tableName.equals(srcTable.getId()))
+                    return srcTable.getData();
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+            }
+            return null;
+        }
+    }
+    
+    public static class MultipleTableLookup implements TableLookup
+    {
+        private final TableManager tableManager;
+        private final @Nullable Table srcTable;
+
+        public MultipleTableLookup(TableManager tableManager, @Nullable Table srcTable)
+        {
+            this.tableManager = tableManager;
+            this.srcTable = srcTable;
+        }
+
+        @Override
+        public @Nullable RecordSet getTable(@Nullable TableId tableId)
+        {
+            try
+            {
+                if (tableId == null)
+                {
+                    if (srcTable != null)
+                        return srcTable.getData();
+                }
+                else
+                {
+                    Table table = tableManager.getSingleTableOrNull(tableId);
+                    if (table != null)
+                        return table.getData();
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+            }
+            return null;
+        }
     }
 }

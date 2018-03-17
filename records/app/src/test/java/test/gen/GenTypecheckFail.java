@@ -9,12 +9,15 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SingleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.Expression._test_TypeVary;
 import records.types.TypeExp;
 import test.DummyManager;
@@ -42,7 +45,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         super(TypecheckInfo.class);
     }
 
-    public static class TypecheckInfo
+    public static class TypecheckInfo implements TableLookup
     {
         public final Expression original;
         public final RecordSet recordSet;
@@ -55,6 +58,15 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             this.recordSet = recordSet;
             this.expressionFailures = expressionFailures;
             this.gen = gen;
+        }
+
+        @Override
+        public @Nullable RecordSet getTable(@Nullable TableId tableId)
+        {
+            if (tableId == null)
+                return recordSet;
+            else
+                return null;
         }
 
         public String getDisplay(Expression expression) throws InternalException, UserException
@@ -83,7 +95,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.check(valid.recordSet, TestUtil.typeState(), TestUtil.excOnError()))
+            if (null == expression.check(valid, TestUtil.typeState(), TestUtil.excOnError()))
                 throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)

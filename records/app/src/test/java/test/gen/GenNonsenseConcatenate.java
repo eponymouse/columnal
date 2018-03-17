@@ -59,7 +59,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
         }
 
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
-        List<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
+        ImmutableList<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
 
         int numMissingCols = sourceOfRandomness.nextInt(0, 10);
         GenValueAnyType genValue = new GenValueAnyType();

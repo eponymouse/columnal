@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -29,6 +28,9 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.SingleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.TypeState;
@@ -37,7 +39,6 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -340,10 +341,10 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             }
             try
             {
-                if (srcTable != null && tableManager != null)
+                if (tableManager != null)
                 {
-                    
-                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
+                    TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
+                    @Nullable TypeExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
                     latestType.set(dataType == null ? null : recorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
                     //Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
@@ -512,4 +513,5 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             return ExpressionEditor.this;
         }
     }
+
 }

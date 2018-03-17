@@ -71,7 +71,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern match type, outcome type
          */
-        public @Nullable Pair<List<TypeExp>, TypeExp> check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public @Nullable Pair<List<TypeExp>, TypeExp> check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             TypeExp[] patternTypes = new TypeExp[patterns.size()];
             TypeState[] rhsStates = new TypeState[patterns.size()];
@@ -178,7 +178,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */
-        public @Nullable Pair<@Recorded TypeExp, TypeState> check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public @Nullable Pair<@Recorded TypeExp, TypeState> check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             final @Nullable Pair<@Recorded TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, data, state, onError);
             if (rhsState == null)
@@ -292,9 +292,9 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.<ColumnId>concat(expression.allColumnNames(), clauses.stream().flatMap(c -> c.outcome.allColumnNames()));
+        return Stream.<ColumnReference>concat(expression.allColumnReferences(), clauses.stream().flatMap(c -> c.outcome.allColumnReferences()));
     }
 
     @Override
@@ -312,14 +312,14 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
         //   - That all of the outcome expressions have the same type as each other (and is what we will return)
 
-        @Nullable TypeExp srcType = expression.check(data, state, onError);
+        @Nullable TypeExp srcType = expression.check(dataLookup, state, onError);
         if (srcType == null)
             return null;
 
@@ -340,7 +340,7 @@ public class MatchExpression extends NonOperatorExpression
         for (int i = 0; i < clauses.size(); i++)
         {
             patternExpressions.addAll(Utility.mapList(clauses.get(i).getPatterns(), p -> p.pattern));
-            @Nullable Pair<List<TypeExp>, TypeExp> patternAndOutcomeType = clauses.get(i).check(data, state, onError);
+            @Nullable Pair<List<TypeExp>, TypeExp> patternAndOutcomeType = clauses.get(i).check(dataLookup, state, onError);
             if (patternAndOutcomeType == null)
                 return null;
             patternTypes.addAll(patternAndOutcomeType.getFirst());

@@ -1,17 +1,21 @@
 package test.gen;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SingleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 
 import java.util.List;
 
 /**
  * A tuple of: original data, new-expression, new-type and expected-new-value for a record set + calculate-new-column
  */
-public class ExpressionValue
+public class ExpressionValue implements TableLookup
 {
     public final DataType type;
     // Number of values  in list will equal number of rows
@@ -28,6 +32,15 @@ public class ExpressionValue
         this.typeManager = typeManager;
         this.recordSet = recordSet;
         this.expression = expression;
+    }
+
+    @Override
+    public @Nullable RecordSet getTable(@Nullable TableId tableId)
+    {
+        if (tableId == null)
+            return recordSet;
+        else
+            return null;
     }
 
     @Override

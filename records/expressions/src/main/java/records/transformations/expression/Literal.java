@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public abstract class Literal extends NonOperatorExpression
 {
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
         return Stream.empty();
     }

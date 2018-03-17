@@ -21,7 +21,6 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperandOps;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
@@ -74,7 +73,7 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (definition == null)
         {
@@ -82,7 +81,7 @@ public class CallExpression extends NonOperatorExpression
             return null;
         }
 
-        @Nullable TypeExp paramType = param.check(data, state, onError);
+        @Nullable TypeExp paramType = param.check(dataLookup, state, onError);
         if (paramType == null)
             return null;
         types = definition.makeParamAndReturnType(state.getTypeManager());
@@ -149,9 +148,9 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return param.allColumnNames();
+        return param.allColumnReferences();
     }
 
     @Override

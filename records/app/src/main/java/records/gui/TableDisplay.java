@@ -957,7 +957,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private StyledString fixExpressionLink(EditableExpression fixer)
     {
         return StyledString.styled("Edit expression", new Clickable(p -> {
-            new EditExpressionDialog(parent, parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
+            new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
                 .showAndWait().ifPresent(newExp -> {
                     Workers.onWorkerThread("Editing table", Priority.SAVE_ENTRY, () -> 
                         FXUtility.alertOnError_(() ->

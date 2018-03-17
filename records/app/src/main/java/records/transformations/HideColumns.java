@@ -130,9 +130,9 @@ public class HideColumns extends Transformation
     
     @Override
     @OnThread(Tag.Any)
-    public List<TableId> getSources()
+    public ImmutableList<TableId> getSources()
     {
-        return Collections.singletonList(srcTableId);
+        return ImmutableList.of(srcTableId);
     }
 
     @Override

@@ -163,7 +163,7 @@ public class PropRunTransformation
 
         srcTable.mgr.record(invertedFilter);
         
-        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, Arrays.asList(filter.getId(), invertedFilter.getId()), Collections.emptyMap());
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, TestUtil.ILD, ImmutableList.of(filter.getId(), invertedFilter.getId()), Collections.emptyMap());
 
         // Check that the same set of rows is present:
         assertEquals(TestUtil.getRowFreq(srcTable.data().getData()), TestUtil.getRowFreq(concatFilters.getData()));
@@ -233,7 +233,7 @@ public class PropRunTransformation
         {
             // Add once each time round the loop:
             ids.add(original.data().getId());
-            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ids, Collections.emptyMap());
+            Concatenate concatenate = new Concatenate(original.mgr, TestUtil.ILD, ImmutableList.copyOf(ids), Collections.emptyMap());
             for (Column column : concatenate.getData().getColumns())
             {
                 // Compare each value from the original set with the corresponding later repeated values:
@@ -265,7 +265,7 @@ public class PropRunTransformation
 
         try
         {
-            new Concatenate(data.mgr, null, Arrays.asList(data.data().getId(), data.data.get(1).getId()), Collections.emptyMap()).getData();
+            new Concatenate(data.mgr, null, ImmutableList.of(data.data().getId(), data.data.get(1).getId()), Collections.emptyMap()).getData();
             fail("Expected failure concatting two unrelated tables");
         }
         catch (UserException e)
@@ -283,7 +283,7 @@ public class PropRunTransformation
                 missing.put(id, new Pair<>(table.getData().getColumn(id).getType(), Optional.<@Value Object>of(table.getData().getColumn(id).getType().getCollapsed(0))));
             }
         }
-        RecordSet concat = new Concatenate(data.mgr, null, Arrays.asList(data.data().getId(), data.data.get(1).getId()), missing).getData();
+        RecordSet concat = new Concatenate(data.mgr, null, ImmutableList.of(data.data().getId(), data.data.get(1).getId()), missing).getData();
         assertEquals(data.data().getData().getLength() + data.data.get(1).getData().getLength(), concat.getLength());
         for (ColumnId c : concat.getColumnIds())
         {

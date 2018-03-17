@@ -50,26 +50,26 @@ public class MatchesOneExpression extends BinaryOpExpression
 
     // Must use checkAsPattern on RHS, not check:
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        lhsType = lhs.check(data, typeState, onError);
+        lhsType = lhs.check(dataLookup, typeState, onError);
         if (lhsType == null)
             return null;
         @NonNull TypeExp lhsFinal = lhsType;
-        @Nullable Pair<@Recorded TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(false, data, typeState, onError);
+        @Nullable Pair<@Recorded TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(false, dataLookup, typeState, onError);
         if (rhsPatType == null)
             return null;
         // We can just discard the RHS type state because it can't introduce any new variables
         rhsType = rhsPatType.getFirst();
         
         if (onError.recordError(this, TypeExp.unifyTypes(lhsFinal, rhsType)) != null)
-            return onError.recordType(this, checkBinaryOp(data, typeState, onError));
+            return onError.recordType(this, checkBinaryOp(dataLookup, typeState, onError));
         else
             return null;
     }
 
     @Override
-    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If we get this far, the RHS pattern must have matched the LHS expression
         // So we just return our type, which is boolean:

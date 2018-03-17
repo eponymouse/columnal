@@ -97,7 +97,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
         }
         else if (c == ColumnReference.class)
         {
-            write(((ColumnReference)expression).allColumnNames().findFirst().get().getRaw());
+            write(((ColumnReference)expression).getColumnId().getRaw());
             push(KeyCode.ENTER);
         }
         else if (c == CallExpression.class)

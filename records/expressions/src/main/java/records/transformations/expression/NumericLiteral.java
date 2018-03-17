@@ -2,7 +2,6 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -29,7 +28,6 @@ import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -53,7 +51,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (unit == null)
             return onError.recordType(this, TypeExp.fromConcrete(this, DataType.NUMBER));

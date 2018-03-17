@@ -36,7 +36,7 @@ public class PropRunExpression
         try
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            src.expression.check(src.recordSet, TestUtil.typeState(), errors);
+            src.expression.check(src, TestUtil.typeState(), errors);
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)
             {

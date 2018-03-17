@@ -53,17 +53,17 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeExp conditionType = condition.check(data, state, onError);
+        @Nullable TypeExp conditionType = condition.check(dataLookup, state, onError);
         if (conditionType == null)
             return null;
         if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, DataType.BOOLEAN), conditionType)) == null)
         {
             return null;
         }
-        @Nullable TypeExp thenType = thenExpression.check(data, state, onError);
-        @Nullable TypeExp elseType = elseExpression.check(data, state, onError);
+        @Nullable TypeExp thenType = thenExpression.check(dataLookup, state, onError);
+        @Nullable TypeExp elseType = elseExpression.check(dataLookup, state, onError);
         if (thenType == null || elseType == null)
             return null;
 
@@ -81,9 +81,9 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<ColumnId> allColumnNames()
+    public Stream<ColumnReference> allColumnReferences()
     {
-        return Stream.of(condition, thenExpression, elseExpression).flatMap(Expression::allColumnNames);
+        return Stream.of(condition, thenExpression, elseExpression).flatMap(Expression::allColumnReferences);
     }
 
     @Override

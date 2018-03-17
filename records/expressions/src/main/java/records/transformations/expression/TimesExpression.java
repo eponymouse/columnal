@@ -65,14 +65,14 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
         for (Expression expression : expressions)
         {
             UnitExp unitVar = UnitExp.makeVariable();
             TypeExp expectedType = new NumTypeExp(this, unitVar);
-            @Nullable TypeExp inferredType = expression.check(data, state, onError);
+            @Nullable TypeExp inferredType = expression.check(dataLookup, state, onError);
             if (inferredType == null)
                 return null;
             
