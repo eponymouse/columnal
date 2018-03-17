@@ -149,7 +149,7 @@ public abstract class VirtualGridSupplier<T extends Node>
         public abstract Point2D screenToLayout(Point2D screen);
         
         /**
-         * Takes a rectangle, and clamps it so that its extends fall within the portion being rendered.
+         * Takes a rectangle, and clamps it so that its extents fall within the portion being rendered.
          */
         public Optional<RectangleBounds> clampVisible(RectangleBounds rectangleBounds)
         {

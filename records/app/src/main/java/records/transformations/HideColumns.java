@@ -43,7 +43,7 @@ import java.util.List;
  * data set.
  */
 @OnThread(Tag.Simulation)
-public class HideColumns extends TransformationEditable
+public class HideColumns extends Transformation
 {
     public static final String NAME = "drop.columns";
     @OnThread(Tag.Any)
@@ -127,24 +127,12 @@ public class HideColumns extends TransformationEditable
 
         result = theResult;
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
-    {
-        return "Hide";
-    }
-
+    
     @Override
     @OnThread(Tag.Any)
     public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
-    }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
-    {
-        return new Editor(view, getManager(), srcTableId, hideIds);
     }
 
     @Override
@@ -259,12 +247,5 @@ public class HideColumns extends TransformationEditable
         int result = srcTableId.hashCode();
         result = 31 * result + hideIds.hashCode();
         return result;
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public Table.MessageWhenEmpty getDisplayMessageWhenEmpty()
-    {
-        return new MessageWhenEmpty("table.hideColumns.noColumns", "table.transformation.noRows");
     }
 }

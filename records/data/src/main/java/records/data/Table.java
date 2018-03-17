@@ -305,55 +305,8 @@ public abstract class Table
         return display;
     }
 
-    /**
-     * Add the given new column to the table.
-     */
-    public abstract void addColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue) throws InternalException, UserException;
-
     @OnThread(Tag.Any)
     public abstract TableOperations getOperations();
-
-    /** Message to show when the table has no columns or no rows */
-    @OnThread(Tag.Any)
-    public abstract MessageWhenEmpty getDisplayMessageWhenEmpty();
-
-    @OnThread(Tag.Any)
-    public static class MessageWhenEmpty
-    {
-        private final @Localized String noColumns;
-        private final @Localized String noRows;
-
-        public MessageWhenEmpty(@LocalizableKey String noColumnsKey, @LocalizableKey String noRowsKey)
-        {
-            this.noColumns = TranslationUtility.getString(noColumnsKey);
-            this.noRows = TranslationUtility.getString(noRowsKey);
-        }
-        
-        @SuppressWarnings("i18n")
-        public MessageWhenEmpty(StyledString err)
-        {
-            this.noColumns = err.toPlain();
-            this.noRows = noColumns;
-        }
-        
-        public MessageWhenEmpty(@Localized String message)
-        {
-            this.noColumns = message;
-            this.noRows = message;
-        }
-
-        /** Message to show when the table has no columns */
-        public @Localized String getDisplayMessageNoColumns()
-        {
-            return noColumns;
-        }
-
-        /** Message to show when the table has no rows */
-        public @Localized String getDisplayMessageNoRows()
-        {
-            return noRows;
-        }
-    }
 
     @OnThread(Tag.Any)
     protected TableManager getManager()

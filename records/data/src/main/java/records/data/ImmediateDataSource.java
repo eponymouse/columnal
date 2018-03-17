@@ -124,13 +124,7 @@ public class ImmediateDataSource extends DataSource
             FXUtility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
         });
     }
-
-    @Override
-    public void addColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue) throws InternalException, UserException
-    {
-
-    }
-
+    
     @Override
     public boolean dataEquals(DataSource o)
     {
@@ -143,12 +137,5 @@ public class ImmediateDataSource extends DataSource
     public int dataHashCode()
     {
         return data.hashCode();
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public MessageWhenEmpty getDisplayMessageWhenEmpty()
-    {
-        return new MessageWhenEmpty("table.immediate.noColumns", "table.immediate.noRows");
     }
 }

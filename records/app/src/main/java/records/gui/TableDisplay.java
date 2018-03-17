@@ -95,7 +95,6 @@ import records.transformations.Filter;
 import records.transformations.HideColumnsPanel;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
-import records.transformations.TransformationEditable;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -468,7 +467,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, VirtualGridSupplierFloating supplierFloating, Table table)
     {
-        super(parent.getManager(), table.getId(), table.getDisplayMessageWhenEmpty(), renameTableSim(table), supplierFloating);
+        super(parent.getManager(), table.getId(), renameTableSim(table), supplierFloating);
         this.parent = parent;
         this.table = table;
         @Nullable RecordSet recordSet = null;
@@ -613,7 +612,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         List<MenuItem> items = new ArrayList<>();
 
-        if (table instanceof TransformationEditable)
+        if (table instanceof Transformation)
         {
             //items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform((TransformationEditable)table)));
         }

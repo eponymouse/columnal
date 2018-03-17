@@ -26,7 +26,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
-import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
@@ -90,9 +89,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     protected final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
     
-    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, MessageWhenEmpty messageWhenEmpty, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
+    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
     {
-        super(messageWhenEmpty);
         this.curTableId = initialTableName;
         this.floatingItems = floatingItems;
         this.tableHeaderItem = new TableHeaderItem(tableManager, initialTableName, renameTable, floatingItems);

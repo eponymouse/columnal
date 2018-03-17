@@ -16,7 +16,6 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.View;
-import records.transformations.TransformationEditable;
 import test.gen.GenTableManager;
 import test.gen.GenNonsenseTransformation;
 import threadchecker.OnThread;
@@ -93,31 +92,5 @@ public class PropLoadSaveTransformation
         {
         }
         return r[0];
-    }
-
-    @Property
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
-    {
-        // Initialise JavaFX:
-        SwingUtilities.invokeAndWait(() -> new JFXPanel());
-        CompletableFuture<Optional<SimulationSupplier<Transformation>>> f = new CompletableFuture<>();
-        Platform.runLater(() -> {
-            View view;
-            try
-            {
-                File tempFile = File.createTempFile("rec", "tmp");
-                tempFile.deleteOnExit();
-                view = new View(tempFile, empty -> {});
-            }
-            catch (InternalException | UserException | IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-            f.complete(Optional.ofNullable(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, new InitialLoadDetails(original.transformation.getId(), null, null))));
-        });
-        Optional<SimulationSupplier<Transformation>> maker = f.get(10, TimeUnit.SECONDS);
-        assertTrue("Not valid after no-op edit: " + original.transformation, maker.isPresent());
-        assertEquals(original.transformation, maker.get().get());
     }
 }

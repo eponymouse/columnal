@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
  * by evaluating an expression for each.
  */
 @OnThread(Tag.Simulation)
-public class Transform extends TransformationEditable
+public class Transform extends Transformation
 {
     @OnThread(Tag.Any)
     private final ImmutableList<Pair<ColumnId, Expression>> newColumns;
@@ -165,25 +165,12 @@ public class Transform extends TransformationEditable
 
         recordSet = theResult;
     }
-
-
-    @Override
-    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
-    {
-        return "calculate";
-    }
-
+    
     @Override
     @OnThread(Tag.Any)
     public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
-    }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
-    {
-        return new Editor(view, getManager(), this.srcTableId, newColumns);
     }
 
     @Override

@@ -6,7 +6,6 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.Table.MessageWhenEmpty;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import styled.StyledString;
@@ -44,7 +43,7 @@ public class GenGridAreaList extends Generator<GridAreaList>
     @OnThread(Tag.FXPlatform)
     public static GridArea makeGridArea(int x0, int y0, int x1, int y1)
     {
-        GridArea gridArea = new GridArea(new MessageWhenEmpty(StyledString.s("")))
+        GridArea gridArea = new GridArea()
         {
             @Override
             protected @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)

@@ -82,7 +82,7 @@ import java.util.Map.Entry;
  * Created by neil on 23/11/2016.
  */
 @OnThread(Tag.Simulation)
-public class Filter extends TransformationEditable
+public class Filter extends Transformation
 {
     private static final String PREFIX = "KEEPIF";
     public static final String NAME = "keep";
@@ -206,24 +206,12 @@ public class Filter extends TransformationEditable
                 prog.progressUpdate((double)(indexMap.filled() - start) / (double)(index - start));
         }
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
-    {
-        return "Filter";
-    }
-
+    
     @Override
     @OnThread(Tag.Any)
     public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
-    }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
-    {
-        return new Editor(view, getManager(), srcTableId, src, filterExpression);
     }
 
     @Override
@@ -533,12 +521,5 @@ public class Filter extends TransformationEditable
         int result = srcTableId.hashCode();
         result = 31 * result + filterExpression.hashCode();
         return result;
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public Table.MessageWhenEmpty getDisplayMessageWhenEmpty()
-    {
-        return new MessageWhenEmpty("table.transformation.noColumns", "table.filter.noRows");
     }
 }

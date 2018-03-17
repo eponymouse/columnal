@@ -67,7 +67,7 @@ import java.util.List;
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public class SummaryStatistics extends TransformationEditable
+public class SummaryStatistics extends Transformation
 {
     public static final String NAME = "aggregate";
     private final @Nullable Table src;
@@ -343,13 +343,7 @@ public class SummaryStatistics extends TransformationEditable
             return new SummaryStatistics(mgr, initialLoadDetails, srcTableId, summaryTypes.build(), splits);
         }
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
-    {
-        return new Editor(view, getManager(), srcTableId, src, summaries, splitBy);
-    }
-
+    
     private static class Editor extends TransformationEditor
     {
         private final SingleSourceControl srcControl;
@@ -549,13 +543,7 @@ public class SummaryStatistics extends TransformationEditable
         }
         return b.toLines();
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
-    {
-        return "Summary";
-    }
-
+    
     @Override
     @OnThread(Tag.Any)
     public List<TableId> getSources()

@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
  * Created by neil on 18/01/2017.
  */
 @OnThread(Tag.Simulation)
-public class Concatenate extends TransformationEditable
+public class Concatenate extends Transformation
 {
     @OnThread(Tag.Any)
     private final List<TableId> sources;
@@ -240,26 +240,14 @@ public class Concatenate extends TransformationEditable
         sourceTables = tables;
         this.recordSet = rs;
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
-    {
-        return "concat";
-    }
-
+    
     @Override
     @OnThread(Tag.Any)
     public List<TableId> getSources()
     {
         return sources;
     }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
-    {
-        return new Editor(view, sources, sourceTables, missingValues);
-    }
-
+    
     @Override
     protected @OnThread(Tag.Any) String getTransformationName()
     {

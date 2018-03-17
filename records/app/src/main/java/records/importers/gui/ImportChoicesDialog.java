@@ -37,7 +37,6 @@ import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.Table.InitialLoadDetails;
-import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.TypeManager;
@@ -140,7 +139,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         Log.log(e);
                         Platform.runLater(() -> {
                             destData.setColumns(ImmutableList.of(), null, null);
-                            destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                            //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
                         });
 
                     }
@@ -231,7 +230,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             catch (UserException e)
             {
                 tableView.setColumns(ImmutableList.of(), null, null);
-                tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                //tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
             }
             return;
         }
@@ -311,7 +310,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             if (item == null)
             {
                 tableView.setColumns(ImmutableList.of(), null, null);
-                tableView.setMessageWhenEmpty(new MessageWhenEmpty(TranslationUtility.getString("need.valid.option")));
+                //tableView.setMessageWhenEmpty(new MessageWhenEmpty(TranslationUtility.getString("need.valid.option")));
                 return;
             }
             try
@@ -324,7 +323,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             {
                 Log.log(e);
                 tableView.setColumns(ImmutableList.of(), null, null);
-                tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                //tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
             }
         };
 
@@ -383,7 +382,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
         {
-            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), null, destColumnHeaderSupplier);
+            super(null, new TableId(suggestedName),  null, destColumnHeaderSupplier);
             this.destRecordSet = destRecordSet;
         }
 
@@ -444,7 +443,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
         {
-            super(null, new TableId(suggestedName), new MessageWhenEmpty(StyledString.s("...")), null, srcColumnHeaderSupplier);
+            super(null, new TableId(suggestedName), null, srcColumnHeaderSupplier);
             this.srcInfo = srcInfo;
         }
 

@@ -33,7 +33,6 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
-import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -127,7 +126,7 @@ public class TestStructuredTextField extends ApplicationTest
     public void start(Stage stage) throws Exception
     {
         VirtualGrid virtualGrid = new VirtualGrid(null);
-        dataDisplay = new DataDisplay(null, new TableId("TestTable"), new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY), null, virtualGrid.getFloatingSupplier())
+        dataDisplay = new DataDisplay(null, new TableId("TestTable"), null, virtualGrid.getFloatingSupplier())
         {
             @Override
             protected CellPosition recalculateBottomRightIncl()

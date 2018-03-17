@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
-import records.data.Table.MessageWhenEmpty;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
@@ -70,7 +69,7 @@ public class TestVirtualGridScroll extends ApplicationTest
         
         // Add a huge table which will be roughly 10,000 pixels square:
         // That's about 400 rows, and 100 columns
-        virtualGrid.addGridAreas(ImmutableList.of(new GridArea(new MessageWhenEmpty(StyledString.s("")))
+        virtualGrid.addGridAreas(ImmutableList.of(new GridArea()
         {
             @Override
             protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)

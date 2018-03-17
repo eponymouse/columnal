@@ -51,7 +51,6 @@ import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.transformations.Transform;
-import records.transformations.TransformationEditable;
 import records.transformations.TransformationInfo;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;

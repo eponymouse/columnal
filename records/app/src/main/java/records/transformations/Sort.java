@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
  *   - Errors in every place if the sort-by columns can't be found.
  */
 @OnThread(Tag.Simulation)
-public class Sort extends TransformationEditable
+public class Sort extends Transformation
 {
 
     public static final String NAME = "sort";
@@ -266,12 +266,6 @@ public class Sort extends TransformationEditable
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
-    {
-        return "Sort";
-    }
-
-    @Override
     protected @OnThread(Tag.Any) String getTransformationName()
     {
         return NAME;
@@ -282,12 +276,6 @@ public class Sort extends TransformationEditable
     public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
-    }
-
-    @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
-    {
-        return new Editor(view, getManager(), srcTableId, originalSortBy);
     }
 
     @OnThread(Tag.FXPlatform)

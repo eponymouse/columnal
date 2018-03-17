@@ -28,7 +28,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.Table.InitialLoadDetails;
-import records.data.Table.MessageWhenEmpty;
 import records.data.TableManager;
 import records.data.TextFileColumn.TextFileColumnListener;
 import records.data.columntype.BlankColumnType;
@@ -889,7 +888,7 @@ public class GuessFormat
                 Log.log(e);
                 Platform.runLater(() -> {
                     gui.tableView.setColumns(ImmutableList.of(), null, null);
-                    gui.tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                    //gui.tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
                 });
 
             }

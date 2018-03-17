@@ -65,13 +65,7 @@ public abstract class LinkedDataSource extends DataSource
         // TODO prompt to transform to non-linked table
         return new TableOperations(null, null, c -> null, c -> null, null, null, null);
     }
-
-    @Override
-    public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
-    {
-        throw new InternalException("Should not try to add column to linked data source");
-    }
-
+    
     @Override
     public boolean dataEquals(DataSource o)
     {

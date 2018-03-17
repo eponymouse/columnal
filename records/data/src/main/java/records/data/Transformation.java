@@ -22,10 +22,6 @@ public abstract class Transformation extends Table
         super(mgr, initialLoadDetails);
     }
 
-    // Label to show between arrows:
-    @OnThread(Tag.FXPlatform)
-    public abstract String getTransformationLabel();
-
     @OnThread(Tag.Any)
     public abstract List<TableId> getSources();
 
@@ -108,18 +104,5 @@ public abstract class Transformation extends Table
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
         return new TableOperations(getManager().getRenameTableOperation(this), null, c -> null, c -> null, null, null, null);
-    }
-
-    @Override
-    public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
-    {
-        throw new InternalException("Called addColumn despite showAddColumnButton returning false for type " + getClass());
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public Table.MessageWhenEmpty getDisplayMessageWhenEmpty()
-    {
-        return new MessageWhenEmpty("table.transformation.noColumns", "table.transformation.noRows");
     }
 }

@@ -8,7 +8,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.Table.MessageWhenEmpty;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -37,12 +36,10 @@ public abstract class GridArea
     private CellPosition topLeft;
     private CellPosition bottomRight;
     
-    private MessageWhenEmpty messageWhenEmpty;
     private @MonotonicNonNull VirtualGrid parent;
 
-    public GridArea(MessageWhenEmpty messageWhenEmpty)
+    public GridArea()
     {
-        this.messageWhenEmpty = messageWhenEmpty;
         // Default position:
         this.topLeft = new CellPosition(CellPosition.row(1), CellPosition.col(1));
         this.bottomRight = topLeft;
@@ -123,11 +120,6 @@ public abstract class GridArea
     public final CellPosition getBottomRightIncl(@UnknownInitialization(GridArea.class) GridArea this)
     {
         return bottomRight;
-    }
-
-    public void setMessageWhenEmpty(MessageWhenEmpty messageWhenEmpty)
-    {
-        this.messageWhenEmpty = messageWhenEmpty;
     }
     
     // Select a cell by moving to it using the keyboard.  Return null if not possible
