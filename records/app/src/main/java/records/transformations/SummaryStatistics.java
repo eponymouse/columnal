@@ -202,13 +202,13 @@ public class SummaryStatistics extends TransformationEditable
                 @Override
                 public boolean indexValid(int index) throws UserException
                 {
-                    return index < splits.size();
+                    return summaries.isEmpty() ? false : index < splits.size();
                 }
 
                 @Override
                 public int getLength() throws UserException
                 {
-                    return splits.size();
+                    return summaries.isEmpty() ? 0 : splits.size();
                 }
             };
         }

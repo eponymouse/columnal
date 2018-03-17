@@ -381,7 +381,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private int internal_getCurrentKnownRows(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
-        return currentKnownRows + HEADER_ROWS + (table.getOperations().appendRows != null ? 1 : 0);
+        return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : HEADER_ROWS) + (table.getOperations().appendRows != null ? 1 : 0);
     }
 
     private int internal_getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
