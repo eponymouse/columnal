@@ -51,7 +51,6 @@ import records.gui.grid.VirtualGridSupplier.ContainerChildren;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
-import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ScrollBindable;
 import records.gui.stable.ScrollGroup;
 import records.gui.stable.ScrollGroup.ScrollLock;
@@ -65,7 +64,6 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
-import utility.gui.ResizableRectangle;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -103,6 +101,11 @@ import java.util.stream.Collectors;
 @OnThread(Tag.FXPlatform)
 public final class VirtualGrid implements ScrollBindable
 {
+    // How many columns beyond last table to show in the grid
+    // (logical, not to do with rendering/scrolling)
+    private static final int COLS_TO_RIGHT = 10;
+    // Ditto for rows
+    private static final int ROWS_TO_BOTTOM = 20;
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
     
@@ -133,8 +136,8 @@ public final class VirtualGrid implements ScrollBindable
     // What is the offset of first item?  Always between negative width of current item and zero.  Never positive.
     private double logicalScrollColumnOffset;
     private double logicalScrollRowOffset;
-    
-    
+
+
     private static final @AbsRowIndex int MIN_ROWS = CellPosition.row(10);
     private static final @AbsColIndex int MIN_COLS = CellPosition.col(10);
     
@@ -1280,8 +1283,8 @@ public final class VirtualGrid implements ScrollBindable
                         .mapToInt(g -> g.getSecond().getBottomRightIncl().columnIndex)
                         .max()
                     .orElse(0)
-                    + 2)));
-        currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(2)));
+                    + COLS_TO_RIGHT)));
+        currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(ROWS_TO_BOTTOM)));
         VisibleBounds bounds = container.redoLayout();
         updatingSizeAndPositions = false;
         
