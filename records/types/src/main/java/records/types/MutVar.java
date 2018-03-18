@@ -39,7 +39,11 @@ public class MutVar extends TypeExp
     public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
     {
         // If the other item is a MutVar, we just unify ourselves to them:
-        if (b instanceof MutVar)
+        if (this == b)
+        {
+            return Either.right(this);
+        }
+        else if (b instanceof MutVar)
         {
             pointer = b;
             return Either.right(this);

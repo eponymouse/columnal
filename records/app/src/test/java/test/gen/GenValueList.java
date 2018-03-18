@@ -25,6 +25,12 @@ public class GenValueList extends GenValueBase<ListAndType>
             this.list = list;
             this.type = type;
         }
+
+        @Override
+        public String toString()
+        {
+            return super.toString() + "{Type: " + type + "}";
+        }
     }
 
     public GenValueList()

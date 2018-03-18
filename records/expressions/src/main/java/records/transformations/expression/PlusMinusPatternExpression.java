@@ -56,7 +56,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on plus minus pattern (should only call matchAsPattern)");
     }

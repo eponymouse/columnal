@@ -43,14 +43,14 @@ public class InvalidOperatorExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
         return null; // Invalid expressions can't type check
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Cannot get value for invalid expression");
     }

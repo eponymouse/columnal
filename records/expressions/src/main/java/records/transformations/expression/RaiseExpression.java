@@ -116,7 +116,7 @@ public class RaiseExpression extends BinaryOpExpression
         return TypeExp.fromConcrete(this, DataType.NUMBER);    }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return DataTypeUtility.value(Utility.raiseNumber((Number)lhs.getValue(rowIndex, state), (Number) rhs.getValue(rowIndex, state)));
     }

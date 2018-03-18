@@ -77,7 +77,7 @@ public class MatchesOneExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return DataTypeUtility.value(rhs.matchAsPattern(rowIndex, lhs.getValue(rowIndex, state), state) != null);
     }

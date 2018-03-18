@@ -84,7 +84,7 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = onError.recordType(this, checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
@@ -118,7 +118,7 @@ public class AddSubtractExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         Number n = (Number)expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)

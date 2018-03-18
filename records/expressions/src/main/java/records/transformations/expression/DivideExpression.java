@@ -69,7 +69,7 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return DataTypeUtility.value(Utility.divideNumbers((Number)lhs.getValue(rowIndex, state), (Number)rhs.getValue(rowIndex, state)));
     }

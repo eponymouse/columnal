@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
@@ -19,15 +20,19 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -45,6 +50,38 @@ public abstract class NaryOpExpression extends Expression
         if (expressions.size() < 2 && !(this instanceof InvalidOperatorExpression))
             Log.logStackTrace("Expressions size: " + expressions.size());
     }
+
+    @Override
+    public final @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    {
+        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = detectImplicitLambda(this, expressions, typeState);
+        typeState = lambda.getSecond();
+        return lambda.getFirst().apply(checkNaryOp(dataLookup, typeState, onError));
+    }
+
+    public abstract @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public final @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    {
+        if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
+        {
+            return new ValueFunction()
+            {
+                @Override
+                @OnThread(Tag.Simulation)
+                public @Value Object call(@Value Object arg) throws InternalException, UserException
+                {
+                    return getValueNaryOp(rowIndex, state.add("?", arg));
+                }
+            };
+        }
+        else
+            return getValueNaryOp(rowIndex, state);
+    }
+    
+    public abstract @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     @Override
     public Stream<ColumnReference> allColumnReferences()

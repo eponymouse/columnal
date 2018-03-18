@@ -67,7 +67,7 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         @Value Object lhsVal = lhs.getValue(rowIndex, state);
         @Value Object rhsVal = rhs.getValue(rowIndex, state);

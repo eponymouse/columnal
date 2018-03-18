@@ -52,7 +52,7 @@ public class EqualExpression extends NaryOpExpression
 
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TypeExp argType = checkAllOperandsSameType(new MutVar(this), dataLookup, typeState, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
                 ExpressionEditorUtil.getFixesForMatchingNumericUnits(typeState, p)
@@ -64,7 +64,7 @@ public class EqualExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         @Value Object first = expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)

@@ -49,7 +49,7 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), dataLookup, state, onError, typeAndExpression -> {
             return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '&' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
@@ -57,7 +57,7 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         for (Expression expression : expressions)
         {

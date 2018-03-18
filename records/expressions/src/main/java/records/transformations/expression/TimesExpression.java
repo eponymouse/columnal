@@ -65,7 +65,7 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
         for (Expression expression : expressions)
@@ -86,7 +86,7 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         Number n = (Number) expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)

@@ -111,19 +111,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @OnThread(Tag.Simulation)
     public abstract @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
-    /**
-     * Calls the given expression as a function with the given
-     * argument.
-     */
-    @OnThread(Tag.Simulation)
-    public @Value Object call(int rowIndex, EvaluateState state, @Value Object param) throws UserException, InternalException
-    {
-        // Internal because shouldn't happen if type-checked:
-        throw new InternalException("Expression " + this + " is not a function but is being called like one");
-    }
-
-
-
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
 

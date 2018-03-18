@@ -48,7 +48,7 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), dataLookup, state, onError, (typeAndExpression) -> {
             // TODO offer a quick fix of wrapping to.string around operand
@@ -57,7 +57,7 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         StringBuilder sb = new StringBuilder();
         for (Expression expression : expressions)

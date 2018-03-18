@@ -5,7 +5,6 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -22,6 +21,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.ValueFunction;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -122,15 +122,27 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object call(int rowIndex, EvaluateState state, @Value Object param) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public final @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
         {
-            return getValue(rowIndex, state.add("?", param));
+            return new ValueFunction()
+            {
+                @Override
+                @OnThread(Tag.Simulation)
+                public @Value Object call(@Value Object arg) throws InternalException, UserException
+                {
+                    return getValueBinaryOp(rowIndex, state.add("?", arg));
+                }
+            };
         }
         else
-            return super.call(rowIndex, state, param);
+            return getValueBinaryOp(rowIndex, state);
     }
+
+    @OnThread(Tag.Simulation)
+    public abstract @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     @Override
     public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException

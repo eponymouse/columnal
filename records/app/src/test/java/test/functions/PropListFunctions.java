@@ -30,11 +30,7 @@ import java.util.Collections;
 import java.util.Random;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Created by neil on 13/12/2016.
@@ -155,8 +151,15 @@ public class PropListFunctions
     @OnThread(Tag.Simulation)
     public void propAny(@When(seed=1L) @From(GenValueList.class) GenValueList.ListAndType src, @When(seed=1L) @From(GenRandom.class) Random r) throws Throwable
     {
-        // Check that random element is found:
-        @Value Object elem = src.list.get(r.nextInt(src.list.size())); 
-        assertTrue(Utility.cast(TestUtil.runExpression("any(" + DataTypeUtility.valueToString(src.type, src.list, null, true) + ", (? = " + DataTypeUtility.valueToString(src.type.getMemberType().get(0), elem, null, true) + "))"), Boolean.class));
+        if (src.list.size() == 0)
+        {
+            assertFalse(Utility.cast(TestUtil.runExpression("any(" + DataTypeUtility.valueToString(src.type, src.list, null, true) + ", (? = ?))"), Boolean.class));
+        }
+        else
+        {
+            // Check that random element is found:
+            @Value Object elem = src.list.get(r.nextInt(src.list.size()));
+            assertTrue("" + src.type, Utility.cast(TestUtil.runExpression("any(" + DataTypeUtility.valueToString(src.type, src.list, null, true) + ", (? = " + DataTypeUtility.valueToString(src.type.getMemberType().get(0), elem, null, true) + "))"), Boolean.class));
+        }
     }
 }
