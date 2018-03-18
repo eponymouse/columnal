@@ -53,7 +53,7 @@ NUMBER : [+\-]? [0-9]+ ('.' [0-9]+)?;
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\]+ {GrammarUtility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\,]+ {GrammarUtility.validUnquoted(getText())}?;
 
 
 mode TYPE_MODE;
