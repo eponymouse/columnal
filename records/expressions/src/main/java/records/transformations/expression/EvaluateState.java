@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableMap;
 import records.error.InternalException;
 
 import java.util.HashMap;
@@ -11,27 +12,28 @@ import java.util.Map;
  */
 public class EvaluateState
 {
-    private final Map<String, @Value Object> variables;
+    private final ImmutableMap<String, @Value Object> variables;
 
     public EvaluateState()
     {
-        this(new HashMap<>());
+        this(ImmutableMap.of());
     }
 
-    private EvaluateState(HashMap<String, @Value Object> variables)
+    private EvaluateState(ImmutableMap<String, @Value Object> variables)
     {
         this.variables = variables;
     }
 
     public EvaluateState add(String varName, @Value Object value) throws InternalException
     {
-        HashMap<String, @Value Object> copy = new HashMap<>(variables);
-        if (copy.containsKey(varName))
+        ImmutableMap.Builder<String, @Value Object> copy = ImmutableMap.builder();
+        if (!varName.equals("?") && variables.containsKey(varName))
         {
             throw new InternalException("Duplicate variable name: " + varName);
         }
+        copy.putAll(variables);
         copy.put(varName, value);
-        return new EvaluateState(copy);
+        return new EvaluateState(copy.build());
     }
 
     public @Value Object get(String varName) throws InternalException

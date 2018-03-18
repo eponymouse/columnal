@@ -19,7 +19,6 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -42,21 +41,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
 
-        DummyManager mgr;
-        try
-        {
-            mgr = new DummyManager();
-            for (DataType type : TestUtil.distinctTypes)
-            {
-                if (type.isTagged())
-                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  type.getTagTypes());
-            }
-        }
-        catch (InternalException | UserException e)
-        {
-            assumeNoException(e);
-            throw new RuntimeException(e);
-        }
+        DummyManager mgr = TestUtil.managerWithTestTypes();
 
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
         ImmutableList<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
@@ -88,4 +73,5 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
             throw new RuntimeException(e);
         }
     }
+
 }

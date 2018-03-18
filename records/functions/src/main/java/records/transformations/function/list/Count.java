@@ -1,4 +1,4 @@
-package records.transformations.function;
+package records.transformations.function.list;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
@@ -7,6 +7,9 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
+import records.transformations.function.FunctionInstance;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;

@@ -5,24 +5,20 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
-import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.Count;
+import records.transformations.function.list.Count;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
-import records.transformations.function.GetElement;
+import records.transformations.function.list.GetElement;
 import records.transformations.function.Max;
 import records.transformations.function.Min;
 import test.TestUtil;
+import test.gen.GenRandom;
 import test.gen.GenValueList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -31,6 +27,7 @@ import utility.Utility;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Random;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -152,5 +149,14 @@ public class PropListFunctions
             }
             // Try invalid non-integer values:
         }
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propAny(@When(seed=1L) @From(GenValueList.class) GenValueList.ListAndType src, @When(seed=1L) @From(GenRandom.class) Random r) throws Throwable
+    {
+        // Check that random element is found:
+        @Value Object elem = src.list.get(r.nextInt(src.list.size())); 
+        assertTrue(Utility.cast(TestUtil.runExpression("any(" + DataTypeUtility.valueToString(src.type, src.list, null, true) + ", (? = " + DataTypeUtility.valueToString(src.type.getMemberType().get(0), elem, null, true) + "))"), Boolean.class));
     }
 }

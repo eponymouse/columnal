@@ -26,35 +26,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.AddSubtractExpressionContext;
-import records.grammar.ExpressionParser.AndExpressionContext;
-import records.grammar.ExpressionParser.ArrayExpressionContext;
-import records.grammar.ExpressionParser.BooleanLiteralContext;
-import records.grammar.ExpressionParser.BracketedCompoundContext;
-import records.grammar.ExpressionParser.BracketedMatchContext;
-import records.grammar.ExpressionParser.CallExpressionContext;
-import records.grammar.ExpressionParser.ColumnRefContext;
-import records.grammar.ExpressionParser.DivideExpressionContext;
-import records.grammar.ExpressionParser.ExpressionContext;
-import records.grammar.ExpressionParser.FixTypeExpressionContext;
-import records.grammar.ExpressionParser.GreaterThanExpressionContext;
-import records.grammar.ExpressionParser.IfThenElseExpressionContext;
-import records.grammar.ExpressionParser.InvalidOpExpressionContext;
-import records.grammar.ExpressionParser.LessThanExpressionContext;
-import records.grammar.ExpressionParser.MatchClauseContext;
-import records.grammar.ExpressionParser.MatchContext;
-import records.grammar.ExpressionParser.NotEqualExpressionContext;
-import records.grammar.ExpressionParser.NumericLiteralContext;
-import records.grammar.ExpressionParser.OrExpressionContext;
-import records.grammar.ExpressionParser.PatternContext;
-import records.grammar.ExpressionParser.RaisedExpressionContext;
-import records.grammar.ExpressionParser.StringConcatExpressionContext;
-import records.grammar.ExpressionParser.StringLiteralContext;
-import records.grammar.ExpressionParser.TableIdContext;
-import records.grammar.ExpressionParser.TagExpressionContext;
-import records.grammar.ExpressionParser.TimesExpressionContext;
-import records.grammar.ExpressionParser.TupleExpressionContext;
-import records.grammar.ExpressionParser.VarRefContext;
+import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
@@ -68,6 +40,8 @@ import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.types.ExpressionBase;
+import records.types.MutVar;
+import records.types.TypeCons;
 import records.types.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -84,6 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -129,8 +104,25 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
     }
 
+    /**
+     * Gets the value for this expression at the given row index
+     * (zero if N/A) and evaluation state
+     */
     @OnThread(Tag.Simulation)
     public abstract @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
+
+    /**
+     * Calls the given expression as a function with the given
+     * argument.
+     */
+    @OnThread(Tag.Simulation)
+    public @Value Object call(int rowIndex, EvaluateState state, @Value Object param) throws UserException, InternalException
+    {
+        // Internal because shouldn't happen if type-checked:
+        throw new InternalException("Expression " + this + " is not a function but is being called like one");
+    }
+
+
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
@@ -325,15 +317,22 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitTagExpression(TagExpressionContext ctx)
         {
             String constructorName = ctx.constructor().constructorName().getText();
+
+            @Nullable Expression args = null;
+            if (ctx.topLevelExpression() != null)
+                args = visitTopLevelExpression(ctx.topLevelExpression());
+            else if (ctx.OPEN_BRACKET() != null)
+                args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
+            
             if (ctx.constructor().UNKNOWNCONSTRUCTOR() != null)
             {
-                return new TagExpression(Either.left(constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+                return new TagExpression(Either.left(constructorName), args);
             }
             else
             {
                 String typeName = ctx.constructor().typeName().getText();
 
-                return new TagExpression(typeManager.lookupTag(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+                return new TagExpression(typeManager.lookupTag(typeName, constructorName), args);
             }
         }
 
@@ -452,6 +451,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
+        public Expression visitImplicitLambdaParam(ImplicitLambdaParamContext ctx)
+        {
+            return new ImplicitLambdaArg();
+        }
+
+        @Override
         public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
         {
             return new InvalidOperatorExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.STRING(), op -> op.getText()));
@@ -521,6 +526,22 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
         public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
         */
+    }
+    
+    // If any of the list are implicit lambda args ('?'), returns a new type state
+    // with a type for '?' and a wrap function which will turn the item into a function.
+    // If none are, returns identity and unaltered type state.
+    protected static Pair<UnaryOperator<@Nullable TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<Expression> args, TypeState typeState)
+    {
+        if (args.stream().anyMatch(a -> a instanceof ImplicitLambdaArg))
+        {
+            MutVar argType = new MutVar(src);
+            return new Pair<UnaryOperator<@Nullable TypeExp>, TypeState>(t -> t == null ? null : new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(argType, t)), typeState.addImplicitLambda(argType));
+        }
+        else
+        {
+            return new Pair<>(x -> x, typeState);
+        }
     }
 
     public static class SingleTableLookup implements TableLookup

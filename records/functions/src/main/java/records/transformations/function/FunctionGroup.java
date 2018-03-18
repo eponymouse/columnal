@@ -15,14 +15,14 @@ public class FunctionGroup
     // Not final, due to setter:
     private ImmutableList<FunctionDefinition> functions;
 
-    FunctionGroup(@LocalizableKey String shortDescriptionKey, FunctionDefinition singleMember)
+    public FunctionGroup(@LocalizableKey String shortDescriptionKey, FunctionDefinition singleMember)
     {
         this.name = singleMember.getName();
         this.shortDescriptionKey = shortDescriptionKey;
         this.functions = ImmutableList.of(singleMember);
     }
     
-    FunctionGroup(String groupName, @LocalizableKey String shortDescriptionKey, ImmutableList<FunctionDefinition> members)
+    protected FunctionGroup(String groupName, @LocalizableKey String shortDescriptionKey, ImmutableList<FunctionDefinition> members)
     {
         this.name = groupName;
         this.shortDescriptionKey = shortDescriptionKey;

@@ -46,6 +46,7 @@ FIX_TYPE : '@type';
 RAISEDTO : '^';
 COMMA: ',';
 STRING_CONCAT : ';';
+IMPLICIT_LAMBDA_PARAM : '?';
 
 NUMBER : [+\-]? [0-9]+ ('.' [0-9]+)?;
 

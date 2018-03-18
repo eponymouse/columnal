@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -40,19 +41,19 @@ public class TypeState
 {
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
-    private final Map<String, List<TypeExp>> variables;
-    private final Map<String, FunctionDefinition> functions;
+    private final ImmutableMap<String, ImmutableList<TypeExp>> variables;
+    private final ImmutableMap<String, FunctionDefinition> functions;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
 
     public TypeState(UnitManager unitManager, TypeManager typeManager)
     {
-        this(new HashMap<>(), typeManager, unitManager);
+        this(ImmutableMap.of(), typeManager, unitManager);
     }
 
-    private TypeState(Map<String, List<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
+    private TypeState(ImmutableMap<String, ImmutableList<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
     {
-        this.variables = Collections.unmodifiableMap(variables);
+        this.variables = variables;
         this.typeManager = typeManager;
         ImmutableList<FunctionDefinition> allFunctions;
         try
@@ -64,20 +65,31 @@ public class TypeState
             Utility.report(e);
             allFunctions = ImmutableList.of();
         }
-        this.functions = allFunctions.stream().collect(Collectors.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
+        this.functions = allFunctions.stream().collect(ImmutableMap.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toImmutableMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
         this.unitManager = unitManager;
     }
 
     public @Nullable TypeState add(String varName, MutVar type, Consumer<StyledString> error)
     {
-        HashMap<String, List<TypeExp>> copy = new HashMap<>(variables);
-        if (copy.containsKey(varName))
+        if (variables.containsKey(varName))
         {
             error.accept(StyledString.s("Duplicate variable name: " + varName));
             return null;
         }
-        copy.put(varName, Collections.singletonList(type));
-        return new TypeState(copy, typeManager, unitManager);
+        ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
+        copy.putAll(variables);
+        copy.put(varName, ImmutableList.of(type));
+        return new TypeState(copy.build(), typeManager, unitManager);
+    }
+
+    public TypeState addImplicitLambda(MutVar type)
+    {
+        // We allow name shadowing for '?' the implicit lambda param
+        // without complaint:
+        ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
+        copy.putAll(variables);
+        copy.put("?", ImmutableList.of(type));
+        return new TypeState(copy.build(), typeManager, unitManager);
     }
 
     /**
@@ -94,17 +106,17 @@ public class TypeState
 
     public static TypeState intersect(List<TypeState> typeStates)
     {
-        Map<String, List<TypeExp>> mergedVars = new HashMap<>(typeStates.get(0).variables);
+        Map<String, ImmutableList<TypeExp>> mergedVars = new HashMap<>(typeStates.get(0).variables);
         for (int i = 1; i < typeStates.size(); i++)
         {
-            Map<String, List<TypeExp>> variables = typeStates.get(i).variables;
-            for (Entry<@KeyFor("variables") String, List<TypeExp>> entry : variables.entrySet())
+            Map<String, ImmutableList<TypeExp>> variables = typeStates.get(i).variables;
+            for (Entry<@KeyFor("variables") String, ImmutableList<TypeExp>> entry : variables.entrySet())
             {
                 // If it's present in both sets, only keep if same type, otherwise mask:
-                mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concat(a, b));
+                mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concatI(a, b));
             }
         }
-        return new TypeState(mergedVars, typeStates.get(0).typeManager, typeStates.get(0).unitManager);
+        return new TypeState(ImmutableMap.copyOf(mergedVars), typeStates.get(0).typeManager, typeStates.get(0).unitManager);
     }
 
     @Override
@@ -126,7 +138,7 @@ public class TypeState
 
     // If it's null, it's totally unknown
     // If it's > size 1, it should count as masked because it has different types in different guards
-    public @Nullable List<TypeExp> findVarType(String varName)
+    public @Nullable ImmutableList<TypeExp> findVarType(String varName)
     {
         return variables.get(varName);
     }
@@ -196,7 +208,7 @@ public class TypeState
         else if (typeStates.length == 1)
             return typeStates[0];
 
-        Map<String, List<TypeExp>> allNewVars = new HashMap<>();
+        Map<String, ImmutableList<TypeExp>> allNewVars = new HashMap<>();
 
         for (TypeState typeState : typeStates)
         {
@@ -210,7 +222,7 @@ public class TypeState
                 throw new InternalException("Functions changed between different type states");
             // Variables: we first remove all the variables which already existed
             // What is left must not overlap
-            MapDifference<String, List<TypeExp>> diff = Maps.difference(typeState.variables, original.variables);
+            MapDifference<String, ImmutableList<TypeExp>> diff = Maps.difference(typeState.variables, original.variables);
             if (!diff.entriesOnlyOnRight().isEmpty())
                 throw new InternalException("Altered type state is missing some original variables: " + diff.entriesOnlyOnRight());
             if (!diff.entriesDiffering().isEmpty())
@@ -229,6 +241,6 @@ public class TypeState
         }
         // Shouldn't be any overlap given earlier checks:
         allNewVars.putAll(original.variables);
-        return new TypeState(allNewVars, original.typeManager, original.unitManager);
+        return new TypeState(ImmutableMap.copyOf(allNewVars), original.typeManager, original.unitManager);
     }
 }

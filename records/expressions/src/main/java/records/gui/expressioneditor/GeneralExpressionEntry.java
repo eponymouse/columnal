@@ -80,6 +80,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         ANY(null) /* Pattern match "any" item */,
         VARIABLE_DECL(null) /* Declare new variable in pattern */,
         VARIABLE_USE(null),
+        IMPLICIT_LAMBDA_ARG(null), /* The ? for implicit lambda args */
         UNFINISHED(null);
 
         private final @Nullable String innerStyle;

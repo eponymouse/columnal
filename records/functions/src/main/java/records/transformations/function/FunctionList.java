@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.transformations.function.list.AnyAllNone;
+import records.transformations.function.list.Count;
+import records.transformations.function.list.GetElement;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 13/12/2016.
@@ -19,6 +21,7 @@ public class FunctionList
     {
         return ImmutableList.copyOf(Arrays.asList(
             Absolute.group(),
+            new AnyAllNone(),
             //AsUnit.group(),
             Count.group(),
             FromString.group(),

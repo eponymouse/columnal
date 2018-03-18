@@ -159,7 +159,7 @@ public class FunctionDefinition
     {
         private final Supplier<FunctionInstance> makeInstance;
 
-        FunctionTypesUniform(TypeManager typeManager, Supplier<FunctionInstance> makeInstance, TypeExp returnType, TypeExp paramType)
+        public FunctionTypesUniform(TypeManager typeManager, Supplier<FunctionInstance> makeInstance, TypeExp returnType, TypeExp paramType)
         {
             super(typeManager, returnType, paramType);
             this.makeInstance = makeInstance;

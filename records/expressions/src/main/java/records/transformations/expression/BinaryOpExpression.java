@@ -1,6 +1,8 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.RecordSet;
@@ -17,6 +19,8 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Arrays;
@@ -24,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -117,13 +122,26 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
 
     @Override
+    public @OnThread(Tag.Simulation) @Value Object call(int rowIndex, EvaluateState state, @Value Object param) throws UserException, InternalException
+    {
+        if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
+        {
+            return getValue(rowIndex, state.add("?", param));
+        }
+        else
+            return super.call(rowIndex, state, param);
+    }
+
+    @Override
     public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState);
+        typeState = lambda.getSecond();
         lhsType = lhs.check(dataLookup, typeState, onError);
         rhsType = rhs.check(dataLookup, typeState, onError);
         if (lhsType == null || rhsType == null)
             return null;
-        return onError.recordType(this, checkBinaryOp(dataLookup, typeState, onError));
+        return onError.recordType(this, lambda.getFirst().apply(checkBinaryOp(dataLookup, typeState, onError)));
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})

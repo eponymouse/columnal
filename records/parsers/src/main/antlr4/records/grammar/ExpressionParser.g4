@@ -16,8 +16,10 @@ varRef  : UNQUOTED_IDENT;
 
 any : ANY;
 
+implicitLambdaParam : IMPLICIT_LAMBDA_PARAM;
+
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | unfinished;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
@@ -44,7 +46,7 @@ stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
 
 constructor : CONSTRUCTOR typeName BACKSLASH constructorName | UNKNOWNCONSTRUCTOR constructorName;
-tagExpression : constructor (COLON expression)?;
+tagExpression : constructor (OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET)?;
 
 functionName : UNQUOTED_IDENT;
 callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;

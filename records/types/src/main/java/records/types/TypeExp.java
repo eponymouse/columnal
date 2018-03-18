@@ -104,6 +104,7 @@ public abstract class TypeExp implements StyledShowable
     public static final String CONS_TEXT = "Text";
     public static final String CONS_BOOLEAN = "Boolean";
     public static final String CONS_LIST = "List";
+    public static final String CONS_FUNCTION = "->";
     // For recording errors:
     protected final @Nullable ExpressionBase src;
     

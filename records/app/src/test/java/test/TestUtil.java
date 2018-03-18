@@ -37,6 +37,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
 import records.importers.ChoicePoint.ChoiceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.EvaluateState;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionInstance;
@@ -92,6 +93,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeNoException;
 
 /**
  * Created by neil on 05/11/2016.
@@ -1097,6 +1099,35 @@ public class TestUtil
     public static KeyCode ctrlCmd()
     {
         return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static @Value Object runExpression(String expressionSrc) throws UserException, InternalException
+    {
+        DummyManager mgr = managerWithTestTypes();
+        Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
+        expression.check(r -> null, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), excOnError());
+        return expression.getValue(0, new EvaluateState());
+    }
+
+    public static DummyManager managerWithTestTypes()
+    {
+        DummyManager mgr;
+        try
+        {
+            mgr = new DummyManager();
+            for (DataType type : distinctTypes)
+            {
+                if (type.isTagged())
+                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  type.getTagTypes());
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            assumeNoException(e);
+            throw new RuntimeException(e);
+        }
+        return mgr;
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

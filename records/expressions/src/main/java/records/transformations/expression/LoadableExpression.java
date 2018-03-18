@@ -20,6 +20,7 @@ public interface LoadableExpression<EXPRESSION extends LoadableExpression<EXPRES
     
     public abstract SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>> loadAsSingle();
 
+    @FunctionalInterface
     public static interface SingleLoader<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT> & StyledShowable, SEMANTIC_PARENT, R>
     {
         @OnThread(Tag.FXPlatform)

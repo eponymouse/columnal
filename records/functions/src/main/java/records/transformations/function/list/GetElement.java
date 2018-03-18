@@ -1,14 +1,14 @@
-package records.transformations.function;
+package records.transformations.function.list;
 
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionDefinition.FunctionTypes;
-import records.transformations.function.FunctionDefinition.TypeMatcher;
+import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
+import records.transformations.function.FunctionInstance;
 import records.types.MutVar;
 import records.types.NumTypeExp;
 import records.types.TupleTypeExp;
@@ -18,9 +18,6 @@ import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by neil on 17/01/2017.

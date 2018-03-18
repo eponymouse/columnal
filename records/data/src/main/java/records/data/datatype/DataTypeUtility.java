@@ -301,6 +301,12 @@ public class DataTypeUtility
     @OnThread(Tag.Simulation)
     public static String valueToString(DataType dataType, @Value Object item, @Nullable DataType parent) throws UserException, InternalException
     {
+        return valueToString(dataType, item, parent, false);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static String valueToString(DataType dataType, @Value Object item, @Nullable DataType parent, boolean asExpression) throws UserException, InternalException
+    {
         return dataType.apply(new DataTypeVisitor<String>()
         {
             @Override
@@ -348,14 +354,14 @@ public class DataTypeUtility
             public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 TaggedValue tv = (TaggedValue)item;
-                String tagName = tags.get(tv.getTagIndex()).getName();
+                String tagName = (asExpression ? ("@tag " + typeName.getRaw() + "\\") : "") + tags.get(tv.getTagIndex()).getName();
                 @Nullable @Value Object tvInner = tv.getInner();
                 if (tvInner != null)
                 {
                     @Nullable DataType typeInner = tags.get(tv.getTagIndex()).getInner();
                     if (typeInner == null)
                         throw new InternalException("Tag value inner but missing type inner: " + typeName + " " + tagName);
-                    return tagName + "(" + valueToString(typeInner, tvInner, dataType) + ")";
+                    return tagName + "(" + valueToString(typeInner, tvInner, dataType, asExpression) + ")";
                 }
                 else
                 {
@@ -375,7 +381,7 @@ public class DataTypeUtility
                 {
                     if (i != 0)
                         s.append(",");
-                    s.append(valueToString(inner.get(i), tuple[i], dataType));
+                    s.append(valueToString(inner.get(i), tuple[i], dataType, asExpression));
                 }
                 if (parent == null || !parent.isTagged())
                     s.append(")");
@@ -394,7 +400,7 @@ public class DataTypeUtility
                         s.append(",");
                     if (inner == null)
                         throw new InternalException("Array has empty type but is not empty");
-                    s.append(valueToString(inner, listEx.get(i), dataType));
+                    s.append(valueToString(inner, listEx.get(i), dataType, asExpression));
                 }
                 return s.append("]").toString();
             }
