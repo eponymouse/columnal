@@ -91,6 +91,8 @@ import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
+import records.transformations.Check;
+import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.HideColumnsPanel;
 import records.transformations.Sort;
@@ -157,69 +159,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public Table getTable()
     {
         return table;
-    }
-
-    public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
-    {
-        return new GridCellInfo<StructuredTextField, CellStyle>()
-        {
-            @Override
-            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
-            {
-                int tableDataRow = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
-                int tableDataColumn = cellPosition.columnIndex - getPosition().columnIndex;
-                if (0 <= tableDataRow && tableDataRow < currentKnownRows &&
-                    0 <= tableDataColumn && tableDataColumn < displayColumns.size())
-                {
-                    return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-            @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
-            {
-                // Blank then queue fetch:
-                StructuredTextField orig = getCell.apply(cellPosition.from(getPosition()));
-                if (orig != null)
-                    orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
-                @SuppressWarnings("units")
-                @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
-                @SuppressWarnings("units")
-                @TableDataRowIndex int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
-                if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
-                {
-                    displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
-                        rowIndexWithinTable,
-                        b -> {},
-                        c -> parent.getGrid().select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits)),
-                        (rowIndex, colIndex, editorKit) -> {
-                            // The rowIndex and colIndex are in table data terms, so we must translate:
-                            @Nullable StructuredTextField cell = getCell.apply(cellPosition.from(getPosition()));
-                            if (cell != null)// && cell == orig)
-                                cell.resetContent(editorKit);
-                        }
-                    );
-                }
-            }
-
-            @Override
-            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, StructuredTextField cellFirst)
-            {
-                // If we are for the right position, we haven't been scrolled out of view.
-                // If the table is re-run, we'll get reset separately, so we are always up to date:
-                return true;
-            }
-
-            @Override
-            public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
-            {
-                return cellStyles;
-            }
-        };
     }
 
     @Override
@@ -898,27 +837,36 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
     
-    private static class Clickable extends Style<Clickable>
+    private static abstract class Clickable extends Style<Clickable>
     {
-        private final FXPlatformConsumer<Point2D> onClick;
+        private final @LocalizableKey String tooltipKey;
+        private final String[] extraStyleClasses;
+
+        public Clickable()
+        {
+            this("click.to.change");
+        }
         
-        public Clickable(FXPlatformConsumer<Point2D> onClick)
+        public Clickable(@LocalizableKey String tooltipKey, String... styleClasses)
         {
             super(Clickable.class);
-            this.onClick = onClick;
+            this.tooltipKey = tooltipKey;
+            this.extraStyleClasses = styleClasses;
         }
 
+        @OnThread(Tag.FXPlatform)
+        protected abstract void onClick(MouseButton mouseButton, Point2D screenPoint);
 
         @Override
         @OnThread(Tag.FXPlatform)
         protected void style(Text t)
         {
             t.getStyleClass().add("styled-text-clickable");
+            t.getStyleClass().addAll(extraStyleClasses);
             t.setOnMouseClicked(e -> {
-                if (e.getButton() == MouseButton.PRIMARY)
-                    onClick.consume(new Point2D(e.getScreenX(), e.getScreenY()));
+                onClick(e.getButton(), new Point2D(e.getScreenX(), e.getScreenY()));
             });
-            Tooltip tooltip = new Tooltip(TranslationUtility.getString("click.to.change"));
+            Tooltip tooltip = new Tooltip(TranslationUtility.getString(tooltipKey));
             Tooltip.install(t, tooltip);
         }
 
@@ -938,35 +886,70 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     private StyledString editSourceLink(TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
     {
-        return srcTableId.toStyledString().withStyle(new Clickable(p -> {
-            new PickTableDialog(parent, p).showAndWait().ifPresent(t -> {
-                Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeSrcTableId.consume(t.getId())));
-            });
-        }));
+        // If this becomes broken/unbroken, we should get re-run:
+        @Nullable Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
+        String[] styleClasses = srcTable == null ?
+                new String[] { "broken-link" } : new String[0];
+        return srcTableId.toStyledString().withStyle(new Clickable("source.link.tooltip", styleClasses) {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                if (mouseButton == MouseButton.PRIMARY)
+                {
+                    new PickTableDialog(parent, screenPoint).showAndWait().ifPresent(t -> {
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeSrcTableId.consume(t.getId())));
+                    });
+                }
+                else if (mouseButton == MouseButton.MIDDLE && srcTable != null)
+                {
+                    TableDisplay target = (TableDisplay) srcTable.getDisplay();
+                    withParent_(p -> {
+                        if (target != null)
+                            p.select(new EntireTableSelection(target, target.getPosition().columnIndex));
+                    });
+                }
+            }
+        });
     }
 
     private StyledString editExpressionLink(Expression curExpression, @Nullable Table srcTable, boolean perRow, @Nullable DataType expectedType, SimulationConsumer<Expression> changeExpression)
     {
-        return curExpression.toStyledString().withStyle(new Clickable(p -> {
-            new EditExpressionDialog(parent, srcTable, curExpression, perRow, expectedType).showAndWait().ifPresent(newExp -> {
-                Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeExpression.consume(newExp)));
-            });
-        }));
+        return curExpression.toStyledString().withStyle(new Clickable() {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                if (mouseButton == MouseButton.PRIMARY)
+                {
+                    new EditExpressionDialog(parent, srcTable, curExpression, perRow, expectedType).showAndWait().ifPresent(newExp -> {
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeExpression.consume(newExp)));
+                    });
+                }
+            }
+        });
     }
     
     private StyledString fixExpressionLink(EditableExpression fixer)
     {
-        return StyledString.styled("Edit expression", new Clickable(p -> {
-            new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
-                .showAndWait().ifPresent(newExp -> {
-                    Workers.onWorkerThread("Editing table", Priority.SAVE_ENTRY, () -> 
-                        FXUtility.alertOnError_(() ->
-                            parent.getManager().edit(table.getId(), () -> fixer.replaceExpression(newExp), null)
-                        )
-                    );
-            });
-                    
-        }));
+        return StyledString.styled("Edit expression", new Clickable() {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+            {
+                if (mouseButton == MouseButton.PRIMARY)
+                {
+                    new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
+                            .showAndWait().ifPresent(newExp -> {
+                        Workers.onWorkerThread("Editing table", Priority.SAVE_ENTRY, () ->
+                                FXUtility.alertOnError_(() ->
+                                        parent.getManager().edit(table.getId(), () -> fixer.replaceExpression(newExp), null)
+                                )
+                        );
+                    });
+                }
+            }
+        });
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1032,6 +1015,26 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     builder.append(" with no splitting.");
                 }
                 content = builder.build();
+            }
+            else if (table instanceof Concatenate)
+            {
+                Concatenate concatenate = (Concatenate)table;
+                content = StyledString.concat(
+                    StyledString.s("Concatenate "),
+                    concatenate.getPrimarySources().map(t -> t.toStyledString()).collect(StyledString.joining(", "))    
+                );
+            }
+            else if (table instanceof Check)
+            {
+                Check check = (Check)table;
+                content = StyledString.concat(
+                    StyledString.s("Check "),
+                    editSourceLink(check.getSource(), newSource ->
+                        parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
+                            table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
+                    StyledString.s(" that "),
+                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), false, DataType.BOOLEAN, e -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e))
+                );
             }
             else
             {

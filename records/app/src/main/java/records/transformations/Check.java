@@ -108,7 +108,7 @@ public class Check extends Transformation
     @Override
     protected @OnThread(Tag.Any) Stream<TableId> getPrimarySources()
     {
-        return Stream.empty();
+        return Stream.of(srcTableId);
     }
 
     @Override
@@ -116,6 +116,18 @@ public class Check extends Transformation
     public Stream<TableId> getSourcesFromExpressions()
     {
         return TransformationUtil.tablesFromExpression(checkExpression);
+    }
+
+    @OnThread(Tag.Any)
+    public TableId getSource()
+    {
+        return srcTableId;
+    }
+
+    @OnThread(Tag.Any)
+    public Expression getCheckExpression()
+    {
+        return checkExpression;
     }
 
     @Override

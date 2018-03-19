@@ -8,6 +8,7 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
@@ -73,13 +74,13 @@ public class TextImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
     {
         Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
         {
             try
             {
-                importTextFile(tableManager, src, rs -> onLoad.consume(rs));
+                importTextFile(tableManager, src, destination, rs -> onLoad.consume(rs));
             }
             catch (InternalException | UserException | IOException ex)
             {
@@ -95,14 +96,14 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
+    public static void importTextFile(TableManager mgr, File textFile, CellPosition destination, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         GuessFormat.guessTextFormatGUI_Then(mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, format ->
         {
             try
             {
-                DataSource ds = makeDataSource(mgr, textFile, format.getFirst(), format.getSecond());
+                DataSource ds = makeDataSource(mgr, textFile, format.getFirst().getInitialLoadDetails(destination), format.getSecond());
                 Platform.runLater(() -> then.consume(ds));
             }
             catch (InternalException | UserException | IOException e)
@@ -120,7 +121,7 @@ public class TextImporter implements Importer
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
             try
             {
-                return makeDataSource(mgr, textFile, new ImportInfo(new InitialLoadDetails(new TableId(textFile.getName()), null, null)/*, link*/), format);
+                return makeDataSource(mgr, textFile, new ImportInfo(textFile.getName()/*, link*/).getInitialLoadDetails(CellPosition.ORIGIN), format);
             }
             catch (IOException e)
             {
@@ -130,13 +131,13 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    private static DataSource makeDataSource(TableManager mgr, final File textFile, final ImportInfo importInfo, final TextFormat format) throws IOException, InternalException, UserException
+    private static DataSource makeDataSource(TableManager mgr, final File textFile, final InitialLoadDetails initialLoadDetails, final TextFormat format) throws IOException, InternalException, UserException
     {
         RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format, null);
         //if (importInfo.linkFile)
             //return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         //else
-            return new ImmediateDataSource(mgr, importInfo.initialLoadDetails, new EditableRecordSet(rs));
+            return new ImmediateDataSource(mgr, initialLoadDetails, new EditableRecordSet(rs));
     }
 
     @OnThread(Tag.Simulation)

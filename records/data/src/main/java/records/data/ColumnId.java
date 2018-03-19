@@ -26,6 +26,11 @@ public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowa
         this.columnId = columnId;
     }
 
+    public static boolean validCharacter(int codePoint, boolean start)
+    {
+        return Character.isLetter(codePoint) || ((codePoint == ' ' || Character.isDigit(codePoint)) && !start);
+    }
+
     @Override
     public boolean equals(@Nullable Object o)
     {

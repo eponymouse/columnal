@@ -51,6 +51,7 @@ import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.Transform;
 import records.transformations.TransformationInfo;
@@ -116,7 +117,8 @@ public class View extends StackPane
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void saveTable(String s)
+            @OnThread(Tag.Simulation)
+            public void saveTable(String s)
             {
                 super.saveTable(s);
                 getNext();
@@ -525,6 +527,9 @@ public class View extends StackPane
                                 });
                             });
                             break;
+                        case IMPORT_FILE:
+                            ImporterManager.getInstance().chooseAndImportFile(thisView.getWindow(), tableManager, cellPosition, tableManager::record);
+                            break;
                         case TRANSFORM:
                             new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
                                 new PickTableDialog(thisView, createTrans.getFirst()).showAndWait().ifPresent(srcTable -> {
@@ -547,7 +552,6 @@ public class View extends StackPane
                                 });
                             });
                             break;
-                        // TODO support import
                     }
                 }
                 virtualGrid.setEffectOnNonOverlays(null);
@@ -571,7 +575,7 @@ public class View extends StackPane
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
         mainPane.addSelectionListener(tableDisplay);
         rowLabelSupplier.addTable(mainPane, tableDisplay);
-        @OnThread(Tag.Any) TableOperations tableOps = tableDisplay.getTable().getOperations();
+        TableOperations tableOps = tableDisplay.getTable().getOperations();
         if (tableOps.addColumn != null || tableOps.appendRows != null)
         {
             expandTableArrowSupplier.addTable(tableDisplay);

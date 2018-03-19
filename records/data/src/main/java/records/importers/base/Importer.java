@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.TableManager;
 import threadchecker.OnThread;
@@ -35,7 +36,7 @@ public interface Importer
      *               is safe.
      */
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, File src, URL origin, FXPlatformConsumer<DataSource> onLoad);
+    public void importFile(Window parent, TableManager tableManager, CellPosition destPosition, File src, URL origin, FXPlatformConsumer<DataSource> onLoad);
 
     /**
      * The name of the importer to display to the user when picking an importer

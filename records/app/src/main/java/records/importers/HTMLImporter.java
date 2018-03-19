@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 public class HTMLImporter implements Importer
 {
     @OnThread(Tag.Simulation)
-    private static void importHTMLFileThen(TableManager mgr, File htmlFile, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
+    private static void importHTMLFileThen(TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
     {
         ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results = new ArrayList<>();
         Document doc = parse(htmlFile);
@@ -120,7 +120,7 @@ public class HTMLImporter implements Importer
                 if (outcome != null)
                 {
                     @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
-                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().initialLoadDetails, loadData.apply(outcomeNonNull.getSecond()));
+                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().getInitialLoadDetails(destination), loadData.apply(outcomeNonNull.getSecond()));
                     return makeDataSource;
                 } else
                     return null;
@@ -192,12 +192,12 @@ public class HTMLImporter implements Importer
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, CellPosition destination, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
     {
         Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> {
             try
             {
-                importHTMLFileThen(tableManager, src, origin, dataSources -> {
+                importHTMLFileThen(tableManager, src, destination, origin, dataSources -> {
                     Platform.runLater(() -> {
                         for (DataSource dataSource : dataSources)
                         {

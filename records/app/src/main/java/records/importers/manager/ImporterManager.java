@@ -14,6 +14,7 @@ import javafx.stage.Window;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.TableManager;
 import records.gui.ErrorableTextField;
@@ -50,7 +51,7 @@ public class ImporterManager
     }
 
     @OnThread(Tag.FXPlatform)
-    public void chooseAndImportFile(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
+    public void chooseAndImportFile(Window parent, TableManager tableManager, CellPosition destination, FXPlatformConsumer<DataSource> onLoad)
     {
         ArrayList<ExtensionFilter> filters = new ArrayList<>();
         filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream())).collect(Collectors.toList())));
@@ -65,7 +66,7 @@ public class ImporterManager
         {
             try
             {
-                importFile(parent, tableManager, chosen, chosen.toURI().toURL(), onLoad);
+                importFile(parent, tableManager, destination, chosen, chosen.toURI().toURL(), onLoad);
             }
             catch (MalformedURLException e)
             {
@@ -75,12 +76,12 @@ public class ImporterManager
     }
 
     @OnThread(Tag.FXPlatform)
-    public void chooseAndImportURL(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
+    public void chooseAndImportURL(Window parent, TableManager tableManager, CellPosition destination, FXPlatformConsumer<DataSource> onLoad)
     {
         @Nullable URLImportDetails choice = new ImportURLDialog().showAndWait().orElse(null);
         if (choice != null)
         {
-            choice.chosenImporter.importFile(parent, tableManager, choice.downloadedFile, choice.source, onLoad);
+            choice.chosenImporter.importFile(parent, tableManager, destination, choice.downloadedFile, choice.source, onLoad);
         }
     }
 
@@ -102,20 +103,20 @@ public class ImporterManager
 
 
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, File file, URL source, FXPlatformConsumer<DataSource> onLoad)
+    public void importFile(Window parent, TableManager tableManager, CellPosition destination, File file, URL source, FXPlatformConsumer<DataSource> onLoad)
     {
         // Work out which importer will handle it:
         for (Importer importer : registeredImporters)
         {
             if (importer.getSupportedFileTypes().stream().anyMatch((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream().anyMatch(ext -> matches(file, ext))))
             {
-                importer.importFile(parent, tableManager, file, source, onLoad);
+                importer.importFile(parent, tableManager, destination, file, source, onLoad);
                 return;
             }
         }
 
         // If none match, give user free choice of importers:
-        new PickImporterDialog(file).showAndWait().ifPresent(importer -> importer.importFile(parent, tableManager, file, source, onLoad));
+        new PickImporterDialog(file).showAndWait().ifPresent(importer -> importer.importFile(parent, tableManager, destination, file, source, onLoad));
     }
 
     private static boolean matches(File file, String wildcard)

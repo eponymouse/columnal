@@ -28,6 +28,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.Table.InitialLoadDetails;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn.TextFileColumnListener;
 import records.data.columntype.BlankColumnType;
@@ -679,21 +680,65 @@ public class GuessFormat
             .max(Entry.comparingByKey()).map((Entry<@KeyFor("viableColumnNameRows") Integer, Integer> e) -> initialVals.get(e.getKey()));
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
+        HashSet<ColumnId> usedNames = new HashSet<>();
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
-            columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() && columnIndex < headerRow.get().size() ? headerRow.get().get(columnIndex) : ("C" + (columnIndex + 1)))));
+        {
+            String original = headerRow.isPresent() && columnIndex < headerRow.get().size() ? headerRow.get().get(columnIndex) : "";
+            StringBuilder stringBuilder = new StringBuilder();
+            int[] codepoints = original.codePoints().toArray();
+            boolean lastWasSpace = false;
+            final int SPACE_CODEPOINT = 32;
+            for (int i = 0; i < codepoints.length; i++)
+            {
+                int codepoint = codepoints[i];
+                if (ColumnId.validCharacter(codepoint, i == 0))
+                {
+                    // Can we make it valid with a prefix?
+                    if (i == 0 && ColumnId.validCharacter(codepoint, false))
+                    {
+                        stringBuilder.append('C').append(new String(codepoints, i, 1));
+                    }
+                    // Otherwise invalid, so drop it.
+                }
+                else if (!lastWasSpace || codepoint != SPACE_CODEPOINT)
+                {
+                    lastWasSpace = codepoint == SPACE_CODEPOINT;
+                    stringBuilder.append(new String(codepoints, i, 1));
+                }
+            }
+            String validated = stringBuilder.toString().trim();
+            if (validated.isEmpty())
+                validated = "C";
+            // Now check if it is taken:
+            String prospectiveName = validated;
+            int appendNum = 1;
+            while (usedNames.contains(new ColumnId(prospectiveName)))
+            {
+                prospectiveName = validated + " " + appendNum;
+                appendNum += 1;
+            }
+            ColumnId columnName = new ColumnId(prospectiveName);
+            
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), columnName));
+            usedNames.add(columnName);
+        }
         return new Format(headerRows, columns);
     }
 
     public static class ImportInfo
     {
-        // Null means auto-assign
-        public final InitialLoadDetails initialLoadDetails;
+        private final TableId suggestedTableId; 
         //public final boolean linkFile;
 
-        public ImportInfo(InitialLoadDetails initialLoadDetails/*, boolean linkFile*/)
+        public ImportInfo(String suggestedName/*, boolean linkFile*/)
         {
-            this.initialLoadDetails = initialLoadDetails;
+            this.suggestedTableId = new TableId(suggestedName);
             //this.linkFile = linkFile;
+        }
+        
+        public InitialLoadDetails getInitialLoadDetails(CellPosition destination)
+        {
+            return new InitialLoadDetails(suggestedTableId, destination, null);
         }
     }
 

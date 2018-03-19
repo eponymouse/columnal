@@ -2,6 +2,7 @@ package records.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.GridAreaRowIndex;
+import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.DoubleExpression;
@@ -46,8 +47,11 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
+import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
+import records.gui.stf.EditorKitSimpleLabel;
+import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -56,6 +60,7 @@ import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -409,6 +414,69 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     public final GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(GridArea.class) DataDisplay this)
     {
         return new GridAreaCellPosition(HEADER_ROWS + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
+    }
+
+    public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
+    {
+        return new GridCellInfo<StructuredTextField, CellStyle>()
+        {
+            @Override
+            public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
+            {
+                int tableDataRow = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
+                int tableDataColumn = cellPosition.columnIndex - getPosition().columnIndex;
+                if (0 <= tableDataRow && tableDataRow < currentKnownRows &&
+                    0 <= tableDataColumn && tableDataColumn < displayColumns.size())
+                {
+                    return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            @Override
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
+            {
+                // Blank then queue fetch:
+                StructuredTextField orig = getCell.apply(cellPosition.from(getPosition()));
+                if (orig != null)
+                    orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
+                @SuppressWarnings("units")
+                @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
+                @SuppressWarnings("units")
+                @TableDataRowIndex int rowIndexWithinTable = getRowIndexWithinTable(cellPosition.rowIndex);
+                if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
+                {
+                    displayColumns.get(columnIndexWithinTable).getColumnHandler().fetchValue(
+                        rowIndexWithinTable,
+                        b -> {},
+                        c -> withParent_(p -> p.select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits))),
+                        (rowIndex, colIndex, editorKit) -> {
+                            // The rowIndex and colIndex are in table data terms, so we must translate:
+                            @Nullable StructuredTextField cell = getCell.apply(cellPosition.from(getPosition()));
+                            if (cell != null)// && cell == orig)
+                                cell.resetContent(editorKit);
+                        }
+                    );
+                }
+            }
+
+            @Override
+            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, StructuredTextField cellFirst)
+            {
+                // If we are for the right position, we haven't been scrolled out of view.
+                // If the table is re-run, we'll get reset separately, so we are always up to date:
+                return true;
+            }
+
+            @Override
+            public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
+            {
+                return cellStyles;
+            }
+        };
     }
 
     public void cleanupFloatingItems()

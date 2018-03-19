@@ -1,20 +1,13 @@
 package records.gui;
 
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import records.data.ColumnId;
-import records.data.TableId;
-import records.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.gui.TranslationUtility;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 30/04/2017.
@@ -31,17 +24,12 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
             s = Utility.collapseSpaces(s);
             if (s.isEmpty())
                 return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getString("column.name.error.missing"));
-            return checkAlphabet(s, ColumnNameTextField::validCharacter, ColumnId::new);
+            return checkAlphabet(s, ColumnId::validCharacter, ColumnId::new);
         });
         getStyleClass().add("column-name-text-field");
         if (initial != null)
             setText(initial.getRaw());
         setPromptText(TranslationUtility.getString("column.name.prompt"));
-    }
-
-    private static boolean validCharacter(int codePoint, boolean start)
-    {
-        return Character.isLetter(codePoint) || ((codePoint == ' ' || Character.isDigit(codePoint)) && !start);
     }
 
     @Override

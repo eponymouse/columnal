@@ -26,6 +26,7 @@ public class TextFormat extends Format
         this.charset = charset;
     }
 
+    // Constructor for testing
     public TextFormat(int headerRows, List<ColumnInfo> columnTypes, @Nullable String separator, @Nullable String quote, Charset charset)
     {
         super(headerRows, columnTypes);

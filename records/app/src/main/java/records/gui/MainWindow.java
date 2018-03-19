@@ -8,6 +8,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
@@ -139,7 +140,7 @@ public class MainWindow
             {
                 try
                 {
-                    ImporterManager.getInstance().importFile(stage, v.getManager(), file, file.toURI().toURL(), ds -> recordTable(v, ds));
+                    ImporterManager.getInstance().importFile(stage, v.getManager(), CellPosition.ORIGIN.offsetByRowCols(1, 1), file, file.toURI().toURL(), ds -> recordTable(v, ds));
                 }
                 catch (MalformedURLException e)
                 {

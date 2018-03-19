@@ -15,6 +15,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
@@ -57,7 +58,7 @@ public class ExcelImporter implements Importer
 
     @SuppressWarnings("deprecation")
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, CellPosition destination, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
     {
         try
         {
@@ -104,7 +105,7 @@ public class ExcelImporter implements Importer
             if (outcome != null)
             {
                 @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().initialLoadDetails, loadData.apply(outcomeNonNull.getSecond()));
+                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().getInitialLoadDetails(destination), loadData.apply(outcomeNonNull.getSecond()));
                 Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> {
                     DataSource dataSource = makeDataSource.get();
                     Platform.runLater(() -> onLoad.consume(dataSource));

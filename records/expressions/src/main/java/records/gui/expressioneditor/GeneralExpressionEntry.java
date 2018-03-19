@@ -70,7 +70,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
-
+    
     public static enum Status
     {
         COLUMN_REFERENCE_SAME_ROW("column-inner"),
@@ -134,6 +134,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      */
     private final Completion fixedTypeCompletion;
 
+    private final SimpleCompletion questionCompletion;
+
     /**
      * Set to true while updating field with auto completion.  Allows us to avoid
      * certain listeners firing which should only fire when the user has made a change.
@@ -171,6 +173,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         roundBracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
         squareBracketCompletion = new KeyShortcutCompletion("List", '[');
         stringCompletion = new KeyShortcutCompletion("Text", '\"');
+        questionCompletion = new SimpleCompletion("", "?","", Status.IMPLICIT_LAMBDA_ARG);
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH);
@@ -306,13 +309,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return PseudoClass.getPseudoClass(pseudoClass);
     }
 
-    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "parent", "semanticParent"})
+    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(roundBracketCompletion);
         r.add(squareBracketCompletion);
         r.add(stringCompletion);
+        r.add(questionCompletion);
         r.add(ifCompletion);
         r.add(matchCompletion);
         r.add(fixedTypeCompletion);
@@ -637,6 +641,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         else if (status.get() == Status.VARIABLE_USE)
         {
             return errorDisplayer.record(this, new VarUseExpression(textField.getText().trim()));
+        }
+        else if (status.get() == Status.IMPLICIT_LAMBDA_ARG)
+        {
+            return errorDisplayer.record(this, new ImplicitLambdaArg());
         }
         // Unfinished -- could be number though:
         CompleteNumericLiteralContext number = parseOrNull(ExpressionParser::completeNumericLiteral);

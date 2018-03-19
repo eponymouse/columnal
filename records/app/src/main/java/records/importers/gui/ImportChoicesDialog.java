@@ -42,14 +42,19 @@ import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataCellSupplier;
+import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplierFloating;
+import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ScrollGroup.ScrollLock;
+import records.gui.stf.StructuredTextField;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
@@ -76,6 +81,7 @@ import utility.gui.LabelledGrid.Row;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -101,6 +107,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         DataDisplay destData = new DestDataDisplay(suggestedName, destGrid.getFloatingSupplier(), destRecordSet);
         destGrid.addGridAreas(ImmutableList.of(destData));
+        DataCellSupplier destDataCellSupplier = new DataCellSupplier();
+        destGrid.addNodeSupplier(destDataCellSupplier);
+        destDataCellSupplier.addGrid(destData, destData.getDataGridCellInfo());
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
@@ -108,6 +117,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         DataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
+        DataCellSupplier srcDataCellSupplier = new DataCellSupplier();
+        srcGrid.addNodeSupplier(srcDataCellSupplier);
+        srcDataCellSupplier.addGrid(srcDataDisplay, srcDataDisplay.getDataGridCellInfo());
 
 
         LabelledGrid choices = new LabelledGrid();
@@ -201,7 +213,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             @Nullable FORMAT format = formatProperty.get();
             if (bt == ButtonType.OK && format != null)
             {
-                return new Pair<>(new ImportInfo(new InitialLoadDetails(null, null, null)/*, linkCopyButtons.valueProperty().get()*/), format);
+                return new Pair<>(new ImportInfo(suggestedName/*, linkCopyButtons.valueProperty().get()*/), format);
             }
             return null;
         });
