@@ -35,3 +35,13 @@
 .pick-table-dialog .button-bar .container {
     -fx-padding: 0;
 }
+.pick-html-table-dialog-pane {
+    .pick-html-table-instruction {
+        -fx-font-size: 150%;
+        -fx-font-weight: bold;
+        -fx-fill: pink;
+        -fx-stroke: darkred;
+        -fx-stroke-width: 0.5;
+        -fx-text-alignment: center;
+    }
+}

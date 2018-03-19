@@ -2,11 +2,20 @@ package records.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.scene.web.WebView;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -54,7 +63,7 @@ import java.util.stream.Collectors;
 public class HTMLImporter implements Importer
 {
     @OnThread(Tag.Simulation)
-    private static void importHTMLFileThen(TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
+    private static void importHTMLFileThen(Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
     {
         ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results = new ArrayList<>();
         Document doc = parse(htmlFile);
@@ -131,14 +140,7 @@ public class HTMLImporter implements Importer
         };
 
         Platform.runLater(() -> {
-            Stage s = new Stage();
-            WebView webView = new WebView();
-            Label instruction = new Label("Click any red-bordered table to import it.");
-            BorderPane borderPane = new BorderPane(webView, instruction, null, new Button("Done"), null);
-            s.setScene(new Scene(borderPane));
-            FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableGUIImportLinks(webViewDoc, importTable));
-            webView.getEngine().loadContent(doc.html());
-            s.show();
+            new PickHTMLTableDialog(parentWindow, doc).showAndWait().ifPresent(n -> importTable.consume(n));
         });
     }
     
@@ -197,7 +199,7 @@ public class HTMLImporter implements Importer
         Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> {
             try
             {
-                importHTMLFileThen(tableManager, src, destination, origin, dataSources -> {
+                importHTMLFileThen(parent, tableManager, src, destination, origin, dataSources -> {
                     Platform.runLater(() -> {
                         for (DataSource dataSource : dataSources)
                         {
@@ -211,5 +213,38 @@ public class HTMLImporter implements Importer
                 throw new UserException("IO Error", e);
             }
         }));
+    }
+    
+    @OnThread(Tag.FXPlatform)
+    private static class PickHTMLTableDialog extends Dialog<Integer>
+    {
+        public PickHTMLTableDialog(Window parent, Document doc)
+        {
+            initOwner(parent);
+            initModality(Modality.WINDOW_MODAL);
+            getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
+            setResizable(true);
+            getDialogPane().getStylesheets().addAll(
+                FXUtility.getStylesheet("general.css"),
+                FXUtility.getStylesheet("dialogs.css")
+            );
+            getDialogPane().getStyleClass().add("pick-html-table-dialog-pane");
+            // To allow cancel to work:
+            setResultConverter(bt -> null);
+            
+            WebView webView = new WebView();
+            Node instruction = new Text("Click any red-bordered table to import it.");
+            instruction.getStyleClass().add("pick-html-table-instruction");
+            TextFlow textFlow = new TextFlow(instruction);
+            textFlow.setTextAlignment(TextAlignment.CENTER);
+            BorderPane.setAlignment(textFlow, Pos.CENTER);
+            BorderPane borderPane = new BorderPane(webView, textFlow, null, null, null);
+            BorderPane.setMargin(webView, new Insets(10, 0, 0, 0));
+            getDialogPane().setContent(borderPane);
+            FXUtility.addChangeListenerPlatform(webView.getEngine().documentProperty(), webViewDoc -> enableGUIImportLinks(webViewDoc, n -> setResult(n)));
+            webView.getEngine().loadContent(doc.html());
+
+            //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
+        }    
     }
 }
