@@ -660,14 +660,16 @@ public class GuessFormat
                             possibleDateFormats.clear();
                         else
                         {
+                            String valPreprocessed = Utility.preprocessDate(val);
                             // Seems expensive but most will be knocked out immediately:
                             for (Iterator<DateFormat> dateFormatIt = possibleDateFormats.iterator(); dateFormatIt.hasNext(); )
                             {
                                 try
                                 {
 
-                                    dateFormatIt.next().formatter.parse(val, LocalDate::from);
-                                } catch (DateTimeParseException e)
+                                    dateFormatIt.next().formatter.parse(valPreprocessed, LocalDate::from);
+                                }
+                                catch (DateTimeParseException e)
                                 {
                                     dateFormatIt.remove();
                                 }

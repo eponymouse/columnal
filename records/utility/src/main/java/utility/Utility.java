@@ -1112,6 +1112,11 @@ public class Utility
         return t;
     }
 
+    public static String preprocessDate(String original)
+    {
+        return original.replaceAll("(?U)[^\\p{Alnum}]+", " ");
+    }
+
     public static class ReadState
     {
         private final File file;

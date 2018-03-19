@@ -74,9 +74,13 @@ public abstract class ToTemporalFunction extends FunctionGroup
                     if (i != 0) b.appendLiteral(sep);
                     b.appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NEVER);
                     break;
-                case MONTH_TEXT:
+                case MONTH_TEXT_SHORT:
                     if (i != 0) b.appendLiteral(sep);
                     b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.SHORT);
+                    break;
+                case MONTH_TEXT_LONG:
+                    if (i != 0) b.appendLiteral(sep);
+                    b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.FULL);
                     break;
                 case MONTH_NUM:
                     if (i != 0) b.appendLiteral(sep);
@@ -109,7 +113,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
 
     abstract DateTimeInfo getResultType();
 
-    static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
+    static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
 
     private class FromStringInstance extends FunctionInstance
     {
