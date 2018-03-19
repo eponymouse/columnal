@@ -9,7 +9,6 @@ import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.UnitsBottom;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -121,7 +120,7 @@ public class ImporterUtility
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnType;
-                    return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit), slice.stream().map(numericColumnType::removePrefix));
+                    return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit), slice.stream().map(numericColumnType::removePrefixAndSuffix));
                 });
             }
             else if (columnType instanceof TextColumnType)
@@ -145,7 +144,7 @@ public class ImporterUtility
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return new TaggedValue(0, null);
                     else
-                        return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefix(item))));
+                        return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefixAndSuffix(item))));
                 }), new TaggedValue(0, null)));
             }
             else if (!(columnType instanceof BlankColumnType))

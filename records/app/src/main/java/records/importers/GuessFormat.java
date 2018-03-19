@@ -549,6 +549,7 @@ public class GuessFormat
             boolean allBlank = true;
             List<DateFormat> possibleDateFormats = new ArrayList<>(ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(l -> l.stream()).map(formatter -> new DateFormat(formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList()));
             @Nullable String commonPrefix = null;
+            @Nullable String commonSuffix = null;
             List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
             {
@@ -574,12 +575,32 @@ public class GuessFormat
                             {
                                 if (Character.getType(val.codePointAt(i)) == Character.CURRENCY_SYMBOL)
                                 {
-                                    commonPrefix = (commonPrefix == null ? "" : commonPrefix) + val.substring(i, val.offsetByCodePoints(i, 1));
+                                    commonPrefix = val.substring(0, val.offsetByCodePoints(i, 1));
                                 }
                                 else
                                     break;
                             }
                         }
+                        if (commonSuffix == null)
+                        {
+                            if (val.length() < 100)
+                            {
+                                int[] codepoints = val.codePoints().toArray();
+                                // Look for a suffix of currency symbol:
+                                for (int i = codepoints.length - 1; i >= 0 ; i--)
+                                {
+                                    if (codepoints[i] == '%' || Character.getType(codepoints[i]) == Character.CURRENCY_SYMBOL)
+                                    {
+                                        commonSuffix = new String(codepoints, i, codepoints.length - i);
+                                    }
+                                    else
+                                        break;
+                                }
+                            }
+                        }
+
+
+
                         int first;
                         // Not an else; if we just picked commonPrefix, we should find it here:
                         if (commonPrefix != null && val.startsWith(commonPrefix))
@@ -595,6 +616,20 @@ public class GuessFormat
                             allNumericOrBlank = false;
                             //break;
                         }
+                        
+                        if (commonSuffix != null && val.endsWith(commonSuffix))
+                        {
+                            // Take off suffix and continue:
+                            val = val.substring(0, val.length() - commonSuffix.length());
+                        }
+                        else if (commonSuffix != null && !Character.isDigit(val.length() - 1))
+                        {
+                            // We thought we had a prefix, but we haven't found it here, so give up:
+                            commonSuffix = null;
+                            allNumeric = false;
+                            allNumericOrBlank = false;
+                        }
+                        
                         try
                         {
                             // TODO: support . as thousands separator and comma as decimal point
@@ -654,11 +689,11 @@ public class GuessFormat
                 columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatter, possibleDateFormats.get(0).destQuery));
             else if (allNumeric)
             {
-                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix));
+                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix, commonSuffix));
             }
             else if (allNumericOrBlank && numericBlank != null)
             {
-                columnTypes.add(new OrBlankColumnType(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix), numericBlank));
+                columnTypes.add(new OrBlankColumnType(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix, commonSuffix), numericBlank));
             }
             else
                 columnTypes.add(new TextColumnType());

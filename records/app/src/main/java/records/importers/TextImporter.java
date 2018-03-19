@@ -15,7 +15,6 @@ import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.Table.InitialLoadDetails;
-import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn;
 import records.data.TextFileColumn.TextFileColumnListener;
@@ -157,7 +156,7 @@ public class TextImporter implements Importer
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefix);
+                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)

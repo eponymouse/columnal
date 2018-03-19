@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFormat
 {
-    private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0, null);
+    private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0, null, null);
     private static final ColumnType TEXT = new TextColumnType();
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -101,7 +101,7 @@ public class TestFormat
     {
         try
         {
-            return new NumericColumnType(DummyManager.INSTANCE.getUnitManager().loadUse(unit), 0, commonPrefix);
+            return new NumericColumnType(DummyManager.INSTANCE.getUnitManager().loadUse(unit), 0, commonPrefix, null);
         }
         catch (InternalException | UserException e)
         {

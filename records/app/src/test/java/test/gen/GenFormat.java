@@ -72,10 +72,10 @@ public class GenFormat extends Generator<TextFormat>
                 ColumnType.BLANK,
                 new TextColumnType(),
                 sourceOfRandomness.nextBoolean() ?
-                new NumericColumnType(Unit.SCALAR, sourceOfRandomness.nextInt(0, 6), null) :
+                new NumericColumnType(Unit.SCALAR, sourceOfRandomness.nextInt(0, 6), null, null) :
                 ((Supplier<ColumnType>)() -> {
                     Unit curr = sourceOfRandomness.choose(currencies);
-                    return new NumericColumnType(curr, sourceOfRandomness.nextInt(0, 6), curr.getDisplayPrefix());}).get(),
+                    return new NumericColumnType(curr, sourceOfRandomness.nextInt(0, 6), curr.getDisplayPrefix(), curr.getDisplaySuffix());}).get(),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:
