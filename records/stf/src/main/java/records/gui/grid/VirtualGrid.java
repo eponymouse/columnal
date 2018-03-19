@@ -1461,13 +1461,13 @@ public final class VirtualGrid implements ScrollBindable
                 button.setVisible(true);
                 CellPosition pos = ((EmptyCellSelection) curSel).position;
                 buttonPosition = pos;
-                double x = visibleBounds.getXCoord(pos.columnIndex) + 2;
-                double y = visibleBounds.getYCoord(pos.rowIndex) + 2;
+                double x = visibleBounds.getXCoord(pos.columnIndex);
+                double y = visibleBounds.getYCoord(pos.rowIndex);
                 button.resizeRelocate(
                     x,
                     y,
-                    Math.max(button.minWidth(100.0), visibleBounds.getXCoordAfter(pos.columnIndex) - x - 4),
-                    visibleBounds.getYCoordAfter(pos.rowIndex) - y - 4
+                    Math.max(button.minWidth(100.0), visibleBounds.getXCoordAfter(pos.columnIndex) - x),
+                    visibleBounds.getYCoordAfter(pos.rowIndex) - y
                 );
             }
             else

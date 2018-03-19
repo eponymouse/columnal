@@ -78,6 +78,8 @@
 }
 
 .create-table-grid-button {
+    /* Default insets: -fx-background-insets: 0 0 -1 0, 0, 1, 2; */
+    -fx-background-insets: 2 2 1 2, 2, 3, 4;
     -fx-padding: 0;
     -fx-font-size: 14px;
 }
