@@ -76,16 +76,10 @@
         -fx-background-color: $column-header-background-color;
     }
 }
+
 .create-table-grid-button {
     -fx-padding: 0;
-    -fx-background-color: $focus-color;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0;
-    &:hover {
-        -fx-background-color: $table-cell-hover;
-    }
-    -fx-text-fill: $focus-color-text;
-    -fx-cursor: hand;
+    -fx-font-size: 14px;
 }
 
 .table-border-overlay {
