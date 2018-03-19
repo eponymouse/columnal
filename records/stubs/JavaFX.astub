@@ -90,22 +90,22 @@ class Scene
 }
 
 package javafx.scene.control;
-class Dialog<T>
+class Dialog<R>
 {
-    void setResizable(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, boolean b);
-    void initStyle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, StageStyle s);
-    void initModality(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Modality m);
-    void initOwner(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Window w);
-    DialogPane getDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
-    void setDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, DialogPane value);
-    void setResultConverter(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, Callback<ButtonType, @Nullable T> a);
-    void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, @Nullable T t);
-    void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
-    void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
-    void setOnShowing(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
-    void setOnHiding(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, EventHandler<DialogEvent> e);
-    void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this, String s);
-    void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<T> this);
+    void setResizable(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, boolean b);
+    void initStyle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, StageStyle s);
+    void initModality(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Modality m);
+    void initOwner(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Window w);
+    DialogPane getDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
+    void setDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, DialogPane value);
+    void setResultConverter(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Callback<ButtonType, @Nullable R> a);
+    void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, @Nullable R r);
+    void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
+    void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
+    void setOnShowing(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
+    void setOnHiding(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
+    void setTitle(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, String s);
+    void close(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
 }
 class Labeled
 {
