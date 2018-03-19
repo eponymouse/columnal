@@ -33,7 +33,7 @@ public class PropGridOverlap
     @Property(trials = 10000)
     public void testLoad(@When(seed=1) @From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
-        VirtualGrid grid = new VirtualGrid(null);
+        VirtualGrid grid = new VirtualGrid(null, 0, 0);
         ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
         grid.addGridAreas(gridAreas.gridAreas);
         checkNoOverlap(gridAreas.gridAreas);
@@ -92,7 +92,7 @@ public class PropGridOverlap
     @Property(trials = 10000)
     public void testMove(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
     {
-        VirtualGrid grid = new VirtualGrid(null);
+        VirtualGrid grid = new VirtualGrid(null, 0, 0);
         ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
         grid.addGridAreas(gridAreas.gridAreas);
         checkNoOverlap(gridAreas.gridAreas);
@@ -112,7 +112,7 @@ public class PropGridOverlap
     public void testPair()
     {
         // A particular pair which caused an infinite loop:
-        VirtualGrid grid = new VirtualGrid(null);
+        VirtualGrid grid = new VirtualGrid(null, 0, 0);
         ImmutableList<GridArea> gridAreas = ImmutableList.of(
             GenGridAreaList.makeGridArea(3, 1, 6, 15),
             GenGridAreaList.makeGridArea(6, 7, 7, 11)

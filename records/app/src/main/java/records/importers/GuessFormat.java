@@ -691,7 +691,7 @@ public class GuessFormat
             for (int i = 0; i < codepoints.length; i++)
             {
                 int codepoint = codepoints[i];
-                if (ColumnId.validCharacter(codepoint, i == 0))
+                if (!ColumnId.validCharacter(codepoint, i == 0))
                 {
                     // Can we make it valid with a prefix?
                     if (i == 0 && ColumnId.validCharacter(codepoint, false))

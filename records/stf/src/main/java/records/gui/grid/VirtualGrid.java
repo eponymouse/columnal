@@ -103,9 +103,9 @@ public final class VirtualGrid implements ScrollBindable
 {
     // How many columns beyond last table to show in the grid
     // (logical, not to do with rendering/scrolling)
-    private static final int COLS_TO_RIGHT = 10;
+    private final int columnsToRight;
     // Ditto for rows
-    private static final int ROWS_TO_BOTTOM = 20;
+    private final int rowsToBottom;
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
     
@@ -136,13 +136,9 @@ public final class VirtualGrid implements ScrollBindable
     // What is the offset of first item?  Always between negative width of current item and zero.  Never positive.
     private double logicalScrollColumnOffset;
     private double logicalScrollRowOffset;
-
-
-    private static final @AbsRowIndex int MIN_ROWS = CellPosition.row(10);
-    private static final @AbsColIndex int MIN_COLS = CellPosition.col(10);
     
-    private final ObjectProperty<@AbsRowIndex Integer> currentKnownRows = new SimpleObjectProperty<>(MIN_ROWS);
-    private final ObjectProperty<@AbsColIndex Integer> currentColumns = new SimpleObjectProperty<>(MIN_COLS);
+    private final ObjectProperty<@AbsRowIndex Integer> currentKnownRows = new SimpleObjectProperty<>();
+    private final ObjectProperty<@AbsColIndex Integer> currentColumns = new SimpleObjectProperty<>();
 
     // Package visible to let sidebars access it
     static final double rowHeight = 24;
@@ -174,8 +170,12 @@ public final class VirtualGrid implements ScrollBindable
     }
     
     @OnThread(Tag.FXPlatform)
-    public VirtualGrid(@Nullable CreateTable createTable, String... styleClasses)
+    public VirtualGrid(@Nullable CreateTable createTable, int columnsToRight, int rowsToBottom, String... styleClasses)
     {
+        this.columnsToRight = columnsToRight;
+        this.rowsToBottom = rowsToBottom;
+        currentKnownRows.set(CellPosition.row(rowsToBottom));
+        currentColumns.set(CellPosition.col(columnsToRight));
         if (createTable != null)
             nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
         nodeSuppliers.add(supplierFloating);
@@ -1104,8 +1104,7 @@ public final class VirtualGrid implements ScrollBindable
             double x = firstRenderColumnOffset + renderXOffset;
             double y = firstRenderRowOffset + renderYOffset;
 
-            // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((-renderYOffset + getHeight() + extraRenderYPixels) / rowHeight) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((-renderYOffset + getHeight() + extraRenderYPixels) / rowHeight));
             int newNumVisibleCols = 0;
             for (int column = firstRenderColumnIndex; x < getWidth() + extraRenderXPixels && column < currentColumns.get(); column++)
             {
@@ -1277,14 +1276,13 @@ public final class VirtualGrid implements ScrollBindable
             openGridAreas.add(cur);
         }
         
-        currentColumns.set(
-            Utility.maxCol(MIN_COLS, 
+        currentColumns.set( 
                 CellPosition.col(gridAreas.stream()
                         .mapToInt(g -> g.getSecond().getBottomRightIncl().columnIndex)
                         .max()
                     .orElse(0)
-                    + COLS_TO_RIGHT)));
-        currentKnownRows.set(Utility.maxRow(MIN_ROWS, rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(ROWS_TO_BOTTOM)));
+                    + columnsToRight));
+        currentKnownRows.set(rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(rowsToBottom));
         VisibleBounds bounds = container.redoLayout();
         updatingSizeAndPositions = false;
         

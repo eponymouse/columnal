@@ -50,7 +50,7 @@ public abstract class GridArea
         return topLeft;
     }
     
-    public void setPosition(CellPosition cellPosition)
+    public void setPosition(@UnknownInitialization(GridArea.class) GridArea this, CellPosition cellPosition)
     {
         topLeft = cellPosition;
         updateParent();

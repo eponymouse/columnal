@@ -103,7 +103,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     public ImportChoicesDialog(TableManager mgr, String suggestedName, ChoicePoint<?, FORMAT> choicePoints, SimulationFunction<FORMAT, ? extends @Nullable RecordSet> loadData, SimulationFunction<Choices, @Nullable SourceInfo> srcData)
     {
         SimpleObjectProperty<@Nullable RecordSet> destRecordSet = new SimpleObjectProperty<>(null);
-        VirtualGrid destGrid = new VirtualGrid(null);
+        VirtualGrid destGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         DataDisplay destData = new DestDataDisplay(suggestedName, destGrid.getFloatingSupplier(), destRecordSet);
         destGrid.addGridAreas(ImmutableList.of(destData));
@@ -111,7 +111,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         destGrid.addNodeSupplier(destDataCellSupplier);
         destDataCellSupplier.addGrid(destData, destData.getDataGridCellInfo());
         //destGrid.setEditable(false);
-        VirtualGrid srcGrid = new VirtualGrid(null);
+        VirtualGrid srcGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
         destGrid.getScrollGroup().add(srcGrid, ScrollLock.VERTICAL);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
@@ -392,9 +392,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
         boolean currentKnownRowsIsFinal;
 
+        @OnThread(Tag.FXPlatform)
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
         {
             super(null, new TableId(suggestedName),  null, destColumnHeaderSupplier);
+            setPosition(CellPosition.ORIGIN);
             this.destRecordSet = destRecordSet;
         }
 
@@ -453,9 +455,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     {
         private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
 
+        @OnThread(Tag.FXPlatform)
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
         {
             super(null, new TableId(suggestedName), null, srcColumnHeaderSupplier);
+            setPosition(CellPosition.ORIGIN);
             this.srcInfo = srcInfo;
         }
 

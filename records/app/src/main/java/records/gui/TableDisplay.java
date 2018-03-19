@@ -371,10 +371,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
-    public void setPosition(CellPosition cellPosition)
+    public void setPosition(@UnknownInitialization(GridArea.class) TableDisplay this, CellPosition cellPosition)
     {
         super.setPosition(cellPosition);
-        mostRecentBounds.set(cellPosition);
+        if (mostRecentBounds != null)
+            mostRecentBounds.set(cellPosition);
     }
     
     /*

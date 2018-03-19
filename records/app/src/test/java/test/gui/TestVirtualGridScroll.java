@@ -61,7 +61,7 @@ public class TestVirtualGridScroll extends ApplicationTest
     @Override
     public void start(Stage stage) throws Exception
     {
-        virtualGrid = new VirtualGrid(null);
+        virtualGrid = new VirtualGrid(null, 0, 0);
         stage.setScene(new Scene(new BorderPane(virtualGrid.getNode())));
         stage.setWidth(800);
         stage.setHeight(600);

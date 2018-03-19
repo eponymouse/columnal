@@ -125,7 +125,7 @@ public class TestStructuredTextField extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
-        VirtualGrid virtualGrid = new VirtualGrid(null);
+        VirtualGrid virtualGrid = new VirtualGrid(null, 0, 0);
         dataDisplay = new DataDisplay(null, new TableId("TestTable"), null, virtualGrid.getFloatingSupplier())
         {
             @Override

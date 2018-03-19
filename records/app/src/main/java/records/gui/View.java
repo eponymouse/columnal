@@ -555,7 +555,7 @@ public class View extends StackPane
                     }
                 }
                 virtualGrid.setEffectOnNonOverlays(null);
-        }, "main-view-grid");
+        }, 10, 20, "main-view-grid");
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
