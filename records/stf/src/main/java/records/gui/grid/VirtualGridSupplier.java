@@ -38,8 +38,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * @param rowBounds The row bounds (vertical) of the current visible items (including any needed for scrolling)
      * @param columnBounds The column bounds (horizontal) of the current visible items (including any needed for scrolling)
      */
-    // package-visible
-    abstract void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds);
+    protected abstract void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds);
 
     void sizesOrPositionsChanged(VisibleBounds visibleBounds)
     {
@@ -57,7 +56,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      * Is there a cell at the given position and if so what it is its state?
      * If none, return null;
      */
-    abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition);
+    protected abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition);
 
     /**
      * Start editing that cell, if possible

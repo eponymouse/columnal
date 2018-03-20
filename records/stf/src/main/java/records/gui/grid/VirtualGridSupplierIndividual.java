@@ -77,7 +77,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     
     // package-visible
     @Override
-    final void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+    final protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
         // Remove not-visible cells and put them in spare cells:
         for (Iterator<Entry<@KeyFor("this.visibleItems") CellPosition, ItemDetails<T>>> iterator = visibleItems.entrySet().iterator(); iterator.hasNext(); )

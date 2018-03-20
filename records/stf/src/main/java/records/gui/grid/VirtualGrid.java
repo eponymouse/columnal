@@ -1435,7 +1435,7 @@ public final class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+        protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
         {
             if (button == null)
             {

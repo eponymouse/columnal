@@ -49,7 +49,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestVirtualGridScroll extends ApplicationTest
+public class TestVirtualGridScrollCoordinates extends ApplicationTest
 {
     private final double ORIGINAL_SCROLL = 5001.0;
     @SuppressWarnings("nullness")
