@@ -111,6 +111,15 @@ public class TestVirtualGridLayout extends ApplicationTest
         // Wait for smooth scrolling to finish:
         TestUtil.sleep(500);
         assertEquals(0, dummySupplier.layoutCount);
+
+        // However, a large scroll will require a layout -- but should only need two (one up, one down):
+        TestUtil.fx_(() -> {
+            virtualGrid.getScrollGroup().requestScrollBy(0, -1000.0);
+            virtualGrid.getScrollGroup().requestScrollBy(0, 1000.0);
+        });
+        // Wait for smooth scrolling to finish:
+        TestUtil.sleep(500);
+        assertEquals(2, dummySupplier.layoutCount);
     }
     
     private static class DummySupplier extends VirtualGridSupplier<Label>

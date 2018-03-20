@@ -616,8 +616,15 @@ public final class VirtualGrid implements ScrollBindable
         
         // May need to adjust our visible row count if we scrolled down:
         if (extraPixelsToShowAfter > 0 || logicalScrollRowIndex > oldRowIndex)
+        {
+            // This will call redoLayout so we won't need to call it again:
             updateSizeAndPositions();
-        container.redoLayout();
+        }
+        else
+        {
+            // No need to update rows, but do need to redo layout:
+            container.redoLayout();
+        }
     }
 
     @Override
