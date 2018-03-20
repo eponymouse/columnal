@@ -144,7 +144,8 @@ public class SmoothScroller
             scrollTimer.start();
         }
         //Log.debug("Scrolling by " + clamped);
-        scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
+        if (clamped != 0.0 || this.scrollOffset != 0.0)
+            scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
         translateProperty.set(this.scrollOffset);
     }
     
