@@ -81,7 +81,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     
     protected final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
-    private final TableHeaderItem tableHeaderItem;
+    private @Nullable TableHeaderItem tableHeaderItem;
     private TableId curTableId;
 
     protected @TableDataRowIndex int currentKnownRows; 
@@ -94,12 +94,11 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     protected final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
     
-    public DataDisplay(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
+    // Version without table header
+    protected DataDisplay(TableId initialTableName, VirtualGridSupplierFloating floatingItems)
     {
         this.curTableId = initialTableName;
         this.floatingItems = floatingItems;
-        this.tableHeaderItem = new TableHeaderItem(tableManager, initialTableName, renameTable, floatingItems);
-        this.floatingItems.addItem(tableHeaderItem);
 
         this.dataSelectionLimits = new TableSelectionLimits()
         {
@@ -121,6 +120,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 DataDisplay.this.doCopy(new RectangleBounds(topLeftIncl, bottomRightIncl));
             }
         };
+    }
+
+    // Version with table header
+    protected DataDisplay(TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
+    {
+        this(initialTableName, floatingItems);
+        tableHeaderItem = new TableHeaderItem(tableManager, initialTableName, renameTable, floatingItems);
+        this.floatingItems.addItem(tableHeaderItem);
     }
 
     protected @Nullable ContextMenu getTableHeaderContextMenu()
@@ -485,7 +492,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         {
             floatingItems.removeItem(columnHeaderItem);
         }
-        floatingItems.removeItem(tableHeaderItem);
+        if (tableHeaderItem != null)
+            floatingItems.removeItem(tableHeaderItem);
+        
     }
 
     @Override
