@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.spreadsheet.Grid;
 import org.junit.Test;
@@ -67,11 +68,14 @@ public class TestVirtualGridLayout extends ApplicationTest
     @Test
     public void testCellsNoLayout()
     {
-        SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
-        SimpleGridArea simpleGridArea = new SimpleGridArea();
-        simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
-        virtualGrid.addNodeSupplier(simpleCellSupplier);
-        virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        TestUtil.fx_(() -> {
+            SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
+            SimpleGridArea simpleGridArea = new SimpleGridArea();
+            virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
+            simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
+            virtualGrid.addNodeSupplier(simpleCellSupplier);
+            virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        });
         dummySupplier.layoutCount = 0;
         moveTo(0, 0);
         moveBy(500, 500);
@@ -81,16 +85,29 @@ public class TestVirtualGridLayout extends ApplicationTest
     @Test
     public void testCellsScroll()
     {
-        SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
-        SimpleGridArea simpleGridArea = new SimpleGridArea();
-        simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
-        virtualGrid.addNodeSupplier(simpleCellSupplier);
-        virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        TestUtil.fx_(() -> {
+            SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
+            SimpleGridArea simpleGridArea = new SimpleGridArea();
+            virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
+            simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
+            virtualGrid.addNodeSupplier(simpleCellSupplier);
+            virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        });
         dummySupplier.layoutCount = 0;
         // For small scroll, shouldn't need any new layout
         // as should just be handled by translation
-        scroll(1, VerticalDirection.DOWN);
-        scroll(1, VerticalDirection.UP);
+        TestUtil.fx_(() -> {
+            virtualGrid.getScrollGroup().requestScrollBy(0, -1.0);
+            virtualGrid.getScrollGroup().requestScrollBy(0, 1.0);
+        });
+        // Wait for smooth scrolling to finish:
+        TestUtil.sleep(500);
+        assertEquals(0, dummySupplier.layoutCount);
+        // True even for medium scroll:
+        TestUtil.fx_(() -> {
+            virtualGrid.getScrollGroup().requestScrollBy(0, -100.0);
+            virtualGrid.getScrollGroup().requestScrollBy(0, 100.0);
+        });
         // Wait for smooth scrolling to finish:
         TestUtil.sleep(500);
         assertEquals(0, dummySupplier.layoutCount);
@@ -98,12 +115,15 @@ public class TestVirtualGridLayout extends ApplicationTest
     
     private static class DummySupplier extends VirtualGridSupplier<Label>
     {
-        private int layoutCount = 0;
+        // Leave it negative while starting up:
+        private int layoutCount = -100;
 
         @Override
         protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
         {
             layoutCount += 1;
+            if (layoutCount > 0)
+                Log.logStackTrace("");
         }
 
         @Override
