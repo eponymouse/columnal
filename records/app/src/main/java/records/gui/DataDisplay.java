@@ -819,7 +819,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     @OnThread(Tag.FXPlatform)
     public Pair<VirtualGrid.ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
     {
-        tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
+        if (tableHeaderItem != null)
+            tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
         return new Pair<>(ListenerOutcome.KEEP, null);
     }
 }

@@ -1,5 +1,7 @@
 package records.importers.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
@@ -12,6 +14,9 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -24,6 +29,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
@@ -49,7 +56,10 @@ import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier.ViewOrder;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
@@ -83,6 +93,7 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @OnThread(Tag.FXPlatform)
@@ -115,7 +126,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
         destGrid.getScrollGroup().add(srcGrid, ScrollLock.VERTICAL);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
-        DataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo);
+        SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
         DataCellSupplier srcDataCellSupplier = new DataCellSupplier();
         srcGrid.addNodeSupplier(srcDataCellSupplier);
@@ -194,7 +205,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
 
 
-        SplitPane splitPane = new SplitPane(srcGrid.getNode(), destGrid.getNode());
+        SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), destGrid.getNode());
         Pane content = new BorderPane(splitPane, choices, null, null, null);
         content.getStyleClass().add("guess-format-content");
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
@@ -395,7 +406,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         @OnThread(Tag.FXPlatform)
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
         {
-            super(null, new TableId(suggestedName),  null, destColumnHeaderSupplier);
+            super(new TableId(suggestedName), destColumnHeaderSupplier);
             setPosition(CellPosition.ORIGIN);
             this.destRecordSet = destRecordSet;
         }
@@ -454,13 +465,144 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     private static class SrcDataDisplay extends DataDisplay
     {
         private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
+        private final RectangleOverlayItem selectionRectangle;
+        private RectangleBounds curBounds;
+        private BoundingBox curBoundingBox;
+        private final Pane mousePane;
 
         @OnThread(Tag.FXPlatform)
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
         {
-            super(null, new TableId(suggestedName), null, srcColumnHeaderSupplier);
+            super(new TableId(suggestedName), srcColumnHeaderSupplier);
             setPosition(CellPosition.ORIGIN);
+            this.mousePane = new Pane();
             this.srcInfo = srcInfo;
+            FXUtility.addChangeListenerPlatform(srcInfo, s -> {
+                if (s != null)
+                    curBounds = new RectangleBounds(CellPosition.ORIGIN,CellPosition.ORIGIN.offsetByRowCols(s.numRows, s.srcColumns.size()));
+            });
+            this.curBounds = new RectangleBounds(getPosition(), getBottomRightIncl());
+            // Will be set right at first layout:
+            this.curBoundingBox = new BoundingBox(0, 0, 0, 0);
+            this.selectionRectangle = new RectangleOverlayItem(ViewOrder.TABLE_BORDER) {
+                
+                
+                @Override
+                protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
+                {
+                    double x = visibleBounds.getXCoord(FXUtility.mouse(SrcDataDisplay.this).curBounds.topLeftIncl.columnIndex);
+                    double y = visibleBounds.getYCoord(FXUtility.mouse(SrcDataDisplay.this).curBounds.topLeftIncl.rowIndex);
+                    curBoundingBox = new BoundingBox(
+                            x,
+                            y,
+                            visibleBounds.getXCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curBounds.bottomRightIncl.columnIndex) - x,
+                            visibleBounds.getYCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curBounds.bottomRightIncl.rowIndex) - y
+                    );
+                        
+                    return Optional.of(Either.right(curBounds));
+                }
+
+                @Override
+                protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
+                {
+                    r.getStyleClass().add("prospective-import-rectangle");
+                }
+            };
+            srcColumnHeaderSupplier.addItem(this.selectionRectangle);
+            mousePane.setOnMouseMoved(e -> {
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
+                e.consume();
+            });
+            mousePane.setOnMouseReleased(e -> {
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
+                e.consume();
+            });
+            mousePane.setOnMouseDragged(e -> {
+                Cursor c = mousePane.getCursor();
+                withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
+                    @AbsRowIndex int newTop = curBounds.topLeftIncl.rowIndex;
+                    @AbsRowIndex int newBottom = curBounds.bottomRightIncl.rowIndex;
+                    @AbsColIndex int newLeft = curBounds.topLeftIncl.columnIndex;
+                    @AbsColIndex int newRight = curBounds.bottomRightIncl.columnIndex;
+                    boolean resizingTop = c == Cursor.NW_RESIZE || c == Cursor.N_RESIZE || c == Cursor.NE_RESIZE;
+                    boolean resizingBottom = c == Cursor.SW_RESIZE || c == Cursor.S_RESIZE || c == Cursor.SE_RESIZE;
+                    boolean resizingLeft = c == Cursor.NW_RESIZE || c == Cursor.W_RESIZE || c == Cursor.SW_RESIZE;
+                    boolean resizingRight = c == Cursor.NE_RESIZE || c == Cursor.E_RESIZE || c == Cursor.SE_RESIZE;
+                    if (resizingTop || resizingBottom || resizingLeft || resizingRight)
+                    {
+                        @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY())).orElse(null);
+                        if (pos != null)
+                        {
+                            if (resizingTop)
+                                newTop = pos.rowIndex;
+                            else if (resizingBottom)
+                                newBottom = pos.rowIndex - CellPosition.row(1);
+                            if (resizingLeft)
+                                newLeft = pos.columnIndex;
+                            else if (resizingRight)
+                                newRight = pos.columnIndex - CellPosition.col(1);
+                        }
+                        curBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
+                        withParent_(p -> p.positionOrAreaChanged());
+                    }
+                });
+            });
+        }
+        
+        private Cursor calculateCursor(double x, double y)
+        {
+            final int EXTRA = 5;
+            boolean inX = curBoundingBox.getMinX() - EXTRA <= x && x < curBoundingBox.getMaxX() + EXTRA;
+            boolean inY = curBoundingBox.getMinY() - EXTRA <= y && y < curBoundingBox.getMaxY() + EXTRA;
+            if (!inX || !inY)
+                return Cursor.DEFAULT;
+            boolean topEdge = Math.abs(curBoundingBox.getMinY() - y) <= EXTRA;
+            boolean bottomEdge = Math.abs(curBoundingBox.getMaxY() - y) <= EXTRA;
+            boolean leftEdge = Math.abs(curBoundingBox.getMinX() - x) <= EXTRA;
+            boolean rightEdge = Math.abs(curBoundingBox.getMaxX() - x) <= EXTRA;
+            if (topEdge && leftEdge)
+            {
+                return Cursor.NW_RESIZE;
+            }
+            else if (topEdge && rightEdge)
+            {
+                return Cursor.NE_RESIZE;
+            }
+            else if (bottomEdge && leftEdge)
+            {
+                return Cursor.SW_RESIZE;
+            }
+            else if (bottomEdge && rightEdge)
+            {
+                return Cursor.SE_RESIZE;
+            }
+            else if (topEdge)
+            {
+                return Cursor.N_RESIZE;
+            }
+            else if (bottomEdge)
+            {
+                return Cursor.S_RESIZE;
+            }
+            else if (leftEdge)
+            {
+                return Cursor.W_RESIZE;
+            }
+            else if (rightEdge)
+            {
+                return Cursor.E_RESIZE;
+            }
+            else
+            {
+                return Cursor.DEFAULT;
+            }
+        }
+
+        @Override
+        public void cleanupFloatingItems()
+        {
+            super.cleanupFloatingItems();
+            withParent_(p -> p.getFloatingSupplier().removeItem(selectionRectangle));
         }
 
         @Override
@@ -476,6 +618,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         protected void doCopy(@Nullable RectangleBounds rectangleBounds)
         {
             // We don't currently support copy on this table
+        }
+
+        public Node getMousePane()
+        {
+            return mousePane;
         }
     }
 }

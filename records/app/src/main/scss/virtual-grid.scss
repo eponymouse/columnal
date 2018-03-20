@@ -119,7 +119,7 @@
     -fx-stroke: null;
 }
 
-.pick-table-overlay {
+.pick-table-overlay, .prospective-import-rectangle {
     -fx-fill: $table-pick-overlay-fill;
     -fx-stroke-width: 3;
     -fx-stroke: $table-pick-overlay-stroke;
