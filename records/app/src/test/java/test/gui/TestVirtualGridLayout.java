@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -76,6 +77,24 @@ public class TestVirtualGridLayout extends ApplicationTest
         moveBy(500, 500);
         assertEquals(0, dummySupplier.layoutCount);
     }
+
+    @Test
+    public void testCellsScroll()
+    {
+        SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
+        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
+        virtualGrid.addNodeSupplier(simpleCellSupplier);
+        virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        dummySupplier.layoutCount = 0;
+        // For small scroll, shouldn't need any new layout
+        // as should just be handled by translation
+        scroll(1, VerticalDirection.DOWN);
+        scroll(1, VerticalDirection.UP);
+        // Wait for smooth scrolling to finish:
+        TestUtil.sleep(500);
+        assertEquals(0, dummySupplier.layoutCount);
+    }
     
     private static class DummySupplier extends VirtualGridSupplier<Label>
     {
@@ -125,6 +144,7 @@ public class TestVirtualGridLayout extends ApplicationTest
         @Override
         protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
         {
+            
         }
 
         @Override
