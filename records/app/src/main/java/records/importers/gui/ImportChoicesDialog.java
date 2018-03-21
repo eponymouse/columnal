@@ -53,6 +53,7 @@ import records.gui.DataCellSupplier;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid;
@@ -121,7 +122,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
         destGrid.getScrollGroup().add(srcGrid.getScrollGroup(), ScrollLock.VERTICAL);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
-        SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo);
+        SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo, destData);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
         DataCellSupplier srcDataCellSupplier = new DataCellSupplier();
         srcGrid.addNodeSupplier(srcDataCellSupplier);
@@ -470,7 +471,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         private final Pane mousePane;
 
         @OnThread(Tag.FXPlatform)
-        public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
+        public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo, GridArea destData)
         {
             super(new TableId(suggestedName), srcColumnHeaderSupplier, true, false);
             setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 0));
@@ -547,6 +548,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         newRight = Utility.maxCol(newLeft, newRight);
                         
                         curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
+                        destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-1, 0));
                         withParent_(p -> p.positionOrAreaChanged());
                     }
                 });
