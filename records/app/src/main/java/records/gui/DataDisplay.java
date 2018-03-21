@@ -20,7 +20,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -42,6 +41,7 @@ import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
+import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -75,10 +75,7 @@ import java.util.Optional;
  */
 @OnThread(Tag.FXPlatform)
 public abstract class DataDisplay extends GridArea implements SelectionListener
-{
-    // One for table title, one for column names, one for column types:
-    public static final int HEADER_ROWS = 3;
-    
+{    
     protected final VirtualGridSupplierFloating floatingItems;
     private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
     private @Nullable TableHeaderItem tableHeaderItem;
@@ -93,25 +90,26 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     protected final SimpleObjectProperty<ImmutableList<CellStyle>> cellStyles = new SimpleObjectProperty<>(ImmutableList.of());
 
     protected final RectangularTableCellSelection.TableSelectionLimits dataSelectionLimits;
-    
-    // Version without table header
-    protected DataDisplay(TableId initialTableName, VirtualGridSupplierFloating floatingItems)
+    private final HeaderRows headerRows;
+
+    private DataDisplay(TableId initialTableName, VirtualGridSupplierFloating floatingItems, HeaderRows headerRows)
     {
         this.curTableId = initialTableName;
         this.floatingItems = floatingItems;
+        this.headerRows = headerRows;
 
         this.dataSelectionLimits = new TableSelectionLimits()
         {
             @Override
             public CellPosition getTopLeftIncl()
             {
-                return getDataDisplayTopLeftIncl().from(getPosition());
+                return Utility.later(DataDisplay.this).getDataDisplayTopLeftIncl().from(getPosition());
             }
 
             @Override
             public CellPosition getBottomRightIncl()
             {
-                return getDataDisplayBottomRightIncl().from(getPosition());
+                return Utility.later(DataDisplay.this).getDataDisplayBottomRightIncl().from(getPosition());
             }
 
             @Override
@@ -122,10 +120,16 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         };
     }
 
-    // Version with table header
+    // Version without table header
+    protected DataDisplay(TableId initialTableName, VirtualGridSupplierFloating floatingItems, boolean showColumnNames, boolean showColumnTypes)
+    {
+        this(initialTableName, floatingItems, new HeaderRows(false, showColumnNames, showColumnTypes));
+    }
+
+                        // Version with full table header
     protected DataDisplay(TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
     {
-        this(initialTableName, floatingItems);
+        this(initialTableName, floatingItems, new HeaderRows(true, true, true));
         tableHeaderItem = new TableHeaderItem(tableManager, initialTableName, renameTable, floatingItems);
         this.floatingItems.addItem(tableHeaderItem);
     }
@@ -148,150 +152,19 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
             // Item for column name:
-            FloatingItem<Pane> columnNameItem = new FloatingItem<Pane>(ViewOrder.FLOATING)
+            if (headerRows.showingColumnNameRow)
             {
-                private double containerTranslateY;
-                // minTranslateY is zero; we can't scroll above our current position.
-                private double maxTranslateY;
-
-                @OnThread(Tag.FXPlatform)
-                private CellPosition getFloatingPosition()
-                {
-                    return new CellPosition(getPosition().rowIndex + CellPosition.row(1), getPosition().columnIndex + CellPosition.col(columnIndex));
-                }
-                
-                @Override
-                public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
-                {
-                    return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
-                }
-
-                @Override
-                @OnThread(Tag.FXPlatform)
-                public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
-                {
-                    CellPosition pos = getFloatingPosition();
-                    double x = visibleBounds.getXCoord(pos.columnIndex);
-                    double y = visibleBounds.getYCoord(pos.rowIndex);
-                    double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
-                    double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
-
-                    // The furthest down we go is to sit just above the last data row of the table:
-                    maxTranslateY = visibleBounds.getYCoord(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)) - y;
-                                        
-                    updateTranslate(getNode());
-                    
-                    return Optional.of(new BoundingBox(
-                            x,
-                            y,
-                            width,
-                            height
-                    ));
-                }
-
-                @Override
-                @OnThread(Tag.FXPlatform)
-                public Pane makeCell(VisibleBounds visibleBounds)
-                {
-                    ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
-                    textField.sizeToFit(30.0, 30.0);
-                    @Nullable FXPlatformConsumer<ColumnId> renameColumn = column.getRenameColumn();
-                    if (renameColumn == null)
-                        textField.setEditable(false);
-                    else
-                    {
-                        @NonNull FXPlatformConsumer<ColumnId> renameColumnFinal = renameColumn;
-                        textField.addOnFocusLoss(newColumnId -> {
-                            if (newColumnId != null)
-                                renameColumnFinal.consume(newColumnId);
-                        });
-                    }
-
-                    final BorderPane borderPane = new BorderPane(textField.getNode());
-                    borderPane.getStyleClass().add("table-display-column-title");
-                    BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
-                    BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
-                    FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
-                        for (CellStyle style : CellStyle.values())
-                        {
-                            style.applyStyle(borderPane, cellStyles.contains(style));
-                        }
-                    });
-
-                    ContextMenu contextMenu = new ContextMenu();
-                    if (columnActions != null)
-                        contextMenu.getItems().setAll(Utility.mapList(columnActions.apply(column.getColumnId()), c -> c.makeMenuItem()));
-                    if (contextMenu.getItems().isEmpty())
-                    {
-                        MenuItem menuItem = new MenuItem("No operations");
-                        menuItem.setDisable(true);
-                        contextMenu.getItems().setAll(menuItem);
-                    }
-                    borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
-                    textField.setContextMenu(contextMenu);
-                    
-                    return borderPane;
-                }
-
-                @Override
-                public void adjustForContainerTranslation(Pane node, Pair<DoubleExpression, DoubleExpression> translateXY)
-                {
-                    FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
-                        containerTranslateY = ty.doubleValue();
-                        updateTranslate(node);
-                    });
-                }
-                
-                @OnThread(Tag.FX)
-                private void updateTranslate(@Nullable Pane borderPane)
-                {
-                    if (borderPane != null)
-                    {
-                        // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
-                        borderPane.setTranslateY(Utility.clampIncl(0.0, - (borderPane.getLayoutY() + containerTranslateY), maxTranslateY));
-                    }
-                }
-            };
+                FloatingItem<Pane> columnNameItem = new ColumnNameItem(columnIndex, column, columnActions);
+                columnHeaderItems.add(columnNameItem);
+                floatingItems.addItem(columnNameItem);
+            }
             // Item for column type:
-            FloatingItem<Label> columnTypeItem = new FloatingItem<Label>(ViewOrder.STANDARD_CELLS)
+            if (headerRows.showingColumnTypeRow)
             {
-                @OnThread(Tag.FXPlatform)
-                private CellPosition getFloatingPosition()
-                {
-                    return new CellPosition(getPosition().rowIndex + CellPosition.row(2), getPosition().columnIndex + CellPosition.col(columnIndex));
-                }
-                
-                @Override
-                public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
-                {
-                    return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
-                }
-
-                @Override
-                public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
-                {
-                    CellPosition pos = getFloatingPosition();
-                    double x = visibleBounds.getXCoord(pos.columnIndex);
-                    double y = visibleBounds.getYCoord(pos.rowIndex);
-                    double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
-                    double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
-
-                    return Optional.of(new BoundingBox(x, y, width, height));
-                }
-
-                @Override
-                public Label makeCell(VisibleBounds visibleBounds)
-                {
-                    Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
-                    typeLabel.getStyleClass().add("table-display-column-title");
-                    return typeLabel;
-                }
-            };
-            
-            columnHeaderItems.add(columnNameItem);
-            columnHeaderItems.add(columnTypeItem);
-            floatingItems.addItem(columnNameItem);
-            floatingItems.addItem(columnTypeItem);
+                FloatingItem<Label> columnTypeItem = new ColumnTypeItem(columnIndex, column);
+                columnHeaderItems.add(columnTypeItem);
+                floatingItems.addItem(columnTypeItem);
+            }
         }
         
         updateParent();
@@ -323,29 +196,29 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     @SuppressWarnings("units")
     protected @TableDataRowIndex int getRowIndexWithinTable(@GridAreaRowIndex int gridRowIndex)
     {
-        return gridRowIndex - HEADER_ROWS;
+        return gridRowIndex - getHeaderRowCount();
     }
 
     @Override
     protected CellPosition recalculateBottomRightIncl()
     {
-        return getPosition().offsetByRowCols(currentKnownRows + (displayColumns.isEmpty() ? 0 : HEADER_ROWS) - 1, Math.max(0, displayColumns.size() - 1));
+        return getPosition().offsetByRowCols(currentKnownRows + (displayColumns.isEmpty() ? 0 : getHeaderRowCount()) - 1, Math.max(0, displayColumns.size() - 1));
     }
 
     // The top left data item in grid area terms, not including any headers
     @SuppressWarnings("units")
     @OnThread(Tag.FXPlatform)
-    public final GridAreaCellPosition getDataDisplayTopLeftIncl(@UnknownInitialization(GridArea.class) DataDisplay this)
+    public final GridAreaCellPosition getDataDisplayTopLeftIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
     {
-        return new GridAreaCellPosition(HEADER_ROWS, 0);
+        return new GridAreaCellPosition(getHeaderRowCount(), 0);
     }
 
     // The last data row in grid area terms, not including any append buttons
     @SuppressWarnings("units")
     @OnThread(Tag.FXPlatform)
-    public final GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(GridArea.class) DataDisplay this)
+    public final GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
     {
-        return new GridAreaCellPosition(HEADER_ROWS + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
+        return new GridAreaCellPosition(getHeaderRowCount() + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
     }
 
     public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
@@ -355,7 +228,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             @Override
             public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
-                int tableDataRow = cellPosition.rowIndex - (getPosition().rowIndex + HEADER_ROWS);
+                int tableDataRow = cellPosition.rowIndex - (getPosition().rowIndex + getHeaderRowCount());
                 int tableDataColumn = cellPosition.columnIndex - getPosition().columnIndex;
                 if (0 <= tableDataRow && tableDataRow < currentKnownRows &&
                     0 <= tableDataColumn && tableDataColumn < displayColumns.size())
@@ -434,14 +307,35 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             return new EntireTableSelection(this, cellPosition.columnIndex);
         }
         // In data cells?
-        else if (cellPosition.rowIndex >= us.rowIndex + HEADER_ROWS)
+        else if (cellPosition.rowIndex >= us.rowIndex + getHeaderRowCount())
         {
             return new RectangularTableCellSelection(cellPosition.rowIndex, cellPosition.columnIndex, dataSelectionLimits);
         }
         // Column name or expand arrow
         return new SingleCellSelection(cellPosition);
     }
+
+    public int getHeaderRowCount(@UnknownInitialization(DataDisplay.class) DataDisplay this)
+    {
+        return (headerRows.showingTableNameRow ? 1 : 0)
+            + (headerRows.showingColumnNameRow ? 1 : 0)
+            + (headerRows.showingColumnTypeRow ? 1 : 0);
+    }
     
+    public static class HeaderRows
+    {
+        private final boolean showingTableNameRow;
+        private final boolean showingColumnNameRow;
+        private final boolean showingColumnTypeRow;
+
+        public HeaderRows(boolean showingTableNameRow, boolean showingColumnNameRow, boolean showingColumnTypeRow)
+        {
+            this.showingTableNameRow = showingTableNameRow;
+            this.showingColumnNameRow = showingColumnNameRow;
+            this.showingColumnTypeRow = showingColumnTypeRow;
+        }
+    }
+
     // A destination overlay corresponding exactly to the table position and original size
     @OnThread(Tag.FXPlatform)
     private class MoveDestinationFree extends MoveDestination
@@ -747,5 +641,167 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         if (tableHeaderItem != null)
             tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
         return new Pair<>(ListenerOutcome.KEEP, null);
+    }
+
+    private class ColumnNameItem extends FloatingItem<Pane>
+    {
+        private final int columnIndex;
+        private final ColumnDetails column;
+        private @Nullable
+        final FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions;
+        private double containerTranslateY;
+        // minTranslateY is zero; we can't scroll above our current position.
+        private double maxTranslateY;
+
+        public ColumnNameItem(int columnIndex, ColumnDetails column, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
+        {
+            super(ViewOrder.FLOATING);
+            this.columnIndex = columnIndex;
+            this.column = column;
+            this.columnActions = columnActions;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private CellPosition getFloatingPosition()
+        {
+            return new CellPosition(getPosition().rowIndex + CellPosition.row(headerRows.showingTableNameRow ? 1 : 0), getPosition().columnIndex + CellPosition.col(columnIndex));
+        }
+
+        @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        {
+            return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        {
+            CellPosition pos = getFloatingPosition();
+            double x = visibleBounds.getXCoord(pos.columnIndex);
+            double y = visibleBounds.getYCoord(pos.rowIndex);
+            double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
+            double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
+
+            // The furthest down we go is to sit just above the last data row of the table:
+            maxTranslateY = visibleBounds.getYCoord(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)) - y;
+                                
+            updateTranslate(getNode());
+            
+            return Optional.of(new BoundingBox(
+                    x,
+                    y,
+                    width,
+                    height
+            ));
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public Pane makeCell(VisibleBounds visibleBounds)
+        {
+            ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
+            textField.sizeToFit(30.0, 30.0);
+            @Nullable FXPlatformConsumer<ColumnId> renameColumn = column.getRenameColumn();
+            if (renameColumn == null)
+                textField.setEditable(false);
+            else
+            {
+                @NonNull FXPlatformConsumer<ColumnId> renameColumnFinal = renameColumn;
+                textField.addOnFocusLoss(newColumnId -> {
+                    if (newColumnId != null)
+                        renameColumnFinal.consume(newColumnId);
+                });
+            }
+
+            final BorderPane borderPane = new BorderPane(textField.getNode());
+            borderPane.getStyleClass().add("table-display-column-title");
+            BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
+            BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
+            FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
+                for (CellStyle style : CellStyle.values())
+                {
+                    style.applyStyle(borderPane, cellStyles.contains(style));
+                }
+            });
+
+            ContextMenu contextMenu = new ContextMenu();
+            if (columnActions != null)
+                contextMenu.getItems().setAll(Utility.mapList(columnActions.apply(column.getColumnId()), c -> c.makeMenuItem()));
+            if (contextMenu.getItems().isEmpty())
+            {
+                MenuItem menuItem = new MenuItem("No operations");
+                menuItem.setDisable(true);
+                contextMenu.getItems().setAll(menuItem);
+            }
+            borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
+            textField.setContextMenu(contextMenu);
+            
+            return borderPane;
+        }
+
+        @Override
+        public void adjustForContainerTranslation(Pane node, Pair<DoubleExpression, DoubleExpression> translateXY)
+        {
+            FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
+                containerTranslateY = ty.doubleValue();
+                updateTranslate(node);
+            });
+        }
+
+        @OnThread(Tag.FX)
+        private void updateTranslate(@Nullable Pane borderPane)
+        {
+            if (borderPane != null)
+            {
+                // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
+                borderPane.setTranslateY(Utility.clampIncl(0.0, - (borderPane.getLayoutY() + containerTranslateY), maxTranslateY));
+            }
+        }
+    }
+
+    private class ColumnTypeItem extends FloatingItem<Label>
+    {
+        private final int columnIndex;
+        private final ColumnDetails column;
+
+        public ColumnTypeItem(int columnIndex, ColumnDetails column)
+        {
+            super(ViewOrder.STANDARD_CELLS);
+            this.columnIndex = columnIndex;
+            this.column = column;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private CellPosition getFloatingPosition()
+        {
+            return new CellPosition(getPosition().rowIndex + CellPosition.row((headerRows.showingTableNameRow ? 1 : 0) + (headerRows.showingColumnNameRow ? 1 : 0)), getPosition().columnIndex + CellPosition.col(columnIndex));
+        }
+
+        @Override
+        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+        {
+            return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
+        }
+
+        @Override
+        public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+        {
+            CellPosition pos = getFloatingPosition();
+            double x = visibleBounds.getXCoord(pos.columnIndex);
+            double y = visibleBounds.getYCoord(pos.rowIndex);
+            double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
+            double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
+
+            return Optional.of(new BoundingBox(x, y, width, height));
+        }
+
+        @Override
+        public Label makeCell(VisibleBounds visibleBounds)
+        {
+            Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
+            typeLabel.getStyleClass().add("table-display-column-title");
+            return typeLabel;
+        }
     }
 }

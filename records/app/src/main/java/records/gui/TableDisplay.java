@@ -9,7 +9,6 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleExpression;
-import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -69,24 +68,18 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
-import records.gui.DataCellSupplier.CellStyle;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
-import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
-import records.gui.grid.RectangularTableCellSelection;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
-import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.ColumnDetails;
-import records.gui.stf.EditorKitSimpleLabel;
-import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
@@ -118,7 +111,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -228,7 +220,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
-    private CellPosition getDataPosition(@UnknownInitialization(GridArea.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    private CellPosition getDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this, @TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
     {
         return getPosition().offsetByRowCols(getDataDisplayTopLeftIncl().rowIndex + rowIndex, getDataDisplayTopLeftIncl().columnIndex + columnIndex);
     }
@@ -319,7 +311,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private int internal_getCurrentKnownRows(@UnknownInitialization(DataDisplay.class) TableDisplay this, Table table)
     {
-        return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : HEADER_ROWS) + (table.getOperations().appendRows != null ? 1 : 0);
+        return currentKnownRows + (displayColumns == null || displayColumns.isEmpty() ? 0 : getHeaderRowCount()) + (table.getOperations().appendRows != null ? 1 : 0);
     }
 
     private int internal_getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
@@ -352,9 +344,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         else
         {
             @SuppressWarnings("units")
-            @TableDataRowIndex int firstRowIncl = Math.max(0, bounds.topLeftIncl.rowIndex - (getPosition().rowIndex + HEADER_ROWS));
+            @TableDataRowIndex int firstRowIncl = Math.max(0, bounds.topLeftIncl.rowIndex - (getPosition().rowIndex + getHeaderRowCount()));
             @SuppressWarnings("units")
-            @TableDataRowIndex int lastRowIncl = Math.min(getBottomRightIncl().rowIndex, bounds.bottomRightIncl.rowIndex) - (getPosition().rowIndex + HEADER_ROWS);
+            @TableDataRowIndex int lastRowIncl = Math.min(getBottomRightIncl().rowIndex, bounds.bottomRightIncl.rowIndex) - (getPosition().rowIndex + getHeaderRowCount());
             calcRowRange = () -> new RowRange(firstRowIncl, lastRowIncl);
         }
         
@@ -1274,7 +1266,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 containerFinal.applyCss();
                 double x = 20 + visibleBounds.getXCoord(getPosition().columnIndex);
                 double endX = -20 + visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex);
-                double y = visibleBounds.getYCoord(getPosition().rowIndex + CellPosition.row(HEADER_ROWS));
+                double y = visibleBounds.getYCoord(getPosition().rowIndex + CellPosition.row(getHeaderRowCount()));
                 double width = endX - x;
                 double height = containerFinal.prefHeight(width);
                 return Optional.of(new BoundingBox(x, y, width, height));

@@ -44,28 +44,23 @@ import org.checkerframework.checker.units.qual.UnitsBottom;
 import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.Table.Display;
-import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier;
-import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
-import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
-import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ScrollGroup.ScrollLock;
-import records.gui.stf.StructuredTextField;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
@@ -74,7 +69,6 @@ import records.importers.Choices;
 import records.importers.Format;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.ImportInfo;
-import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -83,6 +77,7 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -92,7 +87,6 @@ import utility.gui.LabelledGrid.Row;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -410,7 +404,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         @OnThread(Tag.FXPlatform)
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
         {
-            super(new TableId(suggestedName), destColumnHeaderSupplier);
+            super(new TableId(suggestedName), destColumnHeaderSupplier, true, true);
             setPosition(CellPosition.ORIGIN);
             this.destRecordSet = destRecordSet;
         }
@@ -471,22 +465,22 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         public static final double INSET = 5;
         private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
         private final RectangleOverlayItem selectionRectangle;
-        private RectangleBounds curBounds;
+        private RectangleBounds curSelectionBounds;
         private BoundingBox curBoundingBox;
         private final Pane mousePane;
 
         @OnThread(Tag.FXPlatform)
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, SimpleObjectProperty<@Nullable SourceInfo> srcInfo)
         {
-            super(new TableId(suggestedName), srcColumnHeaderSupplier);
-            setPosition(CellPosition.ORIGIN);
+            super(new TableId(suggestedName), srcColumnHeaderSupplier, true, false);
+            setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 0));
             this.mousePane = new Pane();
             this.srcInfo = srcInfo;
             FXUtility.addChangeListenerPlatform(srcInfo, s -> {
                 if (s != null)
-                    curBounds = new RectangleBounds(CellPosition.ORIGIN,CellPosition.ORIGIN.offsetByRowCols(s.numRows, s.srcColumns.size()));
+                    curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0),getPosition().offsetByRowCols(s.numRows + 1, s.srcColumns.size()));
             });
-            this.curBounds = new RectangleBounds(getPosition(), getBottomRightIncl());
+            this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getBottomRightIncl());
             // Will be set right at first layout:
             this.curBoundingBox = new BoundingBox(0, 0, 0, 0);
             this.selectionRectangle = new RectangleOverlayItem(ViewOrder.TABLE_BORDER) {
@@ -495,16 +489,16 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 @Override
                 protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
                 {
-                    double x = visibleBounds.getXCoord(FXUtility.mouse(SrcDataDisplay.this).curBounds.topLeftIncl.columnIndex);
-                    double y = visibleBounds.getYCoord(FXUtility.mouse(SrcDataDisplay.this).curBounds.topLeftIncl.rowIndex);
+                    double x = visibleBounds.getXCoord(FXUtility.mouse(SrcDataDisplay.this).curSelectionBounds.topLeftIncl.columnIndex);
+                    double y = visibleBounds.getYCoord(FXUtility.mouse(SrcDataDisplay.this).curSelectionBounds.topLeftIncl.rowIndex);
                     curBoundingBox = new BoundingBox(
                             x,
                             y,
-                            visibleBounds.getXCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curBounds.bottomRightIncl.columnIndex) - x,
-                            visibleBounds.getYCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curBounds.bottomRightIncl.rowIndex) - y
+                            visibleBounds.getXCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curSelectionBounds.bottomRightIncl.columnIndex) - x,
+                            visibleBounds.getYCoordAfter(FXUtility.mouse(SrcDataDisplay.this).curSelectionBounds.bottomRightIncl.rowIndex) - y
                     );
                         
-                    return Optional.of(Either.right(curBounds));
+                    return Optional.of(Either.right(curSelectionBounds));
                 }
 
                 @Override
@@ -525,10 +519,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
-                    @AbsRowIndex int newTop = curBounds.topLeftIncl.rowIndex;
-                    @AbsRowIndex int newBottom = curBounds.bottomRightIncl.rowIndex;
-                    @AbsColIndex int newLeft = curBounds.topLeftIncl.columnIndex;
-                    @AbsColIndex int newRight = curBounds.bottomRightIncl.columnIndex;
+                    @AbsRowIndex int newTop = curSelectionBounds.topLeftIncl.rowIndex;
+                    @AbsRowIndex int newBottom = curSelectionBounds.bottomRightIncl.rowIndex;
+                    @AbsColIndex int newLeft = curSelectionBounds.topLeftIncl.columnIndex;
+                    @AbsColIndex int newRight = curSelectionBounds.bottomRightIncl.columnIndex;
                     boolean resizingTop = c == Cursor.NW_RESIZE || c == Cursor.N_RESIZE || c == Cursor.NE_RESIZE;
                     boolean resizingBottom = c == Cursor.SW_RESIZE || c == Cursor.S_RESIZE || c == Cursor.SE_RESIZE;
                     boolean resizingLeft = c == Cursor.NW_RESIZE || c == Cursor.W_RESIZE || c == Cursor.SW_RESIZE;
@@ -547,7 +541,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                             else if (resizingRight)
                                 newRight = pos.columnIndex - CellPosition.col(1);
                         }
-                        curBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
+                        // Restrict to valid bounds:
+                        newTop = Utility.maxRow(CellPosition.row(1), newTop);
+                        newBottom = Utility.maxRow(newTop, newBottom);
+                        newRight = Utility.maxCol(newLeft, newRight);
+                        
+                        curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
                         withParent_(p -> p.positionOrAreaChanged());
                     }
                 });

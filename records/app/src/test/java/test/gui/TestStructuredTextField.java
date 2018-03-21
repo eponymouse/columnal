@@ -131,7 +131,7 @@ public class TestStructuredTextField extends ApplicationTest
             @Override
             protected CellPosition recalculateBottomRightIncl()
             {
-                return getPosition().offsetByRowCols(HEADER_ROWS, 0);
+                return getPosition().offsetByRowCols(getHeaderRowCount(), 0);
             }
 
             @Override
