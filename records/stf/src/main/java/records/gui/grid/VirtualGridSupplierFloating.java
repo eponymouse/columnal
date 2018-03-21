@@ -44,7 +44,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
     
     @Override
-    void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+    protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
         toRemove.forEach(r -> containerChildren.remove(r));
         toRemove.clear();

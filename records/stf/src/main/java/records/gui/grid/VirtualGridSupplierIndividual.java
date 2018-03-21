@@ -147,7 +147,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                 else
                 {
                     cell.styleUpdater.listenTo(gridForItem.getSecond().styleForAllCells());
-                    if (cell.originator != gridForItem 
+                    if (cell.originator.getFirst() != gridForItem.getFirst() 
                         || !cell.gridAreaCellPosition.equals(gridForItemResult.get().getSecond())
                         || !gridForItem.getSecond().checkCellUpToDate(cell.gridAreaCellPosition, cell.node))
                     {

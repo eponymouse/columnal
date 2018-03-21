@@ -13,10 +13,13 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.spreadsheet.Grid;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
@@ -42,6 +45,8 @@ import static org.junit.Assert.assertTrue;
 
 public class TestVirtualGridLayout extends ApplicationTest
 {
+    public static final int WINDOW_WIDTH = 810;
+    public static final int WINDOW_HEIGHT = 600;
     @SuppressWarnings("nullness")
     private VirtualGrid virtualGrid;
     @SuppressWarnings("nullness")
@@ -55,8 +60,8 @@ public class TestVirtualGridLayout extends ApplicationTest
         virtualGrid = new VirtualGrid(null, 0, 0);
         virtualGrid.addNodeSupplier(dummySupplier);
         stage.setScene(new Scene(new BorderPane(virtualGrid.getNode())));
-        stage.setWidth(800);
-        stage.setHeight(600);
+        stage.setWidth(WINDOW_WIDTH);
+        stage.setHeight(WINDOW_HEIGHT);
         stage.show();
         TestUtil.sleep(500);
     }
@@ -160,12 +165,70 @@ public class TestVirtualGridLayout extends ApplicationTest
             virtualGrid.getScrollGroup().requestScrollBy(-1000.0, -1000.0);
             return simpleGridArea.fetches.entrySet().stream().mapToInt(e -> e.getCount()).max().orElse(0);
         }));
-        // Scrolling back should still not re-fetch:
+        // Scrolling back should still not re-fetch any -- items should either have been fetched during first
+        // scroll, or during second, but not both (because they should just stay fetched):
         assertEquals(1, (long)TestUtil.<Integer>fx(() -> {
             virtualGrid.getScrollGroup().requestScrollBy(1000.0, 1000.0);
             System.err.println(simpleGridArea.fetches.entrySet().stream().filter(e -> e.getCount() > 1).map(e -> e.toString()).collect(Collectors.joining("\n")));
             return simpleGridArea.fetches.entrySet().stream().mapToInt(e -> e.getCount()).max().orElse(0);
         }));
+    }
+    
+    @Test
+    public void testGridLines()
+    {
+        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        VirtualGridLineSupplier gridLineSupplier = new VirtualGridLineSupplier();
+        TestUtil.fx_(() -> {
+            virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
+            virtualGrid.addNodeSupplier(gridLineSupplier);
+        });
+        
+        // Scroll slowly sideways, and check that the lines are always valid:
+        double curScrollOffset = 0;
+        for (int i = 0; i < 100; i++)
+        {
+            int expectedLines = (int)Math.ceil(WINDOW_WIDTH / 100.0);
+            final int SCROLL_AMOUNT = 29;
+            
+            TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(-SCROLL_AMOUNT, 0.0));
+            curScrollOffset += SCROLL_AMOUNT;
+            // Don't let them all turn into one big smooth scroll:
+            if (i % 20 == 0)
+                TestUtil.sleep(500);
+
+            Collection<Line> columnDividers = TestUtil.fx(() -> gridLineSupplier._test_getColumnDividers());
+            MatcherAssert.assertThat(columnDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
+            for (Line columnDivider : columnDividers)
+            {
+                assertEquals(0.0, (columnDivider.getLayoutX() + 0.5 + curScrollOffset) % 100, 0.01);
+            }
+            // Should all be different X:
+            assertEquals(columnDividers.size(), columnDividers.stream().mapToDouble(l -> l.getLayoutX()).distinct().count());
+        }
+
+        // Same for Y:
+        curScrollOffset = 0;
+        for (int i = 0; i < 100; i++)
+        {
+            int expectedLines = (int)Math.ceil(WINDOW_HEIGHT / 24.0);
+            final int SCROLL_AMOUNT = 7;
+
+            TestUtil.fx_(() -> virtualGrid.getScrollGroup().requestScrollBy(0.0, -SCROLL_AMOUNT));
+            curScrollOffset += SCROLL_AMOUNT;
+            // Don't let them all turn into one big smooth scroll:
+            if (i % 20 == 0)
+                TestUtil.sleep(500);
+
+            Collection<Line> rowDividers = TestUtil.fx(() -> gridLineSupplier._test_getRowDividers());
+            MatcherAssert.assertThat(rowDividers.size(), Matchers.greaterThanOrEqualTo(expectedLines));
+            for (Line rowDivider : rowDividers)
+            {
+                assertEquals(0.0, (rowDivider.getLayoutY() + 0.5 + curScrollOffset) % 24, 0.01);
+            }
+            // Should all be different X:
+            assertEquals(rowDividers.size(), rowDividers.stream().mapToDouble(l -> l.getLayoutY()).distinct().count());
+        }
     }
     
     private static class DummySupplier extends VirtualGridSupplier<Label>
@@ -218,6 +281,11 @@ public class TestVirtualGridLayout extends ApplicationTest
     {
         Multiset<GridAreaCellPosition> fetches = HashMultiset.create();
         
+        public SimpleGridArea()
+        {
+            setPosition(CellPosition.ORIGIN);
+        }
+        
         @Override
         protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
         {
@@ -227,7 +295,7 @@ public class TestVirtualGridLayout extends ApplicationTest
         @Override
         protected CellPosition recalculateBottomRightIncl()
         {
-            return new CellPosition(CellPosition.row(400), CellPosition.col(100));
+            return new CellPosition(CellPosition.row(400), CellPosition.col(1000));
         }
 
         @Override
@@ -243,9 +311,12 @@ public class TestVirtualGridLayout extends ApplicationTest
         }
 
         @Override
-        public GridAreaCellPosition cellAt(CellPosition cellPosition)
+        public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
         {
-            return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
+            if (cellPosition.rowIndex <= 400 && cellPosition.columnIndex <= 1000)
+                return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
+            else
+                return null;
         }
 
         @Override

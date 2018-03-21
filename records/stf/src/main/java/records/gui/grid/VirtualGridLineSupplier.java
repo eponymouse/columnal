@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -22,7 +23,7 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     private final HashMap<Integer, Line> yLinesInUse = new HashMap<>();
     
     @Override
-    void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
+    protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
         double lowestX = visibleBounds.getXCoord(visibleBounds.firstColumnIncl);
         double highestX = visibleBounds.getXCoordAfter(visibleBounds.lastColumnIncl);
@@ -44,10 +45,9 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
                 xLinesInUse.put(i, line);
             }
             // +0.5 to make line appear in the middle of the pixel:
-            line.setStartX(x + 0.5);
-            line.setEndX(x + 0.5);
-            line.setStartY(lowestY);
-            line.setEndY(highestY);
+            line.setLayoutX(x + 0.5);
+            line.setLayoutY(lowestY);
+            line.setEndY(highestY - lowestY);
             linesToKeep.add(line);
         }
 
@@ -63,10 +63,9 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
                 yLinesInUse.put(i, line);
             }
             // +0.5 to make line appear in the middle of the pixel:
-            line.setStartY(y + 0.5);
-            line.setEndY(y + 0.5);
-            line.setStartX(lowestX);
-            line.setEndX(highestX);
+            line.setLayoutY(y + 0.5);
+            line.setLayoutX(lowestX);
+            line.setEndX(highestX - lowestX);
             linesToKeep.add(line);
         }
 
@@ -94,5 +93,15 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
     protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
     {
         return null;
+    }
+
+    public Collection<Line> _test_getColumnDividers()
+    {
+        return xLinesInUse.values();
+    }
+
+    public Collection<Line> _test_getRowDividers()
+    {
+        return yLinesInUse.values();
     }
 }

@@ -119,20 +119,52 @@ public final class VirtualGrid implements ScrollBindable
     private final ArrayList<SelectionListener> selectionListeners = new ArrayList<>();
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
-
-    // The first index to render.  This is not actually necessarily the same
-    // as first really-visible, if we are currently doing some smooth scrolling,
-    // which may require rendering some items which are slightly off-screen:
+    
+    // The visible portion of VirtualGrid has two aspects.  There is the logical position,
+    // which is in theory where the top-left of the viewport currently resides.  This may not correspond
+    // to the current screen position temporarily if there is smooth scrolling going on, but it is where
+    // the top-left will be if you did a sleep for several seconds.
+    // The other aspect is the rendering bounds.  We render (render here meaning that
+    // we layout cells) a region that may extend above/below/left/right of the current visible portion
+    // of the viewport.  This is to allow the next scroll (or window resize) to be carried out without
+    // requiring a re-layout.  A layout is only performed if we reach the extents of the most recent
+    // render, or if we reach a new row in the table.
+    
+    // Outer rectangle is render extents, inner rectangle is logical extents.  If you scroll a little,
+    // just slide logical position without redoing render extents: 
+    // +-------------------------------------+  ^
+    // |Render                               |  | extraRenderYPixelsBefore
+    // |                                     |  v
+    // |     +-------------------+           |
+    // |     |Logical            |           |
+    // |     |                   |           |
+    // |     |                   |           |
+    // |     |                   |           |
+    // |     |                   |           |
+    // |     |                   |           |
+    // |     |                   |           |
+    // |     |                   |           |
+    // |     +-------------------+           |
+    // |                                     | ^
+    // |                                     | | extraRenderYPixelsAtfer
+    // +-------------------------------------+ v
+        
+    // The indexes of the top/left of the render extents:
     private @AbsColIndex int firstRenderColumnIndex = CellPosition.col(0);
     private @AbsRowIndex int firstRenderRowIndex = CellPosition.row(0);
     // Offset of first cell being rendered.  Always zero or negative:
     private double firstRenderColumnOffset = 0.0;
     private double firstRenderRowOffset = 0.0;
-    private double extraRenderXPixelsBefore = MAX_EXTRA_X_PIXELS;
+    
+    // How many pixels are currently rendered before/after logical extents.  The before amount
+    // is always a valid amount that could be rendered before, but the after amount may actually
+    // extend beyond what is currently visible.
+    // Both amounts are always positive.
+    private double extraRenderXPixelsBefore = 0;
     private double extraRenderXPixelsAfter = MAX_EXTRA_X_PIXELS;
-    // This amount is positive:
-    private double extraRenderYPixelsBefore = MAX_EXTRA_Y_PIXELS;
+    private double extraRenderYPixelsBefore = 0;
     private double extraRenderYPixelsAfter = MAX_EXTRA_Y_PIXELS;
+    
     // Where is our theoretical scroll position?   We don't use this for any rendering,
     // only for knowing where to scroll to on next scroll (because we may need to render
     // extra portions outside the logical scroll position).
@@ -163,8 +195,6 @@ public final class VirtualGrid implements ScrollBindable
     private boolean updatingSizeAndPositions = false;
     
     private final VirtualGridSupplierFloating supplierFloating = new VirtualGridSupplierFloating();
-    private double renderXOffset;
-    private double renderYOffset;
     private @Nullable GridAreaHighlight highlightedGridArea;
     private final StackPane stackPane;
     private final Pane activeOverlayPane;
@@ -427,7 +457,6 @@ public final class VirtualGrid implements ScrollBindable
     @Override
     public boolean scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
     {
-        renderXOffset = extraPixelsToShowBefore;
         // We basically do two scrolls.  One to scroll from existing logical position by the given number of pixels,
         // and store that in logical position.  Then a second to scroll from new logical position by
         // the extra number of pixels before, to get the first render.  Finally, we calculate how many
@@ -438,7 +467,7 @@ public final class VirtualGrid implements ScrollBindable
         
         for (int miniScroll = 0; miniScroll < 2; miniScroll++)
         {
-            double remainingScroll = miniScroll == 0 ? scrollBy : -extraPixelsToShowBefore;
+            double remainingScroll = miniScroll == 0 ? scrollBy : (extraPixelsToShowBefore = scrollClampX(extraPixelsToShowBefore));
 
             // Remember here how the scrolling offsets work.  If you have column 5 with content ABCDE, and you
             // have a curOffset of minus 2, then we render like this:
@@ -480,6 +509,12 @@ public final class VirtualGrid implements ScrollBindable
                         }
                         curCol -= 1;
                     }
+                    // Don't scroll beyond end:
+                    if (curCol < 0)
+                    {
+                        curCol = 0;
+                        remainingScroll = 0;
+                    }
                 }
                 else
                 {
@@ -511,8 +546,8 @@ public final class VirtualGrid implements ScrollBindable
                 logicalScrollColumnOffset = curOffset;
 
                 // Can we do the rest via a simple layout alteration?
-                if ((scrollBy >= 0 && scrollBy + extraPixelsToShowAfter < extraRenderXPixelsAfter)
-                    || (scrollBy <= 0 && scrollBy - extraPixelsToShowBefore > -extraRenderXPixelsBefore))
+                if (-this.extraRenderXPixelsBefore <= scrollBy - extraPixelsToShowBefore
+                    && scrollBy + extraPixelsToShowAfter <= this.extraRenderXPixelsAfter)
                 {
                     // Just move everything by that amount without doing a full layout:
                     for (Node node : container.getChildrenUnmodifiable())
@@ -520,16 +555,8 @@ public final class VirtualGrid implements ScrollBindable
                         node.setLayoutX(node.getLayoutX() + scrollBy);
                     }
 
-                    if (scrollBy < 0)
-                    {
-                        this.extraRenderXPixelsBefore -= -scrollBy;
-                        this.extraRenderXPixelsAfter += -scrollBy;
-                    }
-                    else
-                    {
-                        this.extraRenderXPixelsBefore += scrollBy;
-                        this.extraRenderXPixelsAfter -= scrollBy;
-                    }
+                    this.extraRenderXPixelsBefore -= scrollBy;
+                    this.extraRenderXPixelsAfter += scrollBy;
 
                     return false;
                 }
@@ -547,7 +574,8 @@ public final class VirtualGrid implements ScrollBindable
             }
         }
         
-        extraRenderXPixelsAfter = extraPixelsToShowAfter;
+        this.extraRenderXPixelsBefore = extraPixelsToShowBefore;
+        this.extraRenderXPixelsAfter = extraPixelsToShowAfter;
         
         updateHBar();
 
@@ -600,29 +628,24 @@ public final class VirtualGrid implements ScrollBindable
                         }
                     }
                 }
+
+                // Can be small positive number due to floating point error, so just mask that:
+                offset = Math.min(0.0, offset);
             }
         }
 
-        if ((scrollBy >= 0 && scrollBy + extraPixelsToShowAfter < extraRenderYPixelsAfter)
-            || (scrollBy <= 0 && scrollBy - extraPixelsToShowBefore > -extraRenderYPixelsBefore))
+        if (-this.extraRenderYPixelsBefore <= scrollBy - extraPixelsToShowBefore
+            && scrollBy + extraPixelsToShowAfter <= this.extraRenderYPixelsAfter)
         {
             // Just move everything by that amount without doing a full layout:
             for (Node node : container.getChildrenUnmodifiable())
             {
                 node.setLayoutY(node.getLayoutY() + scrollBy);
             }
-            
-            if (scrollBy < 0)
-            {
-                this.extraRenderYPixelsBefore -= -scrollBy;
-                this.extraRenderYPixelsAfter += -scrollBy;
-            }
-            else
-            {
-                this.extraRenderYPixelsBefore += scrollBy;
-                this.extraRenderYPixelsAfter -= scrollBy;
-            }
 
+            this.extraRenderYPixelsBefore -= scrollBy;
+            this.extraRenderYPixelsAfter += scrollBy;
+            
             ScrollResult logicalPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollBy);
             logicalScrollRowIndex = logicalPos.row;
             logicalScrollRowOffset = logicalPos.offset;
@@ -633,12 +656,12 @@ public final class VirtualGrid implements ScrollBindable
         extraPixelsToShowAfter = MAX_EXTRA_Y_PIXELS;
         extraPixelsToShowBefore = MAX_EXTRA_Y_PIXELS;
         
-        renderYOffset = extraPixelsToShowBefore;
         ScrollResult logicalPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollBy);
         int oldRowIndex = logicalScrollRowIndex;
         logicalScrollRowIndex = logicalPos.row;
         logicalScrollRowOffset = logicalPos.offset;
-        ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollClampY(-extraPixelsToShowBefore));
+        extraPixelsToShowBefore = scrollClampY(extraPixelsToShowBefore);
+        ScrollResult renderPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, extraPixelsToShowBefore);
         firstRenderRowIndex = renderPos.row;
         firstRenderRowOffset = renderPos.offset;
         this.extraRenderYPixelsBefore = extraPixelsToShowBefore;
@@ -892,7 +915,8 @@ public final class VirtualGrid implements ScrollBindable
     }
     
     // List of pairs
-    // Index 0 is its negative limit, index 1 is actual item
+    // Index 0 is its (negative) limit, index 1 is actual item.
+    // It should be the case that r[i][0] <= r[i][1] <= 0
     public double[][] _test_getOffsetsAndLimits()
     {
         return new double[][] {
@@ -905,6 +929,8 @@ public final class VirtualGrid implements ScrollBindable
 
     // List of pairs
     // Index 0 is actual item, index 1 is limit (excl)
+    // It should be the case that r[i][0] <= r[i][1]
+    // As an added item, r[0][0] should be <= r[2][0] and r[1][0] <= r[3][0]
     public int[][] _test_getIndexesAndLimits()
     {
         return new int[][] {
@@ -1182,11 +1208,11 @@ public final class VirtualGrid implements ScrollBindable
 
         private VisibleBounds getVisibleBoundDetails(@UnknownInitialization(Region.class) Container this)
         {
-            double x = firstRenderColumnOffset + renderXOffset;
-            double y = firstRenderRowOffset + renderYOffset;
-
-            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((-renderYOffset + getHeight() + extraRenderYPixelsAfter) / rowHeight));
+            // We are starting at firstRenderRowIndex, so already taken into account extraRenderYPixelsBefore:
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((getHeight() + extraRenderYPixelsAfter) / rowHeight));
             int newNumVisibleCols = 0;
+            // We are starting at firstRenderColumnIndex, so already taken into account extraRenderXPixelsBefore:
+            double x = firstRenderColumnOffset;
             for (int column = firstRenderColumnIndex; x < getWidth() + extraRenderXPixelsAfter && column < currentColumns.get(); column++)
             {
                 newNumVisibleCols += 1;
@@ -1203,13 +1229,13 @@ public final class VirtualGrid implements ScrollBindable
                 @Override
                 public double getXCoord(@AbsColIndex int itemIndex)
                 {
-                    return firstRenderColumnOffset + renderXOffset + (firstColumnIncl <= itemIndex ? sumColumnWidths(firstColumnIncl, itemIndex) : -sumColumnWidths(itemIndex, firstColumnIncl));
+                    return -extraRenderXPixelsBefore + firstRenderColumnOffset + (firstColumnIncl <= itemIndex ? sumColumnWidths(firstColumnIncl, itemIndex) : -sumColumnWidths(itemIndex, firstColumnIncl));
                 }
 
                 @Override
                 public double getYCoord(@AbsRowIndex int itemIndex)
                 {
-                    return firstRenderRowOffset + renderYOffset + rowHeight * (itemIndex - firstRowIncl);
+                    return -extraRenderYPixelsBefore + firstRenderRowOffset + rowHeight * (itemIndex - firstRowIncl);
                 }
 
                 @Override
@@ -1217,9 +1243,9 @@ public final class VirtualGrid implements ScrollBindable
                 public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos)
                 {
                     Point2D localCoord = container.screenToLocal(screenPos);
-                    double x = firstRenderColumnOffset + renderXOffset;
+                    double x = firstRenderColumnOffset;
                     // Math.round will find us the nearest row:
-                    @AbsRowIndex int row = CellPosition.row((int)Math.round((localCoord.getY() - (firstRenderRowOffset + renderYOffset)) / rowHeight)) + this.firstRowIncl;
+                    @AbsRowIndex int row = CellPosition.row((int)Math.round((localCoord.getY() - (firstRenderRowOffset)) / rowHeight)) + this.firstRowIncl;
                     
                     if (firstRowIncl <= row && row <= lastRowIncl)
                     {
