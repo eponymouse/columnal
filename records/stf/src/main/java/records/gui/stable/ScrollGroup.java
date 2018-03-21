@@ -91,10 +91,14 @@ public class ScrollGroup
         // TODO we need to set the scroll to right place immediately
     }
 
-    void add(ScrollGroup scrollGroup, ScrollLock scrollLock)
+    public void add(ScrollGroup scrollGroup, ScrollLock scrollLock)
     {
         dependentGroups.put(scrollGroup, scrollLock);
         scrollGroup.parent = new Pair<>(this, scrollLock);
+        if (scrollLock.includesHorizontal())
+            scrollGroup.translateXProperty.bind(translateXProperty);
+        if (scrollLock.includesVertical())
+            scrollGroup.translateYProperty.bind(translateYProperty);
         // TODO we need to set the scroll to right place immediately
     }
 

@@ -15,6 +15,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -124,7 +125,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
-        destGrid.getScrollGroup().add(srcGrid, ScrollLock.VERTICAL);
+        destGrid.getScrollGroup().add(srcGrid.getScrollGroup(), ScrollLock.VERTICAL);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
@@ -204,8 +205,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             choices.addRow(new Row(new Label("Internal error: "), null, new TextFlow(new Text(e.getLocalizedMessage()))));
         }
 
-
-        SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), destGrid.getNode());
+        // Crucial that these use the same margins:
+        StackPane.setMargin(srcGrid.getNode(), new Insets(SrcDataDisplay.INSET));
+        StackPane.setMargin(destGrid.getNode(), new Insets(SrcDataDisplay.INSET));
+        
+        SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), new StackPane(destGrid.getNode()));
         Pane content = new BorderPane(splitPane, choices, null, null, null);
         content.getStyleClass().add("guess-format-content");
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
@@ -464,6 +468,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
     private static class SrcDataDisplay extends DataDisplay
     {
+        public static final double INSET = 5;
         private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
         private final RectangleOverlayItem selectionRectangle;
         private RectangleBounds curBounds;
@@ -510,11 +515,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             };
             srcColumnHeaderSupplier.addItem(this.selectionRectangle);
             mousePane.setOnMouseMoved(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - INSET, e.getY() - INSET));
                 e.consume();
             });
             mousePane.setOnMouseReleased(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY()));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - INSET, e.getY() - INSET));
                 e.consume();
             });
             mousePane.setOnMouseDragged(e -> {
@@ -546,6 +551,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         withParent_(p -> p.positionOrAreaChanged());
                     }
                 });
+            });
+            mousePane.setOnScroll(e -> {
+                withParent_(g -> g.getScrollGroup().requestScroll(e));
+                e.consume();
             });
         }
         
