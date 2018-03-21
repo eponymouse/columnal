@@ -56,6 +56,8 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
     private VirtualGrid virtualGrid;
     @SuppressWarnings("nullness")
     private Label node;
+    @SuppressWarnings("nullness")
+    private Label topLeft;
 
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     @Override
@@ -128,6 +130,35 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
                 return null;
             }
         });
+
+        topLeft = new Label("topLeft");
+        // Add node in middle of screen when viewing top left:        
+        virtualGrid.getFloatingSupplier().addItem(new FloatingItem<Node>(ViewOrder.STANDARD_CELLS)
+        {
+            @Override
+            public Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
+            {
+                @AbsColIndex int xCell = CellPosition.col(0);
+                @AbsRowIndex int yCell = CellPosition.row(0);
+                double x = visibleBounds.getXCoord(xCell);
+                double y = visibleBounds.getYCoord(yCell);
+                double width = visibleBounds.getXCoordAfter(xCell) - x;
+                double height = visibleBounds.getYCoordAfter(yCell) - y;
+                return Optional.of(new BoundingBox(x, y, width, height));
+            }
+
+            @Override
+            public Node makeCell(VisibleBounds visibleBounds)
+            {
+                return topLeft;
+            }
+
+            @Override
+            public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
+            {
+                return null;
+            }
+        });
     }
 
     @OnThread(Tag.Any)
@@ -152,11 +183,11 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
         @Override
         public ScrollAmounts generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
-            int length = 6;
+            int length = 10;
             double[] amounts = new double[length]; 
             for (int i = 0; i < length; i++)
             {
-                amounts[i] = sourceOfRandomness.nextInt(10) == 0 ? 0.0 : sourceOfRandomness.nextDouble(-600.0, 600.0);
+                amounts[i] = sourceOfRandomness.nextInt(10) == 0 ? 0.0 : sourceOfRandomness.nextDouble(-1200.0, 1200.0);
             }
             return new ScrollAmounts(amounts);
         }
@@ -179,6 +210,20 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
             });
             assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.01);
             checkOffsetsNegative();
+            checkAtLeft();
+
+            // Now scroll away and then exactly back:
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(-Math.abs(amount), 0.0);
+            });
+            assertEquals(Math.abs(amount), (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.1);
+            checkOffsetsNegative();
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(Math.abs(amount), 0.0);
+            });
+            assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollXPos()), 0.01);
+            checkOffsetsNegative();
+            checkAtLeft();
         }
 
         for (double amount : scrollAmounts.amounts)
@@ -193,6 +238,7 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
             });
             assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.01);
             checkOffsetsNegative();
+            checkAtTop();
 
 
             // Now scroll away and then exactly back:
@@ -200,10 +246,13 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
                 virtualGrid.getScrollGroup().requestScrollBy(0.0, -Math.abs(amount));
             });
             assertEquals(Math.abs(amount), (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.1);
+            checkOffsetsNegative();
             TestUtil.fx_(() -> {
                 virtualGrid.getScrollGroup().requestScrollBy(0.0, Math.abs(amount));
             });
             assertEquals(0.0, (double)TestUtil.<Double>fx(() -> virtualGrid._test_getScrollYPos()), 0.01);
+            checkAtTop();
+            checkOffsetsNegative();
         }
         
         // Now we need to go to the very bottom/right and try in the other direction:
@@ -243,7 +292,21 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
             checkOffsetsNegative();
         }
     }
-    
+
+    private void checkAtTop()
+    {
+        assertEquals(0, (long)TestUtil.<Integer>fx(() -> virtualGrid.getVisibleBounds().firstRowIncl));
+        assertEquals(0, TestUtil.fx(() -> virtualGrid.getVisibleBounds().getYCoord(CellPosition.row(0))), 0.01);
+        assertEquals(0, TestUtil.fx(() -> topLeft.getLayoutY()), 0.01);
+    }
+
+    private void checkAtLeft()
+    {
+        assertEquals(0, (long)TestUtil.<Integer>fx(() -> virtualGrid.getVisibleBounds().firstColumnIncl));
+        assertEquals(0, TestUtil.fx(() -> virtualGrid.getVisibleBounds().getXCoord(CellPosition.col(0))), 0.01);
+        assertEquals(0, TestUtil.fx(() -> topLeft.getLayoutX()), 0.01);
+    }
+
     @SuppressWarnings("deprecation")
     @Property(trials = 5)
     public void scrollXYBy(@From(GenScrollAmounts.class) ScrollAmounts scrollX, @From(GenScrollAmounts.class) ScrollAmounts scrollY)
@@ -298,19 +361,21 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
     @SuppressWarnings("deprecation")
     private void checkOffsetsNegative()
     {
-        double[][] offsetsAndLimits = virtualGrid._test_getOffsetsAndLimits();
+        double[][] offsetsAndLimits = TestUtil.fx(() -> virtualGrid._test_getOffsetsAndLimits());
         for (int i = 0; i < offsetsAndLimits.length; i++)
         {
-            assertThat("Offset index " + i, offsetsAndLimits[i][1], Matchers.greaterThanOrEqualTo(offsetsAndLimits[i][0]));
-            assertThat("Offset index " + i, offsetsAndLimits[i][1], Matchers.lessThanOrEqualTo(0.0));
+            assertThat("Offset item " + i, offsetsAndLimits[i][1], Matchers.greaterThanOrEqualTo(offsetsAndLimits[i][0]));
+            assertThat("Offset item " + i, offsetsAndLimits[i][1], Matchers.lessThanOrEqualTo(0.0));
         }
 
-        int[][] indexesAndLimits = virtualGrid._test_getIndexesAndLimits();
+        int[][] indexesAndLimits = TestUtil.fx(() -> virtualGrid._test_getIndexesAndLimits());
         for (int i = 0; i < indexesAndLimits.length; i++)
         {
-            assertThat("Index index " + i, indexesAndLimits[i][0], Matchers.greaterThanOrEqualTo(0));
-            assertThat("Index index " + i, indexesAndLimits[i][0], Matchers.lessThan(indexesAndLimits[i][1]));            
+            assertThat("Index item " + i, indexesAndLimits[i][0], Matchers.greaterThanOrEqualTo(0));
+            assertThat("Index item " + i, indexesAndLimits[i][0], Matchers.lessThan(indexesAndLimits[i][1]));            
         }
+        assertThat("Render col before logical col", indexesAndLimits[0][0], Matchers.lessThanOrEqualTo(indexesAndLimits[2][0]));
+        assertThat("Render row before logical row", indexesAndLimits[1][0], Matchers.lessThanOrEqualTo(indexesAndLimits[3][0]));
     }
 
     @Test
