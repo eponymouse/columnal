@@ -120,7 +120,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
-        destGrid.getScrollGroup().add(srcGrid.getScrollGroup(), ScrollLock.VERTICAL);
+        destGrid.getScrollGroup().add(srcGrid.getScrollGroup(), ScrollLock.BOTH);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo, destData);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
