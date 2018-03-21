@@ -101,7 +101,8 @@ import java.util.stream.Collectors;
 @OnThread(Tag.FXPlatform)
 public final class VirtualGrid implements ScrollBindable
 {
-    private static final double MAX_EXTRA_Y_PIXELS = 600;
+    private static final double MAX_EXTRA_X_PIXELS = 800;
+    private static final double MAX_EXTRA_Y_PIXELS = 800;
     // How many columns beyond last table to show in the grid
     // (logical, not to do with rendering/scrolling)
     private final int columnsToRight;
@@ -127,7 +128,8 @@ public final class VirtualGrid implements ScrollBindable
     // Offset of first cell being rendered.  Always zero or negative:
     private double firstRenderColumnOffset = 0.0;
     private double firstRenderRowOffset = 0.0;
-    private double extraRenderXPixels = 0.0; // TODO
+    private double extraRenderXPixelsBefore = MAX_EXTRA_X_PIXELS;
+    private double extraRenderXPixelsAfter = MAX_EXTRA_X_PIXELS;
     // This amount is positive:
     private double extraRenderYPixelsBefore = MAX_EXTRA_Y_PIXELS;
     private double extraRenderYPixelsAfter = MAX_EXTRA_Y_PIXELS;
@@ -423,7 +425,7 @@ public final class VirtualGrid implements ScrollBindable
     }
 
     @Override
-    public void scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
+    public boolean scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
     {
         renderXOffset = extraPixelsToShowBefore;
         // We basically do two scrolls.  One to scroll from existing logical position by the given number of pixels,
@@ -507,6 +509,36 @@ public final class VirtualGrid implements ScrollBindable
             {
                 logicalScrollColumnIndex = CellPosition.col(curCol);
                 logicalScrollColumnOffset = curOffset;
+
+                // Can we do the rest via a simple layout alteration?
+                if ((scrollBy >= 0 && scrollBy + extraPixelsToShowAfter < extraRenderXPixelsAfter)
+                    || (scrollBy <= 0 && scrollBy - extraPixelsToShowBefore > -extraRenderXPixelsBefore))
+                {
+                    // Just move everything by that amount without doing a full layout:
+                    for (Node node : container.getChildrenUnmodifiable())
+                    {
+                        node.setLayoutX(node.getLayoutX() + scrollBy);
+                    }
+
+                    if (scrollBy < 0)
+                    {
+                        this.extraRenderXPixelsBefore -= -scrollBy;
+                        this.extraRenderXPixelsAfter += -scrollBy;
+                    }
+                    else
+                    {
+                        this.extraRenderXPixelsBefore += scrollBy;
+                        this.extraRenderXPixelsAfter -= scrollBy;
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    // We didn't have enough extra pixels or we are laying out anyway, so go up to max:
+                    extraPixelsToShowAfter = MAX_EXTRA_X_PIXELS;
+                    extraPixelsToShowBefore = MAX_EXTRA_X_PIXELS;
+                }
             }
             else
             {
@@ -515,18 +547,18 @@ public final class VirtualGrid implements ScrollBindable
             }
         }
         
-        extraRenderXPixels = extraPixelsToShowAfter;
+        extraRenderXPixelsAfter = extraPixelsToShowAfter;
         
         updateHBar();
 
         boolean atLeft = firstRenderColumnIndex == 0 && firstRenderColumnOffset >= -5;
         //FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
 
-        container.redoLayout();
+        return true;
     }
     
     @Override
-    public void scrollYLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
+    public boolean scrollYLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter)
     {
         // First scroll to the right logical position:
         class ScrollResult
@@ -595,7 +627,7 @@ public final class VirtualGrid implements ScrollBindable
             logicalScrollRowIndex = logicalPos.row;
             logicalScrollRowOffset = logicalPos.offset;
             
-            return;
+            return false;
         }
         // We didn't have enough extra pixels or we are laying out anyway, so go up to max:
         extraPixelsToShowAfter = MAX_EXTRA_Y_PIXELS;
@@ -614,17 +646,24 @@ public final class VirtualGrid implements ScrollBindable
         
         updateVBar();
         
-        // May need to adjust our visible row count if we scrolled down:
-        if (extraPixelsToShowAfter > 0 || logicalScrollRowIndex > oldRowIndex)
+        // May need to adjust our visible row count if a new row is potentially visible:
+        if (logicalScrollRowIndex + ((container.getHeight() + extraRenderYPixelsAfter) / rowHeight) > currentKnownRows.get())
         {
             // This will call redoLayout so we won't need to call it again:
             updateSizeAndPositions();
+            return false;
         }
         else
         {
             // No need to update rows, but do need to redo layout:
-            container.redoLayout();
+            return true;
         }
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void redoLayoutAfterScroll()
+    {
+        container.redoLayout();
     }
 
     @Override
@@ -1148,7 +1187,7 @@ public final class VirtualGrid implements ScrollBindable
 
             int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((-renderYOffset + getHeight() + extraRenderYPixelsAfter) / rowHeight));
             int newNumVisibleCols = 0;
-            for (int column = firstRenderColumnIndex; x < getWidth() + extraRenderXPixels && column < currentColumns.get(); column++)
+            for (int column = firstRenderColumnIndex; x < getWidth() + extraRenderXPixelsAfter && column < currentColumns.get(); column++)
             {
                 newNumVisibleCols += 1;
                 x += getColumnWidth(column);

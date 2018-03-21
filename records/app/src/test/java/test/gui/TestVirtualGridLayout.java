@@ -1,7 +1,10 @@
 package test.gui;
 
 import annotation.units.GridAreaRowIndex;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multiset;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
@@ -32,8 +35,10 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestVirtualGridLayout extends ApplicationTest
 {
@@ -93,33 +98,74 @@ public class TestVirtualGridLayout extends ApplicationTest
             virtualGrid.addNodeSupplier(simpleCellSupplier);
             virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
         });
-        dummySupplier.layoutCount = 0;
-        // For small scroll, shouldn't need any new layout
-        // as should just be handled by translation
-        TestUtil.fx_(() -> {
-            virtualGrid.getScrollGroup().requestScrollBy(0, -1.0);
-            virtualGrid.getScrollGroup().requestScrollBy(0, 1.0);
-        });
-        // Wait for smooth scrolling to finish:
-        TestUtil.sleep(500);
-        assertEquals(0, dummySupplier.layoutCount);
-        // True even for medium scroll:
-        TestUtil.fx_(() -> {
-            virtualGrid.getScrollGroup().requestScrollBy(0, -100.0);
-            virtualGrid.getScrollGroup().requestScrollBy(0, 100.0);
-        });
-        // Wait for smooth scrolling to finish:
-        TestUtil.sleep(500);
-        assertEquals(0, dummySupplier.layoutCount);
+        for (int scrollType = 0; scrollType < 3; scrollType++)
+        {
+            // First loop: Y, second: X, third: X & Y
+            double xf = scrollType >= 1 ? 1 : 0;
+            double yf = scrollType != 1 ? 1 : 0;
+            dummySupplier.layoutCount = 0;
+            // For small scroll, shouldn't need any new layout
+            // as should just be handled by translation
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(-1.0 * xf, -1.0 * yf);
+                virtualGrid.getScrollGroup().requestScrollBy(1.0 * xf, 1.0 * yf);
+            });
+            // Wait for smooth scrolling to finish:
+            TestUtil.sleep(500);
+            assertEquals("ST " + scrollType, 0, dummySupplier.layoutCount);
+            // True even for medium scroll:
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(-100.0 * xf, -100.0 * yf);
+                virtualGrid.getScrollGroup().requestScrollBy(100.0 * xf, 100.0 * yf);
+            });
+            // Wait for smooth scrolling to finish:
+            TestUtil.sleep(500);
+            assertEquals("ST " + scrollType, 0, dummySupplier.layoutCount);
 
-        // However, a large scroll will require a layout -- but should only need two (one up, one down):
+            // However, a large scroll will require a layout -- but should only need two (one up, one down):
+            TestUtil.fx_(() -> {
+                virtualGrid.getScrollGroup().requestScrollBy(-1000.0 * xf, -1000.0 * yf);
+                virtualGrid.getScrollGroup().requestScrollBy(1000.0 * xf, 1000.0 * yf);
+            });
+            // Wait for smooth scrolling to finish:
+            TestUtil.sleep(500);
+            // This should be 2 scrolls even for X and Y together:
+            assertEquals("ST " + scrollType, 2, dummySupplier.layoutCount);
+        }
+        
+        //#error TODO checking that cells are not loaded/reallocated more than needed.
+    }
+    
+    @Test
+    public void testCellAllocation()
+    {
+        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        assertTrue(simpleGridArea.fetches.isEmpty());
         TestUtil.fx_(() -> {
-            virtualGrid.getScrollGroup().requestScrollBy(0, -1000.0);
-            virtualGrid.getScrollGroup().requestScrollBy(0, 1000.0);
+            SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
+            virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
+            simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
+            virtualGrid.addNodeSupplier(simpleCellSupplier);
+            virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
         });
-        // Wait for smooth scrolling to finish:
-        TestUtil.sleep(500);
-        assertEquals(2, dummySupplier.layoutCount);
+        // Small scroll and back shouldn't fetch:
+        assertEquals(0, (long)TestUtil.<Integer>fx(() -> {
+            simpleGridArea.fetches.clear();
+            virtualGrid.getScrollGroup().requestScrollBy(-100.0, -100.0);
+            virtualGrid.getScrollGroup().requestScrollBy(100.0, 100.0);
+            return simpleGridArea.fetches.size();
+        }));
+        // Scrolling only downwards should not re-fetch any cells:
+        assertEquals(1, (long)TestUtil.<Integer>fx(() -> {
+            virtualGrid.getScrollGroup().requestScrollBy(-1000.0, -1000.0);
+            return simpleGridArea.fetches.entrySet().stream().mapToInt(e -> e.getCount()).max().orElse(0);
+        }));
+        // Scrolling back should still not re-fetch:
+        assertEquals(1, (long)TestUtil.<Integer>fx(() -> {
+            virtualGrid.getScrollGroup().requestScrollBy(1000.0, 1000.0);
+            System.err.println(simpleGridArea.fetches.entrySet().stream().filter(e -> e.getCount() > 1).map(e -> e.toString()).collect(Collectors.joining("\n")));
+            return simpleGridArea.fetches.entrySet().stream().mapToInt(e -> e.getCount()).max().orElse(0);
+        }));
     }
     
     private static class DummySupplier extends VirtualGridSupplier<Label>
@@ -170,6 +216,8 @@ public class TestVirtualGridLayout extends ApplicationTest
 
     private static class SimpleGridArea extends GridArea implements GridCellInfo<Label,String>
     {
+        Multiset<GridAreaCellPosition> fetches = HashMultiset.create();
+        
         @Override
         protected @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
         {
@@ -203,7 +251,7 @@ public class TestVirtualGridLayout extends ApplicationTest
         @Override
         public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Label> getCell)
         {
-            // TODO record number of fetches
+            fetches.add(cellPosition);
         }
 
         @Override

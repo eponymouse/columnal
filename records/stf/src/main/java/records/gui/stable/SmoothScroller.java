@@ -5,8 +5,11 @@ import javafx.animation.Interpolator;
 import javafx.beans.property.DoubleProperty;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+
+import java.util.Optional;
 
 /**
  * Smooth scrolling class.  Handles smooth scrolling on a single axis
@@ -19,9 +22,11 @@ import threadchecker.Tag;
  * the translate property towards zero, so that the scroll is animated without
  * needing to do multiple layout passes.
  * 
+ * @param <R> The type returned by the scroller (used for book-keeping such as combining multipl
+ *           calls to redo the layout into one)
  */
 @OnThread(Tag.FXPlatform)
-public class SmoothScroller
+public class SmoothScroller<@NonNull R>
 {
     // AnimationTimer is run every frame, and so lets us do smooth scrolling:
     private @MonotonicNonNull AnimationTimer scrollTimer;
@@ -42,7 +47,7 @@ public class SmoothScroller
     private final DoubleProperty translateProperty;
     private final ScrollClamp scrollClamp;
     // Reference to scrollLayoutXBy/scrollLayoutYBy, depending on axis:
-    private final Scroller scroller;
+    private final Scroller<R> scroller;
     private double MAX_SCROLL_OFFSET = 500.0;
     private Interpolator interpolator = Interpolator.EASE_BOTH;
 
@@ -52,26 +57,26 @@ public class SmoothScroller
         double clampScroll(double amount);
     }
     
-    public static interface Scroller
+    public static interface Scroller<R>
     {
         /**
          * Scrolls layout by scrollBy, but also instructs the renderer to render margins before and/or after
          * the current node for smooth scrolling purposes.  Both may be zero.
          */
-        void scrollLayoutBy(double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
+        Optional<@NonNull R> scrollLayoutBy(double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
     }
     
-    SmoothScroller(DoubleProperty translateProperty, ScrollClamp scrollClamp, Scroller scroller)
+    SmoothScroller(DoubleProperty translateProperty, ScrollClamp scrollClamp, Scroller<R> scroller)
     {
         this.translateProperty = translateProperty;
         this.scrollClamp = scrollClamp;
         this.scroller = scroller;
     }
 
-    public void smoothScroll(double delta)
+    public Optional<@NonNull R> smoothScroll(double delta)
     {
         if (delta == 0.0)
-            return;
+            return Optional.empty();
         
         if (scrollTimer == null)
         {
@@ -144,9 +149,11 @@ public class SmoothScroller
             scrollTimer.start();
         }
         //Log.debug("Scrolling by " + clamped);
+        Optional<@NonNull R> result = Optional.empty();
         if (clamped != 0.0 || this.scrollOffset != 0.0)
-            scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
+            result = scroller.scrollLayoutBy(Math.min(-this.scrollOffset, 0), clamped, Math.max(-this.scrollOffset, 0));
         translateProperty.set(this.scrollOffset);
+        return result;
     }
     
     public long _test_getScrollTimeNanos()

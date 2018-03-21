@@ -13,9 +13,13 @@ import utility.Pair;
 public interface ScrollBindable
 {
     // extra pixels values are always positive.  scrollBy can be negative or positive
-    public void scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
-    public void scrollYLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
-        
+    // Return true if you need layout doing afterwards
+    public boolean scrollXLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
+    public boolean scrollYLayoutBy(Token token, double extraPixelsToShowBefore, double scrollBy, double extraPixelsToShowAfter);
+
+    @OnThread(Tag.FXPlatform)
+    public void redoLayoutAfterScroll();
+    
     @OnThread(Tag.FXPlatform)
     public void updateClip();
 }

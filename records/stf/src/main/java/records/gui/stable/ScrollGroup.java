@@ -2,6 +2,7 @@ package records.gui.stable;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.IntegerExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -19,6 +20,8 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.IdentityHashMap;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A scroll group is for the following notion.  A grid has a scroll position, both horizontally, and vertically.
@@ -34,8 +37,8 @@ import java.util.IdentityHashMap;
 public class ScrollGroup
 {
     private @Nullable Pair<ScrollGroup, ScrollLock> parent;
-    private final SmoothScroller smoothScrollX;
-    private final SmoothScroller smoothScrollY;
+    private final SmoothScroller<ImmutableList<ScrollBindable>> smoothScrollX;
+    private final SmoothScroller<ImmutableList<ScrollBindable>> smoothScrollY;
     final DoubleProperty translateXProperty = new SimpleDoubleProperty(0.0);
     final DoubleProperty translateYProperty = new SimpleDoubleProperty(0.0);
     // All the items that depend on us -- ScrollBindable items (like individual grids or scroll bars), and other scroll groups:
@@ -45,8 +48,8 @@ public class ScrollGroup
     
     public ScrollGroup(ScrollClamp scrollClampX, ScrollClamp scrollClampY)
     {
-        smoothScrollX = new SmoothScroller(translateXProperty, scrollClampX, FXUtility.mouse(this)::scrollXBy);
-        smoothScrollY = new SmoothScroller(translateYProperty, scrollClampY, FXUtility.mouse(this)::scrollYBy);
+        smoothScrollX = new SmoothScroller<>(translateXProperty, scrollClampX, FXUtility.mouse(this)::scrollXBy);
+        smoothScrollY = new SmoothScroller<>(translateYProperty, scrollClampY, FXUtility.mouse(this)::scrollYBy);
     }
 
     public void requestScroll(ScrollEvent scrollEvent)
@@ -71,11 +74,15 @@ public class ScrollGroup
             // Do the rest ourselves, if any:
         }
         
+        Stream<ScrollBindable> changed = Stream.empty();
+        
         if (deltaX != 0.0)
-            smoothScrollX.smoothScroll(deltaX);
+            changed = Stream.concat(changed, smoothScrollX.smoothScroll(deltaX).map(l -> l.stream()).orElse(Stream.empty()));
         
         if (deltaY != 0.0)
-            smoothScrollY.smoothScroll(deltaY);
+            changed = Stream.concat(changed, smoothScrollY.smoothScroll(deltaY).map(l -> l.stream()).orElse(Stream.empty()));
+        
+        changed.distinct().forEach(s -> s.redoLayoutAfterScroll());
     }
 
     public void add(ScrollBindable scrollBindable, ScrollLock scrollLock)
@@ -91,32 +98,46 @@ public class ScrollGroup
         // TODO we need to set the scroll to right place immediately
     }
 
-    private void scrollXBy(double extraBefore, double by, double extraAfter)
+    private Optional<ImmutableList<ScrollBindable>> scrollXBy(double extraBefore, double by, double extraAfter)
     {
         Token token = new Token();
         
+        ImmutableList.Builder<ScrollBindable> changed = ImmutableList.builder();
+        
         directScrollDependents.forEach((member, lock) -> {
             if (lock.includesHorizontal())
-                member.scrollXLayoutBy(token, extraBefore, by ,extraAfter);
+            {
+                if (member.scrollXLayoutBy(token, extraBefore, by, extraAfter))
+                    changed.add(member);
+            }
         });
         dependentGroups.forEach((member, lock) -> {
             if (lock.includesHorizontal())
-                member.scrollXBy(extraBefore, by ,extraAfter);
+                member.scrollXBy(extraBefore, by, extraAfter).ifPresent(changed::addAll);
         });
+        
+        return Optional.of(changed.build()); 
     }
 
-    private void scrollYBy(double extraBefore, double by, double extraAfter)
+    private Optional<ImmutableList<ScrollBindable>> scrollYBy(double extraBefore, double by, double extraAfter)
     {
         Token token = new Token();
 
+        ImmutableList.Builder<ScrollBindable> changed = ImmutableList.builder();
+
         directScrollDependents.forEach((member, lock) -> {
             if (lock.includesVertical())
-                member.scrollYLayoutBy(token, extraBefore, by ,extraAfter);
+            {
+                if (member.scrollYLayoutBy(token, extraBefore, by, extraAfter))
+                    changed.add(member);
+            }
         });
         dependentGroups.forEach((member, lock) -> {
             if (lock.includesVertical())
-                member.scrollYBy(extraBefore, by ,extraAfter);
+                member.scrollYBy(extraBefore, by ,extraAfter).ifPresent(changed::addAll);
         });
+
+        return Optional.of(changed.build());
     }
 
     public void updateClip()
