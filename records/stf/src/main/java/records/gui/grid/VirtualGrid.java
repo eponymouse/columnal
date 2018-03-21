@@ -554,6 +554,10 @@ public final class VirtualGrid implements ScrollBindable
                     {
                         node.setLayoutX(node.getLayoutX() + scrollBy);
                     }
+                    for (Node node : activeOverlayPane.getChildren())
+                    {
+                        node.setLayoutX(node.getLayoutX() + scrollBy);
+                    }
 
                     this.extraRenderXPixelsBefore -= scrollBy;
                     this.extraRenderXPixelsAfter += scrollBy;
@@ -639,6 +643,10 @@ public final class VirtualGrid implements ScrollBindable
         {
             // Just move everything by that amount without doing a full layout:
             for (Node node : container.getChildrenUnmodifiable())
+            {
+                node.setLayoutY(node.getLayoutY() + scrollBy);
+            }
+            for (Node node : activeOverlayPane.getChildren())
             {
                 node.setLayoutY(node.getLayoutY() + scrollBy);
             }

@@ -151,8 +151,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             FloatingItem<Pane> columnNameItem = new FloatingItem<Pane>(ViewOrder.FLOATING)
             {
                 private double containerTranslateY;
-                private double y;
-                private double lastY;
+                // minTranslateY is zero; we can't scroll above our current position.
+                private double maxTranslateY;
 
                 @OnThread(Tag.FXPlatform)
                 private CellPosition getFloatingPosition()
@@ -172,63 +172,18 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 {
                     CellPosition pos = getFloatingPosition();
                     double x = visibleBounds.getXCoord(pos.columnIndex);
-                    y = visibleBounds.getYCoord(pos.rowIndex);
+                    double y = visibleBounds.getYCoord(pos.rowIndex);
                     double width = visibleBounds.getXCoordAfter(pos.columnIndex) - x;
                     double height = visibleBounds.getYCoordAfter(pos.rowIndex) - y;
 
-                    lastY = visibleBounds.getYCoord(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1));
-                    
-                    // So, y and lastY are in the VirtualGrid's coordinate space.  We know that 0 is logically the top
-                    // in the render coordinates we have been given (even if VirtualGrid happens to be rendering more
-                    // above that).
-                    // y is our theoretical placing, if there was no pinning.  lastY is the last (highest Y coordinate) Y
-                    // that we could place when we are pinned.  Therefore, our placement will always be between y and lastY.
-                    
-                    // We also need to plan for the possible translate effect which occurs when virtual grid is smooth scrolling.
-                    // The translate Y on the virtual grid will be positive when scrolling the viewport down, because everything has been drawn
-                    // in the right spot, then translated down to look like it hasn't moved yet, beforeslowly regressing to zero.
-                    // Similarly, translate Y is negative when scrolling viewport up because everything has been translated up
-                    // but the translate regresses to zero.
-                    
-                    // We need to fight this translation because by default, we'll pin to where we should be at the end of the translation,
-                    // but while the translate is non-zero, we will be in the wrong spot.  Not correct when we are not meant
-                    // to scroll while pinned.  So we set our own translate property that ideally would be the negative of
-                    // the container's translate Y to counter-act it.  The confusing thing is that we need to not permanently counter-act
-                    // it, otherwise when the smooth scrolling trips the pinned/unpinned boundary, we'll get weird behaviour.
-                    // So we set limits on the lowest and highest translate Y that we will accept.
-                    
-                    // If we are unpinned at the top, the highest translate Y is unbounded because we can scroll all the way down.
-                    // The lowest is the negation of our Y position.
-                    
-                    // If we are pinned, the lowest translate Y is the negation of our Y position.  The maximum is the
-                    // negation of the last Y.
-                    
-                    double layoutY;
-
-                    // If lastY is off the screen, we should be exactly there:
-                    if (lastY < 0)
-                    {
-                        // The pinned header must scroll up out of view:
-                        layoutY = lastY;
-                    }
-                    // If y is off the screen (but lastY is not), we should be at the top, pinned:
-                    else if (y < 0)
-                    {
-                        // Pinned within view:
-                        layoutY = 0;
-                        
-                    }
-                    // Otherwise, both y and lastY are on screen, so we should just be at Y
-                    else
-                    {
-                        layoutY = y;
-                    }
-                    
+                    // The furthest down we go is to sit just above the last data row of the table:
+                    maxTranslateY = visibleBounds.getYCoord(getDataDisplayBottomRightIncl().from(getPosition()).rowIndex - CellPosition.row(1)) - y;
+                                        
                     updateTranslate(getNode());
                     
                     return Optional.of(new BoundingBox(
                             x,
-                            layoutY,
+                            y,
                             width,
                             height
                     ));
@@ -292,38 +247,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 {
                     if (borderPane != null)
                     {
-                        if (lastY < 0)
-                        {
-                            // We should be off the screen.  But if containerTranslateY
-                            // would keep us on screen, we must act like we are pinned
-                            if (containerTranslateY > -lastY)
-                                borderPane.setTranslateY(-lastY - containerTranslateY);
-                            else
-                                borderPane.setTranslateY(0.0);
-                        }
-                        else if (y < 0)
-                        {
-                            // Pinned.  Our layoutY is zero
-                            
-                            // If our translate would make us pin to above the top position
-                            // don't let that happen and just let us be translated:
-                            if (-containerTranslateY < y)
-                                borderPane.setTranslateY(y);
-                            else if (-containerTranslateY > lastY)
-                                borderPane.setTranslateY(lastY);
-                            else
-                                borderPane.setTranslateY(-containerTranslateY);
-                        }
-                        else
-                        {
-                            // We should be scrolling around, as we are not yet pinned.
-                            // But if the containerTranslateY is less than negative y, we need
-                            // to clamp to prevent ourselves being off-screen when we should appear temporarily pinned
-                            if (containerTranslateY < -y)
-                                borderPane.setTranslateY(-y - containerTranslateY);
-                            else
-                                borderPane.setTranslateY(0.0);
-                        }
+                        // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
+                        borderPane.setTranslateY(Utility.clampIncl(0.0, - (borderPane.getLayoutY() + containerTranslateY), maxTranslateY));
                     }
                 }
             };
