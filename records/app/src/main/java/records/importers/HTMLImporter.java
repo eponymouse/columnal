@@ -1,5 +1,9 @@
 package records.importers;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
+import annotation.units.GridAreaColIndex;
+import annotation.units.GridAreaRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -18,6 +22,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -29,6 +34,7 @@ import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import records.data.*;
+import records.gui.grid.GridAreaCellPosition;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
@@ -54,7 +60,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -94,29 +102,106 @@ public class HTMLImporter implements Importer
             Element table = tables.get(tableIndex);
             // vals is a list of rows:
             final List<List<String>> vals = new ArrayList<>();
+            
+            // Maps position to pending item.  Abusing GridAreaCellPosition a little: it means table position here
+            final Map<GridAreaCellPosition, String> pendingSpanItems = new HashMap<>();
+            
+            @SuppressWarnings("units")
+            final @GridAreaRowIndex int ROW = 1;
+            @SuppressWarnings("units")
+            final @GridAreaColIndex int COL = 1;
+            
             for (Element tableBit : table.children())
             {
                 if (!tableBit.tagName().equals("tbody"))
                     continue;
 
-                for (Element row : tableBit.children())
+                Elements tableChildren = tableBit.children();
+                @SuppressWarnings("units")
+                @GridAreaRowIndex int rowIndex = 0;
+                for (Element row : tableChildren)
                 {
                     if (!row.tagName().equals("tr"))
                         continue;
                     List<String> rowVals = new ArrayList<>();
                     vals.add(rowVals);
-                    for (Element cell : row.children())
+                    Elements children = row.children();
+                    @SuppressWarnings("units")
+                    @GridAreaColIndex int columnIndex = 0;
+                    GridAreaCellPosition nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                    while (pendingSpanItems.containsKey(nextPos))
+                    {
+                        rowVals.add(pendingSpanItems.get(nextPos));
+                        columnIndex += 1 * COL;
+                        nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                    }
+                    
+                    for (Element cell : children)
                     {
                         if (!cell.tagName().equals("td") && !cell.tagName().equals("th"))
                             continue;
                         rowVals.add(cell.text());
+                        int rowSpan = 1;
+                        int colSpan = 1;
+                        if (cell.hasAttr("colspan"))
+                        {
+                            try
+                            {
+                                colSpan = Integer.valueOf(cell.attr("colspan"));
+                            }
+                            catch (NumberFormatException e)
+                            {
+                                Log.log(e);
+                                // Leave it at 1
+                            }
+                        }
+                        if (cell.hasAttr("rowspan"))
+                        {
+                            try
+                            {
+                                rowSpan = Integer.valueOf(cell.attr("rowspan"));
+                            }
+                                catch (NumberFormatException e)
+                            {
+                                Log.log(e);
+                                // Leave it at 1
+                            }
+                        }
+                        // add to current row (though it will just be removed by while loop beneath):
+                        if (colSpan > 1)
+                        {
+                            for (@GridAreaColIndex int extraCol = 1 * COL; extraCol < colSpan; extraCol += 1 * COL)
+                            {
+                                pendingSpanItems.put(new GridAreaCellPosition(rowIndex, columnIndex + extraCol), cell.text());
+                            }
+                        }
+                        // Add to future rows:
+                        if (rowSpan > 1)
+                        {
+                            for (@GridAreaRowIndex int extraRow = 1 * ROW; extraRow < rowSpan; extraRow += 1 * ROW)
+                            {
+                                for (@GridAreaColIndex int extraCol = 0 * COL; extraCol < colSpan; extraCol += 1 * COL)
+                                {
+                                    pendingSpanItems.put(new GridAreaCellPosition(rowIndex + extraRow, columnIndex + extraCol), cell.text());
+                                }
+                            }
+                        }
+
+                        nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                        while (pendingSpanItems.containsKey(nextPos))
+                        {
+                            rowVals.add(pendingSpanItems.get(nextPos));
+                            columnIndex += 1 * COL;
+                            nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                        }
                     }
+
+                    rowIndex += 1 * ROW;
                 }
             }
 
             @Initialized SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
 
-            // TODO show a dialog
             SimulationFunction<Format, EditableRecordSet> loadData = format -> {
                 return ImporterUtility.makeEditableRecordSet(mgr, vals, format);
                 // Make sure we don't keep a reference to vals:
