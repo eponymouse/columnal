@@ -13,9 +13,9 @@ import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.GuessFormat.CharsetChoice;
 import records.importers.GuessFormat.ColumnCountChoice;
-import records.importers.GuessFormat.HeaderRowChoice;
 import records.importers.GuessFormat.QuoteChoice;
 import records.importers.GuessFormat.SeparatorChoice;
+import records.importers.GuessFormat.TrimChoice;
 import records.importers.TextFormat;
 import test.TestUtil.ChoicePick;
 import utility.Utility;
@@ -84,7 +84,7 @@ public class TestFormat
     {
         ChoicePick[] picks = new ChoicePick[] {
             new ChoicePick<CharsetChoice>(CharsetChoice.class, new CharsetChoice("UTF-8")),
-            new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(fmt.headerRows)),
+            new ChoicePick<TrimChoice>(TrimChoice.class, fmt.trimChoice),
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + fmt.separator)),
             new ChoicePick<QuoteChoice>(QuoteChoice.class, new QuoteChoice(null)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(fmt.columnTypes.size()))

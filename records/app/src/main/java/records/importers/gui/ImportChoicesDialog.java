@@ -70,6 +70,7 @@ import records.importers.Choices;
 import records.importers.Format;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.GuessFormat.TrimChoice;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -192,7 +193,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         {
             Choices bestGuess = GuessFormat.findBestGuess(choicePoints);
 
-            makeGUI(mgr.getTypeManager(), choicePoints, bestGuess, Choices.FINISHED, choices, destData, formatProperty, choicesProperty);
+            makeGUI(mgr.getTypeManager(), choicePoints, bestGuess, Choices.FINISHED, choices, destData, srcDataDisplay.trimExpression(), formatProperty, choicesProperty);
         }
         catch (InternalException e)
         {
@@ -238,7 +239,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice, FORMAT extends Format> void makeGUI(TypeManager typeManager, final ChoicePoint<C, FORMAT> rawChoicePoint, Choices previousChoices, Choices currentChoices, LabelledGrid controlGrid, DataDisplay tableView, ObjectProperty<@Nullable FORMAT> destProperty, ObjectProperty<@Nullable Choices> choicesProperty) throws InternalException
+    private static <C extends Choice, FORMAT extends Format> void makeGUI(TypeManager typeManager, final ChoicePoint<C, FORMAT> rawChoicePoint, Choices previousChoices, Choices currentChoices, LabelledGrid controlGrid, DataDisplay tableView, ObjectExpression<TrimChoice> trimObservable, ObjectProperty<@Nullable FORMAT> destProperty, ObjectProperty<@Nullable Choices> choicesProperty) throws InternalException
     {
         final Options<C> options = rawChoicePoint.getOptions();
         if (options == null)
@@ -258,10 +259,18 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
         @NonNull Options<C> optionsNonNull = options;
         // Default handling:
-        Node choiceNode;
-        ObjectExpression<@Nullable C> choiceExpression;
-
-        if (options.isEmpty())
+        final @Nullable Node choiceNode;
+        final ObjectExpression<@Nullable C> choiceExpression;
+        
+        // Trim is a special case:
+        if (options.choiceType.getChoiceClass().equals(TrimChoice.class))
+        {
+            choiceNode = null;
+            @SuppressWarnings("unchecked") // Safe because we know C is TrimChoice
+            ObjectExpression<@Nullable C> casted = (ObjectExpression<@Nullable C>) trimObservable;
+            choiceExpression = casted;
+        }
+        else if (options.isEmpty())
         {
             // This is only if quick picks is empty and manual entry is not possible:
             choiceNode = new Label("No possible options for " + TranslationUtility.getString(options.choiceType.getLabelKey()));
@@ -327,7 +336,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract, fieldList);
             }
         }
-        int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
+        int rowNumber = choiceNode == null ? controlGrid.getLastRow() : controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<@Nullable C> pick = item -> {
             if (item == null)
             {
@@ -339,7 +348,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             {
                 ChoicePoint<?, FORMAT> next = rawChoicePoint.select(item);
                 controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(typeManager, next, previousChoices, currentChoices.with(optionsNonNull.choiceType,item), controlGrid, tableView, destProperty, choicesProperty);
+                makeGUI(typeManager, next, previousChoices, currentChoices.with(optionsNonNull.choiceType,item), controlGrid, tableView, trimObservable, destProperty, choicesProperty);
             }
             catch (InternalException e)
             {
@@ -467,6 +476,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
         private final RectangleOverlayItem selectionRectangle;
         private RectangleBounds curSelectionBounds;
+        private final SimpleObjectProperty<TrimChoice> trim = new SimpleObjectProperty<>(new TrimChoice(0, 0, 0, 0));
         private BoundingBox curBoundingBox;
         private final Pane mousePane;
 
@@ -479,7 +489,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             this.srcInfo = srcInfo;
             FXUtility.addChangeListenerPlatform(srcInfo, s -> {
                 if (s != null)
-                    curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0),getPosition().offsetByRowCols(s.numRows + 1, s.srcColumns.size()));
+                {
+                    // Reset selection:
+                    curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getPosition().offsetByRowCols(s.numRows + 1, s.srcColumns.size()));
+                    trim.set(new TrimChoice(0, 0, 0, 0));
+                }
             });
             this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getBottomRightIncl());
             // Will be set right at first layout:
@@ -549,6 +563,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         
                         curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
                         destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-1, 0));
+                        trim.set(new TrimChoice(
+                            curSelectionBounds.topLeftIncl.rowIndex - 1,
+                            getBottomRightIncl().rowIndex - curSelectionBounds.bottomRightIncl.rowIndex,
+                                curSelectionBounds.topLeftIncl.columnIndex,
+                                getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
+                        ));
                         withParent_(p -> p.positionOrAreaChanged());
                     }
                 });
@@ -633,6 +653,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         public Node getMousePane()
         {
             return mousePane;
+        }
+
+        public ObjectExpression<TrimChoice> trimExpression()
+        {
+            return trim;
         }
     }
 }

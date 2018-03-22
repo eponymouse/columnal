@@ -109,7 +109,7 @@ public class GenFormat extends Generator<TextFormat>
             // Don't let them all be blank or all text/blank:
             if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 continue;
-            TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator, larger.quote, Charset.forName("UTF-8"));
+            TextFormat smaller = new TextFormat(larger.trimChoice.trimFromTop, reducedCols, larger.separator, larger.quote, Charset.forName("UTF-8"));
             if (reducedCols.size() >= 2) // TODO allow one column
                 r.add(smaller);
         }

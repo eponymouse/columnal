@@ -111,7 +111,7 @@ public class ImporterUtility
         {
             ColumnInfo columnInfo = format.columnTypes.get(i);
             int iFinal = i;
-            List<String> slice = Utility.sliceSkipBlankRows(vals, format.headerRows, iFinal);
+            List<String> slice = Utility.sliceSkipBlankRows(vals, 0, iFinal);
             ColumnType columnType = columnInfo.type;
             if (columnType instanceof NumericColumnType)
             {
@@ -155,7 +155,7 @@ public class ImporterUtility
             // Maybe if it has title?                }
         }
 
-        @Initialized int len = vals.size() - format.headerRows - (int)vals.stream().skip(format.headerRows).filter(r -> r.stream().allMatch(String::isEmpty)).count();
+        @Initialized int len = vals.size() - (int)vals.stream().filter(r -> r.stream().allMatch(String::isEmpty)).count();
 
         return new EditableRecordSet(columns, () -> len);
     }

@@ -48,7 +48,12 @@ public class LabelledGrid extends GridPane
         add(row.item, col++, rows);
         return rows++;
     }
-
+    
+    // The return from the last addRow call
+    public int getLastRow()
+    {
+        return rows - 1;
+    }
 
     public void clearRowsAfter(int rowNumber)
     {

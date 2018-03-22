@@ -1,6 +1,7 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.importers.GuessFormat.TrimChoice;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -27,9 +28,9 @@ public class TextFormat extends Format
     }
 
     // Constructor for testing
-    public TextFormat(int headerRows, List<ColumnInfo> columnTypes, @Nullable String separator, @Nullable String quote, Charset charset)
+    public TextFormat(int trimHead, List<ColumnInfo> columnTypes, @Nullable String separator, @Nullable String quote, Charset charset)
     {
-        super(headerRows, columnTypes);
+        super(new TrimChoice(trimHead, 0, 0, 0), columnTypes);
         this.separator = separator;
         this.quote = quote;
         this.charset = charset;
@@ -64,7 +65,7 @@ public class TextFormat extends Format
     public String toString()
     {
         return "TextFormat{" +
-            "headerRows=" + headerRows +
+            "trim=" + trimChoice +
             ", columnTypes=" + columnTypes.stream().map(c -> "\n" + c).collect(Collectors.joining()) +
             ", separator=" + separator +
             ", quote=" + quote +

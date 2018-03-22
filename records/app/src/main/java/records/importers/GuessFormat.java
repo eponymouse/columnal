@@ -107,17 +107,11 @@ public class GuessFormat
      */
     public static ChoicePoint<?, Format> guessGeneralFormat(UnitManager mgr, List<List<String>> vals)
     {
-        List<HeaderRowChoice> headerRowChoices = new ArrayList<>();
-        for (int headerRows = 0; headerRows <= Math.min(MAX_HEADER_ROWS, vals.size() - 2); headerRows++)
-        {
-            headerRowChoices.add(new HeaderRowChoice(headerRows));
-        }
-
-        return ChoicePoint.<HeaderRowChoice, Format>choose(Quality.PROMISING, 0, HeaderRowChoice.getType(), (HeaderRowChoice hrc) -> {
-            int headerRows = hrc.numHeaderRows;
+        // TODO guess some trim possibilities based on alphabets
+        return ChoicePoint.<TrimChoice, Format>choose(Quality.PROMISING, 0, TrimChoice.getType(), (TrimChoice trim) -> {
             try
             {
-                Format format = guessBodyFormat(mgr, vals.get(headerRows).size(), headerRows, vals);
+                Format format = guessBodyFormat(mgr, vals.get(0).size(), trim, vals);
                 // If they are all text record this as feasible but keep going in case we get better
                 // result with more header rows:
                 return ChoicePoint.success(
@@ -131,23 +125,7 @@ public class GuessFormat
                 // Not a good guess then.
                 return ChoicePoint.failure(e);
             }
-        }, headerRowChoices, GuessFormat::convertNonNegativeInteger);
-    }
-
-    private static Either<@Localized String, HeaderRowChoice> convertNonNegativeInteger(String input)
-    {
-        try
-        {
-            int n = Integer.parseInt(input);
-            if (n < 0)
-                return Either.left(TranslationUtility.getString("error.number.negative"));
-            else
-                return Either.right(new HeaderRowChoice(n));
-        }
-        catch (NumberFormatException e)
-        {
-            return Either.left(e.getLocalizedMessage());
-        }
+        }, ImmutableList.of(new TrimChoice(0, 0, 0, 0)), s -> Either.left("GUI error"));
     }
 
     public static class GuessException extends UserException
@@ -205,14 +183,20 @@ public class GuessFormat
     }
 
     // public for testing
-    public static class HeaderRowChoice extends Choice
+    public static class TrimChoice extends Choice
     {
-        private final int numHeaderRows;
+        public final int trimFromTop;
+        public final int trimFromLeft;
+        public final int trimFromRight;
+        public final int trimFromBottom;
 
         // public for testing
-        public HeaderRowChoice(int numHeaderRows)
+        public TrimChoice(int trimFromTop, int trimFromBottom, int trimFromLeft, int trimFromRight)
         {
-            this.numHeaderRows = numHeaderRows;
+            this.trimFromTop = trimFromTop;
+            this.trimFromLeft = trimFromLeft;
+            this.trimFromRight = trimFromRight;
+            this.trimFromBottom = trimFromBottom;
         }
 
         @Override
@@ -221,26 +205,47 @@ public class GuessFormat
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            HeaderRowChoice that = (HeaderRowChoice) o;
+            TrimChoice that = (TrimChoice) o;
 
-            return numHeaderRows == that.numHeaderRows;
+            if (trimFromTop != that.trimFromTop) return false;
+            if (trimFromLeft != that.trimFromLeft) return false;
+            if (trimFromRight != that.trimFromRight) return false;
+            return trimFromBottom == that.trimFromBottom;
         }
 
         @Override
         public int hashCode()
         {
-            return numHeaderRows;
+            int result = trimFromTop;
+            result = 31 * result + trimFromLeft;
+            result = 31 * result + trimFromRight;
+            result = 31 * result + trimFromBottom;
+            return result;
         }
 
+        @SuppressWarnings("i18n")
         @Override
         public @Localized String toString()
         {
-            return Integer.toString(numHeaderRows);
+            return "<trim>";
         }
 
-        public static ChoiceType<HeaderRowChoice> getType()
+        public static ChoiceType<TrimChoice> getType()
         {
-            return new ChoiceType<>(HeaderRowChoice.class, "guess.headerRow", "guess-format/headerRow");
+            return new ChoiceType<>(TrimChoice.class, "guess.headerRow", "guess-format/headerRow");
+        }
+
+        public List<List<String>> trim(List<List<String>> original)
+        {
+            ArrayList<List<String>> trimmed = new ArrayList<>();
+            for (int i = Math.max(0, trimFromTop); i < original.size() - Math.max(0, trimFromBottom); i++)
+            {
+                List<String> originalLine = original.get(i);
+                int left = Utility.clampIncl(0, trimFromLeft, originalLine.size());
+                int right = Utility.clampIncl(left, originalLine.size() - trimFromRight, originalLine.size());
+                trimmed.add(originalLine.subList(left, right));
+            }
+            return trimmed;
         }
     }
 
@@ -392,18 +397,15 @@ public class GuessFormat
 
             @NonNull List<String> initial = initialCheck;
 
-            List<HeaderRowChoice> headerRowChoices = new ArrayList<>();
-            for (int headerRows = 0; headerRows <= Math.min(MAX_HEADER_ROWS, initial.size() - 2); headerRows++)
-            {
-                headerRowChoices.add(new HeaderRowChoice(headerRows));
-            }
+            List<TrimChoice> headerRowChoices = new ArrayList<>();
+            // TODO guess based on alphabets
 
-            return ChoicePoint.choose(headerRowChoices.isEmpty() ? Quality.NOTVIABLE : Quality.PROMISING, 0, HeaderRowChoice.getType(), (HeaderRowChoice hrc) ->
+            return ChoicePoint.choose(headerRowChoices.isEmpty() ? Quality.NOTVIABLE : Quality.PROMISING, 0, TrimChoice.getType(), (TrimChoice trim) ->
                 ChoicePoint.choose(Quality.PROMISING, 0, SeparatorChoice.getType(), (SeparatorChoice sep) ->
                 ChoicePoint.choose(Quality.PROMISING, 0, QuoteChoice.getType(), (QuoteChoice quot) ->
                 {
                     Multiset<Integer> counts = HashMultiset.create();
-                    for (int i = hrc.numHeaderRows; i < initial.size(); i++)
+                    for (int i = 0; i < initial.size(); i++)
                     {
                         if (!initial.get(i).isEmpty())
                         {
@@ -429,14 +431,14 @@ public class GuessFormat
                     return ChoicePoint.choose(quality, score, ColumnCountChoice.getType(), (ColumnCountChoice cc) ->
                     {
                         List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot).columnContents);
-                        Format format = guessBodyFormat(mgr, cc.columnCount, hrc.numHeaderRows, initialVals);
+                        Format format = guessBodyFormat(mgr, cc.columnCount, trim, initialVals);
                         TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
                         double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType) && !(c.type instanceof BlankColumnType)).count() / (double)textFormat.columnTypes.size();
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat);
                     }, viableColumnCounts, null);
                 }, Arrays.asList(quot(null), quot("\""), quot("\'")), enterSingleChar(QuoteChoice::new))
                 , Arrays.asList(sep(";"), sep(","), sep("\t"), sep(":"), sep(" ")), enterSingleChar(SeparatorChoice::new))
-                , headerRowChoices, GuessFormat::convertNonNegativeInteger);
+                , headerRowChoices, s -> Either.left("GUI error"));
         }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()), GuessFormat::pickCharset);
     }
 
@@ -532,8 +534,10 @@ public class GuessFormat
         return s.replace("\t", "\u27FE");
     }
 
-    private static Format guessBodyFormat(UnitManager mgr, int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
+    // Note that the trim choice should not already have been applied
+    private static Format guessBodyFormat(UnitManager mgr, int columnCount, TrimChoice trimChoice, @NonNull List<@NonNull List<@NonNull String>> untrimmed) throws GuessException
     {
+        List<List<String>> initialVals = trimChoice.trim(untrimmed);
         // Per row, for how many columns is it viable to get column name?
         Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
         List<ColumnType> columnTypes = new ArrayList<>();
@@ -551,7 +555,7 @@ public class GuessFormat
             @Nullable String commonPrefix = null;
             @Nullable String commonSuffix = null;
             List<Integer> decimalPlaces = new ArrayList<>();
-            for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
+            for (int rowIndex = 0; rowIndex < initialVals.size(); rowIndex++)
             {
                 List<String> row = initialVals.get(rowIndex);
                 if (row.isEmpty() || row.stream().allMatch(String::isEmpty))
@@ -559,7 +563,7 @@ public class GuessFormat
                     // Whole row is blank
                     // Only add it once, not once per column:
                     if (columnIndex == 0)
-                        blankRows.add(rowIndex - headerRows);
+                        blankRows.add(rowIndex);
                 }
                 else
                 {
@@ -701,6 +705,7 @@ public class GuessFormat
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:
 
+            /*
             for (int headerRow = headerRows - 1; headerRow >= 0; headerRow--)
             {
                 // Must actually have our column in it:
@@ -709,6 +714,7 @@ public class GuessFormat
                     viableColumnNameRows.compute(headerRow, (a, pre) -> pre == null ? 1 : (1 + pre));
                 }
             }
+            */
         }
         int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !(c instanceof BlankColumnType)).count();
         // All must think it's viable, and then pick last one:
@@ -759,7 +765,7 @@ public class GuessFormat
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), columnName));
             usedNames.add(columnName);
         }
-        return new Format(headerRows, columns);
+        return new Format(trimChoice, columns);
     }
 
     public static class ImportInfo
@@ -952,7 +958,7 @@ public class GuessFormat
         TextAreaFiller textAreaFiller = new TextAreaFiller(gui);
 
         gui.textArea.setParagraphGraphicFactory(sourceLine -> {
-            Label label = new Label(Integer.toString(sourceLine - t.headerRows));
+            Label label = new Label(Integer.toString(sourceLine));
             label.getStyleClass().add("line-number");
             return label;
         });

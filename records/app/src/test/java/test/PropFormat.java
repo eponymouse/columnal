@@ -13,9 +13,9 @@ import records.importers.ChoicePoint;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.CharsetChoice;
 import records.importers.GuessFormat.ColumnCountChoice;
-import records.importers.GuessFormat.HeaderRowChoice;
 import records.importers.GuessFormat.QuoteChoice;
 import records.importers.GuessFormat.SeparatorChoice;
+import records.importers.GuessFormat.TrimChoice;
 import records.importers.TextFormat;
 import records.importers.TextImporter;
 import test.TestUtil.ChoicePick;
@@ -51,7 +51,7 @@ public class PropFormat
         ChoicePoint<?, TextFormat> formatChoicePoint = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.charset));
         ChoicePick[] picks = new ChoicePick[] {
             new ChoicePick<>(CharsetChoice.class, new CharsetChoice(formatAndData.format.charset)),
-            new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(formatAndData.format.headerRows)),
+            new ChoicePick<TrimChoice>(TrimChoice.class, formatAndData.format.trimChoice),
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice(formatAndData.format.separator)),
             new ChoicePick<QuoteChoice>(QuoteChoice.class, new QuoteChoice(formatAndData.format.quote)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(formatAndData.format.columnTypes.size()))

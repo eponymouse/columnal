@@ -147,7 +147,7 @@ public class TextImporter implements Importer
         for (int i = 0; i < totalColumns; i++)
         {
             // Must be one per column:
-            ReadState reader = Utility.skipFirstNRows(textFile, format.charset, format.headerRows);
+            ReadState reader = Utility.skipFirstNRows(textFile, format.charset, format.trimChoice.trimFromTop);
 
             ColumnInfo columnInfo = format.columnTypes.get(i);
             int iFinal = i;
@@ -222,7 +222,7 @@ public class TextImporter implements Importer
                 {
                     try
                     {
-                        rowCount = Utility.countLines(textFile, format.charset) - format.headerRows;
+                        rowCount = Utility.countLines(textFile, format.charset) - format.trimChoice.trimFromTop - format.trimChoice.trimFromBottom;
                     } catch (IOException e)
                     {
                         throw new FetchException("Error counting rows", e);

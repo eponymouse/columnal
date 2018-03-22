@@ -1,28 +1,30 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.importers.GuessFormat.TrimChoice;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by neil on 31/10/2016.
  */
 public class Format
 {
-    public final int headerRows;
+    public final TrimChoice trimChoice;
     public final List<ColumnInfo> columnTypes;
     public final List<String> problems = new ArrayList<>();
 
-    public Format(int headerRows, List<ColumnInfo> columnTypes)
+    public Format(TrimChoice trimChoice, List<ColumnInfo> columnTypes)
     {
-        this.headerRows = headerRows;
+        this.trimChoice = trimChoice;
         this.columnTypes = columnTypes;
     }
 
     public Format(Format copyFrom)
     {
-        this(copyFrom.headerRows, copyFrom.columnTypes);
+        this(copyFrom.trimChoice, copyFrom.columnTypes);
     }
 
     public void recordProblem(String problem)
@@ -35,27 +37,21 @@ public class Format
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Format format = (Format) o;
-
-        if (headerRows != format.headerRows) return false;
-        return columnTypes.equals(format.columnTypes);
-
+        return Objects.equals(trimChoice, format.trimChoice) &&
+                Objects.equals(columnTypes, format.columnTypes);
     }
 
     @Override
     public int hashCode()
     {
-        int result = headerRows;
-        result = 31 * result + columnTypes.hashCode();
-        return result;
+        return Objects.hash(trimChoice, columnTypes);
     }
 
     @Override
     public String toString()
     {
         return "Format{" +
-            "headerRows=" + headerRows +
             ", columnTypes=" + columnTypes +
             '}';
     }
