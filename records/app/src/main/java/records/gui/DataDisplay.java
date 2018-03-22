@@ -31,6 +31,7 @@ import records.data.TableManager;
 import records.data.TableOperations;
 import records.data.datatype.DataType;
 import records.gui.DataCellSupplier.CellStyle;
+import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.GridAreaCellPosition;
@@ -62,6 +63,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -84,6 +86,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     protected @TableDataRowIndex int currentKnownRows; 
     
     // Not final because it may changes if user changes the display item or preview options change:
+    // Also note that this is used by reference as an up-to-date check in GridCellInfo
     @OnThread(Tag.FXPlatform)
     protected ImmutableList<ColumnDetails> displayColumns = ImmutableList.of();
 
@@ -221,9 +224,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         return new GridAreaCellPosition(getHeaderRowCount() + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
     }
 
-    public GridCellInfo<StructuredTextField, CellStyle> getDataGridCellInfo()
+    public GridCellInfo<VersionedSTF, CellStyle> getDataGridCellInfo()
     {
-        return new GridCellInfo<StructuredTextField, CellStyle>()
+        return new GridCellInfo<VersionedSTF, CellStyle>()
         {
             @Override
             public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
@@ -242,12 +245,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             }
 
             @Override
-            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable StructuredTextField> getCell)
+            public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable VersionedSTF> getCell)
             {
                 // Blank then queue fetch:
-                StructuredTextField orig = getCell.apply(cellPosition.from(getPosition()));
+                VersionedSTF orig = getCell.apply(cellPosition.from(getPosition()));
                 if (orig != null)
-                    orig.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
+                    orig.blank(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
                 @SuppressWarnings("units")
                 @TableDataColIndex int columnIndexWithinTable = cellPosition.columnIndex;
                 @SuppressWarnings("units")
@@ -260,20 +263,21 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                         c -> withParent_(p -> p.select(new RectangularTableCellSelection(c.rowIndex, c.columnIndex, dataSelectionLimits))),
                         (rowIndex, colIndex, editorKit) -> {
                             // The rowIndex and colIndex are in table data terms, so we must translate:
-                            @Nullable StructuredTextField cell = getCell.apply(cellPosition.from(getPosition()));
+                            @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
-                                cell.resetContent(editorKit);
+                                cell.setContent(editorKit, displayColumns);
                         }
                     );
                 }
             }
 
             @Override
-            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, StructuredTextField cellFirst)
+            public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, VersionedSTF cellFirst)
             {
                 // If we are for the right position, we haven't been scrolled out of view.
-                // If the table is re-run, we'll get reset separately, so we are always up to date:
-                return true;
+                // If the table is re-run, columns will get set, so we are always up to date
+                // provided the columns haven't changed since:
+                return cellFirst.isUsingColumns(displayColumns);
             }
 
             @Override

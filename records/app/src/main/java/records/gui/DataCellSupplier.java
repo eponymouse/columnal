@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.effect.GaussianBlur;
@@ -7,17 +8,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.data.CellPosition;
+import records.data.Column;
 import records.gui.DataCellSupplier.CellStyle;
+import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
+import records.gui.stable.ColumnDetails;
+import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
-public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTextField, CellStyle, GridCellInfo<StructuredTextField, CellStyle>>
+public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
     public DataCellSupplier()
     {
@@ -25,15 +31,15 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
     }
     
     @Override
-    protected StructuredTextField makeNewItem()
+    protected VersionedSTF makeNewItem()
     {
-        StructuredTextField stf = new StructuredTextField();
+        VersionedSTF stf = new VersionedSTF();
         stf.getStyleClass().add("table-data-cell");
         return stf;
     }
 
     @Override
-    protected ItemState getItemState(StructuredTextField stf, Point2D screenPos)
+    protected ItemState getItemState(VersionedSTF stf, Point2D screenPos)
     {
         if (stf.isFocused())
             return ItemState.EDITING;
@@ -93,8 +99,39 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<StructuredTe
     }
 
     @Override
-    protected @OnThread(Tag.FX) void adjustStyle(StructuredTextField item, CellStyle style, boolean on)
+    protected @OnThread(Tag.FX) void adjustStyle(VersionedSTF item, CellStyle style, boolean on)
     {
         style.applyStyle(item, on);
+    }
+    
+    // A simple subclass of STF that holds a version param.  A version is a weak reference
+    // to a list of column details
+    public static class VersionedSTF extends StructuredTextField
+    {
+        @OnThread(Tag.FXPlatform)
+        private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;
+
+        @OnThread(Tag.FXPlatform)
+        public boolean isUsingColumns(ImmutableList<ColumnDetails> columns)
+        {
+            // Very important here we use reference equality not .equals()
+            // It's not about the content of the columns, it's about using the reference to the
+            // immutable list as a simple way of doing a version check
+            return currentVersion != null && currentVersion.get() == columns;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public void blank(EditorKit<?> editorKit)
+        {
+            super.resetContent(editorKit);
+            currentVersion = null;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public void setContent(EditorKit<?> editorKit, ImmutableList<ColumnDetails> columns)
+        {
+            super.resetContent(editorKit);
+            currentVersion = new WeakReference<>(columns);
+        }
     }
 }

@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
  * Similarly, insertion only alters the structure in a list, otherwise it only alters content.
  */
 @OnThread(Tag.FXPlatform)
-public final class StructuredTextField extends StyleClassedTextArea
+public class StructuredTextField extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
     private @MonotonicNonNull EditorKit<?> editorKit;
@@ -160,7 +160,7 @@ public final class StructuredTextField extends StyleClassedTextArea
         resetContent(editorKit);
     }
 
-    public <T> void resetContent(EditorKit<T> editorKit)
+    public <T> void resetContent(@UnknownInitialization(StructuredTextField.class) StructuredTextField this, EditorKit<T> editorKit)
     {
         if (this.editorKit != null)
         {
