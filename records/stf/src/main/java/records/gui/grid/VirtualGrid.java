@@ -1393,7 +1393,7 @@ public final class VirtualGrid implements ScrollBindable
         
         currentColumns.set( 
                 CellPosition.col(gridAreas.stream()
-                        .mapToInt(g -> g.getSecond().getBottomRightIncl().columnIndex)
+                        .mapToInt(g -> g.getSecond().getBottomRightIncl().columnIndex + 1)
                         .max()
                     .orElse(0)
                     + columnsToRight));
