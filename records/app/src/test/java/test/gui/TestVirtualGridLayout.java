@@ -1,5 +1,7 @@
 package test.gui;
 
+import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +31,7 @@ import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplier;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import test.TestUtil;
@@ -36,8 +39,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
+import utility.gui.FXUtility;
 
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -231,6 +237,56 @@ public class TestVirtualGridLayout extends ApplicationTest
         }
     }
     
+    @Test
+    public void testTableMove()
+    {
+        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        // Test that when table moves, cells are updated properly
+        TestUtil.fx_(() -> {
+            SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
+            virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
+            simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
+            virtualGrid.addNodeSupplier(simpleCellSupplier);
+            virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        });
+        
+        Pattern posPattern = Pattern.compile("\\(([0-9]+), ([0-9]+)\\)");
+
+        for (int i = 0; i < 2; i++)
+        {
+            // Table begins at 0,0.  Check that cells we can find do match up:
+            for (Label cell : lookup(".simple-cell").match(Label::isVisible).<Label>queryAll())
+            {
+                // Find out what position it thinks it is:
+                String content = TestUtil.fx(() -> cell.getText());
+                Matcher m = posPattern.matcher(content);
+                assertTrue(content, m.matches());
+                @SuppressWarnings({"units", "nullness"})
+                @AbsColIndex int column = Integer.valueOf(m.group(1));
+                @SuppressWarnings({"units", "nullness"})
+                @AbsRowIndex int row = Integer.valueOf(m.group(2));
+
+                Point2D expectedLayoutPos = TestUtil.fx(() -> {
+                    VisibleBounds visibleBounds = virtualGrid.getVisibleBounds();
+                    return new Point2D(visibleBounds.getXCoord(column + simpleGridArea.getPosition().columnIndex), visibleBounds.getYCoord(row + simpleGridArea.getPosition().rowIndex));
+                });
+                Point2D actualLayoutPos = TestUtil.fx(() -> new Point2D(cell.getLayoutX(), cell.getLayoutY()));
+                
+                assertEquals(content, expectedLayoutPos, actualLayoutPos);
+                MatcherAssert.assertThat(column, Matchers.greaterThanOrEqualTo(0));
+                MatcherAssert.assertThat(row, Matchers.greaterThanOrEqualTo(0));
+            }
+            // Try again after a move:
+            TestUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
+        }
+    }
+    
+    @Test
+    public void testSetColumns()
+    {
+        // Test that when columns change, cells are updated properly
+    }    
+    
     private static class DummySupplier extends VirtualGridSupplier<Label>
     {
         // Leave it negative while starting up:
@@ -261,7 +317,9 @@ public class TestVirtualGridLayout extends ApplicationTest
         @Override
         protected Label makeNewItem()
         {
-            return new Label("X");
+            Label label = new Label("X");
+            label.getStyleClass().add("simple-cell");
+            return label;
         }
 
         @Override
@@ -313,7 +371,7 @@ public class TestVirtualGridLayout extends ApplicationTest
         @Override
         public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
         {
-            if (cellPosition.rowIndex <= 400 && cellPosition.columnIndex <= 1000)
+            if (contains(cellPosition))
                 return GridAreaCellPosition.relativeFrom(cellPosition, getPosition());
             else
                 return null;
@@ -323,6 +381,9 @@ public class TestVirtualGridLayout extends ApplicationTest
         public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable Label> getCell)
         {
             fetches.add(cellPosition);
+            Label label = getCell.apply(cellPosition.from(getPosition()));
+            if (label != null)
+                label.setText(cellPosition.toString());
         }
 
         @Override

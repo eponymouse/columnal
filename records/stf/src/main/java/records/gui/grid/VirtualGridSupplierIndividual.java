@@ -67,6 +67,14 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
             this.gridAreaCellPosition = gridAreaCellPosition;
             this.originator = originator;
         }
+
+        public ItemDetails<T> withPosition(GridAreaCellPosition newPos)
+        {
+            if (this.gridAreaCellPosition.equals(newPos))
+                return this;
+            else
+                return new ItemDetails<>(node, styleUpdater, originator, newPos);
+        }
     }
 
     protected VirtualGridSupplierIndividual(ViewOrder viewOrder, Collection<S> styleValues)
@@ -151,7 +159,8 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
                         || !cell.gridAreaCellPosition.equals(gridForItemResult.get().getSecond())
                         || !gridForItem.getSecond().checkCellUpToDate(cell.gridAreaCellPosition, cell.node))
                     {
-                        gridForItem.getSecond().fetchFor(cell.gridAreaCellPosition, pos -> {
+                        visibleItems.put(cellPosition, cell.withPosition(gridForItemResult.get().getSecond()));
+                        gridForItem.getSecond().fetchFor(gridForItemResult.get().getSecond(), pos -> {
                             ItemDetails<T> item = visibleItems.get(pos);
                             return item == null ? null : item.node;
                         });
