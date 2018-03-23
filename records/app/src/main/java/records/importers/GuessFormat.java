@@ -227,7 +227,7 @@ public class GuessFormat
         @Override
         public @Localized String toString()
         {
-            return "<trim>";
+            return "<trim, vert +" + trimFromTop + " -" + trimFromBottom + " horiz +" + trimFromLeft + " -" + trimFromRight + ">";
         }
 
         public static ChoiceType<TrimChoice> getType()

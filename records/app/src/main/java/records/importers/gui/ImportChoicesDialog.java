@@ -562,9 +562,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         newRight = Utility.maxCol(newLeft, newRight);
                         
                         curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
-                        destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-1, 0));
+                        destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
                         trim.set(new TrimChoice(
-                            curSelectionBounds.topLeftIncl.rowIndex - 1,
+                            curSelectionBounds.topLeftIncl.rowIndex - getDataDisplayTopLeftIncl().rowIndex - getPosition().rowIndex,
                             getBottomRightIncl().rowIndex - curSelectionBounds.bottomRightIncl.rowIndex,
                                 curSelectionBounds.topLeftIncl.columnIndex,
                                 getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex

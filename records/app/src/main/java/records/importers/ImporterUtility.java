@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -105,6 +106,7 @@ public class ImporterUtility
     @OnThread(Tag.Simulation)
     public static EditableRecordSet makeEditableRecordSet(TableManager mgr, List<List<String>> vals, Format format) throws InternalException, UserException
     {
+        Log.debug("Trimming: " + format.trimChoice);
         vals = format.trimChoice.trim(vals);
         @SuppressWarnings({"keyfor", "units"})
         @KeyForBottom @UnitsBottom List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
