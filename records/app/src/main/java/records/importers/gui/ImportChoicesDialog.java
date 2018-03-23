@@ -121,7 +121,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         //destGrid.setEditable(false);
         VirtualGrid srcGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
-        destGrid.getScrollGroup().add(srcGrid.getScrollGroup(), ScrollLock.BOTH);
+        srcGrid.getScrollGroup().add(destGrid.getScrollGroup(), ScrollLock.BOTH);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo, destData);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
@@ -491,7 +491,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 if (s != null)
                 {
                     // Reset selection:
-                    curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getPosition().offsetByRowCols(s.numRows + 1, s.srcColumns.size()));
+                    curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getPosition().offsetByRowCols(s.numRows, s.srcColumns.size() - 1));
                     trim.set(new TrimChoice(0, 0, 0, 0));
                 }
             });
@@ -575,6 +575,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             });
             mousePane.setOnScroll(e -> {
                 withParent_(g -> g.getScrollGroup().requestScroll(e));
+                // In case of small slide scroll, need to recalculate cursor:
+                withParent(g -> g.getVisibleBounds()).ifPresent(b -> selectionRectangle.calculatePosition(b));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - INSET, e.getY() - INSET));
                 e.consume();
             });
         }
@@ -582,8 +585,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         private Cursor calculateCursor(double x, double y)
         {
             final int EXTRA = 5;
-            boolean inX = curBoundingBox.getMinX() - EXTRA <= x && x < curBoundingBox.getMaxX() + EXTRA;
-            boolean inY = curBoundingBox.getMinY() - EXTRA <= y && y < curBoundingBox.getMaxY() + EXTRA;
+            boolean inX = curBoundingBox.getMinX() - EXTRA <= x && x <= curBoundingBox.getMaxX() + EXTRA;
+            boolean inY = curBoundingBox.getMinY() - EXTRA <= y && y <= curBoundingBox.getMaxY() + EXTRA;
             if (!inX || !inY)
                 return Cursor.DEFAULT;
             boolean topEdge = Math.abs(curBoundingBox.getMinY() - y) <= EXTRA;
