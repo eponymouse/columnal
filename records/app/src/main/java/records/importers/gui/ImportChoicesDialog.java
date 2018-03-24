@@ -207,9 +207,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             choices.addRow(new Row(new Label("Internal error: "), null, new TextFlow(new Text(e.getLocalizedMessage()))));
         }
 
-        // Crucial that these use the same margins:
-        StackPane.setMargin(srcGrid.getNode(), new Insets(SrcDataDisplay.INSET));
-        StackPane.setMargin(destGrid.getNode(), new Insets(SrcDataDisplay.INSET));
+        // Crucial that these use the same margins, to get the scrolling to line up:
+        Insets insets = new Insets(SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET, SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET);
+        StackPane.setMargin(srcGrid.getNode(), insets);
+        StackPane.setMargin(destGrid.getNode(), insets);
         
         SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), new StackPane(destGrid.getNode()));
         Pane content = new BorderPane(splitPane, choices, null, null, null);
@@ -459,7 +460,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
     private static class SrcDataDisplay extends DataDisplay
     {
-        public static final double INSET = 5;
+        public static final double HORIZ_INSET = 22;
+        public static final double VERT_INSET = 0;
         private final SimpleObjectProperty<@Nullable SourceInfo> srcInfo;
         private final RectangleOverlayItem selectionRectangle;
         private RectangleBounds curSelectionBounds;
@@ -511,11 +513,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             };
             srcColumnHeaderSupplier.addItem(this.selectionRectangle);
             mousePane.setOnMouseMoved(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - INSET, e.getY() - INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
                 e.consume();
             });
             mousePane.setOnMouseReleased(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - INSET, e.getY() - INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
                 e.consume();
             });
             mousePane.setOnMouseDragged(e -> {
@@ -564,7 +566,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 withParent_(g -> g.getScrollGroup().requestScroll(e));
                 // In case of small slide scroll, need to recalculate cursor:
                 withParent(g -> g.getVisibleBounds()).ifPresent(b -> selectionRectangle.calculatePosition(b));
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - INSET, e.getY() - INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
                 e.consume();
             });
         }

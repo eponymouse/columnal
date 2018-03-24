@@ -7,7 +7,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
@@ -84,7 +86,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             
             for (LabelPane visibleNode : visibleNodes)
             {
-                visibleNode.updateClip();
+                visibleNode.updateClipAndTranslate();
                 
                 visibleNode.setMinDigits(numDigits);
                 visibleNode.label.applyCss();
@@ -94,6 +96,9 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 minY = Math.min(visibleNode.getLayoutY(), minY);
                 maxX = Math.max(visibleNode.getLayoutX() + visibleNode.getWidth(), maxX);
                 maxY = Math.max(visibleNode.getLayoutY() + visibleNode.getHeight() - 1, maxY);
+
+                // If we want to be off-grid, translate ourselves there:
+                visibleNode.leftMostColumn.set(table.tableDisplay.getPosition().columnIndex == 0);
             }
             
             if (visibleNodes.isEmpty() || visibleNodes.stream().allMatch(l -> !l.isVisible() || !l.label.isVisible()))
@@ -127,6 +132,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
         private int curMinDigits = 1;
         private final ResizableRectangle clip = new ResizableRectangle();
+        private final BooleanProperty leftMostColumn = new SimpleBooleanProperty(false);
 
         public LabelPane()
         {
@@ -145,10 +151,13 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
                 }
             });
             FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
-                label.translateXProperty().set((1 - f.doubleValue()) * label.prefWidth(Double.MAX_VALUE));
+                Utility.later(this).updateClipAndTranslate();
+            });
+            FXUtility.addChangeListenerPlatformNN(leftMostColumn, leftMost -> {
+                Utility.later(this).updateClipAndTranslate();
             });
         }
-        
+
         public boolean isTableRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
         {
             return this.tableDisplay == tableDisplay && this.row == row;
@@ -172,10 +181,14 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             }
         }
 
-        public void updateClip()
+        public void updateClipAndTranslate()
         {
+            double adjustForLeftMost = leftMostColumn.get() ? getWidth() : 0;
+            clip.setX(-adjustForLeftMost);
             clip.setWidth(getWidth());
             clip.setHeight(getHeight());
+            double f = slideOutProportion.get();
+            label.translateXProperty().set((1 - f) * label.prefWidth(Double.MAX_VALUE) - adjustForLeftMost);
         }
     }
 
