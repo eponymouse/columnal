@@ -751,6 +751,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return super.toString() + "[" + getTable().getId() + "]";
     }
 
+    @Override
     public ContextMenu makeRowContextMenu(@TableDataRowIndex int row)
     {
         ContextMenu contextMenu = new ContextMenu();
@@ -776,12 +777,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return contextMenu;
     }
 
+    @Override
     public void setRowLabelBounds(Optional<BoundingBox> bounds)
     {
         rowLabelBorder.currentRowLabelBounds = bounds;
         rowLabelBorder.updateClip();
     }
 
+    @Override
     public DoubleExpression slideOutProperty()
     {
         return slideOutProportion;

@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.recorded.qual.Recorded;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.scene.layout.Pane;
@@ -156,7 +157,7 @@ public class Transform extends Transformation
                 }
 
                 @Override
-                public int getLength() throws UserException, InternalException
+                public @TableDataRowIndex int getLength() throws UserException, InternalException
                 {
                     return srcRecordSet.getLength();
                 }

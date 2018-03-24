@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.collections.FXCollections;
@@ -210,7 +211,8 @@ public class SummaryStatistics extends Transformation
                 }
 
                 @Override
-                public int getLength() throws UserException
+                @SuppressWarnings("units")
+                public @TableDataRowIndex int getLength() throws UserException
                 {
                     return summaries.isEmpty() ? 0 : splits.size();
                 }

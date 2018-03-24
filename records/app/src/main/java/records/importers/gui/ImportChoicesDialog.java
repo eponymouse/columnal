@@ -53,6 +53,7 @@ import records.gui.DataCellSupplier;
 import records.gui.DataDisplay;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.gui.RowLabelSupplier;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
@@ -129,6 +130,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         DataCellSupplier srcDataCellSupplier = new DataCellSupplier();
         srcGrid.addNodeSupplier(srcDataCellSupplier);
         srcDataCellSupplier.addGrid(srcDataDisplay, srcDataDisplay.getDataGridCellInfo());
+
+        RowLabelSupplier srcRowLabels = new RowLabelSupplier();
+        srcGrid.addNodeSupplier(srcRowLabels);
+        srcRowLabels.addTable(srcGrid, srcDataDisplay, true);
 
 
         LabelledGrid choices = new LabelledGrid();

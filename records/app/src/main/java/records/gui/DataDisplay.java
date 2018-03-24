@@ -9,6 +9,7 @@ import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -325,7 +326,24 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             + (headerRows.showingColumnNameRow ? 1 : 0)
             + (headerRows.showingColumnTypeRow ? 1 : 0);
     }
-    
+
+    // For controlling the slide-out of various table items such as row labels:
+    public ObservableValue<? extends Number> slideOutProperty()
+    {
+        return new ReadOnlyObjectWrapper<>(1.0);
+    }
+
+    // Make a row label context menu
+    public @Nullable ContextMenu makeRowContextMenu(@TableDataRowIndex int row)
+    {
+        return null;
+    }
+
+    // Notify us of the bounds of row labels, for adjusting shadows
+    public void setRowLabelBounds(Optional<BoundingBox> bounds)
+    {
+    }
+
     public static class HeaderRows
     {
         private final boolean showingTableNameRow;

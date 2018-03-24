@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.layout.Pane;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -113,7 +114,7 @@ public class HideColumns extends Transformation
                 }
 
                 @Override
-                public int getLength() throws UserException, InternalException
+                public @TableDataRowIndex int getLength() throws UserException, InternalException
                 {
                     return srcRecordSet.getLength();
                 }

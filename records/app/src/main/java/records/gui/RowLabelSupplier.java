@@ -14,6 +14,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
@@ -103,12 +104,12 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     }
 
     @OnThread(Tag.FXPlatform)
-    public void addTable(VirtualGrid virtualGrid, TableDisplay tableDisplay)
+    public void addTable(VirtualGrid virtualGrid, DataDisplay tableDisplay, boolean showAlways)
     {
-        final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(ImmutableList.of());
+        final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(showAlways ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
         addGrid(tableDisplay, new TableInfo(tableDisplay, visible));
         virtualGrid.addSelectionListener((oldSel, newSel) -> {
-            visible.set(newSel != null && newSel.includes(tableDisplay) ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
+            visible.set(showAlways || (newSel != null && newSel.includes(tableDisplay)) ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
             // Slightly lazy way to tidy up after ourselves if we get removed:
             return new Pair<>(hasGrid(tableDisplay) ? ListenerOutcome.KEEP : ListenerOutcome.REMOVE, null);
         });
@@ -122,7 +123,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         // Zero based row
         private @TableDataRowIndex int row;
         private final Label label = new Label();
-        private @MonotonicNonNull TableDisplay tableDisplay;
+        private @MonotonicNonNull DataDisplay tableDisplay;
         private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
         private int curMinDigits = 1;
         private final ResizableRectangle clip = new ResizableRectangle();
@@ -137,19 +138,23 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             BorderPane.setAlignment(label, Pos.CENTER_RIGHT);
             label.setOnContextMenuRequested(e -> {
                 if (tableDisplay != null)
-                    tableDisplay.makeRowContextMenu(this.row).show(label, e.getScreenX(), e.getScreenY());
+                {
+                    @Nullable ContextMenu contextMenu = tableDisplay.makeRowContextMenu(this.row);
+                    if (contextMenu != null)
+                        contextMenu.show(label, e.getScreenX(), e.getScreenY());
+                }
             });
             FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
                 label.translateXProperty().set((1 - f.doubleValue()) * label.prefWidth(Double.MAX_VALUE));
             });
         }
         
-        public boolean isTableRow(TableDisplay tableDisplay, @TableDataRowIndex int row)
+        public boolean isTableRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
         {
             return this.tableDisplay == tableDisplay && this.row == row;
         }
         
-        public void setRow(TableDisplay tableDisplay, @TableDataRowIndex int row)
+        public void setRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
         {
             this.tableDisplay = tableDisplay;
             this.row = row;
@@ -176,10 +181,10 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
 
     public class TableInfo implements VirtualGridSupplierIndividual.GridCellInfo<LabelPane, Visible>
     {
-        private final TableDisplay tableDisplay;
-        private final SimpleObjectProperty<ImmutableList<Visible>> visible;
+        private final DataDisplay tableDisplay;
+        private final ObjectExpression<ImmutableList<Visible>> visible;
 
-        private TableInfo(TableDisplay tableDisplay, SimpleObjectProperty<ImmutableList<Visible>> visible)
+        private TableInfo(DataDisplay tableDisplay, ObjectExpression<ImmutableList<Visible>> visible)
         {
             this.tableDisplay = tableDisplay;
             this.visible = visible;

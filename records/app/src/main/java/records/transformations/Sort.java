@@ -1,6 +1,7 @@
 package records.transformations;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -185,7 +186,7 @@ public class Sort extends Transformation
                 }
 
                 @Override
-                public int getLength() throws UserException, InternalException
+                public @TableDataRowIndex int getLength() throws UserException, InternalException
                 {
                     return srcRecordSet.getLength();
                 }

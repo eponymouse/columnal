@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import javafx.application.Platform;
@@ -216,7 +217,8 @@ public class TextImporter implements Importer
             }
 
             @Override
-            public int getLength() throws UserException
+            @SuppressWarnings("units")
+            public @TableDataRowIndex int getLength() throws UserException
             {
                 if (rowCount == -1)
                 {
