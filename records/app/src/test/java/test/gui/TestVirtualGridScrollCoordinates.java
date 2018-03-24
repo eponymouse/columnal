@@ -194,7 +194,7 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
     }
     
     @Property(trials = 5)
-    public void clampTest(@When(seed=1L) @From(GenScrollAmounts.class) ScrollAmounts scrollAmounts)
+    public void clampTest(@From(GenScrollAmounts.class) ScrollAmounts scrollAmounts)
     {
         // We started at top and left, so what we do is scroll out by half the amount, then attempt to scroll back the full amount, then repeat
 

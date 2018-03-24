@@ -31,7 +31,7 @@ public class PropGridOverlap
     public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
     
     @Property(trials = 10000)
-    public void testLoad(@When(seed=1) @From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
+    public void testLoad(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
         VirtualGrid grid = new VirtualGrid(null, 0, 0);
         ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);

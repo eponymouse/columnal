@@ -122,6 +122,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         VirtualGrid srcGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
         srcGrid.getScrollGroup().add(destGrid.getScrollGroup(), ScrollLock.BOTH);
+        destGrid.bindVisibleRowsTo(srcGrid);
         SimpleObjectProperty<@Nullable SourceInfo> srcInfo = new SimpleObjectProperty<>(null);
         SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcInfo, destData);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
@@ -409,7 +410,6 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     private static class DestDataDisplay extends DataDisplay
     {
         private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
-        boolean currentKnownRowsIsFinal;
 
         @OnThread(Tag.FXPlatform)
         public DestDataDisplay(String suggestedName, VirtualGridSupplierFloating destColumnHeaderSupplier, SimpleObjectProperty<@Nullable RecordSet> destRecordSet)
@@ -422,45 +422,27 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         @Override
         public @OnThread(Tag.FXPlatform) void updateKnownRows(@GridAreaRowIndex int checkUpToRowInclGrid, FXPlatformRunnable updateSizeAndPositions)
         {
-            final RecordSet recordSet = destRecordSet.get();
+            RecordSet recordSet = destRecordSet.get();
             if (recordSet == null)
                 return;
-            final @NonNull RecordSet recordSetNonNull = recordSet;
-            @TableDataRowIndex int checkUpToRowIncl = getRowIndexWithinTable(checkUpToRowInclGrid);
-            if (!currentKnownRowsIsFinal && currentKnownRows < checkUpToRowIncl)
-            {
-                Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
-                    try
-                    {
-                        // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
-                        boolean lastRowValid = recordSetNonNull.indexValid(checkUpToRowIncl);
-                        if (lastRowValid)
+            @NonNull RecordSet recordSetFinal = recordSet;
+            Workers.onWorkerThread("Fetching row size", Priority.FETCH, () -> {
+                try
+                {
+                    @TableDataRowIndex int len = recordSetFinal.getLength();
+                    Platform.runLater(() -> {
+                        if (currentKnownRows != len)
                         {
-                            Platform.runLater(() -> {
-                                currentKnownRows = checkUpToRowIncl;
-                                currentKnownRowsIsFinal = false;
-                                updateSizeAndPositions.run();
-                            });
-                        } else
-                        {
-                            // Just a matter of working out where it ends.  Since we know end is close,
-                            // just force with getLength:
-                            @SuppressWarnings("units")
-                            @TableDataRowIndex int length = recordSetNonNull.getLength();
-                            Platform.runLater(() -> {
-                                currentKnownRows = length;
-                                currentKnownRowsIsFinal = true;
-                                updateSizeAndPositions.run();
-                            });
+                            currentKnownRows = len;
+                            updateSizeAndPositions.run();
                         }
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        Log.log(e);
-                        // We just don't call back the update function
-                    }
-                });
-            }
+                    });
+                }
+                catch (UserException | InternalException e)
+                {
+                    Log.log(e);
+                }
+            });
         }
 
         @Override

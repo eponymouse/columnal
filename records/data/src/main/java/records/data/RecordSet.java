@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.units.TableDataRowIndex;
 import javafx.application.Platform;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -196,7 +197,8 @@ public abstract class RecordSet
 
     // Only use when you really need to know the length!
     // Override in subclasses if you can do it faster
-    public int getLength() throws UserException, InternalException
+    @SuppressWarnings("units")
+    public @TableDataRowIndex int getLength() throws UserException, InternalException
     {
         int i = 0;
         while (indexValid(i))

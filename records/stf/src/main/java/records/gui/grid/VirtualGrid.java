@@ -35,6 +35,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -210,6 +211,9 @@ public final class VirtualGrid implements ScrollBindable
         this.columnsToRight = columnsToRight;
         this.rowsToBottom = rowsToBottom;
         currentKnownRows.set(CellPosition.row(rowsToBottom));
+        //FXUtility.addChangeListenerPlatformNN(currentKnownRows, r -> {
+        //    Log.debug("Current rows: " + r);
+        //});
         currentColumns.set(CellPosition.col(columnsToRight));
         if (createTable != null)
             nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
@@ -638,9 +642,10 @@ public final class VirtualGrid implements ScrollBindable
             }
         }
 
-        if (-this.extraRenderYPixelsBefore <= scrollBy - extraPixelsToShowBefore
-            && scrollBy + extraPixelsToShowAfter <= this.extraRenderYPixelsAfter)
+        if (-this.extraRenderYPixelsBefore <= -scrollBy - extraPixelsToShowBefore
+            && -scrollBy + extraPixelsToShowAfter <= this.extraRenderYPixelsAfter)
         {
+            //Log.debug("Slide scroll; wanted to scroll by " + scrollBy + " (+" + extraPixelsToShowAfter + ") and pixels after was " + this.extraRenderYPixelsAfter);
             // Just move everything by that amount without doing a full layout:
             for (Node node : container.getChildrenUnmodifiable())
             {
@@ -681,6 +686,7 @@ public final class VirtualGrid implements ScrollBindable
         if (logicalScrollRowIndex + ((container.getHeight() + extraRenderYPixelsAfter) / rowHeight) > currentKnownRows.get())
         {
             // This will call redoLayout so we won't need to call it again:
+            //Log.debug("Potentially adjusting row count");
             updateSizeAndPositions();
             return false;
         }
@@ -1216,12 +1222,12 @@ public final class VirtualGrid implements ScrollBindable
 
         private VisibleBounds getVisibleBoundDetails(@UnknownInitialization(Region.class) Container this)
         {
-            // We are starting at firstRenderRowIndex, so already taken into account extraRenderYPixelsBefore:
-            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((getHeight() + extraRenderYPixelsAfter) / rowHeight));
+            // We are starting at firstRenderRowIndex, so already taken into account extraRenderYPixelsBefore to find starting pos:
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstRenderRowIndex, (int)Math.ceil((extraRenderYPixelsBefore + getHeight() + extraRenderYPixelsAfter) / rowHeight));
             int newNumVisibleCols = 0;
-            // We are starting at firstRenderColumnIndex, so already taken into account extraRenderXPixelsBefore:
+            // We are starting at firstRenderColumnIndex, so already taken into account extraRenderXPixelsBefore to find starting pos:
             double x = firstRenderColumnOffset;
-            for (int column = firstRenderColumnIndex; x < getWidth() + extraRenderXPixelsAfter && column < currentColumns.get(); column++)
+            for (int column = firstRenderColumnIndex; x < extraRenderXPixelsBefore + getWidth() + extraRenderXPixelsAfter && column < currentColumns.get(); column++)
             {
                 newNumVisibleCols += 1;
                 x += getColumnWidth(column);
@@ -1323,6 +1329,8 @@ public final class VirtualGrid implements ScrollBindable
         //   - Check for overlaps between tables, and reshuffle if needed
         //   - Update our known overall grid size
 
+        // It's okay to ask row sizes beforehand because reshuffling only moves sideways.
+        // If in future we also reshuffle down, this code needs rewriting:
         @SuppressWarnings("units")
         @AbsRowIndex int maxExtra = MAX_EXTRA_ROW_COLS;
         @AbsRowIndex int currentLastVisibleRow = CellPosition.row((int)(container.getHeight() / rowHeight)) + logicalScrollRowIndex;
@@ -1397,7 +1405,10 @@ public final class VirtualGrid implements ScrollBindable
                         .max()
                     .orElse(0)
                     + columnsToRight));
-        currentKnownRows.set(rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(rowsToBottom));
+        if (!currentKnownRows.isBound())
+        {
+            currentKnownRows.set(rowSizes.stream().max(Comparator.comparingInt(x -> x)).<@AbsRowIndex Integer>orElse(CellPosition.row(0)) + CellPosition.row(rowsToBottom));
+        }
         VisibleBounds bounds = container.redoLayout();
         updatingSizeAndPositions = false;
         
@@ -1405,6 +1416,14 @@ public final class VirtualGrid implements ScrollBindable
         {
              nodeSupplier.sizesOrPositionsChanged(bounds);
         }
+    }
+
+    public void bindVisibleRowsTo(VirtualGrid srcGrid)
+    {
+        currentKnownRows.bind(srcGrid.currentKnownRows);
+        FXUtility.addChangeListenerPlatformNN(currentKnownRows, newNum -> {
+            container.redoLayout();
+        });
     }
 
     private boolean overlap(GridArea a, GridArea b)

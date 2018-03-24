@@ -280,12 +280,52 @@ public class TestVirtualGridLayout extends ApplicationTest
             TestUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
         }
     }
-    
+    /*
     @Test
     public void testSetColumns()
     {
         // Test that when columns change, cells are updated properly
+        SimpleGridArea simpleGridArea = new SimpleGridArea();
+        // Test that when table moves, cells are updated properly
+        TestUtil.fx_(() -> {
+            SimpleCellSupplier simpleCellSupplier = new SimpleCellSupplier();
+            virtualGrid.addGridAreas(ImmutableList.of(simpleGridArea));
+            simpleCellSupplier.addGrid(simpleGridArea, simpleGridArea);
+            virtualGrid.addNodeSupplier(simpleCellSupplier);
+            virtualGrid.addNodeSupplier(new VirtualGridLineSupplier());
+        });
+
+        Pattern posPattern = Pattern.compile("\\(([0-9]+), ([0-9]+)\\)");
+
+        for (int numColumns : 
+        {
+            // Table begins at 0,0.  Check that cells we can find do match up:
+            for (Label cell : lookup(".simple-cell").match(Label::isVisible).<Label>queryAll())
+            {
+                // Find out what position it thinks it is:
+                String content = TestUtil.fx(() -> cell.getText());
+                Matcher m = posPattern.matcher(content);
+                assertTrue(content, m.matches());
+                @SuppressWarnings({"units", "nullness"})
+                @AbsColIndex int column = Integer.valueOf(m.group(1));
+                @SuppressWarnings({"units", "nullness"})
+                @AbsRowIndex int row = Integer.valueOf(m.group(2));
+
+                Point2D expectedLayoutPos = TestUtil.fx(() -> {
+                    VisibleBounds visibleBounds = virtualGrid.getVisibleBounds();
+                    return new Point2D(visibleBounds.getXCoord(column + simpleGridArea.getPosition().columnIndex), visibleBounds.getYCoord(row + simpleGridArea.getPosition().rowIndex));
+                });
+                Point2D actualLayoutPos = TestUtil.fx(() -> new Point2D(cell.getLayoutX(), cell.getLayoutY()));
+
+                assertEquals(content, expectedLayoutPos, actualLayoutPos);
+                MatcherAssert.assertThat(column, Matchers.greaterThanOrEqualTo(0));
+                MatcherAssert.assertThat(row, Matchers.greaterThanOrEqualTo(0));
+            }
+            // Try again after a move:
+            TestUtil.fx_(() -> simpleGridArea.setPosition(new CellPosition(CellPosition.row(3), CellPosition.col(5))));
+        }
     }    
+    */
     
     private static class DummySupplier extends VirtualGridSupplier<Label>
     {
