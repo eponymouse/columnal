@@ -44,6 +44,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataDisplay;
+import records.gui.TableDisplay;
 import records.gui.grid.CellSelection;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnHandler;
@@ -61,6 +62,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.IndexRange;
 import utility.Workers;
@@ -140,12 +142,6 @@ public class GuessFormat
     {
         private final Charset charset;
         private final String charsetName;
-
-        public CharsetChoice(String charsetName)
-        {
-            this.charsetName = charsetName;
-            charset = Charset.forName(charsetName);
-        }
 
         public CharsetChoice(Charset charset)
         {
@@ -437,7 +433,7 @@ public class GuessFormat
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat);
                     }, viableColumnCounts, null);
                 }, Arrays.asList(quot(null), quot("\""), quot("\'")), enterSingleChar(QuoteChoice::new))
-                , Arrays.asList(sep(";"), sep(","), sep("\t"), sep(":"), sep(" ")), enterSingleChar(SeparatorChoice::new))
+                , Arrays.asList(sep(";"), sep(","), sep("\t"), sep(":"), sep("|"), sep(" ")), enterSingleChar(SeparatorChoice::new))
                 , headerRowChoices, s -> Either.left("GUI error"));
         }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()), GuessFormat::pickCharset);
     }
@@ -838,19 +834,37 @@ public class GuessFormat
                     return false;
                 }
             };
-            new ImportChoicesDialog<>(mgr, suggestedName, choicePoints, f -> null, choices -> {
-                @Nullable CharsetChoice charsetChoice = choices.getChoice(CharsetChoice.getType());
-                if (charsetChoice == null)
-                    return null;
-                else
+            SimulationFunction<TextFormat, ? extends RecordSet> loadText = format -> {
+                try
                 {
-                    @SuppressWarnings("units")
-                    @TableDataRowIndex int rows = Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0);
-                    return new SourceInfo(ImmutableList.of(new ColumnDetails(new ColumnId("Text File Line"), DataType.TEXT, null, columnHandler)), rows);
+                    return TextImporter.makeRecordSet(mgr.getTypeManager(), file, format, null);
                 }
+                catch (IOException e)
+                {
+                    throw new UserException("Problem reading file", e);
+                }
+            };
+            new ImportChoicesDialog<>(mgr, suggestedName, choicePoints, loadText, choices -> {
+                @Nullable CharsetChoice charsetChoice = choices.getChoice(CharsetChoice.getType());
+                @Nullable ColumnCountChoice columnCountChoice = choices.getChoice(ColumnCountChoice.getType());
+                @Nullable SeparatorChoice separatorChoice = choices.getChoice(SeparatorChoice.getType());
+                @Nullable QuoteChoice quoteChoice = choices.getChoice(QuoteChoice.getType());
+                if (charsetChoice != null && columnCountChoice != null && separatorChoice != null && quoteChoice != null)
+                {
+                    try
+                    {
+                        RecordSet rs = TextImporter.makeSrcRecordSet(file, charsetChoice.charset, separatorChoice.separator, quoteChoice.quote, columnCountChoice.columnCount);
+                        return new SourceInfo(TableDisplayUtility.makeStableViewColumns(rs, new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN.offsetByRowCols(2 + r, c), null), rs.getLength());
+                    }
+                    catch (IOException e)
+                    {
+                        throw new UserException("IO error reading " + file, e);
+                    }
+                }
+                return null;
             }).showAndWait().ifPresent(then);
         });
-        System.err.println(choicePoints);
+        Log.debug("" + choicePoints);
 
     }
 

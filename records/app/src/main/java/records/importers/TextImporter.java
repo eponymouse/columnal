@@ -9,15 +9,8 @@ import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.DataSource;
-import records.data.EditableRecordSet;
-import records.data.ImmediateDataSource;
-import records.data.RecordSet;
+import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.data.TableManager;
-import records.data.TextFileColumn;
 import records.data.TextFileColumn.TextFileColumnListener;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
@@ -138,6 +131,21 @@ public class TextImporter implements Importer
             //return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         //else
             return new ImmediateDataSource(mgr, initialLoadDetails, new EditableRecordSet(rs));
+    }
+
+    @OnThread(Tag.Simulation)
+    public static RecordSet makeSrcRecordSet(File textFile, Charset charset, @Nullable String separator, @Nullable String quote, int totalColumns) throws IOException, InternalException, UserException
+    {
+        List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+        for (int i = 0; i < totalColumns; i++)
+        {
+            // Must be one per column:
+            ReadState reader = Utility.skipFirstNRows(textFile, charset, 0);
+            int iFinal = i;
+            columns.add(rs -> TextFileColumn.stringColumn(rs, reader, separator, new ColumnId("Column " + (iFinal + 1)), iFinal, totalColumns, null));
+        }
+
+        return new KnownLengthRecordSet(columns, Utility.countLines(textFile, charset));
     }
 
     @OnThread(Tag.Simulation)

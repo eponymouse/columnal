@@ -74,6 +74,9 @@ public final class TextFileColumn extends Column
                         }
                     }
                     addValues.accept(storage, next);
+                    // If we're not adding any more, give up and thus prevent infinite loop:
+                    if (next.isEmpty())
+                        break;
                 }
             }
             catch (IOException e)

@@ -1127,8 +1127,7 @@ public class Utility
         public ReadState(File file, Charset charset, int firstLine) throws IOException
         {
             this.file = file;
-            //TODO change to lines() not readLines().stream() to handle large files:
-            lineStream = com.google.common.io.Files.asCharSource(file, charset).readLines().stream().skip(firstLine).iterator();
+            lineStream = com.google.common.io.Files.asCharSource(file, charset).lines().skip(firstLine).iterator();
             //Files.lines(file.toPath(), charset).skip(firstLine).iterator();
         }
 

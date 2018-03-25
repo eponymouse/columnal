@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -68,7 +69,8 @@ import java.util.function.Predicate;
 public class TableDisplayUtility
 {
 
-    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformFunction<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify)
+    @OnThread(Tag.Any)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, Function<ColumnId, @Nullable FXPlatformConsumer<ColumnId>> renameColumn, GetDataPosition getTablePos, @Nullable FXPlatformRunnable onModify)
     {
         ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
         @TableDataColIndex int displayColumnIndex = displayCol(0);
@@ -140,6 +142,7 @@ public class TableDisplayUtility
         return r.build();
     }
 
+    @OnThread(Tag.Any)
     private static ColumnDetails getDisplay(@TableDataColIndex int columnIndex, @NonNull Column column, @Nullable FXPlatformConsumer<ColumnId> rename, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws UserException, InternalException
     {
         return new ColumnDetails(column.getName(), column.getType(), rename, makeField(columnIndex, column.getType(), column.isEditable(), getTablePos, onModify)) {
@@ -339,12 +342,14 @@ public class TableDisplayUtility
         public final GetValue<T> g;
         public final ComponentMaker<T> makeComponent;
 
+        @OnThread(Tag.Any)
         public GetValueAndComponent(GetValue<T> g, ComponentMaker<T> makeComponent)
         {
             this.g = g;
             this.makeComponent = makeComponent;
         }
         
+        @OnThread(Tag.Any)
         public EditorKitCache<T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
             MakeEditorKit<T> makeEditorKit = (rowIndex, value, relinquishFocus) -> {
@@ -360,12 +365,13 @@ public class TableDisplayUtility
     }
 
     // public for testing:
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public static EditorKitCache<?> makeField(@TableDataColIndex int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, GetDataPosition getTablePos, FXPlatformRunnable onModify) throws InternalException
     {
         return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), getTablePos, onModify);
     }
 
+    @OnThread(Tag.Any)
     public static ImmutableList<String> stfStylesFor(DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<ImmutableList<String>, InternalException>()
@@ -420,7 +426,7 @@ public class TableDisplayUtility
         });
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     private static GetValueAndComponent<?> valueAndComponent(DataTypeValue dataTypeValue) throws InternalException
     {
         return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<?>, InternalException>()

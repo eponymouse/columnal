@@ -83,7 +83,7 @@ public class TestFormat
     private static void assertFormat(TextFormat fmt, String... lines) throws UserException, InternalException
     {
         ChoicePick[] picks = new ChoicePick[] {
-            new ChoicePick<CharsetChoice>(CharsetChoice.class, new CharsetChoice("UTF-8")),
+            new ChoicePick<CharsetChoice>(CharsetChoice.class, new CharsetChoice(Charset.forName("UTF-8"))),
             new ChoicePick<TrimChoice>(TrimChoice.class, fmt.trimChoice),
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + fmt.separator)),
             new ChoicePick<QuoteChoice>(QuoteChoice.class, new QuoteChoice(null)),
