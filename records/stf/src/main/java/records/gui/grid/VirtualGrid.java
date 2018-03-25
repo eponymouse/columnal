@@ -20,7 +20,9 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.HPos;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -1253,12 +1255,25 @@ public final class VirtualGrid implements ScrollBindable
 
                 @Override
                 @OnThread(Tag.FXPlatform)
-                public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos)
+                public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos, HPos horizBias, VPos verticalBias)
                 {
                     Point2D localCoord = container.screenToLocal(screenPos);
                     double x = firstRenderColumnOffset;
                     // Math.round will find us the nearest row:
-                    @AbsRowIndex int row = CellPosition.row((int)Math.round((localCoord.getY() - (firstRenderRowOffset)) / rowHeight)) + this.firstRowIncl;
+                    double rowFloat = (localCoord.getY() - (firstRenderRowOffset)) / rowHeight;
+                    switch (horizBias)
+                    {
+                        case LEFT:
+                            rowFloat = Math.floor(rowFloat);
+                            break;
+                        case CENTER:
+                            rowFloat = Math.round(rowFloat);
+                            break;
+                        case RIGHT:
+                            rowFloat = Math.ceil(rowFloat);
+                            break;
+                    }
+                    @AbsRowIndex int row = CellPosition.row((int)rowFloat) + this.firstRowIncl;
                     
                     if (firstRowIncl <= row && row <= lastRowIncl)
                     {
@@ -1267,7 +1282,20 @@ public final class VirtualGrid implements ScrollBindable
                             double nextX = x + getColumnWidth(i);
                             if (x <= localCoord.getX() && localCoord.getX() < nextX)
                             {
-                                @AbsColIndex int column = Math.abs(localCoord.getX() - x) < Math.abs(localCoord.getX() - nextX) ? i : i + CellPosition.col(1);
+                                @AbsColIndex int column = i;
+                                switch (verticalBias)
+                                {
+                                    case TOP:
+                                        column = i;
+                                        break;
+                                    case CENTER:
+                                        double colFloat = Math.abs(localCoord.getX() - x) / Math.abs(nextX - x);
+                                        column = colFloat < 0.5 ? i : i + CellPosition.col(1);
+                                        break;
+                                    case BOTTOM:
+                                        column = i + CellPosition.col(1);
+                                        break;
+                                }
                                 return Optional.of(new CellPosition(row, column));
                             }
                             x = nextX;

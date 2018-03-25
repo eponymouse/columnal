@@ -12,9 +12,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -422,7 +424,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         @OnThread(Tag.FXPlatform)
         public Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
         {
-            Optional<CellPosition> pos = visibleBounds.getNearestTopLeftToScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource));
+            Optional<CellPosition> pos = visibleBounds.getNearestTopLeftToScreenPos(lastMousePosScreen.subtract(offsetFromTopLeftOfSource), HPos.CENTER, VPos.CENTER);
             if (pos.isPresent())
             {
                 destPosition = pos.get(); 
@@ -635,7 +637,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             });
             borderPane.setOnMouseClicked(e -> {
                 withParent_(p -> {
-                    @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY())).orElse(getPosition()).columnIndex;
+                    @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
                     p.select(new EntireTableSelection(DataDisplay.this, columnIndex));
                 });
                 e.consume();

@@ -3,7 +3,9 @@ package records.gui.grid;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import javafx.beans.binding.DoubleExpression;
+import javafx.geometry.HPos;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -143,7 +145,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         }
 
         // The cell position with the top-left that is nearest the given screen X/Y position
-        public abstract Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos);
+        // If biases are non-central, it does not use nearest but instead clamps in that direction.
+        public abstract Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos, HPos horizontalBias, VPos verticalBias);
 
         public abstract Point2D screenToLayout(Point2D screen);
         

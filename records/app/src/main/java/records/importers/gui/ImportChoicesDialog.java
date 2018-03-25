@@ -15,8 +15,10 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -467,6 +469,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         private RectangleBounds curSelectionBounds;
         private final SimpleObjectProperty<TrimChoice> trim = new SimpleObjectProperty<>(new TrimChoice(0, 0, 0, 0));
         private BoundingBox curBoundingBox;
+        private CellPosition mousePressed = CellPosition.ORIGIN;
         private final Pane mousePane;
 
         @OnThread(Tag.FXPlatform)
@@ -520,20 +523,29 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
                 e.consume();
             });
+            mousePane.setOnMousePressed(e -> {
+                withParent(p -> p.getVisibleBounds())
+                    .flatMap(v -> v.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP))
+                    .ifPresent(pos -> mousePressed = pos);
+            });
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
-                    @AbsRowIndex int newTop = curSelectionBounds.topLeftIncl.rowIndex;
-                    @AbsRowIndex int newBottom = curSelectionBounds.bottomRightIncl.rowIndex;
-                    @AbsColIndex int newLeft = curSelectionBounds.topLeftIncl.columnIndex;
-                    @AbsColIndex int newRight = curSelectionBounds.bottomRightIncl.columnIndex;
+                    @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP).orElse(null);
                     boolean resizingTop = c == Cursor.NW_RESIZE || c == Cursor.N_RESIZE || c == Cursor.NE_RESIZE;
                     boolean resizingBottom = c == Cursor.SW_RESIZE || c == Cursor.S_RESIZE || c == Cursor.SE_RESIZE;
                     boolean resizingLeft = c == Cursor.NW_RESIZE || c == Cursor.W_RESIZE || c == Cursor.SW_RESIZE;
                     boolean resizingRight = c == Cursor.NE_RESIZE || c == Cursor.E_RESIZE || c == Cursor.SE_RESIZE;
+                    @AbsRowIndex int newTop;
+                    @AbsRowIndex int newBottom;
+                    @AbsColIndex int newLeft;
+                    @AbsColIndex int newRight;
                     if (resizingTop || resizingBottom || resizingLeft || resizingRight)
                     {
-                        @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY())).orElse(null);
+                        newTop = curSelectionBounds.topLeftIncl.rowIndex;
+                        newBottom = curSelectionBounds.bottomRightIncl.rowIndex;
+                        newLeft = curSelectionBounds.topLeftIncl.columnIndex;
+                        newRight = curSelectionBounds.bottomRightIncl.columnIndex;
                         if (pos != null)
                         {
                             if (resizingTop)
@@ -549,17 +561,26 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         newTop = Utility.maxRow(CellPosition.row(1), newTop);
                         newBottom = Utility.maxRow(newTop, newBottom);
                         newRight = Utility.maxCol(newLeft, newRight);
-                        
-                        curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
-                        destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
-                        trim.set(new TrimChoice(
+                    }
+                    else
+                    {
+                        if (pos == null)
+                            return;
+                        // Drag from the original position where they pressed:
+                        newTop = Utility.minRow(pos.rowIndex, mousePressed.rowIndex);
+                        newBottom = Utility.maxRow(pos.rowIndex, mousePressed.rowIndex);
+                        newLeft = Utility.minCol(pos.columnIndex, mousePressed.columnIndex);
+                        newRight = Utility.maxCol(pos.columnIndex, mousePressed.columnIndex);
+                    }
+                    curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
+                    destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
+                    trim.set(new TrimChoice(
                             curSelectionBounds.topLeftIncl.rowIndex - getDataDisplayTopLeftIncl().rowIndex - getPosition().rowIndex,
                             getBottomRightIncl().rowIndex - curSelectionBounds.bottomRightIncl.rowIndex,
-                                curSelectionBounds.topLeftIncl.columnIndex,
-                                getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
-                        ));
-                        withParent_(p -> p.positionOrAreaChanged());
-                    }
+                            curSelectionBounds.topLeftIncl.columnIndex,
+                            getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
+                    ));
+                    withParent_(p -> p.positionOrAreaChanged());
                 });
             });
             mousePane.setOnScroll(e -> {
