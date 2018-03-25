@@ -138,6 +138,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         {
             setClip(clip);
             setRight(label);
+            setPickOnBounds(false);
             getStyleClass().add("virt-grid-row-label-pane");
             label.getStyleClass().add("virt-grid-row-label");
             label.setMaxHeight(Double.MAX_VALUE);
