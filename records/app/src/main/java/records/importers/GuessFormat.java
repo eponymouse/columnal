@@ -91,6 +91,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -395,10 +396,11 @@ public class GuessFormat
 
             List<TrimChoice> headerRowChoices = new ArrayList<>();
             // TODO guess based on alphabets
+            headerRowChoices.add(new TrimChoice(0, 0, 0, 0));
 
-            return ChoicePoint.choose(headerRowChoices.isEmpty() ? Quality.NOTVIABLE : Quality.PROMISING, 0, TrimChoice.getType(), (TrimChoice trim) ->
+            return 
                 ChoicePoint.choose(Quality.PROMISING, 0, SeparatorChoice.getType(), (SeparatorChoice sep) ->
-                ChoicePoint.choose(Quality.PROMISING, 0, QuoteChoice.getType(), (QuoteChoice quot) ->
+                ChoicePoint.choose(Quality.PROMISING, 0, QuoteChoice.getType(), (QuoteChoice quot) -> 
                 {
                     Multiset<Integer> counts = HashMultiset.create();
                     for (int i = 0; i < initial.size(); i++)
@@ -424,17 +426,16 @@ public class GuessFormat
                     }
                     List<ColumnCountChoice> viableColumnCounts = Multisets.copyHighestCountFirst(counts).entrySet().stream().limit(10).<@NonNull ColumnCountChoice>map(e -> new ColumnCountChoice(e.getElement())).collect(Collectors.<@NonNull ColumnCountChoice>toList());
 
-                    return ChoicePoint.choose(quality, score, ColumnCountChoice.getType(), (ColumnCountChoice cc) ->
+                    return ChoicePoint.choose(quality, score, ColumnCountChoice.getType(), (ColumnCountChoice cc) -> ChoicePoint.choose(headerRowChoices.isEmpty() ? Quality.NOTVIABLE : Quality.PROMISING, 0, TrimChoice.getType(), (TrimChoice trim) ->
                     {
                         List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot).columnContents);
                         Format format = guessBodyFormat(mgr, cc.columnCount, trim, initialVals);
                         TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
                         double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType) && !(c.type instanceof BlankColumnType)).count() / (double)textFormat.columnTypes.size();
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat);
-                    }, viableColumnCounts, null);
+                    }, headerRowChoices, /* This needs to be non-null (see canPick implementation), but doesn't need to work: */s -> Either.left(s)), viableColumnCounts, null);
                 }, Arrays.asList(quot(null), quot("\""), quot("\'")), enterSingleChar(QuoteChoice::new))
-                , Arrays.asList(sep(";"), sep(","), sep("\t"), sep(":"), sep("|"), sep(" ")), enterSingleChar(SeparatorChoice::new))
-                , headerRowChoices, s -> Either.left("GUI error"));
+                , Arrays.asList(sep(";"), sep(","), sep("\t"), sep(":"), sep("|"), sep(" ")), enterSingleChar(SeparatorChoice::new));
         }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()), GuessFormat::pickCharset);
     }
 
@@ -876,6 +877,7 @@ public class GuessFormat
             return Choices.FINISHED;
         else
         {
+            @Nullable Supplier<Choices> fallback = null;
             // At the moment, we just try first and if that gives promising all the way, we take it:
             for (C choice : options.quickPicks)
             {
@@ -892,6 +894,14 @@ public class GuessFormat
                         }
                         // Otherwise try next choice
                     }
+                    else if (next.getQuality() == Quality.FALLBACK)
+                    {
+                        Options<C> optionsFinal = options;
+                        fallback = () -> {
+                            Choices inner = findBestGuess(next);
+                            return inner.isFinished() ? inner.with(optionsFinal.choiceType, choice) : Choices.UNFINISHED;
+                        };
+                    }
                 }
                 catch (InternalException e)
                 {
@@ -899,7 +909,10 @@ public class GuessFormat
                 }
             }
             // No options found:
-            return Choices.UNFINISHED;
+            if (fallback != null)
+                return fallback.get();
+            else
+                return Choices.UNFINISHED;
         }
     }
 
