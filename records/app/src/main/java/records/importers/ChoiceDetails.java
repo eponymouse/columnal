@@ -4,6 +4,7 @@ import annotation.help.qual.HelpKey;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import utility.Either;
 
@@ -17,15 +18,17 @@ public class ChoiceDetails<C>
 {
     private final @LocalizableKey String labelKey;
     private final @HelpKey String helpKey;
-    public final ImmutableList<C> quickPicks;
+    public final ImmutableList<@NonNull C> quickPicks;
     // If null, quick picks are the only options.  If non-null, offer an "Other" pick
     // in the combo box which shows a text field:
-    public final @Nullable Function<String, Either<@Localized String, C>> stringEntry;
+    public final @Nullable Function<String, Either<@Localized String, @NonNull C>> stringEntry;
 
-    public ChoiceDetails(@LocalizableKey String labelKey, @HelpKey String helpKey)
+    public ChoiceDetails(@LocalizableKey String labelKey, @HelpKey String helpKey, ImmutableList<C> quickPicks, @Nullable Function<String, Either<String, C>> stringEntry)
     {
         this.labelKey = labelKey;
         this.helpKey = helpKey;
+        this.quickPicks = quickPicks;
+        this.stringEntry = stringEntry;
     }
 
     public @LocalizableKey String getLabelKey()

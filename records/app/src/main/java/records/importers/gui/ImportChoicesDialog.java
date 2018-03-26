@@ -95,7 +95,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @OnThread(Tag.FXPlatform)
-public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<ImportInfo<FORMAT>>
+public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
 {
     public static class SourceInfo
     {
@@ -109,7 +109,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<ImportInf
         }
     }
 
-    public ImportChoicesDialog(TableManager mgr, String suggestedName, Import<FORMAT> importer)
+    public <SRC_FORMAT> ImportChoicesDialog(TableManager mgr, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
     {
         SimpleObjectProperty<@Nullable RecordSet> destRecordSet = new SimpleObjectProperty<>(null);
         VirtualGrid destGrid = new VirtualGrid(null, 0, 0);
@@ -142,11 +142,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<ImportInf
         //SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
         //choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
 
-        SimpleObjectProperty<@Nullable FORMAT> formatProperty = new SimpleObjectProperty<>(null);
-        FXUtility.addChangeListenerPlatform(formatProperty, format -> {
-            if (format != null)
+        //SimpleObjectProperty<@Nullable FORMAT> destFormatProperty = new SimpleObjectProperty<>(null);
+        FXUtility.addChangeListenerPlatform(importer.currentSrcFormat(), srcFormat -> {
+            if (srcFormat != null)
             {
-                @NonNull FORMAT formatNonNull = format;
+                @NonNull SRC_FORMAT formatNonNull = srcFormat;
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
@@ -158,8 +158,33 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<ImportInf
                                 srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
                             });
                         }
-                        
-                        recordSet = importer.loadDest().apply(formatNonNull);
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        Log.log(e);
+                        Platform.runLater(() -> {
+                            srcDataDisplay.setColumns(ImmutableList.of(), null, null);
+                            //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                        });
+
+                    }
+                });
+            }
+            else
+            {
+                destData.setColumns(ImmutableList.of(), null, null);
+            }
+        });
+        
+        FXUtility.addChangeListenerPlatform(destFormatProperty, destFormat -> {
+            if (destFormat != null)
+            {
+                @NonNull FORMAT formatNonNull = destFormat;
+                TrimChoice trim = srcDataDisplay.trimExpression().get();
+                Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
+                    try
+                    {
+                        RecordSet recordSet = importer.loadDest().apply(new Pair<>(formatNonNull, trim));
                         if (recordSet != null)
                         {
                             @NonNull RecordSet recordSetNonNull = recordSet;
@@ -207,7 +232,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<ImportInf
         });
         //TODO disable ok button if name isn't valid
         setResultConverter(bt -> {
-            @Nullable FORMAT format = formatProperty.get();
+            @Nullable FORMAT format = destFormatProperty.get();
             if (bt == ButtonType.OK && format != null)
             {
                 return new ImportInfo<>(suggestedName/*, linkCopyButtons.valueProperty().get()*/);

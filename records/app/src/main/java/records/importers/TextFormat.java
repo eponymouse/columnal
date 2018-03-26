@@ -1,5 +1,6 @@
 package records.importers;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.importers.GuessFormat.TrimChoice;
 
@@ -28,7 +29,7 @@ public class TextFormat extends Format
     }
 
     // Constructor for testing
-    public TextFormat(int trimHead, List<ColumnInfo> columnTypes, @Nullable String separator, @Nullable String quote, Charset charset)
+    public TextFormat(int trimHead, ImmutableList<ColumnInfo> columnTypes, @Nullable String separator, @Nullable String quote, Charset charset)
     {
         super(new TrimChoice(trimHead, 0, 0, 0), columnTypes);
         this.separator = separator;

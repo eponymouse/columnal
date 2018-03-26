@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -179,7 +180,8 @@ public class EditableRecordSet extends RecordSet
     }
 
     @Override
-    public int getLength() throws UserException, InternalException
+    @SuppressWarnings("units")
+    public @TableDataRowIndex int getLength() throws UserException, InternalException
     {
         return curLength;
     }

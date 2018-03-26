@@ -208,7 +208,7 @@ public class HTMLImporter implements Importer
             @Initialized SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
 
             SimulationFunction<Format, EditableRecordSet> loadData = format -> {
-                return ImporterUtility.makeEditableRecordSet(mgr, vals, format);
+                return ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, format.columnTypes);
                 // Make sure we don't keep a reference to vals:
                 // Not because we null it, but because we make it non-final.
                 //results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));

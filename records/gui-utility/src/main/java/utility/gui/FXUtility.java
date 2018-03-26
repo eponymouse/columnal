@@ -267,7 +267,7 @@ public class FXUtility
 
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
-    public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<@Nullable T> listener)
+    public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<? super @Nullable T> listener)
     {
         // Defeat thread checker:
         property.addListener(new ChangeListener<T>()

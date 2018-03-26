@@ -1,5 +1,6 @@
 package records.importers;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.importers.GuessFormat.TrimChoice;
 
@@ -13,10 +14,10 @@ import java.util.Objects;
 public class Format
 {
     public final TrimChoice trimChoice;
-    public final List<ColumnInfo> columnTypes;
+    public final ImmutableList<ColumnInfo> columnTypes;
     public final List<String> problems = new ArrayList<>();
 
-    public Format(TrimChoice trimChoice, List<ColumnInfo> columnTypes)
+    public Format(TrimChoice trimChoice, ImmutableList<ColumnInfo> columnTypes)
     {
         this.trimChoice = trimChoice;
         this.columnTypes = columnTypes;

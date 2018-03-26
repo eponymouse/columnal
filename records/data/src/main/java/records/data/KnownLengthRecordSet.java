@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.units.TableDataRowIndex;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExFunction;
@@ -26,7 +27,8 @@ public class KnownLengthRecordSet extends RecordSet
     }
 
     @Override
-    public int getLength() throws UserException, InternalException
+    @SuppressWarnings("units")
+    public @TableDataRowIndex int getLength() throws UserException, InternalException
     {
         return length;
     }

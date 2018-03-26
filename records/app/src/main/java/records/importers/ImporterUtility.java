@@ -107,13 +107,11 @@ public class ImporterUtility
     @OnThread(Tag.Simulation)
     public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
     {
-        Log.debug("Trimming: " + format.trimChoice);
-        vals = format.trimChoice.trim(vals);
         @SuppressWarnings({"keyfor", "units"})
         @KeyForBottom @UnitsBottom List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
-        for (int i = 0; i < format.columnTypes.size(); i++)
+        for (int i = 0; i < columnTypes.size(); i++)
         {
-            ColumnInfo columnInfo = format.columnTypes.get(i);
+            ColumnInfo columnInfo = columnTypes.get(i);
             int iFinal = i;
             List<String> slice = Utility.sliceSkipBlankRows(vals, 0, iFinal);
             ColumnType columnType = columnInfo.type;
@@ -140,7 +138,7 @@ public class ImporterUtility
                 OrBlankColumnType or = (OrBlankColumnType) columnType;
                 NumericColumnType inner = (NumericColumnType) or.getInner();
                 DataType numberType = DataType.number(new NumberInfo(inner.unit));
-                @Nullable DataType type = mgr.getTypeManager().getMaybeType().instantiate(
+                @Nullable DataType type = mgr.getMaybeType().instantiate(
                     ImmutableList.of(numberType)
                 );
                 @NonNull DataType typeFinal = type;

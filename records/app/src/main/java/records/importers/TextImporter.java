@@ -23,7 +23,9 @@ import records.data.datatype.TypeManager;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
+import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -91,11 +93,11 @@ public class TextImporter implements Importer
     public static void importTextFile(TableManager mgr, File textFile, CellPosition destination, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
-        GuessFormat.guessTextFormatGUI_Then(mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, format ->
+        GuessFormat.guessTextFormatGUI_Then(mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, impInfo ->
         {
             try
             {
-                DataSource ds = makeDataSource(mgr, textFile, format.getFirst().getInitialLoadDetails(destination), format.getSecond());
+                DataSource ds = makeDataSource(mgr, textFile, impInfo.getInitialLoadDetails(destination), impInfo.getFormat());
                 Platform.runLater(() -> then.consume(ds));
             }
             catch (InternalException | UserException | IOException e)
@@ -123,9 +125,9 @@ public class TextImporter implements Importer
     }
 */
     @OnThread(Tag.Simulation)
-    private static DataSource makeDataSource(TableManager mgr, final File textFile, final InitialLoadDetails initialLoadDetails, final TextFormat format) throws IOException, InternalException, UserException
+    private static DataSource makeDataSource(TableManager mgr, final File textFile, final InitialLoadDetails initialLoadDetails, final FinalTextFormat format) throws IOException, InternalException, UserException
     {
-        RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format, null);
+        RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format);
         //if (importInfo.linkFile)
             //return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         //else
@@ -141,21 +143,21 @@ public class TextImporter implements Importer
             // Must be one per column:
             ReadState reader = Utility.skipFirstNRows(textFile, charset, 0);
             int iFinal = i;
-            columns.add(rs -> TextFileColumn.stringColumn(rs, reader, separator, new ColumnId("Column " + (iFinal + 1)), iFinal, totalColumns, null));
+            columns.add(rs -> TextFileColumn.stringColumn(rs, reader, separator, new ColumnId("Column " + (iFinal + 1)), iFinal, totalColumns));
         }
 
         return new KnownLengthRecordSet(columns, Utility.countLines(textFile, charset));
     }
 
     @OnThread(Tag.Simulation)
-    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format) throws IOException, InternalException, UserException
+    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, FinalTextFormat format) throws IOException, InternalException, UserException
     {
         List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
         for (int i = 0; i < totalColumns; i++)
         {
             // Must be one per column:
-            ReadState reader = Utility.skipFirstNRows(textFile, format.charset, format.trimChoice.trimFromTop);
+            ReadState reader = Utility.skipFirstNRows(textFile, format.initialTextFormat.charset, format.trimChoice.trimFromTop);
 
             ColumnInfo columnInfo = format.columnTypes.get(i);
             int iFinal = i;
@@ -164,7 +166,7 @@ public class TextImporter implements Importer
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
+                    return TextFileColumn.numericColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)
@@ -176,7 +178,7 @@ public class TextImporter implements Importer
                     DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
                     DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(numberType));
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, iFinal, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return new TaggedValue(1, null);
@@ -193,14 +195,14 @@ public class TextImporter implements Importer
             }
             else if (columnInfo.type instanceof TextColumnType)
             {
-                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener));
+                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, iFinal, totalColumns));
             }
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return TextFileColumn.dateColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return TextFileColumn.dateColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
             else if (columnInfo.type instanceof BlankColumnType)
@@ -231,7 +233,7 @@ public class TextImporter implements Importer
                 {
                     try
                     {
-                        rowCount = Utility.countLines(textFile, format.charset) - format.trimChoice.trimFromTop - format.trimChoice.trimFromBottom;
+                        rowCount = Utility.countLines(textFile, format.initialTextFormat.charset) - format.trimChoice.trimFromTop - format.trimChoice.trimFromBottom;
                     } catch (IOException e)
                     {
                         throw new FetchException("Error counting rows", e);

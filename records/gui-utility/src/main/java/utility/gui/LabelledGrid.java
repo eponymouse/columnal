@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by neil on 01/05/2017.
  */
-@OnThread(Tag.FXPlatform)
+@OnThread(Tag.FX)
 public class LabelledGrid extends GridPane
 {
     private int rows = 0;

@@ -1,22 +1,19 @@
 package records.importers;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
-import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.KeyFor;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
-import records.data.Table.Display;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
@@ -26,16 +23,11 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stable.ColumnHandler;
-import records.gui.stable.EditorKitCallback;
-import records.gui.stf.TableDisplayUtility;
 import records.importers.gui.ImportChoicesDialog;
-import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import records.importers.gui.ImporterGUI;
 import records.transformations.function.ToDate;
 import threadchecker.OnThread;
@@ -43,13 +35,16 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationConsumer;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
+import utility.gui.FXUtility;
 import utility.gui.LabelledGrid;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
@@ -63,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -116,7 +110,7 @@ public class GuessFormat
 
     public static ChoiceDetails<Charset> charsetChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.charset", "guess-format/charset");
+        return new ChoiceDetails<>("guess.charset", "guess-format/charset", quickPicks, stringEntry);
     }
 
     // public for testing
@@ -169,7 +163,7 @@ public class GuessFormat
 
         public static ChoiceDetails<TrimChoice> getType()
         {
-            return new ChoiceDetails<>("guess.headerRow", "guess-format/headerRow");
+            return new ChoiceDetails<>("guess.headerRow", "guess-format/headerRow", quickPicks, stringEntry);
         }
 
         public List<List<String>> trim(List<List<String>> original)
@@ -201,7 +195,7 @@ public class GuessFormat
 */
     public static ChoiceDetails<String> separatorChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.separator", "guess-format/separator");
+        return new ChoiceDetails<>("guess.separator", "guess-format/separator", quickPicks, stringEntry);
     }
 
         /*
@@ -225,7 +219,7 @@ public class GuessFormat
 */
     public static ChoiceDetails<String> quoteChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.quote", "guess-format/quote");
+        return new ChoiceDetails<>("guess.quote", "guess-format/quote", quickPicks, stringEntry);
     }
     
     public static class InitialTextFormat
@@ -235,6 +229,13 @@ public class GuessFormat
         public final @Nullable String separator;
         // null means no quote
         public final @Nullable String quote;
+
+        public InitialTextFormat(Charset charset, @Nullable String separator, @Nullable String quote)
+        {
+            this.charset = charset;
+            this.separator = separator;
+            this.quote = quote;
+        }
     }
     
     public static class FinalTextFormat
@@ -242,28 +243,50 @@ public class GuessFormat
         public final InitialTextFormat initialTextFormat;
         public final TrimChoice trimChoice;
         public final ImmutableList<ColumnInfo> columnTypes;
+
+        public FinalTextFormat(InitialTextFormat initialTextFormat, TrimChoice trimChoice, ImmutableList<ColumnInfo> columnTypes)
+        {
+            this.initialTextFormat = initialTextFormat;
+            this.trimChoice = trimChoice;
+            this.columnTypes = columnTypes;
+        }
     }
 
+    @OnThread(Tag.Simulation)
     public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset)
     {
-        LabelledGrid labelledGrid = new LabelledGrid();
+        
         @KeyFor("initialByCharset") Charset initialCharsetGuess = guessCharset(initialByCharset);
         SimpleObjectProperty<Charset> charsetChoice = new SimpleObjectProperty<>();
         Pair<String, String> sepAndQuot = guessSepAndQuot(initialByCharset.get(initialCharsetGuess));
         SimpleObjectProperty<String> sepChoice = new SimpleObjectProperty<>(sepAndQuot.getFirst());
         SimpleObjectProperty<String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot.getSecond());
-        labelledGrid.addRow(ImporterGUI.makeGUI(charsetChoiceDetails(), charsetChoice, initialByCharset.keySet()));
-        labelledGrid.addRow(ImporterGUI.makeGUI(separatorChoiceDetails(), sepChoice,
-                ImmutableList.of(",", ";", "\t", ":", "|", " ") ));
-        labelledGrid.addRow(ImporterGUI.makeGUI(quoteChoiceDetails(), quoteChoice, ImmutableList.of("", "\"", "\'")));
-
-        ObjectProperty<InitialTextFormat> srcFormat = new SimpleObjectProperty<>(new InitialTextFormat());
+        ObjectProperty<InitialTextFormat> srcFormat = new SimpleObjectProperty<>(new InitialTextFormat(charsetChoice.get(), sepChoice.get(), quoteChoice.get()));
         
         return new Import<InitialTextFormat, FinalTextFormat>()
-        {            
+        {
+            @MonotonicNonNull LabelledGrid labelledGrid;
+            
             @Override
+            @OnThread(Tag.FXPlatform)
             public Node getGUI()
             {
+                if (labelledGrid == null)
+                {
+                    labelledGrid = new LabelledGrid();
+                    labelledGrid.addRow(ImporterGUI.makeGUI(charsetChoiceDetails(), charsetChoice, initialByCharset.keySet()));
+                    labelledGrid.addRow(ImporterGUI.makeGUI(separatorChoiceDetails(), sepChoice,
+                        ImmutableList.of(",", ";", "\t", ":", "|", " ") ));
+                    labelledGrid.addRow(ImporterGUI.makeGUI(quoteChoiceDetails(), quoteChoice, ImmutableList.of("", "\"", "\'")));
+
+                    
+                    FXPlatformConsumer<@Nullable Object> update = o -> {
+                        srcFormat.set(new InitialTextFormat(charsetChoice.get(), sepChoice.get(), quoteChoice.get()));
+                    };
+                    FXUtility.addChangeListenerPlatformNN(charsetChoice, update);
+                    FXUtility.addChangeListenerPlatform(quoteChoice, update);
+                    FXUtility.addChangeListenerPlatform(sepChoice, update);
+                }
                 return labelledGrid;
             }
 
@@ -274,12 +297,12 @@ public class GuessFormat
             }
 
             @Override
-            public SimulationFunction<InitialTextFormat, Pair<TrimChoice, ? extends RecordSet>> loadSource()
+            public SimulationFunction<InitialTextFormat, Pair<TrimChoice, @Nullable RecordSet>> loadSource()
             {
                 return this::loadSrc;
             }
 
-            public Pair<TrimChoice, RecordSet> loadSrc(InitialTextFormat initialTextFormat) throws GuessException
+            public Pair<TrimChoice, @Nullable RecordSet> loadSrc(InitialTextFormat initialTextFormat) throws GuessException, InternalException
             {
                 List<String> initialCheck = initialByCharset.get(initialTextFormat.charset);
                 if (initialCheck == null)
@@ -336,6 +359,30 @@ public class GuessFormat
                 return p -> ImporterUtility.makeEditableRecordSet(typeManager, values, columnTypes);
             }
         };
+    }
+
+    private static TrimChoice guessTrim(List<List<String>> values)
+    {
+        // TODO
+        return new TrimChoice(0, 0, 0,0);
+    }
+
+    private static Pair<String, @Nullable String> guessSepAndQuot(List<String> strings)
+    {
+        // TODO
+        return new Pair<>(",", null);
+    }
+
+    private static @Nullable Charset guessCharset(Map<Charset, List<String>> initialByCharset)
+    {
+        if (initialByCharset.isEmpty())
+            return null;
+        // Pretty simple: if UTF-8 is in there, use that, else use any.
+        Charset utf8 = Charset.forName("UTF-8");
+        if (initialByCharset.containsKey(utf8))
+            return utf8;
+        else 
+            return initialByCharset.keySet().iterator().next();
     }
 
     private static Either<@Localized String, Charset> pickCharset(String s)
@@ -620,7 +667,7 @@ public class GuessFormat
             //.filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size())
             .max(Entry.comparingByKey()).map((Entry<@KeyFor("viableColumnNameRows") Integer, Integer> e) -> initialVals.get(e.getKey()));
 
-        List<ColumnInfo> columns = new ArrayList<>(columnCount);
+        ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builderWithExpectedSize(columnCount);
         HashSet<ColumnId> usedNames = new HashSet<>();
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
         {
@@ -663,19 +710,19 @@ public class GuessFormat
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), columnName));
             usedNames.add(columnName);
         }
-        return new Format(trimChoice, columns);
+        return columns.build();
     }
 
     public static class ImportInfo<FORMAT>
     {
         private final TableId suggestedTableId;
-        private final FORMAT format;
-        private final TrimChoice trimChoice; 
+        private final FORMAT format; 
         //public final boolean linkFile;
 
-        public ImportInfo(String suggestedName/*, boolean linkFile*/)
+        public ImportInfo(String suggestedName/*, boolean linkFile*/, FORMAT format)
         {
             this.suggestedTableId = new TableId(suggestedName);
+            this.format = format;
             //this.linkFile = linkFile;
         }
         
@@ -683,92 +730,21 @@ public class GuessFormat
         {
             return new InitialLoadDetails(suggestedTableId, destination, null);
         }
+        
+        public FORMAT getFormat()
+        {
+            return format;
+        }
     }
 
     @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, Consumer<Pair<ImportInfo, TextFormat>> then)
+    public static void guessTextFormatGUI_Then(TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, SimulationConsumer<ImportInfo<FinalTextFormat>> then)
     {
-        ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr.getUnitManager(), initial);
-        Platform.runLater(() ->
-        {
-            ColumnHandler columnHandler = new ColumnHandler()
-            {
-                @Override
-                public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
-                {
-                }
-
-                @Override
-                public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
-                {
-                }
-
-                @Override
-                public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
-                {
-                }
-
-                @Override
-                public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
-                {
-                }
-
-                @Override
-                public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
-                {
-                    // TODO
-                }
-
-                @Override
-                public @OnThread(Tag.Simulation) @Value Object getValue(int index) throws InternalException, UserException
-                {
-                    //TODO
-                    return DataTypeUtility.value("");
-                }
-
-                @Override
-                public void columnResized(double width)
-                {
-
-                }
-
-                @Override
-                public boolean isEditable()
-                {
-                    return false;
-                }
-            };
-            SimulationFunction<TextFormat, ? extends RecordSet> loadText = format -> {
-                try
-                {
-                    return TextImporter.makeRecordSet(mgr.getTypeManager(), file, format, null);
-                }
-                catch (IOException e)
-                {
-                    throw new UserException("Problem reading file", e);
-                }
-            };
-            new ImportChoicesDialog<>(mgr, suggestedName, choicePoints, loadText, choices -> {
-                @Nullable CharsetChoice charsetChoice = choices.getChoice(CharsetChoice.getType());
-                @Nullable ColumnCountChoice columnCountChoice = choices.getChoice(ColumnCountChoice.getType());
-                @Nullable SeparatorChoice separatorChoice = choices.getChoice(SeparatorChoice.getType());
-                @Nullable QuoteChoice quoteChoice = choices.getChoice(QuoteChoice.getType());
-                if (charsetChoice != null && columnCountChoice != null && separatorChoice != null && quoteChoice != null)
-                {
-                    try
-                    {
-                        RecordSet rs = TextImporter.makeSrcRecordSet(file, charsetChoice.charset, separatorChoice.separator, quoteChoice.quote, columnCountChoice.columnCount);
-                        return new SourceInfo(TableDisplayUtility.makeStableViewColumns(rs, new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN.offsetByRowCols(2 + r, c), null), rs.getLength());
-                    }
-                    catch (IOException e)
-                    {
-                        throw new UserException("IO error reading " + file, e);
-                    }
-                }
-                return null;
-            }).showAndWait().ifPresent(then);
+        Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial);
+        Platform.runLater(() -> {
+            new ImportChoicesDialog<FinalTextFormat>(mgr, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
+                Workers.onWorkerThread("Importing", Priority.SAVE_ENTRY, () -> then.consume(importInfo));
+            });
         });
-        Log.debug("" + choicePoints);
-
     }
 }
