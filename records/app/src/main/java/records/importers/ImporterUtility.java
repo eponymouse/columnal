@@ -29,6 +29,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ReadOnlyStringColumnHandler;
@@ -104,7 +105,7 @@ public class ImporterUtility
 
     @NonNull
     @OnThread(Tag.Simulation)
-    public static EditableRecordSet makeEditableRecordSet(TableManager mgr, List<List<String>> vals, Format format) throws InternalException, UserException
+    public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
     {
         Log.debug("Trimming: " + format.trimChoice);
         vals = format.trimChoice.trim(vals);

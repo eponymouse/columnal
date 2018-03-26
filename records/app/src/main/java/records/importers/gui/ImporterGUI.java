@@ -1,0 +1,149 @@
+package records.importers.gui;
+
+import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.nullness.qual.KeyForBottom;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.UnitsBottom;
+import records.gui.ErrorableTextField;
+import records.gui.ErrorableTextField.ConversionResult;
+import records.importers.ChoiceDetails;
+import utility.Either;
+import utility.FXPlatformFunction;
+import utility.gui.FXUtility;
+import utility.gui.GUI;
+import utility.gui.LabelledGrid.Row;
+import utility.gui.TranslationUtility;
+
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+
+public class ImporterGUI
+{
+    public static <C> Row makeGUI(ChoiceDetails<C> charsetChoiceDetails, ObjectProperty<C> charsetChoice, Collection<C> charsets)
+    {
+        if (options.isEmpty())
+        {
+            // This is only if quick picks is empty and manual entry is not possible:
+            choiceNode = new Label("No possible options for " + TranslationUtility.getString(options.choiceType.getLabelKey()));
+            choiceExpression = new ReadOnlyObjectWrapper<>(null);
+        }
+        else if (options.quickPicks.size() == 1 && options.stringEntry == null)
+        {
+            choiceNode = new Label(options.quickPicks.get(0).toString());
+            choiceExpression = new ReadOnlyObjectWrapper<>(options.quickPicks.get(0));
+        }
+        else
+        {
+            List<PickOrOther<C>> quickAndOther = new ArrayList<>();
+            for (C quickPick : options.quickPicks)
+            {
+                quickAndOther.add(new PickOrOther<>(quickPick));
+            }
+            if (options.stringEntry != null)
+                quickAndOther.add(new PickOrOther<>());
+            final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(quickAndOther));
+            @Nullable C choice = previousChoices.getChoice(options.choiceType);
+            if (choice == null || !combo.getItems().contains(choice))
+                combo.getSelectionModel().selectFirst();
+            else
+                combo.getSelectionModel().select(new PickOrOther<>(choice));
+
+            final @Nullable @Initialized ObjectExpression<@Nullable C> fieldValue;
+            if (options.stringEntry != null)
+            {
+                final @NonNull Function<String, Either<@Localized String, C>> stringEntry = options.stringEntry;
+                ErrorableTextField<C> field = new ErrorableTextField<>(s -> {
+                    return stringEntry.apply(s).either(e -> ConversionResult.error(e), v -> ConversionResult.success(v));
+                });
+                fieldValue = field.valueProperty();
+                choiceNode = new HBox(combo, field.getNode());
+                field.getNode().visibleProperty().bind(Bindings.equal(combo.getSelectionModel().selectedItemProperty(), new PickOrOther<>()));
+                field.getNode().managedProperty().bind(field.getNode().visibleProperty());
+                FXUtility.addChangeListenerPlatformNN(field.getNode().visibleProperty(), vis -> {
+                    if (vis)
+                        field.requestFocusWhenInScene();
+                });
+            }
+            else
+            {
+                fieldValue = null;
+                choiceNode = combo;
+            }
+            ReadOnlyObjectProperty<@Nullable PickOrOther<C>> selectedItemProperty = combo.getSelectionModel().selectedItemProperty();
+            FXPlatformFunction<@Nullable PickOrOther<C>, @Nullable C> extract = (@Nullable PickOrOther<C> selectedItem) -> {
+                if (selectedItem != null && selectedItem.value != null)
+                    return selectedItem.value;
+                else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
+                    return fieldValue.get();
+                else
+                    return null;
+            };
+            if (fieldValue == null)
+                choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract);
+            else
+            {
+                @SuppressWarnings({"keyfor", "units"})
+                @KeyForBottom @UnitsBottom ImmutableList<ObservableValue<?>> fieldList = ImmutableList.of(fieldValue);
+                choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract, fieldList);
+            }
+        }
+        int rowNumber = choiceNode == null ? controlGrid.getLastRow() : controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
+    }
+
+    // Either a value of type C, or an "Other" item
+    private static class PickOrOther<C>
+    {
+        private final @Nullable C value;
+
+        public PickOrOther()
+        {
+            this.value = null;
+        }
+
+        public PickOrOther(C value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PickOrOther<?> that = (PickOrOther<?>) o;
+
+            return value != null ? value.equals(that.value) : that.value == null;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return value != null ? value.hashCode() : 0;
+        }
+
+        @Override
+        public @Localized String toString()
+        {
+            return value == null ? TranslationUtility.getString("import.choice.specify") : value.toString();
+        }
+    }
+}

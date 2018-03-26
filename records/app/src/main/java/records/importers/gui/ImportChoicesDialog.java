@@ -12,6 +12,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.BoundingBox;
@@ -66,12 +67,9 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ScrollGroup.ScrollLock;
 import records.gui.stf.TableDisplayUtility;
-import records.importers.ChoicePoint;
-import records.importers.ChoicePoint.Choice;
-import records.importers.ChoicePoint.Options;
-import records.importers.Choices;
 import records.importers.Format;
 import records.importers.GuessFormat;
+import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
 import threadchecker.OnThread;
@@ -97,7 +95,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @OnThread(Tag.FXPlatform)
-public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<ImportInfo, FORMAT>>
+public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<ImportInfo<FORMAT>>
 {
     public static class SourceInfo
     {
@@ -111,7 +109,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
     }
 
-    public ImportChoicesDialog(TableManager mgr, String suggestedName, ChoicePoint<?, FORMAT> choicePoints, SimulationFunction<FORMAT, ? extends @Nullable RecordSet> loadData, SimulationFunction<Choices, @Nullable SourceInfo> srcData)
+    public ImportChoicesDialog(TableManager mgr, String suggestedName, Import<FORMAT> importer)
     {
         SimpleObjectProperty<@Nullable RecordSet> destRecordSet = new SimpleObjectProperty<>(null);
         VirtualGrid destGrid = new VirtualGrid(null, 0, 0);
@@ -152,7 +150,16 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
-                        RecordSet recordSet = loadData.apply(formatNonNull);
+                        RecordSet recordSet = importer.loadSource().apply(formatNonNull);
+                        if (recordSet != null)
+                        {
+                            @NonNull RecordSet recordSetNonNull = recordSet;
+                            Platform.runLater(() -> {
+                                srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                            });
+                        }
+                        
+                        recordSet = importer.loadDest().apply(formatNonNull);
                         if (recordSet != null)
                         {
                             @NonNull RecordSet recordSetNonNull = recordSet;
@@ -178,36 +185,6 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 destData.setColumns(ImmutableList.of(), null, null);
             }
         });
-        SimpleObjectProperty<@Nullable Choices> choicesProperty = new SimpleObjectProperty<>(null);
-        FXUtility.addChangeListenerPlatform(choicesProperty, curChoices -> {
-            if (curChoices != null)
-            {
-                @NonNull final Choices curChoicesNonNull = curChoices;
-                Workers.onWorkerThread("Showing import source", Priority.FETCH, () -> FXUtility.alertOnError_(() -> {
-                    SourceInfo sourceInfo = srcData.apply(curChoicesNonNull);
-                    if (sourceInfo != null)
-                    {
-                        @NonNull SourceInfo sourceInfoNonNull = sourceInfo;
-                        Platform.runLater(() -> {
-                            srcInfo.set(sourceInfoNonNull);
-                            srcDataDisplay.setColumns(sourceInfoNonNull.srcColumns, null, null);
-                        });
-                    }
-                }));
-            }
-        });
-
-        try
-        {
-            Choices bestGuess = GuessFormat.findBestGuess(choicePoints);
-
-            makeGUI(mgr.getTypeManager(), choicePoints, bestGuess, Choices.FINISHED, choices, destData, srcDataDisplay.trimExpression(), formatProperty, choicesProperty);
-        }
-        catch (InternalException e)
-        {
-            Log.log(e);
-            choices.addRow(new Row(new Label("Internal error: "), null, new TextFlow(new Text(e.getLocalizedMessage()))));
-        }
 
         // Crucial that these use the same margins, to get the scrolling to line up:
         Insets insets = new Insets(SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET, SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET);
@@ -233,7 +210,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             @Nullable FORMAT format = formatProperty.get();
             if (bt == ButtonType.OK && format != null)
             {
-                return new Pair<>(new ImportInfo(suggestedName/*, linkCopyButtons.valueProperty().get()*/), format);
+                return new ImportInfo<>(suggestedName/*, linkCopyButtons.valueProperty().get()*/);
             }
             return null;
         });
@@ -245,174 +222,6 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             //initModality(Modality.NONE); // For scenic view
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private static <C extends Choice, FORMAT extends Format> void makeGUI(TypeManager typeManager, final ChoicePoint<C, FORMAT> rawChoicePoint, Choices previousChoices, Choices currentChoices, LabelledGrid controlGrid, DataDisplay tableView, ObjectExpression<TrimChoice> trimObservable, ObjectProperty<@Nullable FORMAT> destProperty, ObjectProperty<@Nullable Choices> choicesProperty) throws InternalException
-    {
-        final Options<C> options = rawChoicePoint.getOptions();
-        if (options == null)
-        {
-            try
-            {
-                FORMAT t = rawChoicePoint.get();
-                destProperty.set(t);
-                choicesProperty.set(currentChoices);
-            }
-            catch (UserException e)
-            {
-                tableView.setColumns(ImmutableList.of(), null, null);
-                //tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
-            }
-            return;
-        }
-        @NonNull Options<C> optionsNonNull = options;
-        // Default handling:
-        final @Nullable Node choiceNode;
-        final ObjectExpression<@Nullable C> choiceExpression;
-        
-        // Trim is a special case:
-        if (options.choiceType.getChoiceClass().equals(TrimChoice.class))
-        {
-            choiceNode = null;
-            @SuppressWarnings("unchecked") // Safe because we know C is TrimChoice
-            ObjectExpression<@Nullable C> casted = (ObjectExpression<@Nullable C>) trimObservable;
-            choiceExpression = casted;
-        }
-        else if (options.isEmpty())
-        {
-            // This is only if quick picks is empty and manual entry is not possible:
-            choiceNode = new Label("No possible options for " + TranslationUtility.getString(options.choiceType.getLabelKey()));
-            choiceExpression = new ReadOnlyObjectWrapper<>(null);
-        }
-        else if (options.quickPicks.size() == 1 && options.stringEntry == null)
-        {
-            choiceNode = new Label(options.quickPicks.get(0).toString());
-            choiceExpression = new ReadOnlyObjectWrapper<>(options.quickPicks.get(0));
-        }
-        else
-        {
-            List<PickOrOther<C>> quickAndOther = new ArrayList<>();
-            for (C quickPick : options.quickPicks)
-            {
-                quickAndOther.add(new PickOrOther<>(quickPick));
-            }
-            if (options.stringEntry != null)
-                quickAndOther.add(new PickOrOther<>());
-            final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(quickAndOther));
-            @Nullable C choice = previousChoices.getChoice(options.choiceType);
-            if (choice == null || !combo.getItems().contains(choice))
-                combo.getSelectionModel().selectFirst();
-            else
-                combo.getSelectionModel().select(new PickOrOther<>(choice));
-
-            final @Nullable @Initialized ObjectExpression<@Nullable C> fieldValue;
-            if (options.stringEntry != null)
-            {
-                final @NonNull Function<String, Either<@Localized String, C>> stringEntry = options.stringEntry;
-                ErrorableTextField<C> field = new ErrorableTextField<>(s -> {
-                    return stringEntry.apply(s).either(e -> ConversionResult.error(e), v -> ConversionResult.success(v));
-                });
-                fieldValue = field.valueProperty();
-                choiceNode = new HBox(combo, field.getNode());
-                field.getNode().visibleProperty().bind(Bindings.equal(combo.getSelectionModel().selectedItemProperty(), new PickOrOther<>()));
-                field.getNode().managedProperty().bind(field.getNode().visibleProperty());
-                FXUtility.addChangeListenerPlatformNN(field.getNode().visibleProperty(), vis -> {
-                    if (vis)
-                        field.requestFocusWhenInScene();
-                });
-            }
-            else
-            {
-                fieldValue = null;
-                choiceNode = combo;
-            }
-            ReadOnlyObjectProperty<@Nullable PickOrOther<C>> selectedItemProperty = combo.getSelectionModel().selectedItemProperty();
-            FXPlatformFunction<@Nullable PickOrOther<C>, @Nullable C> extract = (@Nullable PickOrOther<C> selectedItem) -> {
-                if (selectedItem != null && selectedItem.value != null)
-                    return selectedItem.value;
-                else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
-                    return fieldValue.get();
-                else
-                    return null;
-            };
-            if (fieldValue == null)
-                choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract);
-            else
-            {
-                @SuppressWarnings({"keyfor", "units"})
-                @KeyForBottom @UnitsBottom ImmutableList<ObservableValue<?>> fieldList = ImmutableList.of(fieldValue);
-                choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, extract, fieldList);
-            }
-        }
-        int rowNumber = choiceNode == null ? controlGrid.getLastRow() : controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
-        FXPlatformConsumer<@Nullable C> pick = item -> {
-            if (item == null)
-            {
-                tableView.setColumns(ImmutableList.of(), null, null);
-                //tableView.setMessageWhenEmpty(new MessageWhenEmpty(TranslationUtility.getString("need.valid.option")));
-                return;
-            }
-            try
-            {
-                ChoicePoint<?, FORMAT> next = rawChoicePoint.select(item);
-                controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(typeManager, next, previousChoices, currentChoices.with(optionsNonNull.choiceType,item), controlGrid, tableView, trimObservable, destProperty, choicesProperty);
-            }
-            catch (InternalException e)
-            {
-                Log.log(e);
-                tableView.setColumns(ImmutableList.of(), null, null);
-                //tableView.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
-            }
-        };
-
-        @Nullable C choice = choiceExpression.get();
-        if (choice != null)
-            pick.consume(choice);
-        else if (!options.quickPicks.isEmpty())
-            pick.consume(options.quickPicks.get(0));
-        // Otherwise can't pick anything; no options available.
-        FXUtility.addChangeListenerPlatform(choiceExpression, pick);
-    }
-
-    // Either a value of type C, or an "Other" item
-    private static class PickOrOther<C extends Choice>
-    {
-        private final @Nullable C value;
-
-        public PickOrOther()
-        {
-            this.value = null;
-        }
-
-        public PickOrOther(C value)
-        {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            PickOrOther<?> that = (PickOrOther<?>) o;
-
-            return value != null ? value.equals(that.value) : that.value == null;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return value != null ? value.hashCode() : 0;
-        }
-
-        @Override
-        public @Localized String toString()
-        {
-            return value == null ? TranslationUtility.getString("import.choice.specify") : value.toString();
-        }
     }
 
     private static class DestDataDisplay extends DataDisplay
@@ -479,12 +288,19 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             setPosition(CellPosition.ORIGIN.offsetByRowCols(1, 0));
             this.mousePane = new Pane();
             this.srcInfo = srcInfo;
-            FXUtility.addChangeListenerPlatform(srcInfo, s -> {
-                if (s != null)
+            srcInfo.addListener(new ChangeListener<@Nullable SourceInfo>()
+            {
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                @Override
+                public void changed(ObservableValue<? extends @Nullable SourceInfo> prop, @Nullable SourceInfo oldInfo, @Nullable SourceInfo newInfo)
                 {
-                    // Reset selection:
-                    curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getPosition().offsetByRowCols(s.numRows, s.srcColumns.size() - 1));
-                    trim.set(new TrimChoice(0, 0, 0, 0));
+                    if (newInfo != null && (oldInfo == null || SrcDataDisplay.this.changedSize(oldInfo, newInfo)))
+                    {
+                        // Reset selection:
+                        curSelectionBounds = new RectangleBounds(SrcDataDisplay.this.getPosition().offsetByRowCols(1, 0), SrcDataDisplay.this.getPosition().offsetByRowCols(newInfo.numRows, newInfo.srcColumns.size() - 1));
+                        if (trim != null) // Won't be null, but checker doesn't realise
+                            trim.set(new TrimChoice(0, 0, 0, 0));
+                    }
                 }
             });
             this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getBottomRightIncl());
@@ -591,7 +407,12 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 e.consume();
             });
         }
-        
+
+        private boolean changedSize(SourceInfo oldInfo, SourceInfo newInfo)
+        {
+            return oldInfo.numRows != newInfo.numRows || oldInfo.srcColumns.size() != newInfo.srcColumns.size();
+        }
+
         private Cursor calculateCursor(double x, double y)
         {
             final int EXTRA = 5;

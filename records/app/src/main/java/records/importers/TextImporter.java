@@ -11,7 +11,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.data.TextFileColumn.TextFileColumnListener;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -106,15 +105,15 @@ public class TextImporter implements Importer
             }
         });
     }
-
+/*
     @OnThread(Tag.Simulation)
-    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile/*, boolean link*/) throws IOException, InternalException, UserException
+    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
             try
             {
-                return makeDataSource(mgr, textFile, new ImportInfo(textFile.getName()/*, link*/).getInitialLoadDetails(CellPosition.ORIGIN), format);
+                return makeDataSource(mgr, textFile, new ImportInfo(textFile.getName()).getInitialLoadDetails(CellPosition.ORIGIN), format);
             }
             catch (IOException e)
             {
@@ -122,7 +121,7 @@ public class TextImporter implements Importer
             }
         });
     }
-
+*/
     @OnThread(Tag.Simulation)
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final InitialLoadDetails initialLoadDetails, final TextFormat format) throws IOException, InternalException, UserException
     {
@@ -149,7 +148,7 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format, @Nullable TextFileColumnListener listener) throws IOException, InternalException, UserException
+    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format) throws IOException, InternalException, UserException
     {
         List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
@@ -165,7 +164,7 @@ public class TextImporter implements Importer
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
+                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)
@@ -177,7 +176,7 @@ public class TextImporter implements Importer
                     DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
                     DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(numberType));
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return new TaggedValue(1, null);

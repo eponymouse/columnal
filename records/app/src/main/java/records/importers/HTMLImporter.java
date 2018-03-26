@@ -6,6 +6,8 @@ import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -35,7 +37,9 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.events.EventTarget;
 import records.data.*;
 import records.gui.grid.GridAreaCellPosition;
+import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.GuessFormat.TrimChoice;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import records.importers.gui.ImportChoicesDialog.SourceInfo;
@@ -49,6 +53,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.UnitType;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -208,6 +213,27 @@ public class HTMLImporter implements Importer
                 // Not because we null it, but because we make it non-final.
                 //results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));
             };
+            Import<UnitType, ImmutableList<ColumnInfo>> imp = new Import<UnitType, ImmutableList<ColumnInfo>>()
+            {
+                @Override
+                public ObjectExpression<UnitType> currentSrcFormat()
+                {
+                    return new ReadOnlyObjectWrapper<>(UnitType.UNIT);
+                }
+
+                @Override
+                public SimulationFunction<UnitType, Pair<TrimChoice, ? extends RecordSet>> loadSource()
+                {
+                    return null;
+                }
+
+                @Override
+                public SimulationFunction<Pair<UnitType, TrimChoice>, Pair<ImmutableList<ColumnInfo>,? extends RecordSet>> loadDest()
+                {
+                    return null;
+                }
+            };
+            
             results.add(() -> {
                 @Nullable Pair<ImportInfo, Format> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals), loadData, c -> sourceInfo).showAndWait().orElse(null);
 
