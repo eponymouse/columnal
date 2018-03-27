@@ -41,7 +41,7 @@ import java.util.function.Function;
 public class ImporterGUI
 {
     @OnThread(Tag.FXPlatform)
-    public static <C> Row makeGUI(ChoiceDetails<C> choiceDetails, ObjectProperty<@Nullable C> currentChoice, Collection<C> charsets)
+    public static <C> Row makeGUI(ChoiceDetails<C> choiceDetails, ObjectProperty<@Nullable C> currentChoice)
     {
         Node choiceNode;
         if (choiceDetails.quickPicks.isEmpty() && choiceDetails.stringEntry == null)

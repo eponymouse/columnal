@@ -51,6 +51,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -72,11 +73,13 @@ public class GuessFormat
     // DEST_FORMAT is what you calculate post-trim for the column formats for the final item. 
     public static interface Import<SRC_FORMAT, DEST_FORMAT>
     {
+        @OnThread(Tag.FXPlatform)
         public default @Nullable Node getGUI()
         {
             return null;
         }
         
+        @OnThread(Tag.FXPlatform)
         public ObjectExpression<@Nullable SRC_FORMAT> currentSrcFormat();
 
         // Get the function which would load the source (import LHS) for the given format.
@@ -108,9 +111,11 @@ public class GuessFormat
         }
     }
 
-    public static ChoiceDetails<Charset> charsetChoiceDetails()
+    public static ChoiceDetails<Charset> charsetChoiceDetails(Collection<Charset> available)
     {
-        return new ChoiceDetails<>("guess.charset", "guess-format/charset", quickPicks, stringEntry);
+        // In future, we should allow users to specify
+        // (For now, they can just re-save as UTF-8)
+        return new ChoiceDetails<>("guess.charset", "guess-format/charset", ImmutableList.copyOf(available), null);
     }
 
     // public for testing
@@ -161,11 +166,6 @@ public class GuessFormat
             return "<trim, vert +" + trimFromTop + " -" + trimFromBottom + " horiz +" + trimFromLeft + " -" + trimFromRight + ">";
         }
 
-        public static ChoiceDetails<TrimChoice> getType()
-        {
-            return new ChoiceDetails<>("guess.headerRow", "guess-format/headerRow", quickPicks, stringEntry);
-        }
-
         public List<List<String>> trim(List<List<String>> original)
         {
             ArrayList<List<String>> trimmed = new ArrayList<>();
@@ -195,7 +195,7 @@ public class GuessFormat
 */
     public static ChoiceDetails<String> separatorChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.separator", "guess-format/separator", quickPicks, stringEntry);
+        return new ChoiceDetails<>("guess.separator", "guess-format/separator", ImmutableList.of(",", ";", "\t", ":", "|", " "), enterSingleChar(x -> x));
     }
 
         /*
@@ -219,7 +219,7 @@ public class GuessFormat
 */
     public static ChoiceDetails<String> quoteChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.quote", "guess-format/quote", quickPicks, stringEntry);
+        return new ChoiceDetails<>("guess.quote", "guess-format/quote", ImmutableList.of("", "\"", "\'"), enterSingleChar(x -> x));
     }
     
     public static class InitialTextFormat
@@ -274,10 +274,9 @@ public class GuessFormat
                 if (labelledGrid == null)
                 {
                     labelledGrid = new LabelledGrid();
-                    labelledGrid.addRow(ImporterGUI.makeGUI(charsetChoiceDetails(), charsetChoice, initialByCharset.keySet()));
-                    labelledGrid.addRow(ImporterGUI.makeGUI(separatorChoiceDetails(), sepChoice,
-                        ImmutableList.of(",", ";", "\t", ":", "|", " ") ));
-                    labelledGrid.addRow(ImporterGUI.makeGUI(quoteChoiceDetails(), quoteChoice, ImmutableList.of("", "\"", "\'")));
+                    labelledGrid.addRow(ImporterGUI.makeGUI(charsetChoiceDetails(initialByCharset.keySet()), charsetChoice));
+                    labelledGrid.addRow(ImporterGUI.makeGUI(separatorChoiceDetails(), sepChoice));
+                    labelledGrid.addRow(ImporterGUI.makeGUI(quoteChoiceDetails(), quoteChoice));
 
                     
                     FXPlatformConsumer<@Nullable Object> update = o -> {
