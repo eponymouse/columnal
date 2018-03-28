@@ -171,16 +171,13 @@ public class StructuredTextField extends StyleClassedTextArea
         getStyleClass().addAll(editorKit.stfStyles);
         List<Item> initialItems = editorKit.contentComponent.getItems();
         curValue.addAll(initialItems);
-        suggestions = editorKit.contentComponent.getSuggestions();
-
-        // Call super to avoid our own validation:
-        super.replace(0, 0, makeDoc(initialItems));
-        updatePossibleCaretPositions();
+        
         @SuppressWarnings("initialization")
         Either<List<ErrorFix>, T> endInitial = endEdit(editorKit);
         @Nullable T val = endInitial.<@Nullable T>either(err -> null, v -> v);
         editorKit.completedValue = val;
         editorKit.lastValidValue = editorKit.captureState(curValue, getDocument());
+        suggestions = editorKit.contentComponent.getSuggestions();
     }
 
     private void updateAutoComplete(javafx.scene.control.IndexRange selection)
