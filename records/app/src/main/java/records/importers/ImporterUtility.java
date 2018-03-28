@@ -13,6 +13,7 @@ import org.checkerframework.checker.units.qual.UnitsBottom;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
+import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
@@ -20,6 +21,7 @@ import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.TableManager;
 import records.data.columntype.BlankColumnType;
+import records.data.columntype.BoolColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
@@ -132,6 +134,11 @@ public class ImporterUtility
             else if (columnType instanceof CleanDateColumnType)
             {
                 columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
+            }
+            else if (columnType instanceof BoolColumnType)
+            {
+                BoolColumnType bool = (BoolColumnType) columnType;
+                columns.add(rs -> new MemoryBooleanColumn(rs, columnInfo.title, Utility.mapList(slice, bool::isTrue), false));
             }
             else if (columnType instanceof OrBlankColumnType && ((OrBlankColumnType)columnType).getInner() instanceof NumericColumnType)
             {

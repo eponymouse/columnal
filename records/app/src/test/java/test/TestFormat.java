@@ -7,9 +7,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import records.data.ColumnId;
+import records.data.columntype.BoolColumnType;
+import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -22,11 +25,21 @@ import threadchecker.Tag;
 import utility.Utility;
 
 import java.nio.charset.Charset;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
+import static records.transformations.function.ToTemporalFunction.F.DAY;
+import static records.transformations.function.ToTemporalFunction.F.FRAC_SEC_OPT;
+import static records.transformations.function.ToTemporalFunction.F.HOUR;
+import static records.transformations.function.ToTemporalFunction.F.MIN;
+import static records.transformations.function.ToTemporalFunction.F.MONTH_NUM;
+import static records.transformations.function.ToTemporalFunction.F.SEC_OPT;
+import static records.transformations.function.ToTemporalFunction.F.YEAR2;
+import static records.transformations.function.ToTemporalFunction.m;
 
 /**
  * Created by neil on 28/10/2016.
@@ -35,6 +48,9 @@ public class TestFormat
 {
     private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0, null, null);
     private static final ColumnType TEXT = new TextColumnType();
+    private static final ColumnType BOOL = new BoolColumnType("true");
+    private static final ColumnType DATE = new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, m(" ", DAY, MONTH_NUM, YEAR2), LocalDate::from);
+    private static final ColumnType TIME = new CleanDateColumnType(DateTimeType.TIMEOFDAY, false, m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), LocalTime::from);
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private static ColumnInfo col(ColumnType type, String name)
@@ -65,7 +81,8 @@ public class TestFormat
         assertFormatCR(GenFormat.f(1, c(col(NUM, "A"), col(TEXT, "B")), ",", "", UTF8),
             "A,B", "0,0", "1,1", "1.5,D", "2,2", "3,E");
 
-        //#error TODO add support for date columns
+        assertFormat(GenFormat.f(1, c(col(DATE, "Date"), col(TIME, "Time"), col(BOOL, "Bool"), col(TEXT, "Text")), ",", "", UTF8),
+            "Date, Time, Bool, Text", "3/5/18, 16:45, TRUE, Whatever", "21/6/17, 00:01, FALSE, Something");
     }
 
     @Test
@@ -84,7 +101,7 @@ public class TestFormat
     private static void assertFormatCR(FinalTextFormat fmt, String... lines) throws InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
         assertFormat(fmt, lines);
-        for (char sep : ";\t :".toCharArray())
+        for (char sep : ";\t |".toCharArray())
         {
             fmt = GenFormat.f(fmt.trimChoice.trimFromTop, fmt.columnTypes, "" + sep, fmt.initialTextFormat.quote, fmt.initialTextFormat.charset);
             assertFormat(fmt, Utility.mapArray(String.class, lines, l -> l.replace(',', sep)));

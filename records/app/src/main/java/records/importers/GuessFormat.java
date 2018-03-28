@@ -14,7 +14,6 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -22,11 +21,13 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.columntype.BlankColumnType;
+import records.data.columntype.BoolColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -34,6 +35,7 @@ import records.error.UserException;
 import records.importers.gui.ImportChoicesDialog;
 import records.importers.gui.ImporterGUI;
 import records.transformations.function.ToDate;
+import records.transformations.function.ToTime;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -52,19 +54,17 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +72,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 20/10/2016.
@@ -671,7 +672,7 @@ public class GuessFormat
             }
             else if (!inQuoted && !sep.isEmpty() && row.startsWith(sep, i))
             {
-                r.columnContents.add(sb.toString());
+                r.columnContents.add(sb.toString().trim());
                 r.originalContentAndStyle.add(new Pair<>(replaceTab(sep), "separator"));
                 sb = new StringBuilder();
                 i += sep.length();
@@ -685,7 +686,7 @@ public class GuessFormat
 
             }
         }
-        r.columnContents.add(sb.toString());
+        r.columnContents.add(sb.toString().trim());
         return r;
     }
 
@@ -697,6 +698,8 @@ public class GuessFormat
     // Note that the trim choice should not already have been applied.  But values should be rectangular
     private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed) throws GuessException
     {
+        // true should be the first item in each sub-list:
+        final ImmutableList<ImmutableList<String>> BOOLEAN_SETS = ImmutableList.of(ImmutableList.of("t", "f"), ImmutableList.of("true", "false"), ImmutableList.of("y", "n"), ImmutableList.of("yes", "no"));
         List<List<String>> initialVals = trimChoice.trim(untrimmed);
         int columnCount = initialVals.isEmpty() ? 0 : initialVals.get(0).size();
         List<ColumnType> columnTypes = new ArrayList<>();
@@ -710,7 +713,15 @@ public class GuessFormat
             // Only false if we find content which is not parseable as a number:
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
-            List<DateFormat> possibleDateFormats = new ArrayList<>(ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(l -> l.stream()).map(formatter -> new DateFormat(formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList()));
+            ArrayList<DateFormat> possibleDateFormats = new ArrayList<>(
+                ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(l -> l.stream())
+                    .map(formatter -> new DateFormat(DateTimeType.YEARMONTHDAY, true, formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList())
+            );
+            possibleDateFormats.addAll(
+                ToTime.FORMATS.stream()
+                    .map(formatter -> new DateFormat(DateTimeType.TIMEOFDAY, false, formatter, LocalTime::from)).collect(Collectors.<DateFormat>toList())
+            );
+            ArrayList<ImmutableList<String>> possibleBooleanSets = new ArrayList<>(BOOLEAN_SETS);
             @Nullable String commonPrefix = null;
             @Nullable String commonSuffix = null;
             List<Integer> decimalPlaces = new ArrayList<>();
@@ -730,6 +741,9 @@ public class GuessFormat
                     if (!val.isEmpty())
                     {
                         allBlank = false;
+                        
+                        String originalVal = val;
+                        possibleBooleanSets.removeIf(l -> !l.contains(originalVal.toLowerCase()));
 
                         if (commonPrefix == null)
                         {
@@ -818,19 +832,21 @@ public class GuessFormat
                             }
                             commonPrefix = null;
                         }
-                        // Minimum length for date is 6 by my count
-                        if (val.length() < 6)
+                        // Minimum length for date or time is 5 by my count
+                        if (val.length() < 5)
+                        {
                             possibleDateFormats.clear();
+                        }
                         else
                         {
                             String valPreprocessed = Utility.preprocessDate(val);
                             // Seems expensive but most will be knocked out immediately:
                             for (Iterator<DateFormat> dateFormatIt = possibleDateFormats.iterator(); dateFormatIt.hasNext(); )
                             {
+                                DateFormat dateFormat = dateFormatIt.next();
                                 try
                                 {
-
-                                    dateFormatIt.next().formatter.parse(valPreprocessed, LocalDate::from);
+                                    dateFormat.formatter.parse(dateFormat.preprocessDate ? valPreprocessed : val, dateFormat.destQuery);
                                 }
                                 catch (DateTimeParseException e)
                                 {
@@ -849,9 +865,18 @@ public class GuessFormat
             int minDP = decimalPlaces.stream().mapToInt(i -> i).min().orElse(0);
 
             if (allBlank)
+            {
                 columnTypes.add(ColumnType.BLANK);
+            }
             else if (!possibleDateFormats.isEmpty())
-                columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatter, possibleDateFormats.get(0).destQuery));
+            {
+                DateFormat chosen = possibleDateFormats.get(0);
+                columnTypes.add(new CleanDateColumnType(chosen.dateTimeType, chosen.preprocessDate, chosen.formatter, chosen.destQuery));
+            }
+            else if (!possibleBooleanSets.isEmpty())
+            {
+                columnTypes.add(new BoolColumnType(possibleBooleanSets.get(0).get(0)));
+            }
             else if (allNumeric)
             {
                 columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix, commonSuffix));

@@ -22,9 +22,13 @@ public class CleanDateColumnType extends ColumnType
     // As passed to DateTimeFormatter.ofPattern
     private final DateTimeFormatter formatter;
     private final TemporalQuery<? extends Temporal> query;
+    private final boolean preprocessDate;
+    private final DateTimeType dateTimeType;
 
-    public CleanDateColumnType(DateTimeFormatter formatter, TemporalQuery<? extends Temporal> query)
+    public CleanDateColumnType(DateTimeType dateTimeType, boolean preprocessDate, DateTimeFormatter formatter, TemporalQuery<? extends Temporal> query)
     {
+        this.dateTimeType = dateTimeType;
+        this.preprocessDate = preprocessDate;
         this.formatter = formatter;
         this.query = query;
     }
@@ -37,14 +41,14 @@ public class CleanDateColumnType extends ColumnType
 
         CleanDateColumnType that = (CleanDateColumnType) o;
 
-        return formatter.equals(that.formatter);
+        return formatter.toString().equals(that.formatter.toString()) && dateTimeType.equals(that.dateTimeType) && preprocessDate == that.preprocessDate;
 
     }
 
     @Override
     public int hashCode()
     {
-        return formatter.hashCode();
+        return 31 * formatter.hashCode() + dateTimeType.hashCode() + (preprocessDate ? 1 : 0);
     }
 
     // Is the year two digits?
@@ -56,7 +60,7 @@ public class CleanDateColumnType extends ColumnType
     @Override
     public String toString()
     {
-        return "CleanDate \"" + formatter + "\"";
+        return "CleanDate \"" + formatter + "\" " + dateTimeType + " " + preprocessDate;
     }
 
     public DateTimeFormatter getDateTimeFormatter()
@@ -66,12 +70,12 @@ public class CleanDateColumnType extends ColumnType
 
     public TemporalAccessor parse(@NonNull String s) throws InternalException
     {
-        return getDateTimeInfo().fromParsed(getDateTimeFormatter().parse(Utility.preprocessDate(s), query));
+        return getDateTimeInfo().fromParsed(getDateTimeFormatter().parse(preprocessDate ? Utility.preprocessDate(s) : s, query));
     }
 
     public DateTimeInfo getDateTimeInfo()
     {
-        return new DateTimeInfo(DateTimeType.YEARMONTHDAY);
+        return new DateTimeInfo(dateTimeType);
     }
 
     public TemporalQuery<? extends Temporal> getQuery()

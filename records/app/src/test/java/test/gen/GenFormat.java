@@ -10,6 +10,7 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -86,14 +87,14 @@ public class GenFormat extends Generator<FinalTextFormat>
                 ((Supplier<ColumnType>)() -> {
                     Unit curr = sourceOfRandomness.choose(currencies);
                     return new NumericColumnType(curr, sourceOfRandomness.nextInt(0, 6), curr.getDisplayPrefix(), curr.getDisplaySuffix());}).get(),
-                new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
+                new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:
             if (i == columnCount - 1 && (type instanceof BlankColumnType || columns.stream().allMatch(GenFormat::canBeBlank)))
                 type = new TextColumnType();
             // Don't let all be text/blank:
             if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
-                type = new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from);
+                type = new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, sourceOfRandomness.choose(dateFormats), LocalDate::from);
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }

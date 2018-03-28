@@ -41,7 +41,8 @@ public abstract class ToTemporalFunction extends FunctionGroup
         super(name, shortDescripKey, ImmutableList.of());
     }
 
-    static DateTimeFormatter m(String sep, F... items)
+    // public for testing
+    public static DateTimeFormatter m(String sep, F... items)
     {
         DateTimeFormatterBuilder b = new DateTimeFormatterBuilder();
         for (int i = 0; i < items.length; i++)
@@ -113,7 +114,8 @@ public abstract class ToTemporalFunction extends FunctionGroup
 
     abstract DateTimeInfo getResultType();
 
-    static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
+    // public for testing
+    public static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
 
     private class FromStringInstance extends FunctionInstance
     {

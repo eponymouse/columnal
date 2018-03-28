@@ -1,5 +1,7 @@
 package records.importers;
 
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalQuery;
@@ -9,11 +11,15 @@ import java.time.temporal.TemporalQuery;
  */
 class DateFormat
 {
+    public final boolean preprocessDate;
+    public final DateTimeType dateTimeType;
     public final DateTimeFormatter formatter;
     public final TemporalQuery<? extends Temporal> destQuery;
 
-    public DateFormat(DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends Temporal> destQuery)
+    public DateFormat(DateTimeType dateTimeType, boolean preprocessDate, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends Temporal> destQuery)
     {
+        this.dateTimeType = dateTimeType;
+        this.preprocessDate = preprocessDate;
         this.formatter = dateTimeFormatter;
         this.destQuery = destQuery;
     }
