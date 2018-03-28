@@ -6,6 +6,7 @@ import annotation.units.TableDataRowIndex;
 import javafx.geometry.Point2D;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import threadchecker.OnThread;
@@ -69,7 +70,7 @@ public abstract class GridArea
             withVirtualGrid.consume(parent);
     }
 
-    protected <R> Optional<R> withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformFunction<VirtualGrid, R> withVirtualGrid)
+    protected <R> Optional<R> withParent(@UnknownInitialization(GridArea.class) GridArea this, FXPlatformFunction<VirtualGrid, @NonNull R> withVirtualGrid)
     {
         if (parent != null)
             return Optional.of(withVirtualGrid.apply(parent));
