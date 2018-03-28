@@ -35,7 +35,6 @@ import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
-import records.importers.ChoicePoint.ChoiceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.function.FunctionDefinition;
@@ -57,8 +56,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
-import records.importers.ChoicePoint;
-import records.importers.ChoicePoint.Choice;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import test.gen.GenNumber;
@@ -1134,45 +1131,6 @@ public class TestUtil
     {
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public T call() throws InternalException, UserException;
-    }
-
-    public static class ChoicePick<C extends Choice>
-    {
-        private final Class<C> theClass;
-        private final C choice;
-
-        ChoicePick(Class<C> theClass, C choice)
-        {
-            this.theClass = theClass;
-            this.choice = choice;
-        }
-    }
-
-    @SuppressWarnings("all") // I18n triggers here, and i18n alone won't shut it off. No idea what the issue is.
-    @SafeVarargs
-    public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
-    {
-        ChoiceType<C> choicePointType = choicePoint.getOptions() == null ? null : choicePoint.getOptions().choiceType;
-        if (choicePointType == null)
-        {
-            return choicePoint.get();
-        }
-        else
-        {
-            for (ChoicePick<C> pick : picks)
-            {
-                if (pick.theClass.equals(choicePointType.getChoiceClass()))
-                {
-                    @SuppressWarnings("unchecked")
-                    ChoicePoint<Choice, R> selected = (ChoicePoint<Choice, R>) choicePoint.select(pick.choice);
-                    @SuppressWarnings("unchecked")
-                    ChoicePick<Choice>[] picksCast = (ChoicePick<Choice>[]) picks;
-                    @NonNull R picked = pick(selected, picksCast);
-                    return picked;
-                }
-            }
-            throw new RuntimeException("No suitable choice for class: " + choicePointType);
-        }
     }
 
     public static class Transformation_Mgr

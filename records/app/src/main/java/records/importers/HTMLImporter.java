@@ -106,7 +106,7 @@ public class HTMLImporter implements Importer
         FXPlatformConsumer<Integer> importTable = tableIndex -> {
             Element table = tables.get(tableIndex);
             // vals is a list of rows:
-            final List<List<String>> vals = new ArrayList<>();
+            final List<ArrayList<String>> vals = new ArrayList<>();
             
             // Maps position to pending item.  Abusing GridAreaCellPosition a little: it means table position here
             final Map<GridAreaCellPosition, String> pendingSpanItems = new HashMap<>();
@@ -128,7 +128,7 @@ public class HTMLImporter implements Importer
                 {
                     if (!row.tagName().equals("tr"))
                         continue;
-                    List<String> rowVals = new ArrayList<>();
+                    ArrayList<String> rowVals = new ArrayList<>();
                     vals.add(rowVals);
                     Elements children = row.children();
                     @SuppressWarnings("units")
@@ -205,42 +205,24 @@ public class HTMLImporter implements Importer
                 }
             }
 
-            @Initialized SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
-
-            SimulationFunction<Format, EditableRecordSet> loadData = format -> {
-                return ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, format.columnTypes);
-                // Make sure we don't keep a reference to vals:
-                // Not because we null it, but because we make it non-final.
-                //results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));
-            };
-            Import<UnitType, ImmutableList<ColumnInfo>> imp = new Import<UnitType, ImmutableList<ColumnInfo>>()
+            ImporterUtility.rectangularise(vals);
+            
+            Import<UnitType, ImmutableList<ColumnInfo>> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
             {
                 @Override
-                public ObjectExpression<UnitType> currentSrcFormat()
+                public ColumnId columnName(int index)
                 {
-                    return new ReadOnlyObjectWrapper<>(UnitType.UNIT);
-                }
-
-                @Override
-                public SimulationFunction<UnitType, Pair<TrimChoice, ? extends RecordSet>> loadSource()
-                {
-                    return null;
-                }
-
-                @Override
-                public SimulationFunction<Pair<UnitType, TrimChoice>, Pair<ImmutableList<ColumnInfo>,? extends RecordSet>> loadDest()
-                {
-                    return null;
+                    return new ColumnId("C" + (index + 1));
                 }
             };
             
             results.add(() -> {
-                @Nullable Pair<ImportInfo, Format> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals), loadData, c -> sourceInfo).showAndWait().orElse(null);
+                @Nullable ImportInfo<ImmutableList<ColumnInfo>> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), imp).showAndWait().orElse(null);
 
                 if (outcome != null)
                 {
-                    @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
-                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getFirst().getInitialLoadDetails(destination), loadData.apply(outcomeNonNull.getSecond()));
+                    @Nullable ImportInfo<ImmutableList<ColumnInfo>> outcomeNonNull = outcome;
+                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, outcomeNonNull.getFormat()));
                     return makeDataSource;
                 } else
                     return null;

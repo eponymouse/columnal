@@ -172,7 +172,7 @@ public class Utility
 
     // Given a table of values, skips the first "skipRows" rows,
     // Then extracts all values which are not from completely blank rows.
-    public static List<String> sliceSkipBlankRows(List<List<String>> vals, int skipRows, int columnIndex)
+    public static List<String> sliceSkipBlankRows(List<? extends List<String>> vals, int skipRows, int columnIndex)
     {
         List<String> items = new ArrayList<>(vals.size());
         for (int i = skipRows; i < vals.size(); i++)

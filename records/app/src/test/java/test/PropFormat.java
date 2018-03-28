@@ -9,16 +9,12 @@ import org.junit.runner.RunWith;
 import records.data.DataSource;
 import records.error.InternalException;
 import records.error.UserException;
-import records.importers.ChoicePoint;
 import records.importers.GuessFormat;
-import records.importers.GuessFormat.CharsetChoice;
-import records.importers.GuessFormat.ColumnCountChoice;
-import records.importers.GuessFormat.QuoteChoice;
-import records.importers.GuessFormat.SeparatorChoice;
+import records.importers.GuessFormat.FinalTextFormat;
+import records.importers.GuessFormat.Import;
+import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.GuessFormat.TrimChoice;
-import records.importers.TextFormat;
 import records.importers.TextImporter;
-import test.TestUtil.ChoicePick;
 import test.gen.GenFormattedData;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -47,8 +43,7 @@ public class PropFormat
     public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData, boolean link) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
-        String format = formatAndData.format.toString();
-        ChoicePoint<?, TextFormat> formatChoicePoint = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.charset));
+        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.charset));
         ChoicePick[] picks = new ChoicePick[] {
             new ChoicePick<>(CharsetChoice.class, new CharsetChoice(formatAndData.format.charset)),
             new ChoicePick<TrimChoice>(TrimChoice.class, formatAndData.format.trimChoice),

@@ -2,10 +2,7 @@ package records.importers;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
-import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.stage.Window;
-import log.Log;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -15,34 +12,23 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.DataSource;
-import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
-import records.data.RecordSet;
 import records.data.TableManager;
-import records.data.columntype.TextColumnType;
-import records.error.InternalException;
-import records.error.UserException;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
-import records.importers.GuessFormat.TrimChoice;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
-import records.importers.gui.ImportChoicesDialog.SourceInfo;
-import records.importers.gui.ImporterGUI;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.UnitType;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -80,12 +66,12 @@ public class ExcelImporter implements Importer
             Sheet datatypeSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = datatypeSheet.iterator();
 
-            List<List<String>> vals = new ArrayList<>();
+            List<ArrayList<String>> vals = new ArrayList<>();
             List<ColumnInfo> columnInfos = new ArrayList<>();
 
             while (iterator.hasNext())
             {
-                List<String> row = new ArrayList<>();
+                ArrayList<String> row = new ArrayList<>();
                 Row currentRow = iterator.next();
                 Iterator<Cell> cellIterator = currentRow.iterator();
 
@@ -111,36 +97,11 @@ public class ExcelImporter implements Importer
             ImporterUtility.rectangularise(vals);
             int numSrcColumns = vals.isEmpty() ? 0 : vals.get(0).size();
 
-            Import<UnitType, ImmutableList<ColumnInfo>> importInfo = new Import<UnitType, ImmutableList<ColumnInfo>>()
-            {
-
+            Import<UnitType, ImmutableList<ColumnInfo>> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
                 @Override
-                public ObjectExpression<@Nullable UnitType> currentSrcFormat()
+                public ColumnId columnName(int index)
                 {
-                    return new ReadOnlyObjectWrapper<>(UnitType.UNIT);
-                }
-
-                @Override
-                public SimulationFunction<UnitType, Pair<TrimChoice, @Nullable RecordSet>> loadSource()
-                {
-                    return u -> {
-                        ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
-                        for (int i = 0; i < numSrcColumns; i++)
-                        {
-                            columns.add(new ColumnInfo(new TextColumnType(), excelColumnName(i)));
-                        }
-                        EditableRecordSet recordSet = ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns.build());
-                        return new Pair<TrimChoice, @Nullable RecordSet>(new TrimChoice(0, 0, 0, 0), recordSet);
-                    };
-                }
-
-                @Override
-                public SimulationFunction<Pair<UnitType, TrimChoice>, Pair<ImmutableList<ColumnInfo>, @Nullable RecordSet>> loadDest()
-                {
-                    return p -> {
-                        ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, p.getSecond());
-                        return new Pair<>(columns, ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns));
-                    };
+                    return excelColumnName(index);
                 }
             };
             
@@ -206,4 +167,5 @@ public class ExcelImporter implements Importer
                 return "";
         }
     }
+
 }

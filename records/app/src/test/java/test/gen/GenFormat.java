@@ -13,7 +13,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ColumnInfo;
-import records.importers.TextFormat;
+import records.importers.GuessFormat.FinalTextFormat;
 import records.transformations.function.ToDate;
 import test.DummyManager;
 import utility.Utility;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 29/10/2016.
  */
-public class GenFormat extends Generator<TextFormat>
+public class GenFormat extends Generator<FinalTextFormat>
 {
     public static List<Charset> CHARSETS = Utility.mapList(Arrays.asList("ISO-8859-1", "UTF-8", "UTF-16"), Charset::forName);
     public static List<Character> seps = Arrays.asList(',', ';', '\t', ':');
@@ -52,12 +52,12 @@ public class GenFormat extends Generator<TextFormat>
 
     public GenFormat()
     {
-        super(TextFormat.class);
+        super(FinalTextFormat.class);
     }
 
     @Override
     @SuppressWarnings("initialization")
-    public TextFormat generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public FinalTextFormat generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         String sep = "" + sourceOfRandomness.choose(seps);
         boolean hasTitle = true; //sourceOfRandomness.nextBoolean();
@@ -92,14 +92,13 @@ public class GenFormat extends Generator<TextFormat>
             charset.newEncoder().canEncode(((NumericColumnType) ci.type).unit.getDisplayPrefix()) : true)
         ).collect(Collectors.toList());
 
-        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, null /*TODO */, sourceOfRandomness.choose(possibleCharsets));
-        return format;
+        return new FinalTextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, null /*TODO */, sourceOfRandomness.choose(possibleCharsets));
     }
 
     @Override
-    public List<TextFormat> doShrink(SourceOfRandomness random, TextFormat larger)
+    public List<FinalTextFormat> doShrink(SourceOfRandomness random, FinalTextFormat larger)
     {
-        ArrayList<TextFormat> r = new ArrayList<>();
+        ArrayList<FinalTextFormat> r = new ArrayList<>();
         for (int i = 0; i < larger.columnTypes.size(); i++)
         {
             List<ColumnInfo> reducedCols = new ArrayList<>(larger.columnTypes);
@@ -109,7 +108,7 @@ public class GenFormat extends Generator<TextFormat>
             // Don't let them all be blank or all text/blank:
             if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 continue;
-            TextFormat smaller = new TextFormat(larger.trimChoice.trimFromTop, reducedCols, larger.separator, larger.quote, Charset.forName("UTF-8"));
+            FinalTextFormat smaller = new FinalTextFormat(larger.trimChoice.trimFromTop, reducedCols, larger.separator, larger.quote, Charset.forName("UTF-8"));
             if (reducedCols.size() >= 2) // TODO allow one column
                 r.add(smaller);
         }

@@ -13,6 +13,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.control.PopOver;
@@ -179,7 +180,7 @@ public class ErrorableTextField<T>
         return field.isFocused();
     }
 
-    public static class ConversionResult<T>
+    public static class ConversionResult<@NonNull T>
     {
         private final boolean success;
         private final @Nullable T value;

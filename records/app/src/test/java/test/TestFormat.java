@@ -1,5 +1,6 @@
 package test;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import records.data.ColumnId;
@@ -11,13 +12,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
-import records.importers.GuessFormat.CharsetChoice;
-import records.importers.GuessFormat.ColumnCountChoice;
-import records.importers.GuessFormat.QuoteChoice;
-import records.importers.GuessFormat.SeparatorChoice;
+import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.TrimChoice;
-import records.importers.TextFormat;
-import test.TestUtil.ChoicePick;
 import utility.Utility;
 
 import java.nio.charset.Charset;
@@ -44,16 +40,16 @@ public class TestFormat
     @Test
     public void testFormat() throws UserException, InternalException
     {
-        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(NUM, "B")), ",", null, UTF8),
+        assertFormatCR(new FinalTextFormat(1, c(col(NUM, "A"), col(NUM, "B")), ",", null, UTF8),
             "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(2, c(col(NUM, "A"), col(NUM, "B")), ",", null, UTF8),
+        assertFormatCR(new FinalTextFormat(2, c(col(NUM, "A"), col(NUM, "B")), ",", null, UTF8),
             "# Some comment", "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(0, c(col(NUM, "C1"), col(NUM, "C2")), ",", null, UTF8),
+        assertFormatCR(new FinalTextFormat(0, c(col(NUM, "C1"), col(NUM, "C2")), ",", null, UTF8),
             "0,0", "1,1", "2,2");
 
-        assertFormatCR(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", null, UTF8),
+        assertFormatCR(new FinalTextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", null, UTF8),
             "A,B", "0,0", "1,1", "C,D", "2,2");
-        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(TEXT, "B")), ",", null, UTF8),
+        assertFormatCR(new FinalTextFormat(1, c(col(NUM, "A"), col(TEXT, "B")), ",", null, UTF8),
             "A,B", "0,0", "1,1", "1.5,D", "2,2", "3,E");
 
         //#error TODO add support for date columns
@@ -61,15 +57,15 @@ public class TestFormat
     @Test
     public void testCurrency() throws InternalException, UserException
     {
-        assertFormat(new TextFormat(0, c(col(NUM("$", "$"), "C1"), col(TEXT, "C2")), ",", null, UTF8),
+        assertFormat(new FinalTextFormat(0, c(col(NUM("$", "$"), "C1"), col(TEXT, "C2")), ",", null, UTF8),
             "$0, A", "$1, Whatever", "$2, C");
-        assertFormat(new TextFormat(0, c(col(NUM("£", "£"), "C1"), col(TEXT, "C2")), ",", null, UTF8),
+        assertFormat(new FinalTextFormat(0, c(col(NUM("£", "£"), "C1"), col(TEXT, "C2")), ",", null, UTF8),
             "£ 0, A", "£ 1, Whatever", "£ 2, C");
-        assertFormat(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", null, UTF8),
+        assertFormat(new FinalTextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", null, UTF8),
             "A0, A", "A1, Whatever", "A2, C");
     }
 
-    private static void assertFormatCR(TextFormat fmt, String... lines) throws InternalException, UserException
+    private static void assertFormatCR(FinalTextFormat fmt, String... lines) throws InternalException, UserException
     {
         assertFormat(fmt, lines);
         for (char sep : ";\t :".toCharArray())
@@ -80,7 +76,7 @@ public class TestFormat
     }
 
     @SuppressWarnings("unchecked")
-    private static void assertFormat(TextFormat fmt, String... lines) throws UserException, InternalException
+    private static void assertFormat(FinalTextFormat fmt, String... lines) throws UserException, InternalException
     {
         ChoicePick[] picks = new ChoicePick[] {
             new ChoicePick<CharsetChoice>(CharsetChoice.class, new CharsetChoice(Charset.forName("UTF-8"))),
@@ -89,12 +85,12 @@ public class TestFormat
             new ChoicePick<QuoteChoice>(QuoteChoice.class, new QuoteChoice(null)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(fmt.columnTypes.size()))
         };
-        assertEquals(fmt, TestUtil.pick(GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), Collections.singletonMap(Charset.forName("UTF-8"), Arrays.asList(lines))), picks));
+        assertEquals(fmt, TestUtil.pick(GuessFormat.guessFinalTextFormat(DummyManager.INSTANCE.getUnitManager(), Collections.singletonMap(Charset.forName("UTF-8"), Arrays.asList(lines))), picks));
     }
 
-    private static List<ColumnInfo> c(ColumnInfo... ts)
+    private static ImmutableList<ColumnInfo> c(ColumnInfo... ts)
     {
-        return Arrays.asList(ts);
+        return ImmutableList.copyOf(ts);
     }
 
     private static NumericColumnType NUM(String unit, @Nullable String commonPrefix)

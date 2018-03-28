@@ -75,9 +75,9 @@ public class ImporterGUI
             final @Nullable @Initialized ObjectExpression<@Nullable C> fieldValue;
             if (choiceDetails.stringEntry != null)
             {
-                final @NonNull Function<String, Either<@Localized String, C>> stringEntry = choiceDetails.stringEntry;
-                ErrorableTextField<C> field = new ErrorableTextField<>(s -> {
-                    return stringEntry.apply(s).either(e -> ConversionResult.error(e), v -> ConversionResult.success(v));
+                final @NonNull Function<String, Either<@Localized String, @NonNull C>> stringEntry = choiceDetails.stringEntry;
+                ErrorableTextField<@NonNull C> field = new ErrorableTextField<@NonNull C>(s -> {
+                    return stringEntry.apply(s).<ConversionResult<@NonNull C>>either(e -> ConversionResult.<@NonNull C>error(e), v -> ConversionResult.<@NonNull C>success(v));
                 });
                 fieldValue = field.valueProperty();
                 choiceNode = new HBox(combo, field.getNode());

@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -85,11 +86,11 @@ public class GuessFormat
         // Get the function which would load the source (import LHS) for the given format.
         // For text files, this will be CSV split into columns, but untrimmed and all columns text
         // For XLS it is original sheet, untrimmed
-        SimulationFunction<SRC_FORMAT, Pair<TrimChoice, @Nullable RecordSet>> loadSource();
+        SimulationFunction<SRC_FORMAT, Pair<TrimChoice, RecordSet>> loadSource();
         
         // Get the function which would load the final record set (import RHS) for the given format and trim.
         // After trimming, the types of the columns are guessed at.
-        SimulationFunction<Pair<SRC_FORMAT, TrimChoice>, Pair<DEST_FORMAT, @Nullable RecordSet>> loadDest();
+        SimulationFunction<Pair<SRC_FORMAT, TrimChoice>, Pair<DEST_FORMAT, RecordSet>> loadDest();
     }
     
     /**
@@ -98,7 +99,7 @@ public class GuessFormat
      * @param vals List of rows, where each row is list of values
      * @return
      */
-    public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<List<String>> vals, TrimChoice trimChoice) throws GuessException
+    public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<? extends List<String>> vals, TrimChoice trimChoice) throws GuessException
     {
         return guessBodyFormat(mgr, vals.get(0).size(), trimChoice, vals);
     }
@@ -111,7 +112,7 @@ public class GuessFormat
         }
     }
 
-    public static ChoiceDetails<Charset> charsetChoiceDetails(Collection<Charset> available)
+    public static <C extends Charset> ChoiceDetails<Charset> charsetChoiceDetails(Collection<C> available)
     {
         // In future, we should allow users to specify
         // (For now, they can just re-save as UTF-8)
@@ -166,7 +167,7 @@ public class GuessFormat
             return "<trim, vert +" + trimFromTop + " -" + trimFromBottom + " horiz +" + trimFromLeft + " -" + trimFromRight + ">";
         }
 
-        public List<List<String>> trim(List<List<String>> original)
+        public List<List<String>> trim(List<? extends List<String>> original)
         {
             ArrayList<List<String>> trimmed = new ArrayList<>();
             for (int i = Math.max(0, trimFromTop); i < original.size() - Math.max(0, trimFromBottom); i++)
@@ -225,12 +226,12 @@ public class GuessFormat
     public static class InitialTextFormat
     {
         public final Charset charset;
-        // null means no separator; just one big column
-        public final @Nullable String separator;
-        // null means no quote
-        public final @Nullable String quote;
+        // empty means no separator; just one big column
+        public final String separator;
+        // empty means no quote
+        public final String quote;
 
-        public InitialTextFormat(Charset charset, @Nullable String separator, @Nullable String quote)
+        public InitialTextFormat(Charset charset, String separator, String quote)
         {
             this.charset = charset;
             this.separator = separator;
@@ -255,13 +256,12 @@ public class GuessFormat
     @OnThread(Tag.Simulation)
     public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset)
     {
-        
-        @KeyFor("initialByCharset") Charset initialCharsetGuess = guessCharset(initialByCharset);
-        SimpleObjectProperty<Charset> charsetChoice = new SimpleObjectProperty<>();
+        @KeyFor("initialByCharset") Charset initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>();
         Pair<String, String> sepAndQuot = guessSepAndQuot(initialByCharset.get(initialCharsetGuess));
-        SimpleObjectProperty<String> sepChoice = new SimpleObjectProperty<>(sepAndQuot.getFirst());
-        SimpleObjectProperty<String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot.getSecond());
-        ObjectProperty<InitialTextFormat> srcFormat = new SimpleObjectProperty<>(new InitialTextFormat(charsetChoice.get(), sepChoice.get(), quoteChoice.get()));
+        SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot.getFirst());
+        SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot.getSecond());
+        ObjectProperty<@Nullable InitialTextFormat> srcFormat = new SimpleObjectProperty<>(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
         
         return new Import<InitialTextFormat, FinalTextFormat>()
         {
@@ -280,9 +280,9 @@ public class GuessFormat
 
                     
                     FXPlatformConsumer<@Nullable Object> update = o -> {
-                        srcFormat.set(new InitialTextFormat(charsetChoice.get(), sepChoice.get(), quoteChoice.get()));
+                        srcFormat.set(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
                     };
-                    FXUtility.addChangeListenerPlatformNN(charsetChoice, update);
+                    FXUtility.addChangeListenerPlatform(charsetChoice, update);
                     FXUtility.addChangeListenerPlatform(quoteChoice, update);
                     FXUtility.addChangeListenerPlatform(sepChoice, update);
                 }
@@ -290,18 +290,19 @@ public class GuessFormat
             }
 
             @Override
-            public ObjectExpression<InitialTextFormat> currentSrcFormat()
+            public ObjectExpression<@Nullable InitialTextFormat> currentSrcFormat()
             {
                 return srcFormat;
             }
 
             @Override
-            public SimulationFunction<InitialTextFormat, Pair<TrimChoice, @Nullable RecordSet>> loadSource()
+            public SimulationFunction<InitialTextFormat, Pair<TrimChoice, RecordSet>> loadSource()
             {
                 return this::loadSrc;
             }
 
-            public Pair<TrimChoice, @Nullable RecordSet> loadSrc(InitialTextFormat initialTextFormat) throws GuessException, InternalException
+            @OnThread(Tag.Simulation)
+            public Pair<TrimChoice, RecordSet> loadSrc(InitialTextFormat initialTextFormat) throws GuessException, InternalException, UserException
             {
                 List<String> initialCheck = initialByCharset.get(initialTextFormat.charset);
                 if (initialCheck == null)
@@ -312,23 +313,10 @@ public class GuessFormat
                 String sep = initialTextFormat.separator;
                 String quot = initialTextFormat.quote;
 
-                int maxCols = 0;
-                List<RowInfo> rowInfos = new ArrayList<>();
-                for (int i = 0; i < initial.size(); i++)
-                {
-                    if (!initial.get(i).isEmpty())
-                    {
-                        RowInfo rowInfo = splitIntoColumns(initial.get(i), sep, quot);
-                        rowInfos.add(rowInfo);
-                        maxCols = Math.max(maxCols, rowInfo.columnContents.size());
-                    }
-                }
-                
-                
-
-                ImmutableList<@NonNull List<String>> values = Utility.mapListI(rowInfos, r -> r.columnContents);
+                ImmutableList<ArrayList<String>> values = loadValues(initial, sep, quot);
+                ImporterUtility.rectangularise(values);
                 TrimChoice trimChoice = guessTrim(values);
-                ImmutableList<ColumnInfo> columnInfos = guessBodyFormat(unitManager, maxCols, trimChoice, values);
+                ImmutableList<ColumnInfo> columnInfos = guessBodyFormat(unitManager, values.isEmpty() ? 0 : values.get(0).size(), trimChoice, values);
                 return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, values, columnInfos));
 
 
@@ -352,36 +340,72 @@ public class GuessFormat
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat); */
             }
 
+            public ImmutableList<ArrayList<String>> loadValues(@NonNull List<String> initial, String sep, String quot)
+            {
+                List<RowInfo> rowInfos = new ArrayList<>();
+                for (int i = 0; i < initial.size(); i++)
+                {
+                    if (!initial.get(i).isEmpty())
+                    {
+                        RowInfo rowInfo = splitIntoColumns(initial.get(i), sep, quot);
+                        rowInfos.add(rowInfo);
+                    }
+                }
+                return Utility.mapListI(rowInfos, r -> r.columnContents);
+            }
+
             @Override
             public SimulationFunction<Pair<InitialTextFormat, TrimChoice>, Pair<FinalTextFormat, RecordSet>> loadDest()
             {
-                return p -> ImporterUtility.makeEditableRecordSet(typeManager, values, columnTypes);
+                return p -> {
+                    List<String> initialCheck = initialByCharset.get(p.getFirst().charset);
+                    if (initialCheck == null)
+                        throw new InternalException("initialByCharset key lookup returned null");
+
+                    @NonNull List<String> initial = initialCheck;
+                    
+                    ImmutableList<ArrayList<String>> vals = loadValues(initial, p.getFirst().separator, p.getFirst().quote);
+                    ImporterUtility.rectangularise(vals);
+                    ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, vals.isEmpty() ? 0 : vals.get(0).size(), p.getSecond(), vals);
+                    return new Pair<>(new FinalTextFormat(p.getFirst(), p.getSecond(), columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, vals, columnTypes));
+                };
             }
         };
     }
 
-    private static TrimChoice guessTrim(List<List<String>> values)
+    public static @Nullable InitialTextFormat makeInitialTextFormat(SimpleObjectProperty<@Nullable Charset> charsetChoice, SimpleObjectProperty<@Nullable String> sepChoice, SimpleObjectProperty<@Nullable String> quoteChoice)
+    {
+        @Nullable Charset charset = charsetChoice.get();
+        @Nullable String sep = sepChoice.get();
+        @Nullable String quote = quoteChoice.get();
+        if (charset != null && sep != null && quote != null)
+            return new InitialTextFormat(charset, sep, quote);
+        return null;
+    }
+
+    private static TrimChoice guessTrim(List<? extends List<String>> values)
     {
         // TODO
         return new TrimChoice(0, 0, 0,0);
     }
 
-    private static Pair<String, @Nullable String> guessSepAndQuot(List<String> strings)
+    private static Pair<String, String> guessSepAndQuot(List<String> strings)
     {
         // TODO
-        return new Pair<>(",", null);
+        return new Pair<>(",", "");
     }
 
-    private static @Nullable Charset guessCharset(Map<Charset, List<String>> initialByCharset)
+    private static <C extends Charset> @Nullable C guessCharset(Collection<C> charsets)
     {
-        if (initialByCharset.isEmpty())
-            return null;
         // Pretty simple: if UTF-8 is in there, use that, else use any.
         Charset utf8 = Charset.forName("UTF-8");
-        if (initialByCharset.containsKey(utf8))
-            return utf8;
-        else 
-            return initialByCharset.keySet().iterator().next();
+        C arbitrary = null;
+        for (C charset : charsets)
+        {
+            if (charset.equals(utf8))
+                return charset;
+        }
+        return arbitrary;
     }
 
     private static Either<@Localized String, Charset> pickCharset(String s)
@@ -409,7 +433,7 @@ public class GuessFormat
     private static class RowInfo
     {
         // Each item is one column's content on this row
-        private final List<String> columnContents = new ArrayList<>();
+        private final ArrayList<String> columnContents = new ArrayList<>();
         // Each pair is (content, style)
         private final List<Pair<String, String>> originalContentAndStyle = new ArrayList<>();
 
@@ -479,7 +503,7 @@ public class GuessFormat
     }
 
     // Note that the trim choice should not already have been applied
-    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, int columnCount, TrimChoice trimChoice, @NonNull List<@NonNull List<@NonNull String>> untrimmed) throws GuessException
+    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, int columnCount, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed) throws GuessException
     {
         List<List<String>> initialVals = trimChoice.trim(untrimmed);
         // Per row, for how many columns is it viable to get column name?
@@ -742,7 +766,7 @@ public class GuessFormat
         Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial);
         Platform.runLater(() -> {
             new ImportChoicesDialog<FinalTextFormat>(mgr, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
-                Workers.onWorkerThread("Importing", Priority.SAVE_ENTRY, () -> then.consume(importInfo));
+                Workers.onWorkerThread("Importing", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> then.consume(importInfo)));
             });
         });
     }

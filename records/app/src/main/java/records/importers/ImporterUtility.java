@@ -93,7 +93,7 @@ public class ImporterUtility
 
     // Pads each row with extra blanks so that all rows have the same length
     // Modifies list (and inner lists) in-place.
-    public static void rectangularise(List<List<String>> vals)
+    public static void rectangularise(List<ArrayList<String>> vals)
     {
         int maxRowLength = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
         for (List<String> row : vals)
@@ -105,7 +105,7 @@ public class ImporterUtility
 
     @NonNull
     @OnThread(Tag.Simulation)
-    public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
+    public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<? extends List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
     {
         @SuppressWarnings({"keyfor", "units"})
         @KeyForBottom @UnitsBottom List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();

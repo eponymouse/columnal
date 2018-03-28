@@ -97,6 +97,8 @@ import java.util.function.Function;
 @OnThread(Tag.FXPlatform)
 public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
 {
+    private @Nullable FORMAT destFormat;
+
     public static class SourceInfo
     {
         private final ImmutableList<ColumnDetails> srcColumns;
@@ -150,55 +152,40 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
-                        RecordSet recordSet = importer.loadSource().apply(formatNonNull);
-                        if (recordSet != null)
-                        {
-                            @NonNull RecordSet recordSetNonNull = recordSet;
-                            Platform.runLater(() -> {
-                                srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                        Pair<TrimChoice, RecordSet> loadedSrc = importer.loadSource().apply(formatNonNull);
+                    
+                        Platform.runLater(() -> {
+                            // TODO use trim guess when appropriate (when is that?)
+                            TrimChoice trim = srcDataDisplay.trimExpression().get();
+                            Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
+                                try
+                                {
+                                    Pair<FORMAT, RecordSet> loadedDest = importer.loadDest().apply(new Pair<>(formatNonNull, trim));
+                                    Platform.runLater(() -> {
+                                        destRecordSet.set(loadedDest.getSecond());
+                                        destFormat = loadedDest.getFirst();
+                                        destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                                    });
+                                }
+                                catch (InternalException | UserException e)
+                                {
+                                    Log.log(e);
+                                    Platform.runLater(() -> {
+                                        destData.setColumns(ImmutableList.of(), null, null);
+                                        //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                                    });
+
+                                }
                             });
-                        }
+                            
+                            srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(loadedSrc.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                        });
                     }
                     catch (InternalException | UserException e)
                     {
                         Log.log(e);
                         Platform.runLater(() -> {
                             srcDataDisplay.setColumns(ImmutableList.of(), null, null);
-                            //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
-                        });
-
-                    }
-                });
-            }
-            else
-            {
-                destData.setColumns(ImmutableList.of(), null, null);
-            }
-        });
-        
-        FXUtility.addChangeListenerPlatform(destFormatProperty, destFormat -> {
-            if (destFormat != null)
-            {
-                @NonNull FORMAT formatNonNull = destFormat;
-                TrimChoice trim = srcDataDisplay.trimExpression().get();
-                Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
-                    try
-                    {
-                        RecordSet recordSet = importer.loadDest().apply(new Pair<>(formatNonNull, trim));
-                        if (recordSet != null)
-                        {
-                            @NonNull RecordSet recordSetNonNull = recordSet;
-                            Platform.runLater(() -> {
-                                destRecordSet.set(recordSetNonNull);
-                                destData.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
-                            });
-                        }
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        Log.log(e);
-                        Platform.runLater(() -> {
-                            destData.setColumns(ImmutableList.of(), null, null);
                             //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
                         });
 
@@ -232,10 +219,9 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         });
         //TODO disable ok button if name isn't valid
         setResultConverter(bt -> {
-            @Nullable FORMAT format = destFormatProperty.get();
-            if (bt == ButtonType.OK && format != null)
+            if (bt == ButtonType.OK && destFormat != null)
             {
-                return new ImportInfo<>(suggestedName/*, linkCopyButtons.valueProperty().get()*/);
+                return new ImportInfo<>(suggestedName/*, linkCopyButtons.valueProperty().get()*/, destFormat);
             }
             return null;
         });

@@ -10,7 +10,7 @@ import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.datatype.DataTypeUtility;
 import records.importers.ColumnInfo;
-import records.importers.TextFormat;
+import records.importers.GuessFormat.FinalTextFormat;
 import test.TestUtil;
 import test.gen.GenFormattedData.FormatAndData;
 
@@ -32,13 +32,13 @@ public class GenFormattedData extends Generator<FormatAndData>
 
     public static class FormatAndData
     {
-        public final TextFormat format;
+        public final FinalTextFormat format;
         public final List<String> content;
         // Outermost list is list of rows
         // Next list in is list of columns.
         public final List<List<@Value Object>> loadedContent;
 
-        public FormatAndData(TextFormat format, List<String> content, List<List<@Value Object>> loadedContent)
+        public FormatAndData(FinalTextFormat format, List<String> content, List<List<@Value Object>> loadedContent)
         {
             this.format = format;
             this.content = content;
