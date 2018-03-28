@@ -22,9 +22,37 @@ import utility.gui.FXUtility;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF, CellStyle, GridCellInfo<VersionedSTF, CellStyle>>
 {
+    private static ArrayBlockingQueue<VersionedSTF> newItems = new ArrayBlockingQueue<>(500);
+    
+    static {
+        for (int i = 0; i < 3; i++)
+        {
+            new Thread("STF creator" + i)
+            {
+                @Override
+                @OnThread(value = Tag.FX, ignoreParent = true)
+                public void run()
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            newItems.put(new VersionedSTF());
+                        }
+                        catch (InterruptedException e)
+                        {
+                            // So what?  Go round again.
+                        }
+                    }
+                }
+            }.start();
+        }
+    }
+    
     public DataCellSupplier()
     {
         super(ViewOrder.STANDARD_CELLS, Arrays.asList(CellStyle.values()));
@@ -33,7 +61,18 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     @Override
     protected VersionedSTF makeNewItem()
     {
-        VersionedSTF stf = new VersionedSTF();
+        VersionedSTF stf = null;
+        while (stf == null)
+        {
+            try
+            {
+                stf = newItems.take();
+            }
+            catch (InterruptedException e)
+            {
+                // Just go again
+            }
+        } 
         stf.getStyleClass().add("table-data-cell");
         return stf;
     }
