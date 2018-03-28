@@ -339,7 +339,7 @@ public class GuessFormat
     @OnThread(Tag.Simulation)
     public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset)
     {
-        @KeyFor("initialByCharset") Charset initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+        @Nullable @KeyFor("initialByCharset") Charset initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
         SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess);
         Pair<String, String> sepAndQuot = guessSepAndQuot(initialByCharset.get(initialCharsetGuess));
         SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot.getFirst());
@@ -906,7 +906,7 @@ public class GuessFormat
         HashSet<ColumnId> usedNames = new HashSet<>();
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
         {
-            String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex);
+            String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex + trimChoice.trimFromLeft);
             StringBuilder stringBuilder = new StringBuilder();
             int[] codepoints = original.codePoints().toArray();
             boolean lastWasSpace = false;

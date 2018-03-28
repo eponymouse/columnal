@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -11,13 +12,16 @@ import records.data.columntype.TextColumnType;
 import records.data.datatype.DataTypeUtility;
 import records.importers.ColumnInfo;
 import records.importers.GuessFormat.FinalTextFormat;
+import records.importers.GuessFormat.TrimChoice;
 import test.TestUtil;
 import test.gen.GenFormattedData.FormatAndData;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.stream.Collectors;
 
 /**
@@ -144,7 +148,35 @@ public class GenFormattedData extends Generator<FormatAndData>
         if (r.nextBoolean())
             fileContent.add(""); // Add trailing newline
 
-        return new FormatAndData(format, fileContent, intendedContent);
+        // Strip blanks from beginning and end as trim should now remove them:
+        ArrayList<ColumnInfo> withoutBlanks = new ArrayList<>(format.columnTypes);
+        int leftTrim = 0;
+        for (Iterator<ColumnInfo> iterator = withoutBlanks.iterator(); iterator.hasNext(); )
+        {
+            ColumnInfo col = iterator.next();
+            if (col.type instanceof BlankColumnType)
+            {
+                iterator.remove();
+                leftTrim += 1;
+            }
+            else
+                break;
+        }
+        int rightTrim = 0;
+        for (ListIterator<ColumnInfo> iterator = withoutBlanks.listIterator(withoutBlanks.size()); iterator.hasPrevious();)
+        {
+            ColumnInfo col = iterator.previous();
+            if (col.type instanceof BlankColumnType)
+            {
+                iterator.remove();
+                rightTrim += 1;
+            }
+            else
+                break;
+        }
+        
+        TrimChoice trim = new TrimChoice(format.trimChoice.trimFromTop, format.trimChoice.trimFromBottom,format.trimChoice.trimFromLeft + leftTrim, format.trimChoice.trimFromRight + rightTrim);
+        return new FormatAndData(new FinalTextFormat(format.initialTextFormat, trim, ImmutableList.copyOf(withoutBlanks)), fileContent, intendedContent);
     }
 
 }

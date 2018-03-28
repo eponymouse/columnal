@@ -39,6 +39,8 @@ public class NumericColumnType extends ColumnType
         
         if (commonSuffix != null)
             val = StringUtils.removeEnd(val, commonSuffix);
+        else if (val.endsWith(unit.getDisplaySuffix()))
+            val = StringUtils.removeEnd(val, unit.getDisplaySuffix());
         
         val = val.trim().replace(",", "");
         return val;
@@ -77,7 +79,7 @@ public class NumericColumnType extends ColumnType
             "unit=" + unit +
             ", displayInfo=" + displayInfo +
             ", commonPrefix='" + commonPrefix + '\'' +
-            ", commonPrefix='" + commonSuffix + '\'' +
+            ", commonSuffix='" + commonSuffix + '\'' +
             '}';
     }
 }

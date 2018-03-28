@@ -54,6 +54,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by neil on 31/10/2016.
@@ -107,23 +111,26 @@ public class TextImporter implements Importer
             }
         });
     }
-/*
+
     @OnThread(Tag.Simulation)
-    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
+    public static RecordSet _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
-        return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
+        CompletableFuture<RecordSet> f = new CompletableFuture<>();
+        // TODO need some test code to operate the GUI
+        importTextFile(mgr, textFile, CellPosition.ORIGIN, data -> {
             try
             {
-                return makeDataSource(mgr, textFile, new ImportInfo(textFile.getName()).getInitialLoadDetails(CellPosition.ORIGIN), format);
+                f.complete(data.getData());
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                throw new UserException("IO exception", e);
+                e.printStackTrace();
             }
         });
+        return f.get(10, TimeUnit.SECONDS);
     }
-*/
+
     @OnThread(Tag.Simulation)
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final InitialLoadDetails initialLoadDetails, final FinalTextFormat format) throws IOException, InternalException, UserException
     {

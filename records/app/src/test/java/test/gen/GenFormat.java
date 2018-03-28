@@ -67,7 +67,6 @@ public class GenFormat extends Generator<FinalTextFormat>
     }
 
     @Override
-    @SuppressWarnings("initialization")
     public FinalTextFormat generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         String sep = "" + sourceOfRandomness.choose(seps);
@@ -86,7 +85,14 @@ public class GenFormat extends Generator<FinalTextFormat>
                 new NumericColumnType(Unit.SCALAR, sourceOfRandomness.nextInt(0, 6), null, null) :
                 ((Supplier<ColumnType>)() -> {
                     Unit curr = sourceOfRandomness.choose(currencies);
-                    return new NumericColumnType(curr, sourceOfRandomness.nextInt(0, 6), curr.getDisplayPrefix(), curr.getDisplaySuffix());}).get(),
+                    String displayPrefix = curr.getDisplayPrefix();
+                    String displaySuffix = curr.getDisplaySuffix();
+                    // We use null if empty:
+                    if (displayPrefix.isEmpty())
+                        displayPrefix = null;
+                    if (displaySuffix.isEmpty())
+                        displaySuffix = null;
+                    return new NumericColumnType(curr, sourceOfRandomness.nextInt(0, 6), displayPrefix, displaySuffix);}).get(),
                 new CleanDateColumnType(DateTimeType.YEARMONTHDAY, true, sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:
@@ -103,7 +109,7 @@ public class GenFormat extends Generator<FinalTextFormat>
             charset.newEncoder().canEncode(((NumericColumnType) ci.type).unit.getDisplayPrefix()) : true)
         ).collect(Collectors.toList());
 
-        return f(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), ImmutableList.copyOf(columns), sep, null /*TODO */, sourceOfRandomness.choose(possibleCharsets));
+        return f(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), ImmutableList.copyOf(columns), sep, ""/*TODO */, sourceOfRandomness.choose(possibleCharsets));
     }
 
     @Override
