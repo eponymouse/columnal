@@ -60,6 +60,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -91,6 +95,20 @@ public class GuessFormat
         // Get the function which would load the final record set (import RHS) for the given format and trim.
         // After trimming, the types of the columns are guessed at.
         SimulationFunction<Pair<SRC_FORMAT, TrimChoice>, Pair<DEST_FORMAT, RecordSet>> loadDest();
+        
+        @OnThread(Tag.Simulation)
+        public default DEST_FORMAT _test_getResultNoGUI() throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+        {
+            CompletableFuture<SRC_FORMAT> future = new CompletableFuture<>();
+            Platform.runLater(() -> {
+                SRC_FORMAT srcFormat = currentSrcFormat().get();
+                if (srcFormat != null)
+                    future.complete(srcFormat);
+            });
+            SRC_FORMAT srcFormat = future.get(1, TimeUnit.SECONDS);
+            Pair<TrimChoice, RecordSet> p = loadSource().apply(srcFormat);
+            return loadDest().apply(new Pair<>(srcFormat, p.getFirst())).getFirst();
+        }
     }
     
     /**
@@ -237,6 +255,16 @@ public class GuessFormat
             this.separator = separator;
             this.quote = quote;
         }
+
+        @Override
+        public String toString()
+        {
+            return "InitialTextFormat{" +
+                "charset=" + charset +
+                ", separator='" + separator + '\'' +
+                ", quote='" + quote + '\'' +
+                '}';
+        }
     }
     
     public static class FinalTextFormat
@@ -251,13 +279,23 @@ public class GuessFormat
             this.trimChoice = trimChoice;
             this.columnTypes = columnTypes;
         }
+
+        @Override
+        public String toString()
+        {
+            return "FinalTextFormat{" +
+                "initialTextFormat=" + initialTextFormat +
+                ", trimChoice=" + trimChoice +
+                ", columnTypes=" + columnTypes +
+                '}';
+        }
     }
 
     @OnThread(Tag.Simulation)
     public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset)
     {
         @KeyFor("initialByCharset") Charset initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
-        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>();
+        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess);
         Pair<String, String> sepAndQuot = guessSepAndQuot(initialByCharset.get(initialCharsetGuess));
         SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot.getFirst());
         SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot.getSecond());
@@ -450,13 +488,13 @@ public class GuessFormat
         for (int i = 0; i < row.length();)
         {
             // First check for escaped quote (which may otherwise look like a quote):
-            if (inQuoted && escapedQuote != null && row.startsWith(escapedQuote, i))
+            if (inQuoted && !escapedQuote.isEmpty() && row.startsWith(escapedQuote, i))
             {
                 // Skip it:
                 sb.append(quote);
                 i += escapedQuote.length();
 
-                if (quote != null && escapedQuote.endsWith(quote))
+                if (!quote.isEmpty() && escapedQuote.endsWith(quote))
                 {
                     r.originalContentAndStyle.add(new Pair<>(escapedQuote.substring(0, escapedQuote.length() - quote.length()), "escaped-quote-escape"));
                     r.originalContentAndStyle.add(new Pair<>(quote, "escaped-quote-quote"));
@@ -466,7 +504,7 @@ public class GuessFormat
                     r.originalContentAndStyle.add(new Pair<>(escapedQuote, "escaped-quote"));
                 }
             }
-            else if (quote != null && row.startsWith(quote, i) && (inQuoted || sb.toString().trim().isEmpty()))
+            else if (!quote.isEmpty() && row.startsWith(quote, i) && (inQuoted || sb.toString().trim().isEmpty()))
             {
                 if (!inQuoted)
                 {
@@ -477,7 +515,7 @@ public class GuessFormat
                 i += quote.length();
                 r.originalContentAndStyle.add(new Pair<>(quote, inQuoted ? "quote-begin" : "quote-end"));
             }
-            else if (!inQuoted && sep != null && row.startsWith(sep, i))
+            else if (!inQuoted && !sep.isEmpty() && row.startsWith(sep, i))
             {
                 r.columnContents.add(sb.toString());
                 r.originalContentAndStyle.add(new Pair<>(replaceTab(sep), "separator"));

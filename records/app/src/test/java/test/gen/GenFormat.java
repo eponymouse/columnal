@@ -1,5 +1,6 @@
 package test.gen;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -14,8 +15,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ColumnInfo;
 import records.importers.GuessFormat.FinalTextFormat;
+import records.importers.GuessFormat.InitialTextFormat;
+import records.importers.GuessFormat.TrimChoice;
 import records.transformations.function.ToDate;
 import test.DummyManager;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.nio.charset.Charset;
@@ -55,6 +60,11 @@ public class GenFormat extends Generator<FinalTextFormat>
         super(FinalTextFormat.class);
     }
 
+    public static FinalTextFormat f(int headerRows, ImmutableList<ColumnInfo> columns, String sep, String quote, Charset charset)
+    {
+        return new FinalTextFormat(new InitialTextFormat(charset, sep, quote), new TrimChoice(headerRows, 0, 0, 0), columns);
+    }
+
     @Override
     @SuppressWarnings("initialization")
     public FinalTextFormat generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
@@ -92,7 +102,7 @@ public class GenFormat extends Generator<FinalTextFormat>
             charset.newEncoder().canEncode(((NumericColumnType) ci.type).unit.getDisplayPrefix()) : true)
         ).collect(Collectors.toList());
 
-        return new FinalTextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, null /*TODO */, sourceOfRandomness.choose(possibleCharsets));
+        return f(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), ImmutableList.copyOf(columns), sep, null /*TODO */, sourceOfRandomness.choose(possibleCharsets));
     }
 
     @Override
@@ -108,7 +118,7 @@ public class GenFormat extends Generator<FinalTextFormat>
             // Don't let them all be blank or all text/blank:
             if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 continue;
-            FinalTextFormat smaller = new FinalTextFormat(larger.trimChoice.trimFromTop, reducedCols, larger.separator, larger.quote, Charset.forName("UTF-8"));
+            FinalTextFormat smaller = f(larger.trimChoice.trimFromTop, ImmutableList.copyOf(reducedCols), larger.initialTextFormat.separator, larger.initialTextFormat.quote, Charset.forName("UTF-8"));
             if (reducedCols.size() >= 2) // TODO allow one column
                 r.add(smaller);
         }

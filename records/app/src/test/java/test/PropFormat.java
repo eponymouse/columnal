@@ -43,18 +43,11 @@ public class PropFormat
     public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData, boolean link) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
-        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.charset));
-        ChoicePick[] picks = new ChoicePick[] {
-            new ChoicePick<>(CharsetChoice.class, new CharsetChoice(formatAndData.format.charset)),
-            new ChoicePick<TrimChoice>(TrimChoice.class, formatAndData.format.trimChoice),
-            new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice(formatAndData.format.separator)),
-            new ChoicePick<QuoteChoice>(QuoteChoice.class, new QuoteChoice(formatAndData.format.quote)),
-            new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(formatAndData.format.columnTypes.size()))
-        };
-        assertEquals("Failure with content: " + content, formatAndData.format, TestUtil.pick(formatChoicePoint, picks));
+        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.initialTextFormat.charset));
+        assertEquals("Failure with content: " + content, formatAndData.format, format);
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, content, formatAndData.format.charset);
+        FileUtils.writeStringToFile(tempFile, content, formatAndData.format.initialTextFormat.charset);
         // Can't figure out issue with checker here, came after IntelliJ upgrade!?
         /* TODO restore this
         ChoicePoint<?, DataSource> choicePoint = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
