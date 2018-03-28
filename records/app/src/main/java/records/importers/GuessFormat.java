@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -257,6 +258,24 @@ public class GuessFormat
         }
 
         @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            InitialTextFormat that = (InitialTextFormat) o;
+            return Objects.equals(charset, that.charset) &&
+                Objects.equals(separator, that.separator) &&
+                Objects.equals(quote, that.quote);
+        }
+
+        @Override
+        public int hashCode()
+        {
+
+            return Objects.hash(charset, separator, quote);
+        }
+
+        @Override
         public String toString()
         {
             return "InitialTextFormat{" +
@@ -278,6 +297,24 @@ public class GuessFormat
             this.initialTextFormat = initialTextFormat;
             this.trimChoice = trimChoice;
             this.columnTypes = columnTypes;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FinalTextFormat that = (FinalTextFormat) o;
+            return Objects.equals(initialTextFormat, that.initialTextFormat) &&
+                Objects.equals(trimChoice, that.trimChoice) &&
+                Objects.equals(columnTypes, that.columnTypes);
+        }
+
+        @Override
+        public int hashCode()
+        {
+
+            return Objects.hash(initialTextFormat, trimChoice, columnTypes);
         }
 
         @Override
@@ -756,14 +793,18 @@ public class GuessFormat
                 }
             }
             String validated = stringBuilder.toString().trim();
-            if (validated.isEmpty())
-                validated = "C";
-            // Now check if it is taken:
             String prospectiveName = validated;
+            if (validated.isEmpty())
+            {
+                validated = "C";
+                prospectiveName = "C1";
+            }
+            // Now check if it is taken:
+            
             int appendNum = 1;
             while (usedNames.contains(new ColumnId(prospectiveName)))
             {
-                prospectiveName = validated + " " + appendNum;
+                prospectiveName = validated + appendNum;
                 appendNum += 1;
             }
             ColumnId columnName = new ColumnId(prospectiveName);
