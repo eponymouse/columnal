@@ -65,6 +65,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -339,11 +340,11 @@ public class GuessFormat
     @OnThread(Tag.Simulation)
     public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset)
     {
-        @Nullable @KeyFor("initialByCharset") Charset initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
-        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess);
-        Pair<String, String> sepAndQuot = guessSepAndQuot(initialByCharset.get(initialCharsetGuess));
-        SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot.getFirst());
-        SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot.getSecond());
+        Optional<@KeyFor("initialByCharset") Charset> initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.orElse(null));
+        @Nullable Pair<String, String> sepAndQuot = initialCharsetGuess.map(initialByCharset::get).map(GuessFormat::guessSepAndQuot).orElse(null);
+        SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getFirst());
+        SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getSecond());
         ObjectProperty<@Nullable InitialTextFormat> srcFormat = new SimpleObjectProperty<>(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
         
         return new Import<InitialTextFormat, FinalTextFormat>()
@@ -588,7 +589,9 @@ public class GuessFormat
         return bestSepAndQuot;
     }
 
-    private static <C extends Charset> @Nullable C guessCharset(Collection<C> charsets)
+    // Use Optional here, not Nullable, because the latter can accidentally fool checker framework, see
+    // https://github.com/typetools/checker-framework/issues/1922
+    private static <C extends Charset> Optional<C> guessCharset(Collection<C> charsets)
     {
         // Pretty simple: if UTF-8 is in there, use that, else use any.
         Charset utf8 = Charset.forName("UTF-8");
@@ -596,9 +599,11 @@ public class GuessFormat
         for (C charset : charsets)
         {
             if (charset.equals(utf8))
-                return charset;
+                return Optional.of(charset);
+            else
+                arbitrary = charset;
         }
-        return arbitrary;
+        return Optional.ofNullable(arbitrary);
     }
 
     private static Either<@Localized String, Charset> pickCharset(String s)
