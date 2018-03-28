@@ -60,8 +60,8 @@ public class TestFormat
         assertFormatCR(GenFormat.f(0, c(col(NUM, "C1"), col(NUM, "C2")), ",", "", UTF8),
             "0,0", "1,1", "2,2");
 
-        assertFormatCR(GenFormat.f(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", "", UTF8),
-            "A,B", "0,0", "1,1", "C,D", "2,2");
+        assertFormatCR(GenFormat.f(1, c(col(TEXT, "A"), col(TEXT, "B")), ",", "", UTF8),
+            "A,B", "0,0", "3,5", "1,D", "C,2", "2,2", "E,F");
         assertFormatCR(GenFormat.f(1, c(col(NUM, "A"), col(TEXT, "B")), ",", "", UTF8),
             "A,B", "0,0", "1,1", "1.5,D", "2,2", "3,E");
 
@@ -95,7 +95,11 @@ public class TestFormat
     @OnThread(Tag.Simulation)
     private static void assertFormat(FinalTextFormat fmt, String... lines) throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
-        assertEquals(fmt, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), ImmutableMap.of(Charset.forName("UTF-8"), Arrays.asList(lines)))._test_getResultNoGUI());
+        FinalTextFormat actual = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), ImmutableMap.of(Charset.forName("UTF-8"), Arrays.asList(lines)))._test_getResultNoGUI();
+        assertEquals(fmt.initialTextFormat, actual.initialTextFormat);
+        // We only care about top.  If they have to trim more from sides due to header, that is fine:
+        assertEquals(fmt.toString(), fmt.trimChoice.trimFromTop, actual.trimChoice.trimFromTop);
+        assertEquals(fmt.columnTypes, actual.columnTypes);
     }
 
     private static ImmutableList<ColumnInfo> c(ColumnInfo... ts)

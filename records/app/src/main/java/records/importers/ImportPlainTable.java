@@ -23,6 +23,7 @@ abstract class ImportPlainTable implements Import<UnitType, ImmutableList<Column
     private final TableManager mgr;
     private final List<? extends List<String>> vals;
 
+    // vals must be rectangular
     public ImportPlainTable(int numSrcColumns, TableManager mgr, List<? extends List<String>> vals)
     {
         this.numSrcColumns = numSrcColumns;
@@ -43,14 +44,14 @@ abstract class ImportPlainTable implements Import<UnitType, ImmutableList<Column
             ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
             for (int i = 0; i < numSrcColumns; i++)
             {
-                columns.add(new ColumnInfo(new TextColumnType(), columnName(i)));
+                columns.add(new ColumnInfo(new TextColumnType(), srcColumnName(i)));
             }
             EditableRecordSet recordSet = ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns.build());
-            return new Pair<>(new TrimChoice(0, 0, 0, 0), recordSet);
+            return new Pair<>(GuessFormat.guessTrim(vals), recordSet);
         };
     }
 
-    public abstract ColumnId columnName(int index);
+    public abstract ColumnId srcColumnName(int index);
 
     @Override
     public SimulationFunction<Pair<UnitType, TrimChoice>, Pair<ImmutableList<ColumnInfo>, RecordSet>> loadDest()

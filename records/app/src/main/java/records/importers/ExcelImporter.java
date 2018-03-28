@@ -99,7 +99,7 @@ public class ExcelImporter implements Importer
 
             Import<UnitType, ImmutableList<ColumnInfo>> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
                 @Override
-                public ColumnId columnName(int index)
+                public ColumnId srcColumnName(int index)
                 {
                     return excelColumnName(index);
                 }

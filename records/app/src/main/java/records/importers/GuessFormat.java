@@ -1,6 +1,9 @@
 package records.importers;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multiset;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -53,6 +56,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -67,6 +71,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by neil on 20/10/2016.
@@ -74,6 +79,8 @@ import java.util.stream.Collectors;
 public class GuessFormat
 {
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
+    public static final ImmutableList<String> SEP_CHOICES = ImmutableList.of(",", ";", "\t", ":", "|", " ");
+    public static final ImmutableList<String> QUOTE_CHOICES = ImmutableList.of("", "\"", "\'");
 
     // SRC_FORMAT is what you need to get the initial source table
     // DEST_FORMAT is what you calculate post-trim for the column formats for the final item. 
@@ -120,7 +127,7 @@ public class GuessFormat
      */
     public static ImmutableList<ColumnInfo> guessGeneralFormat(UnitManager mgr, List<? extends List<String>> vals, TrimChoice trimChoice) throws GuessException
     {
-        return guessBodyFormat(mgr, vals.get(0).size(), trimChoice, vals);
+        return guessBodyFormat(mgr, trimChoice, vals);
     }
 
     public static class GuessException extends UserException
@@ -215,7 +222,7 @@ public class GuessFormat
 */
     public static ChoiceDetails<String> separatorChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.separator", "guess-format/separator", ImmutableList.of(",", ";", "\t", ":", "|", " "), enterSingleChar(x -> x));
+        return new ChoiceDetails<>("guess.separator", "guess-format/separator", SEP_CHOICES, enterSingleChar(x -> x));
     }
 
         /*
@@ -239,7 +246,7 @@ public class GuessFormat
 */
     public static ChoiceDetails<String> quoteChoiceDetails()
     {
-        return new ChoiceDetails<>("guess.quote", "guess-format/quote", ImmutableList.of("", "\"", "\'"), enterSingleChar(x -> x));
+        return new ChoiceDetails<>("guess.quote", "guess-format/quote", QUOTE_CHOICES, enterSingleChar(x -> x));
     }
     
     public static class InitialTextFormat
@@ -391,8 +398,8 @@ public class GuessFormat
                 ImmutableList<ArrayList<String>> values = loadValues(initial, sep, quot);
                 ImporterUtility.rectangularise(values);
                 TrimChoice trimChoice = guessTrim(values);
-                ImmutableList<ColumnInfo> columnInfos = guessBodyFormat(unitManager, values.isEmpty() ? 0 : values.get(0).size(), trimChoice, values);
-                return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, values, columnInfos));
+                ImmutableList<ColumnInfo> columnInfos = guessBodyFormat(unitManager, trimChoice, values);
+                return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, trimChoice.trim(values), columnInfos));
 
 
 /*
@@ -441,8 +448,8 @@ public class GuessFormat
                     
                     ImmutableList<ArrayList<String>> vals = loadValues(initial, p.getFirst().separator, p.getFirst().quote);
                     ImporterUtility.rectangularise(vals);
-                    ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, vals.isEmpty() ? 0 : vals.get(0).size(), p.getSecond(), vals);
-                    return new Pair<>(new FinalTextFormat(p.getFirst(), p.getSecond(), columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, vals, columnTypes));
+                    ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, p.getSecond(), vals);
+                    return new Pair<>(new FinalTextFormat(p.getFirst(), p.getSecond(), columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, p.getSecond().trim(vals), columnTypes));
                 };
             }
         };
@@ -457,17 +464,127 @@ public class GuessFormat
             return new InitialTextFormat(charset, sep, quote);
         return null;
     }
-
-    private static TrimChoice guessTrim(List<? extends List<String>> values)
+    
+    private static enum AlphabetItem
     {
-        // TODO
-        return new TrimChoice(0, 0, 0,0);
+        NUMERIC, PUNCTUATION, BOOLEAN, OTHER
     }
 
-    private static Pair<String, String> guessSepAndQuot(List<String> strings)
+    // vals must be rectangular
+    public static TrimChoice guessTrim(List<? extends List<String>> values)
     {
-        // TODO
-        return new Pair<>(",", "");
+        if (values.isEmpty())
+            return new TrimChoice(0, 0, 0,0);
+        
+        int numColumns = values.get(0).size();
+        // We begin in the middle, and then expand outwards, as long as our alphabet hasn't had too many changes
+        // in too many columns. 
+        
+        ArrayList<EnumSet<AlphabetItem>> columnAlphabets = new ArrayList<>();
+        
+        int trimFromTop = 0;
+        for (int row = values.size() < 60 ? (values.size() / 2) : 30; row >= 0; row--)
+        {
+            List<String> rowVals = values.get(row);
+            if (columnAlphabets.isEmpty())
+            {
+                columnAlphabets.addAll(Utility.mapList(rowVals, GuessFormat::calculateAlphabet));
+            }
+            else
+            {
+                int alphabetsChanged = 0;
+                for (int i = 0; i < numColumns; i++)
+                {
+                    EnumSet<AlphabetItem> alphabet = calculateAlphabet(rowVals.get(i));
+                    alphabetsChanged += columnAlphabets.get(i).addAll(alphabet) && alphabet.contains(AlphabetItem.OTHER) ? 1 : 0;
+                }
+                if (alphabetsChanged > numColumns / 4)
+                {
+                    trimFromTop = row + 1;
+                    break;
+                }
+            }
+        }
+        
+        // Now that we have trim from top, we trim the sides by removing any columns which are entirely blank
+        // This is equivalent to finding the first non-blank:
+        long trimFromTopFinal = trimFromTop;
+        int trimLeft = IntStream.range(0, numColumns).filter(c -> values.stream().skip(trimFromTopFinal).anyMatch(row -> !row.get(c).isEmpty())).findFirst().orElse(0);
+        int trimRight = IntStream.range(0, numColumns - trimLeft).filter(c -> values.stream().skip(trimFromTopFinal).anyMatch(row -> !row.get(numColumns - 1 - c).isEmpty())).findFirst().orElse(0);
+        
+        
+        return new TrimChoice(trimFromTop, 0, trimLeft, trimRight);
+    }
+
+    private static EnumSet<AlphabetItem> calculateAlphabet(String s)
+    {
+        // Replace numbers with zero:
+        s = s.replaceAll("[+-]?[0-9]+(\\.[0-9]+)?(e[+-]?[0-9]+)", "0");
+        switch (s.toLowerCase())
+        {
+            case "t": case "f": case "true": case "false": case "yes": case "no": case "y": case "n":
+                return EnumSet.of(AlphabetItem.BOOLEAN);
+        }
+        EnumSet<AlphabetItem> r = EnumSet.noneOf(AlphabetItem.class);
+        s.codePoints().forEach(n -> {
+            if (Character.isDigit(n) || Character.getType(n) == Character.CURRENCY_SYMBOL)
+            {
+                r.add(AlphabetItem.NUMERIC);
+            }
+            else if (Character.isLetter(n))
+            {
+                r.add(AlphabetItem.OTHER);
+            }
+            else if (!Character.isWhitespace(n))
+            {
+                r.add(AlphabetItem.PUNCTUATION);
+            }
+        });
+        return r;
+    }
+
+    private static Pair<String, String> guessSepAndQuot(List<String> lines)
+    {
+        Pair<String, String> bestSepAndQuot = new Pair<>("", "");
+        double bestScore = -Double.MAX_VALUE;
+
+        for (String quot : QUOTE_CHOICES)
+        {
+            for (String sep : SEP_CHOICES)
+            {
+                Multiset<Integer> counts = HashMultiset.create();
+                for (int i = 0; i < lines.size(); i++)
+                {
+                    if (!lines.get(i).isEmpty())
+                    {
+                        counts.add(splitIntoColumns(lines.get(i), sep, quot).columnContents.size());
+                    }
+                }
+
+                if (counts.elementSet().equals(ImmutableSet.of(1)))
+                {
+                    // All columns size one; totally rubbish, don't bother remembering
+                }
+                else if (counts.elementSet().size() == 1)
+                {
+                    // All sizes the same, but not all zero
+                    return new Pair<>(sep, quot);
+                }
+                else
+                {
+                    // Higher is better choice so negate:
+                    double score = -Utility.variance(counts);
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestSepAndQuot = new Pair<>(sep, quot);
+                    }
+
+                }
+            }
+        }
+        
+        return bestSepAndQuot;
     }
 
     private static <C extends Charset> @Nullable C guessCharset(Collection<C> charsets)
@@ -577,12 +694,11 @@ public class GuessFormat
         return s.replace("\t", "\u27FE");
     }
 
-    // Note that the trim choice should not already have been applied
-    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, int columnCount, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed) throws GuessException
+    // Note that the trim choice should not already have been applied.  But values should be rectangular
+    private static ImmutableList<ColumnInfo> guessBodyFormat(UnitManager mgr, TrimChoice trimChoice, @NonNull List<@NonNull ? extends List<@NonNull String>> untrimmed) throws GuessException
     {
         List<List<String>> initialVals = trimChoice.trim(untrimmed);
-        // Per row, for how many columns is it viable to get column name?
-        Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
+        int columnCount = initialVals.isEmpty() ? 0 : initialVals.get(0).size();
         List<ColumnType> columnTypes = new ArrayList<>();
         List<Integer> blankRows = new ArrayList<>();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
@@ -760,16 +876,12 @@ public class GuessFormat
             */
         }
         int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !(c instanceof BlankColumnType)).count();
-        // All must think it's viable, and then pick last one:
-        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream()
-            //.filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size())
-            .max(Entry.comparingByKey()).map((Entry<@KeyFor("viableColumnNameRows") Integer, Integer> e) -> initialVals.get(e.getKey()));
-
+        
         ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builderWithExpectedSize(columnCount);
         HashSet<ColumnId> usedNames = new HashSet<>();
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
         {
-            String original = headerRow.isPresent() && columnIndex < headerRow.get().size() ? headerRow.get().get(columnIndex) : "";
+            String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex);
             StringBuilder stringBuilder = new StringBuilder();
             int[] codepoints = original.codePoints().toArray();
             boolean lastWasSpace = false;

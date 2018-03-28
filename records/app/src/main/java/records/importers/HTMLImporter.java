@@ -210,7 +210,7 @@ public class HTMLImporter implements Importer
             Import<UnitType, ImmutableList<ColumnInfo>> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
             {
                 @Override
-                public ColumnId columnName(int index)
+                public ColumnId srcColumnName(int index)
                 {
                     return new ColumnId("C" + (index + 1));
                 }
