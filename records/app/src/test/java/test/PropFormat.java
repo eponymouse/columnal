@@ -47,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropFormat extends ApplicationTest
 {
-    @Property
+    @Property(trials = 25)
     @OnThread(Tag.Simulation)
     public void testGuessFormat(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
