@@ -96,7 +96,7 @@ public class GUI
     }
 
     // Used by TestFX to identify items in the GUI
-    private static <T extends Styleable> T addIdClass(T node, @LocalizableKey String msgKey)
+    public static <T extends Styleable> T addIdClass(T node, @LocalizableKey String msgKey)
     {
         node.getStyleClass().add(makeId(msgKey));
         return node;

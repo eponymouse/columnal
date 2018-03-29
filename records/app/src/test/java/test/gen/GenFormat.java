@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class GenFormat extends Generator<FinalTextFormat>
 {
     public static List<Charset> CHARSETS = Utility.mapList(Arrays.asList("ISO-8859-1", "UTF-8", "UTF-16"), Charset::forName);
-    public static List<Character> seps = Arrays.asList(',', ';', '\t', ':');
+    public static List<Character> seps = Arrays.asList(',', ';', '\t', '|');
     public static List<Unit> currencies;
     static {
         try

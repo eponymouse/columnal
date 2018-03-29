@@ -66,6 +66,7 @@ public class ImporterGUI
             if (choiceDetails.stringEntry != null)
                 quickAndOther.add(new PickOrOther<>());
             final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(quickAndOther));
+            GUI.addIdClass(combo, choiceDetails.getLabelKey());
             @Nullable C choice = currentChoice.get();
             if (choice == null || !combo.getItems().contains(choice))
                 combo.getSelectionModel().selectFirst();
@@ -116,7 +117,8 @@ public class ImporterGUI
     }
 
     // Either a value of type C, or an "Other" item
-    private static class PickOrOther<C>
+    // Public for testing
+    public static class PickOrOther<C>
     {
         private final @Nullable C value;
 

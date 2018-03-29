@@ -1,8 +1,14 @@
 package test.gui;
 
+import javafx.collections.ObservableList;
 import javafx.scene.control.ComboBox;
 import javafx.scene.input.KeyCode;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
+import test.TestUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.Utility;
 
 import static org.junit.Assert.fail;
 
@@ -11,16 +17,19 @@ import static org.junit.Assert.fail;
  */
 public interface ComboUtilTrait extends FxRobotInterface
 {
+    @OnThread(Tag.Any)
     default <T> void selectNextComboBoxItem(final ComboBox<T> combo) {
         clickOn(combo).type(KeyCode.DOWN).type(KeyCode.ENTER);
     }
 
-    default <T> void selectGivenComboBoxItem(final ComboBox<T> combo, final T item) {
-        final int index = combo.getItems().indexOf(item);
-        final int indexSel = combo.getSelectionModel().getSelectedIndex();
+    @OnThread(Tag.Any)
+    default <@NonNull T> void selectGivenComboBoxItem(final ComboBox<@NonNull T> combo, final @NonNull T item) {
+        ObservableList<@NonNull T> comboItems = TestUtil.<ObservableList<@NonNull T>>fx(() -> combo.getItems());
+        final int index = comboItems.indexOf(item);
+        final int indexSel = TestUtil.fx(() -> combo.getSelectionModel().getSelectedIndex());
 
         if(index == -1)
-            fail("The item " + item + " is not in the combo box " + combo);
+            fail("The item " + item + " " + item.getClass() + " is not in the combo box " + combo + " items are " + Utility.listToString(comboItems) + " " + (comboItems.isEmpty() ? "" : comboItems.get(0).getClass()));
 
         clickOn(combo);
 

@@ -69,7 +69,7 @@ public class GenFormattedData extends Generator<FormatAndData>
 
         fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.initialTextFormat.separator)));
         int rowCount = r.nextInt(50, 200);
-        for (int row = 0; row < 100; row++)
+        for (int row = 0; row < rowCount; row++)
         {
             List<@Value Object> data = new ArrayList<>();
             StringBuilder line = new StringBuilder();

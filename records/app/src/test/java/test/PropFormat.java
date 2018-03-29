@@ -21,7 +21,9 @@ import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.TextImporter;
+import records.importers.gui.ImporterGUI.PickOrOther;
 import test.gen.GenFormattedData;
+import test.gui.ComboUtilTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -45,11 +47,11 @@ import static org.junit.Assert.assertEquals;
  * Created by neil on 29/10/2016.
  */
 @RunWith(JUnitQuickcheck.class)
-public class PropFormat extends ApplicationTest
+public class PropFormat extends ApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
@@ -67,7 +69,9 @@ public class PropFormat extends ApplicationTest
         CompletableFuture<RecordSet> rsFuture = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
         // GUI should show (after a slight delay), so we should provide inputs:
         TestUtil.sleep(3000);
-        // Dummy for now:
+        selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
+        selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
+        selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
         clickOn(".ok-button");
         
         
