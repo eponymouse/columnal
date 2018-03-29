@@ -7,20 +7,33 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.embed.swing.JFXPanel;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Region;
+import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.robot.Motion;
+import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.grid.RectangleBounds;
+import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.TextImporter;
+import records.importers.gui.ImportChoicesDialog;
+import records.importers.gui.ImportChoicesDialog.SrcDataDisplay;
 import records.importers.gui.ImporterGUI.PickOrOther;
 import test.gen.GenFormattedData;
 import test.gui.ComboUtilTrait;
@@ -62,7 +75,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
 
     @Property(trials=10)
     @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormatGUI(@When(seed=5L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         
@@ -72,6 +85,27 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
         selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
         selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
+        @Nullable ImportChoicesDialog<?> importChoicesDialog = TestUtil.<@Nullable ImportChoicesDialog<?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        if (importChoicesDialog != null)
+        {
+            Log.debug("Trying to set trim " + formatAndData.format.trimChoice);
+            VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
+            SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
+            // Find the current top-left corner of the selection rectangle:
+            RectangleBounds curBounds = TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
+            VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
+            Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
+            targetWindow(srcGridNode);
+            moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+                visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex),
+                visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex)))));
+            press(MouseButton.PRIMARY);
+            CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + formatAndData.format.trimChoice.trimFromTop, formatAndData.format.trimChoice.trimFromLeft);
+            moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+                visibleBounds.getXCoord(newTopLeft.columnIndex),
+                visibleBounds.getYCoord(newTopLeft.rowIndex)))));
+            release(MouseButton.PRIMARY);
+        }
         clickOn(".ok-button");
         
         
@@ -92,11 +126,11 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
     @OnThread(Tag.Simulation)
     private void checkDataValues(@From(GenFormattedData.class) @When(seed = 1L) GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
     {
-        assertEquals("Right column length", formatAndData.loadedContent.size(), rs.getLength());
+        assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.content.size(), formatAndData.loadedContent.size(), rs.getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
             assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.content.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
-                rs.getColumns().size(), formatAndData.loadedContent.get(i).size());
+                formatAndData.loadedContent.get(i).size(), rs.getColumns().size());
             for (int c = 0; c < rs.getColumns().size(); c++)
             {
                 @Value Object expected = formatAndData.loadedContent.get(i).get(c);

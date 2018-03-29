@@ -70,7 +70,20 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
 {
+    // Just for testing:
+    private static @Nullable ImportChoicesDialog<?> currentlyShowing;
+    public static @Nullable ImportChoicesDialog<?> _test_getCurrentlyShowing()
+    {
+        return currentlyShowing;
+    }
+    
+    
     private @Nullable FORMAT destFormat;
+    // Only stored as fields for testing purposes:
+    @OnThread(Tag.Any)
+    private final SrcDataDisplay srcDataDisplay;
+    @OnThread(Tag.Any)
+    private final VirtualGrid srcGrid;
 
     public static class SourceInfo
     {
@@ -96,11 +109,11 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         destGrid.addNodeSupplier(destDataCellSupplier);
         destDataCellSupplier.addGrid(destData, destData.getDataGridCellInfo());
         //destGrid.setEditable(false);
-        VirtualGrid srcGrid = new VirtualGrid(null, 0, 0);
+        srcGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"))
         srcGrid.getScrollGroup().add(destGrid.getScrollGroup(), ScrollLock.BOTH);
         destGrid.bindVisibleRowsTo(srcGrid);
-        SrcDataDisplay srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcRecordSet, destData);
+        srcDataDisplay = new SrcDataDisplay(suggestedName, srcGrid.getFloatingSupplier(), srcRecordSet, destData);
         srcGrid.addGridAreas(ImmutableList.of(srcDataDisplay));
         DataCellSupplier srcDataCellSupplier = new DataCellSupplier();
         srcGrid.addNodeSupplier(srcDataCellSupplier);
@@ -216,7 +229,23 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         setOnShown(e -> {
             //initModality(Modality.NONE); // For scenic view
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
+            currentlyShowing = Utility.later(this);
         });
+        setOnHidden(e -> {
+            currentlyShowing = null;
+        });
+    }
+
+    @OnThread(Tag.Any)
+    public SrcDataDisplay _test_getSrcDataDisplay()
+    {
+        return srcDataDisplay;
+    }
+
+    @OnThread(Tag.Any)
+    public VirtualGrid _test_getSrcGrid()
+    {
+        return srcGrid;
     }
 
     private static class RecordSetDataDisplay extends DataDisplay
@@ -264,7 +293,8 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         }
     }
 
-    private static class SrcDataDisplay extends RecordSetDataDisplay
+    // class is public for testing purposes
+    public static class SrcDataDisplay extends RecordSetDataDisplay
     {
         public static final double HORIZ_INSET = 22;
         public static final double VERT_INSET = 0;
@@ -466,6 +496,12 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
                 getBottomRightIncl().offsetByRowCols(-trim.trimFromBottom, -trim.trimFromRight));
             destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
             withParent_(p -> p.positionOrAreaChanged());
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public RectangleBounds _test_getCurSelectionBounds()
+        {
+            return curSelectionBounds;
         }
     }
 }

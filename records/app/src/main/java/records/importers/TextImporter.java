@@ -101,6 +101,7 @@ public class TextImporter implements Importer
         {
             try
             {
+                Log.debug("Importing format " + impInfo.getFormat());
                 DataSource ds = makeDataSource(mgr, textFile, impInfo.getInitialLoadDetails(destination), impInfo.getFormat());
                 Platform.runLater(() -> then.consume(ds));
             }
