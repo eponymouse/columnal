@@ -142,7 +142,14 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     {
         style.applyStyle(item, on);
     }
-    
+
+    @OnThread(Tag.FXPlatform)
+    public @Nullable VersionedSTF _test_getCellAt(CellPosition position)
+    {
+        return getItemAt(position);
+    }
+
+
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details
     public static class VersionedSTF extends StructuredTextField

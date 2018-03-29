@@ -790,6 +790,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return slideOutProportion;
     }
 
+    public int _test_getRowCount()
+    {
+        return currentKnownRows;
+    }
+
     @OnThread(Tag.FXPlatform)
     private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
     {

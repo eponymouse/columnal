@@ -37,6 +37,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.TableDisplay;
 import records.gui.grid.VirtualGrid;
 import records.gui.stf.StructuredTextField;
@@ -118,9 +119,9 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         Table calculated = new Transform(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
-        Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(windowToUse, manager).get();
-        tableManager = details.getFirst();
-        virtualGrid = details.getSecond();
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();
+        tableManager = details._test_getTableManager();
+        virtualGrid = details._test_getVirtualGrid();
 
         @SuppressWarnings("units")
         @TableDataRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
@@ -166,8 +167,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
             }
         }
         expectedCalcContent.add(new Pair<>("Result", calcValuesFiltered));
-        exportToCSVAndCheck(virtualGrid, details.getFirst(),"After deleting " + randomRow, expectedSrcContent, srcData.getId());
-        exportToCSVAndCheck(virtualGrid, details.getFirst(),"After deleting " + randomRow, expectedCalcContent, calculated.getId());
+        exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After deleting " + randomRow, expectedSrcContent, srcData.getId());
+        exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After deleting " + randomRow, expectedCalcContent, calculated.getId());
     }
 
     @Property(trials = 10)
@@ -185,7 +186,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
         Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(sortBy.getName())));
-        Pair<TableManager, VirtualGrid> details = TestUtil.sim(() -> {
+        MainWindowActions details = TestUtil.sim(() -> {
             manager.record(calculated);
             try
             {
@@ -195,8 +196,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
                 throw new RuntimeException(e);
             }
         }).get();
-        tableManager = details.getFirst();
-        virtualGrid = details.getSecond();
+        tableManager = details._test_getTableManager();
+        virtualGrid = details._test_getVirtualGrid();
 
         int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
         @SuppressWarnings("units")
@@ -323,7 +324,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         TestUtil.sim_(() -> {
             try
             {
-                exportToCSVAndCheck(virtualGrid, details.getFirst(),"After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
+                exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
             }
             catch (IOException e)
             {

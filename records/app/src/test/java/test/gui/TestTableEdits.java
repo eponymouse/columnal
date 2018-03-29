@@ -36,6 +36,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.transformations.Sort;
@@ -104,11 +105,11 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
                 dummyManager.record(src);
                 Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), ImmutableList.of(new ColumnId("B"), new ColumnId("A")));
                 dummyManager.record(sort);
-                @OnThread(Tag.Simulation) Supplier<Pair<TableManager, VirtualGrid>> supplier = TestUtil.openDataAsTable(stage, dummyManager);
+                @OnThread(Tag.Simulation) Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {
-                    Pair<TableManager, VirtualGrid> details = supplier.get();
-                    this.tableManager = details.getFirst();
-                    virtualGrid = details.getSecond();
+                    MainWindowActions details = supplier.get();
+                    this.tableManager = details._test_getTableManager();
+                    virtualGrid = details._test_getVirtualGrid();
                     finish.complete(Optional.empty());
                     Platform.runLater(() -> com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, finish));
                 }).start();

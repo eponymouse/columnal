@@ -52,7 +52,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     private final List<T> spareItems = new ArrayList<>();
     private final Collection<S> possibleStyles;
     private final ViewOrder viewOrder;
-    
+
     private class ItemDetails<T>
     {
         private final T node;

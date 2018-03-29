@@ -45,11 +45,14 @@ public class MainWindow
         @OnThread(Tag.FXPlatform)
         public void importFile(File file);
         
-        @OnThread(Tag.FXPlatform)
+        @OnThread(Tag.Any)
         public TableManager _test_getTableManager();
 
-        @OnThread(Tag.FXPlatform)
+        @OnThread(Tag.Any)
         public VirtualGrid _test_getVirtualGrid();
+
+        @OnThread(Tag.FXPlatform)
+        public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position);
     }
 
     // If src is null, make new
@@ -149,17 +152,24 @@ public class MainWindow
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
+            @OnThread(Tag.Any)
             public TableManager _test_getTableManager()
             {
                 return v.getManager();
             }
 
             @Override
-            @OnThread(Tag.FXPlatform)
+            @OnThread(Tag.Any)
             public VirtualGrid _test_getVirtualGrid()
             {
                 return v.getGrid();
+            }
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position)
+            {
+                return v._test_getDataCellSupplier()._test_getCellAt(position);
             }
         };
     }

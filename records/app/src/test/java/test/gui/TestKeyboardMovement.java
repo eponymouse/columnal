@@ -58,7 +58,7 @@ public class TestKeyboardMovement extends ApplicationTest
     @OnThread(Tag.Simulation)
     public void testKeyboardMovement(@When(seed=1L) @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
-        VirtualGrid virtualGrid = TestUtil.openDataAsTable(windowToUse, src.mgr).get().getSecond();
+        VirtualGrid virtualGrid = TestUtil.openDataAsTable(windowToUse, src.mgr).get()._test_getVirtualGrid();
         targetWindow(windowToUse);
         push(KeyCode.CONTROL, KeyCode.HOME);
         assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));

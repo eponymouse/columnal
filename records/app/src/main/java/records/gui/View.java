@@ -46,6 +46,7 @@ import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
@@ -240,6 +241,7 @@ public class View extends StackPane
         save();
     }
 
+    @OnThread(Tag.Any)
     public VirtualGrid getGrid()
     {
         return mainPane;
@@ -607,6 +609,11 @@ public class View extends StackPane
     public ObjectExpression<String> titleProperty()
     {
         return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
+    }
+    
+    public DataCellSupplier _test_getDataCellSupplier()
+    {
+        return dataCellSupplier;
     }
 
     @OnThread(Tag.FXPlatform)

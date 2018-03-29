@@ -824,16 +824,16 @@ public class TestUtil
      * @throws InvocationTargetException
      */
     @OnThread(Tag.Simulation)
-    public static Supplier<Pair<TableManager, VirtualGrid>> openDataAsTable(Stage windowToUse, TableManager mgr) throws Exception
+    public static Supplier<MainWindowActions> openDataAsTable(Stage windowToUse, TableManager mgr) throws Exception
     {
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
         String saved = save(mgr);
         System.out.println("Saving: {{{" + saved + "}}}");
-        AtomicReference<Pair<TableManager, VirtualGrid>> tableManagerAtomicReference = new AtomicReference<>();
+        AtomicReference<MainWindowActions> tableManagerAtomicReference = new AtomicReference<>();
         FXUtility.runFX(() -> checkedToRuntime_(() -> {
             MainWindowActions mainWindowActions = MainWindow.show(windowToUse, temp, new Pair<>(temp, saved));
-            tableManagerAtomicReference.set(new Pair<>(mainWindowActions._test_getTableManager(), mainWindowActions._test_getVirtualGrid()));
+            tableManagerAtomicReference.set(mainWindowActions);
         }));
         // Wait until individual tables are actually loaded:
         return () -> {
@@ -869,7 +869,7 @@ public class TestUtil
         {
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         }
-        return openDataAsTable(windowToUse, manager).get().getFirst();
+        return openDataAsTable(windowToUse, manager).get()._test_getTableManager();
     }
 
     // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.

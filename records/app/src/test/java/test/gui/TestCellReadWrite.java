@@ -18,6 +18,7 @@ import records.data.Table;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
 import test.DataEntryUtil;
 import test.TestUtil;
@@ -69,10 +70,10 @@ public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait
             @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
 
-        Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
         TestUtil.sleep(1000);
-        tableManager = details.getFirst();
-        virtualGrid = details.getSecond();
+        tableManager = details._test_getTableManager();
+        virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
         
         // Pick some random locations in random tables, scroll there, copy data and check value:
@@ -105,10 +106,10 @@ public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait
             @When(seed=2L) @From(GenValueSpecifiedType.class) GenValueSpecifiedType.ValueGenerator valueGenerator) throws Exception
     {
 
-        Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
         TestUtil.sleep(3000);
-        tableManager = details.getFirst();
-        virtualGrid = details.getSecond();
+        tableManager = details._test_getTableManager();
+        virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
         
         Map<CellPosition, String> writtenData = new HashMap<>();

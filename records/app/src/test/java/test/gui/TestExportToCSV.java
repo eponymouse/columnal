@@ -25,6 +25,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.TableDisplay;
 import records.gui.grid.VirtualGrid;
 import records.transformations.Transform;
@@ -85,7 +86,7 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         Table calculated = new Transform(manager, TestUtil.ILD, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
-        Pair<TableManager, VirtualGrid> details = TestUtil.openDataAsTable(windowToUse, manager).get();
+        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();
 
         List<Pair<String, List<String>>> expectedContent = new ArrayList<>();
         for (Column column : expressionValue.recordSet.getColumns())
@@ -94,6 +95,6 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         }
         expectedContent.add(new Pair<>("Result", Utility.mapListEx(expressionValue.value, o -> DataTypeUtility.valueToString(expressionValue.type, o, null))));
 
-        exportToCSVAndCheck(details.getSecond(), details.getFirst(),"", expectedContent, calculated.getId());
+        exportToCSVAndCheck(details._test_getVirtualGrid(), details._test_getTableManager(),"", expectedContent, calculated.getId());
     }
 }

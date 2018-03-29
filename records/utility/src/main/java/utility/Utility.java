@@ -1117,6 +1117,16 @@ public class Utility
         return original.replaceAll("(?U)[^\\p{Alnum}]+", " ");
     }
 
+    public static <T> ImmutableList<T> replicateM_Ex(int length, ExSupplier<T> make) throws InternalException, UserException
+    {
+        ImmutableList.Builder<T> r = ImmutableList.builderWithExpectedSize(length);
+        for (int i = 0; i < length; i++)
+        {
+            r.add(make.get());
+        }
+        return r.build();
+    }
+
     public static class ReadState
     {
         private final File file;
