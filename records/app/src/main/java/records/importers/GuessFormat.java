@@ -80,7 +80,7 @@ import java.util.stream.Stream;
  */
 public class GuessFormat
 {
-    public static final int INITIAL_ROWS_TEXT_FILE = 100;
+    public static final int INITIAL_ROWS_TEXT_FILE = 10_000;
     public static final ImmutableList<String> SEP_CHOICES = ImmutableList.of(",", ";", "\t", ":", "|", " ");
     public static final ImmutableList<String> QUOTE_CHOICES = ImmutableList.of("", "\"", "\'");
 

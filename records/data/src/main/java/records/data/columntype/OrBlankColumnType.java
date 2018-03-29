@@ -42,7 +42,7 @@ public class OrBlankColumnType extends ColumnType
     @Override
     public String toString()
     {
-        return columnType.toString() + "?";
+        return "Maybe (" + columnType.toString() + ")";
     }
 
     public String getBlankString()
