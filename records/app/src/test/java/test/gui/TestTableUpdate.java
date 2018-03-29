@@ -1,11 +1,14 @@
 package test.gui;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -20,6 +23,7 @@ import records.data.RecordSet;
 import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
@@ -30,6 +34,7 @@ import records.transformations.Filter;
 import records.transformations.Sort;
 import records.transformations.Transform;
 import records.transformations.expression.BooleanLiteral;
+import test.DataEntryUtil;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
@@ -49,7 +54,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTableUpdate extends ApplicationTest
+public class TestTableUpdate extends ApplicationTest implements ScrollToTrait
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
@@ -101,6 +106,24 @@ public class TestTableUpdate extends ApplicationTest
         List<List<String>> origClipboardB = getDataViaCopy("B");
         checkAllMatch(origDataB, origClipboardB);
         */
+        int changes = 3;
+        for (int i = 0; i < changes; i++)
+        {
+            int targetColumn = r.nextInt(2);
+            int targetRow = r.nextInt(tableLength);
+            TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
+            @Value Object newVal = colType.makeValue();
+
+            keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 3, targetColumn));
+            push(KeyCode.ENTER);
+            DataEntryUtil.enterValue(this, r, colType.getType(), newVal, false);
+            push(KeyCode.ENTER);
+
+            List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
+            checkAllMatch(latestDataA);
+            List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
+            checkAllMatch(latestDataB);
+        }
     }
 
     @OnThread(Tag.Any)
@@ -136,14 +159,16 @@ public class TestTableUpdate extends ApplicationTest
     @SafeVarargs
     private final void checkAllMatch(List<List<@Nullable String>>... originals)
     {
-        for (int i = 0; i < originals[0].size(); i++)
+        for (int row = 0; row < originals[0].size(); row++)
         {
-            @Nullable String first = originals[0].get(i).get(0);
+            @Nullable String first = originals[0].get(row).get(0);
             for (List<List<@Nullable String>> data : originals)
             {
-                for (@Nullable String value : data.get(i))
+                List<@Nullable String> valsForRow = data.get(row);
+                for (int column = 0; column < valsForRow.size(); column++)
                 {
-                    assertEquals(first, value);
+                    String value = valsForRow.get(column);
+                    assertEquals("Row " + row + " table " + column, first, value);
                 }
             }
         }
