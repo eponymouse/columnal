@@ -338,11 +338,22 @@ public class GuessFormat
     }
 
     @OnThread(Tag.Simulation)
-    public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset)
+    public static Import<InitialTextFormat, FinalTextFormat> guessTextFormat(TypeManager typeManager, UnitManager unitManager, Map<Charset, List<String>> initialByCharset, @Nullable InitialTextFormat itfOverride, @Nullable TrimChoice trimOverride)
     {
-        Optional<@KeyFor("initialByCharset") Charset> initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+        final Optional<@KeyFor("initialByCharset") Charset> initialCharsetGuess;
+        if (itfOverride != null)
+        {
+            @SuppressWarnings("keyfor")
+            @KeyFor("initialByCharset") Charset c = itfOverride.charset;
+            initialCharsetGuess = Optional.of(c);
+        }
+        else
+        {
+            initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+        }
         SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.orElse(null));
-        @Nullable Pair<String, String> sepAndQuot = initialCharsetGuess.map(initialByCharset::get).map(GuessFormat::guessSepAndQuot).orElse(null);
+        @Nullable Pair<String, String> sepAndQuot = itfOverride != null ? new Pair<>(itfOverride.separator, itfOverride.quote) :
+            initialCharsetGuess.map(initialByCharset::get).map(GuessFormat::guessSepAndQuot).orElse(null);
         SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getFirst());
         SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getSecond());
         ObjectProperty<@Nullable InitialTextFormat> srcFormat = new SimpleObjectProperty<>(makeInitialTextFormat(charsetChoice, sepChoice, quoteChoice));
@@ -399,7 +410,7 @@ public class GuessFormat
 
                 ImmutableList<ArrayList<String>> values = loadValues(initial, sep, quot);
                 ImporterUtility.rectangularise(values);
-                TrimChoice trimChoice = guessTrim(values);
+                TrimChoice trimChoice = trimOverride != null ? trimOverride : guessTrim(values);
                 ImmutableList<ColumnInfo> columnInfos = guessBodyFormat(unitManager, trimChoice, values);
                 return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, trimChoice.trim(values), columnInfos));
 
@@ -984,7 +995,7 @@ public class GuessFormat
     @OnThread(Tag.Simulation)
     public static void guessTextFormatGUI_Then(TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, SimulationConsumer<ImportInfo<FinalTextFormat>> then)
     {
-        Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial);
+        Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial, null, null);
         Platform.runLater(() -> {
             new ImportChoicesDialog<FinalTextFormat>(mgr, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
                 Workers.onWorkerThread("Importing", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> then.consume(importInfo)));

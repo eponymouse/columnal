@@ -54,10 +54,10 @@ public class PropFormat
     @SuppressWarnings("unchecked")
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@When(seed=2L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
-        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.initialTextFormat.charset));
+        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
         assertEquals("Failure with content: " + content, formatAndData.format, format._test_getResultNoGUI());
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
