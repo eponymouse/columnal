@@ -9,6 +9,9 @@ import records.data.EditableRecordSet;
 import records.data.RecordSet;
 import records.data.TableManager;
 import records.data.columntype.TextColumnType;
+import records.error.InternalException;
+import records.error.UserException;
+import records.importers.GuessFormat.GuessException;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.TrimChoice;
 import utility.Pair;
@@ -38,27 +41,23 @@ abstract class ImportPlainTable implements Import<UnitType, ImmutableList<Column
     }
 
     @Override
-    public SimulationFunction<UnitType, Pair<TrimChoice, RecordSet>> loadSource()
+    public Pair<TrimChoice, RecordSet> loadSource(UnitType u) throws UserException, InternalException
     {
-        return u -> {
-            ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
-            for (int i = 0; i < numSrcColumns; i++)
-            {
-                columns.add(new ColumnInfo(new TextColumnType(), srcColumnName(i)));
-            }
-            EditableRecordSet recordSet = ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns.build());
-            return new Pair<>(GuessFormat.guessTrim(vals), recordSet);
-        };
+        ImmutableList.Builder<ColumnInfo> columns = ImmutableList.builder();
+        for (int i = 0; i < numSrcColumns; i++)
+        {
+            columns.add(new ColumnInfo(new TextColumnType(), srcColumnName(i)));
+        }
+        EditableRecordSet recordSet = ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns.build());
+        return new Pair<>(GuessFormat.guessTrim(vals), recordSet);
     }
 
     public abstract ColumnId srcColumnName(int index);
 
     @Override
-    public SimulationFunction<Pair<UnitType, TrimChoice>, Pair<ImmutableList<ColumnInfo>, RecordSet>> loadDest()
+    public Pair<ImmutableList<ColumnInfo>, RecordSet> loadDest(UnitType u, TrimChoice trimChoice) throws UserException, InternalException
     {
-        return p -> {
-            ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, p.getSecond());
-            return new Pair<>(columns, ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns));
-        };
+        ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, trimChoice);
+        return new Pair<>(columns, ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns));
     }
 }

@@ -100,11 +100,13 @@ public class GuessFormat
         // Get the function which would load the source (import LHS) for the given format.
         // For text files, this will be CSV split into columns, but untrimmed and all columns text
         // For XLS it is original sheet, untrimmed
-        SimulationFunction<SRC_FORMAT, Pair<TrimChoice, RecordSet>> loadSource();
+        @OnThread(Tag.Simulation)
+        Pair<TrimChoice, RecordSet> loadSource(SRC_FORMAT srcFormat) throws InternalException, UserException;
         
         // Get the function which would load the final record set (import RHS) for the given format and trim.
         // After trimming, the types of the columns are guessed at.
-        SimulationFunction<Pair<SRC_FORMAT, TrimChoice>, Pair<DEST_FORMAT, RecordSet>> loadDest();
+        @OnThread(Tag.Simulation)
+        Pair<DEST_FORMAT, RecordSet> loadDest(SRC_FORMAT srcFormat, TrimChoice trimChoice) throws InternalException, UserException;
         
         @OnThread(Tag.Simulation)
         public default DEST_FORMAT _test_getResultNoGUI() throws UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
@@ -116,8 +118,8 @@ public class GuessFormat
                     future.complete(srcFormat);
             });
             SRC_FORMAT srcFormat = future.get(1, TimeUnit.SECONDS);
-            Pair<TrimChoice, RecordSet> p = loadSource().apply(srcFormat);
-            return loadDest().apply(new Pair<>(srcFormat, p.getFirst())).getFirst();
+            Pair<TrimChoice, RecordSet> p = loadSource(srcFormat);
+            return loadDest(srcFormat, p.getFirst()).getFirst();
         }
     }
     
@@ -390,14 +392,8 @@ public class GuessFormat
                 return srcFormat;
             }
 
-            @Override
-            public SimulationFunction<InitialTextFormat, Pair<TrimChoice, RecordSet>> loadSource()
-            {
-                return this::loadSrc;
-            }
-
             @OnThread(Tag.Simulation)
-            public Pair<TrimChoice, RecordSet> loadSrc(InitialTextFormat initialTextFormat) throws GuessException, InternalException, UserException
+            public Pair<TrimChoice, RecordSet> loadSource(InitialTextFormat initialTextFormat) throws InternalException, UserException
             {
                 List<String> initialCheck = initialByCharset.get(initialTextFormat.charset);
                 if (initialCheck == null)
@@ -450,20 +446,18 @@ public class GuessFormat
             }
 
             @Override
-            public SimulationFunction<Pair<InitialTextFormat, TrimChoice>, Pair<FinalTextFormat, RecordSet>> loadDest()
+            public Pair<FinalTextFormat, RecordSet> loadDest(InitialTextFormat initialTextFormat, TrimChoice trimChoice) throws InternalException, UserException
             {
-                return p -> {
-                    List<String> initialCheck = initialByCharset.get(p.getFirst().charset);
-                    if (initialCheck == null)
-                        throw new InternalException("initialByCharset key lookup returned null");
+                List<String> initialCheck = initialByCharset.get(initialTextFormat.charset);
+                if (initialCheck == null)
+                    throw new InternalException("initialByCharset key lookup returned null");
 
-                    @NonNull List<String> initial = initialCheck;
-                    
-                    ImmutableList<ArrayList<String>> vals = loadValues(initial, p.getFirst().separator, p.getFirst().quote);
-                    ImporterUtility.rectangularise(vals);
-                    ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, p.getSecond(), vals);
-                    return new Pair<>(new FinalTextFormat(p.getFirst(), p.getSecond(), columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, p.getSecond().trim(vals), columnTypes));
-                };
+                @NonNull List<String> initial = initialCheck;
+                
+                ImmutableList<ArrayList<String>> vals = loadValues(initial, initialTextFormat.separator, initialTextFormat.quote);
+                ImporterUtility.rectangularise(vals);
+                ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, trimChoice, vals);
+                return new Pair<>(new FinalTextFormat(initialTextFormat, trimChoice, columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, trimChoice.trim(vals), columnTypes));
             }
         };
     }

@@ -141,7 +141,7 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
-                        Pair<TrimChoice, RecordSet> loadedSrc = importer.loadSource().apply(formatNonNull);
+                        Pair<TrimChoice, RecordSet> loadedSrc = importer.loadSource(formatNonNull);
                     
                         Platform.runLater(() -> {
                             int oldColumns = srcRecordSet.get() == null ? 0 : srcRecordSet.get().getColumns().size();
@@ -155,7 +155,7 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
                             Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                                 try
                                 {
-                                    Pair<FORMAT, RecordSet> loadedDest = importer.loadDest().apply(new Pair<>(formatNonNull, trim));
+                                    Pair<FORMAT, RecordSet> loadedDest = importer.loadDest(formatNonNull, trim);
                                     Platform.runLater(() -> {
                                         destRecordSet.set(loadedDest.getSecond());
                                         destFormat = loadedDest.getFirst();
