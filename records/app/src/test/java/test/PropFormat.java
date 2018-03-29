@@ -10,6 +10,7 @@ import javafx.embed.swing.JFXPanel;
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
+import org.testfx.framework.junit.ApplicationTest;
 import records.data.DataSource;
 import records.data.RecordSet;
 import records.error.InternalException;
@@ -32,7 +33,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -42,33 +45,53 @@ import static org.junit.Assert.assertEquals;
  * Created by neil on 29/10/2016.
  */
 @RunWith(JUnitQuickcheck.class)
-public class PropFormat
+public class PropFormat extends ApplicationTest
 {
-    @BeforeClass
-    @OnThread(Tag.Swing)
-    public static void _initFX()
-    {
-        new JFXPanel();
-    }
-
-    @SuppressWarnings("unchecked")
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
-        assertEquals("Failure with content: " + content, formatAndData.format, format._test_getResultNoGUI());
+        @OnThread(Tag.Simulation) FinalTextFormat ftf = format._test_getResultNoGUI();
+        assertEquals("Failure with content: " + content, formatAndData.format, ftf);
+        checkDataValues(formatAndData, TextImporter.makeRecordSet(DummyManager.INSTANCE.getTypeManager(), writeDataToFile(formatAndData), ftf));
+    }
+
+    @Property(trials=10)
+    @OnThread(Tag.Simulation)
+    public void testGuessFormatGUI(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    {
+        File tempFile = writeDataToFile(formatAndData);
+        
+        CompletableFuture<RecordSet> rsFuture = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
+        // GUI should show (after a slight delay), so we should provide inputs:
+        TestUtil.sleep(3000);
+        // Dummy for now:
+        clickOn(".ok-button");
+        
+        
+        
+        RecordSet rs = rsFuture.get(5000, TimeUnit.MILLISECONDS);
+        checkDataValues(formatAndData, rs);
+    }
+
+    private File writeDataToFile(@From(GenFormattedData.class) @When(seed = 1L) GenFormattedData.FormatAndData formatAndData) throws IOException
+    {
+        String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
         FileUtils.writeStringToFile(tempFile, content, formatAndData.format.initialTextFormat.charset);
+        return tempFile;
+    }
 
-        /* TODO restore this and provide GUI import to select right options
-        RecordSet rs = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
+    @OnThread(Tag.Simulation)
+    private void checkDataValues(@From(GenFormattedData.class) @When(seed = 1L) GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
+    {
         assertEquals("Right column length", formatAndData.loadedContent.size(), rs.getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
-            assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.content.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + format + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
+            assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.content.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
                 rs.getColumns().size(), formatAndData.loadedContent.get(i).size());
             for (int c = 0; c < rs.getColumns().size(); c++)
             {
@@ -77,7 +100,6 @@ public class PropFormat
                 assertEquals("Column " + c + " expected: " + expected + " was " + loaded + " from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
             }
         }
-        */
     }
 
     private Map<Charset, List<String>> variousCharsets(List<String> content, Charset actual)

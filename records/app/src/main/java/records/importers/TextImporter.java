@@ -113,7 +113,7 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    public static RecordSet _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
+    public static CompletableFuture<RecordSet> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         CompletableFuture<RecordSet> f = new CompletableFuture<>();
@@ -128,7 +128,7 @@ public class TextImporter implements Importer
                 e.printStackTrace();
             }
         });
-        return f.get(10, TimeUnit.SECONDS);
+        return f;
     }
 
     @OnThread(Tag.Simulation)

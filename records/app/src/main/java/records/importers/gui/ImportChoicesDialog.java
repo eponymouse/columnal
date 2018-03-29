@@ -191,6 +191,8 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
         getDialogPane().setContent(content);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+        // Helps with testing:
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         // Prevent enter/escape activating buttons:
         ((Button)getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
         // I tried to use setCancelButton(false) but that isn't enough to prevent escape cancelling, so we consume
