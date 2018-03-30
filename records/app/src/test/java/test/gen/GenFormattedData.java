@@ -128,7 +128,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                 }
                 else if (c.type instanceof BlankColumnType)
                 {
-                    //data.add(Collections.emptyList());
+                    data.add(DataTypeUtility.value(""));
                 }
                 else
                     throw new UnsupportedOperationException("Missing case for column columntype? " + c.type.getClass());
@@ -173,6 +173,15 @@ public class GenFormattedData extends Generator<FormatAndData>
             }
             else
                 break;
+        }
+
+        if (leftTrim != 0 || rightTrim != 0)
+        {
+            for (int i = 0; i < intendedContent.size(); i++)
+            {
+                List<Object> row = intendedContent.get(i);
+                intendedContent.set(i, row.subList(leftTrim, row.size() - rightTrim));
+            }
         }
         
         TrimChoice trim = new TrimChoice(format.trimChoice.trimFromTop, format.trimChoice.trimFromBottom,format.trimChoice.trimFromLeft + leftTrim, format.trimChoice.trimFromRight + rightTrim);
