@@ -58,6 +58,6 @@ abstract class ImportPlainTable implements Import<UnitType, ImmutableList<Column
     public Pair<ImmutableList<ColumnInfo>, RecordSet> loadDest(UnitType u, TrimChoice trimChoice) throws UserException, InternalException
     {
         ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, trimChoice);
-        return new Pair<>(columns, ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, columns));
+        return new Pair<>(columns, ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), trimChoice.trim(vals), columns));
     }
 }
