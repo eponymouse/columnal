@@ -26,6 +26,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -80,7 +81,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         return currentlyShowing;
     }
 
-    private final DataDisplay destData;
+    @OnThread(Tag.Any)
+    private final RecordSetDataDisplay destData;
     private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
     private @Nullable FORMAT destFormat;
     private final Import<SRC_FORMAT, FORMAT> importer;
@@ -157,6 +159,10 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             if (oldColumns != loadedSrc.getSecond().getColumns().size())
                             {
                                 srcDataDisplay.setTrim(loadedSrc.getFirst());
+                            }
+                            else
+                            {
+                                srcDataDisplay.setTrim(srcDataDisplay.getTrim());
                             }
                             // Because we are in a runLater, constructor will have finished by then:
                             Utility.later(this).updateDestPreview();
@@ -238,6 +244,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             {
                 Log.debug("Updating dest with trim " + trim);
                 Pair<FORMAT, RecordSet> loadedDest = this.importer.loadDest(formatNonNull, trim);
+                Log.debug("Dest RS size: " + loadedDest.getSecond().getColumns().size() + " x " + loadedDest.getSecond().getLength() + " from format " + formatNonNull);
                 Platform.runLater(() -> {
                     destRecordSet.set(loadedDest.getSecond());
                     destFormat = loadedDest.getFirst();
@@ -268,12 +275,14 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         return srcGrid;
     }
 
-    public @Nullable RecordSet _test_getDestRecordSet()
+    @OnThread(Tag.Any)
+    public RecordSetDataDisplay _test_getDestDataDisplay()
     {
-        return destRecordSet.get();
+        return destData;
     }
     
-    private static class RecordSetDataDisplay extends DataDisplay
+    // public for testing
+    public static class RecordSetDataDisplay extends DataDisplay
     {
         private final ObjectExpression<@Nullable RecordSet> recordSetProperty;
 
@@ -301,6 +310,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                         {
                             currentKnownRows = len;
                             updateSizeAndPositions.run();
+                            // Only on return from this method is bottom right set, so we need a run later:
+                            FXUtility.runAfter(() -> numRowsChanged());
                         }
                     });
                 }
@@ -311,10 +322,21 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
         }
 
+        @OnThread(Tag.FXPlatform)
+        protected void numRowsChanged()
+        {
+        }
+
         @Override
         protected void doCopy(@Nullable RectangleBounds rectangleBounds)
         {
             // We don't currently support copy on this table
+        }
+        
+        @OnThread(Tag.FXPlatform)
+        public @Nullable RecordSet _test_getRecordSet()
+        {
+            return recordSetProperty.get();
         }
     }
 
@@ -373,19 +395,30 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
                 e.consume();
             });
+            @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
             mousePane.setOnMouseReleased(e -> {
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
+                if (pendingTrim[0] != null)
+                {
+                    trim = pendingTrim[0];
+                    destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
+                    updateDestPreview();
+                }
                 e.consume();
             });
             mousePane.setOnMousePressed(e -> {
+                pendingTrim[0] = null;
                 withParent(p -> p.getVisibleBounds())
                     .flatMap(v -> v.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP))
                     .ifPresent(pos -> mousePressed = pos);
             });
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
+                Log.debug("Mouse dragged while cursor: " + c);
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
+                    Log.debug("We have bounds");
                     @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP).orElse(null);
+                    Log.debug("Nearest pos: " + pos);
                     boolean resizingTop = c == Cursor.NW_RESIZE || c == Cursor.N_RESIZE || c == Cursor.NE_RESIZE;
                     boolean resizingBottom = c == Cursor.SW_RESIZE || c == Cursor.S_RESIZE || c == Cursor.SE_RESIZE;
                     boolean resizingLeft = c == Cursor.NW_RESIZE || c == Cursor.W_RESIZE || c == Cursor.SW_RESIZE;
@@ -427,15 +460,13 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                         newRight = Utility.maxCol(pos.columnIndex, mousePressed.columnIndex);
                     }
                     curSelectionBounds = new RectangleBounds(new CellPosition(newTop, newLeft), new CellPosition(newBottom, newRight));
-                    destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
-                    trim = new TrimChoice(
+                    withParent_(p -> p.positionOrAreaChanged());
+                    pendingTrim[0] = new TrimChoice(
                             curSelectionBounds.topLeftIncl.rowIndex - getDataDisplayTopLeftIncl().rowIndex - getPosition().rowIndex,
                             getBottomRightIncl().rowIndex - curSelectionBounds.bottomRightIncl.rowIndex,
                             curSelectionBounds.topLeftIncl.columnIndex,
                             getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
                     );
-                    withParent_(p -> p.positionOrAreaChanged());
-                    updateDestPreview();
                 });
             });
             mousePane.setOnScroll(e -> {
@@ -522,6 +553,22 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 getBottomRightIncl().offsetByRowCols(-trim.trimFromBottom, -trim.trimFromRight));
             destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
             withParent_(p -> p.positionOrAreaChanged());
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        protected void numRowsChanged()
+        {
+            // Update the trim:
+            setTrim(trim);
+            updateDestPreview();
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void setColumns(@UnknownInitialization(DataDisplay.class) SrcDataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
+        {
+            super.setColumns(columns, operations, columnActions);
+            FXUtility.runAfter(() -> Utility.later(this).numRowsChanged());
         }
 
         @OnThread(Tag.FXPlatform)

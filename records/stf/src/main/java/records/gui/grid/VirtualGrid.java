@@ -1253,6 +1253,7 @@ public final class VirtualGrid implements ScrollBindable
                     return -extraRenderYPixelsBefore + firstRenderRowOffset + rowHeight * (itemIndex - firstRowIncl);
                 }
 
+                // I'm not sure this can ever return empty any more, after the clamping logic got added on 30/3/2018
                 @Override
                 @OnThread(Tag.FXPlatform)
                 public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos, HPos horizBias, VPos verticalBias)
@@ -1261,38 +1262,44 @@ public final class VirtualGrid implements ScrollBindable
                     double x = firstRenderColumnOffset;
                     // Math.round will find us the nearest row:
                     double rowFloat = (localCoord.getY() - (firstRenderRowOffset)) / rowHeight;
-                    switch (horizBias)
+                    // We add a little tolerance so that if you go a few pixels beyond border, it doesn't
+                    // feel like a hard snap.
+                    switch (verticalBias)
                     {
-                        case LEFT:
-                            rowFloat = Math.floor(rowFloat);
+                        case TOP:
+                            rowFloat = Math.floor(rowFloat + 0.2);
                             break;
                         case CENTER:
                             rowFloat = Math.round(rowFloat);
                             break;
-                        case RIGHT:
-                            rowFloat = Math.ceil(rowFloat);
+                        case BOTTOM:
+                            rowFloat = Math.ceil(rowFloat - 0.2);
                             break;
                     }
+                    rowFloat = Utility.clampIncl(0, rowFloat, this.lastRowIncl - this.firstRowIncl + 1);
                     @AbsRowIndex int row = CellPosition.row((int)rowFloat) + this.firstRowIncl;
                     
                     if (firstRowIncl <= row && row <= lastRowIncl)
                     {
+                        if (localCoord.getX() < x)
+                            return Optional.of(new CellPosition(row, firstRenderColumnIndex));
+                        
                         for (@AbsColIndex int i = firstRenderColumnIndex; i <= lastColumnIncl; i++)
                         {
                             double nextX = x + getColumnWidth(i);
                             if (x <= localCoord.getX() && localCoord.getX() < nextX)
                             {
                                 @AbsColIndex int column = i;
-                                switch (verticalBias)
+                                switch (horizBias)
                                 {
-                                    case TOP:
+                                    case LEFT:
                                         column = i;
                                         break;
                                     case CENTER:
                                         double colFloat = Math.abs(localCoord.getX() - x) / Math.abs(nextX - x);
                                         column = colFloat < 0.5 ? i : i + CellPosition.col(1);
                                         break;
-                                    case BOTTOM:
+                                    case RIGHT:
                                         column = i + CellPosition.col(1);
                                         break;
                                 }
@@ -1300,6 +1307,8 @@ public final class VirtualGrid implements ScrollBindable
                             }
                             x = nextX;
                         }
+
+                        return Optional.of(new CellPosition(row, lastColumnIncl));
                     }
                     return Optional.empty();
                 }

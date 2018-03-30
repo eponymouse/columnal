@@ -27,6 +27,7 @@ import records.data.DataSource;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DataDisplay;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -37,6 +38,7 @@ import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.TextImporter;
 import records.importers.gui.ImportChoicesDialog;
+import records.importers.gui.ImportChoicesDialog.RecordSetDataDisplay;
 import records.importers.gui.ImportChoicesDialog.SrcDataDisplay;
 import records.importers.gui.ImporterGUI.PickOrOther;
 import test.gen.GenFormattedData;
@@ -80,7 +82,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
 
     @Property(trials=10)
     @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@When(seed=5L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormatGUI(@When(seed=9L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         
@@ -98,10 +100,13 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         checkTrim(importChoicesDialog);
         
         selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
+        TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
         selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
+        TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
         selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
+        TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
         
         Log.debug("Trying to set trim " + formatAndData.format.trimChoice);
@@ -115,14 +120,15 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
             visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex),
             visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex)))));
-        press(MouseButton.PRIMARY);
+        drag(MouseButton.PRIMARY);
         CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + formatAndData.format.trimChoice.trimFromTop, formatAndData.format.trimChoice.trimFromLeft);
         moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
             visibleBounds.getXCoord(newTopLeft.columnIndex),
             visibleBounds.getYCoord(newTopLeft.rowIndex)))));
-        release(MouseButton.PRIMARY);
+        drop();
+        TestUtil.sleep(1000);
         checkTrim(importChoicesDialog);
-        @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestRecordSet());
+        @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestDataDisplay()._test_getRecordSet());
         assertNotNull(destRS);
         if (destRS != null)
             checkDataValues(formatAndData, destRS);
@@ -165,14 +171,19 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         MatcherAssert.assertThat("Graphical bottom", TestUtil.fx(() -> srcVisibleBounds.getYCoordAfter(expectedTrimBounds.bottomRightIncl.rowIndex)), Matchers.greaterThanOrEqualTo(TestUtil.fx(() -> blackRect.getLayoutY() + blackRect.getHeight())));
         
         // Check the size of the dest record set:
-        RecordSet destRecordSet = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestRecordSet());
+        RecordSetDataDisplay destDataDisplay = importChoicesDialog._test_getDestDataDisplay();
+        RecordSet destRecordSet = TestUtil.<@Nullable RecordSet>fx(() -> destDataDisplay._test_getRecordSet());
+        RecordSet srcRecordSet = TestUtil.<@Nullable RecordSet>fx(() -> srcDataDisplay._test_getRecordSet());
+        assertNotNull(srcRecordSet);
         assertNotNull(destRecordSet);
-        if (destRecordSet != null)
+        if (srcRecordSet != null && destRecordSet != null)
         {
-            assertEquals(expectedTrimBounds.bottomRightIncl.columnIndex - expectedTrimBounds.topLeftIncl.columnIndex + 1,
+            assertEquals(srcRecordSet.getColumns().size() - internal.trimFromLeft - internal.trimFromRight,
                 destRecordSet.getColumns().size());
-            assertEquals(expectedTrimBounds.bottomRightIncl.rowIndex - expectedTrimBounds.topLeftIncl.rowIndex + 1,
+            assertEquals(srcRecordSet.getLength() - internal.trimFromTop - internal.trimFromBottom,
                 destRecordSet.getLength());
+            assertEquals(CellPosition.ORIGIN.offsetByRowCols(internal.trimFromTop, internal.trimFromLeft),
+                TestUtil.fx(() -> destDataDisplay.getPosition()));    
         }
     }
 
