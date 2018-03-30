@@ -85,7 +85,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
         selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
         selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
-        @Nullable ImportChoicesDialog<?> importChoicesDialog = TestUtil.<@Nullable ImportChoicesDialog<?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        @Nullable ImportChoicesDialog<?, ?> importChoicesDialog = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
         if (importChoicesDialog != null)
         {
             Log.debug("Trying to set trim " + formatAndData.format.trimChoice);

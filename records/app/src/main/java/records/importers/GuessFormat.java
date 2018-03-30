@@ -991,7 +991,7 @@ public class GuessFormat
     {
         Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial, null, null);
         Platform.runLater(() -> {
-            new ImportChoicesDialog<FinalTextFormat>(mgr, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
+            new ImportChoicesDialog<InitialTextFormat, FinalTextFormat>(mgr, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
                 Workers.onWorkerThread("Importing", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> then.consume(importInfo)));
             });
         });

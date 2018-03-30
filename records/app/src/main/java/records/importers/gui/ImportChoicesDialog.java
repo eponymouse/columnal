@@ -68,22 +68,30 @@ import utility.gui.FXUtility;
 import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
-public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
+public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<FORMAT>>
 {
     // Just for testing:
-    private static @Nullable ImportChoicesDialog<?> currentlyShowing;
-    public static @Nullable ImportChoicesDialog<?> _test_getCurrentlyShowing()
+    private static @Nullable ImportChoicesDialog<?, ?> currentlyShowing;
+    
+
+
+    public static @Nullable ImportChoicesDialog<?, ?> _test_getCurrentlyShowing()
     {
         return currentlyShowing;
     }
-    
-    
+
+    private final DataDisplay destData;
+    private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
     private @Nullable FORMAT destFormat;
-    // Only stored as fields for testing purposes:
+    private final Import<SRC_FORMAT, FORMAT> importer;
+    
+    // These two are only stored as fields for testing purposes:
     @OnThread(Tag.Any)
     private final SrcDataDisplay srcDataDisplay;
     @OnThread(Tag.Any)
     private final VirtualGrid srcGrid;
+
+    
 
     public static class SourceInfo
     {
@@ -97,13 +105,14 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         }
     }
 
-    public <SRC_FORMAT> ImportChoicesDialog(TableManager mgr, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
+    public ImportChoicesDialog(TableManager mgr, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
     {
+        this.importer = importer;
         SimpleObjectProperty<@Nullable RecordSet> srcRecordSet = new SimpleObjectProperty<>(null);
-        SimpleObjectProperty<@Nullable RecordSet> destRecordSet = new SimpleObjectProperty<>(null);
+        destRecordSet = new SimpleObjectProperty<>(null);
         VirtualGrid destGrid = new VirtualGrid(null, 0, 0);
             //new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
-        DataDisplay destData = new RecordSetDataDisplay(suggestedName, destGrid.getFloatingSupplier(), true, destRecordSet);
+        destData = new RecordSetDataDisplay(suggestedName, destGrid.getFloatingSupplier(), true, destRecordSet);
         destGrid.addGridAreas(ImmutableList.of(destData));
         DataCellSupplier destDataCellSupplier = new DataCellSupplier();
         destGrid.addNodeSupplier(destDataCellSupplier);
@@ -131,17 +140,17 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         //SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
         //choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
 
-        Node choices = importer.getGUI();
+        Node choices = this.importer.getGUI();
         
         //SimpleObjectProperty<@Nullable FORMAT> destFormatProperty = new SimpleObjectProperty<>(null);
-        FXUtility.addChangeListenerPlatformAndCallNow(importer.currentSrcFormat(), srcFormat -> {
+        FXUtility.addChangeListenerPlatformAndCallNow(this.importer.currentSrcFormat(), srcFormat -> {
             if (srcFormat != null)
             {
                 @NonNull SRC_FORMAT formatNonNull = srcFormat;
                 Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
                     try
                     {
-                        Pair<TrimChoice, RecordSet> loadedSrc = importer.loadSource(formatNonNull);
+                        Pair<TrimChoice, RecordSet> loadedSrc = this.importer.loadSource(formatNonNull);
                     
                         Platform.runLater(() -> {
                             int oldColumns = srcRecordSet.get() == null ? 0 : srcRecordSet.get().getColumns().size();
@@ -151,28 +160,8 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
                             {
                                 srcDataDisplay.setTrim(loadedSrc.getFirst());
                             }
-                            TrimChoice trim = srcDataDisplay.getTrim();
-                            Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
-                                try
-                                {
-                                    Pair<FORMAT, RecordSet> loadedDest = importer.loadDest(formatNonNull, trim);
-                                    Platform.runLater(() -> {
-                                        destRecordSet.set(loadedDest.getSecond());
-                                        destFormat = loadedDest.getFirst();
-                                        destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
-                                    });
-                                }
-                                catch (InternalException | UserException e)
-                                {
-                                    Log.log(e);
-                                    Platform.runLater(() -> {
-                                        destData.setColumns(ImmutableList.of(), null, null);
-                                        //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
-                                    });
-
-                                }
-                            });
-                            
+                            // Because we are in a runLater, constructor will have finished by then:
+                            Utility.later(this).updateDestPreview();
                             srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(loadedSrc.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
                         });
                     }
@@ -236,6 +225,39 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
         });
     }
 
+    @OnThread(Tag.FXPlatform)
+    public void updateDestPreview()
+    {
+        @Nullable SRC_FORMAT srcFormat = importer.currentSrcFormat().get();
+        
+        if (srcFormat == null)
+            return;
+        @NonNull SRC_FORMAT formatNonNull = srcFormat;
+        
+        TrimChoice trim = srcDataDisplay.getTrim();
+        Workers.onWorkerThread("Previewing data", Priority.LOAD_FROM_DISK, () -> {
+            try
+            {
+                Log.debug("Updating dest with trim " + trim);
+                Pair<FORMAT, RecordSet> loadedDest = this.importer.loadDest(formatNonNull, trim);
+                Platform.runLater(() -> {
+                    destRecordSet.set(loadedDest.getSecond());
+                    destFormat = loadedDest.getFirst();
+                    destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                });
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                Platform.runLater(() -> {
+                    destData.setColumns(ImmutableList.of(), null, null);
+                    //destData.setMessageWhenEmpty(new MessageWhenEmpty(e.getLocalizedMessage()));
+                });
+
+            }
+        });
+    }
+
     @OnThread(Tag.Any)
     public SrcDataDisplay _test_getSrcDataDisplay()
     {
@@ -294,7 +316,7 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
     }
 
     // class is public for testing purposes
-    public static class SrcDataDisplay extends RecordSetDataDisplay
+    public class SrcDataDisplay extends RecordSetDataDisplay
     {
         public static final double HORIZ_INSET = 22;
         public static final double VERT_INSET = 0;
@@ -410,6 +432,7 @@ public class ImportChoicesDialog<FORMAT> extends Dialog<ImportInfo<FORMAT>>
                             getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
                     );
                     withParent_(p -> p.positionOrAreaChanged());
+                    updateDestPreview();
                 });
             });
             mousePane.setOnScroll(e -> {
