@@ -412,6 +412,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Log.log(e);
             errorMessage.set(e);
         }
+        // Crucial to set onModify before calling setupWithRecordSet:
+        this.onModify = () -> {
+            parent.modified();
+            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, null)));
+        };
+        
         this.recordSet = recordSet;
         if (recordSet != null)
             setupWithRecordSet(parent.getManager(), table, recordSet);
@@ -439,11 +445,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         tableBorderOverlay = new TableBorderOverlay();
         supplierFloating.addItem(tableBorderOverlay);
         
-        this.onModify = () -> {
-            parent.modified();
-            Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH, () -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null, null)));
-        };
-        
         Label title = new Label(table.getId().getOutput());
         GUI.showTooltipWhenAbbrev(title);
         Utility.addStyleClass(title, "table-title");
@@ -466,7 +467,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Renaming table", Priority.SAVE_ENTRY, () -> renameTableFinal.renameTable(newName));
         };
     }
-
+    
+    @RequiresNonNull("onModify")
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, RecordSet recordSet)
     {
         ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> renameColumnForTable(table, c), this::getDataPosition, onModify);
