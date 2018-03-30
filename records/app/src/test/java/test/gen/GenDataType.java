@@ -136,8 +136,8 @@ public class GenDataType extends Generator<DataTypeAndManager>
             final ImmutableList<String> typeVars;
             if (r.nextBoolean())
             {
-                int typeVarSize = r.nextInt(1, 4);
-                typeVars = ImmutableList.copyOf(TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')));
+                // Must use distinct to make sure no duplicates:
+                typeVars = TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().collect(ImmutableList.toImmutableList());
             }
             else
             {

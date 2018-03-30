@@ -349,7 +349,7 @@ public class TableManager
     @OnThread(Tag.Simulation)
     private void removeAndSerialise(TableId tableId, @Nullable Saver then, TableAndColumnRenames renames)
     {
-        Log.normalStackTrace("Removing table " + tableId + (then == null ? " permanently" : " as part of edit"), 3);
+        //Log.normalStackTrace("Removing table " + tableId + (then == null ? " permanently" : " as part of edit"), 3);
         Table removed = null;
         int remainingCount;
         synchronized (this)

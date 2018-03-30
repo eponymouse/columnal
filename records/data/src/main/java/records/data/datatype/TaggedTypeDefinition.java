@@ -11,6 +11,7 @@ import records.loadsave.OutputBuilder;
 import utility.Utility;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
@@ -22,12 +23,29 @@ public class TaggedTypeDefinition
     // Version with the type variables unsubstituted:
     // The only free variables should be the ones in the typeVariables list:
     private final ImmutableList<TagType<DataType>> tags;
-
-    public TaggedTypeDefinition(TypeId name, ImmutableList<String> typeVariables, ImmutableList<TagType<DataType>> tags)
+    
+    public TaggedTypeDefinition(TypeId name, ImmutableList<String> typeVariables, ImmutableList<TagType<DataType>> tags) throws InternalException
     {
         this.name = name;
         this.typeVariables = typeVariables;
         this.tags = tags;
+        // Caller is responsible for checking name, type variables and tags.  Hence any violations here are InternalException, not UserException
+        HashSet<String> uniqueTypeVars = new HashSet<>();
+        for (String typeVariable : typeVariables)
+        {
+            if (!uniqueTypeVars.add(typeVariable))
+            {
+                throw new InternalException("Duplicate type variable: \"" + typeVariable + "\"");
+            }
+        }
+        HashSet<String> uniqueTagNames = new HashSet<>();
+        for (TagType<DataType> tag : tags)
+        {
+            if (!uniqueTagNames.add(tag.getName()))
+            {
+                throw new InternalException("Duplicate type tag: \"" + tag.getName() + "\"");
+            }
+        }
     }
 
     public ImmutableList<TagType<DataType>> getTags()

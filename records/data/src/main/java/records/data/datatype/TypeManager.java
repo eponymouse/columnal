@@ -57,7 +57,7 @@ public class TypeManager
     private final HashMap<TypeId, TaggedTypeDefinition> knownTypes = new HashMap<>();
     private final TaggedTypeDefinition maybeType;
 
-    public TypeManager(UnitManager unitManager)
+    public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
         maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of("type"), ImmutableList.of(
@@ -282,8 +282,6 @@ public class TypeManager
 
                 tagType.getInner().apply(new DataTypeVisitor<UnitType>()
                 {
-                    boolean topLevel = true;
-
                     @Override
                     public UnitType number(NumberInfo displayInfo) throws InternalException, UserException
                     {
@@ -317,13 +315,9 @@ public class TypeManager
                     @Override
                     public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                     {
-                        if (!topLevel)
-                        {
-                            @Nullable TaggedTypeDefinition referencedType = knownTypes.get(typeName);
-                            if (referencedType != null)
-                                incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<>()).add(taggedTypeDefinition);
-                        }
-                        topLevel = false;
+                        @Nullable TaggedTypeDefinition referencedType = knownTypes.get(typeName);
+                        if (referencedType != null)
+                            incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<>()).add(taggedTypeDefinition);
                         for (TagType<DataType> tag : tags)
                         {
                             @Nullable DataType inner = tag.getInner();
