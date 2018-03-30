@@ -841,12 +841,16 @@ public class TestUtil
         }));
         // Wait until individual tables are actually loaded:
         return () -> {
+            int count = 0;
             do
             {
                 //System.err.println("Waiting for main window");
                 sleep(1000);
+                count += 1;
             }
-            while (fx(() -> windowToUse.getScene().lookup(".table-display-table-title")) == null);
+            while (fx(() -> windowToUse.getScene().lookup(".table-display-table-title")) == null && count < 30);
+            if (count >= 30)
+                throw new RuntimeException("Could not load table data");
             return tableManagerAtomicReference.get();
         };
     }
