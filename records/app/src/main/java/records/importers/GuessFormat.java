@@ -9,6 +9,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -464,6 +465,7 @@ public class GuessFormat
                 ImmutableList<ArrayList<String>> vals = loadValues(initial, initialTextFormat.separator, initialTextFormat.quote);
                 ImporterUtility.rectangularise(vals);
                 ImmutableList<ColumnInfo> columnTypes = guessBodyFormat(unitManager, trimChoice, vals);
+                Log.debug("Vals width " + vals.get(0).size() + " cols " + columnTypes.size() + " which are: " + Utility.listToString(columnTypes));
                 return new Pair<>(new FinalTextFormat(initialTextFormat, trimChoice, columnTypes), ImporterUtility.makeEditableRecordSet(typeManager, trimChoice.trim(vals), columnTypes));
             }
         };
@@ -877,6 +879,8 @@ public class GuessFormat
                     {
                         // Found a blank:
                         allNumeric = false;
+                        possibleBooleanSets.clear();
+                        possibleDateFormats.clear();
                     }
                 }
             }
