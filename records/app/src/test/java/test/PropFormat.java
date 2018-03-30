@@ -82,7 +82,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
 
     @Property(trials=10)
     @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@When(seed=9L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         

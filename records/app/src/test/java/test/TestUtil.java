@@ -600,7 +600,7 @@ public class TestUtil
     {
         try
         {
-            return WaitForAsyncUtils.asyncFx(action).get();
+            return WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
         }
         catch (Exception e)
         {
@@ -613,7 +613,7 @@ public class TestUtil
     {
         try
         {
-            WaitForAsyncUtils.asyncFx(action::run).get();
+            WaitForAsyncUtils.asyncFx(action::run).get(60, TimeUnit.SECONDS);
         }
         catch (Exception e)
         {
