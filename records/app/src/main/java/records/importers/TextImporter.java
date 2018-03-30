@@ -201,7 +201,7 @@ public class TextImporter implements Importer
                 else
                     throw new InternalException("Unhandled or-blank column type: " + orBlankColumnType.getInner().getClass());
             }
-            else if (columnInfo.type instanceof TextColumnType)
+            else if (columnInfo.type instanceof TextColumnType || columnInfo.type instanceof BlankColumnType)
             {
                 columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns));
             }
@@ -212,11 +212,6 @@ public class TextImporter implements Importer
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
                     return TextFileColumn.dateColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
-            }
-            else if (columnInfo.type instanceof BlankColumnType)
-            {
-                // If it's blank, should we add any column?
-                // Maybe if it has title?                }
             }
             else
                 throw new InternalException("Unhandled column type: " + columnInfo.type.getClass());

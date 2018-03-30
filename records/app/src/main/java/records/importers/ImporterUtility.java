@@ -127,7 +127,7 @@ public class ImporterUtility
                     return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit), slice.stream().map(numericColumnType::removePrefixAndSuffix));
                 });
             }
-            else if (columnType instanceof TextColumnType)
+            else if (columnType instanceof TextColumnType || columnType instanceof BlankColumnType)
             {
                 columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice, ""));
             }
@@ -156,7 +156,7 @@ public class ImporterUtility
                         return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefixAndSuffix(item))));
                 }), new TaggedValue(0, null)));
             }
-            else if (!(columnType instanceof BlankColumnType))
+            else
             {
                 throw new InternalException("Unhandled column type: " + columnType.getClass());
             }
