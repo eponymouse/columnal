@@ -21,6 +21,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.HPos;
+import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.Cursor;
@@ -33,6 +34,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -119,6 +121,7 @@ public final class VirtualGrid implements ScrollBindable
     private final ScrollBar vBar;
     private final ScrollGroup scrollGroup;
     private final ArrayList<SelectionListener> selectionListeners = new ArrayList<>();
+    private final BorderPane paneWithScrollBars;
     // Used as a sort of lock on updating the scroll bars to prevent re-entrant updates:
     private boolean settingScrollBarVal = false;
     
@@ -220,7 +223,42 @@ public final class VirtualGrid implements ScrollBindable
             nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
         nodeSuppliers.add(supplierFloating);
         this.hBar = new ScrollBar();
+        hBar.setOrientation(Orientation.HORIZONTAL);
+        hBar.setMin(0.0);
+        hBar.setMax(1.0);
+        hBar.setValue(0.0);
+        hBar.valueProperty().addListener(new ChangeListener<Number>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends Number> prop, Number oldScrollBarVal, Number newScrollBarVal)
+            {
+                if (!settingScrollBarVal)
+                {
+                    double delta = FXUtility.mouse(VirtualGrid.this).getMaxScrollX() * (newScrollBarVal.doubleValue() - oldScrollBarVal.doubleValue());
+                    FXUtility.mouse(VirtualGrid.this).scrollGroup.requestScrollBy(-delta, 0);
+                }
+            }
+        });
         this.vBar = new ScrollBar();
+        vBar.setOrientation(Orientation.VERTICAL);
+        vBar.setMin(0.0);
+        vBar.setMax(1.0);
+        vBar.setValue(0.0);
+        vBar.valueProperty().addListener(new ChangeListener<Number>()
+        {
+            @Override
+            @SuppressWarnings("nullness")
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends Number> prop, Number oldScrollBarVal, Number newScrollBarVal)
+            {
+                if (!settingScrollBarVal)
+                {
+                    double delta = FXUtility.mouse(VirtualGrid.this).getMaxScrollY() * (newScrollBarVal.doubleValue() - oldScrollBarVal.doubleValue());
+                    FXUtility.mouse(VirtualGrid.this).scrollGroup.requestScrollBy(0, -delta);
+                }
+            }
+        });
         this.container = new Container();
         this.container.getStyleClass().addAll(styleClasses);
         this.activeOverlayPane = new Pane() {
@@ -243,7 +281,9 @@ public final class VirtualGrid implements ScrollBindable
             {
             }
         };
-        this.stackPane.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
+        this.paneWithScrollBars = new BorderPane(stackPane, null, vBar, hBar, null);
+        
+        this.paneWithScrollBars.getStylesheets().add(FXUtility.getStylesheet("virtual-grid.css"));
         scrollGroup = new ScrollGroup(FXUtility.mouse(this)::scrollClampX, FXUtility.mouse(this)::scrollClampY);
 /*
 
@@ -566,6 +606,8 @@ public final class VirtualGrid implements ScrollBindable
 
                     this.extraRenderXPixelsBefore -= scrollBy;
                     this.extraRenderXPixelsAfter += scrollBy;
+                    
+                    updateHBar();
 
                     return false;
                 }
@@ -663,6 +705,8 @@ public final class VirtualGrid implements ScrollBindable
             ScrollResult logicalPos = new ScrollResult(logicalScrollRowIndex, logicalScrollRowOffset, scrollBy);
             logicalScrollRowIndex = logicalPos.row;
             logicalScrollRowOffset = logicalPos.offset;
+            
+            updateVBar();
             
             return false;
         }
@@ -833,7 +877,7 @@ public final class VirtualGrid implements ScrollBindable
 
     public Region getNode()
     {
-        return stackPane;
+        return paneWithScrollBars;
     }
 
     public void positionOrAreaChanged()
@@ -1452,6 +1496,8 @@ public final class VirtualGrid implements ScrollBindable
         {
              nodeSupplier.sizesOrPositionsChanged(bounds);
         }
+        updateHBar();
+        updateVBar();
     }
 
     public void bindVisibleRowsTo(VirtualGrid srcGrid)
