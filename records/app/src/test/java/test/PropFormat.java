@@ -13,6 +13,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -55,6 +56,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by neil on 29/10/2016.
@@ -105,6 +107,11 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
                 visibleBounds.getXCoord(newTopLeft.columnIndex),
                 visibleBounds.getYCoord(newTopLeft.rowIndex)))));
             release(MouseButton.PRIMARY);
+            @NonNull ImportChoicesDialog<?, ?> icdFinal = importChoicesDialog;
+            @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> icdFinal._test_getDestRecordSet());
+            assertNotNull(destRS);
+            if (destRS != null)
+                checkDataValues(formatAndData, destRS);
         }
         clickOn(".ok-button");
         
@@ -135,7 +142,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
             {
                 @Value Object expected = formatAndData.loadedContent.get(i).get(c);
                 @Value Object loaded = rs.getColumns().get(c).getType().getCollapsed(i);
-                assertEquals("Column " + c + " expected: " + expected + " was " + loaded + " from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
+                assertEquals("Column " + c + " expected: {{{" + expected + "}}} was {{{" + loaded + "}}} from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
             }
         }
     }

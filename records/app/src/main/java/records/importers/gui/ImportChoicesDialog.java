@@ -91,8 +91,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     @OnThread(Tag.Any)
     private final VirtualGrid srcGrid;
 
-    
-
     public static class SourceInfo
     {
         private final ImmutableList<ColumnDetails> srcColumns;
@@ -270,6 +268,11 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         return srcGrid;
     }
 
+    public @Nullable RecordSet _test_getDestRecordSet()
+    {
+        return destRecordSet.get();
+    }
+    
     private static class RecordSetDataDisplay extends DataDisplay
     {
         private final ObjectExpression<@Nullable RecordSet> recordSetProperty;
