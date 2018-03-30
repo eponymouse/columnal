@@ -11,10 +11,13 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -84,41 +87,93 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         CompletableFuture<RecordSet> rsFuture = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
         // GUI should show (after a slight delay), so we should provide inputs:
         TestUtil.sleep(3000);
-        selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
-        selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
-        selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
-        @Nullable ImportChoicesDialog<?, ?> importChoicesDialog = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
-        if (importChoicesDialog != null)
+        @Nullable ImportChoicesDialog<?, ?> maybeICD = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        if (maybeICD == null)
         {
-            Log.debug("Trying to set trim " + formatAndData.format.trimChoice);
-            VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
-            SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
-            // Find the current top-left corner of the selection rectangle:
-            RectangleBounds curBounds = TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
-            VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
-            Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
-            targetWindow(srcGridNode);
-            moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
-                visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex),
-                visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex)))));
-            press(MouseButton.PRIMARY);
-            CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + formatAndData.format.trimChoice.trimFromTop, formatAndData.format.trimChoice.trimFromLeft);
-            moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
-                visibleBounds.getXCoord(newTopLeft.columnIndex),
-                visibleBounds.getYCoord(newTopLeft.rowIndex)))));
-            release(MouseButton.PRIMARY);
-            @NonNull ImportChoicesDialog<?, ?> icdFinal = importChoicesDialog;
-            @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> icdFinal._test_getDestRecordSet());
-            assertNotNull(destRS);
-            if (destRS != null)
-                checkDataValues(formatAndData, destRS);
+            assertNotNull(maybeICD);
+            return;
+            
         }
+        @NonNull ImportChoicesDialog<?, ?> importChoicesDialog = maybeICD;
+        checkTrim(importChoicesDialog);
+        
+        selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
+        checkTrim(importChoicesDialog);
+        selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
+        checkTrim(importChoicesDialog);
+        selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
+        checkTrim(importChoicesDialog);
+        
+        Log.debug("Trying to set trim " + formatAndData.format.trimChoice);
+        VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
+        SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
+        // Find the current top-left corner of the selection rectangle:
+        RectangleBounds curBounds = TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
+        VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
+        Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
+        targetWindow(srcGridNode);
+        moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+            visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex),
+            visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex)))));
+        press(MouseButton.PRIMARY);
+        CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + formatAndData.format.trimChoice.trimFromTop, formatAndData.format.trimChoice.trimFromLeft);
+        moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+            visibleBounds.getXCoord(newTopLeft.columnIndex),
+            visibleBounds.getYCoord(newTopLeft.rowIndex)))));
+        release(MouseButton.PRIMARY);
+        checkTrim(importChoicesDialog);
+        @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestRecordSet());
+        assertNotNull(destRS);
+        if (destRS != null)
+            checkDataValues(formatAndData, destRS);
+        
         clickOn(".ok-button");
         
         
         
         RecordSet rs = rsFuture.get(5000, TimeUnit.MILLISECONDS);
         checkDataValues(formatAndData, rs);
+    }
+    
+    @OnThread(Tag.Simulation)
+    private void checkTrim(ImportChoicesDialog<?, ?> importChoicesDialog) throws InternalException, UserException
+    {
+        // We don't care what the trim actually is, we just want it to be consistent between:
+        // - the trim value held internally
+        // - the trim visual bounds held internally
+        // - the graphical display of the black rectangle
+        // - the size of the destination record set
+
+        SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
+        // Start with internal trim as the base value:
+        TrimChoice internal = TestUtil.fx(() -> srcDataDisplay.getTrim());
+
+        // Check against the visual bounds held internally:
+        RectangleBounds expectedTrimBounds = TestUtil.fx(() -> new RectangleBounds(srcDataDisplay.getPosition().offsetByRowCols(1 + internal.trimFromTop, internal.trimFromLeft),
+            srcDataDisplay.getBottomRightIncl().offsetByRowCols(- internal.trimFromBottom, -internal.trimFromRight)));
+        assertEquals("Internal trim against logical rectangle bounds", expectedTrimBounds, 
+            TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds()));
+        
+        // Check the visible bounds of the graphical rectangle:
+        VisibleBounds srcVisibleBounds = TestUtil.fx(() -> importChoicesDialog._test_getSrcGrid().getVisibleBounds());
+        @SuppressWarnings("nullness")
+        @NonNull Rectangle blackRect = lookup(".prospective-import-rectangle").query();
+        assertEquals("Graphical left", TestUtil.fx(() -> srcVisibleBounds.getXCoord(expectedTrimBounds.topLeftIncl.columnIndex)), TestUtil.fx(() -> blackRect.getLayoutX()), 1.0);
+        // Because of clamp visible, we can only do a very weak check on right and bottom:
+        MatcherAssert.assertThat("Graphical right", TestUtil.fx(() -> srcVisibleBounds.getXCoordAfter(expectedTrimBounds.bottomRightIncl.columnIndex)), Matchers.greaterThanOrEqualTo(TestUtil.fx(() -> blackRect.getLayoutX() + blackRect.getWidth())));
+        assertEquals("Graphical top", TestUtil.fx(() -> srcVisibleBounds.getYCoord(expectedTrimBounds.topLeftIncl.rowIndex)), TestUtil.fx(() -> blackRect.getLayoutY()), 1.0);
+        MatcherAssert.assertThat("Graphical bottom", TestUtil.fx(() -> srcVisibleBounds.getYCoordAfter(expectedTrimBounds.bottomRightIncl.rowIndex)), Matchers.greaterThanOrEqualTo(TestUtil.fx(() -> blackRect.getLayoutY() + blackRect.getHeight())));
+        
+        // Check the size of the dest record set:
+        RecordSet destRecordSet = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestRecordSet());
+        assertNotNull(destRecordSet);
+        if (destRecordSet != null)
+        {
+            assertEquals(expectedTrimBounds.bottomRightIncl.columnIndex - expectedTrimBounds.topLeftIncl.columnIndex + 1,
+                destRecordSet.getColumns().size());
+            assertEquals(expectedTrimBounds.bottomRightIncl.rowIndex - expectedTrimBounds.topLeftIncl.rowIndex + 1,
+                destRecordSet.getLength());
+        }
     }
 
     private File writeDataToFile(@From(GenFormattedData.class) @When(seed = 1L) GenFormattedData.FormatAndData formatAndData) throws IOException

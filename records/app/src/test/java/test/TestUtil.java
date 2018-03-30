@@ -9,9 +9,13 @@ import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
 import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
@@ -1125,6 +1129,15 @@ public class TestUtil
             throw new RuntimeException(e);
         }
         return mgr;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void copySnapshotToClipboard(Node node)
+    {
+        WritableImage img = node.snapshot(null, null);
+        ClipboardContent clipboardContent = new ClipboardContent();
+        clipboardContent.putImage(img);
+        Clipboard.getSystemClipboard().setContent(clipboardContent);
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
