@@ -407,9 +407,16 @@ public class GuessFormat
                 ImmutableList<ArrayList<String>> values = loadValues(initial, sep, quot);
                 ImporterUtility.rectangularise(values);
                 TrimChoice trimChoice = trimOverride != null ? trimOverride : guessTrim(values);
-                ImmutableList<ColumnInfo> columnInfos = guessBodyFormat(unitManager, trimChoice, values);
-                return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, trimChoice.trim(values), columnInfos));
-
+                ImmutableList.Builder<ColumnInfo> columnInfos = ImmutableList.builder();
+                if (!values.isEmpty())
+                {
+                    for (int i = 0; i < values.get(0).size(); i++)
+                    {
+                        columnInfos.add(new ColumnInfo(new TextColumnType(), new ColumnId("Col " + (i + 1))));
+                    }
+                }
+                return new Pair<>(trimChoice, ImporterUtility.makeEditableRecordSet(typeManager, values, columnInfos.build()));
+                
 
 /*
                 double score;
