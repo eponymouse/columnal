@@ -37,6 +37,6 @@ public class BoolColumnType extends ColumnType
 
     public boolean isTrue(@NonNull String s)
     {
-        return s.equalsIgnoreCase(lowerCaseTrue);
+        return s.trim().equalsIgnoreCase(lowerCaseTrue);
     }
 }

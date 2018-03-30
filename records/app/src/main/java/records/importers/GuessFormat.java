@@ -682,7 +682,7 @@ public class GuessFormat
             }
             else if (!inQuoted && !sep.isEmpty() && row.startsWith(sep, i))
             {
-                r.columnContents.add(sb.toString().trim());
+                r.columnContents.add(sb.toString());
                 r.originalContentAndStyle.add(new Pair<>(replaceTab(sep), "separator"));
                 sb = new StringBuilder();
                 i += sep.length();
@@ -696,7 +696,7 @@ public class GuessFormat
 
             }
         }
-        r.columnContents.add(sb.toString().trim());
+        r.columnContents.add(sb.toString());
         return r;
     }
 
@@ -753,7 +753,7 @@ public class GuessFormat
                         allBlank = false;
                         
                         String originalVal = val;
-                        possibleBooleanSets.removeIf(l -> !l.contains(originalVal.toLowerCase()));
+                        possibleBooleanSets.removeIf(l -> !l.contains(originalVal.trim().toLowerCase()));
 
                         if (commonPrefix == null)
                         {
@@ -849,14 +849,15 @@ public class GuessFormat
                         }
                         else
                         {
-                            String valPreprocessed = Utility.preprocessDate(val);
+                            String valTrimmed = val.trim();
+                            String valPreprocessed = Utility.preprocessDate(valTrimmed);
                             // Seems expensive but most will be knocked out immediately:
                             for (Iterator<DateFormat> dateFormatIt = possibleDateFormats.iterator(); dateFormatIt.hasNext(); )
                             {
                                 DateFormat dateFormat = dateFormatIt.next();
                                 try
                                 {
-                                    dateFormat.formatter.parse(dateFormat.preprocessDate ? valPreprocessed : val, dateFormat.destQuery);
+                                    dateFormat.formatter.parse(dateFormat.preprocessDate ? valPreprocessed : valTrimmed, dateFormat.destQuery);
                                 }
                                 catch (DateTimeParseException e)
                                 {

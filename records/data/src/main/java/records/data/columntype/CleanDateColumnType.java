@@ -70,6 +70,7 @@ public class CleanDateColumnType extends ColumnType
 
     public TemporalAccessor parse(@NonNull String s) throws InternalException
     {
+        s = s.trim();
         return getDateTimeInfo().fromParsed(getDateTimeFormatter().parse(preprocessDate ? Utility.preprocessDate(s) : s, query));
     }
 
