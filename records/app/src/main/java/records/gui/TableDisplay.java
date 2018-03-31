@@ -4,6 +4,7 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -1024,7 +1025,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Concatenate concatenate = (Concatenate)table;
                 content = StyledString.concat(
                     StyledString.s("Concatenate "),
-                    concatenate.getPrimarySources().map(t -> t.toStyledString()).collect(StyledString.joining(", "))    
+                    concatenate.getPrimarySources().map(t -> t.toStyledString()).collect(StyledString.joining(", ")).withStyle(
+                        new Clickable("edit.tooltip") {
+                            @Override
+                            @OnThread(Tag.FXPlatform)
+                            protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                            {
+                                if (mouseButton == MouseButton.PRIMARY)
+                                {
+                                    new TableListDialog(parent.getWindow(), concatenate.getPrimarySources().collect(ImmutableList.toImmutableList())).showAndWait().ifPresent(newList -> Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, ImmutableMap.of()), null);
+                                    })));
+                                }
+                            }
+                        }
+                    )    
                 );
             }
             else if (table instanceof Check)

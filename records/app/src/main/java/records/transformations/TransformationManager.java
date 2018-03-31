@@ -52,9 +52,9 @@ public class TransformationManager implements TransformationLoader
             new SummaryStatistics.Info(),
             new Filter.Info(),
             new Sort.Info(),
-            new Check.Info()
+            new Check.Info(),
             //new HideColumns.Info(),
-            //new Concatenate.Info()
+            new Concatenate.Info()
         );
     }
 

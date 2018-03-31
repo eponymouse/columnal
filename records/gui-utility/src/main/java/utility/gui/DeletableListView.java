@@ -44,7 +44,7 @@ public class DeletableListView<T> extends ListView<T>
     {
         super(items);
         setCellFactory(lv -> {
-            DeletableListCell cell = new DeletableListCell(lv);
+            DeletableListCell cell = Utility.later(this).makeCell();
             allCells.add(new WeakReference<>(cell));
             return cell;
         });
@@ -56,6 +56,18 @@ public class DeletableListView<T> extends ListView<T>
                 deleteSelection();
             }
         });
+    }
+
+    public DeletableListView()
+    {
+        this(FXCollections.observableArrayList());
+    }
+
+    // For overriding in subclasses:
+    @OnThread(Tag.FXPlatform)
+    protected DeletableListCell makeCell()
+    {
+        return new DeletableListCell();
     }
 
     // For overriding by subclasses:
@@ -140,7 +152,7 @@ public class DeletableListView<T> extends ListView<T>
         private final BooleanProperty deletable = new SimpleBooleanProperty(true);
 
         @SuppressWarnings("initialization")
-        public DeletableListCell(ListView<T> listView)
+        public DeletableListCell()
         {
             getStyleClass().add("deletable-list-cell");
             button = new SmallDeleteButton();

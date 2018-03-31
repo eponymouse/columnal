@@ -50,7 +50,8 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
 
     private void makeTransformationButtons(@UnknownInitialization(LightDialog.class) PickTransformationDialog this, TilePane tilePane)
     {
-        tilePane.setPrefColumns(4);
+        tilePane.setPrefColumns(3);
+        tilePane.setPrefRows(2);
 
         for (TransformationInfo transformationInfo : TransformationManager.getInstance().getTransformations())
         {
