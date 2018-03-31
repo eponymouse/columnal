@@ -2,6 +2,7 @@ package records.transformations;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
@@ -11,6 +12,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
@@ -39,6 +41,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -308,56 +311,6 @@ public class Concatenate extends Transformation
         return r;
     }
 
-    private static class Editor extends TransformationEditor
-    {
-        private final List<TableId> srcTableIds;
-        private final List<Table> srcs; // May be empty
-        private final Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals;
-
-        private Editor(View view, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals)
-        {
-            this.srcTableIds = srcTableIds;
-            this.srcs = srcs;
-            this.missingVals = missingVals;
-        }
-
-        @Override
-        public TransformationInfo getInfo()
-        {
-            return new Info();
-        }
-
-        @Override
-        public @Localized String getDisplayTitle()
-        {
-            return TranslationUtility.getString("transformEditor.concatenate.title");
-        }
-
-        @Override
-        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
-        {
-            return new Pair<>("todo", "todo");
-        }
-
-        @Override
-        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
-        {
-            return new Pane(new Label("TODO"));
-        }
-
-        @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
-        {
-            return () -> new Concatenate(mgr, initialLoadDetails, ImmutableList.copyOf(srcTableIds), missingVals);
-        }
-
-        @Override
-        public TableId getSourceId()
-        {
-            return srcTableIds.get(0);
-        }
-    }
-
     public static class Info extends TransformationInfo
     {
         public Info()
@@ -387,9 +340,9 @@ public class Concatenate extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.FXPlatform) @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable)
         {
-            return new Editor(view,  srcTableId == null ? Collections.emptyList() : Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
+            return () -> new Concatenate(mgr, new InitialLoadDetails(null, destination, null), ImmutableList.of(), ImmutableMap.of());
         }
     }
 

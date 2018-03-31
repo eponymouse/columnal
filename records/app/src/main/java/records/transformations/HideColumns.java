@@ -6,6 +6,7 @@ import javafx.scene.layout.Pane;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -166,58 +167,6 @@ public class HideColumns extends Transformation
         return result;
     }
 
-    private static class Editor extends TransformationEditor
-    {
-        private final SingleSourceControl srcControl;
-        private final HideColumnsPanel columnsPanel;
-
-        @OnThread(Tag.FXPlatform)
-        @SuppressWarnings("initialization")
-        public Editor(View view, TableManager mgr, @Nullable TableId srcTableId, ImmutableList<ColumnId> toHide)
-        {
-            this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            this.columnsPanel = new HideColumnsPanel(mgr, srcControl.tableIdProperty(), toHide);
-        }
-
-        @Override
-        public TransformationInfo getInfo()
-        {
-            return new Info();
-        }
-
-        @Override
-        public @Localized String getDisplayTitle()
-        {
-            return TranslationUtility.getString("transformEditor.hide.title");
-        }
-
-        @Override
-        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
-        {
-            return new Pair<>("hide.description.short", "hide.description.rest");
-        }
-
-        @Override
-        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
-        {
-            return GUI.vbox("hide-columns-content", srcControl, columnsPanel.getNode());
-        }
-
-        @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
-        {
-            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            ImmutableList<ColumnId> hiddenCols = columnsPanel.getHiddenColumns();
-            return () -> new HideColumns(mgr, initialLoadDetails, srcId.get(), hiddenCols);
-        }
-
-        @Override
-        public @Nullable TableId getSourceId()
-        {
-            return srcControl.getTableIdOrNull();
-        }
-    }
-
     public static class Info extends SingleSourceTransformationInfo
     {
         public Info()
@@ -234,9 +183,9 @@ public class HideColumns extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
+        protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Editor(view, mgr, srcTableId, ImmutableList.of());
+            return new HideColumns(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
         }
     }
 

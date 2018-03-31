@@ -9,6 +9,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -247,7 +248,7 @@ public class Transform extends Transformation
         return newColumns;
     }
 
-    public static class Info extends TransformationInfo
+    public static class Info extends SingleSourceTransformationInfo
     {
         public Info()
         {
@@ -255,7 +256,7 @@ public class Transform extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             ImmutableList.Builder<Pair<ColumnId, Expression>> columns = ImmutableList.builder();
 
@@ -265,73 +266,13 @@ public class Transform extends Transformation
                 columns.add(new Pair<>(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
 
-            return new Transform(mgr, initialLoadDetails, source.get(0), columns.build());
-        }
-
-        @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
-        {
-            return new Editor(view, mgr, srcTableId, Collections.singletonList(new Pair<ColumnId, Expression>(new ColumnId(""), new NumericLiteral(0, null))));
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private static class Editor extends TransformationEditor
-    {
-        private final SingleSourceControl srcControl;
-        private final ColumnExpressionList columnEditors;
-
-        @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
-        {
-            this.srcControl = new SingleSourceControl(view, mgr, srcId);
-            this.columnEditors = new ColumnExpressionList(mgr, srcControl, true, newColumns);
-        }
-
-
-        @Override
-        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
-        {
-            return new Pair<>("calculate.description.short", "calculate.description.rest");
-        }
-
-        @Override
-        public TransformationInfo getInfo()
-        {
-            return new Info();
-        }
-
-        @Override
-        public @Localized String getDisplayTitle()
-        {
-            return TranslationUtility.getString("transformEditor.calculate.title");
-        }
-
-        @Override
-        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
-        {
-            return columnEditors.getNode();
+            return new Transform(mgr, initialLoadDetails, srcTableId, columns.build());
         }
         
         @Override
-        public @Nullable SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
+        protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            ImmutableList.Builder<Pair<ColumnId, Expression>> cols = ImmutableList.builder();
-            for (Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> col : columnEditors.getColumns())
-            {
-                @Nullable ColumnId columnId = col.getFirst().getValue();
-                if (columnId == null)
-                    return null;
-                cols.add(new Pair<>(columnId, col.getSecond().getValue()));
-            }
-            return () -> new Transform(mgr, initialLoadDetails, srcId.get(), cols.build());
-        }
-
-        @Override
-        public @Nullable TableId getSourceId()
-        {
-            return srcControl.getTableIdOrNull();
+            return new Transform(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
         }
     }
 }

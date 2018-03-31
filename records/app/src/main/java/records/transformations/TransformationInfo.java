@@ -13,8 +13,11 @@ import records.error.UserException;
 import records.gui.View;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
+import utility.SimulationSupplier;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by neil on 02/11/2016.
@@ -67,19 +70,8 @@ public abstract class TransformationInfo
     @OnThread(Tag.Simulation)
     public abstract Transformation load(TableManager mgr, InitialLoadDetails initialLoadDetails, List<TableId> source, String detail) throws InternalException, UserException;
 
-
     @OnThread(Tag.FXPlatform)
-    public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
-    {
-        throw new RuntimeException("");
-    }
-
-    // TODO make this abstract and remove editNew
-    @OnThread(Tag.Simulation)
-    public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
-    {
-        throw new RuntimeException("");
-    }
+    public abstract @Nullable SimulationSupplier<Transformation> make(View view, TableManager mgr, CellPosition destination, FXPlatformSupplier<Optional<Table>> askForSingleSrcTable);
     
     public final String getImageFileName()
     {

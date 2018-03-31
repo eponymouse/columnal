@@ -534,14 +534,17 @@ public class View extends StackPane
                             break;
                         case TRANSFORM:
                             new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
-                                new PickTableDialog(thisView, createTrans.getFirst()).showAndWait().ifPresent(srcTable -> {
+                                @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView, thisView.getManager(), cellPosition, () ->
+                                    new PickTableDialog(thisView, createTrans.getFirst()).showAndWait());
+                                if (makeTrans != null)
+                                {
+                                    @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                                     Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
                                         FXUtility.alertOnError_(() -> {
-                                            Transformation trans = createTrans.getSecond().makeWithSource(thisView, thisView.getManager(), cellPosition, srcTable);
-                                            tableManager.record(trans);
+                                            tableManager.record(makeTransFinal.get());
                                         });
                                     });
-                                });
+                                }
                             });
                             break;
                         case CHECK:

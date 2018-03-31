@@ -51,9 +51,10 @@ public class HideColumnsPanel
     public HideColumnsPanel(TableManager mgr, ObjectExpression<@Nullable TableId> srcIdProperty, ImmutableList<ColumnId> initiallyHidden)
     {
         this.hiddenColumns = new DeletableListView<>(FXCollections.observableArrayList(initiallyHidden));
-        this.shownColumns = TransformationEditor.getColumnListView(mgr, srcIdProperty, hiddenColumns.getItems(), col -> {
-            addAllItemsToHidden(Collections.singletonList(col));
-        });
+        this.shownColumns = //TransformationEditor.getColumnListView(mgr, srcIdProperty, hiddenColumns.getItems(), col -> {
+            //addAllItemsToHidden(Collections.singletonList(col));
+        //});
+            new ListView<>();
         shownColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         shownColumns.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER)

@@ -66,6 +66,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.gui.TranslationUtility;
@@ -79,6 +80,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -257,252 +259,6 @@ public class Filter extends Transformation
         return srcTableId;
     }
 
-    private static class Editor extends TransformationEditor
-    {
-        private final SingleSourceControl srcControl;
-        private final List<ColumnId> allColumns = new ArrayList<>();
-        //private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
-        //private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
-        private final TableManager mgr;
-        private Expression expression;
-        private final ExpressionEditor expressionEditor;
-
-        @SuppressWarnings("initialization")
-        @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, Expression expression)
-        {
-            this.mgr = mgr;
-            this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            //this.srcHeaderAndData = FXCollections.observableArrayList();
-            //this.destHeaderAndData = FXCollections.observableArrayList();
-            this.expression = expression;
-            this.expressionEditor = new ExpressionEditor(expression, srcControl.tableProperty(), true, new ReadOnlyObjectWrapper<>(DataType.BOOLEAN), mgr, e -> {
-                try
-                {
-                    updateExample(e);
-                    this.expression = e;
-                }
-                catch (InternalException | UserException ex)
-                {
-                    Log.log(ex);
-                    // TODO what should we show in interface?
-                }
-            });
-        }
-
-        @OnThread(Tag.FXPlatform)
-        private void updateExample(Expression expression) throws UserException, InternalException
-        {
-            @Nullable Table src = srcControl.getTableOrNull();
-            if (src == null)
-                return;
-            if (expression.check(new MultipleTableLookup(mgr, src), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), new ErrorAndTypeRecorderStorer()) == null)
-                return;
-
-            if (allColumns.isEmpty())
-            {
-                allColumns.addAll(src.getData().getColumnIds());
-            }
-            /*
-            Map<ColumnId, Long> itemToFreq = expression.allColumnReferences().collect(Collectors.groupingBy(Function.<ColumnId>identity(), Collectors.<ColumnId>counting()));
-            List<ColumnId> sortedByFreq = itemToFreq.entrySet().stream().sorted(Entry.<ColumnId, Long>comparingByValue(Comparator.<Long>reverseOrder())).<ColumnId>map(Entry::getKey).limit(3).collect(Collectors.toList());
-            if (sortedByFreq.size() < 3)
-            {
-                // Add any other columns to make it up:
-                for (ColumnId c : allColumns)
-                {
-                    if (!sortedByFreq.contains(c))
-                    {
-                        sortedByFreq.add(c);
-                        if (sortedByFreq.size() == 3)
-                            break;
-                    }
-                }
-            }
-*/
-            // Skip the solver:
-            if (true) return;
-
-            Configuration config = Configuration.defaultConfiguration();
-            try
-            {
-                LogManager logger = BasicLogManager.create(config);
-                ShutdownManager shutdown = ShutdownManager.create();
-                SolverContext ctx = SolverContextFactory.createSolverContext(
-                    config, logger, shutdown.getNotifier(), Solvers.Z3);
-
-                Map<Pair<@Nullable TableId, ColumnId>, @NonNull Formula> vars = new HashMap<>();
-                BooleanFormula f = (BooleanFormula)expression.toSolver(ctx.getFormulaManager(), src.getData(), vars);
-
-                //System.out.println("Example: " + f.toString());
-
-                try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
-                    prover.addConstraint(f);
-                    for (Formula var : vars.values())
-                    {
-                        if (var instanceof BitvectorFormula)
-                        {
-                            prover.addConstraint(asciiRange(ctx.getFormulaManager().getBooleanFormulaManager(), ctx.getFormulaManager().getBitvectorFormulaManager(), (BitvectorFormula)var, 0));
-                        }
-                    }
-
-
-                    boolean isUnsat = prover.isUnsat();
-                    //System.out.println("Satisfiable: " + !isUnsat);
-                    if (!isUnsat) {
-                        //srcHeaderAndData.clear();
-                        Model model = prover.getModel();
-                        for (Entry<@KeyFor("vars") Pair<@Nullable TableId, ColumnId>, @NonNull Formula> var : vars.entrySet())
-                        {
-                            Object evaluated = model.evaluate(var.getValue());
-                            if (evaluated != null)
-                            {
-                                //System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
-                                //srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
-                                //destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
-                            }
-                        }
-                    }
-                }
-                try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
-                    prover.addConstraint(ctx.getFormulaManager().getBooleanFormulaManager().not(f));
-                    for (Formula var : vars.values())
-                    {
-                        if (var instanceof BitvectorFormula)
-                        {
-                            prover.addConstraint(asciiRange(ctx.getFormulaManager().getBooleanFormulaManager(), ctx.getFormulaManager().getBitvectorFormulaManager(), (BitvectorFormula)var, 0));
-                        }
-                    }
-
-                    boolean isUnsat = prover.isUnsat();
-                    //System.out.println("Satisfiable negation: " + !isUnsat);
-                    if (!isUnsat) {
-                        Model model = prover.getModel();
-                        for (Entry<@KeyFor("vars") Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
-                        {
-                            Object evaluated = model.evaluate(var.getValue());
-                            if (evaluated != null)
-                            {
-                                //System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
-                                //srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
-                            }
-                        }
-                    }
-                }
-            }
-            catch (UserException | InternalException e)
-            {
-                e.printStackTrace();
-            }
-            catch (ClassCastException e)
-            {
-                // Types issue
-                e.printStackTrace();
-            }
-            catch (InvalidConfigurationException | SolverException | InterruptedException e)
-            {
-                // Never mind then...
-                e.printStackTrace();
-            }
-
-        }
-
-        // Not really a @Value return, but satisfies type system:
-        @SuppressWarnings("value")
-        private @Value String show(@Nullable Object v)
-        {
-            if (v == null)
-                return "null";
-            if (v instanceof BigInteger)
-            {
-                BigInteger i = (BigInteger) v;
-                StringBuilder sb = new StringBuilder();
-                for (int nextCodePoint = i.intValue(); nextCodePoint != 0; i = i.shiftRight(32), nextCodePoint = i.intValue())
-                {
-                    sb.appendCodePoint(nextCodePoint);
-                }
-                return sb.reverse().toString();
-            }
-            return v.getClass().toString();
-        }
-
-        private BooleanFormula asciiRange(BooleanFormulaManager b, BitvectorFormulaManager v, BitvectorFormula cur, int index)
-        {
-            if (index >= Expression.MAX_STRING_SOLVER_LENGTH)
-                return b.makeBoolean(true);
-
-            // A valid option is string is blank from here on
-            BooleanFormula isZero = v.equal(cur, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 0));
-            // If it's not all blank, we look at next character and check it is in ASCII range
-            BitvectorFormula nextChar = v.and(cur, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 127));
-            BooleanFormula nextCharASCII = b.and(v.lessThan(v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 32), nextChar, false), v.lessThan(nextChar, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 122), false));
-            BooleanFormula thereafter = asciiRange(b, v, v.shiftRight(cur, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 32), false), index + 1);
-            return b.or(isZero, b.and(nextCharASCII, thereafter));
-        }
-
-        @Override
-        public TransformationInfo getInfo()
-        {
-            return new Info();
-        }
-
-        @Override
-        public @Localized String getDisplayTitle()
-        {
-            return TranslationUtility.getString("transformEditor.filter.title");
-        }
-
-        @Override
-        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
-        {
-            return new Pair<>("filter.description.short", "filter.description.rest");
-        }
-
-        @Override
-        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
-        {
-            try
-            {
-                updateExample(new BooleanLiteral(true));
-            }
-            catch (Exception e)
-            {
-                reportError.consume(e);
-            }
-
-            Node example = new Label("TODO"); //createExplanation(srcHeaderAndData, destHeaderAndData, "");
-            FXPlatformConsumer<@Nullable Expression> updater = expression -> {
-                if (expression != null)
-                {
-                    try
-                    {
-                        updateExample(expression);
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        // Never mind, don't update
-                        reportError.consume(e);
-                    }
-                }
-            };
-
-            return new VBox(expressionEditor.getContainer(), example);
-        }
-
-        @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, InitialLoadDetails initialLoadDetails)
-        {
-            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            return () -> new Filter(mgr, initialLoadDetails, srcId.get(), expression);
-        }
-
-        @Override
-        public @Nullable TableId getSourceId()
-        {
-            return srcControl.getTableIdOrNull();
-        }
-    }
-
     public static class Info extends SingleSourceTransformationInfo
     {
         public Info()
@@ -517,7 +273,8 @@ public class Filter extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        @OnThread(Tag.Simulation)
+        public Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
             return new Filter(mgr, new InitialLoadDetails(null, destination, new Pair<>(Display.ALL, ImmutableList.of())), srcTable.getId(), new BooleanLiteral(true));
         }

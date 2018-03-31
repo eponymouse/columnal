@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
@@ -18,7 +19,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
+import records.gui.View;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -28,6 +31,7 @@ import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
 import utility.Utility;
 
 import java.io.File;
@@ -169,6 +173,12 @@ public class Check extends Transformation
         protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
             return new Check(mgr, initialLoadDetails, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
+        {
+            return new Check(mgr, new InitialLoadDetails(null, destination, null), srcTable.getId(), new BooleanLiteral(true));
         }
     }
 }
