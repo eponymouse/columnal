@@ -52,7 +52,6 @@ import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.DeletableListView;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;

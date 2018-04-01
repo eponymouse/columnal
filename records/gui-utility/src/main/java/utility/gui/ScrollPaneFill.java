@@ -27,6 +27,12 @@ public class ScrollPaneFill extends ScrollPane
         FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> fillWidth(b));
     }
 
+    public ScrollPaneFill(Node content)
+    {
+        this();
+        setContent(content);
+    }
+
     @OnThread(Tag.FXPlatform)
     private void fillWidth(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this, @Nullable Bounds viewportBounds)
     {

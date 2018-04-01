@@ -137,6 +137,7 @@ class ScrollPane
 {
     Property viewportBoundsProperty(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
     Node getContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
+    void setContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, Node content);
     void setFitToWidth(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);
     void setFitToHeight(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);
 }

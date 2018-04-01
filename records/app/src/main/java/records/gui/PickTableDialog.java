@@ -8,6 +8,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.Table;
+import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -80,7 +81,7 @@ public class PickTableDialog extends LightDialog<Table>
         initModality(Modality.NONE);
 
 
-        PickTablePane pickTablePane = new PickTablePane(view, t -> {
+        PickTablePane pickTablePane = new PickTablePane(view, new TableId(""), t -> {
             setResult(t);
             close();
         });

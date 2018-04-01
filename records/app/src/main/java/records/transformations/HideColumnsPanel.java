@@ -26,7 +26,6 @@ import records.data.TableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.gui.DeletableListView;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;
@@ -50,7 +49,7 @@ public class HideColumnsPanel
 
     public HideColumnsPanel(TableManager mgr, ObjectExpression<@Nullable TableId> srcIdProperty, ImmutableList<ColumnId> initiallyHidden)
     {
-        this.hiddenColumns = new DeletableListView<>(FXCollections.observableArrayList(initiallyHidden));
+        this.hiddenColumns = new ListView<>(FXCollections.observableArrayList(initiallyHidden));
         this.shownColumns = //TransformationEditor.getColumnListView(mgr, srcIdProperty, hiddenColumns.getItems(), col -> {
             //addAllItemsToHidden(Collections.singletonList(col));
         //});

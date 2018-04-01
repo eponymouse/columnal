@@ -10,8 +10,9 @@ import utility.Utility;
 import java.util.Collections;
 
 @OnThread(Tag.FXPlatform)
-public class ReorderableDeletableListView<T> extends DeletableListView<T>
+public class ReorderableDeletableListView<T>
 {
+    /*
     private int curDragTargetIndex = -1;
     
     public ReorderableDeletableListView(ObservableList<T> items)
@@ -84,4 +85,5 @@ public class ReorderableDeletableListView<T> extends DeletableListView<T>
     {
         FXUtility.setPseudoclass(cell.contentPane, "target-above", true);
     }
+    */
 }

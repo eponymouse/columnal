@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class InsertableReorderableDeletableListView<@NonNull T> extends ReorderableDeletableListView<Optional<@NonNull T>>
 {
+    /*
     private final FXPlatformSupplier<@Nullable T> makeNew;
 
     public InsertableReorderableDeletableListView(List<T> original, FXPlatformSupplier<@Nullable T> makeNew)
@@ -114,4 +115,5 @@ public class InsertableReorderableDeletableListView<@NonNull T> extends Reordera
         if (newItem != null)
             getItems().set(getItems().size() - 1, Optional.of(newItem));
     }
+    */
 }

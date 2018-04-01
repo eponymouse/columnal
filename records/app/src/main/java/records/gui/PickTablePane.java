@@ -30,15 +30,13 @@ public class PickTablePane extends BorderPane
     private final TextField tableField = new TextField();
     private final AutoComplete autoComplete;
 
-    public PickTablePane(View view, FXPlatformConsumer<Table> setResultAndFinishEditing)
+    public PickTablePane(View view, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
+        tableField.setText(initial.getRaw());
         autoComplete = new AutoComplete(tableField, (s, q) -> view.getManager().getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), getListener(setResultAndFinishEditing), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
 
         setCenter(tableField);
         setTop(new Label("Click on a table or type table name"));
-        FXUtility.addChangeListenerPlatform(tableField.sceneProperty(), s -> {
-            Log.logStackTrace("Scene now: " + s);
-        });
     }
 
     public void focusEntryField()
