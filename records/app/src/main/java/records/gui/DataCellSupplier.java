@@ -31,7 +31,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     static {
         for (int i = 0; i < 3; i++)
         {
-            new Thread("STF creator" + i)
+            Thread t = new Thread("STF creator" + i)
             {
                 @Override
                 @OnThread(value = Tag.FX, ignoreParent = true)
@@ -49,7 +49,9 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
                         }
                     }
                 }
-            }.start();
+            };
+            t.setDaemon(true);
+            t.start();
         }
     }
     
