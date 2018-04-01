@@ -158,6 +158,7 @@ class ListView<T>
     MultipleSelectionModel getSelectionModel(@UnknownInitialization(javafx.scene.control.ListView.class) ListView this);
     void setOnKeyPressed(@UnknownInitialization(javafx.scene.control.ListView.class) ListView this, EventHandler handler);
     List getItems(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this);
+    void setEditable(@UnknownInitialization(javafx.scene.control.ListView.class) ListView<T> this, boolean b);
 }
 class SelectionModel<T>
 {
@@ -176,6 +177,11 @@ class ListCell<T>
 class Cell<T>
 {
      @Nullable T getItem(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
+     ReadOnlyBooleanProperty emptyProperty(@UnknownInitialization(javafx.scene.control.Cell.class) Cell this);
+}
+class IndexedCell<T>
+{
+     int getIndex(@UnknownInitialization(javafx.scene.control.IndexedCell.class) IndexedCell this);
 }
 class PopupControl
 {

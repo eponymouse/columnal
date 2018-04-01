@@ -47,7 +47,8 @@ public class AutoComplete extends PopupControl
     private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
     private final ListView<Completion> completions;
-    private BorderPane container;
+    private final BorderPane container;
+    private boolean settingContentDirectly = false;
 
     public static enum WhitespacePolicy
     {
@@ -257,7 +258,7 @@ public class AutoComplete extends PopupControl
             for (Completion completion : available)
             {
                 CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
-                if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY)
+                if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY && !settingContentDirectly)
                 {
                     @Nullable String newContent = onSelect.exactCompletion(text, completion);
                     if (newContent != null)
@@ -266,7 +267,7 @@ public class AutoComplete extends PopupControl
                     hide();
                     return change;
                 }
-                else if (completionAction == CompletionAction.SELECT)
+                else if (completionAction == CompletionAction.SELECT || (settingContentDirectly && completionAction == CompletionAction.COMPLETE_IMMEDIATELY))
                 {
                     // Select it, at least:
                     if (!haveSelected)
@@ -321,6 +322,13 @@ public class AutoComplete extends PopupControl
                 }
             }
         });
+    }
+
+    public void setContentDirect(String s)
+    {
+        settingContentDirectly = true;
+        textField.setText(s);
+        settingContentDirectly = false;
     }
 
     private void updateHeight(@UnknownInitialization(Window.class) AutoComplete this, ListView<?> completions)

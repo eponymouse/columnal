@@ -144,11 +144,10 @@ public class DeletableListView<T> extends ListView<T>
         }
     }
 
-    public class DeletableListCell extends SlidableListCell<T>
+    protected class DeletableListCell extends SlidableListCell<T>
     {
-        protected int curIndex;
-        private final SmallDeleteButton button;
-        private final Label label;
+        protected final SmallDeleteButton deleteButton;
+        protected final Label label;
         private final BooleanProperty deletable = new SimpleBooleanProperty(true);
         protected final BorderPane contentPane;
 
@@ -156,8 +155,8 @@ public class DeletableListView<T> extends ListView<T>
         public DeletableListCell()
         {
             getStyleClass().add("deletable-list-cell");
-            button = new SmallDeleteButton();
-            button.setOnAction(() -> {
+            deleteButton = new SmallDeleteButton();
+            deleteButton.setOnAction(() -> {
                 if (isSelected())
                 {
                     // Delete all in selection
@@ -169,7 +168,7 @@ public class DeletableListView<T> extends ListView<T>
                     animateOutToRight(Collections.singletonList(this), () -> getItems().remove(getItem()));
                 }
             });
-            button.setOnHover(entered -> {
+            deleteButton.setOnHover(entered -> {
                 if (isSelected())
                 {
                     hoverOverSelection = entered;
@@ -182,20 +181,22 @@ public class DeletableListView<T> extends ListView<T>
                 }
                 // If not selected, nothing to do
             });
-            button.visibleProperty().bind(deletable);
+            deleteButton.visibleProperty().bind(deletable);
             label = new Label("");
             BorderPane.setAlignment(label, Pos.CENTER_LEFT);
-            contentPane = new BorderPane(label, null, button, null, null);
+            contentPane = new BorderPane(label, null, deleteButton, null, null);
             contentPane.getStyleClass().add("deletable-list-cell-content");
             setGraphic(contentPane);
         }
         
         @OnThread(Tag.FXPlatform)
-        protected final void resetContentPane()
+        protected final void setContentLabelAndDelete()
         {
-            contentPane.getChildren().clear();
             contentPane.setCenter(label);
-            contentPane.setRight(button);
+            contentPane.setRight(deleteButton);
+            contentPane.setLeft(null);
+            contentPane.setTop(null);
+            contentPane.setBottom(null);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -229,7 +230,6 @@ public class DeletableListView<T> extends ListView<T>
             {
                 label.setText("");
                 deletable.set(false);
-                curIndex = -1;
             }
             else
             {
@@ -238,14 +238,6 @@ public class DeletableListView<T> extends ListView<T>
             }
 
             super.updateItem(item, empty);
-        }
-
-        @Override
-        @OnThread(Tag.FX)
-        public void updateIndex(int i)
-        {
-            curIndex = i;
-            super.updateIndex(i);
         }
     }
 }

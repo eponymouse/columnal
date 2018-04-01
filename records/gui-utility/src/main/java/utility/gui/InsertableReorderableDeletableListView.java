@@ -30,6 +30,10 @@ public class InsertableReorderableDeletableListView<@NonNull T> extends Reordera
     {
         super(FXCollections.observableArrayList(Stream.concat(original.stream().map(Optional::of), Stream.of(Optional.<T>empty())).collect(ImmutableList.toImmutableList())));
         this.makeNew = makeNew;
+        FXUtility.listen(getItems(), c -> {
+            if (getItems().isEmpty() || getItems().get(getItems().size() - 1).isPresent())
+                getItems().add(Optional.empty());
+        });
     }
 
     public ImmutableList<T> getRealItems()
@@ -64,7 +68,8 @@ public class InsertableReorderableDeletableListView<@NonNull T> extends Reordera
         return index < getItems().size();
     }
 
-    private class IRDListCell extends RDListCell
+    @OnThread(Tag.FXPlatform)
+    protected class IRDListCell extends RDListCell
     {
         private final Button addButton = GUI.button("irdListView.add", () -> addAtEnd());
 
@@ -73,24 +78,40 @@ public class InsertableReorderableDeletableListView<@NonNull T> extends Reordera
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void updateItem(@Nullable Optional<@NonNull T> item, boolean empty)
         {
-            if (item != null && !item.isPresent())
+            if (empty || item == null)
             {
+                setEditable(false);
                 contentPane.getChildren().clear();
+            }
+            else if (item != null && !item.isPresent())
+            {
                 contentPane.setCenter(addButton);
+                contentPane.setLeft(null);
+                contentPane.setRight(null);
+                contentPane.setTop(null);
+                contentPane.setBottom(null);
+                setEditable(false);
             }
             else
             {
-                resetContentPane();
+                setEditable(true);
+                setNormalContent();
             }
             super.updateItem(item, empty);
             
         }
+        
+        // Can be overridden by subclasses.
+        protected void setNormalContent()
+        {
+            super.setContentLabelAndDelete();
+        }
     }
 
-    private void addAtEnd()
+    protected void addAtEnd()
     {
         @Nullable T newItem = makeNew.get();
         if (newItem != null)
-            getItems().add(getItems().size() - 1, Optional.of(newItem));
+            getItems().set(getItems().size() - 1, Optional.of(newItem));
     }
 }

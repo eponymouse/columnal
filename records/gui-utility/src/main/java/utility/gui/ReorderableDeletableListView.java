@@ -29,7 +29,7 @@ public class ReorderableDeletableListView<T> extends DeletableListView<T>
         return new RDListCell();
     }
 
-    public class RDListCell extends DeletableListCell
+    protected class RDListCell extends DeletableListCell
     {
         public RDListCell()
         {
@@ -37,15 +37,15 @@ public class ReorderableDeletableListView<T> extends DeletableListView<T>
                 // Find nearest cell boundary:
                 Pair<@Nullable DeletableListCell, @Nullable DeletableListCell> nearest = getNearestGap(e.getSceneX(), e.getSceneY());
                 @Nullable DeletableListCell first = nearest.getFirst();
-                if (first != null && validTargetPosition(first.curIndex + 1))
+                if (first != null && validTargetPosition(first.getIndex() + 1))
                 {
-                    curDragTargetIndex = first.curIndex + 1;
+                    curDragTargetIndex = first.getIndex() + 1;
                     setTargetBelow(first, true);
                 }
                 @Nullable DeletableListCell second = nearest.getSecond();
-                if (second != null && validTargetPosition(second.curIndex))
+                if (second != null && validTargetPosition(second.getIndex()))
                 {
-                    curDragTargetIndex = second.curIndex;
+                    curDragTargetIndex = second.getIndex();
                     setTargetAbove(second, true);
                 }
             });
@@ -56,6 +56,7 @@ public class ReorderableDeletableListView<T> extends DeletableListView<T>
                     T t = getItem();
                     if (t != null)
                     {
+                        int curIndex = getIndex();
                         getItems().remove(curIndex);
                         // Add before remove, because remove will upset index:
                         getItems().add(curDragTargetIndex + (curIndex <= curDragTargetIndex ? -1 : 0), t);
