@@ -101,8 +101,8 @@ public class Concatenate extends Transformation
         try
         {
             tables = Utility.mapListEx(sources, getManager()::getSingleTableOrThrow);
-            LinkedHashMap<ColumnId, DataType> prevColumns = getColumnsNameAndType(tables.get(0));
-            int totalLength = tables.get(0).getData().getLength();
+            LinkedHashMap<ColumnId, DataType> prevColumns = tables.isEmpty() ? new LinkedHashMap<>() : getColumnsNameAndType(tables.get(0));
+            int totalLength = tables.isEmpty() ? 0 : tables.get(0).getData().getLength();
             List<Integer> ends = new ArrayList<>();
             ends.add(totalLength);
 
