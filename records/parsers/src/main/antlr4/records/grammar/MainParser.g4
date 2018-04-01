@@ -15,7 +15,7 @@ dataSource : dataSourceLinkHeader | dataSourceImmediate;
 
 transformationName : item;
 sourceName : item;
-transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName+ NEWLINE detail NEWLINE;
+transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName* NEWLINE detail NEWLINE;
 
 // For copy and paste:
 isolatedValues : units types dataFormat values;

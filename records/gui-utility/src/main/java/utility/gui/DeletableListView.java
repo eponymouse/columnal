@@ -2,7 +2,6 @@ package utility.gui;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
@@ -34,7 +33,7 @@ import java.util.List;
 public class DeletableListView<T> extends ListView<T>
 {
     // Keep track of all cells for the purposes of finding bounds:
-    private final List<WeakReference<DeletableListCell>> allCells = new ArrayList<>();
+    protected final List<WeakReference<DeletableListCell>> allCells = new ArrayList<>();
     // Have to keep manual track of the selected cells.  ListView only tells us selected items,
     // but can't map that back to selected cells:
     private final ObservableList<DeletableListCell> selectedCells = FXCollections.observableArrayList();
@@ -147,9 +146,11 @@ public class DeletableListView<T> extends ListView<T>
 
     public class DeletableListCell extends SlidableListCell<T>
     {
+        protected int curIndex;
         private final SmallDeleteButton button;
         private final Label label;
         private final BooleanProperty deletable = new SimpleBooleanProperty(true);
+        protected final BorderPane contentPane;
 
         @SuppressWarnings("initialization")
         public DeletableListCell()
@@ -184,9 +185,17 @@ public class DeletableListView<T> extends ListView<T>
             button.visibleProperty().bind(deletable);
             label = new Label("");
             BorderPane.setAlignment(label, Pos.CENTER_LEFT);
-            BorderPane borderPane = new BorderPane(label, null, button, null, null);
-            borderPane.getStyleClass().add("deletable-list-cell-content");
-            setGraphic(borderPane);
+            contentPane = new BorderPane(label, null, button, null, null);
+            contentPane.getStyleClass().add("deletable-list-cell-content");
+            setGraphic(contentPane);
+        }
+        
+        @OnThread(Tag.FXPlatform)
+        protected final void resetContentPane()
+        {
+            contentPane.getChildren().clear();
+            contentPane.setCenter(label);
+            contentPane.setRight(button);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -220,6 +229,7 @@ public class DeletableListView<T> extends ListView<T>
             {
                 label.setText("");
                 deletable.set(false);
+                curIndex = -1;
             }
             else
             {
@@ -228,6 +238,14 @@ public class DeletableListView<T> extends ListView<T>
             }
 
             super.updateItem(item, empty);
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        public void updateIndex(int i)
+        {
+            curIndex = i;
+            super.updateIndex(i);
         }
     }
 }

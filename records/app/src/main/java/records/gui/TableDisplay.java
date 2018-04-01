@@ -119,6 +119,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A specialisation of DataDisplay that links it to an actual Table.
@@ -1023,9 +1024,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             else if (table instanceof Concatenate)
             {
                 Concatenate concatenate = (Concatenate)table;
+                @OnThread(Tag.Any) Stream<TableId> sources = concatenate.getPrimarySources();
+                StyledString sourceText = sources.map(t -> t.toStyledString()).collect(StyledString.joining(", "));
+                if (sourceText.toPlain().isEmpty())
+                {
+                    sourceText = StyledString.s("no tables");
+                }
                 content = StyledString.concat(
                     StyledString.s("Concatenate "),
-                    concatenate.getPrimarySources().map(t -> t.toStyledString()).collect(StyledString.joining(", ")).withStyle(
+                    sourceText.withStyle(
                         new Clickable("edit.tooltip") {
                             @Override
                             @OnThread(Tag.FXPlatform)
@@ -1033,7 +1040,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             {
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
-                                    new TableListDialog(parent.getWindow(), concatenate.getPrimarySources().collect(ImmutableList.toImmutableList())).showAndWait().ifPresent(newList -> Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                                    new TableListDialog(parent, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList())).showAndWait().ifPresent(newList -> Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                                         parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, ImmutableMap.of()), null);
                                     })));
                                 }
