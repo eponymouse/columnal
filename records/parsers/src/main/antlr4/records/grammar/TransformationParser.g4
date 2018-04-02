@@ -27,10 +27,11 @@ splitBy : splitKW column=item NEWLINE;
 summary : summaryCol* splitBy*;
 
 /* Concat: */
-concatMissingColumnName : item;
-concatOmit : {_input.LT(1).getText().equals("@OMIT")}? ATOM;
-concatMissingColumn : concatMissingColumnName type ((concatOmit NEWLINE) | value);
-concatMissing : concatMissingColumn*;
+concatIncompleteKW : {_input.LT(1).getText().equals("@INCOMPLETE")}? ATOM;
+concatOmit : {_input.LT(1).getText().equals("OMIT")}? ATOM;
+concatWrapMaybe : {_input.LT(1).getText().equals("WRAPMAYBE")}? ATOM;
+concatDefault : {_input.LT(1).getText().equals("DEFAULT")}? ATOM;
+concatMissing : concatIncompleteKW (concatOmit | concatWrapMaybe | concatDefault);
 
 /* Transform: */
 

@@ -6,11 +6,13 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -71,6 +73,11 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
             addButton = null;
         }
         updateChildren();
+    }
+    
+    public ObservableList<String> getStyleClass(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
+    {
+        return scrollPane.getStyleClass();
     }
 
     private ImmutableList<Cell> getSelectedCells()
@@ -133,6 +140,12 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     public Region getNode()
     {
         return scrollPane;
+    }
+
+    protected void clearSelection()
+    {
+        selection.clear();
+        updateSelectionState();
     }
 
     /**
@@ -210,6 +223,16 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 }
                 // If not selected, nothing to do
             });
+            setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY)
+                {
+                    // TODO check for shift, ctrl
+                    selection.clear();
+                    selection.set(getIndex());
+                    updateSelectionState();
+                    e.consume();
+                }
+            });
             //deleteButton.visibleProperty().bind(deletable);
             Pair<CELL_CONTENT, ObjectExpression<T>> pair = makeCellContent(initialContent, editImmediately);
             this.content = pair.getFirst();
@@ -217,6 +240,11 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
             setCenter(this.content);
             if (allowDeleting)
                 setRight(deleteButton);
+        }
+
+        private int getIndex(@UnknownInitialization Cell this)
+        {
+            return Utility.indexOfRef(cells, this);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -228,6 +256,14 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         public CELL_CONTENT getContent()
         {
             return content;
+        }
+    }
+
+    private void updateSelectionState()
+    {
+        for (int i = 0; i < cells.size(); i++)
+        {
+            FXUtility.setPseudoclass(cells.get(i), "selected", selection.get(i));
         }
     }
 

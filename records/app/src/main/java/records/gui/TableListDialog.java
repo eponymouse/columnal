@@ -49,6 +49,11 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
         Region tableListNode = tableList.getNode();
         tableListNode.setMinHeight(150.0);
         getDialogPane().setContent(new BorderPane(tableListNode, new Label("Choose the tables to concatenate"), null, null, null));
+        getDialogPane().getStylesheets().addAll(
+            FXUtility.getStylesheet("general.css"),
+            FXUtility.getStylesheet("dialogs.css")
+        );
+        getDialogPane().getStyleClass().add("table-list-dialog");
         setResultConverter(bt -> {
             if (bt == ButtonType.OK)
                 return tableList.getItems();
@@ -71,6 +76,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
         public TableList(ImmutableList<TableId> originalItems)
         {
             super(originalItems, true, true, true);
+            getStyleClass().add("table-list");
         }
         
         @Override
@@ -83,6 +89,12 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
                 curValue.set(t.getId());
                 if (addButton != null)
                     addButton.requestFocus();
+            });
+            FXUtility.addChangeListenerPlatformNN(pickTablePane.currentlyEditing(), ed -> {
+                if (ed)
+                {
+                    clearSelection();
+                }
             });
             if (editImmediately)
             {

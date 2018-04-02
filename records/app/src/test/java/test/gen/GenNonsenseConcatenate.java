@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Concatenate;
+import records.transformations.Concatenate.IncompleteColumnHandling;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
@@ -46,26 +47,11 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
         ImmutableList<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
 
-        int numMissingCols = sourceOfRandomness.nextInt(0, 10);
-        GenValueAnyType genValue = new GenValueAnyType();
-        Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missing = new HashMap<>();
-        for (int i = 0; i < numMissingCols; i++)
-        {
-            // Although it's nonsense, type must match the generated value or else load will fail:
-            DataType type = sourceOfRandomness.choose(TestUtil.distinctTypes);
-            try
-            {
-                missing.put(TestUtil.generateColumnId(sourceOfRandomness), new Pair<DataType, Optional<@Value Object>>(type, sourceOfRandomness.nextBoolean() ? Optional.<@Value Object>empty() : Optional.<@Value Object>of(makeValue(type))));
-            }
-            catch (UserException | InternalException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
+        IncompleteColumnHandling incompleteColumnHandling = IncompleteColumnHandling.values()[sourceOfRandomness.nextInt(IncompleteColumnHandling.values().length)];
 
         try
         {
-            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null), srcIds, missing));
+            return new Transformation_Mgr(mgr, new Concatenate(mgr, new InitialLoadDetails(ourId, null, null), srcIds, incompleteColumnHandling));
         }
         catch (InternalException e)
         {

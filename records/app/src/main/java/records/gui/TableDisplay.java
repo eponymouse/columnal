@@ -87,6 +87,7 @@ import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Check;
 import records.transformations.Concatenate;
+import records.transformations.Concatenate.IncompleteColumnHandling;
 import records.transformations.Filter;
 import records.transformations.HideColumnsPanel;
 import records.transformations.Sort;
@@ -1042,7 +1043,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                 {
                                     new TableListDialog(parent, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
                                         Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
-                                            parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, ImmutableMap.of()), null);
+                                            parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, IncompleteColumnHandling.DEFAULT), null);
                                     })));
                                 }
                             }

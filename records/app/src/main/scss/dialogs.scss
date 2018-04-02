@@ -45,3 +45,9 @@
         -fx-text-alignment: center;
     }
 }
+.table-list-dialog .table-list .fancy-list-cell:selected {
+    -fx-background-color: $focus-color;
+    & .text-field {
+         -fx-text-fill: $focus-color-text;
+    } 
+}

@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
@@ -94,14 +95,14 @@ public class PickTablePane extends BorderPane
         autoComplete.setContentDirect(tableId == null ? "" : tableId.getRaw());
     }
 
-    public boolean isEditing()
+    public BooleanExpression currentlyEditing()
     {
-        return tableField.isFocused();
+        return tableField.focusedProperty();
     }
     
     public long lastEditTimeMillis()
     {
-        return isEditing() ? System.currentTimeMillis() : lastEditTimeMillis;
+        return tableField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
     }
 
     private static class TableCompletion extends Completion

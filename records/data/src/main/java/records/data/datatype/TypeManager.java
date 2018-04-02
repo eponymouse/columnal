@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,6 +32,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.GraphUtility;
 import utility.Pair;
+import utility.TaggedValue;
 import utility.UnitType;
 import utility.Utility;
 
@@ -56,6 +58,8 @@ public class TypeManager
     private final UnitManager unitManager;
     private final HashMap<TypeId, TaggedTypeDefinition> knownTypes = new HashMap<>();
     private final TaggedTypeDefinition maybeType;
+    // Only need one value for Missing:
+    private final TaggedValue maybeMissing;
 
     public TypeManager(UnitManager unitManager) throws InternalException
     {
@@ -64,9 +68,21 @@ public class TypeManager
             new TagType<>("Missing", null),
             new TagType<>("Present", DataType.typeVariable("type"))
         ));
+        maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
     }
-
+    
+    public TaggedValue maybeMissing()
+    {
+        return maybeMissing;
+    }
+    
+    public TaggedValue maybePresent(@Value Object content)
+    {
+        return new TaggedValue(1, content);
+    }
+    
+    
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
     public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<String> typeVariables, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
