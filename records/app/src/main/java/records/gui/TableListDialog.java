@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
@@ -38,12 +39,14 @@ import java.util.Optional;
 public class TableListDialog extends LightDialog<ImmutableList<TableId>>
 {
     private final View parent;
+    private final ImmutableSet<Table> excludeTables;
 
     protected TableListDialog(View parent, Table destTable, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
     {
         super(parent.getWindow());
         initModality(Modality.NONE);
         this.parent = parent;
+        this.excludeTables = ImmutableSet.of(destTable);
         TableList tableList = new TableList(originalItems);            
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         Region tableListNode = tableList.getNode();
@@ -60,8 +63,9 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
             else
                 return null;
         });
+        
         setOnShowing(e -> {
-            parent.enableTablePickingMode(lastScreenPos, ImmutableList.of(destTable), t -> {
+            parent.enableTablePickingMode(lastScreenPos, excludeTables, t -> {
                 tableList.pickTableIfEditing(t);
             });
         });
@@ -85,7 +89,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
             if (original == null)
                 original = new TableId("");
             SimpleObjectProperty<TableId> curValue = new SimpleObjectProperty<>(original);
-            PickTablePane pickTablePane = new PickTablePane(parent, original, t -> {
+            PickTablePane pickTablePane = new PickTablePane(parent, excludeTables, original, t -> {
                 curValue.set(t.getId());
                 if (addButton != null)
                     addButton.requestFocus();
@@ -116,7 +120,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
                 .filter(p -> p.lastEditTimeMillis() > curTime - 200L).findFirst().orElse(null);
             if (curEditing != null)
             {
-                curEditing.setContent(t.getId());
+                curEditing.setContent(t);
                 if (addButton != null)
                     addButton.requestFocus();
             }

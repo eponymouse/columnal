@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
@@ -11,6 +12,7 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Table;
 import records.data.TableId;
 import records.gui.expressioneditor.AutoComplete;
@@ -30,13 +32,17 @@ public class PickTablePane extends BorderPane
 {
     private final TextField tableField = new TextField();
     private final AutoComplete autoComplete;
+    private final FXPlatformConsumer<Table> setResultAndClose;
     private long lastEditTimeMillis = -1;
 
-    public PickTablePane(View view, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
+    public PickTablePane(View view, ImmutableSet<Table> exclude, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
+        this.setResultAndClose = setResultAndFinishEditing;
         tableField.setText(initial.getRaw());
-        autoComplete = new AutoComplete(tableField, (s, q) -> view.getManager().getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), getListener(setResultAndFinishEditing), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
-
+        autoComplete = new AutoComplete(tableField,
+            (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()),
+            getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
+        
         setCenter(tableField);
         setTop(new Label("Click on a table or type table name"));
         FXUtility.addChangeListenerPlatformNN(tableField.focusedProperty(), focus -> {
@@ -50,14 +56,16 @@ public class PickTablePane extends BorderPane
         tableField.requestFocus();
     }
 
-    private CompletionListener getListener(@UnknownInitialization(BorderPane.class)PickTablePane this, FXPlatformConsumer<Table> setResultAndClose)
+    @RequiresNonNull("setResultAndClose")
+    private CompletionListener getListener(@UnknownInitialization(BorderPane.class) PickTablePane this)
     {
+        @NonNull FXPlatformConsumer<Table> setResultAndCloseFinal = setResultAndClose;
         return new CompletionListener()
         {
             @Override
             public String doubleClick(String currentText, Completion selectedItem)
             {
-                setResultAndClose.consume(((TableCompletion) selectedItem).t);
+                setResultAndCloseFinal.consume(((TableCompletion) selectedItem).t);
                 return ((TableCompletion) selectedItem).t.getId().getOutput();
             }
 
@@ -90,9 +98,11 @@ public class PickTablePane extends BorderPane
         };
     }
 
-    public void setContent(@Nullable TableId tableId)
+    public void setContent(@Nullable Table table)
     {
-        autoComplete.setContentDirect(tableId == null ? "" : tableId.getRaw());
+        autoComplete.setContentDirect(table == null ? "" : table.getId().getRaw());
+        if (table != null)
+            setResultAndClose.consume(table);
     }
 
     public BooleanExpression currentlyEditing()

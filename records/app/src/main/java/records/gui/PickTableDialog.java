@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -83,7 +84,9 @@ public class PickTableDialog extends LightDialog<Table>
         initModality(Modality.NONE);
 
 
-        PickTablePane pickTablePane = new PickTablePane(view, new TableId(""), t -> {
+        // Should also exclude tables which use destination as a source, to prevent cycles:
+        ImmutableSet<Table> excludeTables = destTable == null ? ImmutableSet.of() : ImmutableSet.of(destTable);
+        PickTablePane pickTablePane = new PickTablePane(view, excludeTables, new TableId(""), t -> {
             setResult(t);
             close();
         });
@@ -95,7 +98,7 @@ public class PickTableDialog extends LightDialog<Table>
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         
         setOnShowing(e -> {
-            view.enableTablePickingMode(lastScreenPos, destTable == null ? ImmutableList.of() : ImmutableList.of(destTable), t -> {
+            view.enableTablePickingMode(lastScreenPos, excludeTables, t -> {
                 // We shouldn't need the mouse call here, I think this is a checker framework bug:
                 FXUtility.mouse(this).setResult(t);
                 close();

@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -258,7 +259,7 @@ public class View extends StackPane
         }
     }
     
-    public void enableTablePickingMode(Point2D screenPos, ImmutableList<Table> excludeTables, FXPlatformConsumer<Table> onPick)
+    public void enableTablePickingMode(Point2D screenPos, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
     {
         if (pickPaneMouse != null)
             disableTablePickingMode();
