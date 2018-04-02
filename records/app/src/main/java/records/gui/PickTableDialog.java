@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -7,6 +8,7 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.TableId;
 import threadchecker.OnThread;
@@ -20,7 +22,7 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class PickTableDialog extends LightDialog<Table>
 {
-    public PickTableDialog(View view, Point2D lastScreenPos)
+    public PickTableDialog(View view, @Nullable Table destTable, Point2D lastScreenPos)
     {
         // We want the cancel button to appear to the right, because otherwise the auto complete hides it:
         super(view.getWindow(), new DialogPane() {
@@ -93,7 +95,7 @@ public class PickTableDialog extends LightDialog<Table>
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         
         setOnShowing(e -> {
-            view.enableTablePickingMode(lastScreenPos, t -> {
+            view.enableTablePickingMode(lastScreenPos, destTable == null ? ImmutableList.of() : ImmutableList.of(destTable), t -> {
                 // We shouldn't need the mouse call here, I think this is a checker framework bug:
                 FXUtility.mouse(this).setResult(t);
                 close();

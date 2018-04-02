@@ -69,6 +69,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -257,7 +258,7 @@ public class View extends StackPane
         }
     }
     
-    public void enableTablePickingMode(Point2D screenPos, FXPlatformConsumer<Table> onPick)
+    public void enableTablePickingMode(Point2D screenPos, ImmutableList<Table> excludeTables, FXPlatformConsumer<Table> onPick)
     {
         if (pickPaneMouse != null)
             disableTablePickingMode();
@@ -266,8 +267,12 @@ public class View extends StackPane
         
         pickPaneMouseFinal.setPickOnBounds(true);
         @Nullable Table[] picked = new @Nullable Table[1];
+        Predicate<GridArea> validPick = g -> g instanceof TableDisplay && !excludeTables.contains(((TableDisplay) g).getTable());
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            @Nullable TableDisplay tableDisplay = (TableDisplay)mainPane.highlightGridAreaAtScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);
+            @Nullable TableDisplay tableDisplay = (TableDisplay)mainPane.highlightGridAreaAtScreenPos(
+                new Point2D(e.getScreenX(), e.getScreenY()),
+                validPick,
+                pickPaneMouseFinal::setCursor);
             picked[0] = tableDisplay != null ? tableDisplay.getTable() : null;
             e.consume();
         });
@@ -276,7 +281,8 @@ public class View extends StackPane
                 onPick.consume(picked[0]);
         });
         getChildren().add(pickPaneMouseFinal);
-        mainPane.highlightGridAreaAtScreenPos(screenPos, g -> g instanceof TableDisplay, pickPaneMouseFinal::setCursor);
+        // Highlight immediately:
+        mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
     }
     
     // If any sources are invalid, they are skipped
@@ -535,7 +541,7 @@ public class View extends StackPane
                         case TRANSFORM:
                             new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
                                 @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView, thisView.getManager(), cellPosition, () ->
-                                    new PickTableDialog(thisView, createTrans.getFirst()).showAndWait());
+                                    new PickTableDialog(thisView, null, createTrans.getFirst()).showAndWait());
                                 if (makeTrans != null)
                                 {
                                     @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
@@ -548,7 +554,7 @@ public class View extends StackPane
                             });
                             break;
                         case CHECK:
-                            new PickTableDialog(thisView, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
+                            new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
                                 new EditExpressionDialog(thisView, srcTable, new UnfinishedExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                                     Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                                         Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);

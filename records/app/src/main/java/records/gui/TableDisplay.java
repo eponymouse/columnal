@@ -890,7 +890,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
     }
     
-    private StyledString editSourceLink(TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
+    private StyledString editSourceLink(Table destTable, TableId srcTableId, SimulationConsumer<TableId> changeSrcTableId)
     {
         // If this becomes broken/unbroken, we should get re-run:
         @Nullable Table srcTable = parent.getManager().getSingleTableOrNull(srcTableId);
@@ -903,7 +903,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             {
                 if (mouseButton == MouseButton.PRIMARY)
                 {
-                    new PickTableDialog(parent, screenPoint).showAndWait().ifPresent(t -> {
+                    new PickTableDialog(parent, destTable, screenPoint).showAndWait().ifPresent(t -> {
                         Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> changeSrcTableId.consume(t.getId())));
                     });
                 }
@@ -972,7 +972,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Filter filter = (Filter)table;
                 content = StyledString.concat(
                     StyledString.s("Filter "),
-                    editSourceLink(filter.getSource(), newSource -> 
+                    editSourceLink(filter, filter.getSource(), newSource -> 
                         parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(), 
                             table.getDetailsForCopy(), newSource, filter.getFilterExpression()), null)),
                     StyledString.s(", keeping rows where: "),
@@ -986,7 +986,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Sort sort = (Sort)table;
                 content = StyledString.concat(
                     StyledString.s("Sort "),
-                    editSourceLink(sort.getSource(), newSource ->
+                    editSourceLink(sort, sort.getSource(), newSource ->
                             parent.getManager().edit(table.getId(), () -> new Sort(parent.getManager(),
                                     table.getDetailsForCopy(), newSource, sort.getSortBy()), null)),
                     StyledString.s(" by "),
@@ -1002,7 +1002,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 StyledString.Builder builder = new StyledString.Builder();
                 builder.append("Aggregate ");
                 builder.append(
-                    editSourceLink(aggregate.getSource(), newSource ->
+                    editSourceLink(aggregate, aggregate.getSource(), newSource ->
                             parent.getManager().edit(table.getId(), () -> new SummaryStatistics(parent.getManager(),
                                     table.getDetailsForCopy(), newSource, aggregate.getColumnExpressions(), aggregate.getSplitBy()), null))
                 );
@@ -1041,7 +1041,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             {
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
-                                    new TableListDialog(parent, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
+                                    new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
                                         Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                                             parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, IncompleteColumnHandling.DEFAULT), null);
                                     })));
@@ -1056,7 +1056,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Check check = (Check)table;
                 content = StyledString.concat(
                     StyledString.s("Check "),
-                    editSourceLink(check.getSource(), newSource ->
+                    editSourceLink(check, check.getSource(), newSource ->
                         parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                             table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
                     StyledString.s(" that "),

@@ -39,7 +39,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
 {
     private final View parent;
 
-    protected TableListDialog(View parent, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
+    protected TableListDialog(View parent, Table destTable, ImmutableList<TableId> originalItems, Point2D lastScreenPos)
     {
         super(parent.getWindow());
         initModality(Modality.NONE);
@@ -61,7 +61,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
                 return null;
         });
         setOnShowing(e -> {
-            parent.enableTablePickingMode(lastScreenPos, t -> {
+            parent.enableTablePickingMode(lastScreenPos, ImmutableList.of(destTable), t -> {
                 tableList.pickTableIfEditing(t);
             });
         });
