@@ -887,7 +887,7 @@ public class DataType
     public int hashCode()
     {
         int result = kind.hashCode();
-        // Must use specialised hashCode which matches sameType rather than equals
+        // Must use specialised hashCodeForType which matches sameType rather than equals
         result = 31 * result + (numberInfo != null ? numberInfo.hashCodeForType() : 0);
         result = 31 * result + (dateTimeInfo != null ? dateTimeInfo.hashCodeForType() : 0);
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
@@ -1513,6 +1513,7 @@ public class DataType
         });
     }
 
+    // save the declaration of this type
     // If topLevelDeclaration is false, save a reference (matters for tagged types)
     public OutputBuilder save(OutputBuilder b) throws InternalException
     {

@@ -27,6 +27,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
@@ -35,6 +36,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.ExpressionValue;
 import test.gen.GenDataType;
+import test.gen.GenDataType.DataTypeAndManager;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import test.gen.GenRandom;
@@ -74,6 +76,21 @@ public class PropTypecheck
                 assertEqualIfSame(a, b);
             }
         }
+    }
+    
+    // This won't test tagged types very well, but it should do okay for numbers, etc
+    @Property(trials=10000)
+    public void testTypeHashCodeAndEquals(@From(GenDataType.class) DataTypeAndManager dataTypeAndManagerA, @From(GenDataType.class) DataTypeAndManager dataTypeAndManagerB) throws InternalException
+    {
+        assertTrue(dataTypeAndManagerA.dataType.equals(dataTypeAndManagerA.dataType));
+        assertTrue(dataTypeAndManagerB.dataType.equals(dataTypeAndManagerB.dataType));
+        assertEquals(dataTypeAndManagerA.dataType.hashCode(),dataTypeAndManagerA.dataType.hashCode());
+        assertEquals(dataTypeAndManagerB.dataType.hashCode(),dataTypeAndManagerB.dataType.hashCode());
+        String aSaved = dataTypeAndManagerA.dataType.save(new OutputBuilder()).toString();
+        String bSaved = dataTypeAndManagerB.dataType.save(new OutputBuilder()).toString();
+        assertEquals(aSaved + " =?= " + bSaved, dataTypeAndManagerA.dataType.equals(dataTypeAndManagerB.dataType), aSaved.equals(bSaved));
+        if (aSaved.equals(bSaved))
+            assertEquals(aSaved, dataTypeAndManagerA.dataType.hashCode(), dataTypeAndManagerB.dataType.hashCode());
     }
 
     @SuppressWarnings("intern")
