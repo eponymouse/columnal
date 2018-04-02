@@ -1040,8 +1040,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             {
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
-                                    new TableListDialog(parent, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList())).showAndWait().ifPresent(newList -> Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
-                                        parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, ImmutableMap.of()), null);
+                                    new TableListDialog(parent, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
+                                        Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                                            parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, ImmutableMap.of()), null);
                                     })));
                                 }
                             }

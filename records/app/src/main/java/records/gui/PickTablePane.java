@@ -29,6 +29,7 @@ public class PickTablePane extends BorderPane
 {
     private final TextField tableField = new TextField();
     private final AutoComplete autoComplete;
+    private long lastEditTimeMillis = -1;
 
     public PickTablePane(View view, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
@@ -37,6 +38,10 @@ public class PickTablePane extends BorderPane
 
         setCenter(tableField);
         setTop(new Label("Click on a table or type table name"));
+        FXUtility.addChangeListenerPlatformNN(tableField.focusedProperty(), focus -> {
+            // Update whether focus is arriving or leaving:
+            lastEditTimeMillis = System.currentTimeMillis();
+        });
     }
 
     public void focusEntryField()
@@ -87,6 +92,16 @@ public class PickTablePane extends BorderPane
     public void setContent(@Nullable TableId tableId)
     {
         autoComplete.setContentDirect(tableId == null ? "" : tableId.getRaw());
+    }
+
+    public boolean isEditing()
+    {
+        return tableField.isFocused();
+    }
+    
+    public long lastEditTimeMillis()
+    {
+        return isEditing() ? System.currentTimeMillis() : lastEditTimeMillis;
     }
 
     private static class TableCompletion extends Completion

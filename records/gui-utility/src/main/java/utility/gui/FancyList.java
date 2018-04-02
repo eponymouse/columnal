@@ -27,12 +27,13 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A ListView which allows deletion of selected items using a little cross to the right (or pressing backspace/delete), which is
  * animated by sliding out the items.
  */
-public abstract class FancyList<T>
+public abstract class FancyList<T, CELL_CONTENT extends Node>
 {
     private final VBox children = new VBox();
     private final ArrayList<Cell> cells = new ArrayList<>();
@@ -41,6 +42,7 @@ public abstract class FancyList<T>
     private final boolean allowReordering;
     private final boolean allowDeleting;
     private final ScrollPane scrollPane = new ScrollPaneFill(children);
+    private final BorderPane bottomPane = new BorderPane();
     protected final @Nullable Button addButton;
 
     public FancyList(ImmutableList<T> initialItems, boolean allowDeleting, boolean allowReordering, boolean allowInsertion)
@@ -55,12 +57,19 @@ public abstract class FancyList<T>
         });
         for (T initialItem : initialItems)
         {
-            cells.add(new Cell(initialItem));
+            cells.add(new Cell(initialItem, false));
         }
-        addButton = GUI.button("add", () -> {
-            cells.add(new Cell(null));
-            updateChildren();
-        });
+        if (allowInsertion)
+        {
+            addButton = GUI.button("add", () -> {
+                addToEnd(null, true);
+            });
+            bottomPane.setCenter(addButton);
+        }
+        else
+        {
+            addButton = null;
+        }
         updateChildren();
     }
 
@@ -77,7 +86,7 @@ public abstract class FancyList<T>
 
     // For overriding in subclasses:
     @OnThread(Tag.FXPlatform)
-    protected abstract Pair<Node, ObjectExpression<T>> makeCellContent(@Nullable T initialContent);
+    protected abstract Pair<CELL_CONTENT, ObjectExpression<T>> makeCellContent(@Nullable T initialContent, boolean editImmediately);
 
     private void deleteCells(List<Cell> selectedCells)
     {
@@ -104,17 +113,21 @@ public abstract class FancyList<T>
     }
 
     @RequiresNonNull({"children", "cells"})
-    private void updateChildren(@UnknownInitialization(Object.class) FancyList<T> this)
+    private void updateChildren(@UnknownInitialization(Object.class) FancyList<T, CELL_CONTENT> this)
     {
         ArrayList<Node> nodes = new ArrayList<>(this.cells);
-        if (addButton != null)
-            nodes.add(addButton);
+        nodes.add(bottomPane);
         children.getChildren().setAll(nodes);
     }
 
     public ImmutableList<T> getItems()
     {
         return cells.stream().map(c -> c.value.get()).collect(ImmutableList.toImmutableList());
+    }
+    
+    protected Stream<Cell> streamCells()
+    {
+        return cells.stream();
     }
 
     public Region getNode()
@@ -161,13 +174,14 @@ public abstract class FancyList<T>
             return new Pair<>(nearestAbove.getSecond(), nearestBelow.getSecond());
     }*/
 
+    @OnThread(Tag.FXPlatform)
     protected class Cell extends BorderPane
     {
         protected final SmallDeleteButton deleteButton;
-        protected final Node content;
+        protected final CELL_CONTENT content;
         private final ObjectExpression<T> value;
         
-        public Cell(@Nullable T initialContent)
+        public Cell(@Nullable T initialContent, boolean editImmediately)
         {
             getStyleClass().add("fancy-list-cell");
             deleteButton = new SmallDeleteButton();
@@ -197,7 +211,7 @@ public abstract class FancyList<T>
                 // If not selected, nothing to do
             });
             //deleteButton.visibleProperty().bind(deletable);
-            Pair<Node, ObjectExpression<T>> pair = makeCellContent(initialContent);
+            Pair<CELL_CONTENT, ObjectExpression<T>> pair = makeCellContent(initialContent, editImmediately);
             this.content = pair.getFirst();
             this.value = pair.getSecond();
             setCenter(this.content);
@@ -210,11 +224,22 @@ public abstract class FancyList<T>
         {
             pseudoClassStateChanged(PseudoClass.getPseudoClass("my_hover_sel"), hovering);
         }
+
+        public CELL_CONTENT getContent()
+        {
+            return content;
+        }
     }
 
     private boolean isSelected(@UnknownInitialization Cell cell)
     {
         int index = Utility.indexOfRef(cells, cell);
         return index < 0 ? false : selection.get(index);
+    }
+    
+    protected void addToEnd(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, @Nullable T content, boolean editImmediately)
+    {
+        cells.add(new Cell(content, editImmediately));
+        updateChildren();
     }
 }
