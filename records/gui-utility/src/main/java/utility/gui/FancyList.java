@@ -46,7 +46,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     private boolean hoverOverSelection = false;
     private final boolean allowReordering;
     private final boolean allowDeleting;
-    private final ScrollPane scrollPane = new ScrollPaneFill(children);
+    private final ScrollPaneFill scrollPane = new ScrollPaneFill(children);
     private final BorderPane bottomPane = new BorderPane();
     protected final @Nullable Button addButton;
 
@@ -54,6 +54,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         this.allowDeleting = allowDeleting;
         this.allowReordering = allowReordering;
+        children.setFillWidth(true);
         children.setOnKeyPressed(e -> {
             if (allowDeleting && (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE))
             {
@@ -221,6 +222,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         ArrayList<Node> nodes = new ArrayList<>(this.cells);
         nodes.add(bottomPane);
         children.getChildren().setAll(nodes);
+        scrollPane.fillViewport();
     }
 
     public ImmutableList<T> getItems()

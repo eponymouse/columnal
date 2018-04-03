@@ -419,10 +419,10 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                     Log.debug("We have bounds");
                     @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP).orElse(null);
                     Log.debug("Nearest pos: " + pos);
-                    boolean resizingTop = c == Cursor.NW_RESIZE || c == Cursor.N_RESIZE || c == Cursor.NE_RESIZE;
-                    boolean resizingBottom = c == Cursor.SW_RESIZE || c == Cursor.S_RESIZE || c == Cursor.SE_RESIZE;
-                    boolean resizingLeft = c == Cursor.NW_RESIZE || c == Cursor.W_RESIZE || c == Cursor.SW_RESIZE;
-                    boolean resizingRight = c == Cursor.NE_RESIZE || c == Cursor.E_RESIZE || c == Cursor.SE_RESIZE;
+                    boolean resizingTop = FXUtility.isResizingTop(c);
+                    boolean resizingBottom = FXUtility.isResizingBottom(c);
+                    boolean resizingLeft = FXUtility.isResizingLeft(c);
+                    boolean resizingRight = FXUtility.isResizingRight(c);
                     @AbsRowIndex int newTop;
                     @AbsRowIndex int newBottom;
                     @AbsColIndex int newLeft;

@@ -51,8 +51,10 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
         TableList tableList = new TableList(originalItems);            
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         Region tableListNode = tableList.getNode();
-        tableListNode.setMinWidth(300.0);
-        tableListNode.setMinHeight(300.0);
+        tableListNode.setMinWidth(200.0);
+        tableListNode.setMinHeight(150.0);
+        tableListNode.setPrefWidth(250.0);
+        tableListNode.setPrefHeight(200.0);
         getDialogPane().setContent(new BorderPane(tableListNode, new Label("Choose the tables to concatenate"), null, null, null));
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),

@@ -111,6 +111,11 @@ class Dialog<R>
     double getY(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     double getWidth(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     double getHeight(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
+    
+    void setX(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double x);
+    void setY(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double y);
+    void setWidth(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double width);
+    void setHeight(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, double height);
 }
 class Labeled
 {
@@ -136,6 +141,8 @@ class ToggleButton
 class ScrollPane
 {
     Property viewportBoundsProperty(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
+    Property contentProperty(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
+    Bounds getViewportBounds(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
     Node getContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this);
     void setContent(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, Node content);
     void setFitToWidth(@UnknownInitialization(javafx.scene.control.ScrollPane.class) ScrollPane this, boolean b);

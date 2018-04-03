@@ -21,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
@@ -737,6 +738,27 @@ public class FXUtility
             ((Runnable)runAlert::run).run();
         else
             Platform.runLater(runAlert::run);
+    }
+
+
+    public static boolean isResizingRight(Cursor c)
+    {
+        return c == Cursor.NE_RESIZE || c == Cursor.E_RESIZE || c == Cursor.SE_RESIZE;
+    }
+
+    public static boolean isResizingLeft(Cursor c)
+    {
+        return c == Cursor.NW_RESIZE || c == Cursor.W_RESIZE || c == Cursor.SW_RESIZE;
+    }
+
+    public static boolean isResizingBottom(Cursor c)
+    {
+        return c == Cursor.SW_RESIZE || c == Cursor.S_RESIZE || c == Cursor.SE_RESIZE;
+    }
+
+    public static boolean isResizingTop(Cursor c)
+    {
+        return c == Cursor.NW_RESIZE || c == Cursor.N_RESIZE || c == Cursor.NE_RESIZE;
     }
 
     /**

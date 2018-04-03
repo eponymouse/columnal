@@ -24,7 +24,8 @@ public class ScrollPaneFill extends ScrollPane
     public ScrollPaneFill()
     {
         getStyleClass().add("scroll-pane-fill");
-        FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> fillWidth(b));
+        FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> fillViewport(b));
+        FXUtility.addChangeListenerPlatform(contentProperty(), c -> fillViewport());
     }
 
     public ScrollPaneFill(Node content)
@@ -34,7 +35,7 @@ public class ScrollPaneFill extends ScrollPane
     }
 
     @OnThread(Tag.FXPlatform)
-    private void fillWidth(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this, @Nullable Bounds viewportBounds)
+    private void fillViewport(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this, @Nullable Bounds viewportBounds)
     {
         if (viewportBounds != null)
         {
@@ -44,9 +45,10 @@ public class ScrollPaneFill extends ScrollPane
         }
     }
 
+    // Call this direct if you have altered what is inside the content in the viewport:
     @OnThread(Tag.FXPlatform)
-    public void fillWidth()
+    public void fillViewport(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this)
     {
-        fillWidth(getViewportBounds());
+        fillViewport(getViewportBounds());
     }
 }
