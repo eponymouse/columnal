@@ -51,3 +51,27 @@
          -fx-text-fill: $focus-color-text;
     } 
 }
+.small-delete {
+    -fx-cursor: hand;
+}
+.small-delete-circle {
+    .small-delete > & {
+        -fx-fill: transparent;
+    }
+    .small-delete:hover > &, .fancy-list-cell:my_hover_sel .small-delete > & {
+        -fx-fill: darkred;
+    }
+}
+
+.small-delete-cross {
+    -fx-stroke-width: 2;
+
+    .small-delete > & {
+        -fx-stroke: grey;
+
+    }
+    .small-delete:hover > &, .deletable-list-cell:my_hover_sel .small-delete > &,
+      .deletable-list-cell:selected & {
+        -fx-stroke: white;
+    }
+}
