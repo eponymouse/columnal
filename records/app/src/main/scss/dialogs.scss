@@ -45,11 +45,66 @@
         -fx-text-alignment: center;
     }
 }
+.table-list-dialog .table-list {
+    -fx-background-color: grey, $control-background;
+    -fx-background-insets: 0, 1;
+    .fancy-list-cell {
+        -fx-border-color: transparent;
+        -fx-border-style: solid inside;
+        -fx-border-width: 2 0 0 0;
+    }
+}
+.table-list-dialog .table-list .fancy-list-cell:even {
+    -fx-background-color: $control-background;
+}
+.table-list-dialog .table-list .fancy-list-cell:odd {
+    -fx-background-color: $control-background-odd;
+    & .text-field {
+        -fx-background-color: $control-background-odd;
+    }
+}
+.table-list-dialog .table-list .fancy-list-cell:drag-target {
+    -fx-border-color: black;
+    -fx-border-style: dashed inside;
+    -fx-border-width: 2 0 0 0;
+}
+
 .table-list-dialog .table-list .fancy-list-cell:selected {
     -fx-background-color: $focus-color;
-    & .text-field {
+    &:even .pick-table-pane .text-field, &:odd .pick-table-pane .text-field {
+        -fx-background-color: $focus-color, $focus-color;
+        &:hover {
+            -fx-background-color: white, $focus-color;
+        }
+    }
+    & .text-field, & .label {
          -fx-text-fill: $focus-color-text;
-    } 
+    }
+}
+.table-list-dialog .fancy-list-cell {
+    &:even .pick-table-pane > .text-field {
+        -fx-background-color: $control-background, $control-background;
+        -fx-background-insets: 0, 1;
+        &:hover {
+            -fx-background-color: grey, $control-background;
+        }
+        &:focused {
+            -fx-background-color: grey, white;
+        }
+    }
+    &:odd .pick-table-pane > .text-field {
+        -fx-background-color: $control-background-odd, $control-background-odd;
+        -fx-background-insets: 0, 1;
+        &:hover {
+            -fx-background-color: grey, $control-background-odd;
+        }
+        &:focused {
+            -fx-background-color: grey, white;
+        }
+    }
+    & .pick-table-pane > .label {
+        -fx-font-size: 80%;
+    }
 }
 .small-delete {
     -fx-cursor: hand;
@@ -70,8 +125,8 @@
         -fx-stroke: grey;
 
     }
-    .small-delete:hover > &, .deletable-list-cell:my_hover_sel .small-delete > &,
-      .deletable-list-cell:selected & {
+    .small-delete:hover > &, .fancy-list-cell:my_hover_sel .small-delete > &,
+      .fancy-list-cell:selected & {
         -fx-stroke: white;
     }
 }

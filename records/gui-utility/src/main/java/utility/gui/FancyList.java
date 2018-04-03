@@ -8,6 +8,8 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
@@ -39,7 +41,8 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
 {
     private final VBox children = new VBox();
     private final ArrayList<Cell> cells = new ArrayList<>();
-    private final BitSet selection = new BitSet(); 
+    private final BitSet selection = new BitSet();
+    private boolean dragging;
     private boolean hoverOverSelection = false;
     private final boolean allowReordering;
     private final boolean allowDeleting;
@@ -52,10 +55,37 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         this.allowDeleting = allowDeleting;
         this.allowReordering = allowReordering;
         children.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE)
+            if (allowDeleting && (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE))
             {
-                Utility.later(this).deleteCells(Utility.later(this).getSelectedCells());
+                FXUtility.keyboard(this).deleteCells(Utility.later(this).getSelectedCells());
             }
+        });
+        children.setOnMousePressed(e -> {
+            if (e.getButton() == MouseButton.PRIMARY)
+            {
+                selection.clear();
+                FXUtility.mouse(this).updateSelectionState();
+            }
+        });
+        children.setOnMouseDragged(e -> {
+            if (allowReordering)
+            {
+                // TODO update the selection to include source item
+                dragging = true;
+                FXUtility.mouse(this).updateDragPreview(new Point2D(e.getX(), e.getY()));
+            }
+        });
+        children.setOnMouseReleased(e -> {
+            if (dragging && allowReordering)
+            {
+                int target = FXUtility.mouse(this).findClosestDragTarget(new Point2D(e.getX(), e.getY()));
+                if (target != -1)
+                {
+                    FXUtility.mouse(this).dragSelectionTo(target);
+                }
+            }
+            dragging = false;
+            FXUtility.mouse(this).updateDragPreview(null);
         });
         for (T initialItem : initialItems)
         {
@@ -67,6 +97,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 addToEnd(null, true);
             });
             bottomPane.setCenter(addButton);
+            BorderPane.setMargin(addButton, new Insets(6));
         }
         else
         {
@@ -74,7 +105,64 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         }
         updateChildren();
     }
-    
+
+    private void dragSelectionTo(int target)
+    {
+        // We must adjust target for all the items we are removing:
+        target -= selection.get(0, target).cardinality();
+        List<Cell> selected = new ArrayList<>();
+        
+        for (int original = 0, adjusted = 0; original < cells.size(); original++) // Adjusted increment is conditional, in loop
+        {
+            if (selection.get(original))
+            {
+                selected.add(cells.remove(adjusted));
+                // Don't increment adjusted as it already points to the next cell
+            }
+            else
+            {
+                adjusted += 1;
+            }
+        }
+        cells.addAll(target, selected);
+        selection.clear();
+        // Or should we retain selection?
+        updateChildren();
+        updateSelectionState();
+    }
+
+    // If null is passed, we are not dragging, so turn off preview
+    private void updateDragPreview(@Nullable Point2D childrenPoint)
+    {
+        if (children.getChildren().isEmpty())
+            return;
+        
+        int index = childrenPoint == null ? -1 : findClosestDragTarget(childrenPoint);
+        for (int i = 0; i < children.getChildren().size(); i++)
+        {
+            FXUtility.setPseudoclass(children.getChildren().get(i), "drag-target", i == index);
+        }
+    }
+
+    private int findClosestDragTarget(Point2D childrenPoint)
+    {
+        for (int i = 0; i < children.getChildren().size(); i++)
+        {
+            Node item = children.getChildren().get(i);
+            double rel = childrenPoint.getY() - item.getLayoutY();
+            double itemHeight = item.getBoundsInParent().getHeight();
+            if (0 <= rel && rel <= itemHeight / 2.0)
+            {
+                return i;
+            }
+            else if (rel <= itemHeight)
+            {
+                return Math.min(i + 1, children.getChildren().size() - 1);
+            }
+        }
+        return -1;
+    }
+
     public ObservableList<String> getStyleClass(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
     {
         return scrollPane.getStyleClass();
@@ -122,6 +210,12 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     @RequiresNonNull({"children", "cells"})
     private void updateChildren(@UnknownInitialization(Object.class) FancyList<T, CELL_CONTENT> this)
     {
+        for (int i = 0; i < cells.size(); i++)
+        {
+            boolean even = (i % 2) == 0;
+            FXUtility.setPseudoclass(cells.get(i), "even", even);
+            FXUtility.setPseudoclass(cells.get(i), "odd", !even);
+        }
         ArrayList<Node> nodes = new ArrayList<>(this.cells);
         nodes.add(bottomPane);
         children.getChildren().setAll(nodes);
@@ -226,14 +320,47 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
             setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY)
                 {
-                    // TODO check for shift, ctrl
-                    selection.clear();
-                    selection.set(getIndex());
+                    if (e.isShortcutDown())
+                    {
+                        selection.set(getIndex());
+                    }
+                    else if (e.isShiftDown())
+                    {
+                        if (!selection.get(getIndex()))
+                        {
+                            // Find the next earliest selection above us:
+                            int prev = selection.previousSetBit(getIndex());
+                            if (prev != -1)
+                            {
+                                selection.set(prev, getIndex() + 1);
+                            }
+                            else
+                            {
+                                // Next beyond us:
+                                int next = selection.nextSetBit(getIndex());
+                                if (next != -1)
+                                {
+                                    selection.set(getIndex(), next);
+                                }
+                                else
+                                {
+                                    // Just select us, then:
+                                    selection.set(getIndex());
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        selection.clear();
+                        selection.set(getIndex());
+                    }
                     updateSelectionState();
                     e.consume();
                 }
             });
             //deleteButton.visibleProperty().bind(deletable);
+            setMargin(deleteButton, new Insets(0, 4, 0, 4));
             Pair<CELL_CONTENT, ObjectExpression<T>> pair = makeCellContent(initialContent, editImmediately);
             this.content = pair.getFirst();
             this.value = pair.getSecond();

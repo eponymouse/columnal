@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -44,11 +45,16 @@ public class PickTablePane extends BorderPane
             getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
         
         setCenter(tableField);
-        setTop(new Label("Click on a table or type table name"));
+        Label label = new Label("Click on a table or type table name");
+        setTop(label);
+        setMargin(label, new Insets(2));
+        setMargin(tableField, new Insets(0, 4, 4, 4));
+        
         FXUtility.addChangeListenerPlatformNN(tableField.focusedProperty(), focus -> {
             // Update whether focus is arriving or leaving:
             lastEditTimeMillis = System.currentTimeMillis();
         });
+        getStyleClass().add("pick-table-pane");
     }
 
     public void focusEntryField()
