@@ -66,6 +66,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 selection.clear();
                 FXUtility.mouse(this).updateSelectionState();
             }
+            e.consume();
         });
         children.setOnMouseDragged(e -> {
             if (allowReordering)
@@ -103,6 +104,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         {
             addButton = null;
         }
+        bottomPane.getStyleClass().add("fancy-list-end");
         updateChildren();
     }
 
@@ -317,7 +319,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 }
                 // If not selected, nothing to do
             });
-            setOnMouseClicked(e -> {
+            setOnMousePressed(e -> {
                 if (e.getButton() == MouseButton.PRIMARY)
                 {
                     if (e.isShortcutDown())

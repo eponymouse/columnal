@@ -48,7 +48,7 @@
 .table-list-dialog .table-list {
     -fx-background-color: grey, $control-background;
     -fx-background-insets: 0, 1;
-    .fancy-list-cell {
+    & .fancy-list-cell, & .fancy-list-end {
         -fx-border-color: transparent;
         -fx-border-style: solid inside;
         -fx-border-width: 2 0 0 0;
@@ -63,10 +63,12 @@
         -fx-background-color: $control-background-odd;
     }
 }
-.table-list-dialog .table-list .fancy-list-cell:drag-target {
-    -fx-border-color: black;
-    -fx-border-style: dashed inside;
-    -fx-border-width: 2 0 0 0;
+.table-list-dialog .table-list {
+    & .fancy-list-cell:drag-target, & .fancy-list-end:drag-target {
+        -fx-border-color: black;
+        -fx-border-style: dashed inside;
+        -fx-border-width: 2 0 0 0;
+    }
 }
 
 .table-list-dialog .table-list .fancy-list-cell:selected {
