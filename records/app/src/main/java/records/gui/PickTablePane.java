@@ -35,6 +35,7 @@ public class PickTablePane extends BorderPane
     private final AutoComplete autoComplete;
     private final FXPlatformConsumer<Table> setResultAndClose;
     private long lastEditTimeMillis = -1;
+    private final Label label;
 
     public PickTablePane(View view, ImmutableSet<Table> exclude, TableId initial, FXPlatformConsumer<Table> setResultAndFinishEditing)
     {
@@ -45,7 +46,7 @@ public class PickTablePane extends BorderPane
             getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
         
         setCenter(tableField);
-        Label label = new Label("Click on a table or type table name");
+        label = new Label("Click on a table or type table name");
         setTop(label);
         setMargin(label, new Insets(2));
         setMargin(tableField, new Insets(0, 4, 4, 4));
@@ -55,6 +56,11 @@ public class PickTablePane extends BorderPane
             lastEditTimeMillis = System.currentTimeMillis();
         });
         getStyleClass().add("pick-table-pane");
+    }
+    
+    public void showLabelOnlyWhenFocused()
+    {
+        label.visibleProperty().bind(tableField.focusedProperty());
     }
 
     public void focusEntryField()

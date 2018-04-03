@@ -45,6 +45,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
     {
         super(parent.getWindow());
         initModality(Modality.NONE);
+        setResizable(true);
         this.parent = parent;
         this.excludeTables = ImmutableSet.of(destTable);
         TableList tableList = new TableList(originalItems);            
@@ -95,6 +96,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
                 if (addButton != null)
                     addButton.requestFocus();
             });
+            pickTablePane.showLabelOnlyWhenFocused();
             FXUtility.addChangeListenerPlatformNN(pickTablePane.currentlyEditing(), ed -> {
                 if (ed)
                 {
