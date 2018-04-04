@@ -95,7 +95,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         }
         if (allowInsertion)
         {
-            addButton = GUI.button("add", () -> {
+            addButton = GUI.button("fancylist.add", () -> {
                 addToEnd(null, true);
             });
             bottomPane.setCenter(addButton);

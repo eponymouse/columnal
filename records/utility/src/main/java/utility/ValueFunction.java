@@ -6,7 +6,8 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-public abstract @Value class ValueFunction
+// I want to label this class @Value but I don't seem able to.  Perhaps because it is abstract?
+public abstract class ValueFunction
 {
     @OnThread(Tag.Simulation)
     public abstract @Value Object call(@Value Object arg) throws InternalException, UserException;
