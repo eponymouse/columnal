@@ -42,6 +42,7 @@ import records.gui.TableDisplay;
 import records.gui.grid.VirtualGrid;
 import records.gui.stf.StructuredTextField;
 import records.transformations.Sort;
+import records.transformations.Sort.Direction;
 import records.transformations.Transform;
 import test.DummyManager;
 import test.TestUtil;
@@ -185,7 +186,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + srcData.getData().getColumns().size())), null);
-        Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(sortBy.getName())));
+        Table calculated = TestUtil.sim(() -> new Sort(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(sortBy.getName(), Direction.ASCENDING))));
         MainWindowActions details = TestUtil.sim(() -> {
             manager.record(calculated);
             try

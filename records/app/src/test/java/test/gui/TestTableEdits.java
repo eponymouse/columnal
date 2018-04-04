@@ -40,6 +40,7 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.transformations.Sort;
+import records.transformations.Sort.Direction;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenColumnId;
@@ -103,7 +104,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
                 ImmediateDataSource src = new ImmediateDataSource(dummyManager, new InitialLoadDetails(null, originalTableTopLeft, null), new EditableRecordSet(columns, () -> 3));
                 srcId = src.getId();
                 dummyManager.record(src);
-                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), ImmutableList.of(new ColumnId("B"), new ColumnId("A")));
+                Sort sort = new Sort(dummyManager, new InitialLoadDetails(new TableId("Sorted"), transformTopLeft, null), src.getId(), ImmutableList.of(new Pair<>(new ColumnId("B"), Direction.ASCENDING), new Pair<>(new ColumnId("A"), Direction.DESCENDING)));
                 dummyManager.record(sort);
                 @OnThread(Tag.Simulation) Supplier<MainWindowActions> supplier = TestUtil.openDataAsTable(stage, dummyManager);
                 new Thread(() -> {

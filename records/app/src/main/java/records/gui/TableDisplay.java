@@ -984,16 +984,31 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             else if (table instanceof Sort)
             {
                 Sort sort = (Sort)table;
+                StyledString sourceText = sort.getSortBy().isEmpty() ?
+                    StyledString.s("original order") :
+                    sort.getSortBy().stream().map(c -> StyledString.concat(c.getFirst().toStyledString(), c.getSecond().toStyledString())).collect(StyledString.joining(", "));
+                sourceText = sourceText.withStyle(new Clickable()
+                {
+                    @Override
+                    @OnThread(Tag.FXPlatform)
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        if (mouseButton == MouseButton.PRIMARY)
+                        {
+                            new EditSortDialog(parent,
+                                parent.getManager().getSingleTableOrNull(sort.getSource()),
+                                sort,
+                                sort.getSortBy()).showAndWait();
+                        }
+                    }
+                });
                 content = StyledString.concat(
                     StyledString.s("Sort "),
                     editSourceLink(sort, sort.getSource(), newSource ->
                             parent.getManager().edit(table.getId(), () -> new Sort(parent.getManager(),
                                     table.getDetailsForCopy(), newSource, sort.getSortBy()), null)),
                     StyledString.s(" by "),
-                    // TODO make this an edit link once we've decided how to edit:
-                    sort.getSortBy().isEmpty() ?
-                        StyledString.s("original order") :
-                        sort.getSortBy().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", "))
+                    sourceText
                 );
             }
             else if (table instanceof SummaryStatistics)

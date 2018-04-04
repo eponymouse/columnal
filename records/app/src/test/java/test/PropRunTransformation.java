@@ -23,6 +23,7 @@ import records.transformations.Concatenate.IncompleteColumnHandling;
 import records.transformations.Filter;
 import records.transformations.HideColumns;
 import records.transformations.Sort;
+import records.transformations.Sort.Direction;
 import records.transformations.SummaryStatistics;
 import records.transformations.Transform;
 import records.transformations.expression.CallExpression;
@@ -76,9 +77,9 @@ public class PropRunTransformation
         RecordSet src = srcTable.data().getData();
         Column sortBy = src.getColumns().get(r.nextInt(src.getColumns().size()));
 
-        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), ImmutableList.of(sortBy.getName()));
+        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), ImmutableList.of(new Pair<>(sortBy.getName(), Direction.ASCENDING)));
 
-        // TODO sort by multiple columns, too
+        // TODO sort by multiple columns, too, and descending
 
         assertTrue("Sorting by " + sortBy.getName() + ":\n" + src.debugGetVals(), !TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
             .pairMap((a, b) ->

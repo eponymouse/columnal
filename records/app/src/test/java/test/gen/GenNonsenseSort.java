@@ -10,6 +10,7 @@ import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Sort;
+import records.transformations.Sort.Direction;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
@@ -38,7 +39,7 @@ public class GenNonsenseSort extends Generator<Transformation_Mgr>
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
-        ImmutableList<ColumnId> cols = TestUtil.makeList(sourceOfRandomness, 1, 10, () -> TestUtil.generateColumnId(sourceOfRandomness));
+        ImmutableList<Pair<ColumnId, Direction>> cols = TestUtil.makeList(sourceOfRandomness, 1, 10, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), sourceOfRandomness.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING));
 
         try
         {

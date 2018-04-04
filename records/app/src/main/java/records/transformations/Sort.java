@@ -44,6 +44,8 @@ import records.grammar.TransformationParser.SortContext;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
+import styled.StyledShowable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -79,7 +81,17 @@ public class Sort extends Transformation
 
     public static final String NAME = "sort";
 
-    private static enum Direction { ASCENDING, DESCENDING; }
+    public static enum Direction implements StyledShowable
+    {
+        ASCENDING, DESCENDING;
+
+        // This is for preview in description, so we just give an arrow:
+        @Override
+        public StyledString toStyledString()
+        {
+            return StyledString.s(this == ASCENDING ? "\u2191" : "\u2193");
+        }
+    }
 
     @OnThread(Tag.Any)
     private String sortByError;
@@ -111,10 +123,10 @@ public class Sort extends Transformation
     private int @Nullable [] stillToOrder;
 
     @OnThread(Tag.Any)
-    private final @NonNull ImmutableList<ColumnId> originalSortBy;
-    private final @Nullable ImmutableList<Column> sortBy;
+    private final @NonNull ImmutableList<Pair<ColumnId, Direction>> originalSortBy;
+    private final @Nullable ImmutableList<Pair<Column, Direction>> sortBy;
 
-    public Sort(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<ColumnId> sortBy) throws InternalException
+    public Sort(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Direction>> sortBy) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
@@ -130,20 +142,20 @@ public class Sort extends Transformation
             return;
         }
         @Nullable RecordSet theResult = null;
-        @Nullable List<Column> theSortBy = null;
+        @Nullable List<Pair<Column, Direction>> theSortBy = null;
         try
         {
-            List<Column> sortByColumns = new ArrayList<>();
-            for (ColumnId c : originalSortBy)
+            List<Pair<Column, Direction>> sortByColumns = new ArrayList<>();
+            for (Pair<ColumnId, Direction> c : originalSortBy)
             {
-                @Nullable Column column = this.src.getData().getColumn(c);
+                @Nullable Column column = this.src.getData().getColumn(c.getFirst());
                 if (column == null)
                 {
                     sortByColumns = null;
                     this.sortByError = "Could not find source column to sort by: \"" + c + "\"";
                     break;
                 }
-                sortByColumns.add(column);
+                sortByColumns.add(new Pair<>(column, c.getSecond()));
             }
             theSortBy = sortByColumns;
 
@@ -254,8 +266,8 @@ public class Sort extends Transformation
         if (sortBy == null)
             throw new UserException(sortByError);
         List<@Value Object> r = new ArrayList<>();
-        for (Column c : sortBy)
-            r.add(c.getType().getCollapsed(srcIndex));
+        for (Pair<Column, Direction> c : sortBy)
+            r.add(c.getFirst().getType().getCollapsed(srcIndex));
         return r;
     }
 
@@ -307,7 +319,7 @@ public class Sort extends Transformation
         {
             SortContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::sort);
 
-            return new Sort(mgr, initialLoadDetails, srcTableId, Utility.<OrderByContext, ColumnId>mapListI(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
+            return new Sort(mgr, initialLoadDetails, srcTableId, Utility.<OrderByContext, Pair<ColumnId, Direction>>mapListI(loaded.orderBy(), o -> new Pair<>(new ColumnId(o.column.getText()), o.orderKW().getText().equals("DESCENDING") ? Direction.DESCENDING : Direction.ASCENDING)));
         }
 
         @Override
@@ -322,13 +334,13 @@ public class Sort extends Transformation
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
         OutputBuilder b = new OutputBuilder();
-        for (ColumnId c : originalSortBy)
-            b.kw("ASCENDING").id(renames.columnId(srcTableId, c)).nl();
+        for (Pair<ColumnId, Direction> c : originalSortBy)
+            b.kw(c.getSecond().toString()).id(renames.columnId(srcTableId, c.getFirst())).nl();
         return b.toLines();
     }
 
     @OnThread(Tag.Any)
-    public ImmutableList<ColumnId> getSortBy()
+    public ImmutableList<Pair<ColumnId, Direction>> getSortBy()
     {
         return originalSortBy;
     }
