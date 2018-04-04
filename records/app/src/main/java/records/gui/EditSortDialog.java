@@ -5,6 +5,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -42,7 +43,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 {
     private final ImmutableList<Table> possibleTables;
 
-    public EditSortDialog(View parent, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
+    public EditSortDialog(View parent, Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
         super(parent.getWindow());
         initModality(Modality.NONE);
@@ -66,6 +67,14 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             else
                 return null;
         });
+        setOnShowing(e -> {
+            parent.enableColumnPickingMode(lastScreenPos, p -> possibleTables.contains(p.getFirst()), t -> {
+                sortList.pickColumnIfEditing(t);
+            });
+        });
+        setOnHiding(e -> {
+            parent.disablePickingMode();
+        });
     }
 
     private class SortList extends FancyList<Pair<ColumnId, Direction>, SortPane>
@@ -80,6 +89,11 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         {
             SortPane sortPane = new SortPane(initialContent);
             return new Pair<>(sortPane, sortPane.currentValue());
+        }
+
+        public void pickColumnIfEditing(Pair<Table, ColumnId> t)
+        {
+            // TODO
         }
     }
 

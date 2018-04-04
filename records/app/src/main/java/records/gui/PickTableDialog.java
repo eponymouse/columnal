@@ -106,7 +106,7 @@ public class PickTableDialog extends LightDialog<Table>
             pickTablePane.focusEntryField();
         });
         setOnHiding(e -> {
-            view.disableTablePickingMode();
+            view.disablePickingMode();
         });
         getDialogPane().getStyleClass().add("pick-table-dialog");
         //org.scenicview.ScenicView.show(getDialogPane().getScene());

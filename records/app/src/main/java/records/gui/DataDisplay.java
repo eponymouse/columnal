@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.units.AbsColIndex;
+import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
@@ -175,6 +176,22 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         
         updateParent();
         
+    }
+
+    // Gets the column and the bounds for that column, if one is there (otherwise null is returned)
+    public @Nullable Pair<ColumnId, RectangleBounds> getColumnAt(CellPosition cell)
+    {
+        @AbsRowIndex int topDataRow = getPosition().rowIndex + CellPosition.row(tableHeaderItem == null ? 0 : 1);
+        @AbsRowIndex int bottomDataRow = getDataDisplayBottomRightIncl().from(getPosition()).rowIndex;
+        if (cell.rowIndex < topDataRow
+            || cell.rowIndex > bottomDataRow)
+            return null;
+        
+        int colIndex = cell.columnIndex - getPosition().columnIndex;
+        if (0 <= colIndex && colIndex < displayColumns.size())
+            return new Pair<>(displayColumns.get(colIndex).getColumnId(), new RectangleBounds(new CellPosition(topDataRow, cell.columnIndex), new CellPosition(bottomDataRow, cell.columnIndex)));
+        else
+            return null;
     }
 
     public void addCellStyle(CellStyle cellStyle)

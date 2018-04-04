@@ -74,7 +74,7 @@ public class TableListDialog extends LightDialog<ImmutableList<TableId>>
             });
         });
         setOnHiding(e -> {
-            parent.disableTablePickingMode();
+            parent.disablePickingMode();
         });
     }
 

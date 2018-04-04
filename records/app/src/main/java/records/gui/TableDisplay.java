@@ -995,7 +995,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         if (mouseButton == MouseButton.PRIMARY)
                         {
-                            new EditSortDialog(parent,
+                            new EditSortDialog(parent, screenPoint,
                                 parent.getManager().getSingleTableOrNull(sort.getSource()),
                                 sort,
                                 sort.getSortBy()).showAndWait();

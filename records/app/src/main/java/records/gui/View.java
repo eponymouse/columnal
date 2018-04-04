@@ -32,6 +32,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
+import records.data.Column;
+import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
@@ -50,7 +52,9 @@ import records.error.UserException;
 import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.DataOrTransformChoice.DataOrTransform;
 import records.gui.grid.GridArea;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
+import records.gui.grid.VirtualGrid.Picker;
 import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.importers.manager.ImporterManager;
@@ -249,7 +253,7 @@ public class View extends StackPane
         return mainPane;
     }
 
-    public void disableTablePickingMode()
+    public void disablePickingMode()
     {
         if (pickPaneMouse != null)
         {
@@ -262,24 +266,68 @@ public class View extends StackPane
     public void enableTablePickingMode(Point2D screenPos, ImmutableSet<Table> excludeTables, FXPlatformConsumer<Table> onPick)
     {
         if (pickPaneMouse != null)
-            disableTablePickingMode();
+            disablePickingMode();
         
         final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
         
         pickPaneMouseFinal.setPickOnBounds(true);
         @Nullable Table[] picked = new @Nullable Table[1];
-        Predicate<GridArea> validPick = g -> g instanceof TableDisplay && !excludeTables.contains(((TableDisplay) g).getTable());
+        Picker<Table> validPick = (g, cell) -> {
+            if (g instanceof TableDisplay && !excludeTables.contains(((TableDisplay) g).getTable()))
+                return new Pair<>(new RectangleBounds(g.getPosition(), g.getBottomRightIncl()), ((TableDisplay) g).getTable());
+            else
+                return null;
+        };
         pickPaneMouseFinal.setOnMouseMoved(e -> {
-            @Nullable TableDisplay tableDisplay = (TableDisplay)mainPane.highlightGridAreaAtScreenPos(
+            picked[0] = mainPane.highlightGridAreaAtScreenPos(
                 new Point2D(e.getScreenX(), e.getScreenY()),
                 validPick,
                 pickPaneMouseFinal::setCursor);
-            picked[0] = tableDisplay != null ? tableDisplay.getTable() : null;
             e.consume();
         });
         pickPaneMouseFinal.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY && picked[0] != null)
                 onPick.consume(picked[0]);
+        });
+        getChildren().add(pickPaneMouseFinal);
+        // Highlight immediately:
+        mainPane.highlightGridAreaAtScreenPos(screenPos, validPick, pickPaneMouseFinal::setCursor);
+    }
+
+    public void enableColumnPickingMode(Point2D screenPos, Predicate<Pair<Table, ColumnId>> includeColumn, FXPlatformConsumer<Pair<Table, ColumnId>> onPick)
+    {
+        if (pickPaneMouse != null)
+            disablePickingMode();
+
+        final @NonNull Pane pickPaneMouseFinal = pickPaneMouse = new Pane();
+
+        pickPaneMouseFinal.setPickOnBounds(true);
+        class Ref
+        {
+            @Nullable Pair<Table, ColumnId> pick = null;
+        }
+        Ref picked = new Ref();
+        Picker<Pair<Table, ColumnId>> validPick = (g, cell) -> {
+            if (!(g instanceof TableDisplay))
+                return null;
+            TableDisplay tableDisplay = (TableDisplay) g;
+            @Nullable Pair<ColumnId, RectangleBounds> c = tableDisplay.getColumnAt(cell);
+            if (c != null && includeColumn.test(new Pair<>(tableDisplay.getTable(), c.getFirst())))
+            {
+                return new Pair<>(c.getSecond(), new Pair<>(tableDisplay.getTable(), c.getFirst()));
+            }
+            return null;
+        };
+        pickPaneMouseFinal.setOnMouseMoved(e -> {
+            picked.pick = mainPane.highlightGridAreaAtScreenPos(
+                new Point2D(e.getScreenX(), e.getScreenY()),
+                validPick,
+                pickPaneMouseFinal::setCursor);
+            e.consume();
+        });
+        pickPaneMouseFinal.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && picked.pick != null)
+                onPick.consume(picked.pick);
         });
         getChildren().add(pickPaneMouseFinal);
         // Highlight immediately:

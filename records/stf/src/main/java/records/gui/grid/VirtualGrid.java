@@ -1021,11 +1021,18 @@ public final class VirtualGrid implements ScrollBindable
         }
     }
     
-    public @Nullable GridArea highlightGridAreaAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
+    public static interface Picker<T>
+    {
+        // Given a grid area and a cell contained within it, is it a valid pick?  If so,
+        // return a non-null pair of the area to highlight, and some custom type T.
+        public @Nullable Pair<RectangleBounds, T> pick(GridArea gridArea, CellPosition cell);
+    }
+    
+    public <T> @Nullable T highlightGridAreaAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
     {
         if (highlightedGridArea == null)
             highlightedGridArea = supplierFloating.addItem(new GridAreaHighlight());
-        return highlightedGridArea.highlightAtScreenPos(screenPos, validPick, setCursor);
+        return highlightedGridArea.highlightAtScreenPos(screenPos, picker, setCursor);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1802,7 +1809,7 @@ public final class VirtualGrid implements ScrollBindable
     @OnThread(Tag.FXPlatform)
     private class GridAreaHighlight extends RectangleOverlayItem
     {
-        private @Nullable GridArea picked;
+        private @Nullable RectangleBounds picked;
         
         private GridAreaHighlight()
         {
@@ -1816,7 +1823,7 @@ public final class VirtualGrid implements ScrollBindable
                 return Optional.empty();
             else
             {
-                return visibleBounds.clampVisible(new RectangleBounds(picked.getPosition(), picked.getBottomRightIncl())).map(b -> Either.left(getRectangleBoundsInContainer(b)));
+                return visibleBounds.clampVisible(picked).map(b -> Either.left(getRectangleBoundsInContainer(b)));
             }
         }
 
@@ -1826,18 +1833,30 @@ public final class VirtualGrid implements ScrollBindable
             r.getStyleClass().add("pick-table-overlay");
         }
 
-        public @Nullable GridArea highlightAtScreenPos(Point2D screenPos, Predicate<GridArea> validPick, FXPlatformConsumer<@Nullable Cursor> setCursor)
+        public <T> @Nullable T highlightAtScreenPos(Point2D screenPos, Picker<T> picker, FXPlatformConsumer<@Nullable Cursor> setCursor)
         {
             Point2D localPos = container.screenToLocal(screenPos);
             @Nullable CellPosition cellAtScreenPos = getCellPositionAt(localPos.getX(), localPos.getY());
-            @Nullable GridArea oldPicked = picked;
-            picked = gridAreas.stream().filter(validPick).filter(g -> cellAtScreenPos != null && g.contains(cellAtScreenPos)).findFirst().orElse(null);
+            @Nullable RectangleBounds oldPicked = picked;
+            final Pair<RectangleBounds, T> result;
+            if (cellAtScreenPos == null)
+            {
+                result = null;
+            }
+            else
+            {
+                @NonNull CellPosition pos = cellAtScreenPos;
+                result = gridAreas.stream().filter(g -> g.contains(pos))
+                    .flatMap(g -> Utility.streamNullable(picker.pick(g, pos)))
+                    .findFirst().orElse(null);
+            }
+            picked = result == null ? null : result.getFirst();
             if (picked != oldPicked)
             {
                 container.redoLayout();
             }
             setCursor.consume(picked != null ? Cursor.HAND : null);
-            return picked;
+            return result == null ? null : result.getSecond();
         }
     }
 }

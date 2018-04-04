@@ -6,7 +6,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-public @Value abstract class ValueFunction
+public abstract @Value class ValueFunction
 {
     @OnThread(Tag.Simulation)
     public abstract @Value Object call(@Value Object arg) throws InternalException, UserException;
