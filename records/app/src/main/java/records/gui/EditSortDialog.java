@@ -150,7 +150,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         public SortPane(@Nullable Pair<ColumnId, Direction> initialContent)
         {
             currentValue = new SimpleObjectProperty<>(initialContent == null ? new Pair<>(new ColumnId(""), Direction.ASCENDING) : initialContent);
-            columnField = new TextField();
+            columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
             autoComplete = new AutoComplete(columnField,
                 (s, q) -> possibleTables.stream().flatMap(t -> {
                     try
@@ -260,6 +260,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             public void setDirection(Direction direction)
             {
                 this.direction = direction;
+                currentValue.set(new Pair<>(currentValue.get().getFirst(), direction));
                 icon.setRotate(direction == Direction.ASCENDING ? 0 : 180);
                 topLabel.setText(direction == Direction.ASCENDING ? smallItem : largeItem);
                 bottomLabel.setText(direction == Direction.ASCENDING ? largeItem : smallItem);

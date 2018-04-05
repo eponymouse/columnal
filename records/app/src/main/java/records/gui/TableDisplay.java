@@ -998,7 +998,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             new EditSortDialog(parent, screenPoint,
                                 parent.getManager().getSingleTableOrNull(sort.getSource()),
                                 sort,
-                                sort.getSortBy()).showAndWait();
+                                sort.getSortBy()).showAndWait().ifPresent(newSort -> {
+                                    Workers.onWorkerThread("Editing sort", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> 
+                                        parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSource(), newSort), null)
+                                    ));
+                            });
                         }
                     }
                 });
