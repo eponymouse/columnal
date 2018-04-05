@@ -89,6 +89,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 return null;
         });
         setOnShowing(e -> {
+            //org.scenicview.ScenicView.show(getDialogPane().getScene());
             parent.enableColumnPickingMode(lastScreenPos, p -> possibleTables.contains(p.getFirst()), t -> {
                 sortList.pickColumnIfEditing(t);
             });
