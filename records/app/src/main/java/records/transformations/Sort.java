@@ -220,19 +220,21 @@ public class Sort extends Transformation
         if (sortMap == null)
             throw new InternalException("Trying to fill null sort map; error in initialisation carried forward.");
         int destStart = sortMap.filled();
+        Direction[] justDirections = originalSortBy.stream().map(p -> p.getSecond()).toArray(Direction[]::new);
         for (int dest = destStart; dest <= target; dest++)
         {
             int lowestIndex = 0;
-            @Nullable List<@Value Object> lowest = null;
+            @Value Object @Nullable [] lowest = null;
             int pointerToLowestIndex = -1;
             int prevSrc = 0;
             if (stillToOrder == null)
                 throw new InternalException("Trying to re-sort an already sorted list");
-            for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder[src])
+            // stillToOrder shouldn't possibly become null during this loop, but need to satisfy checker:
+            for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder == null ? -1 : stillToOrder[src])
             {
                 // src is in stillToOrder terms, which is one more than original indexes
-                List<@Value Object> cur = getItem(src - 1);
-                if (lowest == null || Utility.compareLists(cur, lowest) < 0)
+                @Value Object[] cur = getItem(src - 1);
+                if (lowest == null || compareFixedSet(cur, lowest, justDirections) < 0)
                 {
                     lowest = cur;
                     lowestIndex = src;
@@ -240,7 +242,7 @@ public class Sort extends Transformation
                 }
                 prevSrc = src;
             }
-            if (lowest != null)
+            if (lowest != null && stillToOrder != null)
             {
                 // Make the pointer behind lowest point to entry after lowest:
                 stillToOrder[pointerToLowestIndex] = stillToOrder[lowestIndex];
@@ -260,14 +262,33 @@ public class Sort extends Transformation
         }
     }
 
+    // All arrays must be same length.
+    // Returns -1 if a is before b, given the directions.
+    // e.g. compareFixedSet({0}, {1}, DESCENDING) will return positive number, because 0 is after 1 when descending
+    private static int compareFixedSet(Object[] a, Object[] b, Direction[] justDirections) throws UserException, InternalException
+    {
+        for (int i = 0; i < a.length; i++)
+        {
+            int cmp = Utility.compareValues(a[i], b[i]);
+            if (justDirections[i] == Direction.DESCENDING)
+                cmp = -cmp;
+            if (cmp != 0)
+                return cmp;
+        }
+        return 0;
+    }
+
     @Pure
-    private List<@Value Object> getItem(int srcIndex) throws UserException, InternalException
+    private @Value Object[] getItem(int srcIndex) throws UserException, InternalException
     {
         if (sortBy == null)
             throw new UserException(sortByError);
-        List<@Value Object> r = new ArrayList<>();
-        for (Pair<Column, Direction> c : sortBy)
-            r.add(c.getFirst().getType().getCollapsed(srcIndex));
+        @Value Object[] r = new @Value Object[sortBy.size()];
+        for (int i = 0; i < sortBy.size(); i++)
+        {
+            Pair<Column, Direction> c = sortBy.get(i);
+            r[i] = c.getFirst().getType().getCollapsed(srcIndex);
+        }
         return r;
     }
 

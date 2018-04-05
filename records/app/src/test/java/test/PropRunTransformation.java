@@ -1,11 +1,14 @@
 package test;
 
 import annotation.qual.Value;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.Precision;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import records.data.Column;
@@ -76,17 +79,22 @@ public class PropRunTransformation
         // Pick an arbitrary column and sort by it
         RecordSet src = srcTable.data().getData();
         Column sortBy = src.getColumns().get(r.nextInt(src.getColumns().size()));
+        Direction direction = r.nextBoolean() ? Direction.ASCENDING : Direction.DESCENDING;
 
-        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), ImmutableList.of(new Pair<>(sortBy.getName(), Direction.ASCENDING)));
+        Sort sort = new Sort(srcTable.mgr, TestUtil.ILD, srcTable.data().getId(), ImmutableList.of(new Pair<>(sortBy.getName(), direction)));
 
-        // TODO sort by multiple columns, too, and descending
+        // TODO sort by multiple columns, too
 
-        assertTrue("Sorting by " + sortBy.getName() + ":\n" + src.debugGetVals(), !TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
+        assertTrue("Sorting by " + sortBy.getName() + " " + direction + ":\n" + src.debugGetVals(), !TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
             .pairMap((a, b) ->
             {
                 try
                 {
                     int cmp = Utility.compareValues(a, b);
+                    // Flip if descending:
+                    if (direction == Direction.DESCENDING)
+                        cmp = -cmp;
+                    
                     if (cmp > 0)
                     {
                         System.err.println("Problematic comparison: " + a + " vs " + b);
@@ -161,7 +169,9 @@ public class PropRunTransformation
                 ), ImmutableList.of(invert(op))));
 
         // Lengths should equal original:
-        assertEquals(srcTable.data().getData().getLength(), filter.getData().getLength() + invertedFilter.getData().getLength());
+        @TableDataRowIndex int filterLength = filter.getData().getLength();
+        @TableDataRowIndex int invertedFilterLength = invertedFilter.getData().getLength();
+        assertEquals(srcTable.data().getData().getLength(), filterLength + invertedFilterLength);
 
         srcTable.mgr.record(invertedFilter);
         
@@ -205,15 +215,17 @@ public class PropRunTransformation
 
         Expression countExpression = new CallExpression(original.mgr.getUnitManager(), "count", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
         SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
-        assertEquals(1, summaryStatistics.getData().getLength());
-        assertEquals(1, summaryStatistics.getData().getColumns().size());
-        assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0)));
+        RecordSet summaryRS = summaryStatistics.getData();
+        assertEquals(1, summaryRS.getLength());
+        assertEquals(1, summaryRS.getColumns().size());
+        assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryRS.getColumns().get(0).getType().getCollapsed(0)));
 
         Expression sumExpression = new CallExpression(original.mgr.getUnitManager(),"sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
         summaryStatistics = new SummaryStatistics(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
-        assertEquals(1, summaryStatistics.getData().getLength());
-        assertEquals(1, summaryStatistics.getData().getColumns().size());
-        assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
+        summaryRS = summaryStatistics.getData();
+        assertEquals(1, summaryRS.getLength());
+        assertEquals(1, summaryRS.getColumns().size());
+        assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryRS.getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
     }
 
     @OnThread(Tag.Simulation)
@@ -230,7 +242,7 @@ public class PropRunTransformation
     public void testConcatSelf(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
     {
         List<TableId> ids = new ArrayList<>();
-        int originalLength = original.data().getData().getLength();
+        @TableDataRowIndex int originalLength = original.data().getData().getLength();
         for (int repeats = 1; repeats < 4; repeats++)
         {
             // Add once each time round the loop:
