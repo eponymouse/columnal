@@ -108,6 +108,15 @@
         -fx-font-size: 80%;
     }
 }
+.sort-list-dialog .sort-direction-button {
+    .label {
+        -fx-font-size: 60%;
+    }
+    -fx-padding: 3 5 3 5;    
+}
+.sort-list-dialog .sort-direction-icon {
+    -fx-fill: grey(60%);
+}
 .small-delete {
     -fx-cursor: hand;
 }

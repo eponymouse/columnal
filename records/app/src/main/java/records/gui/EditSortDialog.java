@@ -71,11 +71,11 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         dataWithColumns = d;
 
         SortList sortList = new SortList(originalSortBy);
-        getDialogPane().setContent(sortList.getNode());
-        sortList.getNode().setMinWidth(200.0);
+        sortList.getNode().setMinWidth(250.0);
         sortList.getNode().setMinHeight(150.0);
-        sortList.getNode().setPrefWidth(250.0);
+        sortList.getNode().setPrefWidth(300.0);
         sortList.getNode().setPrefHeight(200.0);
+        getDialogPane().setContent(new BorderPane(sortList.getNode(), new Label("Choose the columns to sort by"), null, null, null));
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         getDialogPane().getStylesheets().addAll(
             FXUtility.getStylesheet("general.css"),
@@ -245,6 +245,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             public DirectionButton()
             {
                 icon = new Polygon(5, 0, 10, 25, 0, 25);
+                icon.getStyleClass().add("sort-direction-icon");
                 BorderPane sortGraphic = new BorderPane();
                 topLabel = new Label(smallItem);
                 bottomLabel = new Label(largeItem);
@@ -255,6 +256,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 setOnAction(e -> {
                     FXUtility.mouse(this).setDirection(direction == Direction.ASCENDING ? Direction.DESCENDING : Direction.ASCENDING);
                 });
+                getStyleClass().add("sort-direction-button");
             }
 
             public void setDirection(Direction direction)
