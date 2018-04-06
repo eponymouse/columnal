@@ -45,7 +45,7 @@
         -fx-text-alignment: center;
     }
 }
-.table-list-dialog .table-list {
+.table-list-dialog .table-list, .sort-list-dialog .sort-list {
     -fx-background-color: grey, $control-background;
     -fx-background-insets: 0, 1;
     & .fancy-list-cell, & .fancy-list-end {
@@ -54,16 +54,16 @@
         -fx-border-width: 2 0 0 0;
     }
 }
-.table-list-dialog .table-list .fancy-list-cell:even {
+.table-list-dialog .table-list .fancy-list-cell:even, .sort-list-dialog .sort-list .fancy-list-cell:even {
     -fx-background-color: $control-background;
 }
-.table-list-dialog .table-list .fancy-list-cell:odd {
+.table-list-dialog .table-list .fancy-list-cell:odd, .sort-list-dialog .sort-list .fancy-list-cell:odd {
     -fx-background-color: $control-background-odd;
     & .text-field {
         -fx-background-color: $control-background-odd;
     }
 }
-.table-list-dialog .table-list {
+.table-list-dialog .table-list, .sort-list-dialog .sort-list {
     & .fancy-list-cell:drag-target, & .fancy-list-end:drag-target {
         -fx-border-color: black;
         -fx-border-style: dashed inside;
@@ -71,9 +71,10 @@
     }
 }
 
-.table-list-dialog .table-list .fancy-list-cell:selected {
+.table-list-dialog .table-list .fancy-list-cell:selected, .sort-list-dialog .sort-list .fancy-list-cell:selected {
     -fx-background-color: $focus-color;
-    &:even .pick-table-pane .text-field, &:odd .pick-table-pane .text-field {
+    &:even .pick-table-pane .text-field, &:odd .pick-table-pane .text-field,
+    &:even .sort-pane .text-field, &:odd .sort-pane .text-field {
         -fx-background-color: $focus-color, $focus-color;
         &:hover {
             -fx-background-color: white, $focus-color;
@@ -82,9 +83,17 @@
     & .text-field, & .label {
          -fx-text-fill: $focus-color-text;
     }
+    & .sort-direction-button {
+        -fx-background-color: $focus-color;
+        -fx-background-insets: 0;
+        -fx-text-fill: $focus-color-text;
+        .sort-direction-icon {
+            -fx-fill: $focus-color-text;
+        }
+    }
 }
-.table-list-dialog .fancy-list-cell {
-    &:even .pick-table-pane > .text-field {
+.table-list-dialog .fancy-list-cell, .sort-list-dialog .fancy-list-cell {
+    &:even .pick-table-pane > .text-field, &:even .sort-pane > .text-field {
         -fx-background-color: $control-background, $control-background;
         -fx-background-insets: 0, 1;
         &:hover {
@@ -94,7 +103,7 @@
             -fx-background-color: grey, white;
         }
     }
-    &:odd .pick-table-pane > .text-field {
+    &:odd .pick-table-pane > .text-field, &:odd .sort-pane > .text-field {
         -fx-background-color: $control-background-odd, $control-background-odd;
         -fx-background-insets: 0, 1;
         &:hover {
@@ -104,7 +113,7 @@
             -fx-background-color: grey, white;
         }
     }
-    & .pick-table-pane > .label {
+    & .pick-table-pane > .label, & .sort-pane > .label {
         -fx-font-size: 80%;
     }
 }
@@ -114,9 +123,9 @@
         -fx-padding: -1 0 -1 0;
     }
     -fx-padding: 3 5 3 5;    
-}
-.sort-list-dialog .sort-direction-icon {
-    -fx-fill: grey(60%);
+    .sort-direction-icon {
+        -fx-fill: grey(60%);
+    }
 }
 .small-delete {
     -fx-cursor: hand;

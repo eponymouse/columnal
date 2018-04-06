@@ -105,6 +105,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         public SortList(ImmutableList<Pair<ColumnId, Direction>> initialItems)
         {
             super(initialItems, true, true, true);
+            getStyleClass().add("sort-list");
         }
 
         @Override
@@ -169,12 +170,15 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 // Update whether focus is arriving or leaving:
                 lastEditTimeMillis = System.currentTimeMillis();
             });
-            setTop(new Label("Type table name or click on column"));
+            Label label = new Label("Type table name or click on column");
+            label.visibleProperty().bind(columnField.focusedProperty());
+            setTop(label);
             setCenter(columnField);
             button = new DirectionButton();
             button.setDirection(initialContent == null ? Direction.ASCENDING : initialContent.getSecond());
             button.setType(calculateTypeOf(initialContent == null ? null : initialContent.getFirst()));
             setRight(button);
+            getStyleClass().add("sort-pane");
             
         }
 
