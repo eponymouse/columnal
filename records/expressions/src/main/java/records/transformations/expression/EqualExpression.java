@@ -20,6 +20,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.MutVar;
 import records.types.NumTypeExp;
@@ -54,7 +55,7 @@ public class EqualExpression extends NaryOpExpression
     @Override
     public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeExp argType = checkAllOperandsSameType(new MutVar(this), dataLookup, typeState, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
+        @Nullable TypeExp argType = checkAllOperandsSameType(new MutVar(this), dataLookup, typeState, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
                 ExpressionEditorUtil.getFixesForMatchingNumericUnits(typeState, p)
         ) : ImmutableList.of()));
         if (argType == null)

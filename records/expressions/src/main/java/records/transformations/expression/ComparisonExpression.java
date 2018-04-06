@@ -16,6 +16,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.MutVar;
 import records.types.NumTypeExp;
@@ -114,7 +115,7 @@ public class ComparisonExpression extends NaryOpExpression
     @Override
     public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(new MutVar(this), dataLookup, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
+        type = checkAllOperandsSameType(new MutVar(this), dataLookup, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
             ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p)
         ) : ImmutableList.of()));
         if (type == null)

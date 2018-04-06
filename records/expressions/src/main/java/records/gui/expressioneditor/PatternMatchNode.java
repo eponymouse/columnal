@@ -24,6 +24,7 @@ import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
@@ -40,7 +41,7 @@ import java.util.stream.Stream;
  */
 public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression, ExpressionNodeParent>, ExpressionNodeParent
 {
-    private final Pair<ErrorTop, ErrorDisplayer<Expression>> matchLabel;
+    private final Pair<ErrorTop, ErrorDisplayer<Expression, ExpressionNodeParent>> matchLabel;
     private final ConsecutiveBase<Expression, ExpressionNodeParent> source;
     private final ObservableList<ClauseNode> clauses;
     private ConsecutiveBase<Expression, ExpressionNodeParent> parent;
@@ -285,11 +286,11 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public <C extends LoadableExpression<C, ?>> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends StyledShowable> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel.getFirst(), loc, forType);
 
-        return Stream.<Pair<ConsecutiveChild<? extends C, ?>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.findClosestDrop(loc, forType))))
+        return Stream.<Pair<ConsecutiveChild<? extends C, ?>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.<C>findClosestDrop(loc, forType))))
             .min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
@@ -319,7 +320,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
         matchLabel.getSecond().addErrorAndFixes(error, quickFixes);
     }

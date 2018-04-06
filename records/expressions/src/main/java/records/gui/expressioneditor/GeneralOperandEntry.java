@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION>, OperandNode<EXPRESSION, SEMANTIC_PARENT>
+abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * A label to the left of the text-field, used for displaying things like the
@@ -80,10 +80,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends LoadableExpression<EXPRESS
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         container.setError(true);
-        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> {
+        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> e) -> {
             getParent().replaceLoad(this, e);
         });
     }

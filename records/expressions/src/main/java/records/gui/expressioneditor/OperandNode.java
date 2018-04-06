@@ -20,7 +20,7 @@ import java.util.List;
  * next to operators.  (Depends on type: some operands, like tagged operands,
  * may not have a useful type available.)
  */
-public @Interned interface OperandNode<@NonNull EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION>
+public @Interned interface OperandNode<@NonNull EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * Gets the variables declared in this node.

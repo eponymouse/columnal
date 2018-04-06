@@ -127,7 +127,7 @@ public abstract class BinaryOpExpression extends Expression
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
         {
-            return new ValueFunction()
+            return new @Value ValueFunction()
             {
                 @Override
                 @OnThread(Tag.Simulation)

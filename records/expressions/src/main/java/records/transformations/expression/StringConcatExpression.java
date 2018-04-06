@@ -15,6 +15,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeExp;
 import styled.StyledString;
@@ -52,7 +53,7 @@ public class StringConcatExpression extends NaryOpExpression
     {
         return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.TEXT), dataLookup, state, onError, (typeAndExpression) -> {
             // TODO offer a quick fix of wrapping to.string around operand
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to ';' must be text but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to ';' must be text but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
         }));
     }
 

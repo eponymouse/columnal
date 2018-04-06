@@ -22,6 +22,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
@@ -35,14 +36,14 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/02/2017.
  */
-public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expression, ExpressionNodeParent>, EEDisplayNodeParent, ErrorDisplayer<Expression>, ExpressionNodeParent
+public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expression, ExpressionNodeParent>, EEDisplayNodeParent, ErrorDisplayer<Expression, ExpressionNodeParent>, ExpressionNodeParent
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> parent;
     private final ExpressionNodeParent semanticParent;
     private final @Interned SubConsecutive condition;
     private final @Interned SubConsecutive thenPart;
     private final @Interned SubConsecutive elsePart;
-    private final Pair<ErrorTop, ErrorDisplayer<Expression>> ifLabel;
+    private final Pair<ErrorTop, ErrorDisplayer<Expression, ExpressionNodeParent>> ifLabel;
     private final ErrorTop thenLabel;
     private final ErrorTop elseLabel;
 
@@ -137,7 +138,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public <C extends LoadableExpression<C, ?>> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends StyledShowable> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, ifLabel.getFirst(), loc, forType);
 
@@ -288,7 +289,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
         condition.addErrorAndFixes(error, quickFixes);
     }

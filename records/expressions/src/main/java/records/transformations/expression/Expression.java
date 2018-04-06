@@ -87,7 +87,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
-    public abstract @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
@@ -518,7 +518,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // If any of the list are implicit lambda args ('?'), returns a new type state
     // with a type for '?' and a wrap function which will turn the item into a function.
     // If none are, returns identity and unaltered type state.
-    protected static Pair<UnaryOperator<@Nullable TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<Expression> args, TypeState typeState)
+    protected static Pair<UnaryOperator<@Nullable TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
     {
         if (args.stream().anyMatch(a -> a instanceof ImplicitLambdaArg))
         {

@@ -40,6 +40,7 @@ import records.gui.FixList.FixInfo;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -278,7 +279,7 @@ public class ExpressionInfoDisplay
         }
     }
     
-    public <EXPRESSION extends StyledShowable> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION>> fixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> replace)
+    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> replace)
     {
         //Log.debug("Message and fixes: " + newMsgAndFixes);
         // The listener on this property should make the popup every time:

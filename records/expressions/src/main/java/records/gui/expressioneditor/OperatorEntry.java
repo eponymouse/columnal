@@ -22,6 +22,7 @@ import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
 import utility.gui.FXUtility;
@@ -33,12 +34,12 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION>
+public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * The outermost container for the whole thing:
      */
-    private final Pair<ErrorTop, ErrorDisplayer<EXPRESSION>> container;
+    private final Pair<ErrorTop, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>> container;
     private final @MonotonicNonNull AutoComplete autoComplete;
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
@@ -59,7 +60,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
             initialContentEntered.set(true);
         }
         FXUtility.sizeToFit(textField, 5.0, 5.0);
-        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), (Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> e) -> parent.replaceWholeLoad(FXUtility.mouse(this), e.getSecond()), parent.getParentStyles());
+        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, getParent().getEditor(), (Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> e) -> parent.replaceWholeLoad(FXUtility.mouse(this), e.getSecond()), parent.getParentStyles());
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
@@ -87,7 +88,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
         return Stream.of(container.getFirst());
     }
 
-    private static <EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @Localized String>> validOperators, String s)
+    private static <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @Localized String>> validOperators, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())
@@ -161,7 +162,7 @@ public class OperatorEntry<EXPRESSION extends LoadableExpression<EXPRESSION, SEM
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         container.getSecond().addErrorAndFixes(error, quickFixes);
     }

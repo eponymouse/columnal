@@ -15,6 +15,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.TypeCons;
 import records.types.TypeExp;
@@ -52,7 +53,7 @@ public class OrExpression extends NaryOpExpression
     public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), dataLookup, state, onError, (typeAndExpression) -> {
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
         }));
     }
 

@@ -29,6 +29,7 @@ import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import styled.StyledShowable;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -459,7 +460,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return parent.getEditor();
     }
 
-    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         // We don't actually want to allow general dropping to the left of us, because the
         // only thing that fits there is a case.  If we want to enable case dropping

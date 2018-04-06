@@ -24,6 +24,7 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.*;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
@@ -44,7 +45,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION>
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 
@@ -176,7 +177,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
             operands.get(operands.size() - 1).focus(side);
     }
     
-    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> newNode)
+    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> newNode)
     {
         if (newNode.getFirst() == ReplacementTarget.CURRENT)
         {
@@ -201,7 +202,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     protected abstract boolean hasImplicitRoundBrackets();
 
     // Replaces the whole operator-expression that operator was part of, with the new expression
-    protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded EXPRESSION e)
+    protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> e)
     {
         if (operators.contains(oldOperator))
         {
@@ -549,7 +550,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
      *
      * Returns the item before which you would insert, and the distance.
      */
-    protected <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    protected <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return Utility.filterOutNulls(Stream.<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>>concat(operands.stream(), operators.stream()).<@Nullable Pair<ConsecutiveChild<? extends C, ?>, Double>>map(n -> n.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).get();
     }
@@ -834,7 +835,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Load
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         //Log.logStackTrace("\n\n\n" + this + " showing " + error.toPlain() + " " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
         if (operators.isEmpty())

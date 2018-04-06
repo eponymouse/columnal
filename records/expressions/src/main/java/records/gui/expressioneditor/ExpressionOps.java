@@ -46,7 +46,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     // Remember: earlier means more likely to be inner-bracketed.  Outer list is groups of operators
     // with equal bracketing likelihood/precedence.
     @SuppressWarnings("recorded")
-    private final static ImmutableList<ImmutableList<OperatorExpressionInfo<Expression>>> OPERATORS = ImmutableList.of(
+    private final static ImmutableList<ImmutableList<OperatorExpressionInfo<Expression, ExpressionNodeParent>>> OPERATORS = ImmutableList.of(
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
         ImmutableList.of(
             new OperatorExpressionInfo<>(
@@ -61,10 +61,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
                 opD("+", "op.plus"),
                 opD("-", "op.minus")
             ), ExpressionOps::makeAddSubtract),
-            new OperatorExpressionInfo<Expression>(ImmutableList.of(
+            new OperatorExpressionInfo<Expression, ExpressionNodeParent>(ImmutableList.of(
                 opD("*", "op.times")
             ), ExpressionOps::makeTimes),
-            new OperatorExpressionInfo<Expression>(
+            new OperatorExpressionInfo<Expression, ExpressionNodeParent>(
                 opD("/", "op.divide")
             , (lhs, rhs, _b) -> new DivideExpression(lhs, rhs))
         ),
@@ -120,14 +120,14 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
         ImmutableList.of(
-            new OperatorExpressionInfo<Expression>(
+            new OperatorExpressionInfo<Expression, ExpressionNodeParent>(
                 opD(",", "op.separator")
             , (lhs, rhs, _b) -> /* Dummy, see below: */ lhs)
             {
                 @Override
-                public OperatorSection<Expression> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
+                public OperatorSection<Expression, ExpressionNodeParent> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection<Expression>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, bracketedStatus) -> {
+                    return new NaryOperatorSection<Expression, ExpressionNodeParent>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, bracketedStatus) -> {
                         switch (bracketedStatus)
                         {
                             case DIRECT_SQUARE_BRACKETED:
@@ -243,7 +243,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         }
         else
         {
-            expression = makeExpressionWithOperators(OPERATORS, errorDisplayers.getRecorder(), ImmutableList.copyOf(expressionExps), ops, bracketedStatus);
+            expression = OperandOps.makeExpressionWithOperators(this, OPERATORS, errorDisplayers.getRecorder(), ImmutableList.copyOf(expressionExps), ops, bracketedStatus);
         }
         if (expression == null)
             expression = new InvalidOperatorExpression(expressionExps, ops);

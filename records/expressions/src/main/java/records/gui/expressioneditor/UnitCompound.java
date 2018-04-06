@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
+import styled.StyledShowable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -30,7 +31,7 @@ public class UnitCompound extends UnitCompoundBase implements OperandNode<UnitEx
     }
 
     @Override
-    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, operations.getOperandClass(), nodes().get(0), loc, forType), super.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
     }

@@ -66,7 +66,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression>, EEDisplayNodeParent, UnitNodeParent
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>, EEDisplayNodeParent, UnitNodeParent
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";

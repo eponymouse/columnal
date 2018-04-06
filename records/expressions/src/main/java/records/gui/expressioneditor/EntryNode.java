@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * A helper class that shares code between various text-field based nodes.
  */
-public abstract class EntryNode<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>
+public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent;
     private final Class<EXPRESSION> expressionClass;
@@ -97,7 +97,7 @@ public abstract class EntryNode<EXPRESSION extends LoadableExpression<EXPRESSION
 
 
     @Override
-    public <C extends LoadableExpression<C, ?>> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return ConsecutiveChild.closestDropSingle(this, expressionClass, calculateNodes().findFirst().get(), loc, forType);
     }

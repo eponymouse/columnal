@@ -10,10 +10,10 @@ import java.util.List;
  * An interface implemented by an expression editor component which can display
  * an error and accompanying quick fixes.
  */
-public interface ErrorDisplayer<EXPRESSION extends StyledShowable>
+public interface ErrorDisplayer<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
     // TODO make the String @Localized
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION>> quickFixes);
+    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes);
     
     public void showType(String type);
 

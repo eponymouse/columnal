@@ -18,6 +18,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
@@ -89,9 +90,9 @@ public class AddSubtractExpression extends NaryOpExpression
         type = onError.recordType(this, checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
-                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(null, ImmutableList.of());
+                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, ImmutableList.of());
             @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers with matching units but found "), ourType.toStyledString());
-            ImmutableList.Builder<QuickFix<Expression>> fixes = ImmutableList.builder();
+            ImmutableList.Builder<QuickFix<Expression,ExpressionNodeParent>> fixes = ImmutableList.builder();
             try
             {
                 // Is the problematic type text, and all ops '+'? If so, offer to convert it 
@@ -101,7 +102,7 @@ public class AddSubtractExpression extends NaryOpExpression
                 // the quick fix if it is definitely a string, for which we can use equals:
                 if (ourType.equals(TypeExp.fromConcrete(null, DataType.TEXT)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
                 {
-                    fixes.add(new QuickFix<Expression>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
+                    fixes.add(new QuickFix<Expression,ExpressionNodeParent>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
                 }
 
                 if (ourType instanceof NumTypeExp)
@@ -111,7 +112,7 @@ public class AddSubtractExpression extends NaryOpExpression
             {
                 Utility.report(e);
             }
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression>>>(err, fixes.build());
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(err, fixes.build());
         }));
         return type;
     }

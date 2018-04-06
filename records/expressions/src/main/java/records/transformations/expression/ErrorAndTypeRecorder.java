@@ -96,7 +96,7 @@ public interface ErrorAndTypeRecorder
     // TODO make the String @Localized
     public <EXPRESSION> void recordError(EXPRESSION src, StyledString error);
     
-    public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> fixes);
+    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes);
 
     public default @Recorded @Nullable TypeExp recordTypeAndError(Expression expression, Either<StyledString, TypeExp> typeOrError)
     {
@@ -109,23 +109,23 @@ public interface ErrorAndTypeRecorder
      * A quick fix for an error.  Has a title to display, and a thunk to run
      * to get a replacement expression for the error source.
      */
-    public final static class QuickFix<EXPRESSION extends StyledShowable>
+    public final static class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     {
         private final StyledString title;
-        private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> fixedReplacement;
+        private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement;
         private final ImmutableList<String> cssClasses;
 
-        public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, @UnknownIfRecorded EXPRESSION replacement)
+        public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> replacement)
         {
             this(StyledString.concat(
                     StyledString.s(TranslationUtility.getString(titleKey)),
                     StyledString.s(": "),
                     replacement.toStyledString()),
                 ImmutableList.of(OperandOps.makeCssClass(replacement)),
-                p -> new Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>(replacementTarget, replacement));
+                p -> new Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>(replacementTarget, replacement));
         }
         
-        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION>> fixedReplacement)
+        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement)
         {
             this.title = title;
             this.cssClasses = cssClasses;
@@ -138,7 +138,7 @@ public interface ErrorAndTypeRecorder
         }
         
         @OnThread(Tag.FXPlatform)
-        public Pair<ReplacementTarget, @UnknownIfRecorded EXPRESSION> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
+        public Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
         {
             return fixedReplacement.apply(new QuickFixParams(parentWindow, tableManager));
         }

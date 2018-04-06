@@ -15,6 +15,7 @@ import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.NaryOpExpression;
+import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -30,7 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
+public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
     public OperandNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
 
@@ -48,23 +49,23 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
 
     OperandNode<EXPRESSION, SEMANTIC_PARENT> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
     
-    public static interface MakeNary<EXPRESSION>
+    public static interface MakeNary<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<String> operators, BracketedStatus bracketedStatus);
     }
 
-    public static interface MakeBinary<EXPRESSION>
+    public static interface MakeBinary<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, @Recorded EXPRESSION rhs, BracketedStatus bracketedStatus);
     }
     
     // One set of operators that can be used to make a particular expression
-    static class OperatorExpressionInfo<EXPRESSION>
+    static class OperatorExpressionInfo<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         public final ImmutableList<Pair<String, @Localized String>> operators;
-        public final Either<MakeNary<EXPRESSION>, MakeBinary<EXPRESSION>> makeExpression;
+        public final Either<MakeNary<EXPRESSION, SEMANTIC_PARENT>, MakeBinary<EXPRESSION, SEMANTIC_PARENT>> makeExpression;
 
-        OperatorExpressionInfo(ImmutableList<Pair<String, @Localized String>> operators, MakeNary<EXPRESSION> makeExpression)
+        OperatorExpressionInfo(ImmutableList<Pair<String, @Localized String>> operators, MakeNary<EXPRESSION, SEMANTIC_PARENT> makeExpression)
         {
             this.operators = operators;
             this.makeExpression = Either.left(makeExpression);
@@ -73,7 +74,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         // I know it's a bit odd, but we distinguish the N-ary constructor from the binary constructor by 
         // making the operators a non-list here.  The only expression with multiple operators
         // is add-subtract, which is N-ary.  And you can't have a binary expression with multiple different operators...
-        OperatorExpressionInfo(Pair<String, @Localized String> operator, MakeBinary<EXPRESSION> makeExpression)
+        OperatorExpressionInfo(Pair<String, @Localized String> operator, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression)
         {
             this.operators = ImmutableList.of(operator);
             this.makeExpression = Either.right(makeExpression);
@@ -84,16 +85,16 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             return operators.stream().anyMatch((Pair<String, @Localized String> p) -> p.getFirst().equals(op));
         }
         
-        public OperatorSection<EXPRESSION> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
+        public OperatorSection<EXPRESSION, SEMANTIC_PARENT> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
         {
             return makeExpression.either(
-                nAry -> new NaryOperatorSection<EXPRESSION>(operators, operatorSetPrecedence, nAry, initialIndex, initialOperator),
-                binary -> new BinaryOperatorSection<EXPRESSION>(operators, operatorSetPrecedence, binary, initialIndex)
+                nAry -> new NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT>(operators, operatorSetPrecedence, nAry, initialIndex, initialOperator),
+                binary -> new BinaryOperatorSection<EXPRESSION, SEMANTIC_PARENT>(operators, operatorSetPrecedence, binary, initialIndex)
             );
         }
     }
     
-    static abstract class OperatorSection<EXPRESSION>
+    static abstract class OperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         protected final ImmutableList<Pair<String, @Localized String>> possibleOperators;
         // The ordering in the candidates list:
@@ -125,12 +126,12 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         abstract @Nullable EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketedStatus bracketedStatus);
     }
     
-    static class BinaryOperatorSection<EXPRESSION> extends OperatorSection<EXPRESSION>
+    static class BinaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT>
     {
-        private final MakeBinary<EXPRESSION> makeExpression;
+        private final MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression;
         private final int operatorIndex;
 
-        private BinaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION> makeExpression, int initialIndex)
+        private BinaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression, int initialIndex)
         {
             super(operators, candidatePrecedence);
             this.makeExpression = makeExpression;
@@ -175,14 +176,14 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         }
     }
     
-    static class NaryOperatorSection<EXPRESSION> extends OperatorSection<EXPRESSION>
+    static class NaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT>
     {
-        private final MakeNary<EXPRESSION> makeExpression;
+        private final MakeNary<EXPRESSION, SEMANTIC_PARENT> makeExpression;
         private final ArrayList<String> actualOperators = new ArrayList<>();
         private final int startingOperatorIndexIncl;
         private int endingOperatorIndexIncl;
 
-        NaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION> makeExpression, int initialIndex, String initialOperator)
+        NaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION, SEMANTIC_PARENT> makeExpression, int initialIndex, String initialOperator)
         {
             super(operators, candidatePrecedence);
             this.makeExpression = makeExpression;
@@ -247,7 +248,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
          * to join two NaryOpExpressions while bracketing an item in the middle.
          */
         
-        public @Nullable EXPRESSION makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection<EXPRESSION> rhs, List<@Recorded EXPRESSION> expressions, BracketedStatus bracketedStatus)
+        public @Nullable EXPRESSION makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT> rhs, List<@Recorded EXPRESSION> expressions, BracketedStatus bracketedStatus)
         {
             List<@Recorded EXPRESSION> args = new ArrayList<>();
             // Add our args, minus the end one:
@@ -270,7 +271,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
      *                   plus will come earlier in the list than equals, because given "a + b = c", we're more likely
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
-    default @Nullable @UnknownIfRecorded EXPRESSION makeExpressionWithOperators(ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+    static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> @Nullable @UnknownIfRecorded EXPRESSION makeExpressionWithOperators(OperandOps<EXPRESSION, SEMANTIC_PARENT> operandOps, ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         if (ops.size() != expressionExps.size() - 1)
         {
@@ -285,7 +286,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
         }
         
         // First, split it into sections based on cohesive parts that have the same operators:
-        List<OperatorSection<EXPRESSION>> operatorSections = new ArrayList<>();
+        List<OperatorSection<EXPRESSION, SEMANTIC_PARENT>> operatorSections = new ArrayList<>();
         nextOp: for (int i = 0; i < ops.size(); i++)
         {
             if (operatorSections.isEmpty() || !operatorSections.get(operatorSections.size() - 1).addOperator(ops.get(i), i))
@@ -293,7 +294,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                 // Make new section:
                 for (int candidateIndex = 0; candidateIndex < candidates.size(); candidateIndex++)
                 {
-                    for (OperatorExpressionInfo<EXPRESSION> operatorExpressionInfo : candidates.get(candidateIndex))
+                    for (OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT> operatorExpressionInfo : candidates.get(candidateIndex))
                     {
                         if (operatorExpressionInfo.includes(ops.get(i)))
                         {
@@ -317,16 +318,16 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             // Maybe with the possibility of different brackets?
             if (bracketedStatus == BracketedStatus.MISC)
             {
-                List<EXPRESSION> possibles = new ArrayList<>();
+                List<LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> possibles = new ArrayList<>();
                 for (BracketedStatus status : Arrays.asList(BracketedStatus.DIRECT_ROUND_BRACKETED, BracketedStatus.DIRECT_SQUARE_BRACKETED))
                 {
-                    @Nullable EXPRESSION possible = operatorSections.get(0).makeExpression(expressionExps, status);
+                    @Nullable LoadableExpression<EXPRESSION, SEMANTIC_PARENT> possible = operatorSections.get(0).makeExpression(expressionExps, status);
                     if (possible != null)
                         possibles.add(possible);
                 }
                 if (!possibles.isEmpty())
                 {
-                    EXPRESSION invalidOpExpression = makeInvalidOpExpression(expressionExps, ops);
+                    EXPRESSION invalidOpExpression = operandOps.makeInvalidOpExpression(expressionExps, ops);
                     errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
                     errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, e)));
                     return invalidOpExpression;
@@ -334,7 +335,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             }
         }
 
-        EXPRESSION invalidOpExpression = makeInvalidOpExpression(expressionExps, ops);
+        EXPRESSION invalidOpExpression = operandOps.makeInvalidOpExpression(expressionExps, ops);
         errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Mixed operators: brackets required"));
         
         if (operatorSections.size() == 3
@@ -350,9 +351,9 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
             @Nullable @Recorded EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, bracketedStatus);
             if (middle != null)
             {
-                @Nullable EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION>) operatorSections.get(0)).makeExpressionMiddleMerge(
+                @Nullable EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT>) operatorSections.get(0)).makeExpressionMiddleMerge(
                     middle,
-                    (NaryOperatorSection<EXPRESSION>) operatorSections.get(2),
+                    (NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT>) operatorSections.get(2),
                     expressionExps, bracketedStatus
                 );
 
@@ -372,7 +373,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
 
             for (int i = 0; i < operatorSections.size(); i++)
             {
-                OperatorSection<EXPRESSION> operatorSection = operatorSections.get(i);
+                OperatorSection<EXPRESSION, SEMANTIC_PARENT> operatorSection = operatorSections.get(i);
                 if (operatorSection.operatorSetPrecedence != precedence)
                     break;
 
@@ -384,7 +385,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                     continue;
                 
                 // The replacement if we just bracketed this section:
-                @UnknownIfRecorded EXPRESSION replacement;
+                @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> replacement;
                 // There's three possibilities.  One is that if there is one other section, or two that match each other,
                 // we could make a valid expression.  Otherwise we're going to be invalid even with a bracket.
                 if (operatorSections.size() == 2)
@@ -418,7 +419,7 @@ public interface OperandOps<EXPRESSION extends LoadableExpression<EXPRESSION, SE
                     newExps.add(operatorSection.getFirstOperandIndex(), sectionExpression);
                     newOps.subList(operatorSection.getFirstOperandIndex(), operatorSection.getLastOperandIndex()).clear();
                     
-                    replacement = makeInvalidOpExpression(ImmutableList.copyOf(newExps), newOps);
+                    replacement = operandOps.makeInvalidOpExpression(ImmutableList.copyOf(newExps), newOps);
                 }
 
                 if (replacement != null)

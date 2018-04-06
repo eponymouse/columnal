@@ -34,17 +34,17 @@ public class ErrorDisplayerRecord
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
-    private final IdentityHashMap<Expression, ErrorDisplayer<Expression>> expressionDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression>> unitDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, ErrorDisplayer<Expression, ExpressionNodeParent>> expressionDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression, UnitNodeParent>> unitDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
-    private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?>>>> pending = new IdentityHashMap<>();
+    private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?, ?>>>> pending = new IdentityHashMap<>();
     
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
-    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression> displayer, @NonNull EXPRESSION e)
+    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression, ExpressionNodeParent> displayer, @NonNull EXPRESSION e)
     {
         expressionDisplayers.put(e, displayer);
-        Pair<StyledString, List<QuickFix<?>>> pendingItem = pending.remove(e);
+        Pair<StyledString, List<QuickFix<?, ?>>> pendingItem = pending.remove(e);
         if (pendingItem != null)
         {
             showError(e, pendingItem.getFirst(), (List) pendingItem.getSecond());
@@ -54,15 +54,15 @@ public class ErrorDisplayerRecord
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression> displayer, @NonNull UNIT_EXPRESSION e)
+    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression, UnitNodeParent> displayer, @NonNull UNIT_EXPRESSION e)
     {
         unitDisplayers.put(e, displayer);
         return e;
     }
 
-    private void showError(Expression e, @Nullable StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression>> quickFixes)
+    private void showError(Expression e, @Nullable StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
-        @Nullable ErrorDisplayer<Expression> d = expressionDisplayers.get(e);
+        @Nullable ErrorDisplayer<Expression, ExpressionNodeParent> d = expressionDisplayers.get(e);
         if (d != null)
         {
             d.addErrorAndFixes(s == null ? StyledString.s("") : s, quickFixes);
@@ -126,7 +126,7 @@ public class ErrorDisplayerRecord
 
             @SuppressWarnings("unchecked")
             @Override
-            public <EXPRESSION extends StyledShowable> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION>> quickFixes)
+            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
             {
                 if (src instanceof Expression && !quickFixes.isEmpty())
                 {

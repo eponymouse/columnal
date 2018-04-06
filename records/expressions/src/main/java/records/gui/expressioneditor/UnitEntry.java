@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent> implements OperandNode<UnitExpression, UnitNodeParent>, ErrorDisplayer<UnitExpression>
+public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent> implements OperandNode<UnitExpression, UnitNodeParent>, ErrorDisplayer<UnitExpression, UnitNodeParent>
 {
     private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("Bracketed", '(');
 
