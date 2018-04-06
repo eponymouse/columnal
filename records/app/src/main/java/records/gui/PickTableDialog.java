@@ -90,7 +90,7 @@ public class PickTableDialog extends LightDialog<Table>
             setResult(t);
             close();
         });
-        getDialogPane().setContent(pickTablePane);
+        getDialogPane().setContent(pickTablePane.get(0));
 
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
         setResultConverter(bt -> null);

@@ -16,6 +16,8 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
@@ -28,18 +30,21 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
  * A ListView which allows deletion of selected items using a little cross to the right (or pressing backspace/delete), which is
  * animated by sliding out the items.
  */
-public abstract class FancyList<T, CELL_CONTENT extends Node>
+public abstract class FancyList<T, CELL_CONTENT extends List<Pane>>
 {
-    private final VBox children = new VBox();
+    private final GridPane children = new GridPane();
     private final ArrayList<Cell> cells = new ArrayList<>();
     private final BitSet selection = new BitSet();
     private boolean dragging;
@@ -54,7 +59,6 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         this.allowDeleting = allowDeleting;
         this.allowReordering = allowReordering;
-        children.setFillWidth(true);
         children.setOnKeyPressed(e -> {
             if (allowDeleting && (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE))
             {
@@ -137,6 +141,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     // If null is passed, we are not dragging, so turn off preview
     private void updateDragPreview(@Nullable Point2D childrenPoint)
     {
+        /*
         if (children.getChildren().isEmpty())
             return;
         
@@ -145,22 +150,28 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         {
             FXUtility.setPseudoclass(children.getChildren().get(i), "drag-target", i == index);
         }
+        */
     }
 
     private int findClosestDragTarget(Point2D childrenPoint)
     {
-        for (int i = 0; i < children.getChildren().size(); i++)
+        int lastRow = children.getChildren().stream().mapToInt(n -> {
+            return Optional.ofNullable(children.getRowIndex(n)).orElse(-1);
+        }).max().orElse(-1);
+        for (Node item : children.getChildren())
         {
-            Node item = children.getChildren().get(i);
             double rel = childrenPoint.getY() - item.getLayoutY();
             double itemHeight = item.getBoundsInParent().getHeight();
+            @Nullable Integer rowIndex = children.getRowIndex(item);
+            if (rowIndex == null)
+                continue;
             if (0 <= rel && rel <= itemHeight / 2.0)
             {
-                return i;
+                return rowIndex;
             }
             else if (rel <= itemHeight)
             {
-                return Math.min(i + 1, children.getChildren().size() - 1);
+                return Math.min(rowIndex + 1, lastRow);
             }
         }
         return -1;
@@ -199,11 +210,14 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         SimpleDoubleProperty amount = new SimpleDoubleProperty(0);
         for (Cell cell : cells)
         {
-            cell.translateXProperty().bind(amount);
+            for (Node node : cell)
+            {
+                node.translateXProperty().bind(amount);
+            }
         }
         
         Timeline t = new Timeline(new KeyFrame(Duration.millis(200),
-                Utility.mapList(cells, c -> new KeyValue(amount, c.getWidth())).toArray(new KeyValue[0])));
+                Utility.mapList(cells, c -> new KeyValue(amount, scrollPane.getWidth())).toArray(new KeyValue[0])));
         
         t.setOnFinished(e -> after.run());
         t.play();
@@ -216,12 +230,25 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         for (int i = 0; i < cells.size(); i++)
         {
             boolean even = (i % 2) == 0;
-            FXUtility.setPseudoclass(cells.get(i), "even", even);
-            FXUtility.setPseudoclass(cells.get(i), "odd", !even);
+            for (Node node : cells.get(i))
+            {
+                FXUtility.setPseudoclass(node, "even", even);
+                FXUtility.setPseudoclass(node, "odd", !even);
+            }
         }
-        ArrayList<Node> nodes = new ArrayList<>(this.cells);
-        nodes.add(bottomPane);
-        children.getChildren().setAll(nodes);
+        ArrayList<List<Node>> nodes = new ArrayList<>(this.cells);
+        nodes.add(ImmutableList.of(bottomPane));
+        int maxCols = 0;
+        children.getChildren().clear();
+        for (int row = 0; row < nodes.size(); row++)
+        {
+            for (int col = 0; col < nodes.get(row).size(); col++)
+            {
+                children.add(nodes.get(row).get(col), col, row);
+            }
+            maxCols = Math.max(maxCols, nodes.get(row).size());
+        }
+        GridPane.setColumnSpan(bottomPane, maxCols);
         scrollPane.fillViewport();
     }
 
@@ -286,7 +313,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     }*/
 
     @OnThread(Tag.FXPlatform)
-    protected class Cell extends BorderPane
+    protected class Cell extends AbstractList<Node> implements List<Node>
     {
         protected final SmallDeleteButton deleteButton;
         protected final CELL_CONTENT content;
@@ -321,7 +348,12 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                 }
                 // If not selected, nothing to do
             });
-            setOnMousePressed(e -> {
+            //deleteButton.visibleProperty().bind(deletable);
+            GridPane.setMargin(deleteButton, new Insets(0, 4, 0, 4));
+            Pair<CELL_CONTENT, ObjectExpression<T>> pair = makeCellContent(initialContent, editImmediately);
+            this.content = pair.getFirst();
+            this.value = pair.getSecond();
+            content.forEach(p -> p.setOnMousePressed(e -> {
                 if (e.getButton() == MouseButton.PRIMARY)
                 {
                     if (e.isShortcutDown())
@@ -362,15 +394,24 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
                     updateSelectionState();
                     e.consume();
                 }
-            });
-            //deleteButton.visibleProperty().bind(deletable);
-            setMargin(deleteButton, new Insets(0, 4, 0, 4));
-            Pair<CELL_CONTENT, ObjectExpression<T>> pair = makeCellContent(initialContent, editImmediately);
-            this.content = pair.getFirst();
-            this.value = pair.getSecond();
-            setCenter(this.content);
-            if (allowDeleting)
-                setRight(deleteButton);
+            }));
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public final Node get(int index)
+        {
+            if (index < content.size())
+                return content.get(index);
+            else 
+                return deleteButton;
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public final int size()
+        {
+            return content.size() + (allowDeleting ? 1 : 0);
         }
 
         private int getIndex(@UnknownInitialization Cell this)
@@ -381,7 +422,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         @OnThread(Tag.FXPlatform)
         private void updateHoverState(boolean hovering)
         {
-            pseudoClassStateChanged(PseudoClass.getPseudoClass("my_hover_sel"), hovering);
+            deleteButton.pseudoClassStateChanged(PseudoClass.getPseudoClass("my_hover_sel"), hovering);
         }
 
         public CELL_CONTENT getContent()
@@ -394,7 +435,10 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         for (int i = 0; i < cells.size(); i++)
         {
-            FXUtility.setPseudoclass(cells.get(i), "selected", selection.get(i));
+            for (Node node : cells.get(i))
+            {
+                FXUtility.setPseudoclass(node, "selected", selection.get(i));
+            }
         }
     }
 

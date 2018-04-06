@@ -9,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -26,11 +27,13 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.FXUtility;
 
+import java.util.AbstractList;
 import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
-public class PickTablePane extends BorderPane
+public class PickTablePane extends AbstractList<Pane>
 {
+    private final BorderPane borderPane = new BorderPane();
     private final TextField tableField = new TextField();
     private final AutoComplete autoComplete;
     private final FXPlatformConsumer<Table> setResultAndClose;
@@ -45,19 +48,33 @@ public class PickTablePane extends BorderPane
             (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()),
             getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
         
-        setCenter(tableField);
+        borderPane.setCenter(tableField);
         label = new Label("Click on a table or type table name");
-        setTop(label);
-        setMargin(label, new Insets(2));
-        setMargin(tableField, new Insets(0, 4, 4, 4));
+        borderPane.setTop(label);
+        borderPane.setMargin(label, new Insets(2));
+        borderPane.setMargin(tableField, new Insets(0, 4, 4, 4));
         
         FXUtility.addChangeListenerPlatformNN(tableField.focusedProperty(), focus -> {
             // Update whether focus is arriving or leaving:
             lastEditTimeMillis = System.currentTimeMillis();
         });
-        getStyleClass().add("pick-table-pane");
+        borderPane.getStyleClass().add("pick-table-pane");
     }
-    
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public Pane get(int index)
+    {
+        return borderPane;
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public int size()
+    {
+        return 1;
+    }
+
     public void showLabelOnlyWhenFocused()
     {
         label.visibleProperty().bind(tableField.focusedProperty());
@@ -69,7 +86,7 @@ public class PickTablePane extends BorderPane
     }
 
     @RequiresNonNull("setResultAndClose")
-    private CompletionListener getListener(@UnknownInitialization(BorderPane.class) PickTablePane this)
+    private CompletionListener getListener(@UnknownInitialization(AbstractList.class) PickTablePane this)
     {
         @NonNull FXPlatformConsumer<Table> setResultAndCloseFinal = setResultAndClose;
         return new CompletionListener()
