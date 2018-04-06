@@ -53,7 +53,7 @@ public class AnyAllNone extends FunctionGroup
         @OnThread(Tag.Simulation)
         public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            Object[] args = Utility.castTuple(param, 2);
+            @Value Object @Value[] args = Utility.castTuple(param, 2);
             ListEx list = Utility.cast(args[0], ListEx.class);
             ValueFunction processElement = Utility.cast(args[1], ValueFunction.class);
             for (int i = 0; i < list.size(); i++)

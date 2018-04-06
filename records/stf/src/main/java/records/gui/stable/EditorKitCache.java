@@ -46,7 +46,7 @@ import java.util.concurrent.ExecutionException;
  * V is the type of the value being displayed, e.g. Number
  */
 @OnThread(Tag.FXPlatform)
-public final class EditorKitCache<V> implements ColumnHandler
+public final class EditorKitCache<@Value V> implements ColumnHandler
 {
     public static enum ProgressState
     {
@@ -60,14 +60,14 @@ public final class EditorKitCache<V> implements ColumnHandler
     private final Cache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
 
     @OnThread(Tag.Any)
-    private final GetValue<V> getValue;
+    private final GetValue<@Value V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
-    private final MakeEditorKit<V> makeEditorKit;
+    private final MakeEditorKit<@Value V> makeEditorKit;
     private final @TableDataColIndex int columnIndex;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public EditorKitCache(@TableDataColIndex int columnIndex, GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, MakeEditorKit<V> makeEditorKit)
+    public EditorKitCache(@TableDataColIndex int columnIndex, GetValue<@Value V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, MakeEditorKit<@Value V> makeEditorKit)
     {
         this.columnIndex = columnIndex;
         this.getValue = getValue;
@@ -230,11 +230,13 @@ public final class EditorKitCache<V> implements ColumnHandler
     {
     }
 
+    /*
     @OnThread(Tag.Simulation)
     protected final void store(int rowIndex, V v) throws UserException, InternalException
     {
         getValue.set(rowIndex, v);
     }
+    /*
 
     /**
      * A display cache.  This sets off the loader for its value, and in the mean time
@@ -249,7 +251,7 @@ public final class EditorKitCache<V> implements ColumnHandler
         private final @TableDataRowIndex int rowIndex;
         // The result of loading: either value or error.  If null, still loading
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull Either<Pair<V, EditorKit<V>>, @Localized String> loadedItemOrError;
+        private @MonotonicNonNull Either<Pair<@Value V, EditorKit<@Value V>>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
         private final EditorKitCallback callbackSetCellContent;
@@ -267,10 +269,10 @@ public final class EditorKitCache<V> implements ColumnHandler
             Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
         }
 
-        public synchronized void update(V loadedItem)
+        public synchronized void update(@Value V loadedItem)
         {
             FXUtility.alertOnErrorFX_(() -> {
-                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
+                this.loadedItemOrError = Either.<Pair<@Value V, EditorKit<@Value V>>, @Localized String>left(new Pair<@Value V, EditorKit<@Value V>>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
             updateDisplay();
             formatVisible(OptionalInt.of(rowIndex));
@@ -281,7 +283,7 @@ public final class EditorKitCache<V> implements ColumnHandler
         {
             if (loadedItemOrError != null)
             {
-                EditorKit<V> editorKit = loadedItemOrError.either(p -> p.getSecond(), err -> new EditorKitSimpleLabel<>(err));
+                EditorKit<@Value V> editorKit = loadedItemOrError.<EditorKit<@Value V>>either(p -> p.getSecond(), err -> new EditorKitSimpleLabel<>(err));
                 this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, editorKit);
             }
             else
@@ -335,7 +337,7 @@ public final class EditorKitCache<V> implements ColumnHandler
                     Platform.runLater(() -> displayCacheItem.updateProgress(ProgressState.GETTING, d));
                 };
                 prog.progressUpdate(0.0);
-                V val = getValue.getWithProgress(originalIndex, prog);
+                @Value V val = getValue.getWithProgress(originalIndex, prog);
                 Platform.runLater(() -> displayCacheItem.update(val));
             }
             catch (UserException | InternalException e)

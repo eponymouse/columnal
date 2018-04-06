@@ -337,30 +337,35 @@ public class TableDisplayUtility
         public CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex);
     }
     
-    public static class GetValueAndComponent<T>
+    public static class GetValueAndComponent<@Value T>
     {
-        public final GetValue<T> g;
-        public final ComponentMaker<T> makeComponent;
+        public final GetValue<@Value T> g;
+        public final ComponentMaker<@Value T> makeComponent;
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(GetValue<T> g, ComponentMaker<T> makeComponent)
+        public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent)
         {
             this.g = g;
             this.makeComponent = makeComponent;
         }
         
         @OnThread(Tag.Any)
-        public EditorKitCache<T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
+        public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
-            MakeEditorKit<T> makeEditorKit = (rowIndex, value, relinquishFocus) -> {
-                FXPlatformConsumer<Pair<String, T>> saveChange = isEditable ? (Pair<String, T> p) -> {
-                    Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
-                    onModify.run();
+            MakeEditorKit<@Value T> makeEditorKit = (rowIndex, value, relinquishFocus) -> {
+                FXPlatformConsumer<Pair<String, @Value T>> saveChange = isEditable ? new FXPlatformConsumer<Pair<String, @Value T>>()
+                {
+                    @Override
+                    public @OnThread(Tag.FXPlatform) void consume(Pair<String, @Value T> p)
+                    {
+                        Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
+                        onModify.run();
+                    }
                 } : null;
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
+                return new EditorKit<@Value T>(makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
             };
-            return new EditorKitCache<T>(columnIndex, g, vis -> {}, makeEditorKit);
+            return new EditorKitCache<@Value T>(columnIndex, g, vis -> {}, makeEditorKit);
         }
     }
 
@@ -498,24 +503,24 @@ public class TableDisplayUtility
                 {
                     gvacs.add(valueAndComponent(type));
                 }
-                GetValue<Object[]> tupleGet = new GetValue<Object[]>()
+                GetValue<@Value Object @Value[]> tupleGet = new GetValue<@Value Object @Value[]>()
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public Object@NonNull [] getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    public @Value Object @Value @NonNull [] getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
-                        Object[] r = new Object[types.size()];
+                        @Value Object[] r = new @Value Object[types.size()];
                         for (int i = 0; i < r.length; i++)
                         {
                             r[i] = gvacs.get(i).g.getWithProgress(index, progressListener);
                         }
-                        return r;
+                        return DataTypeUtility.value(r);
                     }
 
                     @Override
                     @OnThread(Tag.Simulation)
                     @SuppressWarnings("unchecked")
-                    public void set(int index, Object[] value) throws InternalException, UserException
+                    public void set(int index, @Value Object @Value[] value) throws InternalException, UserException
                     {
                         for (int i = 0; i < value.length; i++)
                         {
@@ -526,18 +531,18 @@ public class TableDisplayUtility
                 };
 
 
-                return new GetValueAndComponent<Object[]>(tupleGet, (parents, value) -> {
-                    ArrayList<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends Object>>> components = new ArrayList<>(types.size());
+                return new GetValueAndComponent<@Value Object @Value[]>(tupleGet, (parents, value) -> {
+                    ArrayList<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @Value Object>>> components = new ArrayList<>(types.size());
                     for (int i = 0; i < types.size(); i++)
                     {
                         GetValueAndComponent<?> gvac = gvacs.get(i);
                         // Have to use some casts because we can't express the type safety:
                         @SuppressWarnings("unchecked")
-                        ComponentMaker<Object> makeComponent = (ComponentMaker)gvac.makeComponent;
+                        ComponentMaker<@Value Object> makeComponent = (ComponentMaker)gvac.makeComponent;
                         int iFinal = i;
                         components.add(subParents -> makeComponent.makeComponent(subParents, value[iFinal]));
                     }
-                    return new FixedLengthComponentList<Object[], Object>(parents, "(", components, ",", ")", l -> l.toArray());
+                    return new FixedLengthComponentList<@Value Object @Value[], @Value Object>(parents, "(", components, ",", ")", (List<@Value Object> l) -> DataTypeUtility.value(l.<@Value Object>toArray(new @Value Object[0])));
                 });
             }
 

@@ -67,7 +67,7 @@ public abstract class NaryOpExpression extends Expression
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
-            return new ValueFunction()
+            return new @Value ValueFunction()
             {
                 @Override
                 @OnThread(Tag.Simulation)
