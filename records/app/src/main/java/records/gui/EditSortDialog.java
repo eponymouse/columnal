@@ -12,9 +12,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.stage.Modality;
@@ -47,7 +45,6 @@ import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.LightDialog;
 
-import java.util.AbstractList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -144,14 +141,12 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
     }
 
     @OnThread(Tag.FXPlatform)
-    private class SortPane extends AbstractList<Pane>
+    private class SortPane extends BorderPane
     {
-        private final BorderPane borderPane = new BorderPane();
         private final SimpleObjectProperty<Pair<ColumnId, Direction>> currentValue;
         private final TextField columnField;
         private final AutoComplete autoComplete;
         private final DirectionButton button;
-        private final Pane buttonPane;
         private long lastEditTimeMillis = -1;
 
         public SortPane(@Nullable Pair<ColumnId, Direction> initialContent)
@@ -177,27 +172,14 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             });
             Label label = new Label("Type table name or click on column");
             label.visibleProperty().bind(columnField.focusedProperty());
-            borderPane.setTop(label);
-            borderPane.setCenter(columnField);
+            setTop(label);
+            setCenter(columnField);
             button = new DirectionButton();
             button.setDirection(initialContent == null ? Direction.ASCENDING : initialContent.getSecond());
             button.setType(calculateTypeOf(initialContent == null ? null : initialContent.getFirst()));
-            borderPane.getStyleClass().add("sort-pane");
-            buttonPane = new StackPane(button);
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public Pane get(int index)
-        {
-            return index == 0 ? borderPane : buttonPane;
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public int size()
-        {
-            return 2;
+            setRight(button);
+            getStyleClass().add("sort-pane");
+            
         }
 
         public long lastEditTimeMillis()
