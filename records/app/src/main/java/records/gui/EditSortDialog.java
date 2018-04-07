@@ -5,6 +5,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -16,6 +17,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import javafx.stage.Modality;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -53,10 +55,12 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 {
     private final ImmutableList<Table> possibleTables;
     private final @Nullable RecordSet dataWithColumns;
+    private final SortList sortList;
 
     public EditSortDialog(View parent, Point2D lastScreenPos, @Nullable Table srcTable, Table destTable, ImmutableList<Pair<ColumnId, Direction>> originalSortBy)
     {
         super(parent.getWindow());
+        setResizable(true);
         initModality(Modality.NONE);
         possibleTables = srcTable == null ? ImmutableList.of(destTable) : ImmutableList.of(srcTable, destTable);
         @Nullable RecordSet d = null;
@@ -70,11 +74,11 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
         dataWithColumns = d;
 
-        SortList sortList = new SortList(originalSortBy);
+        sortList = new SortList(originalSortBy);
         sortList.getNode().setMinWidth(250.0);
         sortList.getNode().setMinHeight(150.0);
         sortList.getNode().setPrefWidth(300.0);
-        sortList.getNode().setPrefHeight(200.0);
+        sortList.getNode().setPrefHeight(250.0);
         getDialogPane().setContent(new BorderPane(sortList.getNode(), new Label("Choose the columns to sort by"), null, null, null));
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         getDialogPane().getStylesheets().addAll(
@@ -106,6 +110,11 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         {
             super(initialItems, true, true, true);
             getStyleClass().add("sort-list");
+            listenForCellChange(c -> {
+                updateButtonWidths();
+                // When cell is added, not yet in scene, so run later in case it's the largest one:
+                FXUtility.runAfterDelay(Duration.millis(100), () -> updateButtonWidths());
+            });
         }
 
         @Override
@@ -138,6 +147,20 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 addToEnd(new Pair<>(t.getSecond(), Direction.ASCENDING), false);
             }
         }
+
+        public void updateButtonWidths(@UnknownInitialization(FancyList.class) SortList this)
+        {
+            ImmutableList<SortPane.DirectionButton> buttons = streamCells().map(c -> c.getContent().button).collect(ImmutableList.toImmutableList());
+            if (buttons.isEmpty())
+                return;
+            // Find the largest preferred width:
+            double largestPrefWidth = buttons.stream().mapToDouble(b -> b.prefWidth(-1)).max().orElse(30.0);
+            for (SortPane.DirectionButton button : buttons)
+            {
+                // Must set min, not pref, otherwise it screws up our calculation above:
+                button.setMinWidth(largestPrefWidth);
+            }
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -153,6 +176,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         {
             currentValue = new SimpleObjectProperty<>(initialContent == null ? new Pair<>(new ColumnId(""), Direction.ASCENDING) : initialContent);
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
+            BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
             autoComplete = new AutoComplete(columnField,
                 (s, q) -> possibleTables.stream().flatMap(t -> {
                     try
@@ -178,6 +202,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             button.setDirection(initialContent == null ? Direction.ASCENDING : initialContent.getSecond());
             button.setType(calculateTypeOf(initialContent == null ? null : initialContent.getFirst()));
             setRight(button);
+            BorderPane.setMargin(button, new Insets(0, 4, 0, 4));
             getStyleClass().add("sort-pane");
             
         }
@@ -238,6 +263,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             return currentValue;
         }
 
+        @OnThread(Tag.FXPlatform)
         private class DirectionButton extends Button
         {
             private final Label topLabel;
@@ -249,8 +275,9 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
 
             public DirectionButton()
             {
-                icon = new Polygon(5, 0, 10, 25, 0, 25);
+                icon = new Polygon(4, 0, 8, 25, 0, 25);
                 icon.getStyleClass().add("sort-direction-icon");
+                BorderPane.setMargin(icon, new Insets(0, 1, 0, 3));
                 BorderPane sortGraphic = new BorderPane();
                 topLabel = new Label(smallItem);
                 bottomLabel = new Label(largeItem);
@@ -390,6 +417,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                 }
                 // Will update labels:
                 setDirection(direction);
+                sortList.updateButtonWidths();
             }
         }
     }

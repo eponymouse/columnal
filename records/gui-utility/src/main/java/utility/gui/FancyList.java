@@ -6,13 +6,14 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
@@ -24,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -40,7 +42,7 @@ import java.util.stream.Stream;
 public abstract class FancyList<T, CELL_CONTENT extends Node>
 {
     private final VBox children = new VBox();
-    private final ArrayList<Cell> cells = new ArrayList<>();
+    private final ObservableList<Cell> cells = FXCollections.observableArrayList();
     private final BitSet selection = new BitSet();
     private boolean dragging;
     private boolean hoverOverSelection = false;
@@ -230,7 +232,7 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         return cells.stream().map(c -> c.value.get()).collect(ImmutableList.toImmutableList());
     }
     
-    protected Stream<Cell> streamCells()
+    protected Stream<Cell> streamCells(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this)
     {
         return cells.stream();
     }
@@ -408,5 +410,10 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         cells.add(new Cell(content, editImmediately));
         updateChildren();
+    }
+    
+    protected void listenForCellChange(@UnknownInitialization(FancyList.class) FancyList<T, CELL_CONTENT> this, FXPlatformConsumer<Change<? extends Cell>> listener)
+    {
+        FXUtility.listen(cells, listener);
     }
 }

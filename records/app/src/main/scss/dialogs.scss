@@ -48,19 +48,31 @@
 .table-list-dialog .table-list, .sort-list-dialog .sort-list {
     -fx-background-color: grey, $control-background;
     -fx-background-insets: 0, 1;
-    & .fancy-list-cell, & .fancy-list-end {
+    & .fancy-list-end {
+        -fx-background: transparent;
+        -fx-border-color: black, transparent;
+        -fx-border-style: solid inside;
+        -fx-border-width: 1 0 0 0, 1 0 0 0;
+    }
+    & .viewport {
+        -fx-background-color: $control-background;
+    }
+    & .fancy-list-cell {
         -fx-border-color: transparent;
         -fx-border-style: solid inside;
         -fx-border-width: 2 0 0 0;
     }
 }
 .table-list-dialog .table-list .fancy-list-cell:even, .sort-list-dialog .sort-list .fancy-list-cell:even {
-    -fx-background-color: $control-background;
+    -fx-background-color: $list-even;
+    & .text-field {
+        -fx-background-color: $list-even;
+    }
 }
 .table-list-dialog .table-list .fancy-list-cell:odd, .sort-list-dialog .sort-list .fancy-list-cell:odd {
-    -fx-background-color: $control-background-odd;
+    -fx-background-color: $list-odd;
     & .text-field {
-        -fx-background-color: $control-background-odd;
+        -fx-background-color: $list-odd;
     }
 }
 .table-list-dialog .table-list, .sort-list-dialog .sort-list {
@@ -94,20 +106,20 @@
 }
 .table-list-dialog .fancy-list-cell, .sort-list-dialog .fancy-list-cell {
     &:even .pick-table-pane > .text-field, &:even .sort-pane > .text-field {
-        -fx-background-color: $control-background, $control-background;
+        -fx-background-color: $list-even, $list-even;
         -fx-background-insets: 0, 1;
         &:hover {
-            -fx-background-color: grey, $control-background;
+            -fx-background-color: grey, $list-even;
         }
         &:focused {
             -fx-background-color: grey, white;
         }
     }
     &:odd .pick-table-pane > .text-field, &:odd .sort-pane > .text-field {
-        -fx-background-color: $control-background-odd, $control-background-odd;
+        -fx-background-color: $list-odd, $list-odd;
         -fx-background-insets: 0, 1;
         &:hover {
-            -fx-background-color: grey, $control-background-odd;
+            -fx-background-color: grey, $list-odd;
         }
         &:focused {
             -fx-background-color: grey, white;

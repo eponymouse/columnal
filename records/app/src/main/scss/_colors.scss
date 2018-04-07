@@ -16,11 +16,11 @@ $focus-color-row-col: rgb(237, 236, 243);
 $focus-color-text: white;
 $faint-focus-color: rgba($focus-color, 0.25);
 $control-background: grey(95%);
-$control-background-odd: grey(92%);
+$control-background-dark: grey(92%);
 
 /* Lists: */
-$list-even: derive(white, -4%);
-$list-odd:  derive(white, -8%);
+$list-even: grey(99%);
+$list-odd:  grey(97%);
 $list-background: derive(white, -12%);
 $list-selection-focused: $focus-color;
 $list-selection-unfocused: rgb(120, 118, 128);
