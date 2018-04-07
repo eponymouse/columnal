@@ -43,7 +43,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern

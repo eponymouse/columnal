@@ -51,7 +51,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (unit == null)
             return onError.recordType(this, TypeExp.fromConcrete(this, DataType.NUMBER));

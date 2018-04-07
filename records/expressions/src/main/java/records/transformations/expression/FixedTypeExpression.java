@@ -60,7 +60,7 @@ public class FixedTypeExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TypeExp innerType = inner.check(dataLookup, typeState, onError);
         if (innerType == null)

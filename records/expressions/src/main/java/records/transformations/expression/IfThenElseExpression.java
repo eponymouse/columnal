@@ -53,7 +53,7 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TypeExp conditionType = condition.check(dataLookup, state, onError);
         if (conditionType == null)

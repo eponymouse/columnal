@@ -145,7 +145,7 @@ public abstract class BinaryOpExpression extends Expression
     public abstract @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState);
         typeState = lambda.getSecond();

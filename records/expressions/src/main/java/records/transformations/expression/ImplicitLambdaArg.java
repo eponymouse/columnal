@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -39,13 +40,13 @@ import java.util.stream.Stream;
 public class ImplicitLambdaArg extends NonOperatorExpression
 {
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList<TypeExp> questTypes = typeState.findVarType("?");
         if (questTypes == null || questTypes.isEmpty())
             throw new UserException("? is not a valid expression by itself");
         // Pick last one in case of nested definitions:
-        return questTypes.get(questTypes.size() - 1);
+        return onError.recordType(this, questTypes.get(questTypes.size() - 1));
     }
 
     @Override

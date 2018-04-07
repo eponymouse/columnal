@@ -94,7 +94,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         }
     }
     
-    static abstract class OperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
+    static abstract class OperatorSection<EXPRESSION extends LoadableExpression<@UnknownIfRecorded EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         protected final ImmutableList<Pair<String, @Localized String>> possibleOperators;
         // The ordering in the candidates list:
@@ -126,7 +126,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         abstract @Nullable EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketedStatus bracketedStatus);
     }
     
-    static class BinaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT>
+    static class BinaryOperatorSection<EXPRESSION extends LoadableExpression<@UnknownIfRecorded EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT>
     {
         private final MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression;
         private final int operatorIndex;

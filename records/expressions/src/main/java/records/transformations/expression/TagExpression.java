@@ -69,7 +69,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         // Not valid tag; nothing more we can do:

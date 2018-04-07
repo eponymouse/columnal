@@ -50,7 +50,7 @@ public class MatchesOneExpression extends BinaryOpExpression
 
     // Must use checkAsPattern on RHS, not check:
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         lhsType = lhs.check(dataLookup, typeState, onError);
         if (lhsType == null)

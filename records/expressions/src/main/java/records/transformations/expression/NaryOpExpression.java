@@ -52,11 +52,11 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public final @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = detectImplicitLambda(this, expressions, typeState);
         typeState = lambda.getSecond();
-        return lambda.getFirst().apply(checkNaryOp(dataLookup, typeState, onError));
+        return onError.recordType(this, lambda.getFirst().apply(checkNaryOp(dataLookup, typeState, onError)));
     }
 
     public abstract @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;

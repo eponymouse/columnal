@@ -62,7 +62,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())

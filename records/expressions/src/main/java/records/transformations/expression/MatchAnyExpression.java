@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 public class MatchAnyExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern

@@ -54,7 +54,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         for (int i = 0; i < typeArray.length; i++)
