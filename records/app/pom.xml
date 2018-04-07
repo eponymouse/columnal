@@ -346,13 +346,13 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.20.1</version>
                 <configuration>
-                    <argLine>-Xmx1G</argLine>
+                    <argLine>-Xmx1G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=2500</argLine>
                     <skipAfterFailureCount>0</skipAfterFailureCount>
                     <includes>
                         <include>**/Test*.java</include>
                         <include>**/Prop*.java</include>
                     </includes>
-                    <!-- TEMP -->
+                    <!-- Exclude GUI tests from Maven test (can still run direct from IDE): -->
                     <!--
                     <excludes>
                         <exclude>**/gui/*.java</exclude>
