@@ -456,7 +456,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(prefix + text + suffix, Utility.universal("TODO"));
+            return new CompletionContent(prefix + text + suffix, null);
         }
 
         @Override
@@ -517,7 +517,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(function.getName() + "(...)", TranslationUtility.getString(functionGroup.getShortDescriptionKey()));
+            return new CompletionContent(function.getName() + "(...)", functionGroup.getShortDescriptionKey());
         }
 
         @Override
@@ -565,7 +565,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText, "");
+            return new CompletionContent(currentText, null);
         }
 
         @Override
@@ -689,7 +689,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(keyword, Utility.universal("TODO"));
+            return new CompletionContent(keyword, null);
         }
 
         @Override
@@ -723,7 +723,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(tagInfo.getTagInfo().getName() + " [type " + tagInfo.getTypeName() + "]", "");
+            return new CompletionContent(tagInfo.getTagInfo().getName() + " [type " + tagInfo.getTypeName() + "]", null);
         }
 
         @Override
@@ -1026,7 +1026,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(" { ", "Units");
+            return new CompletionContent(" { ", "expression.autocomplete.units");
         }
 
         @Override
@@ -1065,7 +1065,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText, "Named match");
+            return new CompletionContent(currentText, "expression.autocomplete.units");
         }
 
         @Override
@@ -1099,7 +1099,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(name, "Variable");
+            return new CompletionContent(name, "expression.autocomplete.variable");
         }
 
         @Override

@@ -136,7 +136,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText, "");
+            return new CompletionContent(currentText, null);
         }
 
         @Override
@@ -209,7 +209,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(name, "");
+            return new CompletionContent(name, null);
         }
 
         @Override

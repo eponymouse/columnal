@@ -139,7 +139,7 @@ public class PickTablePane extends BorderPane
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(t.getId().getOutput(), "");
+            return new CompletionContent(t.getId().getOutput(), null);
         }
 
         @Override

@@ -199,7 +199,7 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(operator, this.description);
+            return new CompletionContent(new Pair<>(operator, this.description));
         }
 
         @Override

@@ -35,6 +35,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.Instruction;
@@ -431,15 +432,22 @@ public class AutoComplete extends PopupControl
             private final ObservableStringValue completion;
             private final @Localized String description;
 
-            public CompletionContent(ObservableStringValue completion, @Localized String description)
+            public CompletionContent(ObservableStringValue completion, @Nullable @LocalizableKey String descriptionKey)
             {
                 this.completion = completion;
-                this.description = description;
+                this.description = descriptionKey == null ? Utility.universal("") : TranslationUtility.getString(descriptionKey);
             }
 
-            public CompletionContent(String completion, @Localized String description)
+            public CompletionContent(String completion, @Nullable @LocalizableKey String description)
             {
                 this(new ReadOnlyStringWrapper(completion), description);
+            }
+            
+            // Slight hack: use Pair to have an overload that comes pre-localised:
+            public CompletionContent(Pair<String, @Localized String> completionAndDescription)
+            {
+                this.completion = new ReadOnlyStringWrapper(completionAndDescription.getFirst());
+                this.description = completionAndDescription.getSecond();
             }
         }
         
@@ -491,18 +499,18 @@ public class AutoComplete extends PopupControl
     public static @Interned class KeyShortcutCompletion extends Completion
     {
         private final Character[] shortcuts;
-        private final @Localized String title;
+        private final @LocalizableKey String titleKey;
 
         public KeyShortcutCompletion(@LocalizableKey String titleKey, Character... shortcuts)
         {
             this.shortcuts = shortcuts;
-            this.title = TranslationUtility.getString(titleKey);
+            this.titleKey = titleKey;
         }
 
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(" " + shortcuts[0] + " ", title);
+            return new CompletionContent(" " + shortcuts[0] + " ", titleKey);
         }
 
         @Override

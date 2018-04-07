@@ -148,7 +148,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText, "");
+            return new CompletionContent(currentText, null);
         }
 
         @Override
