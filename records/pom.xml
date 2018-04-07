@@ -114,12 +114,11 @@
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
-                                    <!-- <annotationProcessor>org.checkerframework.checker.lock.LockChecker</annotationProcessor> -->
-                                    <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
                                     <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
                                     <annotationProcessor>annotation.help.HelpFileChecker</annotationProcessor>
-                                    <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor>
+                                    <!-- Temporarily disabled while sorting out the LoadableExpression bug: -->
+                                    <!-- <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor> -->
                                 </annotationProcessors>
                                 <annotationProcessorPaths>
                                     <path>

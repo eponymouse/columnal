@@ -93,18 +93,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     @OnThread(Tag.Any)
     private final VirtualGrid srcGrid;
 
-    public static class SourceInfo
-    {
-        private final ImmutableList<ColumnDetails> srcColumns;
-        private final @TableDataRowIndex int numRows;
-
-        public SourceInfo(ImmutableList<ColumnDetails> srcColumns, @TableDataRowIndex int numRows)
-        {
-            this.srcColumns = srcColumns;
-            this.numRows = numRows;
-        }
-    }
-
     public ImportChoicesDialog(TableManager mgr, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
     {
         this.importer = importer;

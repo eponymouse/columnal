@@ -26,6 +26,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunction;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid.Row;
@@ -152,7 +153,7 @@ public class ImporterGUI
         @Override
         public @Localized String toString()
         {
-            return value == null ? TranslationUtility.getString("import.choice.specify") : value.toString();
+            return value == null ? TranslationUtility.getString("import.choice.specify") : Utility.universal(value.toString());
         }
     }
 }

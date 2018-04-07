@@ -23,7 +23,7 @@ public class ChoiceDetails<C>
     // in the combo box which shows a text field:
     public final @Nullable Function<String, Either<@Localized String, @NonNull C>> stringEntry;
 
-    public ChoiceDetails(@LocalizableKey String labelKey, @HelpKey String helpKey, ImmutableList<@NonNull C> quickPicks, @Nullable Function<String, Either<String, @NonNull C>> stringEntry)
+    public ChoiceDetails(@LocalizableKey String labelKey, @HelpKey String helpKey, ImmutableList<@NonNull C> quickPicks, @Nullable Function<String, Either<@Localized String, @NonNull C>> stringEntry)
     {
         this.labelKey = labelKey;
         this.helpKey = helpKey;

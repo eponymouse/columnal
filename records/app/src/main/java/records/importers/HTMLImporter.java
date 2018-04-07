@@ -42,7 +42,6 @@ import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
-import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
 import utility.Pair;

@@ -1053,7 +1053,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 content = StyledString.concat(
                     StyledString.s("Concatenate "),
                     sourceText.withStyle(
-                        new Clickable("edit.tooltip") {
+                        new Clickable("click.to.change") {
                             @Override
                             @OnThread(Tag.FXPlatform)
                             protected void onClick(MouseButton mouseButton, Point2D screenPoint)

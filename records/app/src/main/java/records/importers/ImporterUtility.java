@@ -36,7 +36,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ReadOnlyStringColumnHandler;
 import records.gui.stable.ColumnDetails;
-import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -50,49 +49,6 @@ import java.util.List;
 
 public class ImporterUtility
 {
-    //package-visible
-    static SourceInfo makeSourceInfo(List<List<String>> vals)
-    {
-        ImmutableList.Builder<ColumnDetails> columnHandlers = ImmutableList.builder();
-        if (!vals.isEmpty())
-        {
-            int widest = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
-            for (int columnIndex = 0; columnIndex < widest; columnIndex++)
-            {
-                @SuppressWarnings("units")
-                @TableDataColIndex int columnIndexFinal = columnIndex;
-                columnHandlers.add(new ColumnDetails(new ColumnId("Column " + (columnIndex + 1)), DataType.TEXT, null, new ReadOnlyStringColumnHandler(columnIndexFinal)
-                {
-                    @Override
-                    @OnThread(Tag.FXPlatform)
-                    public void fetchValueForRow(int rowIndex, FXPlatformConsumer<String> withValue)
-                    {
-                        String s;
-                        try
-                        {
-                            s = vals.get(rowIndex).get(columnIndexFinal);
-                        }
-                        catch (IndexOutOfBoundsException e)
-                        {
-                            s = "<Missing>";
-                        }
-                        withValue.consume(s);
-                    }
-
-                    @OnThread(Tag.Simulation)
-                    @Override
-                    public @Value Object getValue(int rowIndex) throws InternalException, UserException
-                    {
-                        return vals.get(rowIndex).get(columnIndexFinal);
-                    }
-                }));
-            }
-        }
-        @SuppressWarnings("units")
-        @TableDataRowIndex int valSize = vals.size();
-        return new SourceInfo(columnHandlers.build(), valSize);
-    }
-
     // Pads each row with extra blanks so that all rows have the same length
     // Modifies list (and inner lists) in-place.
     public static void rectangularise(List<ArrayList<String>> vals)

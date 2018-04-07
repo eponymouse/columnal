@@ -179,7 +179,7 @@ public class GenFormattedData extends Generator<FormatAndData>
         {
             for (int i = 0; i < intendedContent.size(); i++)
             {
-                List<Object> row = intendedContent.get(i);
+                List<@Value Object> row = intendedContent.get(i);
                 intendedContent.set(i, row.subList(leftTrim, row.size() - rightTrim));
             }
         }

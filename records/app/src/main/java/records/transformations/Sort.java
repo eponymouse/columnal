@@ -265,7 +265,7 @@ public class Sort extends Transformation
     // All arrays must be same length.
     // Returns -1 if a is before b, given the directions.
     // e.g. compareFixedSet({0}, {1}, DESCENDING) will return positive number, because 0 is after 1 when descending
-    private static int compareFixedSet(Object[] a, Object[] b, Direction[] justDirections) throws UserException, InternalException
+    private static int compareFixedSet(@Value Object[] a, @Value Object[] b, Direction[] justDirections) throws UserException, InternalException
     {
         for (int i = 0; i < a.length; i++)
         {

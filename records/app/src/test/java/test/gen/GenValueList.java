@@ -16,11 +16,11 @@ public class GenValueList extends GenValueBase<ListAndType>
 {
     public static class ListAndType
     {
-        public final ListEx list;
+        public final @Value ListEx list;
         // Type of the whole array, not the item inside:
         public final DataType type;
 
-        public ListAndType(ListEx list, DataType type)
+        public ListAndType(@Value ListEx list, DataType type)
         {
             this.list = list;
             this.type = type;
@@ -58,7 +58,7 @@ public class GenValueList extends GenValueBase<ListAndType>
                 throw new RuntimeException(e);
             }
         }
-        return new ListAndType(new ListEx()
+        return new ListAndType(new @Value ListEx()
         {
             @Override
             public int size() throws InternalException, UserException
