@@ -134,9 +134,9 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     private static class NumericLiteralCompletion extends Completion
     {
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, currentText);
+            return new CompletionContent(currentText, "");
         }
 
         @Override
@@ -207,9 +207,9 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(name));
+            return new CompletionContent(name, "");
         }
 
         @Override

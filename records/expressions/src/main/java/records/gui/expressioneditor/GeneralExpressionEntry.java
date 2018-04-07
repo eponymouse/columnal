@@ -454,9 +454,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(prefix.isEmpty() ? null : new Label(" " + prefix + " "), new ReadOnlyStringWrapper(text + suffix));
+            return new CompletionContent(prefix + text + suffix, Utility.universal("TODO"));
         }
 
         @Override
@@ -515,9 +515,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(function.getName() + "(...)"));
+            return new CompletionContent(function.getName() + "(...)", TranslationUtility.getString(functionGroup.getShortDescriptionKey()));
         }
 
         @Override
@@ -563,9 +563,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private class NumericLiteralCompletion extends GeneralCompletion
     {
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, currentText);
+            return new CompletionContent(currentText, "");
         }
 
         @Override
@@ -687,9 +687,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(keyword));
+            return new CompletionContent(keyword, Utility.universal("TODO"));
         }
 
         @Override
@@ -721,9 +721,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(tagInfo.getTagInfo().getName() + " [type " + tagInfo.getTypeName() + "]"));
+            return new CompletionContent(tagInfo.getTagInfo().getName() + " [type " + tagInfo.getTypeName() + "]", "");
         }
 
         @Override
@@ -1024,9 +1024,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private class AddUnitCompletion extends Completion
     {
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(new Label(" { "), new ReadOnlyStringWrapper("Units"));
+            return new CompletionContent(" { ", "Units");
         }
 
         @Override
@@ -1063,9 +1063,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private static class VarDeclCompletion extends Completion
     {
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(new Label("Named match"), currentText);
+            return new CompletionContent(currentText, "Named match");
         }
 
         @Override
@@ -1097,9 +1097,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(new Label("Variable"), new ReadOnlyStringWrapper(name));
+            return new CompletionContent(name, "Variable");
         }
 
         @Override

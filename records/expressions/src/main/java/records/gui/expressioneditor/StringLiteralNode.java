@@ -146,9 +146,9 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     private static class EndStringCompletion extends Completion
     {
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, currentText);
+            return new CompletionContent(currentText, "");
         }
 
         @Override

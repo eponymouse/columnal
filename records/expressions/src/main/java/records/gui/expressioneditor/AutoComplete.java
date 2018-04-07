@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -20,6 +21,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -27,11 +30,15 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionAction;
+import records.gui.expressioneditor.AutoComplete.Completion.CompletionContent;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.Pair;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
+import utility.gui.Instruction;
+import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,6 +55,7 @@ public class AutoComplete extends PopupControl
     private final TextField textField;
     private final ListView<Completion> completions;
     private final BorderPane container;
+    private final Instruction instruction;
     private boolean settingContentDirectly = false;
 
     public static enum WhitespacePolicy
@@ -83,6 +91,7 @@ public class AutoComplete extends PopupControl
     public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, CompletionListener onSelect, WhitespacePolicy whitespacePolicy, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
+        this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
         this.completions = new ListView<Completion>() {
             @Override
             @OnThread(Tag.FX)
@@ -91,12 +100,14 @@ public class AutoComplete extends PopupControl
                 // Can't be focused
             }
         };
+        completions.setPrefWidth(350.0);
         container = new BorderPane(null, null, null, null, completions);
         
         FXUtility.listen(completions.getItems(), change -> {
             updateHeight(completions);
         });
 
+        textField.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
         completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
 
         completions.setCellFactory(lv -> {
@@ -132,7 +143,11 @@ public class AutoComplete extends PopupControl
                 Pair<Double, Double> pos = calculatePosition();
                 updateCompletions(calculateCompletions, textField.getText());
                 if (!isShowing() && pos != null)
+                {
+                    Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
+                    instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
                     show(textField, pos.getFirst(), pos.getSecond());
+                }
             }
             else
             {
@@ -151,6 +166,7 @@ public class AutoComplete extends PopupControl
                             textField.setText(newContent);
                     }
                     hide();
+                    instruction.hide();
                 }
             }
         });
@@ -265,6 +281,7 @@ public class AutoComplete extends PopupControl
                         change.setText(newContent);
                     change.setRange(0, textField.getLength());
                     hide();
+                    instruction.hide();
                     return change;
                 }
                 else if (completionAction == CompletionAction.SELECT || (settingContentDirectly && completionAction == CompletionAction.COMPLETE_IMMEDIATELY))
@@ -294,14 +311,18 @@ public class AutoComplete extends PopupControl
             
             return change;
         }));
-        
-        setHideOnEscape(true);
-        setAutoHide(true);
+
+        // We do the hiding on escape and auto-hide:
+        setHideOnEscape(false);
+        setAutoHide(false);
+        instruction.setHideOnEscape(false);
+        instruction.setAutoHide(false);
         
         addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE)
             {
                 hide();
+                instruction.hide();
                 e.consume();
             }
             if ((e.getCode() == KeyCode.UP || e.getCode() == KeyCode.PAGE_UP) && completions.getSelectionModel().getSelectedIndex() <= 0)
@@ -319,6 +340,7 @@ public class AutoComplete extends PopupControl
                     if (newContent != null)
                         textField.setText(newContent);
                     hide();
+                    instruction.hide();
                 }
             }
         });
@@ -404,11 +426,28 @@ public class AutoComplete extends PopupControl
 
     public abstract static @Interned class Completion
     {
+        protected final class CompletionContent
+        {
+            private final ObservableStringValue completion;
+            private final @Localized String description;
+
+            public CompletionContent(ObservableStringValue completion, @Localized String description)
+            {
+                this.completion = completion;
+                this.description = description;
+            }
+
+            public CompletionContent(String completion, @Localized String description)
+            {
+                this(new ReadOnlyStringWrapper(completion), description);
+            }
+        }
+        
         /**
          * Given a property with the latest text, what graphical node and text property
          * should we show for the item?
          */
-        public abstract Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText);
+        public abstract CompletionContent getDisplay(ObservableStringValue currentText);
 
         /**
          * Given the current input, should we be showing this completion?
@@ -452,18 +491,18 @@ public class AutoComplete extends PopupControl
     public static @Interned class KeyShortcutCompletion extends Completion
     {
         private final Character[] shortcuts;
-        private final String title;
+        private final @Localized String title;
 
-        public KeyShortcutCompletion(String title, Character... shortcuts)
+        public KeyShortcutCompletion(@LocalizableKey String titleKey, Character... shortcuts)
         {
             this.shortcuts = shortcuts;
-            this.title = title;
+            this.title = TranslationUtility.getString(titleKey);
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(new Label(" " + shortcuts[0] + " "), new ReadOnlyStringWrapper(title));
+            return new CompletionContent(" " + shortcuts[0] + " ", title);
         }
 
         @Override
@@ -497,6 +536,7 @@ public class AutoComplete extends PopupControl
             setMinHeight(CELL_HEIGHT);
             setPrefHeight(CELL_HEIGHT);
             setMaxHeight(CELL_HEIGHT);
+            getStyleClass().add("completion-cell");
         }
 
         @Override
@@ -511,9 +551,9 @@ public class AutoComplete extends PopupControl
             }
             else
             {
-                Pair<@Nullable Node, ObservableStringValue> p = item.getDisplay(textField.textProperty());
-                setGraphic(p.getFirst());
-                textProperty().bind(p.getSecond());
+                CompletionContent cc = item.getDisplay(textField.textProperty());
+                setGraphic(GUI.labelRaw(cc.description, "completion-cell-description"));
+                textProperty().bind(cc.completion);
             }
             super.updateItem(item, empty);
         }

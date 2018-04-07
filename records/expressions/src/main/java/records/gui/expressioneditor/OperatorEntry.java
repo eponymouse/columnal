@@ -197,14 +197,9 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            Label description = new Label(this.description);
-            BorderPane.setAlignment(description, Pos.BOTTOM_RIGHT);
-            description.getStyleClass().add("operator-description");
-            Label mainLabel = new Label(operator);
-            BorderPane.setAlignment(mainLabel, Pos.BOTTOM_LEFT);
-            return new Pair<>(new BorderPane(description, null, null, null, mainLabel), new ReadOnlyStringWrapper(""));
+            return new CompletionContent(operator, this.description);
         }
 
         @Override

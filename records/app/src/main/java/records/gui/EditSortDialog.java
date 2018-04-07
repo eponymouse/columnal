@@ -450,9 +450,9 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(c.getName().getOutput()));
+            return new CompletionContent(c.getName().getOutput(), "");
         }
 
         @Override

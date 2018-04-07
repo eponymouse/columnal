@@ -188,3 +188,9 @@
     /* Note: if you make shadow too big, the tooltip can steal mouse focus from item and disappear too easily! */
     -fx-effect: dropshadow( three-pass-box , hsba(32,10%,40%,0.7) , 8, 0.6 , 2 , 2 );
 }
+.instruction > .instruction-label {
+    -fx-background-insets: 0, 1;
+    -fx-background-color: black, yellow;
+    -fx-text-fill: black;
+    -fx-label-padding: 3;
+}

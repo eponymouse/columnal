@@ -1,7 +1,21 @@
-.operator-description {
-    -fx-text-fill: grey;
-    -fx-font-size: 75%;
-    .list-cell:selected & {
-        -fx-text-fill: white;
+@import 'colors';
+@import 'fonts';
+
+.completion-cell { 
+    -fx-content-display: right;
+    -fx-graphic-text-gap: 10;
+    -fx-text-fill: black;
+    .completion-cell-description {
+        -fx-text-fill: grey;
+        -fx-font-size: 75%;
+        .list-cell:selected & {
+            -fx-text-fill: white;
+        }
     }
+}
+.autocomplete-instruction.instruction > .instruction-label {
+    -fx-background-insets: 0, 1;
+    -fx-background-color: grey(70%), white;
+    -fx-font-size: 75%;
+    -fx-text-fill: grey(70%);
 }

@@ -137,9 +137,9 @@ public class PickTablePane extends BorderPane
         }
 
         @Override
-        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(t.getId().getOutput()));
+            return new CompletionContent(t.getId().getOutput(), "");
         }
 
         @Override

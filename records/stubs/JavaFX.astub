@@ -279,6 +279,8 @@ class Window
     boolean isShowing(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void hide(@UnknownInitialization(javafx.stage.Window.class) Window this);
     void sizeToScene(@UnknownInitialization(javafx.stage.Window.class) Window this);
+    
+    void setOnHiding(@UnknownInitialization(javafx.stage.Window.class) Window this, EventHandler<WindowEvent> e);
 
     <T extends Event> void addEventFilter(@UnknownInitialization(javafx.stage.Window.class) Window this,
                 final EventType<T> eventType,
@@ -288,9 +290,11 @@ class PopupWindow
 {
     //@UnknownInitialization ObservableList<String> getStyleClass();
     void show(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, Node ownerNode, double anchorX, double anchorY);
+    void setAnchorLocation(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, AnchorLocation value);
     void setAnchorX(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, final double value);
     void setAnchorY(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, final double value);
     void setAutoHide(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, boolean value);
+    void setAutoFix(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, boolean value);
     void setHideOnEscape(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this, boolean value);
     void hide(@UnknownInitialization(javafx.stage.PopupWindow.class) PopupWindow this);
 }
@@ -317,7 +321,6 @@ class PopOver
 {
     void setDetachable(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, boolean b);
     BooleanProperty detachedProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
-    void setAutoFix(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, boolean b);
     void show(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, @NonNull Node owner);
     void setArrowLocation(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, ArrowLocation location);
     StackPane getRoot(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
