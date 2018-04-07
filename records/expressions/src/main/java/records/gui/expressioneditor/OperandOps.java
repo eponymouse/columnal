@@ -94,7 +94,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         }
     }
     
-    static abstract class OperatorSection<EXPRESSION extends LoadableExpression<@UnknownIfRecorded EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
+    static abstract class OperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         protected final ImmutableList<Pair<String, @Localized String>> possibleOperators;
         // The ordering in the candidates list:
@@ -126,11 +126,11 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         abstract @Nullable EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketedStatus bracketedStatus);
     }
     
-    static class BinaryOperatorSection<EXPRESSION extends LoadableExpression<@UnknownIfRecorded EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT>
+    static class BinaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT>
     {
         private final MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression;
         private final int operatorIndex;
-
+        
         private BinaryOperatorSection(ImmutableList<Pair<String, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression, int initialIndex)
         {
             super(operators, candidatePrecedence);
@@ -271,7 +271,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
      *                   plus will come earlier in the list than equals, because given "a + b = c", we're more likely
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
-    static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> @Nullable @UnknownIfRecorded EXPRESSION makeExpressionWithOperators(OperandOps<EXPRESSION, SEMANTIC_PARENT> operandOps, ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+    static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> @Nullable EXPRESSION makeExpressionWithOperators(OperandOps<EXPRESSION, SEMANTIC_PARENT> operandOps, ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         if (ops.size() != expressionExps.size() - 1)
         {

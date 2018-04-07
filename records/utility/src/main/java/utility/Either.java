@@ -1,6 +1,7 @@
 package utility;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.framework.qual.Covariant;
 import records.error.InternalException;
 import records.error.UserException;
 
@@ -13,6 +14,7 @@ import java.util.function.Function;
 /**
  * Immutable Either class
  */
+@Covariant({0, 1})
 public class Either<A, B>
 {
     private final @Nullable A a;
