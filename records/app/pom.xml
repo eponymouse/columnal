@@ -353,11 +353,9 @@
                         <include>**/Prop*.java</include>
                     </includes>
                     <!-- Exclude GUI tests from Maven test (can still run direct from IDE): -->
-                    <!--
                     <excludes>
                         <exclude>**/gui/*.java</exclude>
                     </excludes>
-                    -->
                 </configuration>
                 <executions>
                     <execution>
