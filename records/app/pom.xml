@@ -328,6 +328,16 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
             </plugin>
+            
+            <!-- Skip surefire, just run failsafe, from https://stackoverflow.com/questions/31474560/is-isolation-of-failsafe-and-surefire-runs-from-each-other-using-a-skip-approach -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.20.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
