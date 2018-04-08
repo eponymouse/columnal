@@ -17,6 +17,7 @@ import utility.gui.FXUtility;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by neil on 18/10/2016.
@@ -58,7 +59,7 @@ public class Main extends Application
                 if (param.endsWith(".rec"))
                 {
                     Log.normal("Showing main window, to load file: \"" + paramFile.getAbsolutePath() + "\"");
-                    MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, Charset.forName("UTF-8"))));
+                    MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, StandardCharsets.UTF_8)));
                 }
                 else
                 {

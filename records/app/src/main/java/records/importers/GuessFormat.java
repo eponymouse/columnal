@@ -54,6 +54,7 @@ import utility.gui.TranslationUtility;
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -608,7 +609,7 @@ public class GuessFormat
     private static <C extends Charset> Optional<C> guessCharset(Collection<C> charsets)
     {
         // Pretty simple: if UTF-8 is in there, use that, else use any.
-        Charset utf8 = Charset.forName("UTF-8");
+        Charset utf8 = StandardCharsets.UTF_8;
         C arbitrary = null;
         for (C charset : charsets)
         {

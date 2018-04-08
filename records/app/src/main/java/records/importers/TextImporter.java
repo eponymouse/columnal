@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -252,7 +253,7 @@ public class TextImporter implements Importer
     {
         Map<Charset, List<String>> initial = new LinkedHashMap<>();
         Set<Charset> charsets = new LinkedHashSet<>();
-        charsets.addAll(Arrays.asList(Charset.forName("UTF-8"), Charset.forName("ISO-8859-1"), Charset.forName("UTF-16")));
+        charsets.addAll(Arrays.asList(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1, StandardCharsets.UTF_16));
         charsets.add(Charset.defaultCharset());
         for (Charset charset : charsets)
         {
