@@ -69,6 +69,7 @@ import static org.junit.Assert.assertNotNull;
  * Created by neil on 29/10/2016.
  */
 @RunWith(JUnitQuickcheck.class)
+@OnThread(Tag.Simulation)
 public class PropFormat extends ApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
@@ -189,7 +190,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         }
     }
 
-    private File writeDataToFile(@From(GenFormattedData.class) @When(seed = 1L) GenFormattedData.FormatAndData formatAndData) throws IOException
+    private File writeDataToFile(GenFormattedData.FormatAndData formatAndData) throws IOException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         File tempFile = File.createTempFile("test", "txt");
@@ -199,7 +200,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
     }
 
     @OnThread(Tag.Simulation)
-    private void checkDataValues(@From(GenFormattedData.class) @When(seed = 1L) GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
+    private void checkDataValues(GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
     {
         assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.content.size(), formatAndData.loadedContent.size(), rs.getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
