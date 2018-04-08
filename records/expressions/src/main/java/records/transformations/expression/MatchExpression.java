@@ -21,6 +21,7 @@ import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.types.TypeExp;
 import styled.StyledString;
@@ -352,9 +353,13 @@ public class MatchExpression extends NonOperatorExpression
         for (int i = 0; i < patternExpressions.size(); i++)
         {
             Expression expression = patternExpressions.get(i);
-            // Must show an error to get the quick fixes to show:
-            onError.recordError(expression, StyledString.s("Pattern match items must have matching items")); 
-            onError.recordQuickFixes(expression, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i)));
+            List<QuickFix<Expression, ExpressionNodeParent>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i));
+            if (!fixesForMatchingNumericUnits.isEmpty())
+            {
+                // Must show an error to get the quick fixes to show:
+                onError.recordError(expression, StyledString.s("Pattern match items must have matching items"));
+                onError.recordQuickFixes(expression, fixesForMatchingNumericUnits);
+            }
         }
         
         if (onError.recordError(this, TypeExp.unifyTypes(patternTypes)) == null)
