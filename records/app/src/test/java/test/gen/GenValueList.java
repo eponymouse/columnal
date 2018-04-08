@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenValueList.ListAndType;
@@ -58,7 +59,7 @@ public class GenValueList extends GenValueBase<ListAndType>
                 throw new RuntimeException(e);
             }
         }
-        return new ListAndType(new @Value ListEx()
+        return new ListAndType(DataTypeUtility.value(new ListEx()
         {
             @Override
             public int size() throws InternalException, UserException
@@ -71,6 +72,6 @@ public class GenValueList extends GenValueBase<ListAndType>
             {
                 return values[index];
             }
-        }, length == 0 && sourceOfRandomness.nextBoolean() ? DataType.array() : DataType.array(t));
+        }), length == 0 && sourceOfRandomness.nextBoolean() ? DataType.array() : DataType.array(t));
     }
 }

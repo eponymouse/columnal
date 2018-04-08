@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -127,7 +128,7 @@ public abstract class BinaryOpExpression extends Expression
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
         {
-            return new @Value ValueFunction()
+            return DataTypeUtility.value(new ValueFunction()
             {
                 @Override
                 @OnThread(Tag.Simulation)
@@ -135,7 +136,7 @@ public abstract class BinaryOpExpression extends Expression
                 {
                     return getValueBinaryOp(rowIndex, state.add("?", arg));
                 }
-            };
+            });
         }
         else
             return getValueBinaryOp(rowIndex, state);

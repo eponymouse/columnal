@@ -9,6 +9,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
@@ -67,7 +68,7 @@ public abstract class NaryOpExpression extends Expression
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
-            return new @Value ValueFunction()
+            return DataTypeUtility.value(new ValueFunction()
             {
                 @Override
                 @OnThread(Tag.Simulation)
@@ -75,7 +76,7 @@ public abstract class NaryOpExpression extends Expression
                 {
                     return getValueNaryOp(rowIndex, state.add("?", arg));
                 }
-            };
+            });
         }
         else
             return getValueNaryOp(rowIndex, state);

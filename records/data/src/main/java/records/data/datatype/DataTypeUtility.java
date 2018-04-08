@@ -31,6 +31,7 @@ import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.ValueFunction;
 import utility.Workers;
 import utility.Workers.Priority;
 
@@ -267,6 +268,12 @@ public class DataTypeUtility
     public static Utility.@Value ListEx value(Utility.@UnknownIfValue ListEx list)
     {
         return list;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value ValueFunction value(@UnknownIfValue ValueFunction function)
+    {
+        return function;
     }
 
     @SuppressWarnings("valuetype")
