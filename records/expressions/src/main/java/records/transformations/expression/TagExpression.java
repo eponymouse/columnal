@@ -179,7 +179,7 @@ public class TagExpression extends NonOperatorExpression
         if (inner == null)
             return tag;
         else
-            return tag + ":" + inner.save(BracketedStatus.MISC, renames);
+            return tag + "(" + inner.save(BracketedStatus.DIRECT_ROUND_BRACKETED, renames) + ")";
     }
 
     @Override
@@ -189,7 +189,7 @@ public class TagExpression extends NonOperatorExpression
         if (inner == null)
             return tag;
         else
-            return StyledString.concat(tag, StyledString.s(":"), inner.toDisplay(BracketedStatus.MISC));
+            return StyledString.concat(tag, StyledString.s("("), inner.toDisplay(BracketedStatus.DIRECT_ROUND_BRACKETED), StyledString.s(")"));
     }
 
     @Override
