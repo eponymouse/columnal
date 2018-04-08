@@ -53,6 +53,26 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- For Java 10
+            <plugin>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>10</version>
+                            <vendor>oracle</vendor>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
         </plugins>
     </build>
 
@@ -69,7 +89,7 @@
                     <plugins>
                         <plugin>
                             <artifactId>maven-compiler-plugin</artifactId>
-                            <version>3.3</version>
+                            <version>3.7.0</version>
                             <configuration>
                                 <annotationProcessors>
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
@@ -107,7 +127,7 @@
                     <plugins>
                         <plugin>
                             <artifactId>maven-compiler-plugin</artifactId>
-                            <version>3.3</version>
+                            <version>3.7.0</version>
                             <configuration>
                                 <annotationProcessors>
                                     <!-- Add all the checkers you want to enable here -->
