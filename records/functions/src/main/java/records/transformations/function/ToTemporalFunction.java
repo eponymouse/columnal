@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Pair;
+import utility.Utility;
 
 import java.time.DateTimeException;
 import java.time.Year;
@@ -123,9 +124,9 @@ public abstract class ToTemporalFunction extends FunctionGroup
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException
+        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            String src = (String) param;
+            String src = Utility.preprocessDate(Utility.cast(param, String.class));
 
             for (int i = 0; i < usedFormats.size(); i++)
             {

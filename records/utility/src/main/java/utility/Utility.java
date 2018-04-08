@@ -1114,7 +1114,19 @@ public class Utility
 
     public static String preprocessDate(String original)
     {
-        return original.replaceAll("(?U)[^\\p{Alnum}]+", " ");
+        // We split on colons, which we preserve (because they are usually in time):
+        String[] splitByColon = original.split(":");
+        StringBuilder reAssembled = new StringBuilder();
+        for (int i = 0; i < splitByColon.length; i++)
+        {
+            // Generally, we replace any punctuation or space sequence with a single space, before the first colon:
+            if (i == 0)
+                splitByColon[i] = splitByColon[i].replaceAll("(?U)[^\\p{Alnum}]+", " ");
+            reAssembled.append(splitByColon[i]);
+            if (i < splitByColon.length - 1)
+                reAssembled.append(":");
+        }
+        return reAssembled.toString();
     }
 
     public static <T> ImmutableList<T> replicateM_Ex(int length, ExSupplier<T> make) throws InternalException, UserException
