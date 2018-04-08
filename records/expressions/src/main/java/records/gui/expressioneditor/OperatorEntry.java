@@ -93,7 +93,7 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())
         {
-            r.add(new KeyShortcutCompletion("End bracketed expressions", c));
+            r.add(new KeyShortcutCompletion("autocomplete.bracket.end", c));
         }
         for (Pair<String, @Localized String> operator : validOperators)
         {
@@ -199,7 +199,7 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(new Pair<>(operator, this.description));
+            return new CompletionContent(new Pair<String, @Localized String>(operator, this.description));
         }
 
         @Override

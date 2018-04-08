@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 // Like GeneralExpressionEntry but for units only
 public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent> implements OperandNode<UnitExpression, UnitNodeParent>, ErrorDisplayer<UnitExpression, UnitNodeParent>
 {
-    private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("Bracketed", '(');
+    private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);

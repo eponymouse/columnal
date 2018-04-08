@@ -170,9 +170,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         super(Expression.class, parent);
         this.semanticParent = semanticParent;
-        roundBracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
-        squareBracketCompletion = new KeyShortcutCompletion("List", '[');
-        stringCompletion = new KeyShortcutCompletion("Text", '\"');
+        roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
+        squareBracketCompletion = new KeyShortcutCompletion("autocomplete.list", '[');
+        stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         questionCompletion = new SimpleCompletion("", "?","", Status.IMPLICIT_LAMBDA_ARG);
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
