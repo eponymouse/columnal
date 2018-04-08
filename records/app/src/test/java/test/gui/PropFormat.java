@@ -1,4 +1,4 @@
-package test;
+package test.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +41,8 @@ import records.importers.gui.ImportChoicesDialog;
 import records.importers.gui.ImportChoicesDialog.RecordSetDataDisplay;
 import records.importers.gui.ImportChoicesDialog.SrcDataDisplay;
 import records.importers.gui.ImporterGUI.PickOrOther;
+import test.DummyManager;
+import test.TestUtil;
 import test.gen.GenFormattedData;
 import test.gui.ComboUtilTrait;
 import threadchecker.OnThread;
