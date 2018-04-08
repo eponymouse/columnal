@@ -2,7 +2,9 @@ package records.error;
 
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.apache.commons.lang3.StringUtils;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
 
@@ -23,9 +25,34 @@ public class ParseException extends UserException
     }
 
     @SuppressWarnings("deprecation")
-    public ParseException(Parser p, ParseCancellationException e)
+    public ParseException(String input, Parser p, ParseCancellationException e)
     {
-        super("Found: {" + p.getCurrentToken().getText() + "} " + (p.getCurrentToken().getType() < 0 ? "EOF" : p.getTokenNames()[p.getCurrentToken().getType()]) + " [" + p.getCurrentToken().getType() + "] " + p.getCurrentToken().getStartIndex(), e);
+        super("Error while parsing on line " + p.getCurrentToken().getLine() + ":\n" + highlightPosition(input, p.getCurrentToken().getLine(), p.getCurrentToken().getCharPositionInLine()) + "\n" +
+            "Found: {" + p.getCurrentToken().getText() + "} " + (p.getCurrentToken().getType() < 0 ? "EOF" : p.getTokenNames()[p.getCurrentToken().getType()]) + " [" + p.getCurrentToken().getType() + "] " + p.getCurrentToken().getStartIndex(), e);
+    }
+
+    @SuppressWarnings("deprecation")
+    public ParseException(String input, Parser p, RecognitionException e)
+    {
+        super("Error while parsing on line " + e.getOffendingToken().getLine() + ":\n" + highlightPosition(input, e.getOffendingToken().getLine(), e.getOffendingToken().getCharPositionInLine()) + "\n" +
+            "Found: {" + e.getOffendingToken().getText() + "} " + (e.getOffendingToken().getType() < 0 ? "EOF" : p.getTokenNames()[e.getOffendingToken().getType()]) + " [" + p.getCurrentToken().getType() + "] " + e.getOffendingToken().getStartIndex(), e);
+    }
+
+    private static String highlightPosition(String input, int line, int charPositionInLine)
+    {
+        // Line starts at 1, so rebase to zero:
+        line -= 1;
+        
+        String[] lines = input.split("\\r?\\n");
+        if (line < lines.length && charPositionInLine < lines[line].length())
+        {
+            // Position is valid.
+            return lines[line] + "\n" + StringUtils.leftPad("", charPositionInLine) + "^-- Unexpected\n";
+        }
+        else
+        {
+            return "Internal error: parse error position invalid";
+        }
     }
 
     private static String formatLocation(ParserRuleContext problemItem)

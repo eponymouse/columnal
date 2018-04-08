@@ -401,17 +401,6 @@ public class Utility
     public static <R, PARSER extends Parser> R parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException
     {
         ANTLRInputStream inputStream = new ANTLRInputStream(input);
-        return parse(makeLexer, makeParser, withParser, inputStream);
-    }
-
-    public static <R, PARSER extends Parser> R parseAsOne(InputStream input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException, IOException
-    {
-        ANTLRInputStream inputStream = new ANTLRInputStream(input);
-        return parse(makeLexer, makeParser, withParser, inputStream);
-    }
-
-    private static <R, PARSER extends Parser> R parse(Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser, ANTLRInputStream inputStream) throws UserException, InternalException
-    {
         // Could try speeding things up with: https://github.com/antlr/antlr4/issues/192
         DescriptiveErrorListener del = new DescriptiveErrorListener();
         Lexer lexer = makeLexer.apply(inputStream);
@@ -431,7 +420,10 @@ public class Utility
         }
         catch (ParseCancellationException e)
         {
-            throw new ParseException(parser, e);
+            if (e.getCause() instanceof RecognitionException)
+                throw new ParseException(input, parser, (RecognitionException)e.getCause());
+            else
+                throw new ParseException(input, parser, e);
         }
     }
 

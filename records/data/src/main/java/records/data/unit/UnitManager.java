@@ -1,5 +1,6 @@
 package records.data.unit;
 
+import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,6 +22,7 @@ import utility.Utility;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,9 @@ public class UnitManager
             @Nullable InputStream stream = classLoader.getResourceAsStream("builtin_units.txt");
             if (stream == null)
                 throw new InternalException("Could not find data file");
-            List<DeclarationContext> decls = Utility.parseAsOne(stream, UnitLexer::new, UnitParser::new, p -> p.file().declaration());
+            String builtInUnits = IOUtils.toString(stream, StandardCharsets.UTF_8);
+            stream.close();
+            List<DeclarationContext> decls = Utility.parseAsOne(builtInUnits, UnitLexer::new, UnitParser::new, p -> p.file().declaration());
             for (DeclarationContext decl : decls)
             {
                 if (decl.unitDeclaration() != null)
