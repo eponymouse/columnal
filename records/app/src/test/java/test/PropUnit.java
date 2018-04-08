@@ -65,11 +65,6 @@ public class PropUnit
             assertEquals(unit("m^2/s^2"), u.toConcreteUnit());
         });
         withMut(u -> withMut(u3 -> {
-            unify(u.times(u3.raisedTo(3)), times(unitExp("m^3/s"), unitExp("m/s^3")));
-            // It can have multiple resolutions here, so let it be either:
-            assertEquals(unit("m^4/s^4"), u.times(u3).toConcreteUnit());
-        }));
-        withMut(u -> withMut(u3 -> {
             // Test that an ambiguous resolution, followed by clarifier, gives right result:
             unify(u.times(u3.raisedTo(3)), times(unitExp("m^3/s"), unitExp("m/s^3")));
             unify(u, unitExp("m/s"));
