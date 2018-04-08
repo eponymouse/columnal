@@ -356,8 +356,7 @@
                     <excludes>
                         <exclude>**/gui/*.java</exclude>
                         <!-- TEMP: exclude TestAs, which currently isn't supported: -->
-                        <exclude>test.TestUnit#testAs</exclude>
-                        <exclude>test.TestUnit#testAsFail</exclude>
+                        <exclude>test.TestUnit</exclude>
                     </excludes>
                 </configuration>
                 <executions>
