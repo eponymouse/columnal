@@ -6,6 +6,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -15,6 +16,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -195,6 +197,26 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                 focus(Focus.RIGHT);
             }
         });
+        
+        //#error TODO add drag to container to allow selection of nodes
+        container.setOnMouseDragged(e -> {
+            if (e.getButton() == MouseButton.PRIMARY)
+            {
+                // TODO pass an enum indicating we want contains, not before
+                ConsecutiveChild<? extends StyledShowable, ?> target = findSmallestContainer(new Point2D(e.getSceneX(), e.getSceneY()));
+                if (target != null)
+                {
+                    if (this.selection == null)
+                    {
+                        selectOnly(target);
+                    }
+                    else
+                    {
+                        extendSelectionTo(target);
+                    }
+                }
+            }
+        });
 
         loadContent(startingValue);
 
@@ -234,7 +256,61 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             }
         }));
 
-        //Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+        //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+    }
+
+    private @Nullable ConsecutiveChild<? extends StyledShowable, ?> findSmallestContainer(Point2D pointInScene)
+    {
+        class Locator implements LocatableVisitor
+        {
+            @MonotonicNonNull ConsecutiveChild<? extends StyledShowable, ?> smallest = null;
+            int nodesSizeOfSmallest = Integer.MAX_VALUE;
+
+            @Override
+            public <C extends StyledShowable> void register(ConsecutiveChild<? extends C, ?> graphicalItem, Class<C> childType)
+            {
+                for (Node node : graphicalItem.nodes())
+                {
+                    Bounds boundsInScene = node.localToScene(node.getBoundsInLocal());
+                    if (boundsInScene.contains(pointInScene) && graphicalItem.nodes().size() < nodesSizeOfSmallest)
+                    {
+                        smallest = graphicalItem;
+                        nodesSizeOfSmallest = graphicalItem.nodes().size();
+                    }
+                }
+            }
+        }
+        Locator locator = new Locator();
+        visitLocatable(locator);
+        return locator.smallest;
+    }
+
+    private <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D pointInScene, Class<C> targetClass)
+    {
+        class Locator implements LocatableVisitor
+        {
+            double minDist = Double.MAX_VALUE;
+            @MonotonicNonNull ConsecutiveChild<? extends C, ?> nearest = null;
+
+            @Override
+            public <D extends StyledShowable> void register(ConsecutiveChild<? extends D, ?> item, Class<D> childType)
+            {
+                if (targetClass.isAssignableFrom(childType) && !item.nodes().isEmpty())
+                {
+                    double dist = FXUtility.distanceToLeft(item.nodes().get(0), pointInScene);
+                    if (dist < minDist)
+                    {
+                        // Safe because of the check above:
+                        @SuppressWarnings("unchecked")
+                        ConsecutiveChild<? extends C, ?> casted = (ConsecutiveChild)item;
+                        nearest = casted;
+                    }
+                }
+            }
+        }
+        Locator locator = new Locator();
+        visitLocatable(locator);
+        return locator.nearest == null ? null : new Pair<>(locator.nearest, locator.minDist);
     }
 
     @SuppressWarnings("initialization") // Because we pass ourselves as this

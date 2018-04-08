@@ -209,13 +209,11 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public void visitLocatable(LocatableVisitor visitor)
     {
-        Stream<Pair<ConsecutiveChild<? extends C, ?>, Double>> stream = Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, Expression.class, head, loc, forType));
+        visitor.register(this, Expression.class);
         if (contents != null)
-            return Stream.<Pair<ConsecutiveChild<? extends C, ?>, Double>>concat(stream, Utility.<Pair<ConsecutiveChild<? extends C, ?>, Double>>streamNullable(contents.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
-        else
-            return stream.findFirst().orElse(null);
+            contents.visitLocatable(visitor);
     }
 
     @Override

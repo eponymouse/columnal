@@ -50,7 +50,7 @@ import java.util.stream.Stream;
  * One case in a match expression.  May have several "or"-ed patterns, each of which may
  * have a "where" guard.  Will always have one outcome.
  */
-public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ExpressionNodeParent
+public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ExpressionNodeParent, Locatable
 {
     private final PatternMatchNode parent;
     private final ErrorTop caseLabel;
@@ -460,21 +460,15 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return parent.getEditor();
     }
 
-    public <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    @Override
+    public void visitLocatable(LocatableVisitor visitor)
     {
-        // We don't actually want to allow general dropping to the left of us, because the
-        // only thing that fits there is a case.  If we want to enable case dropping
-        // we'll (a) need to remove ConsecutiveChild constraint (we're not one) and
-        // (b) have a way to determine if the thing being dropped actually fits here.
-        return //Stream.<Pair<ConsecutiveChild, Double>>concat(
-            //Stream.of(new Pair<>(this, FXUtility.distanceToLeft(caseLabel, loc))),
-            matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) ->
-            {
-                @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> firstDrop = p.getFirst().findClosestDrop(loc, forType);
-                return p.getSecond() == null ? Utility.streamNullable(firstDrop) : Utility.streamNullable(firstDrop, p.getSecond().findClosestDrop(loc, forType));
-            })
-            //)
-            .min(Comparator.comparing(p -> p.getSecond())).get();
+        matches.forEach(p -> {
+            p.getFirst().visitLocatable(visitor);
+            if (p.getSecond() != null)
+                p.getSecond().visitLocatable(visitor);
+        });
+        // TODO also visit us, once LocatableVisitor has a method for it
     }
 
     @Override

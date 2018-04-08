@@ -138,12 +138,12 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public <C extends StyledShowable> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public void visitLocatable(LocatableVisitor visitor)
     {
-        @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, ifLabel.getFirst(), loc, forType);
-
-        return Utility.streamNullable(startDist, condition.findClosestDrop(loc, forType), thenPart.findClosestDrop(loc, forType), elsePart.findClosestDrop(loc, forType))
-            .filter(x -> x != null).min(Comparator.comparing(p -> p.getSecond())).get();
+        visitor.register(this, Expression.class);
+        condition.visitLocatable(visitor);
+        thenPart.visitLocatable(visitor);
+        elsePart.visitLocatable(visitor);
     }
 
     @Override

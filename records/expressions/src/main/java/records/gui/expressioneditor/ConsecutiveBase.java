@@ -45,7 +45,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>, Locatable
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 
@@ -544,15 +544,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
     }
 
-    /**
-     * Finds the nearest location to the given point in the scene where you could
-     * drop a child.
-     *
-     * Returns the item before which you would insert, and the distance.
-     */
-    protected <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    @Override
+    public void visitLocatable(LocatableVisitor visitor)
     {
-        return Utility.filterOutNulls(Stream.<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>>concat(operands.stream(), operators.stream()).<@Nullable Pair<ConsecutiveChild<? extends C, ?>, Double>>map(n -> n.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).get();
+        operands.forEach(o -> o.visitLocatable(visitor));
+        operators.forEach(o -> o.visitLocatable(visitor));
     }
 
     @SuppressWarnings("unchecked")

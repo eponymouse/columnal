@@ -17,14 +17,12 @@ import java.util.stream.Stream;
 /**
  * A child of a ConsecutiveBase item.  Has methods for selection, dragging and focusing.
  */
-public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode
+public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode, Locatable
 {
     @Pure
     public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent();
 
     void setSelected(boolean selected);
-
-    <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType);
 
     // Ideally this would be protected access:
     @SuppressWarnings("unchecked")

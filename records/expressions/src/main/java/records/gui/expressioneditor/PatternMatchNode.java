@@ -286,12 +286,10 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public <C extends StyledShowable> Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public void visitLocatable(LocatableVisitor visitor)
     {
-        @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel.getFirst(), loc, forType);
-
-        return Stream.<Pair<ConsecutiveChild<? extends C, ?>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.<C>findClosestDrop(loc, forType))))
-            .min(Comparator.comparing(p -> p.getSecond())).get();
+        visitor.register(this, Expression.class);
+        clauses.forEach(c -> c.visitLocatable(visitor));
     }
 
     @Override

@@ -95,11 +95,10 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
         }
     }
 
-
     @Override
-    public <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public void visitLocatable(LocatableVisitor visitor)
     {
-        return ConsecutiveChild.closestDropSingle(this, expressionClass, calculateNodes().findFirst().get(), loc, forType);
+        visitor.register(this, expressionClass);
     }
 
     @Override
