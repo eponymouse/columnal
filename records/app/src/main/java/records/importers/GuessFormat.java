@@ -928,7 +928,7 @@ public class GuessFormat
         HashSet<ColumnId> usedNames = new HashSet<>();
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
         {
-            String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex + trimChoice.trimFromLeft);
+            String original = trimChoice.trimFromTop == 0 ? "" : untrimmed.get(trimChoice.trimFromTop - 1).get(columnIndex + trimChoice.trimFromLeft).trim();
             StringBuilder stringBuilder = new StringBuilder();
             int[] codepoints = original.codePoints().toArray();
             boolean lastWasSpace = false;
