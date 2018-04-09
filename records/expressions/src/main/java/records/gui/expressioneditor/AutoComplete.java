@@ -510,7 +510,7 @@ public class AutoComplete extends PopupControl
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(" " + shortcuts[0] + " ", titleKey);
+            return new CompletionContent("" + shortcuts[0], titleKey);
         }
 
         @Override

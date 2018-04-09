@@ -13,6 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -173,7 +174,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
         squareBracketCompletion = new KeyShortcutCompletion("autocomplete.list", '[');
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
-        questionCompletion = new SimpleCompletion("", "?","", Status.IMPLICIT_LAMBDA_ARG);
+        questionCompletion = new SimpleCompletion( "", "?", "autocomplete.implicitArg", Status.IMPLICIT_LAMBDA_ARG);
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH);
@@ -322,9 +323,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(fixedTypeCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
-        r.add(new SimpleCompletion("", "any", "", Status.ANY));
-        r.add(new SimpleCompletion("", "true", "", Status.LITERAL));
-        r.add(new SimpleCompletion("", "false", "", Status.LITERAL));
+        r.add(new SimpleCompletion("", "anything", "autocomplete.match.anything", Status.ANY));
+        r.add(new SimpleCompletion("", "true", null, Status.LITERAL));
+        r.add(new SimpleCompletion("", "false", null, Status.LITERAL));
         for (Column column : parent.getEditor().getAvailableColumns())
         {
             if (parent.getEditor().allowsSameRow())
@@ -441,13 +442,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         private final String prefix;
         private final String text;
-        private final String suffix;
+        private final @Nullable @LocalizableKey String descriptionKey;
         private final Status type;
 
-        public SimpleCompletion(String prefix, String text, String suffix, Status type)
+        public SimpleCompletion(String prefix, String text, @Nullable @LocalizableKey String descriptionKey, Status type)
         {
             this.prefix = prefix;
-            this.suffix = suffix;
+            this.descriptionKey = descriptionKey;
             this.text = text;
             this.type = type;
         }
@@ -456,7 +457,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(prefix + text + suffix, null);
+            return new CompletionContent(prefix + text, descriptionKey);
         }
 
         @Override
@@ -494,7 +495,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return "SimpleCompletion{" +
                     "prefix='" + prefix + '\'' +
                     ", text='" + text + '\'' +
-                    ", suffix='" + suffix + '\'' +
+                    ", description='" + descriptionKey + '\'' +
                     ", type=" + type +
                     '}';
         }
