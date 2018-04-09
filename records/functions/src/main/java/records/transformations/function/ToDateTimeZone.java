@@ -39,13 +39,13 @@ public class ToDateTimeZone extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        r.add(fromString("datetimezoned.from.string"));
-        r.add(new FunctionDefinition("datetimezoned.from.datetime.zone", DT_Z::new, DataType.date(getResultType()),
+        r.add(fromString("datetimezoned.from.string", "datetimezoned.from.string.mini"));
+        r.add(new FunctionDefinition("datetimezoned.from.datetime.zone", "datetimezoned.from.datetime.zone.mini", DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
-        r.add(new FunctionDefinition("datetimezoned", D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
+        r.add(new FunctionDefinition("datetimezoned", "datetimezoned.mini", D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
-        r.add(new FunctionDefinition("datetimezoned.from.date.timezoned", D_TZ::new, DataType.date(getResultType()), DataType.tuple(
+        r.add(new FunctionDefinition("datetimezoned.from.date.timezoned", "datetimezoned.from.date.timezoned.mini", D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)))));
         return r.build();

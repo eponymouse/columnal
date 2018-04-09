@@ -15,7 +15,7 @@ public class Round extends SingleNumericInOutFunction
 {
     public Round()
     {
-        super("round", () -> new FunctionInstance()
+        super("round", "round.mini", () -> new FunctionInstance()
         {
             @Override
             public @Value Object getValue(int rowIndex, @Value Object params) throws UserException, InternalException

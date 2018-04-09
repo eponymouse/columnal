@@ -27,7 +27,7 @@ public class GetElement extends FunctionDefinition
     // Takes parameters: column/array, index
     public GetElement()
     {
-        super("element", typeManager -> {
+        super("element", "element.mini", typeManager -> {
                 TypeExp any = new MutVar(null);
                 return new FunctionTypesUniform(typeManager, Instance::new, any, new TupleTypeExp(null,
                     ImmutableList.of(

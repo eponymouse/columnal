@@ -17,7 +17,7 @@ public class Not extends FunctionDefinition
 {
     public Not()
     {
-        super("not", Instance::new, DataType.BOOLEAN, DataType.BOOLEAN);
+        super("not", "not.mini", Instance::new, DataType.BOOLEAN, DataType.BOOLEAN);
     }
     
     public static FunctionGroup group()

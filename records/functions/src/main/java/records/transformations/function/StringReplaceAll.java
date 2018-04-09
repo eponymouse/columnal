@@ -17,7 +17,7 @@ public class StringReplaceAll extends FunctionDefinition
 {
     public StringReplaceAll()
     {
-        super("replace.all", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
+        super("replace.all", "replace.all.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
     }
 
     public static FunctionGroup group()

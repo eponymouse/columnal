@@ -85,7 +85,7 @@ public class PropDateFunctions
     {
         LocalDateTime src = LocalDateTime.of(date, time);
         // Test with string input:
-        Object o = runFunction1(v(src.toString()), DataType.TEXT, new ToDateTime().fromString("datetime.from.string"));
+        Object o = runFunction1(v(src.toString()), DataType.TEXT, new ToDateTime()._test_fromString("datetime.from.string"));
         assertEquals(LocalDateTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -102,7 +102,7 @@ public class PropDateFunctions
     {
         ZonedDateTime src = ZonedDateTime.of(date, time, zone);
         // Test with string input:
-        Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone().fromString("datetimezoned.from.string"));
+        Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone()._test_fromString("datetimezoned.from.string"));
         assertEquals(ZonedDateTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -181,25 +181,25 @@ public class PropDateFunctions
     @OnThread(Tag.Simulation)
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime().fromString("datetime.from.string")));
+        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime()._test_fromString("datetime.from.string")));
     }
 
     @OnThread(Tag.Simulation)
     private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone().fromString("datetimezoned.from.string")));
+        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone()._test_fromString("datetimezoned.from.string")));
     }
 
     @OnThread(Tag.Simulation)
     private Object strToTime(String src) throws Throwable
     {
-        return runFunction1(v(src), DataType.TEXT, new ToTime().fromString("time.from.string"));
+        return runFunction1(v(src), DataType.TEXT, new ToTime()._test_fromString("time.from.string"));
     }
 
     @OnThread(Tag.Simulation)
     private Object strToDate(String src) throws Throwable
     {
-        return runFunction1(v(src), DataType.TEXT, new ToDate().fromString("date.from.string"));
+        return runFunction1(v(src), DataType.TEXT, new ToDate()._test_fromString("date.from.string"));
     }
 
     // Tests single numeric input, numeric output function

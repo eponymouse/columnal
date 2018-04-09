@@ -13,7 +13,7 @@ public class StringLength extends FunctionDefinition
 {
     public StringLength()
     {
-        super("length", Instance::new, DataType.NUMBER, DataType.TEXT);
+        super("text length", "length.mini", Instance::new, DataType.NUMBER, DataType.TEXT);
     }
     
     public static FunctionGroup group()

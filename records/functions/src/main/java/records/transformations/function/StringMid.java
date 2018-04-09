@@ -13,7 +13,7 @@ public class StringMid extends FunctionDefinition
 {
     public StringMid()
     {
-        super("middle", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
+        super("middle", "middle.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
     }
 
     public static FunctionGroup group()

@@ -21,7 +21,7 @@ public class Min extends FunctionDefinition
 {
     public Min()
     {
-        super("min", typeManager -> {
+        super("minimum", "minimum.mini", typeManager -> {
             TypeExp any = new MutVar(null);
             return new FunctionTypesUniform(typeManager, Instance::new, any, new TypeCons(null, TypeExp.CONS_LIST, any));
         });

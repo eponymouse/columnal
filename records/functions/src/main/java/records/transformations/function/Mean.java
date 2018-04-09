@@ -16,7 +16,7 @@ public class Mean extends SingleNumericSummaryFunction
 {
     public Mean()
     {
-        super("average", () -> new FunctionInstance()
+        super("average", "average.mini", () -> new FunctionInstance()
         {
             @Override
             public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException

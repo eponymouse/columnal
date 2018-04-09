@@ -17,7 +17,7 @@ public class StringTrim extends FunctionDefinition
 {
     public StringTrim()
     {
-        super("trim", Instance::new, DataType.TEXT, DataType.TEXT);
+        super("trim", "trim.mini", Instance::new, DataType.TEXT, DataType.TEXT);
     }
     
     public static FunctionGroup group()

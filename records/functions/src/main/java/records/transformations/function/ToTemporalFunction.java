@@ -108,9 +108,14 @@ public abstract class ToTemporalFunction extends FunctionGroup
     }
 
     // Public for testing purposes only
-    public final FunctionDefinition fromString(@LocalizableKey String name)
+    public final FunctionDefinition _test_fromString(@LocalizableKey String name)
     {
-        return new FunctionDefinition(name, FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT);
+        return fromString(name, name);
+    }
+    
+    protected final FunctionDefinition fromString(@LocalizableKey String name, @LocalizableKey String miniDescriptionKey)
+    {
+        return new FunctionDefinition(name, miniDescriptionKey, FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT);
     }
 
     abstract DateTimeInfo getResultType();

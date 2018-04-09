@@ -16,7 +16,7 @@ public class Max extends FunctionDefinition
 {
     public Max()
     {
-        super("max", Max::listOfAny);
+        super("maximum", "maximum.mini", Max::listOfAny);
     }
 
     public static FunctionGroup group()

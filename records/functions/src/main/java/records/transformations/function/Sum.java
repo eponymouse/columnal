@@ -16,7 +16,7 @@ public class Sum extends SingleNumericSummaryFunction
 {
     public Sum()
     {
-        super("sum", Instance::new);
+        super("sum", "sum.mini", Instance::new);
     }
     
     public static FunctionGroup group()

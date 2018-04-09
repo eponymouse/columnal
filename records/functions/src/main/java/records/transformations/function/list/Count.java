@@ -29,7 +29,7 @@ public class Count extends FunctionDefinition
 {
     public Count()
     {
-        super("count", Instance::new, DataType.NUMBER, DataType.array());
+        super("list length", "list.length.mini", Instance::new, DataType.NUMBER, DataType.array());
     }
 
     public static FunctionGroup group()

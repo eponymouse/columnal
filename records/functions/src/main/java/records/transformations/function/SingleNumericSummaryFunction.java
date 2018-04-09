@@ -24,9 +24,9 @@ import java.util.function.Supplier;
  */
 public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
-    public SingleNumericSummaryFunction(String name, Supplier<FunctionInstance> makeInstance)
+    public SingleNumericSummaryFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<FunctionInstance> makeInstance)
     {
-        super(name, typeManager -> {
+        super(name, miniDescriptionKey, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
             return new FunctionTypesUniform(typeManager, makeInstance, numType, new TypeCons(null, TypeCons.CONS_LIST, numType));
         });

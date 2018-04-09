@@ -13,7 +13,7 @@ public class Xor extends FunctionDefinition
 {
     public Xor()
     {
-        super("xor", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
+        super("xor", "xor.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
     }
     public static FunctionGroup group()
     {

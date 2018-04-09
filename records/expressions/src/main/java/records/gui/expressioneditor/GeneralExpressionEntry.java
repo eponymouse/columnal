@@ -176,9 +176,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         questionCompletion = new SimpleCompletion( "", "?", "autocomplete.implicitArg", Status.IMPLICIT_LAMBDA_ARG);
         unitCompletion = new AddUnitCompletion();
-        ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
-        matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH);
-        fixedTypeCompletion = new KeywordCompletion(ExpressionLexer.FIX_TYPE);
+        ifCompletion = new KeywordCompletion(ExpressionLexer.IF, "autocomplete.if");
+        matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
+        fixedTypeCompletion = new KeywordCompletion(ExpressionLexer.FIX_TYPE, "autocomplete.fixType");
         varDeclCompletion = new VarDeclCompletion();
         if (!userEntered)
         {
@@ -314,14 +314,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
-        r.add(roundBracketCompletion);
-        r.add(squareBracketCompletion);
-        r.add(stringCompletion);
-        r.add(questionCompletion);
         r.add(ifCompletion);
         r.add(matchCompletion);
         r.add(fixedTypeCompletion);
-        r.add(new NumericLiteralCompletion());
+        
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "anything", "autocomplete.match.anything", Status.ANY));
         r.add(new SimpleCompletion("", "true", null, Status.LITERAL));
@@ -330,9 +326,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             if (parent.getEditor().allowsSameRow())
             {
-                r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
+                r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), "autocomplete.column.sameRow", Status.COLUMN_REFERENCE_SAME_ROW));
             }
-            r.add(new SimpleCompletion(ARROW_WHOLE, column.getName().getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
+            r.add(new SimpleCompletion(ARROW_WHOLE, "@entire " + column.getName().getRaw(), "autocomplete.column.entire", Status.COLUMN_REFERENCE_WHOLE));
         }
         for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
         {
@@ -364,6 +360,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             r.add(varDeclCompletion);
         }
+
+        r.add(roundBracketCompletion);
+        r.add(squareBracketCompletion);
+        r.add(stringCompletion);
+        r.add(questionCompletion);
+        r.add(new NumericLiteralCompletion());
 
         // TODO: use type to prioritise and to filter
         /*
@@ -518,7 +520,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(function.getName() + "(...)", functionGroup.getShortDescriptionKey());
+            return new CompletionContent(function.getName() + "(...)", function.getMiniDescriptionKey());
         }
 
         @Override
@@ -681,16 +683,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private static class KeywordCompletion extends Completion
     {
         private final String keyword;
+        private final @Nullable @LocalizableKey String descriptionKey;
 
-        private KeywordCompletion(int expressionLexerKeywordIndex)
+        private KeywordCompletion(int expressionLexerKeywordIndex, @Nullable @LocalizableKey String descriptionKey)
         {
             this.keyword = Utility.literal(ExpressionLexer.VOCABULARY, expressionLexerKeywordIndex);
+            this.descriptionKey = descriptionKey;
         }
 
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(keyword, null);
+            return new CompletionContent(keyword, descriptionKey);
         }
 
         @Override
@@ -1066,7 +1070,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText, "expression.autocomplete.units");
+            return new CompletionContent(currentText, "expression.autocomplete.variable");
         }
 
         @Override

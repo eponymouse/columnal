@@ -26,7 +26,7 @@ public class ToString extends FunctionDefinition
 {
     public ToString()
     {
-        super("to.string", typeManager -> new FunctionTypes(typeManager, 
+        super("to text", "to.string.mini", typeManager -> new FunctionTypes(typeManager, 
             TypeExp.fromConcrete(null, DataType.TEXT),
             new MutVar(null)
         ) {

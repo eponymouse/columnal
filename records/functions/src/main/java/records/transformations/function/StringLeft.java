@@ -13,7 +13,7 @@ public class StringLeft extends FunctionDefinition
 {
     public StringLeft()
     {
-        super("left", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
+        super("left", "left.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
     }
     
     public static FunctionGroup group()

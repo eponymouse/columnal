@@ -12,6 +12,13 @@
             -fx-text-fill: white;
         }
     }
+    &:selected {
+        -fx-text-fill: white;
+        -fx-background-color: $focus-color;
+        .completion-cell-description {
+            -fx-text-fill: grey(75%);
+        }
+    }
 }
 .autocomplete-instruction.instruction > .instruction-label {
     -fx-background-insets: 0, 1;

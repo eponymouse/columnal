@@ -13,7 +13,7 @@ public class StringWithin extends FunctionDefinition
 {
     public StringWithin()
     {
-        super("within", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.TEXT, DataType.TEXT));
+        super("within", "within.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.TEXT, DataType.TEXT));
     }
 
     public static FunctionGroup group()

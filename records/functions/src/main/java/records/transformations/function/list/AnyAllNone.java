@@ -31,9 +31,9 @@ public class AnyAllNone extends FunctionGroup
     public AnyAllNone()
     {
         super("any/all/none", "anyAllNone.short", ImmutableList.of(
-            new FunctionDefinition("any", new Matcher(() -> new Processor(true, null, false))),
-            new FunctionDefinition("all", new Matcher(() -> new Processor(null, false, true))),
-            new FunctionDefinition("none", new Matcher(() -> new Processor(false, null, true)))));
+            new FunctionDefinition("any", "any.mini", new Matcher(() -> new Processor(true, null, false))),
+            new FunctionDefinition("all", "all.mini", new Matcher(() -> new Processor(null, false, true))),
+            new FunctionDefinition("none", "none.mini", new Matcher(() -> new Processor(false, null, true)))));
     }
     
     private static class Processor extends FunctionInstance

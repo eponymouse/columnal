@@ -15,7 +15,7 @@ public class Absolute extends SingleNumericInOutFunction
 {
     public Absolute()
     {
-        super("abs", Absolute::makeInstance);
+        super("abs", "abs.mini", Absolute::makeInstance);
     }
 
     public static FunctionGroup group()

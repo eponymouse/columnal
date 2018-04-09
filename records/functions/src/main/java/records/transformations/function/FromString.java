@@ -34,7 +34,7 @@ public class FromString extends FunctionDefinition
 {
     public FromString()
     {
-        super("from.string", typeManager -> new FunctionTypes(typeManager,
+        super("from text", "from.string.mini", typeManager -> new FunctionTypes(typeManager,
             new MutVar(null),
             TypeExp.fromConcrete(null, DataType.TEXT)
         ) {

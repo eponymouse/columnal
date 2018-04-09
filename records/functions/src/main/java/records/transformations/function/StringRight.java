@@ -17,7 +17,7 @@ public class StringRight extends FunctionDefinition
 {
     public StringRight()
     {
-        super("right", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
+        super("right", "right.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
     }
 
     public static FunctionGroup group()

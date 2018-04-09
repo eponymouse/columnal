@@ -17,7 +17,7 @@ public class StringWithinIndex extends FunctionDefinition
 {
     public StringWithinIndex()
     {
-        super("within.indexes", Instance::new, DataType.array(DataType.NUMBER), DataType.tuple(DataType.TEXT, DataType.TEXT));
+        super("within.positions", "within.positions.mini", Instance::new, DataType.array(DataType.NUMBER), DataType.tuple(DataType.TEXT, DataType.TEXT));
     }
 
     public static FunctionGroup group()

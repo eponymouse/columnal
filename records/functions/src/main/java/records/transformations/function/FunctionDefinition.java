@@ -30,17 +30,25 @@ public class FunctionDefinition
 {
     private final String name;
     private final TypeMatcher typeMatcher;
+    private final @LocalizableKey String miniDescriptionKey;
 
-    public FunctionDefinition(String name, TypeMatcher typeMatcher)
+    public FunctionDefinition(String name, @LocalizableKey String miniDescriptionKey, TypeMatcher typeMatcher)
     {
         this.name = name;
+        this.miniDescriptionKey = miniDescriptionKey;
         this.typeMatcher = typeMatcher;
     }
 
-    public FunctionDefinition(String name, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
+    public FunctionDefinition(String name, @LocalizableKey String miniDescriptionKey, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
     {
         this.name = name;
+        this.miniDescriptionKey = miniDescriptionKey;
         this.typeMatcher = new ExactType(makeInstance, returnType, paramType);
+    }
+
+    public @LocalizableKey String getMiniDescriptionKey()
+    {
+        return miniDescriptionKey;
     }
 
     public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
