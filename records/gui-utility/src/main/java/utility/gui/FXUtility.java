@@ -21,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -611,6 +612,33 @@ public class FXUtility
                 }
             });
         }
+    }
+
+    // Ensures selected item is in view.
+    public static void ensureSelectionInView(ListView<?> listView, @Nullable VerticalDirection moveDirection)
+    {
+        FXUtility.runAfter(() -> {
+            int selIndex = listView.getSelectionModel().getSelectedIndex();
+            if (selIndex < 0)
+                return; // No selection
+
+            // Determine if the selection is in view:
+            // Can't use pseudo-classes due to https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8185831
+            // so use stream-filter afterwards:
+            @Nullable Node topCell = listView.lookup(".list-cell");
+            @Nullable Node selectedCell = listView.lookupAll(".list-cell").stream().filter(c -> ((ListCell<?>) c).isSelected()).findFirst().orElse(null);
+            Bounds listViewSceneBounds = listView.localToScene(listView.getBoundsInLocal());
+            if (selectedCell == null || !listViewSceneBounds.contains(selectedCell.localToScene(new Point2D(0, 10))))
+            {
+                if (moveDirection == VerticalDirection.UP)
+                    listView.scrollTo(selIndex);
+                else
+                {
+                    int pageSize = (int) Math.floor(listViewSceneBounds.getHeight() / (topCell == null ? 24 : topCell.getBoundsInLocal().getHeight()));
+                    listView.scrollTo(Math.max(0, selIndex - pageSize + 1));
+                }
+            }
+        });
     }
 
     public static interface DragHandler

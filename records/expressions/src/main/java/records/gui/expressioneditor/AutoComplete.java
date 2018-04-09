@@ -6,6 +6,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Point2D;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
@@ -101,7 +102,8 @@ public class AutoComplete extends PopupControl
                 // Can't be focused
             }
         };
-        completions.setPrefWidth(350.0);
+        completions.getStyleClass().add("autocomplete");
+        completions.setPrefWidth(400.0);
         container = new BorderPane(null, null, null, null, completions);
         
         FXUtility.listen(completions.getItems(), change -> {
@@ -291,6 +293,7 @@ public class AutoComplete extends PopupControl
                     if (!haveSelected)
                     {
                         completions.getSelectionModel().select(completion);
+                        FXUtility.ensureSelectionInView(completions, null);
                         haveSelected = true;
                     }
                 }
@@ -299,6 +302,7 @@ public class AutoComplete extends PopupControl
             if (!text.isEmpty() && !completions.getItems().isEmpty() && completions.getSelectionModel().isEmpty())
             {
                 completions.getSelectionModel().select(0);
+                FXUtility.ensureSelectionInView(completions, null);
             }
             
             if (whitespacePolicy == WhitespacePolicy.DISALLOW)
@@ -319,18 +323,55 @@ public class AutoComplete extends PopupControl
         instruction.setHideOnEscape(false);
         instruction.setAutoHide(false);
         
-        addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+        textField.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE)
             {
                 hide();
                 instruction.hide();
                 e.consume();
             }
-            if ((e.getCode() == KeyCode.UP || e.getCode() == KeyCode.PAGE_UP) && completions.getSelectionModel().getSelectedIndex() <= 0)
+            final int PAGE = 9;
+            int oldSel = completions.getSelectionModel().getSelectedIndex();
+            if (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.PAGE_UP)
             {
-                completions.getSelectionModel().clearSelection();
+                if (oldSel <= 0)
+                {
+                    completions.getSelectionModel().clearSelection();
+                }
+                else if (e.getCode() == KeyCode.UP)
+                {
+                    completions.getSelectionModel().select(oldSel - 1);
+                    FXUtility.ensureSelectionInView(completions, VerticalDirection.UP);
+                }
+                else if (e.getCode() == KeyCode.PAGE_UP)
+                {
+                    completions.getSelectionModel().select(
+                        Math.max(0, oldSel - PAGE)
+                    );
+                    FXUtility.ensureSelectionInView(completions, VerticalDirection.UP);
+                }
                 e.consume();
             }
+            else if (e.getCode() == KeyCode.DOWN)
+            {
+                if (oldSel < completions.getItems().size() - 1)
+                {
+                    completions.getSelectionModel().select(oldSel + 1);
+                    if (oldSel > 10)
+                        oldSel = oldSel;
+                    FXUtility.ensureSelectionInView(completions, VerticalDirection.DOWN);
+                }
+                e.consume();
+            }
+            else if (e.getCode() == KeyCode.PAGE_DOWN)
+            {
+                completions.getSelectionModel().select(
+                    Math.min(completions.getItems().size() - 1, oldSel + PAGE)
+                );
+                FXUtility.ensureSelectionInView(completions, VerticalDirection.DOWN);
+                e.consume();
+            }
+            
             if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
             {
                 Completion selectedItem = completions.getSelectionModel().getSelectedItem();

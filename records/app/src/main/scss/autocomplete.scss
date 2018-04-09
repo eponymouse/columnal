@@ -1,7 +1,7 @@
 @import 'colors';
 @import 'fonts';
 
-.completion-cell { 
+.autocomplete.list-view > .virtual-flow > .clipped-container > .sheet > .completion-cell { 
     -fx-content-display: right;
     -fx-graphic-text-gap: 10;
     -fx-text-fill: black;
@@ -14,12 +14,20 @@
     }
     &:selected {
         -fx-text-fill: white;
-        -fx-background-color: $focus-color;
+        -fx-background-color: $list-selection-focused;
         .completion-cell-description {
             -fx-text-fill: grey(75%);
         }
     }
 }
+/* From https://stackoverflow.com/questions/12670137/how-to-hide-the-horizontal-scrollbar-of-a-listview-in-javafx */
+.autocomplete.list-view .scroll-bar:horizontal {
+    .increment-arrow, .decrement-arrow, .increment-button, .decrement-button {
+        -fx-padding:0;
+    }
+}
+
+
 .autocomplete-instruction.instruction > .instruction-label {
     -fx-background-insets: 0, 1;
     -fx-background-color: grey(70%), white;
