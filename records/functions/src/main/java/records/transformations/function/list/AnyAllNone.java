@@ -77,7 +77,7 @@ public class AnyAllNone extends FunctionGroup
         public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
         {
             MutVar elemType = new MutVar(null);
-            return new FunctionTypesUniform(typeManager, makeInstance, TypeExp.fromConcrete(null, DataType.BOOLEAN), new TupleTypeExp(null, ImmutableList.of(new TypeCons(null, TypeExp.CONS_LIST, elemType), new TypeCons(null, TypeExp.CONS_FUNCTION, elemType, TypeExp.fromConcrete(null, DataType.BOOLEAN))), true));
+            return new FunctionTypesUniform(typeManager, makeInstance, TypeExp.bool(null), new TupleTypeExp(null, ImmutableList.of(new TypeCons(null, TypeExp.CONS_LIST, elemType), new TypeCons(null, TypeExp.CONS_FUNCTION, elemType, TypeExp.bool(null))), true));
         }
     }
 }

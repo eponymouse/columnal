@@ -52,7 +52,7 @@ public class OrExpression extends NaryOpExpression
     @Override
     public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return onError.recordType(this, checkAllOperandsSameType(TypeExp.fromConcrete(this, DataType.BOOLEAN), dataLookup, state, onError, (typeAndExpression) -> {
+        return onError.recordType(this, checkAllOperandsSameType(TypeExp.bool(this), dataLookup, state, onError, (typeAndExpression) -> {
             return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '|' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
         }));
     }

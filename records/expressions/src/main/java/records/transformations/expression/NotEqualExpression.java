@@ -63,7 +63,7 @@ public class NotEqualExpression extends BinaryOpExpression
             }
             return null;
         }
-        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
+        return TypeExp.bool(this);
     }
 
     @Override

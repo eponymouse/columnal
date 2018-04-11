@@ -20,8 +20,12 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * We have the following concrete/terminal types:
@@ -191,7 +195,27 @@ public abstract class TypeExp implements StyledShowable
         , ImmutableList.of());
     }
 
+    public static TypeExp bool(@Nullable ExpressionBase src)
+    {
+        return new TypeCons(src, TypeExp.CONS_BOOLEAN);
+    }
+    
+    public static TypeExp text(@Nullable ExpressionBase src)
+    {
+        return new TypeCons(src, CONS_TEXT);
+    }
+
+    public static TypeExp plainNumber(@Nullable ExpressionBase src)
+    {
+        return new NumTypeExp(src, UnitExp.SCALAR);
+    }
+    
     public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
+    {
+        return fromDataType(src, dataType, t -> null);
+    }
+
+    public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType, Function<String, @Nullable TypeExp> typeVarLookup) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
         {
@@ -204,7 +228,7 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp text() throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_TEXT);
+                return TypeExp.text(src);
             }
 
             @Override
@@ -216,31 +240,40 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp bool() throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_BOOLEAN);
+                return TypeExp.bool(src);
             }
 
             @Override
             public TypeExp tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, v -> fromConcrete(src, v)));
+                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, v -> fromDataType(src, v, typeVarLookup)));
             }
 
             @Override
             public TypeExp tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
             {
-                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromConcrete(src, t)), true);
+                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromDataType(src, t, typeVarLookup)), true);
             }
 
             @Override
             public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src) : fromConcrete(src, inner));
+                return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src) : fromDataType(src, inner, typeVarLookup));
             }
 
             @Override
             public TypeExp toInfer() throws InternalException, InternalException
             {
                 return new MutVar(src);
+            }
+
+            @Override
+            public TypeExp typeVariable(String typeVariableName) throws InternalException, InternalException
+            {
+                @Nullable TypeExp lookedUp = typeVarLookup.apply(typeVariableName);
+                if (lookedUp == null)
+                    throw new InternalException("Cannot find type variable: " + typeVariableName + " in " + dataType);
+                return lookedUp;
             }
         });
     }

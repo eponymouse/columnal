@@ -109,11 +109,12 @@ public class RaiseExpression extends BinaryOpExpression
             // If power is not 1, integer, or 1/integer, fall through...
         }
         
-        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, DataType.NUMBER), lhsTypeFinal)) == null)
+        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.plainNumber(this), lhsTypeFinal)) == null)
             return null;
-        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, DataType.NUMBER), rhsTypeFinal)) == null)
+        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.plainNumber(this), rhsTypeFinal)) == null)
             return null;
-        return TypeExp.fromConcrete(this, DataType.NUMBER);    }
+        return TypeExp.plainNumber(this);
+    }
 
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException

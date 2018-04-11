@@ -54,7 +54,7 @@ public class NumericLiteral extends Literal
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (unit == null)
-            return onError.recordType(this, TypeExp.fromConcrete(this, DataType.NUMBER));
+            return onError.recordType(this, TypeExp.plainNumber(this));
 
         Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {

@@ -6,7 +6,6 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
@@ -19,7 +18,6 @@ import records.types.TypeCons;
 import records.types.TypeExp;
 import utility.ExFunction;
 import utility.Pair;
-import utility.Utility;
 import utility.ValueFunction;
 
 import java.util.Collections;

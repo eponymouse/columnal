@@ -188,7 +188,7 @@ public class MatchExpression extends NonOperatorExpression
             if (guard != null)
             {
                 @Nullable TypeExp type = guard.check(data, rhsState.getSecond(), onError);
-                if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.fromConcrete(guard, DataType.BOOLEAN), type)) == null)
+                if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.bool(guard), type)) == null)
                 {
                     return null;
                 }

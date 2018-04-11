@@ -61,7 +61,7 @@ public class EqualExpression extends NaryOpExpression
         if (argType == null)
             return null;
         else
-            return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));
+            return onError.recordType(this, TypeExp.bool(this));
     }
 
     @Override

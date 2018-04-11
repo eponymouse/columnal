@@ -120,7 +120,7 @@ public class ComparisonExpression extends NaryOpExpression
         ) : ImmutableList.of()));
         if (type == null)
             return null;
-        return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));
+        return onError.recordType(this, TypeExp.bool(this));
     }
 
     @Override

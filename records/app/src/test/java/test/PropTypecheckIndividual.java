@@ -176,11 +176,11 @@ public class PropTypecheckIndividual
 
         TableLookup tableLookup = id -> null;
         assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -282,9 +282,9 @@ public class PropTypecheckIndividual
 
         for (Function<List<Expression>, Expression> create : Arrays.<Function<List<Expression>, Expression>>asList(AndExpression::new, OrExpression::new))
         {
-            assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN)))));
-            assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
-            assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(TypeExp.bool(null), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(TypeExp.bool(null), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(TypeExp.bool(null), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
 
             assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(nonBool)))));
             assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(nonBool)))));
@@ -304,8 +304,8 @@ public class PropTypecheckIndividual
         // Must be different types:
         Assume.assumeFalse(DataType.checkSame(main, other, s -> {}) != null);
 
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN))));
-        assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
+        assertEquals(TypeExp.bool(null), check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN))));
+        assertEquals(TypeExp.bool(null), check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
 
         assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(other), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN))));
         assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(other)), ImmutableList.of(ComparisonOperator.GREATER_THAN))));

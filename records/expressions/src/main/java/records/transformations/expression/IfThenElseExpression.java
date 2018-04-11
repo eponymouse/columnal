@@ -58,7 +58,7 @@ public class IfThenElseExpression extends NonOperatorExpression
         @Nullable TypeExp conditionType = condition.check(dataLookup, state, onError);
         if (conditionType == null)
             return null;
-        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, DataType.BOOLEAN), conditionType)) == null)
+        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.bool(this), conditionType)) == null)
         {
             return null;
         }

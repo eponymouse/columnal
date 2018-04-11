@@ -37,7 +37,7 @@ public class FromString extends FunctionDefinition
     {
         super("from text", "from.string.mini", typeManager -> new FunctionTypes(typeManager,
             new MutVar(null),
-            TypeExp.fromConcrete(null, DataType.TEXT)
+            TypeExp.text(null)
         ) {
             @Override
             protected ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException

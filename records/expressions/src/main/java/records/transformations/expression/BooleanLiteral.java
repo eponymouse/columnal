@@ -35,7 +35,7 @@ public class BooleanLiteral extends Literal
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
-        return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));
+        return onError.recordType(this, TypeExp.bool(this));
     }
 
     @Override

@@ -73,7 +73,7 @@ public class MatchesOneExpression extends BinaryOpExpression
     {
         // If we get this far, the RHS pattern must have matched the LHS expression
         // So we just return our type, which is boolean:
-        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
+        return TypeExp.bool(this);
     }
 
     @Override

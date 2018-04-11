@@ -41,7 +41,7 @@ public class StringLiteral extends Literal
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
-        return onError.recordTypeNN(this, TypeExp.fromConcrete(this, DataType.TEXT));
+        return onError.recordTypeNN(this, TypeExp.text(this));
     }
 
     @Override
