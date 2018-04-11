@@ -9,6 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -87,10 +88,10 @@ public class ToDateTimeZone extends ToTemporalFunction
         return ZonedDateTime.from(temporalAccessor);
     }
 
-    private class D_TZ extends FunctionInstance
+    private class D_TZ extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             OffsetTime t = (OffsetTime)paramList[1];
@@ -98,20 +99,20 @@ public class ToDateTimeZone extends ToTemporalFunction
         }
     }
 
-    private class DT_Z extends FunctionInstance
+    private class DT_Z extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             return ZonedDateTime.of((LocalDateTime)paramList[0], ZoneId.of((String)paramList[1]));
         }
     }
 
-    private class D_T_Z extends FunctionInstance
+    private class D_T_Z extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
             return ZonedDateTime.of(LocalDateTime.of((LocalDate) paramList[0], (LocalTime)paramList[1]), ZoneId.of((String) paramList[2]));

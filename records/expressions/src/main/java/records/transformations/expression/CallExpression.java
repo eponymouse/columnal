@@ -144,7 +144,7 @@ public class CallExpression extends NonOperatorExpression
         if (types == null)
             throw new InternalException("Calling function " + functionName + " which didn't typecheck");
         
-        return types.getInstanceAfterTypeCheck().getValue(rowIndex, param.getValue(rowIndex, state));
+        return types.getInstanceAfterTypeCheck().call(param.getValue(rowIndex, state));
     }
 
     @Override

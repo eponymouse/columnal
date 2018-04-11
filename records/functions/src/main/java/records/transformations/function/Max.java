@@ -7,10 +7,9 @@ import records.error.UserException;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.ValueFunction;
 
 public class Max extends FunctionDefinition
 {
@@ -30,10 +29,10 @@ public class Max extends FunctionDefinition
         return new FunctionTypesUniform(typeManager, Instance::new, any, new TypeCons(null, TypeExp.CONS_LIST, any));
     }    
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             @Value ListEx list = Utility.cast(param, ListEx.class);
             if (list.size() == 0)

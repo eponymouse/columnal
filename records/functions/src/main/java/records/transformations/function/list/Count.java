@@ -9,14 +9,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
-import records.transformations.function.FunctionInstance;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,10 +41,10 @@ public class Count extends FunctionDefinition
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(new TypeCons(null, TypeExp.CONS_LIST, new MutVar(null))));
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             return DataTypeUtility.value(Utility.valueList(param).size());
         }

@@ -3,7 +3,6 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -13,12 +12,12 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -86,10 +85,10 @@ public class ToTime extends ToTemporalFunction
         return LocalTime.from(temporalAccessor);
     }
 
-    private class FromNumbers extends FunctionInstance
+    private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
             int hour = DataTypeUtility.requireInteger(paramList[0]);

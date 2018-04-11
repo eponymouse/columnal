@@ -13,13 +13,10 @@ import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionDefinition.FunctionTypesUniform;
 import records.transformations.function.FunctionDefinition.TypeMatcher;
 import records.transformations.function.FunctionGroup;
-import records.transformations.function.FunctionInstance;
 import records.types.MutVar;
 import records.types.TupleTypeExp;
 import records.types.TypeCons;
 import records.types.TypeExp;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
@@ -36,7 +33,7 @@ public class AnyAllNone extends FunctionGroup
             new FunctionDefinition("none", "none.mini", new Matcher(() -> new Processor(false, null, true)))));
     }
     
-    private static class Processor extends FunctionInstance
+    private static class Processor extends ValueFunction
     {
         private final @Nullable @Value Boolean returnIfTrueFound;
         private final @Nullable @Value Boolean returnIfFalseFound;
@@ -50,8 +47,7 @@ public class AnyAllNone extends FunctionGroup
         }
 
         @Override
-        @OnThread(Tag.Simulation)
-        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object @Value[] args = Utility.castTuple(param, 2);
             ListEx list = Utility.cast(args[0], ListEx.class);
@@ -70,9 +66,9 @@ public class AnyAllNone extends FunctionGroup
 
     private static class Matcher implements TypeMatcher
     {
-        private final Supplier<FunctionInstance> makeInstance;
+        private final Supplier<ValueFunction> makeInstance;
 
-        private Matcher(Supplier<FunctionInstance> makeInstance)
+        private Matcher(Supplier<ValueFunction> makeInstance)
         {
             this.makeInstance = makeInstance;
         }

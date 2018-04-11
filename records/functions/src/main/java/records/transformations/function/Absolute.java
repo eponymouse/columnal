@@ -5,6 +5,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.math.BigDecimal;
 
@@ -23,12 +24,12 @@ public class Absolute extends SingleNumericInOutFunction
         return new FunctionGroup("abs.short", new Absolute());
     }
     
-    private static FunctionInstance makeInstance()
+    private static ValueFunction makeInstance()
     {
-        return new FunctionInstance()
+        return new ValueFunction()
         {
             @Override
-            public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+            public Object call(@Value Object param) throws UserException, InternalException
             {
                 return DataTypeUtility.value(Utility.<Number>withNumber(param, l -> {
                     if (l == Long.MIN_VALUE)

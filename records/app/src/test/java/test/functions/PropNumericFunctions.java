@@ -17,8 +17,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.Absolute;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
-import records.transformations.function.FunctionInstance;
 import records.transformations.function.Mean;
 import records.transformations.function.Round;
 import records.transformations.function.Sum;
@@ -30,6 +28,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -128,13 +127,13 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit))));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().getValue(0, DataTypeUtility.value(src));
+            Object num = instance.getFirst().call(DataTypeUtility.value(src));
             return (Number)num;
         }
         catch (RuntimeException e)
@@ -154,13 +153,13 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().getValue(0, DataTypeUtility.value(src));
+            Object num = instance.getFirst().call(DataTypeUtility.value(src));
             return (Number)num;
         }
         catch (RuntimeException e)

@@ -16,6 +16,7 @@ import records.types.TypeExp;
 import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +40,7 @@ public class FunctionDefinition
         this.typeMatcher = typeMatcher;
     }
 
-    public FunctionDefinition(String name, @LocalizableKey String miniDescriptionKey, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
+    public FunctionDefinition(String name, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance, DataType returnType, DataType paramType)
     {
         this.name = name;
         this.miniDescriptionKey = miniDescriptionKey;
@@ -117,10 +118,10 @@ public class FunctionDefinition
     {
         private final DataType exactReturnType;
         private final DataType exactParamType;
-        private final Supplier<FunctionInstance> makeInstance;
+        private final Supplier<ValueFunction> makeInstance;
 
 
-        public ExactType(Supplier<FunctionInstance> makeInstance, DataType exactReturnType, DataType exactParamType)
+        public ExactType(Supplier<ValueFunction> makeInstance, DataType exactReturnType, DataType exactParamType)
         {
             this.makeInstance = makeInstance;
             this.exactReturnType = exactReturnType;
@@ -141,7 +142,7 @@ public class FunctionDefinition
         public final TypeExp returnType;
         protected final TypeManager typeManager;
         @MonotonicNonNull
-        private FunctionInstance instance;
+        private ValueFunction instance;
 
         FunctionTypes(TypeManager typeManager, TypeExp returnType, TypeExp paramType)
         {
@@ -150,9 +151,9 @@ public class FunctionDefinition
             this.paramType = paramType;
         }
         
-        protected abstract FunctionInstance makeInstanceAfterTypeCheck() throws UserException, InternalException;
+        protected abstract ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException;
 
-        public final FunctionInstance getInstanceAfterTypeCheck() throws InternalException, UserException
+        public final ValueFunction getInstanceAfterTypeCheck() throws InternalException, UserException
         {
             if (instance == null)
             {
@@ -165,16 +166,16 @@ public class FunctionDefinition
     // A version that has a single instance generator, regardless of type.
     public static class FunctionTypesUniform extends FunctionTypes
     {
-        private final Supplier<FunctionInstance> makeInstance;
+        private final Supplier<ValueFunction> makeInstance;
 
-        public FunctionTypesUniform(TypeManager typeManager, Supplier<FunctionInstance> makeInstance, TypeExp returnType, TypeExp paramType)
+        public FunctionTypesUniform(TypeManager typeManager, Supplier<ValueFunction> makeInstance, TypeExp returnType, TypeExp paramType)
         {
             super(typeManager, returnType, paramType);
             this.makeInstance = makeInstance;
         }
 
         @Override
-        protected FunctionInstance makeInstanceAfterTypeCheck()
+        protected ValueFunction makeInstanceAfterTypeCheck()
         {
             return makeInstance.get();
         }

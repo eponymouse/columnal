@@ -8,16 +8,14 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
-import records.transformations.function.FunctionInstance;
 import records.types.MutVar;
 import records.types.NumTypeExp;
 import records.types.TupleTypeExp;
 import records.types.TypeCons;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
+import utility.ValueFunction;
 
 /**
  * Created by neil on 17/01/2017.
@@ -44,11 +42,10 @@ public class GetElement extends FunctionDefinition
         return new FunctionGroup("element.short", new GetElement());
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         @Override
-        @OnThread(Tag.Simulation)
-        public @Value Object getValue(int rowIndex, @Value Object params) throws UserException, InternalException
+        public Object call(@Value Object params) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(params, 2);
             @UserIndex int userIndex = DataTypeUtility.userIndex(paramList[1]);

@@ -13,7 +13,6 @@ import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
 import records.transformations.function.list.Count;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionInstance;
 import records.transformations.function.list.GetElement;
 import records.transformations.function.Max;
 import records.transformations.function.Min;
@@ -24,6 +23,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,8 +47,8 @@ public class PropListFunctions
 
         FunctionDefinition minFunction = new Min();
         FunctionDefinition maxFunction = new Max();
-        @Nullable Pair<FunctionInstance, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, Collections.emptyList(), src.type);
-        @Nullable Pair<FunctionInstance, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, Collections.emptyList(), src.type);
+        @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, Collections.emptyList(), src.type);
+        @Nullable Pair<ValueFunction, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, Collections.emptyList(), src.type);
 
         if (minChecked == null || maxChecked == null)
         {
@@ -56,10 +56,10 @@ public class PropListFunctions
         }
         else if (src.list.size() == 0)
         {
-            @NonNull Pair<FunctionInstance, DataType> minFinal = minChecked;
-            @NonNull Pair<FunctionInstance, DataType> maxFinal = maxChecked;
-            TestUtil.assertUserException(() -> minFinal.getFirst().getValue(0, DataTypeUtility.value(src.list)));
-            TestUtil.assertUserException(() -> maxFinal.getFirst().getValue(0, DataTypeUtility.value(src.list)));
+            @NonNull Pair<ValueFunction, DataType> minFinal = minChecked;
+            @NonNull Pair<ValueFunction, DataType> maxFinal = maxChecked;
+            TestUtil.assertUserException(() -> minFinal.getFirst().call(DataTypeUtility.value(src.list)));
+            TestUtil.assertUserException(() -> maxFinal.getFirst().call(DataTypeUtility.value(src.list)));
         }
         else
         {
@@ -76,8 +76,8 @@ public class PropListFunctions
 
             assertEquals(src.type.getMemberType().get(0), minChecked.getSecond());
             assertEquals(src.type.getMemberType().get(0), maxChecked.getSecond());
-            @Value Object minActual = minChecked.getFirst().getValue(0, DataTypeUtility.value(src.list));
-            @Value Object maxActual = maxChecked.getFirst().getValue(0, DataTypeUtility.value(src.list));
+            @Value Object minActual = minChecked.getFirst().call(DataTypeUtility.value(src.list));
+            @Value Object maxActual = maxChecked.getFirst().call(DataTypeUtility.value(src.list));
             TestUtil.assertValueEqual("", expectedMin, minActual);
             TestUtil.assertValueEqual("", expectedMax, maxActual);
         }
@@ -89,7 +89,7 @@ public class PropListFunctions
     public void propCount(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
         Count function = new Count();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), src.type);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), src.type);
         if (checked == null)
         {
             fail("Type check failure");
@@ -97,7 +97,7 @@ public class PropListFunctions
         else
         {
             assertEquals(DataType.NUMBER, checked.getSecond());
-            @Value Object actual = checked.getFirst().getValue(0, DataTypeUtility.value(src.list));
+            @Value Object actual = checked.getFirst().call(DataTypeUtility.value(src.list));
             assertEquals(src.list.size(), actual);
         }
     }
@@ -107,7 +107,7 @@ public class PropListFunctions
     public void propElement(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
         GetElement function = new GetElement();
-        @Nullable Pair<FunctionInstance, DataType> checked = null;
+        @Nullable Pair<ValueFunction, DataType> checked = null;
         try
         {
             checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER));
@@ -128,7 +128,7 @@ public class PropListFunctions
             // Try valid values:
             for (int i = 0; i < src.list.size(); i++)
             {
-                @Value Object actual = checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i + 1 /* one-based index */)}));
+                @Value Object actual = checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i + 1 /* one-based index */)}));
                 assertSame(src.list.get(i), actual);
             }
             // Try invalid integer values:
@@ -136,7 +136,7 @@ public class PropListFunctions
             {
                 try
                 {
-                    checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i)}));
+                    checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i)}));
                     fail("Expected user exception for index " + i);
                 }
                 catch (UserException e)

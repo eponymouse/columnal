@@ -1,17 +1,12 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
-
-import java.util.List;
+import utility.ValueFunction;
 
 public class Not extends FunctionDefinition
 {
@@ -25,11 +20,11 @@ public class Not extends FunctionDefinition
         return new FunctionGroup("not.short", new Not());
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             return DataTypeUtility.value(!Utility.cast(param, Boolean.class));
         }

@@ -5,9 +5,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
+import utility.ValueFunction;
 
 public class StringMid extends FunctionDefinition
 {
@@ -21,10 +20,10 @@ public class StringMid extends FunctionDefinition
         return new FunctionGroup("middle.short", new StringMid());
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object @Value [] params = Utility.castTuple(param, 3);
             String src = Utility.cast(params[0], String.class);

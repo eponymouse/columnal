@@ -5,10 +5,9 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +24,11 @@ public class StringWithinIndex extends FunctionDefinition
         return new FunctionGroup("within.indexes.short", new StringWithinIndex());
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object[] params = Utility.castTuple(param, 2);
             @Value String big = Utility.cast(params[1], String.class);

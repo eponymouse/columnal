@@ -4,10 +4,9 @@ import annotation.qual.Value;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.ValueFunction;
 
 /**
  * Created by neil on 22/01/2017.
@@ -16,10 +15,10 @@ public class Mean extends SingleNumericSummaryFunction
 {
     public Mean()
     {
-        super("average", "average.mini", () -> new FunctionInstance()
+        super("average", "average.mini", () -> new ValueFunction()
         {
             @Override
-            public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+            public Object call(@Value Object param) throws UserException, InternalException
             {
                 ListEx list = Utility.valueList(param);
                 int size = list.size();

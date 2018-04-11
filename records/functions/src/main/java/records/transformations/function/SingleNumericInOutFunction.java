@@ -8,6 +8,7 @@ import records.error.UserException;
 import records.types.NumTypeExp;
 import records.types.units.UnitExp;
 import utility.Pair;
+import utility.ValueFunction;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
  */
 abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
-    SingleNumericInOutFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<FunctionInstance> makeInstance)
+    SingleNumericInOutFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
     {
         super(name, miniDescriptionKey, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());

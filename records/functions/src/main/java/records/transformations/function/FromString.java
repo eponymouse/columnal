@@ -21,6 +21,7 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.ValueFunction;
 
 import java.text.ParsePosition;
 import java.time.format.DateTimeFormatter;
@@ -39,7 +40,7 @@ public class FromString extends FunctionDefinition
             TypeExp.fromConcrete(null, DataType.TEXT)
         ) {
             @Override
-            protected FunctionInstance makeInstanceAfterTypeCheck() throws UserException, InternalException
+            protected ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException
             {
                 return new Instance(returnType.toConcreteType(typeManager).eitherEx(err -> {throw new UserException(err.getErrorText().toPlain());}, x -> x));
             }
@@ -51,7 +52,7 @@ public class FromString extends FunctionDefinition
         return new FunctionGroup("from.string.short", new FromString());
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         private final DataType type;
 
@@ -62,8 +63,7 @@ public class FromString extends FunctionDefinition
 
 
         @Override
-        @OnThread(Tag.Simulation)
-        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             return convertFromString(type, new StringView(param.toString()));
         }

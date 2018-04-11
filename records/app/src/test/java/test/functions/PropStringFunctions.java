@@ -3,7 +3,6 @@ package test.functions;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -23,6 +22,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +53,7 @@ public class PropStringFunctions
     public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLength function = new StringLength();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
         if (checked == null)
         {
             fail("Type check failure");
@@ -61,7 +61,7 @@ public class PropStringFunctions
         else
         {
             assertEquals(DataType.NUMBER, checked.getSecond());
-            @Value Number actual = (Number)checked.getFirst().getValue(0, DataTypeUtility.value(str));
+            @Value Number actual = (Number)checked.getFirst().call(DataTypeUtility.value(str));
             assertEquals(str.codePointCount(0, str.length()), actual.intValue());
             assertTrue(actual.doubleValue() == (double)actual.intValue());
         }
@@ -72,7 +72,7 @@ public class PropStringFunctions
     public void propTrim(@From(UnicodeStringGenerator.class) String orig, @From(GenRandom.class) Random r) throws Throwable
     {
         StringTrim function = new StringTrim();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
         if (checked == null)
         {
             fail("Type check failure");
@@ -93,7 +93,7 @@ public class PropStringFunctions
                 withSpaces = withSpaces + SPACES.charAt(r.nextInt(SPACES.length()));
             }
 
-            @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(withSpaces));
+            @Value String actual = (String)checked.getFirst().call(DataTypeUtility.value(withSpaces));
                 assertEquals(orig, actual);
 
         }
@@ -115,7 +115,7 @@ public class PropStringFunctions
     public void propLeft(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLeft function = new StringLeft();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER));
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER));
         if (checked == null)
         {
             fail("Type check failure");
@@ -127,13 +127,13 @@ public class PropStringFunctions
             // Going beyond length should just return whole string, so go 5 beyond to check:
             for (int i = 0; i <= strCodepoints.length + 5; i++)
             {
-                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(str), v(i)}));
+                @Value String actual = (String)checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(str), v(i)}));
                 assertTrue(str.startsWith(actual));
                 assertEquals(new String(strCodepoints, 0, Math.min(i, strCodepoints.length)), actual);
             }
 
-            @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(str), v(-1)})));
+            @Nullable Pair<ValueFunction, DataType> checkedFinal = checked;
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(str), v(-1)})));
         }
     }
 
@@ -142,7 +142,7 @@ public class PropStringFunctions
     public void propRight(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringRight function = new StringRight();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER));
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER));
         if (checked == null)
         {
             fail("Type check failure");
@@ -154,13 +154,13 @@ public class PropStringFunctions
             // Going beyond length should just return whole string, so go 5 beyond to check:
             for (int i = 0; i <= strCodepoints.length + 5; i++)
             {
-                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(str), v(i)}));
+                @Value String actual = (String)checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(str), v(i)}));
                 assertTrue(str.endsWith(actual));
                 assertEquals(new String(strCodepoints, Math.max(0, strCodepoints.length - i), Math.min(i, strCodepoints.length)), actual);
             }
 
-            @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(-1)})));
+            @Nullable Pair<ValueFunction, DataType> checkedFinal = checked;
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().call(DataTypeUtility.value(new Object[]{v(str), v(-1)})));
         }
     }
 
@@ -169,7 +169,7 @@ public class PropStringFunctions
     public void propMid(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringMid function = new StringMid();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
         if (checked == null)
         {
             fail("Type check failure");
@@ -184,16 +184,16 @@ public class PropStringFunctions
                 for (int length = 0; length <= strCodepoints.length + 5 - start; length++)
                 {
                     // Start should be one-based, so we add one when making the call:
-                    @Value String actual = (String) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(start + 1), v(length)}));
+                    @Value String actual = (String) checked.getFirst().call(DataTypeUtility.value(new Object[]{v(str), v(start + 1), v(length)}));
                     assertTrue(str.contains(actual));
                     assertEquals("From #" + (start + 1) + " for " + length + " in " + strCodepoints.length, new String(strCodepoints, Math.min(start, strCodepoints.length), Math.min(length, Math.max(0, strCodepoints.length - start))), actual);
                 }
             }
 
-            @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(-1), v(0)})));
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(0), v(-1)})));
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(-1), v(-1)})));
+            @Nullable Pair<ValueFunction, DataType> checkedFinal = checked;
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().call(DataTypeUtility.value(new Object[]{v(str), v(-1), v(0)})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().call(DataTypeUtility.value(new Object[]{v(str), v(0), v(-1)})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().call(DataTypeUtility.value(new Object[]{v(str), v(-1), v(-1)})));
         }
     }
 
@@ -216,9 +216,9 @@ public class PropStringFunctions
         StringWithin function = new StringWithin();
         StringWithinIndex functionIndex = new StringWithinIndex();
         FunctionDefinition replaceFunction = new StringReplaceAll();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
-        @Nullable Pair<FunctionInstance, DataType> checkedIndex = TestUtil.typeCheckFunction(functionIndex, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
-        @Nullable Pair<FunctionInstance, DataType> checkedReplace = TestUtil.typeCheckFunction(replaceFunction, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
+        @Nullable Pair<ValueFunction, DataType> checkedIndex = TestUtil.typeCheckFunction(functionIndex, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
+        @Nullable Pair<ValueFunction, DataType> checkedReplace = TestUtil.typeCheckFunction(replaceFunction, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
 
         if (checked == null || checkedIndex == null || checkedReplace == null)
         {
@@ -227,11 +227,11 @@ public class PropStringFunctions
         else
         {
             assertEquals(DataType.BOOLEAN, checked.getSecond());
-            @Value Boolean actualContained = (Boolean) checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(target), v(s.toString())}));
+            @Value Boolean actualContained = (Boolean) checked.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(target), v(s.toString())}));
             assertEquals(targets.stream().anyMatch(b -> b), actualContained);
 
             assertEquals(DataType.array(DataType.NUMBER), checkedIndex.getSecond());
-            ListEx actualIndexes = (ListEx) checkedIndex.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(target), v(s.toString())}));
+            ListEx actualIndexes = (ListEx) checkedIndex.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(target), v(s.toString())}));
             List<@Value Integer> expectedIndexes = new ArrayList<>();
             int index = 0;
             for (Boolean match : targets)
@@ -244,7 +244,7 @@ public class PropStringFunctions
 
 
             assertEquals(DataType.TEXT, checkedReplace.getSecond());
-            assertEquals(replaced.toString(), checkedReplace.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(target), v(replacement), v(s.toString())})));
+            assertEquals(replaced.toString(), checkedReplace.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(target), v(replacement), v(s.toString())})));
         }
     }
 
@@ -254,8 +254,8 @@ public class PropStringFunctions
     {
         FunctionDefinition toString = new ToString();
         FunctionDefinition fromString = new FromString();
-        @Nullable Pair<FunctionInstance, DataType> checkedToString = TestUtil.typeCheckFunction(toString, Collections.emptyList(), typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
-        @Nullable Pair<FunctionInstance, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), Collections.emptyList(), DataType.TEXT, typeAndValueGen.getTypeManager());
+        @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, Collections.emptyList(), typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
+        @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), Collections.emptyList(), DataType.TEXT, typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)
         {
             fail("Type check failure");
@@ -267,8 +267,8 @@ public class PropStringFunctions
             for (int i = 0; i < 100; i++)
             {
                 @Value Object value = typeAndValueGen.makeValue();
-                @Value Object asString = checkedToString.getFirst().getValue(0, value);
-                @Value Object roundTripped = checkedFromString.getFirst().getValue(0, asString);
+                @Value Object asString = checkedToString.getFirst().call(value);
+                @Value Object roundTripped = checkedFromString.getFirst().call(asString);
                 TestUtil.assertValueEqual(asString.toString(), value, roundTripped);
             }
         }

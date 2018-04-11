@@ -4,10 +4,9 @@ import annotation.qual.Value;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.ValueFunction;
 
 /**
  * Created by neil on 19/01/2017.
@@ -24,10 +23,10 @@ public class Sum extends SingleNumericSummaryFunction
         return new FunctionGroup("sum.short", new Sum());
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             // If there are non-integers this will get widened.  And if not, it will stay Integer
             // which will be faster:

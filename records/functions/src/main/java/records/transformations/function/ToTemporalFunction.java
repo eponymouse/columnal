@@ -3,8 +3,6 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -13,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.time.DateTimeException;
 import java.time.Year;
@@ -123,13 +122,13 @@ public abstract class ToTemporalFunction extends FunctionGroup
     // public for testing
     public static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
 
-    private class FromStringInstance extends FunctionInstance
+    private class FromStringInstance extends ValueFunction
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             String src = Utility.preprocessDate(Utility.cast(param, String.class));
 
@@ -196,10 +195,10 @@ public abstract class ToTemporalFunction extends FunctionGroup
     // If two formats may be mistaken for each other, put them in the same inner list:
     protected abstract List<List<@NonNull DateTimeFormatter>> getFormats();
 
-    class FromTemporalInstance extends FunctionInstance
+    class FromTemporalInstance extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException
+        public Object call(@Value Object param) throws UserException
         {
             try
             {

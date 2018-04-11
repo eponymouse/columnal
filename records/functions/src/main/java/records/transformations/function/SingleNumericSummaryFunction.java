@@ -12,6 +12,7 @@ import records.types.NumTypeExp;
 import records.types.TypeCons;
 import records.types.units.UnitExp;
 import utility.Pair;
+import utility.ValueFunction;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
  */
 public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
-    public SingleNumericSummaryFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<FunctionInstance> makeInstance)
+    public SingleNumericSummaryFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
     {
         super(name, miniDescriptionKey, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());

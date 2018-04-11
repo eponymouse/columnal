@@ -43,7 +43,6 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
-import records.transformations.function.FunctionInstance;
 import records.types.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -970,12 +969,12 @@ public class TestUtil
         };
     }
 
-    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
     {
         return typeCheckFunction(function, units, paramType, null);
     }
 
-    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
@@ -992,7 +991,7 @@ public class TestUtil
         return null;
     }
 
-    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();

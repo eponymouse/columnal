@@ -10,6 +10,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -79,10 +80,10 @@ public class ToDateTime extends ToTemporalFunction
         return LocalDateTime.from(temporalAccessor);
     }
 
-    private class DateAndTimeInstance extends FunctionInstance
+    private class DateAndTimeInstance extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object params) throws UserException, InternalException
+        public Object call(@Value Object params) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(params, 2);
             return LocalDateTime.of((LocalDate)paramList[0], (LocalTime) paramList[1]);

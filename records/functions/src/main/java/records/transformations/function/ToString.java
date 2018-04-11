@@ -19,6 +19,7 @@ import threadchecker.Tag;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.ValueFunction;
 
 import java.time.temporal.TemporalAccessor;
 
@@ -31,7 +32,7 @@ public class ToString extends FunctionDefinition
             new MutVar(null)
         ) {
             @Override
-            protected FunctionInstance makeInstanceAfterTypeCheck() throws UserException, InternalException
+            protected ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException
             {
                 return new Instance(paramType.toConcreteType(typeManager).eitherEx(err -> {throw new UserException(err.getErrorText().toPlain());}, x -> x));
             }
@@ -43,7 +44,7 @@ public class ToString extends FunctionDefinition
         return new FunctionGroup("to.string.short", new ToString());
     }
     
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         private final DataType type;
 
@@ -53,8 +54,7 @@ public class ToString extends FunctionDefinition
         }
         
         @Override
-        @OnThread(Tag.Simulation)
-        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             return DataTypeUtility.value(convertToString(type, param));
         }

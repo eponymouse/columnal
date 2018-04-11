@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -19,7 +20,6 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,10 +92,10 @@ public class ToDate extends ToTemporalFunction
         return LocalDate.from(temporalAccessor);
     }
 
-    private class FromYearMonth_Day extends FunctionInstance
+    private class FromYearMonth_Day extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             YearMonth ym = (YearMonth) paramList[0];
@@ -111,10 +111,10 @@ public class ToDate extends ToTemporalFunction
         }
     }
 
-    private class FromNumbers extends FunctionInstance
+    private class FromNumbers extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
             int year = DataTypeUtility.requireInteger(paramList[0]);

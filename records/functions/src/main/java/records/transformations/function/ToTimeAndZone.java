@@ -9,6 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.time.LocalTime;
 import java.time.OffsetTime;
@@ -80,10 +81,10 @@ public class ToTimeAndZone extends ToTemporalFunction
         return OffsetTime.from(temporalAccessor);
     }
 
-    private class T_Z extends FunctionInstance
+    private class T_Z extends ValueFunction
     {
         @Override
-        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
+        public Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             return OffsetTime.of((LocalTime)paramList[0], ZoneOffset.of((String)paramList[1]));

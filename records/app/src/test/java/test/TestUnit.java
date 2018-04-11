@@ -17,7 +17,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.AsUnit;
-import records.transformations.function.FunctionInstance;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -176,7 +175,7 @@ public class TestUnit
         /*
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = new AsUnit().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)), s ->
+            @Nullable Pair<ValueFunction, DataType> instance = new AsUnit().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)), s ->
             {
                 throw new RuntimeException(new UserException(s));
             }, mgr);

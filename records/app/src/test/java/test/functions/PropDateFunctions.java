@@ -15,8 +15,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
-import records.transformations.function.FunctionInstance;
 import records.transformations.function.ToDate;
 import records.transformations.function.ToDateTime;
 import records.transformations.function.ToDateTimeZone;
@@ -27,6 +25,7 @@ import test.gen.GenZoneId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.ValueFunction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -209,9 +208,9 @@ public class PropDateFunctions
     {
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), srcType);
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), srcType);
             assertNotNull(instance);
-            return instance.getFirst().getValue(0, src);
+            return instance.getFirst().call(src);
         }
         catch (RuntimeException e)
         {

@@ -5,9 +5,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
+import utility.ValueFunction;
 
 public class StringLength extends FunctionDefinition
 {
@@ -21,11 +20,11 @@ public class StringLength extends FunctionDefinition
         return new FunctionGroup("length.short", new StringLength());
     }
     
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
+        public Object call(@Value Object param) throws UserException, InternalException
         {
             @Value String str = Utility.cast(param, String.class);
             return DataTypeUtility.value(str.codePointCount(0, str.length()));

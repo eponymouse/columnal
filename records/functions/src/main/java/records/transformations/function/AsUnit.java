@@ -34,7 +34,7 @@ public class AsUnit
     }
 
     @Override
-    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, Consumer<String> onError, UnitManager mgr) throws InternalException, UserException
+    public @Nullable Pair<ValueFunction, DataType> typeCheck(List<Unit> units, DataType param, Consumer<String> onError, UnitManager mgr) throws InternalException, UserException
     {
         if (units.size() != 1)
         {
@@ -67,7 +67,7 @@ public class AsUnit
         throw new InternalException("Overloads inapplicable to astype");
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends ValueFunction
     {
         private final @Nullable BigDecimal scaleBD;
         private final long scaleInt;
