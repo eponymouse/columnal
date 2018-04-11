@@ -15,6 +15,7 @@ import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.transformations.expression.CallExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.FixedTypeExpression;
 import utility.Either;
@@ -568,7 +569,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), new TagExpression(Either.right(tagInfo), null)));
+                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), TestUtil.tagged(Either.right(tagInfo), null)));
                 }
                 else
                 {
@@ -576,7 +577,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     nonTerm.add(() ->
                     {
                         Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
-                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> new TagExpression(Either.right(tagInfo), e));
+                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> TestUtil.tagged(Either.right(tagInfo), e));
                     });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);

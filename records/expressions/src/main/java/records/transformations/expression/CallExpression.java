@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -11,6 +12,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
+import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -64,17 +66,24 @@ public class CallExpression extends Expression
     // Used for testing, and for creating quick recipe functions:
     // Creates a call to a named function
     @SuppressWarnings("recorded")
-    public CallExpression(UnitManager mgr, String functionName, Expression... args) throws InternalException
+    public CallExpression(UnitManager mgr, String functionName, Expression... args)
     {
-        this(new StandardFunction(nonNullLookup(mgr, functionName)), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
+        this(nonNullLookup(mgr, functionName), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
     }
 
-    private static FunctionDefinition nonNullLookup(UnitManager mgr, String functionName) throws InternalException
+    private static Expression nonNullLookup(UnitManager mgr, String functionName)
     {
-        FunctionDefinition functionDefinition = FunctionList.lookup(mgr, functionName);
-        if (functionDefinition == null)
-            throw new InternalException("Function " + functionName + " not found");
-        return functionDefinition;
+        try
+        {
+            FunctionDefinition functionDefinition = FunctionList.lookup(mgr, functionName);
+            if (functionDefinition != null)
+                return new StandardFunction(functionDefinition);
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+        }
+        return new UnfinishedExpression(functionName);
     }
 
     @Override

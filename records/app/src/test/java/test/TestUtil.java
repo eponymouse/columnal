@@ -34,11 +34,14 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.function.FunctionDefinition;
@@ -1116,6 +1119,24 @@ public class TestUtil
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
         expression.check(r -> null, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), excOnError());
         return expression.getValue(0, new EvaluateState());
+    }
+
+
+
+    // Used for testing
+    // Creates a call to a tag constructor
+    @SuppressWarnings("recorded")
+    public static Expression tagged(Either<String, TagInfo> constructor, @Nullable Expression arg)
+    {
+        ConstructorExpression constructorExpression = new ConstructorExpression(constructor);
+        if (arg == null)
+        {
+            return constructorExpression;
+        }
+        else
+        {
+            return new CallExpression(constructorExpression, arg);
+        }
     }
 
     public static DummyManager managerWithTestTypes()

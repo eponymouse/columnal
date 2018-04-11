@@ -33,6 +33,7 @@ import records.transformations.expression.TupleExpression;
 import records.transformations.expression.UnfinishedExpression;
 import records.transformations.expression.VarDeclExpression;
 import records.transformations.expression.VarUseExpression;
+import test.DummyManager;
 import test.TestUtil;
 import utility.Either;
 import utility.Pair;
@@ -100,7 +101,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> !tagAllowed ? genTerminal(r, gs) : new TagExpression(Either.left(TestUtil.makeString(r, gs).trim()), genDepth(r, depth + 1, gs)),
+                () -> !tagAllowed ? genTerminal(r, gs) : TestUtil.tagged(Either.left(TestUtil.makeString(r, gs).trim()), genDepth(r, depth + 1, gs)),
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
@@ -110,7 +111,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                () -> new CallExpression(TestUtil.generateVarName(r), null, TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), genDepth(true, r, depth + 1, gs)),
+                () -> new CallExpression(DummyManager.INSTANCE.getUnitManager(), TestUtil.generateVarName(r), genDepth(true, r, depth + 1, gs)),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
                 () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
                 () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
@@ -160,7 +161,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             () ->
             {
                 String constructorName = TestUtil.makeNonEmptyString(r, gs).trim();
-                return new TagExpression(Either.left(constructorName), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
+                return TestUtil.tagged(Either.left(constructorName), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
             }
         )).get();
     }

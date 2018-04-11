@@ -22,6 +22,7 @@ import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.transformations.expression.CallExpression;
 import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.StringConcatExpression;
 import utility.Either;
@@ -534,7 +535,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> new TagExpression(Either.right(tagInfo), null));
+                    terminals.add(() -> TestUtil.tagged(Either.right(tagInfo), null));
                 }
                 else
                 {
@@ -544,7 +545,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         @Nullable Object innerValue = ((TaggedValue) targetValue).getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
-                        return new TagExpression(Either.right(tagInfo), make(nonNullInner, innerValue, maxLevels - 1));
+                        return TestUtil.tagged(Either.right(tagInfo), make(nonNullInner, innerValue, maxLevels - 1));
                     });
                 }
                 terminals.add(() -> columnRef(type, targetValue));
@@ -840,12 +841,12 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         if (typeDefinition == null)
                             throw new InternalException("Looked up type but null definition: " + typeName);
                         if (inner == null)
-                            return new Pair<>(new TagExpression(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
+                            return new Pair<>(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
                         @Nullable Object innerValue = p.getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
                         Pair<Expression, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, innerValue);
-                        return new Pair<>(new TagExpression(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), subPattern.getFirst()), subPattern.getSecond());
+                        return new Pair<>(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), subPattern.getFirst()), subPattern.getSecond());
                     }
                 });
 

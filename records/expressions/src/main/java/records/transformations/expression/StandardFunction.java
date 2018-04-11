@@ -119,4 +119,9 @@ public class StandardFunction extends NonOperatorExpression
     {
         return Objects.hash(functionDefinition.getName());
     }
+
+    public String _test_getName()
+    {
+        return functionDefinition.getName();
+    }
 }

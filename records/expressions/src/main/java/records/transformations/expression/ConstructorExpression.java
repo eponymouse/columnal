@@ -52,6 +52,12 @@ public class ConstructorExpression extends NonOperatorExpression
     {
         tag = typeName == null ? Either.left(tagName) : typeManager.lookupTag(typeName, tagName);
     }
+    
+    // Used for testing:
+    public ConstructorExpression(Either<String, TagInfo> tag)
+    {
+        this.tag = tag;
+    }
 
     @Override
     public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
@@ -140,5 +146,15 @@ public class ConstructorExpression extends NonOperatorExpression
     public int hashCode()
     {
         return Objects.hash(tag);
+    }
+
+    public String _test_getName()
+    {
+        return tag.either(s -> s, t -> t.getTagInfo().getName());
+    }
+
+    public boolean _test_hasInner()
+    {
+        return tag.either(s -> false, t -> t.getTagInfo().getInner() != null);
     }
 }

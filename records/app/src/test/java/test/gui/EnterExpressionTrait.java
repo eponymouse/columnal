@@ -3,6 +3,7 @@ package test.gui;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.stringtemplate.v4.ST;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
@@ -111,24 +112,21 @@ public interface EnterExpressionTrait extends FxRobotInterface
         }
         else if (c == StandardFunction.class)
         {
-            TagExpression tag = (TagExpression)expression;
-            write(tag._test_getQualifiedTagName());
+            StandardFunction function = (StandardFunction) expression;
+            write(function._test_getName());
             push(KeyCode.ENTER);
-            if (tag.getInner() != null)
-            {
-                enterExpression(tag.getInner(), false, r);
-                write(")");
-            }
+            // Get rid of brackets; if in a call expression, we will add them again:
+            push(KeyCode.BACK_SPACE);
         }
         else if (c == ConstructorExpression.class)
         {
-            TagExpression tag = (TagExpression)expression;
-            write(tag._test_getQualifiedTagName());
+            ConstructorExpression tag = (ConstructorExpression) expression;
+            write(tag._test_getName());
             push(KeyCode.ENTER);
-            if (tag.getInner() != null)
+            if (tag._test_hasInner())
             {
-                enterExpression(tag.getInner(), false, r);
-                write(")");
+                // Get rid of brackets; if in a call expression, we will add them again:
+                push(KeyCode.BACK_SPACE);
             }
         }
         else if (c == MatchExpression.class)
