@@ -188,11 +188,35 @@ public abstract class TypeExp implements StyledShowable
     // 
     public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
     {
-        List<TypeExp> typeVars;
-        // TODO        
+        ImmutableList.Builder<TypeExp> typeVarsInOrder = ImmutableList.builder();
+        Map<String, TypeExp> typeVarsByName = new HashMap<>();
+
+        for (String typeVarName : taggedTypeDefinition.getTypeArguments())
+        {
+            TypeExp mutVar = new MutVar(src);
+            typeVarsInOrder.add(mutVar);
+            typeVarsByName.put(typeVarName, mutVar);
+        }
+
+        TypeCons overallType = new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), typeVarsInOrder.build());
+        ImmutableList.Builder<TypeExp> tagTypes = ImmutableList.builder();
+
+        for (TagType<DataType> tagType : taggedTypeDefinition.getTags())
+        {
+            if (tagType.getInner() == null)
+            {
+                tagTypes.add(overallType);
+            }
+            else
+            {
+                TypeExp innerTypeExp = fromDataType(src, tagType.getInner(), typeVarsByName::get);
+                tagTypes.add(new TypeCons(src, TypeExp.CONS_FUNCTION, innerTypeExp, overallType));
+            }
+        }
+        
         return new Pair<>(
-            new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments().stream().map(_name -> new MutVar(src)).collect(ImmutableList.toImmutableList()))
-        , ImmutableList.of());
+            overallType
+        , tagTypes.build());
     }
 
     public static TypeExp bool(@Nullable ExpressionBase src)
