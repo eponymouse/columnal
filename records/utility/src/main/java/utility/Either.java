@@ -240,6 +240,11 @@ public class Either<A, B>
         return this.<@Nullable B>either(l -> null, r -> r);
     }
     
+    public void ifLeft(Consumer<A> withLeft)
+    {
+        either_(withLeft, b -> {});
+    }
+
     public void ifRight(Consumer<B> withRight)
     {
         either_(a -> {}, withRight);

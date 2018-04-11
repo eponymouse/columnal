@@ -23,7 +23,7 @@ public class StringMid extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object @Value [] params = Utility.castTuple(param, 3);
             String src = Utility.cast(params[0], String.class);

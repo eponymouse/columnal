@@ -19,7 +19,7 @@ public class Round extends SingleNumericInOutFunction
         super("round", "round.mini", () -> new ValueFunction()
         {
             @Override
-            public Object call(@Value Object params) throws UserException, InternalException
+            public @Value Object call(@Value Object params) throws UserException, InternalException
             {
                 return DataTypeUtility.value(Utility.<Number>withNumber(params, x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN)));
             }

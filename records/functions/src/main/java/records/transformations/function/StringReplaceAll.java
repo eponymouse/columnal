@@ -24,7 +24,7 @@ public class StringReplaceAll extends FunctionDefinition
     {
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object[] params = Utility.castTuple(param, 3);
             return DataTypeUtility.value(Utility.cast(params[2], String.class).replace(Utility.cast(params[0], String.class), Utility.cast(params[1], String.class)));

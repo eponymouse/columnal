@@ -84,7 +84,7 @@ public class ToTimeAndZone extends ToTemporalFunction
     private class T_Z extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             return OffsetTime.of((LocalTime)paramList[0], ZoneOffset.of((String)paramList[1]));

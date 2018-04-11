@@ -45,7 +45,7 @@ public class GetElement extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public Object call(@Value Object params) throws UserException, InternalException
+        public @Value Object call(@Value Object params) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(params, 2);
             @UserIndex int userIndex = DataTypeUtility.userIndex(paramList[1]);

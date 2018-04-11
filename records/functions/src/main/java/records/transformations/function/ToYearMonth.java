@@ -72,7 +72,7 @@ public class ToYearMonth extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             return YearMonth.of(DataTypeUtility.requireInteger(paramList[0]), DataTypeUtility.requireInteger(paramList[1]));

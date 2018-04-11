@@ -128,7 +128,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             String src = Utility.preprocessDate(Utility.cast(param, String.class));
 
@@ -198,7 +198,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
     class FromTemporalInstance extends ValueFunction
     {
         @Override
-        public Object call(@Value Object param) throws UserException
+        public @Value Object call(@Value Object param) throws UserException
         {
             try
             {

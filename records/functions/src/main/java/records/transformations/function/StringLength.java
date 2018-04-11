@@ -24,7 +24,7 @@ public class StringLength extends FunctionDefinition
     {
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             @Value String str = Utility.cast(param, String.class);
             return DataTypeUtility.value(str.codePointCount(0, str.length()));

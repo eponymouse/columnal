@@ -29,7 +29,7 @@ public class Absolute extends SingleNumericInOutFunction
         return new ValueFunction()
         {
             @Override
-            public Object call(@Value Object param) throws UserException, InternalException
+            public @Value Object call(@Value Object param) throws UserException, InternalException
             {
                 return DataTypeUtility.value(Utility.<Number>withNumber(param, l -> {
                     if (l == Long.MIN_VALUE)

@@ -54,7 +54,7 @@ public class ToString extends FunctionDefinition
         }
         
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             return DataTypeUtility.value(convertToString(type, param));
         }

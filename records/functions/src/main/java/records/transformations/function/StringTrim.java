@@ -24,7 +24,7 @@ public class StringTrim extends FunctionDefinition
     {
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             String src = Utility.cast(param, String.class);
             // From https://stackoverflow.com/a/28295733

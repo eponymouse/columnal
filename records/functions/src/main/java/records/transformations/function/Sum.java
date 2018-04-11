@@ -28,7 +28,7 @@ public class Sum extends SingleNumericSummaryFunction
     private static class Instance extends ValueFunction
     {
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             // If there are non-integers this will get widened.  And if not, it will stay Integer
             // which will be faster:

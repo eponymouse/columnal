@@ -20,7 +20,7 @@ public class Mean extends SingleNumericSummaryFunction
         super(NAME, "average.mini", () -> new ValueFunction()
         {
             @Override
-            public Object call(@Value Object param) throws UserException, InternalException
+            public @Value Object call(@Value Object param) throws UserException, InternalException
             {
                 ListEx list = Utility.valueList(param);
                 int size = list.size();

@@ -32,7 +32,7 @@ public class Max extends FunctionDefinition
     private static class Instance extends ValueFunction
     {
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             @Value ListEx list = Utility.cast(param, ListEx.class);
             if (list.size() == 0)

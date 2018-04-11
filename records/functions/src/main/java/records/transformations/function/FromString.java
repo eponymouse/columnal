@@ -63,7 +63,7 @@ public class FromString extends FunctionDefinition
 
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             return convertFromString(type, new StringView(param.toString()));
         }

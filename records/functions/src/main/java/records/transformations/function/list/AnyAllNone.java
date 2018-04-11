@@ -47,7 +47,7 @@ public class AnyAllNone extends FunctionGroup
         }
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object @Value[] args = Utility.castTuple(param, 2);
             ListEx list = Utility.cast(args[0], ListEx.class);

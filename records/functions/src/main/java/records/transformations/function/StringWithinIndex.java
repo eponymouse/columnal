@@ -28,7 +28,7 @@ public class StringWithinIndex extends FunctionDefinition
     {
 
         @Override
-        public Object call(@Value Object param) throws UserException, InternalException
+        public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             @Value Object[] params = Utility.castTuple(param, 2);
             @Value String big = Utility.cast(params[1], String.class);

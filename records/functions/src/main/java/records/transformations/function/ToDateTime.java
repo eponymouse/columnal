@@ -83,7 +83,7 @@ public class ToDateTime extends ToTemporalFunction
     private class DateAndTimeInstance extends ValueFunction
     {
         @Override
-        public Object call(@Value Object params) throws UserException, InternalException
+        public @Value Object call(@Value Object params) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(params, 2);
             return LocalDateTime.of((LocalDate)paramList[0], (LocalTime) paramList[1]);

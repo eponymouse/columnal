@@ -91,7 +91,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     private class D_TZ extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             OffsetTime t = (OffsetTime)paramList[1];
@@ -102,7 +102,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     private class DT_Z extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             return ZonedDateTime.of((LocalDateTime)paramList[0], ZoneId.of((String)paramList[1]));
@@ -112,7 +112,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     private class D_T_Z extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
             return ZonedDateTime.of(LocalDateTime.of((LocalDate) paramList[0], (LocalTime)paramList[1]), ZoneId.of((String) paramList[2]));

@@ -95,7 +95,7 @@ public class ToDate extends ToTemporalFunction
     private class FromYearMonth_Day extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             YearMonth ym = (YearMonth) paramList[0];
@@ -114,7 +114,7 @@ public class ToDate extends ToTemporalFunction
     private class FromNumbers extends ValueFunction
     {
         @Override
-        public Object call(@Value Object simpleParams) throws UserException, InternalException
+        public @Value Object call(@Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
             int year = DataTypeUtility.requireInteger(paramList[0]);
