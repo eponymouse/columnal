@@ -57,7 +57,6 @@ import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TagExpression;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.VarDeclExpression;
 import records.transformations.expression.VarUseExpression;

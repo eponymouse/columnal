@@ -1,0 +1,93 @@
+Function call design
+===
+
+Aims:
+ - Support call of named functions, and user functions in variables
+ - Support application of tagged type constructors (could be applied like functions, or not)
+ - Allow easy use of wildcard functions, both for passing in e.g. map(xs, ? + 1),
+   and for a form of partial application, e.g. map(?, abs) which would be x -> map(x, abs)
+ - Allow passing of single tuple variable as function args. 
+ - Potentially allow function piping or composition, either like:
+     x >> abs >> round
+   Or:
+     Xs >> map(?, abs) >> filter(?, isInteger)
+ - Useful errors: no weird errors like Haskell because of partial application, no trying to unify operand with function because operator is missing
+
+There are several key decisions:
+ - Should there be a function application operator, e.g. length@xs, length$xs ?
+ - Should adjacency always be treated as application, e.g. length xs, or are brackets needed, e.g. length(xs)
+ - Should currying be allowed and/or discouraged?
+ - Should a special notation be needed for applying to tuples, e.g. let arg = (xs, ? + 1) in map(arg)
+ - Should we only allow prefix or only allow suffix (piping) function calling?  Suffix-only would interfere with wildcards
+ - Is there a special case either or calling a function, or for using a function name without args (e.g. passing a wildcard)
+
+Proposal 1: Application operator
+===
+
+We have a function call operator, let's say $ for sake of argument.
+
+Advantages:
+ - Less confusion over tuples vs non-tuples for args.  map$(xs, ? + 1) or map$arg
+ - Easy to have whatever you like on LHS.  Function name, user function name, tag, an expression, etc
+ - No special case in the parser or expression editor: it's an operator, just like we have already
+ - Can either allow currying easily (nary operator) or make it harder (binary operator)
+ - Symmetrical with piping, e.g. abs$x vs x>>abs.
+ - No special treatement needed for argument brackets
+ - No need to bracket single item args, incl lists, e.g. minimum$[1, 2, 3]
+
+Disadvantages:
+ - Unusual choice
+ - Makes the wildcard rules a bit weirder.  length$? is reasonable, map$(?, f) is weirder, especially compared to let a = (?, f) in map$a.  You'd have to lose referential transparency
+ - Similarly, xs >> map$(?, abs) gets weird.  You'd need to allow mixed operators, or bracket the latter to xs >> (map$(?, abs))
+ - Can still get weird errors, e.g. 1$2 will be a strange type error.
+ - Bit weird for both map$(a, b) and map$(c) to be valid.
+ - Users will likely not bracket and get warned a lot to bracket one way or another, e.g. abs$x - 3 must become (abs$x) - 3 or abs$(x - 3)
+ 
+Proposal 2: Special case user functions
+===
+
+We allow function calls of named functions and tags specially by selecting from auto-complete, but calling a user function is special, as is calling on a tuple.
+So you can have:
+   abs(x)  -- call named function normally
+   %myFunction(x)   -- call user function
+   map(xs, ? + 1)   -- call named function normally (with wildcard function) 
+   map(!arg)        -- call named function and use tuple as args
+
+Advantages:
+  - Easy to pick out function calls, can treat them separately
+  - No ambiguity over how many parameters are needed
+  - No distinction between tags, imported functions or user functions needed.
+   
+Disadvantages:
+  - Awkward in editor to edit function name (what if they instead pick something that isn't a function?)
+  - Two extra intricacies to remember
+
+Proposal 3: Treat adjacency to brackets as a function call
+===
+
+We treat any identifier next to some brackets as function call, e.g.
+   abs(x)
+   myFunction(x)
+
+More details: 
+ - Code completion offers function names, tags, user functions.  For each of these, brackets are automatically added.  Remember there are no zero-arg functions.
+ - Function brackets are just like normal round brackets, but there is a special case for ident followed by round bracket with no operator between.
+ - This can be mixed with other operators, so abs(3) + abs(4) is fine, doesn't have to be (abs(3)) + (abs(4))
+ - To put an operator, type it at the end of the function name.  Expression editor shouldn't let you go to the operator position if there is an existing ident followed by round bracket.
+ - Wildcards in  
+
+Advantages:
+ - Makes the wildcard rule reasonably sane
+ - Classic: familiar to everyone
+ - No distinction between tags, imported functions or user functions needed, including in code completion
+ - Relatively simple to use piping
+ - Less chance for odd bracketing, abs(x) + 3, abs(x + 3), abs(x) + abs(y) all pretty clear.
+ - No special treatement needed for argument brackets
+
+Disadvantages:
+ - Have to allow missing operator in expression editor
+ - Missing operator will be mistaken for function call, e.g. x + (2*3) missing plus will look like x(2*3) which will cause x type error
+ - Bit weird for both map(a, b) and map(c) to be valid (tuple args must still be bracketed) 
+ - Have to always bracket, which is odd for lists, e.g. minimum([1,2,3]) 
+ 
+

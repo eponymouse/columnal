@@ -13,9 +13,11 @@ import utility.ValueFunction;
  */
 public class Sum extends SingleNumericSummaryFunction
 {
+    public static final String NAME = "sum";
+
     public Sum()
     {
-        super("sum", "sum.mini", Instance::new);
+        super(NAME, "sum.mini", Instance::new);
     }
     
     public static FunctionGroup group()

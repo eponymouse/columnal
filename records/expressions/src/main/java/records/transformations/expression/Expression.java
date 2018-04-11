@@ -215,6 +215,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
+        public Expression visitConstructor(ConstructorContext ctx)
+        {
+            return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : ctx.typeName().getText(), ctx.constructorName().getText());
+        }
+
+        @Override
         public Expression visitNotEqualExpression(NotEqualExpressionContext ctx)
         {
             return new NotEqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
@@ -301,29 +307,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
-        public Expression visitTagExpression(TagExpressionContext ctx)
-        {
-            String constructorName = ctx.constructor().constructorName().getText();
-
-            @Nullable Expression args = null;
-            if (ctx.topLevelExpression() != null)
-                args = visitTopLevelExpression(ctx.topLevelExpression());
-            else if (ctx.OPEN_BRACKET() != null)
-                args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
-            
-            if (ctx.constructor().UNKNOWNCONSTRUCTOR() != null)
-            {
-                return new TagExpression(Either.left(constructorName), args);
-            }
-            else
-            {
-                String typeName = ctx.constructor().typeName().getText();
-
-                return new TagExpression(typeManager.lookupTag(typeName, constructorName), args);
-            }
-        }
-
-        @Override
         public Expression visitFixTypeExpression(FixTypeExpressionContext ctx)
         {
             String typeSrc = ctx.TYPE_CONTENT().getText();
@@ -359,13 +342,21 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitCallExpression(CallExpressionContext ctx)
         {
-            // Utility.mapList(ctx.UNIT(), u -> )
+            Expression function = visitCallTarget(ctx.callTarget());
+            
             @NonNull Expression args;
             if (ctx.topLevelExpression() != null)
                 args = visitTopLevelExpression(ctx.topLevelExpression());
             else
                 args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
-            String functionName = ctx.functionName().getText();
+            
+            return new CallExpression(function, args);
+        }
+
+        @Override
+        public Expression visitStandardFunction(StandardFunctionContext ctx)
+        {
+            String functionName = ctx.ident().getText();
             @Nullable FunctionDefinition functionDefinition = null;
             try
             {
@@ -376,9 +367,16 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 Utility.report(e);
                 // Carry on, but function is null so will count as unknown
             }
-            return new CallExpression(functionName, functionDefinition, Collections.emptyList(), args);
+            if (functionDefinition == null)
+            {
+                return new UnfinishedExpression(functionName);
+            }
+            else
+            {
+                return new StandardFunction(functionDefinition);
+            }
         }
-
+        
         /*
         @Override
         public Expression visitBinaryOpExpression(BinaryOpExpressionContext ctx)
@@ -434,7 +432,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitNewVariable(ExpressionParser.NewVariableContext ctx)
         {
-            return new VarDeclExpression(ctx.UNQUOTED_IDENT().getText());
+            return new VarDeclExpression(ctx.ident().getText());
         }
 
         @Override

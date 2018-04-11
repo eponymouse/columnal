@@ -37,6 +37,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -246,8 +247,24 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return getAllChildren().stream().flatMap(o -> o._test_getHeaders());
     }
 
-    public static enum OperatorOutcome { KEEP, BLANK }
+    /**
+     * If the operand to the right of rightOf does NOT pass the given test (or the operator between is non-blank),
+     * use the supplier to make one and insert it with blank operator between.
+     */
+    public void ensureOperandToRight(OperandNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<OperandNode<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<OperandNode<EXPRESSION, SEMANTIC_PARENT>> makeNew)
+    {
+        int index = Utility.indexOfRef(operands, rightOf);
+        if (index + 1 < operands.size() && isAcceptable.test(operands.get(index + 1)) && operators.get(index).isBlank())
+            return; // Nothing to do; already acceptable
+        // Must add:
+        atomicEdit.set(true);
+        operators.add(index, makeBlankOperator());
+        operands.add(index + 1, makeNew.get());
+        atomicEdit.set(false);
+    }
 
+    public static enum OperatorOutcome { KEEP, BLANK }
+    
     public OperatorOutcome addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
     {
         // Must add operand and operator

@@ -2,8 +2,10 @@ parser grammar ExpressionParser;
 
 options { tokenVocab = ExpressionLexer; }
 
-tableId : STRING | UNQUOTED_IDENT;
-columnId : STRING | UNQUOTED_IDENT;
+ident : STRING | UNQUOTED_IDENT;
+
+tableId : ident;
+columnId : ident;
 columnRefType : COLUMN | WHOLECOLUMN;
 columnRef : columnRefType (tableId COLON)? columnId;
 
@@ -12,14 +14,15 @@ stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
 unfinished : UNFINISHED STRING;
 
-varRef  : UNQUOTED_IDENT;
+varRef  : ident;
 
 any : ANY;
 
 implicitLambdaParam : IMPLICIT_LAMBDA_PARAM;
 
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | unfinished;
+// Similar,y constructor may need an argument, but that's sorted out in type checking.
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | constructor | standardFunction | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
@@ -46,17 +49,17 @@ stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
 
 constructor : CONSTRUCTOR typeName BACKSLASH constructorName | UNKNOWNCONSTRUCTOR constructorName;
-tagExpression : constructor (OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET)?;
 
-functionName : UNQUOTED_IDENT;
-callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;
+standardFunction : FUNCTION ident;
+callTarget : varRef | standardFunction | constructor | unfinished;
+callExpression : CALL callTarget OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;
 
 tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (compoundExpression | (expression (COMMA expression)*))? CLOSE_SQUARE;
 
-newVariable : NEWVAR UNQUOTED_IDENT;
-typeName : STRING | UNQUOTED_IDENT;
-constructorName : STRING | UNQUOTED_IDENT;
+newVariable : NEWVAR ident;
+typeName : ident;
+constructorName : ident;
 pattern : expression (CASEGUARD expression)?;
 
 /* Single argument, matched once as variable name or tuple pattern */
@@ -70,8 +73,8 @@ match : MATCH expression matchClause+;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
-// tagExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression
-expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | tagExpression | fixTypeExpression;
+// callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor
+expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | fixTypeExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;

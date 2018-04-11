@@ -11,6 +11,7 @@ import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.IfThenElseExpression;
@@ -19,8 +20,8 @@ import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.NaryOpExpression;
+import records.transformations.expression.StandardFunction;
 import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TagExpression;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.VarDeclExpression;
 import records.transformations.expression.VarUseExpression;
@@ -103,12 +104,23 @@ public interface EnterExpressionTrait extends FxRobotInterface
         else if (c == CallExpression.class)
         {
             CallExpression call = (CallExpression) expression;
-            write(call._test_getFunctionName());
+            enterExpression(call._test_getFunction(), false, r);
             write("(");
             enterExpression(call._test_getParam(), false, r);
             write(")");
         }
-        else if (c == TagExpression.class)
+        else if (c == StandardFunction.class)
+        {
+            TagExpression tag = (TagExpression)expression;
+            write(tag._test_getQualifiedTagName());
+            push(KeyCode.ENTER);
+            if (tag.getInner() != null)
+            {
+                enterExpression(tag.getInner(), false, r);
+                write(")");
+            }
+        }
+        else if (c == ConstructorExpression.class)
         {
             TagExpression tag = (TagExpression)expression;
             write(tag._test_getQualifiedTagName());

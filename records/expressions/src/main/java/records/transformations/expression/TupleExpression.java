@@ -130,13 +130,21 @@ public class TupleExpression extends Expression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "(" + members.stream().map(e -> e.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(", ")) + ")";
+        String content = members.stream().map(e -> e.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(", "));
+        if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
+            return content;
+        else
+            return "(" + content + ")";
     }
-
+    
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        return StyledString.roundBracket(members.stream().map(e -> e.toDisplay(BracketedStatus.MISC)).collect(StyledString.joining(", ")));
+        StyledString content = members.stream().map(e -> e.toDisplay(BracketedStatus.MISC)).collect(StyledString.joining(", "));
+        if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
+            return content;
+        else
+            return StyledString.roundBracket(content);
     }
 
     @Override

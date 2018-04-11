@@ -35,6 +35,7 @@ import utility.Pair;
 import utility.TaggedValue;
 import utility.UnitType;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -462,6 +463,22 @@ public class TypeManager
         public TagType<DataType> getTagInfo()
         {
             return wholeType.getTags().get(tagIndex);
+        }
+        
+        public @Value Object makeValue()
+        {
+            TagType<DataType> tag = getTagInfo();
+            if (tag.getInner() == null)
+                return new TaggedValue(tagIndex, null);
+            else
+                return DataTypeUtility.value(new ValueFunction()
+                {
+                    @Override
+                    public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                    {
+                        return new TaggedValue(tagIndex, arg);
+                    }
+                });
         }
     }
 }

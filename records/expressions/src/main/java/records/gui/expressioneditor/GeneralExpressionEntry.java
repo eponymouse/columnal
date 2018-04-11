@@ -82,6 +82,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         VARIABLE_DECL(null) /* Declare new variable in pattern */,
         VARIABLE_USE(null),
         IMPLICIT_LAMBDA_ARG(null), /* The ? for implicit lambda args */
+        FUNCTION_NAME(null), /* A function from the standard library */
         UNFINISHED(null);
 
         private final @Nullable String innerStyle;
@@ -850,22 +851,24 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FunctionNode(Either.right(fc.function), semanticParent,null, parent)));
+                status.setValue(Status.FUNCTION_NAME);
+                parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')')));
+                return fc.function.getName();
             }
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                TagExpressionNode tagExpressionNode = new TagExpressionNode(parent, semanticParent, Either.right(tc.tagInfo), tc.tagInfo.getTagInfo().getInner() == null ? null : new UnfinishedExpression(""));
+                status.setValue(Status.TAG);
+                
                 if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
-                    tagExpressionNode.focusWhenShown();
+                    parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')')));
                 }
                 else
                 {
                     if (moveFocus)
                         parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
                 }
-                parent.replace(GeneralExpressionEntry.this, tagExpressionNode);
             }
             else if (c == varDeclCompletion)
             {

@@ -13,9 +13,11 @@ import utility.ValueFunction;
  */
 public class Mean extends SingleNumericSummaryFunction
 {
+    public static final String NAME = "average";
+
     public Mean()
     {
-        super("average", "average.mini", () -> new ValueFunction()
+        super(NAME, "average.mini", () -> new ValueFunction()
         {
             @Override
             public Object call(@Value Object param) throws UserException, InternalException

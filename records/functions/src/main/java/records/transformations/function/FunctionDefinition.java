@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -7,11 +8,14 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.types.ExpressionBase;
+import records.types.TypeCons;
 import records.types.TypeExp;
 import utility.ExFunction;
 import utility.Pair;
@@ -153,13 +157,18 @@ public class FunctionDefinition
         
         protected abstract ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException;
 
-        public final ValueFunction getInstanceAfterTypeCheck() throws InternalException, UserException
+        public final @Value ValueFunction getInstanceAfterTypeCheck() throws InternalException, UserException
         {
             if (instance == null)
             {
                 instance = makeInstanceAfterTypeCheck();
             }
-            return instance;
+            return DataTypeUtility.value(instance);
+        }
+        
+        public TypeExp getFunctionType(@Nullable ExpressionBase src)
+        {
+            return new TypeCons(src, TypeExp.CONS_FUNCTION, paramType, returnType);
         }
     }
     

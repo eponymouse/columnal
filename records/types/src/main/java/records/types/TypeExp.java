@@ -17,6 +17,7 @@ import records.types.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -179,9 +180,15 @@ public abstract class TypeExp implements StyledShowable
         return Either.left(StyledString.concat(StyledString.s("Type mismatch: "), toStyledString(), StyledString.s(" versus "), other.toStyledString()));
     }
     
-    public static TypeExp fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
+    // The first part of the pair is the overall tagged type.  The second part is a list, for all the constructors,
+    // 
+    public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
     {
-        return new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments().stream().map(_name -> new MutVar(src)).collect(ImmutableList.toImmutableList()));
+        List<TypeExp> typeVars;
+        // TODO        
+        return new Pair<>(
+            new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments().stream().map(_name -> new MutVar(src)).collect(ImmutableList.toImmutableList()))
+        , ImmutableList.of());
     }
 
     public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
@@ -254,6 +261,11 @@ public abstract class TypeExp implements StyledShowable
     }
 
     public static boolean isList(TypeExp typeExp)
+    {
+        return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_LIST);
+    }
+
+    public static boolean isFunction(TypeExp typeExp)
     {
         return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_LIST);
     }

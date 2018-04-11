@@ -84,11 +84,15 @@ public class TypeState
 
     public TypeState addImplicitLambda(MutVar type)
     {
-        // We allow name shadowing for '?' the implicit lambda param
-        // without complaint:
+        return addAllowShadow("?", type);
+    }
+
+    public TypeState addAllowShadow(String varName, MutVar type)
+    {
+        // We allow name shadowing without complaint:
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();
         copy.putAll(variables);
-        copy.put("?", ImmutableList.of(type));
+        copy.put(varName, ImmutableList.of(type));
         return new TypeState(copy.build(), typeManager, unitManager);
     }
 

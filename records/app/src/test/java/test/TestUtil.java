@@ -403,11 +403,14 @@ public class TestUtil
     static {
         try
         {
-            // TODO add a higher-order type
+            // TODO add more higher-order types
             DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
             DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER))).instantiate(ImmutableList.of());
             DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
             DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("A", a), new TagType<DataType>("C", c))).instantiate(ImmutableList.of());
+            DataType maybeMaybe = DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(
+                DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(DataType.TEXT))
+            ));
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -428,6 +431,7 @@ public class TestUtil
                 b,
                 c,
                 nested,
+                maybeMaybe,
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.NUMBER)),
                 DataType.tuple(Arrays.asList(DataType.BOOLEAN, DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), c)),
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER)))),
