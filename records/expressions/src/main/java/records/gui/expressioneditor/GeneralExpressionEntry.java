@@ -1,20 +1,18 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -55,7 +53,6 @@ import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -72,6 +69,62 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
     
+    private static enum GeneralPseudoclass
+    {
+        COLUMN_REFERENCE("ps-column"),
+        TAG("ps-tag"),
+        LITERAL("ps-literal"),
+        VARIABLE_USE("ps-variable"),
+        UNFINISHED("ps-unfinished");
+
+        private final String name;
+        private GeneralPseudoclass(String name)
+        {
+            this.name = name;
+        }
+    }
+    
+    // A value object:
+    public static interface GeneralValue
+    {
+        public String getContent();
+
+        default public ImmutableList<Pair<String, @Nullable DataType>> getDeclaredVariables() { return ImmutableList.of(); }
+
+        @Nullable GeneralPseudoclass getPseudoclass();
+
+        String getTypeLabel(boolean focused);
+    }
+    
+    public static class Unfinished implements GeneralValue
+    {
+        private final String value;
+
+        public Unfinished(String value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return value;
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.UNFINISHED;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return focused ? "" : "error";
+        }
+    }
+    
+    // TODO remove this once conversion to GeneralValue is complete;
     public static enum Status
     {
         COLUMN_REFERENCE_SAME_ROW("column-inner"),
@@ -147,7 +200,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /**
      * Current status of the field.
      */
-    private final ObjectProperty<Status> status = new SimpleObjectProperty<>(Status.UNFINISHED);
+    private final ObjectProperty<GeneralValue> currentValue;
 
     /**
      * The auto-complete which will show when the user is entering input.
@@ -168,7 +221,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
     
-    public GeneralExpressionEntry(String content, boolean userEntered, Status initialStatus, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    // If initial value is String, it was user entered.  If GeneralValue, we trust it.
+    public GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         super(Expression.class, parent);
         this.semanticParent = semanticParent;
@@ -181,65 +235,51 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
         fixedTypeCompletion = new KeywordCompletion(ExpressionLexer.FIX_TYPE, "autocomplete.fixType");
         varDeclCompletion = new VarDeclCompletion();
-        if (!userEntered)
-        {
-            textField.setText(content); // Do before auto complete is on the field
+        currentValue = new SimpleObjectProperty<>(initialValue.either(s -> new Unfinished(s), v -> v));
+        initialValue.ifRight(v -> {
+            textField.setText(v.getContent()); // Do before auto complete is on the field
             initialContentEntered.set(true);
-        }
+        });
         updateNodes();
 
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
 
-        FXUtility.addChangeListenerPlatformNN(status, this::updateStatusAndTypeLabel);
-        updateStatusAndTypeLabel(Status.UNFINISHED);
+        updateGraphics();
+        FXUtility.addChangeListenerPlatformNN(currentValue, v -> updateGraphics());
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
-            updateStatusAndTypeLabel(status.get());
+            updateGraphics();
         });
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
-            updateStatus(t);
+            if (!completing)
+            {
+                currentValue.set(new Unfinished(t));
+            }
+            completing = false;
             parent.changed(GeneralExpressionEntry.this);
         });
-        updateStatus(textField.getText());
-        status.setValue(initialStatus);
-        if (userEntered)
-        {
+        initialValue.ifLeft(s -> {
             // Do this after auto-complete is set up and we are set as part of parent,
             // in case it finishes a completion:
             FXUtility.runAfter(() -> {
-                textField.setText(content);
+                textField.setText(s);
                 initialContentEntered.set(true);
             });
-        }
+        });
     }
 
     @RequiresNonNull({"container", "textField", "typeLabel"})
-    private void updateStatusAndTypeLabel(@UnknownInitialization(Object.class) GeneralExpressionEntry this, Status s)
+    private void updateGraphics(@UnknownInitialization(Object.class) GeneralExpressionEntry this)
     {
-        for (Status possibleStatus : Status.values())
+        for (GeneralPseudoclass possibleStatus : GeneralPseudoclass.values())
         {
-            container.pseudoClassStateChanged(getPseudoClass(possibleStatus), false);
+            container.pseudoClassStateChanged(PseudoClass.getPseudoClass(possibleStatus.name), false);
         }
         // Then turn on the one we want:
-        container.pseudoClassStateChanged(getPseudoClass(s), true);
-        typeLabel.setText(getTypeLabel(s, textField.isFocused()));
-    }
-
-    @RequiresNonNull({"autoComplete", "status", "textField"})
-    private void updateStatus(@UnknownInitialization(Object.class) GeneralExpressionEntry this, String t)
-    {
-        if (!completing)
-        {
-            // TODO set prospective status if focus left now
-            @Initialized AutoComplete auto = autoComplete;
-            AutoComplete.@Nullable Completion completion = auto.getCompletionIfFocusLeftNow();
-            if (completion == null)
-                status.set(Status.UNFINISHED);
-            else
-                status.set(getStatusFor(completion));
-        }
-        else
-            completing = false;
-        textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
+        GeneralPseudoclass actual = currentValue.get().getPseudoclass();
+        if (actual != null)
+            container.pseudoClassStateChanged(PseudoClass.getPseudoClass(actual.name), true);
+        //textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
+        typeLabel.setText(currentValue.get().getTypeLabel(textField.isFocused()));
     }
 
     private static Status getStatusFor(@Nullable Completion completion)
@@ -433,7 +473,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {
-        return FXUtility.<Status, @Nullable String>mapBindingLazy(status, Status::getStyleWhenInner);
+        return null;
+        //return FXUtility.<Status, @Nullable String>mapBindingLazy(currentValue, Status::getStyleWhenInner);
     }
 
     private static abstract class GeneralCompletion extends Completion
@@ -776,15 +817,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    public @Nullable Column getColumn()
-    {
-        if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
-        {
-            // TODO get columns from... somewhere
-        }
-        return null;
-    }
-
     private class CompletionListener extends SimpleCompletionListener
     {
         public CompletionListener()
@@ -996,10 +1028,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
     {
-        if (status.get() == Status.VARIABLE_DECL)
-            return Collections.singletonList(new Pair<String, @Nullable DataType>(textField.getText().trim(), null));
-        else
-            return Collections.emptyList();
+        return currentValue.get().getDeclaredVariables();
     }
 
     @Override
