@@ -53,7 +53,7 @@ public class ConstructorExpression extends NonOperatorExpression
         tag = typeName == null ? Either.left(tagName) : typeManager.lookupTag(typeName, tagName);
     }
     
-    // Used for testing:
+    // Used for testing, or if you know the tag directly:
     public ConstructorExpression(Either<String, TagInfo> tag)
     {
         this.tag = tag;
@@ -112,7 +112,7 @@ public class ConstructorExpression extends NonOperatorExpression
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         // TODO need to also pass across the type name some how
-        return (p, s) -> new GeneralExpressionEntry(tag.either(str -> str, t -> t.getTagInfo().getName()), false, Status.TAG, p, s);
+        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.TagName(tag.either(str -> str, t -> t.getTagInfo().getName())), p, s);
     }
 
     @Override

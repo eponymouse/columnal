@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -72,6 +73,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private static enum GeneralPseudoclass
     {
         COLUMN_REFERENCE("ps-column"),
+        FUNCTION("ps-function"),
         TAG("ps-tag"),
         LITERAL("ps-literal"),
         VARIABLE_USE("ps-variable"),
@@ -94,6 +96,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Nullable GeneralPseudoclass getPseudoclass();
 
         String getTypeLabel(boolean focused);
+        
+        @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError);
     }
     
     public static class Unfinished implements GeneralValue
@@ -121,6 +125,117 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public String getTypeLabel(boolean focused)
         {
             return focused ? "" : "error";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            UnfinishedExpression unfinishedExpression = new UnfinishedExpression(value.trim());
+            onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
+            return unfinishedExpression;
+        }
+    }
+
+
+    public static class StdFunc implements GeneralValue
+    {
+        private final FunctionDefinition function;
+
+        public StdFunc(FunctionDefinition function)
+        {
+            this.function = function;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return function.getName();
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.FUNCTION;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "function";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return new StandardFunction(function);
+        }
+    }
+    
+    public static class TagName implements GeneralValue
+    {
+        private final TagInfo tagInfo;
+
+        public TagName(TagInfo tagInfo)
+        {
+            this.tagInfo = tagInfo;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return tagInfo.getTagInfo().getName();
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.TAG;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return tagInfo.wholeType.getTaggedTypeName().getRaw() + "\\";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return new ConstructorExpression(Either.right(tagInfo));
+        }
+    }
+    
+    public static class VarUse implements GeneralValue
+    {
+        private final String varName;
+
+        public VarUse(String varName)
+        {
+            this.varName = varName;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return varName;
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.VARIABLE_USE;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "variable";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return new VarUseExpression(varName);
         }
     }
     
@@ -220,6 +335,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
+
+    public GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    {
+        this(Either.right(initialValue), parent, semanticParent);
+    }
     
     // If initial value is String, it was user entered.  If GeneralValue, we trust it.
     public GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
@@ -479,7 +599,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     private static abstract class GeneralCompletion extends Completion
     {
-        abstract Status getType();
+        abstract GeneralValue getValue();
     }
 
     private static class SimpleCompletion extends GeneralCompletion
@@ -487,14 +607,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         private final String prefix;
         private final String text;
         private final @Nullable @LocalizableKey String descriptionKey;
-        private final Status type;
+        private final GeneralValue value;
 
-        public SimpleCompletion(String prefix, String text, @Nullable @LocalizableKey String descriptionKey, Status type)
+        public SimpleCompletion(String prefix, String text, @Nullable @LocalizableKey String descriptionKey, GeneralValue value)
         {
             this.prefix = prefix;
             this.descriptionKey = descriptionKey;
             this.text = text;
-            this.type = type;
+            this.value = value;
         }
 
 
@@ -527,9 +647,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return text;
         }
 
-        Status getType()
+        GeneralValue getType()
         {
-            return type;
+            return value;
         }
 
         // For debugging:
@@ -540,7 +660,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                     "prefix='" + prefix + '\'' +
                     ", text='" + text + '\'' +
                     ", description='" + descriptionKey + '\'' +
-                    ", type=" + type +
+                    ", value=" + value +
                     '}';
         }
     }
@@ -657,7 +777,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        Status getType()
+        GeneralValue getValue()
         {
             return Status.LITERAL;
         }
@@ -666,6 +786,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
+        return errorDisplayer.record(this, currentValue.get().saveUnrecorded(onError));
+        /*
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
             return errorDisplayer.record(this, new ColumnReference(new ColumnId(textField.getText()), status.get() == Status.COLUMN_REFERENCE_SAME_ROW ? ColumnReferenceType.CORRESPONDING_ROW : ColumnReferenceType.WHOLE_COLUMN));
@@ -708,6 +830,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         UnfinishedExpression unfinishedExpression = new UnfinishedExpression(textField.getText().trim());
         onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
         return errorDisplayer.record(this, unfinishedExpression);
+        */
     }
 
     private <T> @Nullable T parseOrNull(ExFunction<ExpressionParser, T> parse)
@@ -883,14 +1006,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
-                status.setValue(Status.FUNCTION_NAME);
+                currentValue.setValue(new StdFunc(fc.function));
                 parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')')));
                 return fc.function.getName();
             }
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                status.setValue(Status.TAG);
+                currentValue.setValue(new TagName(tc.tagInfo));
                 
                 if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
@@ -914,7 +1037,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c instanceof VarUseCompletion)
             {
                 completing = true;
-                status.setValue(Status.VARIABLE_USE);
+                currentValue.setValue(new VarUse(((VarUseCompletion)c).name));
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 if (moveFocus)
                     parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
