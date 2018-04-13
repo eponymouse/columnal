@@ -107,12 +107,13 @@ public abstract class ToTemporalFunction extends FunctionGroup
     }
 
     // Public for testing purposes only
-    public final FunctionDefinition _test_fromString(@LocalizableKey String name)
+    @SuppressWarnings("i18n")
+    public final FunctionDefinition _test_fromString(String name)
     {
         return fromString(name, name);
     }
     
-    protected final FunctionDefinition fromString(@LocalizableKey String name, @LocalizableKey String miniDescriptionKey)
+    protected final FunctionDefinition fromString(String name, @LocalizableKey String miniDescriptionKey)
     {
         return new FunctionDefinition(name, miniDescriptionKey, FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT);
     }
