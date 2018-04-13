@@ -112,7 +112,7 @@ public class NumericLiteral extends Literal
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         return (p, s) -> {
-            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new Lit(this), p, s);
+            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new GeneralExpressionEntry.NumLit(value), p, s);
             if (unit != null)
                 generalExpressionEntry.addUnitSpecifier(unit);
             return generalExpressionEntry;

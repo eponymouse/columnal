@@ -7,11 +7,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
-import javafx.scene.Cursor;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
@@ -22,17 +18,13 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Shape;
 import javafx.stage.Window;
-import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
@@ -49,9 +41,7 @@ import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.DataOrTransformChoice.DataOrTransform;
-import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
@@ -59,8 +49,6 @@ import records.gui.grid.VirtualGridLineSupplier;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
-import records.transformations.Transform;
-import records.transformations.TransformationInfo;
 import records.transformations.TransformationManager;
 import records.transformations.expression.UnfinishedExpression;
 import threadchecker.OnThread;
@@ -604,7 +592,7 @@ public class View extends StackPane
                             break;
                         case CHECK:
                             new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                                new EditExpressionDialog(thisView, srcTable, new UnfinishedExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                                new EditExpressionDialog(thisView, srcTable, new UnfinishedExpression("", null), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                                     Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                                         Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                         tableManager.record(check);

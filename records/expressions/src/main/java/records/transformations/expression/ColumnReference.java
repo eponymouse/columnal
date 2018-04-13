@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.Column;
@@ -239,6 +240,7 @@ public class ColumnReference extends NonOperatorExpression
         return null;
     }
 
+    @Pure
     public @Nullable TableId getTableId()
     {
         return tableName;

@@ -5,9 +5,6 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -21,7 +18,6 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import records.data.ColumnId;
 import records.data.Table;
-import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.gui.ColumnNameTextField;
@@ -140,7 +136,7 @@ public class ColumnExpressionList
 
     private static Pair<ColumnId, Expression> makeNewColumnDetails()
     {
-        return new Pair<>(new ColumnId(""), new UnfinishedExpression(""));
+        return new Pair<>(new ColumnId(""), new UnfinishedExpression("", null));
     }
 
 

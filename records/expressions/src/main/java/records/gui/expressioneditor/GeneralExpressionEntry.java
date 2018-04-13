@@ -20,7 +20,6 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.Column;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
@@ -96,8 +95,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Nullable GeneralPseudoclass getPseudoclass();
 
         String getTypeLabel(boolean focused);
-        
+
         @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError);
+        
+        default @UnknownIfRecorded Expression saveUnrecordedWithUnits(ErrorAndTypeRecorder onError, @Nullable UnitExpression units)
+        {
+            if (units == null)
+                return saveUnrecorded(onError);
+            return new UnfinishedExpression(getContent(), units);
+        }
     }
     
     public static class Unfinished implements GeneralValue
@@ -127,10 +133,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return focused ? "" : "error";
         }
 
+        
         @Override
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
-            UnfinishedExpression unfinishedExpression = new UnfinishedExpression(value.trim());
+            // Shouldn't actually get called, but haven't extracted parent class to prevent this:
+            return saveUnrecordedWithUnits(onError, null);
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecordedWithUnits(ErrorAndTypeRecorder onError, @Nullable UnitExpression units)
+        {
+            UnfinishedExpression unfinishedExpression = new UnfinishedExpression(value.trim(), units);
             onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
             return unfinishedExpression;
         }
@@ -360,7 +374,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         });
     }
 
-    @RequiresNonNull({"container", "textField", "typeLabel"})
+    @RequiresNonNull({"container", "textField", "typeLabel", "currentValue"})
     private void updateGraphics(@UnknownInitialization(Object.class) GeneralExpressionEntry this)
     {
         for (GeneralPseudoclass possibleStatus : GeneralPseudoclass.values())
@@ -701,7 +715,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             try
             {
-                return new Lit(new NumericLiteral(Utility.parseNumber(currentText.replace("_", "")), unitSpecifier == null ? null : unitSpecifier));
+                return new NumLit(Utility.parseNumber(currentText.replace("_", "")));
             }
             catch (UserException e)
             {
@@ -714,7 +728,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
-        return errorDisplayer.record(this, currentValue.get().saveUnrecorded(onError));
+        @Nullable UnitExpression units = unitSpecifier == null ? null : unitSpecifier.saveUnrecorded(errorDisplayer, onError);
+        return errorDisplayer.record(this, currentValue.get().saveUnrecordedWithUnits(onError, units));
         /*
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
@@ -978,7 +993,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 currentValue.setValue(gc == null ? new Unfinished(currentText) : gc.getValue(currentText));
                 // End of following operator, since we pushed rest into there:
                 if (moveFocus)
-                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 
                 if (gc instanceof SimpleCompletion)
                 {
@@ -1375,6 +1389,46 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
             return columnReference;
+        }
+    }
+
+    public static class NumLit implements GeneralValue
+    {
+        private final Number number;
+
+        public NumLit(Number number)
+        {
+            this.number = number;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return Utility.numberToString(number);
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.LITERAL;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return saveUnrecordedWithUnits(onError, null);
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecordedWithUnits(ErrorAndTypeRecorder onError, @Nullable UnitExpression units)
+        {
+            return new NumericLiteral(number, units);
         }
     }
 }

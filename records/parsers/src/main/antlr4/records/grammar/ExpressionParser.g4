@@ -12,7 +12,7 @@ columnRef : columnRefType (tableId COLON)? columnId;
 numericLiteral : NUMBER UNIT?;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
-unfinished : UNFINISHED STRING;
+unfinished : UNFINISHED STRING UNIT?;
 
 varRef  : ident;
 

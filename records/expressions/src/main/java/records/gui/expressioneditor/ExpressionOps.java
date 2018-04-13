@@ -220,7 +220,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     @Override
     public Expression makeUnfinished(String s)
     {
-        return new UnfinishedExpression(s);
+        return new UnfinishedExpression(s, null);
     }
 
     @Override

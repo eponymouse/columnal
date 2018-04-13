@@ -16,6 +16,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
@@ -25,6 +26,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -35,10 +37,12 @@ import java.util.stream.Stream;
 public class UnfinishedExpression extends NonOperatorExpression
 {
     private final String text;
+    private final @Nullable UnitExpression units;
 
-    public UnfinishedExpression(String text)
+    public UnfinishedExpression(String text, @Nullable UnitExpression units)
     {
         this.text = text;
+        this.units = units;
     }
 
     @Override
@@ -63,7 +67,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@unfinished " + OutputBuilder.quoted(text);
+        return "@unfinished " + OutputBuilder.quoted(text) + (units == null ? "" : "{" + units.save(true) + "}");
     }
 
     @Override
@@ -81,7 +85,12 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.Unfinished(text), p, s);
+        return (p, s) -> {
+            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new Unfinished(text), p, s);
+            if (units != null)
+                generalExpressionEntry.addUnitSpecifier(units);
+            return generalExpressionEntry;
+        };
     }
 
     @Override
@@ -99,13 +108,13 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return o instanceof UnfinishedExpression && text.equals(((UnfinishedExpression)o).text);
+        return o instanceof UnfinishedExpression && text.equals(((UnfinishedExpression)o).text) && Objects.equals(units, ((UnfinishedExpression)o).units);
     }
 
     @Override
     public int hashCode()
     {
-        return text.hashCode();
+        return Objects.hash(text, units);
     }
 
     public String getText()

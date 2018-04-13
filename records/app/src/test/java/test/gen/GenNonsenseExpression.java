@@ -5,45 +5,21 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.UserException;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
-import records.transformations.expression.AndExpression;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.InvalidOperatorExpression;
-import records.transformations.expression.MatchExpression;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.OrExpression;
-import records.transformations.expression.RaiseExpression;
-import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TimesExpression;
-import records.transformations.expression.TupleExpression;
-import records.transformations.expression.UnfinishedExpression;
-import records.transformations.expression.VarDeclExpression;
-import records.transformations.expression.VarUseExpression;
 import test.DummyManager;
 import test.TestUtil;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -54,6 +30,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("recorded")
 public class GenNonsenseExpression extends Generator<Expression>
 {
+    private final GenUnit genUnit = new GenUnit();
+    
     public GenNonsenseExpression()
     {
         super(Expression.class);
@@ -129,18 +107,24 @@ public class GenNonsenseExpression extends Generator<Expression>
         try
         {
             return r.<Expression>choose(Arrays.asList(
-                new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), null), // TODO gen unit
+                new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
                 new BooleanLiteral(r.nextBoolean()),
                 new StringLiteral(TestUtil.makeStringV(r, gs)),
                 new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
                 new VarUseExpression(TestUtil.generateVarName(r)),
-                new UnfinishedExpression(TestUtil.makeUnfinished(r))
+                new UnfinishedExpression(TestUtil.makeUnfinished(r), r.nextBoolean() ? null : genUnit(r, gs))
             ));
         }
         catch (UserException e)
         {
             throw new RuntimeException(e);
         }
+    }
+
+    private UnitExpression genUnit(SourceOfRandomness r, GenerationStatus gs)
+    {
+        // TODO generate richer expressions that cancel out, etc
+        return UnitExpression.load(genUnit.generate(r, gs));
     }
 
     private Function<MatchExpression, MatchExpression.MatchClause> genClause(SourceOfRandomness r, GenerationStatus gs, int depth)

@@ -47,12 +47,10 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -369,7 +367,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             if (functionDefinition == null)
             {
-                return new UnfinishedExpression(functionName);
+                return new UnfinishedExpression(functionName, null);
             }
             else
             {
@@ -426,7 +424,14 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
-            return new UnfinishedExpression(ctx.STRING().getText());
+            try
+            {
+                return new UnfinishedExpression(ctx.STRING().getText(), ctx.UNIT() == null ? null : UnitExpression.load(ctx.UNIT().getText()));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException("Error parsing unit: \"" + ctx.UNIT().getText() + "\"", e);
+            }
         }
 
         @Override

@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -12,7 +11,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
-import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -23,12 +21,10 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionList;
 import records.types.MutVar;
 import records.types.TupleTypeExp;
@@ -83,7 +79,7 @@ public class CallExpression extends Expression
         {
             Log.log(e);
         }
-        return new UnfinishedExpression(functionName);
+        return new UnfinishedExpression(functionName, null);
     }
 
     @Override
