@@ -85,7 +85,7 @@ public class ConstructorExpression extends NonOperatorExpression
     @OnThread(Tag.Simulation)
     public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return tag.eitherEx(s -> {
+        return tag.<@Value Object>eitherEx(s -> {
             throw new InternalException("Attempting to fetch function despite failing type check");
         }, t -> t.makeValue());
     }
