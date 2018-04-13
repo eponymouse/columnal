@@ -18,7 +18,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
+import records.gui.expressioneditor.GeneralExpressionEntry.Lit;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
@@ -112,7 +112,7 @@ public class NumericLiteral extends Literal
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
         return (p, s) -> {
-            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(editString(), false, Status.LITERAL, p, s);
+            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new Lit(this), p, s);
             if (unit != null)
                 generalExpressionEntry.addUnitSpecifier(unit);
             return generalExpressionEntry;
@@ -150,7 +150,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    protected String editString()
+    public String editString()
     {
         return numberAsString();
     }

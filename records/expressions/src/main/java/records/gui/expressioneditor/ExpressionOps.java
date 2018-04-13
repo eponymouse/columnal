@@ -10,7 +10,6 @@ import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
@@ -30,6 +29,7 @@ import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.UnfinishedExpression;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -208,7 +208,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     @Override
     public OperandNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
     {
-        return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, true, Status.UNFINISHED, parent, semanticParent);
+        return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent, semanticParent);
     }
 
     @Override

@@ -7,7 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
+import records.gui.expressioneditor.GeneralExpressionEntry.Lit;
 import records.gui.expressioneditor.OperandNode;
 import utility.Pair;
 
@@ -41,8 +41,8 @@ public abstract class Literal extends NonOperatorExpression
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(editString(), false, Status.LITERAL, p, s);
+        return (p, s) -> new GeneralExpressionEntry(new Lit(this), p, s);
     }
 
-    protected abstract String editString();
+    public abstract String editString();
 }

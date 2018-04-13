@@ -16,7 +16,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.types.MutVar;
 import records.types.TypeExp;
@@ -104,7 +103,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(varName, false, Status.VARIABLE_DECL, p, s);
+        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.VarDecl(varName), p, s);
     }
 
     @Override

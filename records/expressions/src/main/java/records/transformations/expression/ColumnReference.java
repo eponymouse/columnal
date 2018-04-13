@@ -26,7 +26,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
@@ -50,23 +49,11 @@ public class ColumnReference extends NonOperatorExpression
     {
         // Column is in same table as referring item, use the same row as that item
         // E.g. if doing a transform, score_percent = score / 100;
-        CORRESPONDING_ROW(Status.COLUMN_REFERENCE_SAME_ROW),
+        CORRESPONDING_ROW,
 
         // Column may or may not be in same table, use whole column as item,
         // e.g. if normalising, cost = cost {CORRESPONDING_ROW}/sum(cost{WHOLE_COLUMN})
-        WHOLE_COLUMN(Status.COLUMN_REFERENCE_WHOLE);
-
-        private final GeneralExpressionEntry.Status status;
-
-        private ColumnReferenceType(GeneralExpressionEntry.Status status)
-        {
-            this.status = status;
-        }
-
-        public GeneralExpressionEntry.Status getEntryStatus()
-        {
-            return status;
-        }
+        WHOLE_COLUMN;
     }
     private final @Nullable TableId tableName;
     private final ColumnId columnName;
@@ -216,7 +203,7 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(columnName.getRaw(), false, referenceType.getEntryStatus(), p, s);
+        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.ColumnRef(this), p, s);
     }
 
     @Override

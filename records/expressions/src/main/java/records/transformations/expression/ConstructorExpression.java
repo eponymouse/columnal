@@ -20,7 +20,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Status;
+import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeCons;
@@ -111,8 +111,7 @@ public class ConstructorExpression extends NonOperatorExpression
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        // TODO need to also pass across the type name some how
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.TagName(tag.either(str -> str, t -> t.getTagInfo().getName())), p, s);
+        return (p, s) -> new GeneralExpressionEntry(tag.<GeneralValue>either(str -> new GeneralExpressionEntry.Unfinished(str), t -> new GeneralExpressionEntry.TagName(t)), p, s);
     }
 
     @Override

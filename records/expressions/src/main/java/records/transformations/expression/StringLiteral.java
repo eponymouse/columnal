@@ -97,7 +97,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    protected String editString()
+    public String editString()
     {
         return value;
     }

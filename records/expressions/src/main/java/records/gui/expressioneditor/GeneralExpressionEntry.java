@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import log.Log;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -20,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
-import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
@@ -30,15 +30,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.CompleteBooleanLiteralContext;
 import records.grammar.ExpressionParser.CompleteNumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -76,7 +73,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         FUNCTION("ps-function"),
         TAG("ps-tag"),
         LITERAL("ps-literal"),
-        VARIABLE_USE("ps-variable"),
+        VARIABLE_USE("ps-use"),
+        VARIABLE_DECL("ps-decl"),
+        LAMBDA_ARG("ps-lambda"),
+        MATCH_ANYTHING("ps-anything"),
         UNFINISHED("ps-unfinished");
 
         private final String name;
@@ -238,33 +238,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return new VarUseExpression(varName);
         }
     }
-    
-    // TODO remove this once conversion to GeneralValue is complete;
-    public static enum Status
-    {
-        COLUMN_REFERENCE_SAME_ROW("column-inner"),
-        COLUMN_REFERENCE_WHOLE("column-inner"),
-        TAG(null) /* if no inner */,
-        LITERAL(null) /*number or bool, not string */,
-        ANY(null) /* Pattern match "any" item */,
-        VARIABLE_DECL(null) /* Declare new variable in pattern */,
-        VARIABLE_USE(null),
-        IMPLICIT_LAMBDA_ARG(null), /* The ? for implicit lambda args */
-        FUNCTION_NAME(null), /* A function from the standard library */
-        UNFINISHED(null);
-
-        private final @Nullable String innerStyle;
-
-        private Status(@Nullable String innerStyle)
-        {
-            this.innerStyle = innerStyle;
-        }
-
-        public @Nullable String getStyleWhenInner()
-        {
-            return innerStyle;
-        }
-    }
 
     /**
      * Shortcut for opening a bracketed section.  This is passed back to us by reference
@@ -287,7 +260,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /**
      * Completion for declaring a new variable
      */
-    private final Completion varDeclCompletion;
+    private final VarDeclCompletion varDeclCompletion;
 
     /**
      * Completion for if-then-else
@@ -349,7 +322,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
         squareBracketCompletion = new KeyShortcutCompletion("autocomplete.list", '[');
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
-        questionCompletion = new SimpleCompletion( "", "?", "autocomplete.implicitArg", Status.IMPLICIT_LAMBDA_ARG);
+        questionCompletion = new SimpleCompletion( "", "?", "autocomplete.implicitArg", new QuestValue());
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF, "autocomplete.if");
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
@@ -402,18 +375,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         typeLabel.setText(currentValue.get().getTypeLabel(textField.isFocused()));
     }
 
-    private static Status getStatusFor(@Nullable Completion completion)
-    {
-        if (completion == null)
-            return Status.UNFINISHED;
-        else if (completion instanceof NumericLiteralCompletion)
-            return Status.LITERAL;
-        else if (completion instanceof SimpleCompletion)
-            return ((SimpleCompletion)completion).type;
-        
-        return Status.UNFINISHED;
-    }
-
     @Override
     protected Stream<Node> calculateNodes()
     {
@@ -426,51 +387,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return Utility.streamNullable(unitSpecifier);
     }
 
-    private static String getTypeLabel(Status s, boolean focused)
-    {
-        switch (s)
-        {
-            case COLUMN_REFERENCE_SAME_ROW:
-                return "column";
-            case COLUMN_REFERENCE_WHOLE:
-                return "whole column";
-            case TAG:
-                return "tag";
-            case LITERAL:
-                return "";
-            case VARIABLE_USE:
-                return "variable";
-            case UNFINISHED:
-                return focused ? "" : "error";
-        }
-        return "";
-    }
-
-    private static PseudoClass getPseudoClass(Status s)
-    {
-        String pseudoClass;
-        switch (s)
-        {
-            case COLUMN_REFERENCE_SAME_ROW:
-            case COLUMN_REFERENCE_WHOLE:
-                pseudoClass = "ps-column";
-                break;
-            case TAG:
-                pseudoClass = "ps-tag";
-                break;
-            case LITERAL:
-                pseudoClass = "ps-literal";
-                break;
-            case VARIABLE_USE:
-                pseudoClass = "ps-variable";
-                break;
-            default:
-                pseudoClass = "ps-unfinished";
-                break;
-        }
-        return PseudoClass.getPseudoClass(pseudoClass);
-    }
-
     @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
@@ -480,16 +396,19 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(fixedTypeCompletion);
         
         addAllFunctions(r);
-        r.add(new SimpleCompletion("", "anything", "autocomplete.match.anything", Status.ANY));
-        r.add(new SimpleCompletion("", "true", null, Status.LITERAL));
-        r.add(new SimpleCompletion("", "false", null, Status.LITERAL));
-        for (Column column : parent.getEditor().getAvailableColumns())
+        r.add(new SimpleCompletion("", "anything", "autocomplete.match.anything", new MatchAnything()));
+        r.add(new SimpleCompletion("", "true", null, new Lit(new BooleanLiteral(true))));
+        r.add(new SimpleCompletion("", "false", null, new Lit(new BooleanLiteral(false))));
+        for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))
         {
-            if (parent.getEditor().allowsSameRow())
+            if (column.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
             {
-                r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), "autocomplete.column.sameRow", Status.COLUMN_REFERENCE_SAME_ROW));
+                r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getColumnId().getRaw(), "autocomplete.column.sameRow", new ColumnRef(column)));
             }
-            r.add(new SimpleCompletion(ARROW_WHOLE, "@entire " + column.getName().getRaw(), "autocomplete.column.entire", Status.COLUMN_REFERENCE_WHOLE));
+            else
+            {
+                r.add(new SimpleCompletion(ARROW_WHOLE, "@entire " + column.getColumnId().getRaw(), "autocomplete.column.entire", new ColumnRef(column)));
+            }
         }
         for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
         {
@@ -599,7 +518,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     private static abstract class GeneralCompletion extends Completion
     {
-        abstract GeneralValue getValue();
+        abstract GeneralValue getValue(String currentText);
     }
 
     private static class SimpleCompletion extends GeneralCompletion
@@ -647,7 +566,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return text;
         }
 
-        GeneralValue getType()
+        @Override
+        GeneralValue getValue(String currentText)
         {
             return value;
         }
@@ -777,9 +697,17 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        GeneralValue getValue()
+        GeneralValue getValue(String currentText)
         {
-            return Status.LITERAL;
+            try
+            {
+                return new Lit(new NumericLiteral(Utility.parseNumber(currentText.replace("_", "")), unitSpecifier == null ? null : unitSpecifier));
+            }
+            catch (UserException e)
+            {
+                Log.log(e);
+                return new Unfinished(currentText);
+            }
         }
     }
 
@@ -981,7 +909,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 if (unitSpecifier == null)
                 {
                     addUnitSpecifier(null); // Should we put rest in the curly brackets?
-                    status.set(Status.LITERAL);
                 }
                 else
                 {
@@ -1028,7 +955,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c == varDeclCompletion)
             {
                 completing = true;
-                status.setValue(Status.VARIABLE_DECL);
+                currentValue.setValue(new VarDecl(varDeclCompletion.getVarName(currentText)));
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 if (moveFocus)
                     parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
@@ -1048,7 +975,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 @Nullable GeneralCompletion gc = (GeneralCompletion) c;
                 completing = true;
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
-                status.setValue(gc == null ? Status.UNFINISHED : gc.getType());
+                currentValue.setValue(gc == null ? new Unfinished(currentText) : gc.getValue(currentText));
                 // End of following operator, since we pushed rest into there:
                 if (moveFocus)
                     parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
@@ -1192,7 +1119,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean shouldShow(String input)
         {
-            return isNumeric(input) && unitSpecifier == null;
+            return isNumeric(input);
         }
 
         private boolean isNumeric(String input)
@@ -1231,7 +1158,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean shouldShow(String input)
         {
-            return input.length() >= 1 && Character.isLetter(input.codePointAt(0)) && !(input.equals("true") || input.equals("false"));
+            return input.startsWith(VarDecl.PREFIX) && (input.length() == VarDecl.PREFIX.length() || Character.isLetter(input.codePointAt(VarDecl.PREFIX.length())));
         }
 
         @Override
@@ -1244,6 +1171,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public boolean features(String curInput, char character)
         {
             return (curInput.length() >= 1 && (Character.isDigit(character) || character == ' ')) || Character.isLetter(character);
+        }
+
+        public String getVarName(String currentText)
+        {
+            return StringUtils.removeStart(currentText, VarDecl.PREFIX);
         }
     }
 
@@ -1278,6 +1210,171 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public boolean features(String curInput, char character)
         {
             return name.contains("" + character);
+        }
+    }
+
+    public static class QuestValue implements GeneralValue
+    {
+        @Override
+        public String getContent()
+        {
+            return "?";
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.LAMBDA_ARG;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return new ImplicitLambdaArg();
+        }
+    }
+    
+    public static class MatchAnything implements GeneralValue
+    {
+
+        @Override
+        public String getContent()
+        {
+            return "@anything";
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.MATCH_ANYTHING;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return new MatchAnyExpression();
+        }
+    }
+    
+    public static class VarDecl implements GeneralValue
+    {
+        private static final String PREFIX = "$";
+        private final String varName; // Without prefix
+
+        public VarDecl(String varName)
+        {
+            this.varName = varName;
+        }
+
+
+        @Override
+        public String getContent()
+        {
+            return PREFIX + varName;
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.VARIABLE_DECL;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "named match";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return new VarDeclExpression(varName);
+        }
+    }
+    
+    public static class Lit implements GeneralValue
+    {
+        private final Literal literal;
+
+        public Lit(Literal literal)
+        {
+            this.literal = literal;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return literal.editString();
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.LITERAL;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            return "";
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return literal;
+        }
+    }
+    
+    public static class ColumnRef implements GeneralValue
+    {
+        private final ColumnReference columnReference;
+
+        public ColumnRef(ColumnReference columnReference)
+        {
+            this.columnReference = columnReference;
+        }
+
+        @Override
+        public String getContent()
+        {
+            String prefix = "";
+            if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
+                prefix = "@entire ";
+            return prefix + columnReference.getColumnId().getRaw();
+        }
+
+        @Override
+        public @Nullable GeneralPseudoclass getPseudoclass()
+        {
+            return GeneralPseudoclass.COLUMN_REFERENCE;
+        }
+
+        @Override
+        public String getTypeLabel(boolean focused)
+        {
+            String s = "Column";
+            if (columnReference.getTableId() != null)
+                s += " " + columnReference.getTableId().getRaw() + "\\";
+            return s;
+        }
+
+        @Override
+        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
+        {
+            return columnReference;
         }
     }
 }

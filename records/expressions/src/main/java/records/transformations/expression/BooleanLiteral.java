@@ -80,7 +80,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    protected String editString()
+    public String editString()
     {
         return value.toString();
     }

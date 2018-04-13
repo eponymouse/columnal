@@ -27,6 +27,9 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
+import records.gui.expressioneditor.GeneralExpressionEntry.ColumnRef;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
@@ -334,24 +337,29 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
 //        return type;
 //    }
 
-    public List<Column> getAvailableColumns()
+    public Stream<ColumnReference> getAvailableColumnReferences()
     {
-        if (srcTable == null)
-            return Collections.emptyList();
-        try
-        {
-            return srcTable.getData().getColumns();
-        }
-        catch (UserException e)
-        {
-            Log.log(e);
-            return Collections.emptyList();
-        }
-        catch (InternalException e)
-        {
-            Utility.report(e);
-            return Collections.emptyList();
-        }
+        return tableManager.streamAllTables().flatMap(t -> {
+            try
+            {
+                List<Column> columns = t.getData().getColumns();
+                Stream<ColumnReference> wholeColumns = columns.stream().map(c -> new ColumnReference(t.getId(), c.getName(), ColumnReferenceType.WHOLE_COLUMN));
+                // Use reference equality, as tables may share names if we compare them:
+                if (t == srcTable)
+                {
+                    return Stream.concat(wholeColumns, columns.stream().map(c -> new ColumnReference(c.getName(), ColumnReferenceType.CORRESPONDING_ROW)));
+                }
+                else
+                {
+                    return wholeColumns;
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                return Stream.empty();
+            }
+        });
     }
 
     @Override
