@@ -346,7 +346,6 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 Platform.runLater(new Runnable()
                 {
                     @Override
-                    @SuppressWarnings("localization") // TODO localise this
                     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
                     public void run()
                     {
