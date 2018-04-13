@@ -20,7 +20,8 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ExpressionEditor;
-import records.gui.expressioneditor.ExpressionEditor.ExpressionEditorFlowPane;
+import records.gui.expressioneditor.TopLevelEditor;
+import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -134,10 +135,10 @@ public class TestExpressionEditorPosition extends ApplicationTest implements Scr
             assertEquals(Utility.listToString(accum), content, accum.stream().collect(Collectors.joining()));
             
             
-            ExpressionEditorFlowPane editorPane = lookup(".expression-editor").<ExpressionEditorFlowPane>query();
+            TopLevelEditorFlowPane editorPane = lookup(".expression-editor").<TopLevelEditorFlowPane>query();
             assertNotNull(editorPane);
             if (editorPane == null) return;
-            ExpressionEditor expressionEditor = editorPane._test_getEditor();
+            TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
 
             // Dismiss dialog:
             push(KeyCode.ESCAPE);

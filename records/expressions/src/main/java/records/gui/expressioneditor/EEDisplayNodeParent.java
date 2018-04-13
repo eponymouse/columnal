@@ -41,5 +41,5 @@ public interface EEDisplayNodeParent
     /**
      * Gets the editor which contains this expression
      */
-    ExpressionEditor getEditor();
+    TopLevelEditor<?, ?> getEditor();
 }

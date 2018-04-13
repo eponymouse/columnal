@@ -283,7 +283,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public ExpressionEditor getEditor()
+    public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
     }

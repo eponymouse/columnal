@@ -58,58 +58,20 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNodeParent> implements ExpressionNodeParent
+public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeParent> implements ExpressionNodeParent
 {
-    private final FlowPane container;
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
-    private final TableManager tableManager;
-    private final List<FXPlatformConsumer<Node>> focusListeners = new ArrayList<>();
     // Does it allow use of same-row column references?  Thinks like Transform, Sort, do -- but Aggregate does not.
     private final boolean allowsSameRow;
 
-    // Selections take place within one consecutive and go from one operand to another (inclusive):
-
-    private @Nullable SelectionInfo<?, ?> selection;
-    private @Nullable ConsecutiveChild<?, ?> curHoverDropTarget;
-    private boolean selectionLocked;
+    
     private ObjectProperty<@Nullable DataType> latestType = new SimpleObjectProperty<>(null);
-
-    public void registerFocusable(TextField textField)
-    {
-        // We now do this using scene's focus owner
-        /*
-        Utility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
-            if (!focus)
-            {
-                focusChanged();
-            }
-        });
-        */
-    }
-
-    @Override
-    public boolean isFocused()
-    {
-        return childIsFocused();
-    }
 
     public ObjectExpression<@Nullable DataType> typeProperty()
     {
         return latestType;
-    }
-
-    public @Nullable Window getWindow()
-    {
-        if (container.getScene() == null)
-            return null;
-        return container.getScene().getWindow();
-    }
-
-    public TableManager getTableManager()
-    {
-        return tableManager;
     }
 
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayerRecord, ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer)
@@ -129,79 +91,23 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         return allowsSameRow;
     }
 
-    private static class SelectionInfo<E extends StyledShowable, P>
-    {
-        private final ConsecutiveBase<E, P> parent;
-        private final ConsecutiveChild<E, P> start;
-        private final ConsecutiveChild<E, P> end;
-
-        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end)
-        {
-            this.parent = parent;
-            this.start = start;
-            this.end = end;
-        }
-
-        public boolean contains(ConsecutiveChild<?, ?> item)
-        {
-            return parent.getChildrenFromTo(start, end).contains(item);
-        }
-
-        public @Nullable CopiedItems copyItems()
-        {
-            return parent.copyItems(start, end);
-        }
-
-        public void removeItems()
-        {
-            parent.removeItems(start, end);
-        }
-
-        public void markSelection(boolean selected)
-        {
-            parent.markSelection(start, end, selected);
-        }
-    }
+    
 
     @SuppressWarnings("initialization")
     public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(EXPRESSION_OPS,  null, null, "");
+        super(EXPRESSION_OPS, tableManager);
         this.allowsSameRow = allowsSameRow;
-        this.container = new ExpressionEditorFlowPane();
-        this.tableManager = tableManager;
-        container.getStyleClass().add("expression-editor");
-        container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
+        
+        
         // TODO respond to dynamic adjustment of table to revalidate column references:
         this.srcTable = srcTable.getValue();
         this.expectedType = expectedType;
-        container.getChildren().setAll(nodes());
-        FXUtility.listen(nodes(), c -> {
-            container.getChildren().setAll(nodes());
-        });
+        
         this.onChange = onChangeHandler;
-        FXUtility.onceNotNull(container.sceneProperty(), scene -> {
-            FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
-                //Utility.logStackTrace("Focus now with: " + owner);
-                FXUtility.runAfter(() -> {
-                    //Log.debug("Focus now with [2]: " + owner);
-                    // We are in a run-after so check focus hasn't changed again:
-                    if (scene.getFocusOwner() == owner)
-                    {
-                        focusChanged();
-                    }
-                });
-            });
-        });
-        // If they click the background, focus the end:
-        container.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY)
-            {
-                focus(Focus.RIGHT);
-            }
-        });
         
         //#error TODO add drag to container to allow selection of nodes
+        /*
         container.setOnMouseDragged(e -> {
             if (e.getButton() == MouseButton.PRIMARY)
             {
@@ -220,44 +126,9 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                 }
             }
         });
+        */
 
         loadContent(startingValue);
-
-        FXUtility.enableDragTo(container, Collections.singletonMap(FXUtility.getTextDataFormat("Expression"), new DragHandler()
-        {
-            @Override
-            @SuppressWarnings("initialization")
-            public @OnThread(Tag.FXPlatform) void dragMoved(Point2D pointInScene)
-            {
-                Pair<ConsecutiveChild<? extends Expression, ?>, Double> nearest = findClosestDrop(pointInScene, Expression.class);
-                if (curHoverDropTarget != null)
-                    curHoverDropTarget.setHoverDropLeft(false);
-                curHoverDropTarget = nearest.getFirst();
-                curHoverDropTarget.setHoverDropLeft(true);
-            }
-
-            @Override
-            @SuppressWarnings("initialization")
-            public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard dragboard, Point2D pointInScene)
-            {
-                @Nullable Object o = dragboard.getContent(FXUtility.getTextDataFormat("Expression"));
-                if (o != null && o instanceof CopiedItems)
-                {
-                    // We need to find the closest drop point
-                    Pair<ConsecutiveChild<? extends Expression, ?>, Double> nearest = findClosestDrop(pointInScene, Expression.class);
-                    // Now we need to add the content:
-                    //TODO work out if this is a null drag because everything would go to hell
-                    // (Look if drag destination is inside selection?)
-                    // Or can we stop it going to hell?
-                    boolean dropped = nearest.getFirst().getParent().insertBefore(nearest.getFirst(), (CopiedItems) o);
-                    // Tidy up any blanks:
-                    if (dropped)
-                        nearest.getFirst().getParent().focusChanged();
-                    return dropped;
-                }
-                return false;
-            }
-        }));
 
         //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
@@ -326,17 +197,13 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         atomicEdit.set(false);
     }
 
-    public Node getContainer()
-    {
-        return container;
-    }
-
 //    @Override
 //    public @Nullable DataType getType(EEDisplayNode child)
 //    {
 //        return type;
 //    }
 
+    @Override
     public Stream<ColumnReference> getAvailableColumnReferences()
     {
         return tableManager.streamAllTables().flatMap(t -> {
@@ -450,118 +317,12 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         return false;
     }
 
-    public TypeManager getTypeManager()
-    {
-        return tableManager.getTypeManager();
-    }
-
     @Override
     public Stream<String> getParentStyles()
     {
         return Stream.empty();
     }
 
-    @Override
-    public ExpressionEditor getEditor()
-    {
-        return this;
-    }
-
-    public void setSelectionLocked(boolean selectionLocked)
-    {
-        this.selectionLocked = selectionLocked;
-    }
-
-    @SuppressWarnings("initialization")
-    public <E extends StyledShowable, P> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E, P> src)
-    {
-        if (selectionLocked)
-            return;
-
-        if (selection != null)
-        {
-            // Check that span includes src:
-            if (selection.contains(src))
-                return; // Fine, no need to reassign
-            // else clear and drop through to reassignment:
-            clearSelection();
-        }
-
-        selection = new SelectionInfo<E, P>(src.getParent(), src, src);
-        selection.markSelection(true);
-    }
-
-    private void clearSelection(@UnknownInitialization(ConsecutiveBase.class) ExpressionEditor this)
-    {
-        if (selectionLocked)
-            return;
-
-        if (selection != null)
-            selection.markSelection(false);
-        selection = null;
-    }
-
-    public <E extends StyledShowable, P> void selectOnly(ConsecutiveChild<E, P> src)
-    {
-        if (selectionLocked)
-            return;
-
-        clearSelection();
-        ensureSelectionIncludes(src);
-    }
-
-    public <E extends StyledShowable, P> void extendSelectionTo(ConsecutiveChild<E, P> node)
-    {
-        if (selectionLocked)
-            return;
-
-        if (selection != null && node.getParent() == selection.parent)
-        {
-            // Given they have same parent, selection must be of type E:
-            @SuppressWarnings("unchecked")
-            SelectionInfo<E, P> oldSel = (SelectionInfo<E, P>)selection;
-
-            // The target might be ahead or behind or within the current selection.
-            // We try with asking for ahead or behind.  If one is empty, choose the other
-            // If both are non-empty, go from start to target:
-            ConsecutiveChild<E, P> oldSelStart = oldSel.start;
-            List<ConsecutiveChild<E, P>> startToTarget = oldSel.parent.getChildrenFromTo(oldSelStart, node);
-            ConsecutiveChild<E, P> oldSelEnd = oldSel.end;
-            // Thus the rule is use startToTarget unless it's empty:
-            if (!startToTarget.isEmpty())
-            {
-                clearSelection();
-                selection = new SelectionInfo<E, P>(node.getParent(), oldSelStart, node);
-                selection.markSelection(true);
-            }
-            else
-            {
-                clearSelection();
-                selection = new SelectionInfo<E, P>(node.getParent(), node, oldSelEnd);
-                selection.markSelection(true);
-            }
-        }
-    }
-
-    public @Nullable CopiedItems getSelection()
-    {
-        if (selection != null)
-        {
-            return selection.copyItems();
-        }
-        return null;
-    }
-
-    public void removeSelectedItems()
-    {
-        if (selectionLocked)
-            return;
-
-        if (selection != null)
-        {
-            selection.removeItems();
-        }
-    }
 
     @Override
     public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
@@ -573,29 +334,6 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             return Collections.singletonList(new Pair<>(t, Collections.emptyList()));
     }
 
-    @Override
-    public void focusChanged()
-    {
-        super.focusChanged();
-        getAllChildren().stream().flatMap(c -> c.nodes().stream()).filter(c -> c.isFocused()).findFirst().ifPresent(focused -> {
-            focusListeners.forEach(l -> l.consume(focused));
-        });
-        FXUtility.setPseudoclass(container, "focus-within", childIsFocused());
-    }
     
-    public void addFocusListener(FXPlatformConsumer<Node> focusListener)
-    {
-        focusListeners.add(focusListener);
-    }
-
-    // Only really exists for testing purposes:
-    public class ExpressionEditorFlowPane extends FlowPane
-    {
-        @OnThread(Tag.Any)
-        public ExpressionEditor _test_getEditor()
-        {
-            return ExpressionEditor.this;
-        }
-    }
 
 }

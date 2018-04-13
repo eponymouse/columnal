@@ -203,7 +203,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public ExpressionEditor getEditor()
+    public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
     }

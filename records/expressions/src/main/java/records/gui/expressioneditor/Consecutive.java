@@ -77,7 +77,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     }
 
     @Override
-    public ExpressionEditor getEditor()
+    public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
     }

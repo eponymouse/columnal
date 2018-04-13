@@ -48,7 +48,6 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
         super(parent, operandClass);
-        parent.getEditor().registerFocusable(textField);
 
         FXUtility.sizeToFit(textField, null, null);
         typeLabel = new Label();

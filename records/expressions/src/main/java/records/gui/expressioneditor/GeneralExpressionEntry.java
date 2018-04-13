@@ -1102,7 +1102,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public ExpressionEditor getEditor()
+    public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
     }

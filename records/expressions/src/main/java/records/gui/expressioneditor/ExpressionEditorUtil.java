@@ -105,7 +105,7 @@ public class ExpressionEditorUtil
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
     @NonNull
-    protected static <E extends StyledShowable, P> Pair<ErrorTop, ErrorDisplayer<E, P>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, ExpressionEditor editor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replaceWithFixed, Stream<String> parentStyles)
+    protected static <E extends StyledShowable, P> Pair<ErrorTop, ErrorDisplayer<E, P>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, TopLevelEditor<?, ?> editor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replaceWithFixed, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -165,7 +165,7 @@ public class ExpressionEditorUtil
     }
 
     @NonNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E, P>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, ExpressionEditor expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replace, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E, P>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, TopLevelEditor<?, ?> expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replace, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
@@ -278,7 +278,7 @@ public class ExpressionEditorUtil
     @SuppressWarnings("initialization")
     public static <E extends StyledShowable, P> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src)
     {
-        ExpressionEditor editor = src.getParent().getEditor();
+        TopLevelEditor<?, ?> editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
             editor.ensureSelectionIncludes(src);
             @Nullable CopiedItems selection = editor.getSelection();

@@ -61,7 +61,7 @@ abstract class DeepNodeTree
         updateDisplay();
     }
 
-    public final ObservableList<Node> nodes()
+    public final ObservableList<Node> nodes(@UnknownInitialization(DeepNodeTree.class) DeepNodeTree this)
     {
         return nodes;
     }

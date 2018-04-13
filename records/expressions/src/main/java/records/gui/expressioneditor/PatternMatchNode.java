@@ -199,7 +199,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public ExpressionEditor getEditor()
+    public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
     }

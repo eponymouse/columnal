@@ -18,7 +18,8 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ExpressionEditor;
-import records.gui.expressioneditor.ExpressionEditor.ExpressionEditorFlowPane;
+import records.gui.expressioneditor.TopLevelEditor;
+import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -185,10 +186,10 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             push(KeyCode.TAB);
             push(KeyCode.TAB);
             write(original);
-            ExpressionEditorFlowPane editorPane = lookup(".expression-editor").<ExpressionEditorFlowPane>query();
+            TopLevelEditorFlowPane editorPane = lookup(".expression-editor").<TopLevelEditorFlowPane>query();
             assertNotNull(editorPane);
             if (editorPane == null) return;
-            ExpressionEditor expressionEditor = editorPane._test_getEditor();
+            TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
             List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).collect(Collectors.toList());
             
             assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
