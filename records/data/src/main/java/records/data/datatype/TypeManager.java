@@ -65,9 +65,9 @@ public class TypeManager
     public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
-        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of("type"), ImmutableList.of(
+        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of("a"), ImmutableList.of(
             new TagType<>("Missing", null),
-            new TagType<>("Present", DataType.typeVariable("type"))
+            new TagType<>("Present", DataType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);

@@ -93,9 +93,14 @@ public class TaggedTypeDefinition
         {
             if (!first)
                 b.t(FormatLexer.TAGOR, FormatLexer.VOCABULARY);
-            b.kw(b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
-            if (tag.getInner() != null)
-                tag.getInner().save(b);
+            b.kw(b.quotedIfNecessary(tag.getName()));
+            @Nullable DataType inner = tag.getInner();
+            if (inner != null)
+            {
+                b.raw("(");
+                inner.save(b);
+                b.raw(")");
+            }
             first = false;
         }
         b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);

@@ -13,7 +13,7 @@ tagRef : TAGGED ident (DASH type)*; // First ident is name, rest are type params
 typeVar : TYPEVAR ident;
 
 ident : UNQUOTED_NAME | STRING;
-tagItem : ident (OPEN_BRACKET type (COMMA type)+ CLOSE_BRACKET)?;
+tagItem : ident (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
 
 defaultValue: DEFAULT VALUE VALUE_END;
 
