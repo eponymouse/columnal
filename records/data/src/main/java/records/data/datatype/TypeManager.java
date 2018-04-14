@@ -17,7 +17,6 @@ import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
-import records.grammar.FormatParser.CompleteTypeOrIncompleteContext;
 import records.grammar.FormatParser.DateContext;
 import records.grammar.FormatParser.DecimalPlacesContext;
 import records.grammar.FormatParser.NumberContext;
@@ -27,6 +26,7 @@ import records.grammar.FormatParser.TypeDeclContext;
 import records.grammar.FormatParser.TypeDeclsContext;
 import records.grammar.MainParser.TypesContext;
 import records.loadsave.OutputBuilder;
+import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -139,7 +139,12 @@ public class TypeManager
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
 
             if (item.type() != null)
-                tags.add(new TagType<DataType>(tagName, loadTypeUse(item.type())));
+            {
+                if (item.type().size() == 1)
+                    tags.add(new TagType<DataType>(tagName, loadTypeUse(item.type(0))));
+                else
+                    tags.add(new TagType<DataType>(tagName, DataType.tuple(Utility.mapListEx(item.type(), t -> loadTypeUse(t)))));
+            }
             else
                 tags.add(new TagType<DataType>(tagName, null));
         }
@@ -151,25 +156,7 @@ public class TypeManager
     {
         return Utility.parseAsOne(type, FormatLexer::new, FormatParser::new, p -> loadTypeUse(p.completeType().type()));
     }
-
-    public Either<String, DataType> loadTypeUseAllowIncomplete(String type) throws InternalException, UserException
-    {
-        try
-        {
-            return Utility.<Either<String, DataType>, FormatParser>parseAsOne(type, FormatLexer::new, FormatParser::new, (FormatParser p) -> {
-                CompleteTypeOrIncompleteContext typeOrNot = p.completeTypeOrIncomplete();
-                if (typeOrNot.type() != null)
-                    return Either.right(loadTypeUse(typeOrNot.type()));
-                else
-                    return Either.left(typeOrNot.STRING().getText());
-            });
-        }
-        catch (ParseException e)
-        {
-            throw new UserException("Error parsing {|" + type + "|}", e);
-        }
-    }
-
+    
     public DataType loadTypeUse(TypeContext type) throws InternalException, UserException
     {
         if (type.BOOLEAN() != null)

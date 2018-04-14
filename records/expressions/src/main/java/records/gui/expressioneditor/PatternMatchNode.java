@@ -65,7 +65,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
             }
 
             @Override
-            protected ExpressionNodeParent getThisAsSemanticParent()
+            public ExpressionNodeParent getThisAsSemanticParent()
             {
                 return PatternMatchNode.this;
             }

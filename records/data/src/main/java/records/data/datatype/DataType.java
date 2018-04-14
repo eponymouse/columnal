@@ -43,6 +43,8 @@ import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TagContext;
 import records.grammar.FormatLexer;
 import records.loadsave.OutputBuilder;
+import styled.StyledShowable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.BiFunctionInt;
@@ -112,7 +114,7 @@ import static java.time.temporal.ChronoField.YEAR;
  *            | Tuple [Type]
  *            | Array Type
  */
-public class DataType
+public class DataType implements StyledShowable
 {
     @OnThread(Tag.Simulation)
     public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws UserException, InternalException
@@ -737,6 +739,20 @@ public class DataType
         {
             Log.log(e);
             return "Error: " + e.getLocalizedMessage();
+        }
+    }
+
+    @Override
+    public StyledString toStyledString()
+    {
+        try
+        {
+            return StyledString.s(toDisplay(false));
+        }
+        catch (UserException | InternalException e)
+        {
+            Log.log(e);
+            return StyledString.s("Error showing type: " + e.getLocalizedMessage());
         }
     }
 

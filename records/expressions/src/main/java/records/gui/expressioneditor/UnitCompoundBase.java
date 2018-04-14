@@ -18,7 +18,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     }
 
     @Override
-    protected UnitNodeParent getThisAsSemanticParent()
+    public UnitNodeParent getThisAsSemanticParent()
     {
         return this;
     }

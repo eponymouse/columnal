@@ -202,7 +202,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             }
 
             @Override
-            protected ExpressionNodeParent getThisAsSemanticParent()
+            public ExpressionNodeParent getThisAsSemanticParent()
             {
                 return ClauseNode.this;
             }

@@ -181,14 +181,14 @@ public class CallExpression extends Expression
 
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
+        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
     }
 
     @Override
     public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
         return new Pair<>(
-            ImmutableList.of(function.loadAsSingle(), (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, SingleLoader.withSemanticParent(param.loadAsConsecutive(true), s), ')')),
+            ImmutableList.of(function.loadAsSingle(), (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(param.loadAsConsecutive(true), s), ')')),
             ImmutableList.of((p, s) -> new OperatorEntry<>(Expression.class, "", false, p))
         );
     }

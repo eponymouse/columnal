@@ -37,6 +37,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.types.ExpressionBase;
@@ -310,7 +311,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             String typeSrc = ctx.TYPE_CONTENT().getText();
             try
             {
-                return new FixedTypeExpression(typeManager.loadTypeUseAllowIncomplete(typeSrc), visitExpression(ctx.expression()));
+                return new FixedTypeExpression(TypeExpression.parseTypeExpression(typeManager, typeSrc), visitExpression(ctx.expression()));
             }
             catch (InternalException | UserException e)
             {

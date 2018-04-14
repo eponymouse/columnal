@@ -187,16 +187,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
         return locator.nearest == null ? null : new Pair<>(locator.nearest, locator.minDist);
     }
 
-    @SuppressWarnings("initialization") // Because we pass ourselves as this
-    private void loadContent(@UnknownInitialization(ExpressionEditor.class) ExpressionEditor this, Expression startingValue)
-    {
-        Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> items = startingValue.loadAsConsecutive(false);
-        atomicEdit.set(true);
-        operators.addAll(Utility.mapList(items.getSecond(), f -> f.load(this, this)));
-        operands.addAll(Utility.mapList(items.getFirst(), f -> f.load(this, this)));
-        atomicEdit.set(false);
-    }
-
 //    @Override
 //    public @Nullable DataType getType(EEDisplayNode child)
 //    {
@@ -268,7 +258,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     }
 
     @Override
-    protected ExpressionNodeParent getThisAsSemanticParent()
+    public ExpressionNodeParent getThisAsSemanticParent()
     {
         return this;
     }

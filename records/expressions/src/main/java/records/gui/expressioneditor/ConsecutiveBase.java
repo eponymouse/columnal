@@ -24,6 +24,8 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.*;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.TypeParent;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
@@ -146,7 +148,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     // Get us as a semantic parent.  Do not get OUR parent.
-    protected abstract SEMANTIC_PARENT getThisAsSemanticParent();
+    public abstract SEMANTIC_PARENT getThisAsSemanticParent();
 
     protected abstract void selfChanged();
 
@@ -908,4 +910,5 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public static final OperandOps<Expression, ExpressionNodeParent> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitNodeParent> UNIT_OPS = new UnitExpressionOps();
+    public static final OperandOps<TypeExpression, TypeParent> TYPE_OPS = new TypeExpressionOps();
 }

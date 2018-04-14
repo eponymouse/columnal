@@ -35,6 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import records.data.TableManager;
+import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
@@ -288,7 +289,16 @@ public class ExpressionInfoDisplay
             //Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
                 hide(true);
-            replace.consume(q.getFixedVersion(parentWindow, tableManager));
+            try
+            {
+                replace.consume(q.getFixedVersion(parentWindow, tableManager));
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+                // User clicked expecting it to work, so better tell them:
+                FXUtility.showError(e);
+            }
         })).collect(ImmutableList.toImmutableList())));
         if (popup != null)
         {

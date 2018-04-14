@@ -193,6 +193,11 @@ public final class StyledString
     {
         return StyledString.concat(StyledString.s("("), inner, StyledString.s(")"));
     }
+
+    public static StyledString squareBracket(StyledString inner)
+    {
+        return StyledString.concat(StyledString.s("["), inner, StyledString.s("]"));
+    }
     
     @Override
     public boolean equals(@Nullable Object o)

@@ -35,7 +35,7 @@ import java.util.Random;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings("recorded")
-public interface EnterExpressionTrait extends FxRobotInterface
+public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
 {
     @OnThread(Tag.Any)
     public default void enterExpression(Expression expression, boolean needsBrackets, Random r)
@@ -209,16 +209,7 @@ public interface EnterExpressionTrait extends FxRobotInterface
         {
             write("@type");
             FixedTypeExpression f = (FixedTypeExpression)expression; 
-            write(f.getType().either(s -> s, t -> {
-                try
-                {
-                    return t.save(new OutputBuilder()).toString();
-                }
-                catch (InternalException e)
-                {
-                    return t.toString();
-                }
-            }));
+            enterType(f.getType(), r);
             push(KeyCode.RIGHT);
             enterExpression(f.getInner(), false, r);
             write(")");

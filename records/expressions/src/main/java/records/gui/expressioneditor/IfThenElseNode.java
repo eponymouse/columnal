@@ -330,7 +330,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         }
 
         @Override
-        protected ExpressionNodeParent getThisAsSemanticParent()
+        public ExpressionNodeParent getThisAsSemanticParent()
         {
             return IfThenElseNode.this;
         }

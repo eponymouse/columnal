@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
+import records.error.InternalException;
 import records.gui.TypeDialog;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.QuickFixParams;
@@ -34,6 +35,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformFunctionInt;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -183,7 +185,7 @@ public class ExpressionEditorUtil
     public static List<QuickFix<Expression,ExpressionNodeParent>> quickFixesForTypeError(Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression,ExpressionNodeParent>> quickFixes = new ArrayList<>();
-        FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionNodeParent>>> makeTypeFix = params -> {
+        FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionNodeParent>>> makeTypeFix = params -> {
             TypeDialog typeDialog = new TypeDialog(params.parentWindow, params.tableManager.getTypeManager(), false);
             @Nullable DataType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
@@ -194,11 +196,11 @@ public class ExpressionEditorUtil
                 return new Pair<>(CURRENT, src);
             }
         };
-        quickFixes.add(new QuickFix<Expression,ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), makeTypeFix));
+        quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), makeTypeFix));
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression,ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
+            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
         }
         return quickFixes;
     }

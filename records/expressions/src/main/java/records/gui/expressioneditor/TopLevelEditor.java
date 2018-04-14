@@ -11,6 +11,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -111,6 +113,17 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             }
         }));
         */
+    }
+
+
+    @SuppressWarnings("initialization") // Because we pass ourselves as this
+    protected void loadContent(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> this, LoadableExpression<EXPRESSION, SEMANTIC_PARENT> startingValue)
+    {
+        Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> items = startingValue.loadAsConsecutive(false);
+        atomicEdit.set(true);
+        operators.addAll(Utility.mapList(items.getSecond(), f -> f.load(this, getThisAsSemanticParent())));
+        operands.addAll(Utility.mapList(items.getFirst(), f -> f.load(this, getThisAsSemanticParent())));
+        atomicEdit.set(false);
     }
 
 

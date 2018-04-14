@@ -72,6 +72,7 @@ abstract class DeepNodeTree
     // Must be in display order:
     protected abstract Stream<Node> calculateNodes();
 
+    // Called after nodes have been updated
     protected abstract void updateDisplay();
 
     protected final void updateListeners()

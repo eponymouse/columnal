@@ -29,19 +29,19 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
 
-    protected BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, Node prefixNode, Node suffixNode, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
+    protected BracketedExpression(ConsecutiveBase<Expression, ExpressionNodeParent> parent, Node prefixNode, Node suffixNode, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
     {
-        super(operations, parent, prefixNode, suffixNode, "bracket", content, endCharacter);
+        super(EXPRESSION_OPS, parent, prefixNode, suffixNode, "bracket", content, endCharacter);
         this.consecParent = parent;
     }
 
-    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
+    public BracketedExpression(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content, char endCharacter)
     {
-        this(operations, parent, new Label("("), new Label(")"), content, endCharacter);
+        this(parent, new Label("("), new Label(")"), content, endCharacter);
     }
 
     @Override
-    protected ExpressionNodeParent getThisAsSemanticParent()
+    public ExpressionNodeParent getThisAsSemanticParent()
     {
         return this;
     }

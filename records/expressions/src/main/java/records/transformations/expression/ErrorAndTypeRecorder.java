@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.error.InternalException;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.QuickFix;
 import records.gui.expressioneditor.ExpressionEditorUtil;
@@ -23,6 +24,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunction;
+import utility.FXPlatformFunctionInt;
 import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.gui.TranslationUtility;
@@ -112,7 +114,7 @@ public interface ErrorAndTypeRecorder
     public final static class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     {
         private final StyledString title;
-        private final FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement;
+        private final FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement;
         private final ImmutableList<String> cssClasses;
 
         public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> replacement)
@@ -125,7 +127,7 @@ public interface ErrorAndTypeRecorder
                 p -> new Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>(replacementTarget, replacement));
         }
         
-        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunction<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement)
+        public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement)
         {
             this.title = title;
             this.cssClasses = cssClasses;
@@ -138,7 +140,7 @@ public interface ErrorAndTypeRecorder
         }
         
         @OnThread(Tag.FXPlatform)
-        public Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager)
+        public Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager) throws InternalException
         {
             return fixedReplacement.apply(new QuickFixParams(parentWindow, tableManager));
         }

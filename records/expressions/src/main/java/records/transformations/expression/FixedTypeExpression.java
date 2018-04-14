@@ -21,6 +21,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FixedTypeNode;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.type.TypeExpression;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -41,22 +42,25 @@ import java.util.stream.Stream;
  */
 public class FixedTypeExpression extends NonOperatorExpression
 {
-    // If a String, then it's an incomplete or incorrect type as specified in the slot.
-    private final Either<String, DataType> type;
+    // This may a type expression that doesn't save to a valid type:
+    private final TypeExpression type;
     private final @Recorded Expression inner;
     
-    public FixedTypeExpression(Either<String, DataType> type, @Recorded Expression innerExpression)
+    public FixedTypeExpression(@Recorded TypeExpression type, @Recorded Expression innerExpression)
     {
         this.type = type;
         this.inner = innerExpression;
     }
 
-    public static Expression fixType(DataType fix, @Recorded Expression expression)
+    public static Expression fixType(DataType fix, @Recorded Expression expression) throws InternalException
     {
+        TypeExpression typeExpression = TypeExpression.fromDataType(fix);
         if (expression instanceof FixedTypeExpression)
-            return new FixedTypeExpression(Either.right(fix), ((FixedTypeExpression)expression).inner);
+        {
+            return new FixedTypeExpression(typeExpression, ((FixedTypeExpression)expression).inner);
+        }
         else
-            return new FixedTypeExpression(Either.right(fix), expression);
+            return new FixedTypeExpression(typeExpression, expression);
     }
 
     @Override
@@ -68,7 +72,13 @@ public class FixedTypeExpression extends NonOperatorExpression
         else
         {
             @NonNull TypeExp innerTypeFinal = innerType;
-            return type.<@Nullable @Recorded TypeExp>eitherInt(text -> null, t -> onError.recordTypeAndError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, t), innerTypeFinal)));
+            @Nullable DataType dataType = type.toDataType();
+            if (dataType == null)
+            {
+                // TODO should we record an error here?
+                return null;
+            }
+            return onError.recordTypeAndError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, dataType), innerTypeFinal));
         }
     }
 
@@ -87,35 +97,13 @@ public class FixedTypeExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        try
-        {
-            return "@type {|" + type.eitherInt(
-                text -> "@incomplete \"" + GrammarUtility.escapeChars(text)+ "\"",
-                t -> t.save(new OutputBuilder()).toString()) + "|} " + inner.save(BracketedStatus.MISC, renames);
-        }
-        catch (InternalException e)
-        {
-            Utility.report(e);
-            // Not much else we can do:
-            return inner.save(BracketedStatus.MISC, renames);
-        }
+        return "@type {|" + type.save(renames) + "|} " + inner.save(BracketedStatus.MISC, renames);
     }
 
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        try
-        {
-            return StyledString.concat(StyledString.s("type ("), type.eitherEx(
-                    text -> StyledString.s(text),
-                    t -> StyledString.s(t.toDisplay(false))), StyledString.s(") "), inner.toDisplay(BracketedStatus.MISC));
-        }
-        catch (UserException | InternalException e)
-        {
-            Log.log(e);
-            // Not much else we can do:
-            return StyledString.s(inner.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
-        }
+        return StyledString.concat(StyledString.s("type ("), type.toStyledString(), StyledString.s(") "), inner.toDisplay(BracketedStatus.MISC));
     }
     
     @Override
@@ -127,7 +115,7 @@ public class FixedTypeExpression extends NonOperatorExpression
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new FixedTypeNode(p, s, type.either(str -> str, t -> t.toString()), inner);
+        return (p, s) -> new FixedTypeNode(p, s, type, inner);
     }
 
     @Override
@@ -161,7 +149,7 @@ public class FixedTypeExpression extends NonOperatorExpression
         return Objects.hash(type, inner);
     }
 
-    public Either<String, DataType> getType()
+    public TypeExpression getType()
     {
         return type;
     }

@@ -38,6 +38,7 @@ DASH: '-';
 TAGOR: '|';
 
 INCOMPLETE : '@INCOMPLETE';
+INVALIDOPS : '@INVALIDOPS';
 
 
 NEWLINE : '\r'? '\n' ;

@@ -337,7 +337,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
 
         @OnThread(Tag.FXPlatform)
         @Override
-        protected ExpressionNodeParent getThisAsSemanticParent()
+        public ExpressionNodeParent getThisAsSemanticParent()
         {
             return SurroundNode.this;
         }

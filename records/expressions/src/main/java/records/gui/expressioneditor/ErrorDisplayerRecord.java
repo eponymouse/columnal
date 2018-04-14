@@ -13,6 +13,8 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.TypeParent;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
 import styled.StyledShowable;
@@ -36,6 +38,7 @@ public class ErrorDisplayerRecord
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
     private final IdentityHashMap<Expression, ErrorDisplayer<Expression, ExpressionNodeParent>> expressionDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression, UnitNodeParent>> unitDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<TypeExpression, ErrorDisplayer<TypeExpression, TypeParent>> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?, ?>>>> pending = new IdentityHashMap<>();
@@ -57,6 +60,13 @@ public class ErrorDisplayerRecord
     public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression, UnitNodeParent> displayer, @NonNull UNIT_EXPRESSION e)
     {
         unitDisplayers.put(e, displayer);
+        return e;
+    }
+
+    @SuppressWarnings({"initialization", "recorded"})
+    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(@UnknownInitialization(Object.class) ErrorDisplayer<TypeExpression, TypeParent> displayer, @NonNull TYPE_EXPRESSION e)
+    {
+        typeDisplayers.put(e, displayer);
         return e;
     }
 

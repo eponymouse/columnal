@@ -904,13 +904,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == roundBracketCompletion)
                 {
-                    BracketedExpression bracketedExpression = new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')');
+                    BracketedExpression bracketedExpression = new BracketedExpression(parent, null, ')');
                     bracketedExpression.focusWhenShown();
                     parent.replace(GeneralExpressionEntry.this, bracketedExpression);
                 }
                 else if (ksc == squareBracketCompletion)
                 {
-                    BracketedExpression bracketedExpression = new SquareBracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null);
+                    BracketedExpression bracketedExpression = new SquareBracketedExpression(parent, null);
                     bracketedExpression.focusWhenShown();
                     parent.replace(GeneralExpressionEntry.this, bracketedExpression);
                 }
@@ -942,14 +942,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c != null && c.equals(fixedTypeCompletion))
             {
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FixedTypeNode(parent, semanticParent, "", null)));
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FixedTypeNode(parent, semanticParent, null, null)));
             }
             else if (c instanceof FunctionCompletion)
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
                 currentValue.setValue(new StdFunc(fc.function));
-                parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')')));
+                parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(parent, null, ')')));
                 return fc.function.getName();
             }
             else if (c instanceof TagCompletion)
@@ -959,7 +959,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 
                 if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
-                    parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null, ')')));
+                    parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(parent, null, ')')));
                 }
                 else
                 {

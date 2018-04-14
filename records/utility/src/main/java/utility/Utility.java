@@ -84,7 +84,7 @@ public class Utility
 
     public static <T, R> ImmutableList<@NonNull R> mapListI(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {
-        ImmutableList.Builder<@NonNull R> r = ImmutableList.builder();
+        ImmutableList.Builder<@NonNull R> r = ImmutableList.builderWithExpectedSize(list.size());
         for (T t : list)
             r.add(func.apply(t));
         return r.build();
@@ -92,7 +92,7 @@ public class Utility
 
     public static <T, R> ImmutableList<@NonNull R> mapListInt(List<@NonNull T> list, FunctionInt<@NonNull T, @NonNull R> func) throws InternalException
     {
-        ImmutableList.Builder<@NonNull R> r = ImmutableList.builder();
+        ImmutableList.Builder<@NonNull R> r = ImmutableList.builderWithExpectedSize(list.size());
         for (T t : list)
             r.add(func.apply(t));
         return r.build();
