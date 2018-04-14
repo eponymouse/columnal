@@ -52,6 +52,7 @@ import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -159,7 +160,7 @@ public class Sort extends Transformation
             }
             theSortBy = sortByColumns;
 
-            List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+            List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
 
             RecordSet srcRecordSet = src.getData();
             this.stillToOrder = new int[srcRecordSet.getLength() + 1];

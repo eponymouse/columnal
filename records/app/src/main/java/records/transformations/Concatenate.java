@@ -30,6 +30,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 
@@ -160,7 +161,7 @@ public class Concatenate extends Transformation
             }
 
             List<Table> tablesFinal = tables;
-            rs = new KnownLengthRecordSet(Utility.<Entry<ColumnId, ColumnDetails>, ExFunction<RecordSet, Column>>mapList(new ArrayList<>(ourColumns.entrySet()), (Entry<ColumnId, ColumnDetails> colDetails) -> new ExFunction<RecordSet, Column>()
+            rs = new KnownLengthRecordSet(Utility.<Entry<ColumnId, ColumnDetails>, SimulationFunction<RecordSet, Column>>mapList(new ArrayList<>(ourColumns.entrySet()), (Entry<ColumnId, ColumnDetails> colDetails) -> new SimulationFunction<RecordSet, Column>()
             {
                 @Override
                 @OnThread(Tag.Simulation)

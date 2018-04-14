@@ -210,13 +210,6 @@ public class OutputBuilder
             {
                 return quoted(g.get(index));
             }
-            
-            @Override
-            @OnThread(Tag.Simulation)
-            public String inferred(GetValue<@Value String> g) throws InternalException, UserException
-            {
-                return text(g);
-            }
 
             @Override
             @OnThread(Tag.Simulation)

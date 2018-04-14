@@ -223,12 +223,6 @@ public class FromString extends FunctionDefinition
                     }
                     return new ListExList(items);
                 }
-
-                @Override
-                public @Value Object toInfer() throws InternalException, UserException
-                {
-                    throw new UserException("Cannot convert automatic type to string");
-                }
             });
         }
     }

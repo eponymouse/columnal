@@ -27,6 +27,7 @@ import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.SimulationFunction;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -162,7 +163,7 @@ public abstract class DataSource extends Table
             }));
         }
 
-        public static ExFunction<RecordSet, ? extends EditableColumn> create(DataType.ColumnMaker<?, ?> c)
+        public static SimulationFunction<RecordSet, ? extends EditableColumn> create(DataType.ColumnMaker<?, ?> c)
         {
             return rs -> c.apply(rs);
         }

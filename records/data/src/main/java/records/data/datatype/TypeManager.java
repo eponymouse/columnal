@@ -219,10 +219,6 @@ public class TypeManager
         {
             return DataType.typeVariable(type.typeVar().ident().getText());
         }
-        else if (type.AUTOMATIC() != null)
-        {
-            return DataType.toInfer();
-        }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
     }
@@ -309,13 +305,7 @@ public class TypeManager
                     {
                         return UnitType.UNIT;
                     }
-
-                    @Override
-                    public UnitType toInfer() throws InternalException, UserException
-                    {
-                        return UnitType.UNIT;
-                    }
-
+                    
                     @Override
                     public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                     {

@@ -20,7 +20,6 @@ TYPE : 'TYPE';
 TYPEVAR : 'TYPEVAR';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
-AUTOMATIC: 'AUTOMATIC';
 DEFAULT : 'DEFAULT' -> pushMode(VALUE_MODE);
 
 WS : ( ' ' | '\t' )+ -> skip;

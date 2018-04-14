@@ -46,6 +46,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.TranslationUtility;
@@ -94,7 +95,7 @@ public class Transform extends Transformation
         {
             RecordSet srcRecordSet = this.src.getData();
             TableLookup tableLookup = new MultipleTableLookup(mgr, src);
-            List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+            List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
             for (Column c : srcRecordSet.getColumns())
             {
                 // If the old column is not overwritten by one of the same name, include it:

@@ -68,6 +68,7 @@ import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.gui.TranslationUtility;
 
@@ -120,7 +121,7 @@ public class Filter extends Transformation
         {
             if (src != null)
             {
-                List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+                List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
                 RecordSet data = src.getData();
                 TableLookup tableLookup = new MultipleTableLookup(mgr, src);
                 for (Column c : data.getColumns())

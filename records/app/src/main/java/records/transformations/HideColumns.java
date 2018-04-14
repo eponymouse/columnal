@@ -29,6 +29,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.GUI;
@@ -93,7 +94,7 @@ public class HideColumns extends Transformation
             if (shownColumns.isEmpty())
                 throw new UserException("Cannot hide all columns");
 
-            theResult = new <Column>RecordSet(Utility.mapList(shownColumns, c -> (ExFunction<RecordSet, Column>)(rs -> new Column(rs, c.getName())
+            theResult = new <Column>RecordSet(Utility.mapList(shownColumns, c -> (SimulationFunction<RecordSet, Column>)(rs -> new Column(rs, c.getName())
             {
                 @Override
                 public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException

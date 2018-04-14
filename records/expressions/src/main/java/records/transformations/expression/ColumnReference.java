@@ -192,12 +192,6 @@ public class ColumnReference extends NonOperatorExpression
             {
                 return columnVariables.computeIfAbsent(key, (Pair x) -> formulaManager.getBooleanFormulaManager().makeVariable(columnName.getOutput()));
             }
-
-            @Override
-            public Formula toInfer() throws InternalException, UserException
-            {
-                throw new UserException("Can't do automatic type");
-            }
         });
     }
 

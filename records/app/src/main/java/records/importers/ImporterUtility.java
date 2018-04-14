@@ -40,6 +40,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 
@@ -66,7 +67,7 @@ public class ImporterUtility
     public static EditableRecordSet makeEditableRecordSet(TypeManager mgr, List<? extends List<String>> vals, ImmutableList<ColumnInfo> columnTypes) throws InternalException, UserException
     {
         @SuppressWarnings({"keyfor", "units"})
-        @KeyForBottom @UnitsBottom List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+        @KeyForBottom @UnitsBottom List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
         for (int i = 0; i < columnTypes.size(); i++)
         {
             ColumnInfo columnInfo = columnTypes.get(i);

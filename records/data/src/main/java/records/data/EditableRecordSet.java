@@ -52,7 +52,7 @@ public class EditableRecordSet extends RecordSet
      * @throws InternalException
      * @throws UserException
      */
-    public <C extends EditableColumn> EditableRecordSet(List<ExFunction<RecordSet, C>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
+    public <C extends EditableColumn> EditableRecordSet(List<SimulationFunction<RecordSet, C>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
     {
         super(columns);
         // Can't fail given the type we require above:
@@ -65,7 +65,7 @@ public class EditableRecordSet extends RecordSet
         this(Utility.mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
     }
 
-    private static ExFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
+    private static SimulationFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
     {
         @Nullable @Value Object defaultValue = (original instanceof EditableColumn) ? ((EditableColumn)original).getDefaultValue() : null;
 
@@ -158,19 +158,13 @@ public class EditableRecordSet extends RecordSet
                 }
                 return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new ListExList(Collections.emptyList())), ListEx.class));
             }
-
-            @Override
-            public EditableColumn inferred(GetValue<@Value String> g) throws InternalException, UserException
-            {
-                return new InferTypeColumn(rs, original.getName(), getAll(g));
-            }
         });
     }
 
     @NonNull
-    public static EditableRecordSet newRecordSetSingleColumn() throws InternalException, UserException
+    public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type) throws InternalException, UserException
     {
-        return new EditableRecordSet(Collections.singletonList(rs -> new InferTypeColumn(rs, new ColumnId("C1"), ImmutableList.of(""))), () -> 0);
+        return new EditableRecordSet(Collections.singletonList(type.makeImmediateColumn(name, DataTypeUtility.makeDefaultValue(type))::apply), () -> 0);
     }
 
     @Override

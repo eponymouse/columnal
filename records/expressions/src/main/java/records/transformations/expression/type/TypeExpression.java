@@ -93,12 +93,6 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             }
 
             @Override
-            public TypeExpression toInfer() throws InternalException, InternalException
-            {
-                throw new UnimplementedException(); // TODO remove infer
-            }
-
-            @Override
             public TypeExpression typeVariable(String typeVariableName) throws InternalException, InternalException
             {
                 return new UnfinishedTypeExpression(typeVariableName);

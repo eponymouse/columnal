@@ -133,12 +133,6 @@ public class ToString extends FunctionDefinition
                     }
                     return s.append("]").toString();
                 }
-
-                @Override
-                public String toInfer() throws InternalException, UserException
-                {
-                    throw new InternalException("Cannot convert to automatic type");
-                }
             });
         }
     }

@@ -32,6 +32,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ReadState;
@@ -146,7 +147,7 @@ public class TextImporter implements Importer
     @OnThread(Tag.Simulation)
     public static RecordSet makeSrcRecordSet(File textFile, Charset charset, @Nullable String separator, @Nullable String quote, int totalColumns) throws IOException, InternalException, UserException
     {
-        List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+        List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
         for (int i = 0; i < totalColumns; i++)
         {
             // Must be one per column:
@@ -161,7 +162,7 @@ public class TextImporter implements Importer
     @OnThread(Tag.Simulation)
     public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, FinalTextFormat format) throws IOException, InternalException, UserException
     {
-        List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+        List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
         for (int i = 0; i < totalColumns; i++)
         {

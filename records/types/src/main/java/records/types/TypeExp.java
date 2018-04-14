@@ -286,12 +286,6 @@ public abstract class TypeExp implements StyledShowable
             }
 
             @Override
-            public TypeExp toInfer() throws InternalException, InternalException
-            {
-                return new MutVar(src);
-            }
-
-            @Override
             public TypeExp typeVariable(String typeVariableName) throws InternalException, InternalException
             {
                 @Nullable TypeExp lookedUp = typeVarLookup.apply(typeVariableName);

@@ -245,12 +245,6 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                     throw new InternalException("Tagged type cannot contain empty array");
                 return DataTypeValue.arrayV(inner, reMapGV(g));
             }
-
-            @Override
-            public DataTypeValue inferred(GetValue<@Value String> g) throws InternalException, InternalException
-            {
-                throw new InternalException("Cannot have an inferred type inside a tagged type");
-            }
         });
     }
 

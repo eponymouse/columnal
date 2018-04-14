@@ -17,7 +17,6 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.EditableColumn;
-import records.data.InferTypeColumn;
 import records.data.MemoryArrayColumn;
 import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
@@ -194,12 +193,6 @@ public class DataType implements StyledShowable
                     }
                 });
             }
-
-            @Override
-            public Column toInfer() throws InternalException, UserException
-            {
-                throw new InternalException("Attempting to make a calculated column with automatic type");
-            }
         });
     }
 
@@ -230,13 +223,6 @@ public class DataType implements StyledShowable
             public DataTypeValue text() throws InternalException, UserException
             {
                 return DataTypeValue.text(castTo(String.class));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public DataTypeValue toInfer() throws InternalException, UserException
-            {
-                return DataTypeValue.toInfer(castTo(String.class));
             }
 
             @Override
@@ -340,13 +326,8 @@ public class DataType implements StyledShowable
         return new DataType(Kind.TYPE_VARIABLE, null, null, null, null, name);
     }
 
-    public boolean isToInfer()
-    {
-        return kind == Kind.TO_INFER;
-    }
-
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, TYPE_VARIABLE, TO_INFER }
+    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, TYPE_VARIABLE }
     final Kind kind;
     // For NUMBER:
     final @Nullable NumberInfo numberInfo;
@@ -394,11 +375,6 @@ public class DataType implements StyledShowable
             this.tagTypes = tagTypes;
         }
     }
-
-    public static DataType toInfer()
-    {
-        return new DataType(Kind.TO_INFER, null, null, null, null, null);
-    }
     
     public static DataType array()
     {
@@ -437,8 +413,6 @@ public class DataType implements StyledShowable
         // If null, array is empty and thus of unknown type
         R array(@Nullable DataType inner) throws InternalException, E;
         
-        R toInfer() throws InternalException, E;
-
         default R typeVariable(String typeVariableName) throws InternalException, E
         {
             throw new InternalException("Free variable " + typeVariableName + " in type");
@@ -452,10 +426,6 @@ public class DataType implements StyledShowable
 
     public static interface ConcreteDataTypeVisitor<R> extends DataTypeVisitor<R>
     {
-        public default R toInfer() throws InternalException, UserException
-        {
-            throw new InternalException("Cannot handle automatic type");
-        }
     }
 
     public static class SpecificDataTypeVisitor<R> implements DataTypeVisitor<R>
@@ -501,12 +471,6 @@ public class DataType implements StyledShowable
         {
             throw new InternalException("Unexpected array type");
         }
-
-        @Override
-        public R toInfer() throws InternalException, UserException
-        {
-            throw new InternalException("Unexpected automatic type");
-        }
     }
 
     @SuppressWarnings("nullness")
@@ -534,8 +498,6 @@ public class DataType implements StyledShowable
                 return visitor.tuple(memberType);
             case TYPE_VARIABLE:
                 return visitor.typeVariable(typeVariableName);
-            case TO_INFER:
-                return visitor.toInfer();
             default:
                 throw new InternalException("Missing kind case");
         }
@@ -718,12 +680,6 @@ public class DataType implements StyledShowable
             public String typeVariable(String typeVariableName) throws InternalException, UserException
             {
                 return typeVariableName + "*";
-            }
-
-            @Override
-            public String toInfer() throws InternalException, UserException
-            {
-                return "Automatic";
             }
         });
     }
@@ -1242,12 +1198,6 @@ public class DataType implements StyledShowable
                 DataType innerFinal = inner;
                 return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Utility.mapListEx(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
             }
-
-            @Override
-            public ExFunction<RecordSet, EditableColumn> toInfer() throws InternalException, UserException
-            {
-                throw new InternalException("Attempting to make new column of automatic type");
-            }
         });
     }
 
@@ -1270,15 +1220,6 @@ public class DataType implements StyledShowable
             public ColumnMaker<?, ?> text() throws InternalException, UserException
             {
                 return new ColumnMaker<MemoryStringColumn, String>(defaultValue, String.class, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), p -> {
-                    return loadString(p);
-                });
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> toInfer() throws InternalException, UserException
-            {
-                return new ColumnMaker<InferTypeColumn, String>(defaultValue, String.class, (rs, defaultValue) -> new InferTypeColumn(rs, columnId, Collections.emptyList()), (c, s) -> c.add(s), p -> {
                     return loadString(p);
                 });
             }
@@ -1461,12 +1402,6 @@ public class DataType implements StyledShowable
             }
 
             @Override
-            public @Value Object toInfer() throws InternalException, UserException
-            {
-                return loadString(p);
-            }
-
-            @Override
             public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 ParserRuleContext ctx = DataType.<@Nullable ParserRuleContext>tryParse(() -> {
@@ -1548,13 +1483,6 @@ public class DataType implements StyledShowable
             public UnitType text() throws InternalException, InternalException
             {
                 b.t(FormatLexer.TEXT, FormatLexer.VOCABULARY);
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType toInfer() throws InternalException, InternalException
-            {
-                b.t(FormatLexer.AUTOMATIC, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
             }
 

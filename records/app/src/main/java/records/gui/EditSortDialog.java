@@ -403,12 +403,6 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                             }
                             return UnitType.UNIT;
                         }
-
-                        @Override
-                        public UnitType toInfer() throws InternalException, UserException
-                        {
-                            return text();
-                        }
                     });
                 }
                 catch (UserException | InternalException e)

@@ -12,6 +12,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.SimulationFunction;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -44,11 +45,11 @@ public abstract class RecordSet
     @OnThread(Tag.FXPlatform)
     protected @MonotonicNonNull RecordSetListener listener;
 
-    public <C extends Column> RecordSet(List<ExFunction<RecordSet, C>> columns) throws InternalException, UserException
+    public <C extends Column> RecordSet(List<SimulationFunction<RecordSet, C>> columns) throws InternalException, UserException
     {
         this.columns = new ArrayList<>();
         Set<ColumnId> colNames = new HashSet<>();
-        for (ExFunction<RecordSet, ? extends Column> f : columns)
+        for (SimulationFunction<RecordSet, ? extends Column> f : columns)
         {
             @SuppressWarnings("initialization")
             Column newCol = f.apply(this);

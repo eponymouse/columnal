@@ -54,6 +54,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -138,7 +139,7 @@ public class SummaryStatistics extends Transformation
             RecordSet src = this.src.getData();
             List<JoinedSplit> splits = calcSplits(src, splitBy);
 
-            List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
+            List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
 
             // Will be zero by default, which we take advantage of:
             int[] splitIndexes = new int[src.getLength()];
