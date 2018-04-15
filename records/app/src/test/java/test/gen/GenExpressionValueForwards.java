@@ -19,6 +19,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.FixedTypeExpression;
 import utility.Either;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -97,7 +98,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     }
 
     // Easier than passing parameters around:
-    private List<ExFunction<RecordSet, Column>> columns;
+    private List<SimulationFunction<RecordSet, Column>> columns;
     // The length of the column we are generating:
     private int targetSize;
 

@@ -1143,55 +1143,55 @@ public class DataType implements StyledShowable
     }
 
     @OnThread(Tag.Simulation)
-    public ExFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value, @Value Object defaultValue) throws InternalException, UserException
+    public SimulationFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value, @Value Object defaultValue) throws InternalException, UserException
     {
-        return apply(new DataTypeVisitor<ExFunction<RecordSet, EditableColumn>>()
+        return apply(new DataTypeVisitor<SimulationFunction<RecordSet, EditableColumn>>()
         {
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
             {
                 return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString), Utility.cast(defaultValue, String.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
             {
                 return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Utility.mapListEx(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.<@Value Object, @Value Object @Value[]>mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> array(@Nullable DataType inner) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot create column with empty array type");

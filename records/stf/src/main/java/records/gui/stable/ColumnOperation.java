@@ -14,19 +14,19 @@ import utility.gui.GUI;
 public abstract class ColumnOperation
 {
     @OnThread(Tag.Any)
-    private final @LocalizableKey String nameKey;
+    protected final @LocalizableKey String nameKey;
 
     protected ColumnOperation(@LocalizableKey String nameKey)
     {
         this.nameKey = nameKey;
     }
 
-    @OnThread(Tag.Simulation)
-    public abstract void execute();
-
     @OnThread(Tag.FXPlatform)
-    public MenuItem makeMenuItem()
+    public final MenuItem makeMenuItem()
     {
-        return GUI.menuItem(nameKey, () -> Workers.onWorkerThread(nameKey, Priority.SAVE_ENTRY, this::execute));
+        return GUI.menuItem(nameKey, () -> executeFX());
     }
+    
+    @OnThread(Tag.FXPlatform)
+    protected abstract void executeFX();
 }

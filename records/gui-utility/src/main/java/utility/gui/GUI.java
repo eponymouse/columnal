@@ -153,6 +153,13 @@ public class GUI
         return vBox;
     }
 
+    public static HBox hbox(String styleClass, Node... contents)
+    {
+        HBox hBox = new HBox(contents);
+        hBox.getStyleClass().add(styleClass);
+        return hBox;
+    }
+
     /**
      * Like label but the text is permitted to wrap (by using a TextFlow)
      */

@@ -42,6 +42,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
+import records.gui.EditColumnDialog.ColumnDetails;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
@@ -83,7 +84,7 @@ public class View extends StackPane
     // The STF supplier for the main pane:
     private final DataCellSupplier dataCellSupplier = new DataCellSupplier();
     // The supplier for buttons to add rows and columns:
-    private final ExpandTableArrowSupplier expandTableArrowSupplier = new ExpandTableArrowSupplier();
+    private final ExpandTableArrowSupplier expandTableArrowSupplier;
     // The supplier for row labels:
     private final RowLabelSupplier rowLabelSupplier = new RowLabelSupplier();
     
@@ -564,11 +565,13 @@ public class View extends StackPane
                     switch (choice.get().getSecond())
                     {
                         case DATA:
-                            Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
-                                FXUtility.alertOnError_(() -> {
-                                    
-                                    ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn());
-                                    tableManager.record(data);
+                            Optional<ColumnDetails> optInitialDetails = new EditColumnDialog(thisView.getWindow(), thisView.getManager(), new ColumnId("A")).showAndWait();
+                            optInitialDetails.ifPresent(initialDetails -> {
+                                Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
+                                    FXUtility.alertOnError_(() -> {
+                                        ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
+                                        tableManager.record(data);
+                                    });
                                 });
                             });
                             break;
@@ -604,6 +607,7 @@ public class View extends StackPane
                 }
                 virtualGrid.setEffectOnNonOverlays(null);
         }, 10, 20, "main-view-grid");
+        expandTableArrowSupplier = new ExpandTableArrowSupplier(Utility.later(this));
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);

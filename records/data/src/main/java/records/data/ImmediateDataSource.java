@@ -82,22 +82,9 @@ public class ImmediateDataSource extends DataSource
     {
         return new TableOperations(getManager().getRenameTableOperation(this), (addBefore, newColumnName, newColumnType, defaultValue) -> {
             FXUtility.alertOnError_(() -> {
-                @MonotonicNonNull ColumnId name = newColumnName;
-                if (name == null)
-                {
-                    String stem = "C";
-                    for (int i = 1; i < 100000; i++)
-                    {
-                        name = new ColumnId(stem + i);
-                        if (!getData().getColumnIds().contains(name))
-                            break;
-                    }
-                    // Give up!
-                }
-                if (name == null || getData().getColumnIds().contains(name))
-                    throw new UserException("Column name already exists in table: " + name);
-                
-                data.addColumn(addBefore, newColumnType.makeImmediateColumn(name, defaultValue));
+                ColumnId name = newColumnName != null ? newColumnName : proposeNewColumnName();
+                if (name != null)
+                    data.addColumn(addBefore, newColumnType.makeImmediateColumn(name, defaultValue));
             });
             // All columns in ImmediateDataSource can be renamed:
         }, oldId -> getManager().getRenameColumnOperation(this, oldId)
@@ -124,7 +111,7 @@ public class ImmediateDataSource extends DataSource
             FXUtility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
         });
     }
-    
+
     @Override
     public boolean dataEquals(DataSource o)
     {

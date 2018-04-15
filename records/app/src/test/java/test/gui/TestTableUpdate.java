@@ -44,6 +44,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class TestTableUpdate extends ApplicationTest implements ScrollToTrait
         dummy.getTypeManager()._test_copyTaggedTypesFrom(colA.getTypeManager());
         dummy.getTypeManager()._test_copyTaggedTypesFrom(colB.getTypeManager());
         @Initialized final int tableLength = 1 + r.nextInt(20);
-        EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<ExFunction<RecordSet, EditableColumn>>of(
+        EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
             colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colA.makeValue()), colA.makeValue()),
             colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colB.makeValue()), colB.makeValue())
         ), () -> tableLength);

@@ -26,6 +26,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.FixedTypeExpression;
 import records.transformations.expression.StringConcatExpression;
 import utility.Either;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -115,7 +116,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         super(ExpressionValue.class);
     }
 
-    private List<ExFunction<RecordSet, Column>> columns;
+    private List<SimulationFunction<RecordSet, Column>> columns;
     private int nextVar = 0;
 
     @Override

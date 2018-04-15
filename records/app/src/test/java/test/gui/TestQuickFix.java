@@ -37,6 +37,7 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.SimulationFunction;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -265,7 +266,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
-            List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+            List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {
                 int iFinal = i;

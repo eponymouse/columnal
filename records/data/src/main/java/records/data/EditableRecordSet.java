@@ -162,9 +162,9 @@ public class EditableRecordSet extends RecordSet
     }
 
     @NonNull
-    public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type) throws InternalException, UserException
+    public static EditableRecordSet newRecordSetSingleColumn(ColumnId name, DataType type, @Value Object defaultValue) throws InternalException, UserException
     {
-        return new EditableRecordSet(Collections.singletonList(type.makeImmediateColumn(name, DataTypeUtility.makeDefaultValue(type))::apply), () -> 0);
+        return new EditableRecordSet(Collections.singletonList(type.makeImmediateColumn(name, defaultValue)::apply), () -> 0);
     }
 
     @Override

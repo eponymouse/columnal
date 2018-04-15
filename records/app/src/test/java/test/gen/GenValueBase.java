@@ -145,12 +145,6 @@ public abstract class GenValueBase<T> extends Generator<T>
                 @NonNull DataType innerFinal = inner;
                 return DataTypeUtility.value(TestUtil.<@Value Object>makeList(r, 1, 12, () -> makeValue(innerFinal)));
             }
-
-            @Override
-            public @Value Object toInfer() throws InternalException, UserException
-            {
-                throw new InternalException("Can't make value of automatic type");
-            }
         });
     }
 

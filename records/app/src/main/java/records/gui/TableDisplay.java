@@ -81,6 +81,7 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.ColumnDetails;
+import records.gui.stable.SimpleColumnOperation;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
@@ -671,10 +672,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             r.add(new ColumnOperation("virtGrid.column.addBefore")
             {
                 @Override
-                @OnThread(Tag.Simulation)
-                public void execute()
+                @OnThread(Tag.FXPlatform)
+                public void executeFX()
                 {
-                    addColumnFinal.addColumn(c, null, DataType.toInfer(), DataTypeUtility.value(""));
+                    FXUtility.mouse(TableDisplay.this).addColumn(addColumnFinal, c);
                 }
             });
 
@@ -689,10 +690,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     r.add(new ColumnOperation("virtGrid.column.addAfter")
                     {
                         @Override
-                        @OnThread(Tag.Simulation)
-                        public void execute()
+                        @OnThread(Tag.FXPlatform)
+                        public void executeFX()
                         {
-                            addColumnFinal.addColumn(columnAfter, null, DataType.toInfer(), DataTypeUtility.value(""));
+                            FXUtility.mouse(TableDisplay.this).addColumn(addColumnFinal, columnAfter);
                         }
                     });
                 }
@@ -725,7 +726,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
         return r.build();
     }
-    
+
+    @OnThread(Tag.FXPlatform)
+    public void addColumn(TableOperations.AddColumn addColumnOperation, @Nullable ColumnId c)
+    {
+        Optional<EditColumnDialog.ColumnDetails> optInitialDetails = new EditColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName()).showAndWait();
+        optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
+            addColumnOperation.addColumn(c, initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue)
+        ));
+    }
+
     private ColumnOperation columnQuickTransform(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table us, @LocalizableKey String nameKey, String suggestedPrefix, ColumnId srcColumn, SimulationFunction<ColumnId, Transformation> makeTransform) throws InternalException, UserException
     {
         String stem = suggestedPrefix + "." + srcColumn.getRaw();
@@ -739,10 +749,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // If we reach 999, just go with that and let user fix it
         ColumnId newColumnId = new ColumnId(nextId);
         
-        return new ColumnOperation(nameKey)
+        return new SimpleColumnOperation(nameKey)
         {
             @Override
-            public @OnThread(Tag.Simulation) void execute()
+            @OnThread(Tag.Simulation)
+            public void execute()
             {
                 FXUtility.alertOnError_(() -> {
                     Transformation t = makeTransform.apply(newColumnId);

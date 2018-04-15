@@ -26,6 +26,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
+import utility.SimulationFunction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -168,7 +169,7 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
         {
             UnitManager u = new UnitManager();
             TypeManager typeManager = new TypeManager(u);
-            List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+            List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 1; i <= 3; i++)
             {
                 int iFinal = i;

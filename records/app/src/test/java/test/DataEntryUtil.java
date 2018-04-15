@@ -121,13 +121,6 @@ public class DataEntryUtil
                 }
                 return UnitType.UNIT;
             }
-
-            @Override
-            public UnitType toInfer() throws InternalException, UserException
-            {
-                throw new UserException("Cannot entered value of type still to be inferred");
-                // Actually, we could, but we probably didn't mean to test that...
-            }
         });
     }
 }

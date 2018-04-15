@@ -24,6 +24,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.ExFunction;
+import utility.SimulationFunction;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -75,7 +76,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 final @Initialized int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
 
                 int numColumns = r.nextInt(1, 12);
-                List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+                List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
                 GenColumn genColumn = new GenColumn(mgr);
                 for (int i = 0; i < numColumns; i++)
                 {

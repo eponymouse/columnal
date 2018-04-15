@@ -5,6 +5,7 @@ import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.units.TableDataColIndex;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -330,6 +331,32 @@ public abstract class Table
 
         @OnThread(Tag.Any)
         public CellPosition getMostRecentPosition();
+    }
+
+    @OnThread(Tag.Any)
+    public @Nullable ColumnId proposeNewColumnName()
+    {
+        try
+        {
+            @MonotonicNonNull ColumnId name = null;
+            String stem = "C";
+            List<ColumnId> columnIds = getData().getColumnIds();
+            for (int i = 1; i < 100000; i++)
+            {
+                name = new ColumnId(stem + i);
+                if (!columnIds.contains(name))
+                    break;
+            }
+            // Give up!
+            if (name == null || columnIds.contains(name))
+                throw new UserException("Column name already exists in table: " + name);
+            return name;
+        }
+        catch (UserException | InternalException e)
+        {
+            Log.log(e);
+            return null;
+        }
     }
 
 }

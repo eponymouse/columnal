@@ -14,6 +14,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.SimulationFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +45,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
             {
                 values.add(makeValue(type));
             }
-            final ExFunction<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values, makeValue(type));
+            final SimulationFunction<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values, makeValue(type));
             @SuppressWarnings({"keyfor", "units"})
             RecordSet recordSet = new EditableRecordSet(Collections.singletonList(create), () -> length);
             return (EditableColumn)recordSet.getColumns().get(0);

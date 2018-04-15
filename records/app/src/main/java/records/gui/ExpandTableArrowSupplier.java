@@ -5,13 +5,18 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.data.ColumnId;
+import records.data.TableManager;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.gui.DataCellSupplier.CellStyle;
+import records.gui.EditColumnDialog.ColumnDetails;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -26,6 +31,7 @@ import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
@@ -34,10 +40,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     public static final String RIGHT_ARROW = "\u27F6";
     public static final String DOWN_ARROW = "\u2193";
     private WeakHashMap<Button, Pair<TableDisplay, CellStyle>> buttonTableDisplaysAndHoverStyles = new WeakHashMap<>();
+    private final View parent;
     
-    public ExpandTableArrowSupplier()
+    public ExpandTableArrowSupplier(View parent)
     {
         super(ViewOrder.STANDARD_CELLS, Arrays.asList(CellStyle.values()));
+        this.parent = parent;
     }
     
     @Override
@@ -137,10 +145,13 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     item.setVisible(true);
                     item.setText(RIGHT_ARROW);
                     item.setOnAction(e -> {
-                        Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
-                            TableOperations.@Nullable AddColumn appendOp = tableDisplay.getTable().getOperations().addColumn;
-                            if (appendOp != null)
-                                appendOp.addColumn(null, null, DataType.toInfer(), DataTypeUtility.value(""));
+                        Optional<ColumnDetails> optInitialDetails = new EditColumnDialog(parent.getWindow(), parent.getManager(), tableDisplay.getTable().proposeNewColumnName()).showAndWait();
+                        optInitialDetails.ifPresent(initialDetails -> {
+                            Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
+                                TableOperations.@Nullable AddColumn appendOp = tableDisplay.getTable().getOperations().addColumn;
+                                if (appendOp != null)
+                                    appendOp.addColumn(null, initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue);
+                            });
                         });
                     });
                     buttonTableDisplaysAndHoverStyles.put(item, new Pair<>(tableDisplay, CellStyle.HOVERING_EXPAND_RIGHT));
