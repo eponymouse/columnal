@@ -1,6 +1,7 @@
 package test.gui;
 
 import javafx.scene.input.KeyCode;
+import log.Log;
 import org.testfx.api.FxRobotInterface;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -53,5 +54,14 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         // We should already be in the default value:
         enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue);
         clickOn(".ok-button");
+        
+        // If we can still see the OK button, there was a problem.  Cancel the dialog instead:
+        if (lookup(".ok-button").tryQuery().isPresent())
+        {
+            Log.normal("Error in dialog; cancelling");
+            // Let us see what the problem is:
+            TestUtil.sleep(1500);
+            clickOn(".cancel-button");
+        }
     }
 }

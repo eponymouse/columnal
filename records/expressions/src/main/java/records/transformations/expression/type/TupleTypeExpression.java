@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.BracketedTypeNode;
 import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
 import records.gui.expressioneditor.ConsecutiveBase;
@@ -60,12 +61,12 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType()
+    public @Nullable DataType toDataType(TypeManager typeManager)
     {
         ImmutableList.Builder<DataType> memberTypes = ImmutableList.builderWithExpectedSize(members.size());
         for (TypeExpression member : members)
         {
-            DataType memberType = member.toDataType();
+            DataType memberType = member.toDataType(typeManager);
             if (memberType == null)
                 return null;
             memberTypes.add(memberType);

@@ -66,6 +66,18 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isScalar()
+    {
+        return number == 1;
+    }
+
+    @Override
     public int hashCode()
     {
         return number;

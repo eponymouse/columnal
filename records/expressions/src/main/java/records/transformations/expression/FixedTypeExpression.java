@@ -72,7 +72,7 @@ public class FixedTypeExpression extends NonOperatorExpression
         else
         {
             @NonNull TypeExp innerTypeFinal = innerType;
-            @Nullable DataType dataType = type.toDataType();
+            @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
             if (dataType == null)
             {
                 // TODO should we record an error here?

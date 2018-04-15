@@ -5,6 +5,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.OperandNode;
@@ -67,7 +68,7 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType()
+    public @Nullable DataType toDataType(TypeManager typeManager)
     {
         return dataType;
     }

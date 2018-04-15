@@ -3,6 +3,7 @@ package records.transformations.expression.type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.SquareBracketedExpression;
@@ -39,10 +40,10 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType()
+    public @Nullable DataType toDataType(TypeManager typeManager)
     {
         // Be careful here; null is a valid value inside a list type, but we don't want to pass null!
-        DataType inner = innerType.toDataType();
+        DataType inner = innerType.toDataType(typeManager);
         if (inner != null)
             return DataType.array(inner);
         return null;

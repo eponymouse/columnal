@@ -3,6 +3,7 @@ package records.transformations.expression.type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.TypeEntry;
@@ -43,7 +44,7 @@ public class UnfinishedTypeExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType()
+    public @Nullable DataType toDataType(TypeManager typeManager)
     {
         return null;
     }

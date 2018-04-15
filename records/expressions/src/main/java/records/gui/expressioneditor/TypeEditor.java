@@ -79,6 +79,6 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
         ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
         ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
         clearAllErrors();
-        return errorDisplayers.recordType(this, saveUnrecorded(errorDisplayers, recorder)).toDataType();
+        return errorDisplayers.recordType(this, saveUnrecorded(errorDisplayers, recorder)).toDataType(getTypeManager());
     }
 }

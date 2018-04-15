@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeEntry;
 import records.loadsave.OutputBuilder;
@@ -37,7 +38,7 @@ public class TaggedTypeNameExpression extends TypeExpression
     }
 
     @Override
-    public @Nullable DataType toDataType()
+    public @Nullable DataType toDataType(TypeManager typeManager)
     {
         // By itself, not a valid type.  We rely on the type-application operator to spot us before calling us.
         return null;

@@ -76,6 +76,18 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return operands.isEmpty() || (operands.size() == 1 && operands.get(0).isEmpty());
+    }
+
+    @Override
+    public boolean isScalar()
+    {
+        return operands.size() == 1 && operands.get(0).isScalar();
+    }
+
+    @Override
     public int hashCode()
     {
         return operands.hashCode();

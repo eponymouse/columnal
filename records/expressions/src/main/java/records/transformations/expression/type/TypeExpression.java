@@ -29,6 +29,7 @@ import records.grammar.FormatParserBaseVisitor;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
 import utility.Pair;
 import utility.UnitType;
@@ -47,7 +48,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression number(NumberInfo numberInfo) throws InternalException, InternalException
             {
-                throw new UnimplementedException(); // TODO
+                return new NumberTypeExpression(UnitExpression.load(numberInfo.getUnit()));
             }
 
             @Override
@@ -109,7 +110,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
 
     public abstract String save(TableAndColumnRenames renames);
 
-    public abstract @Nullable DataType toDataType();
+    public abstract @Nullable DataType toDataType(TypeManager typeManager);
 
     public static TypeExpression parseTypeExpression(TypeManager typeManager, String src) throws UserException, InternalException
     {

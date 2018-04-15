@@ -75,6 +75,18 @@ public class UnfinishedUnitExpression extends UnitExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return text.isEmpty();
+    }
+
+    @Override
+    public boolean isScalar()
+    {
+        return text.equals("1") || isEmpty();
+    }
+
+    @Override
     public int hashCode()
     {
         return text.hashCode();

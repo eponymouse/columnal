@@ -72,6 +72,18 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return operators.isEmpty() && operands.size() == 1 && operands.get(0).isEmpty();
+    }
+
+    @Override
+    public boolean isScalar()
+    {
+        return operators.isEmpty() && operands.size() == 1 && operands.get(0).isScalar();
+    }
+
+    @Override
     public int hashCode()
     {
         int result = operands.hashCode();

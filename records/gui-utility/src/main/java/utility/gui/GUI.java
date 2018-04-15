@@ -284,10 +284,11 @@ public class GUI
         return comboBox;
     }
 
-    public static RadioButton radioButton(ToggleGroup toggleGroup, @LocalizableKey String labelKey)
+    public static RadioButton radioButton(ToggleGroup toggleGroup, @LocalizableKey String labelKey, String... styleClasses)
     {
         RadioButton item = new RadioButton(TranslationUtility.getString(labelKey));
         item.setToggleGroup(toggleGroup);
+        item.getStyleClass().addAll(styleClasses);
         return item;
     }
     

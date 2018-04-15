@@ -59,10 +59,10 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
 
         ColumnNameTextField columnNameTextField = new ColumnNameTextField(initial);
         ToggleGroup toggleGroup = new ToggleGroup();
-        RadioButton radioNumber = GUI.radioButton(toggleGroup, "Number (no units");
+        RadioButton radioNumber = GUI.radioButton(toggleGroup, "Number (no units", "radio-type-number");
         radioNumber.setSelected(true);
-        RadioButton radioText = GUI.radioButton(toggleGroup, "Text");
-        RadioButton radioCustom = GUI.radioButton(toggleGroup, "Cutom");
+        RadioButton radioText = GUI.radioButton(toggleGroup, "Text", "radio-type-text");
+        RadioButton radioCustom = GUI.radioButton(toggleGroup, "Custom", "radio-type-custom");
         TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""));
         StructuredTextField structuredTextField = new StructuredTextField();
         getDialogPane().setContent(GUI.vbox("",
@@ -77,6 +77,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         final Button btOk = (Button) getDialogPane().lookupButton(ButtonType.OK);
         btOk.getStyleClass().add("ok-button");
+        getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
         // From https://stackoverflow.com/questions/38696053/prevent-javafx-dialog-from-closing
         btOk.addEventFilter(
             ActionEvent.ACTION,
@@ -98,6 +99,11 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
                     event.consume();
             }
         );
+        setResultConverter(bt -> {
+            if (bt == ButtonType.OK && getResult() != null)
+                return getResult();
+            return null;
+        });
     }
 
     private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class) EditColumnDialog this, DataType dataType) throws InternalException

@@ -153,4 +153,8 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
 
     @Override
     public abstract boolean equals(@Nullable Object obj);
+
+    public abstract boolean isEmpty();
+
+    public abstract boolean isScalar();
 }

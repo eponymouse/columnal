@@ -59,6 +59,18 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isScalar()
+    {
+        return false;
+    }
+
+    @Override
     public int hashCode()
     {
         int result = unit.hashCode();
