@@ -1,7 +1,10 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableSet;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
+import records.data.datatype.DataType;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import utility.UnitType;
@@ -10,9 +13,11 @@ import java.util.stream.Stream;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> implements TypeParent
 {
-    public TypeEditor(TableManager tableManager)
+    public TypeEditor(TableManager tableManager, TypeExpression startingValue)
     {
-        super(new TypeExpressionOps(), tableManager);
+        super(new TypeExpressionOps(), tableManager, "type-editor");
+        
+        loadContent(startingValue);
     }
 
     @Override
@@ -67,5 +72,13 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
     public boolean isTuple()
     {
         return false;
+    }
+
+    public @Nullable DataType getValue()
+    {
+        ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
+        ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
+        clearAllErrors();
+        return errorDisplayers.recordType(this, saveUnrecorded(errorDisplayers, recorder)).toDataType();
     }
 }

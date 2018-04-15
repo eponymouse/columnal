@@ -174,6 +174,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void focus(Focus side)
     {
+        if (operands.isEmpty())
+        {
+            // Shouldn't happen, but better to ignore call than throw exception:
+            Log.logStackTrace("Empty operands!");
+            return;
+        }
+        
         if (side == Focus.LEFT)
             operands.get(0).focus(side);
         else

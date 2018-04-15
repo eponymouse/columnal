@@ -36,6 +36,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.EditColumnDialog.ColumnDetails;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
@@ -45,6 +46,8 @@ import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenColumnId;
 import test.gen.GenTableId;
+import test.gen.GenTypeAndValueGen;
+import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -56,6 +59,7 @@ import utility.Workers.Priority;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -67,7 +71,7 @@ import static org.junit.Assert.fail;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestTableEdits extends ApplicationTest implements ClickTableLocationTrait
+public class TestTableEdits extends ApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait
 {
     @SuppressWarnings("nullness")
     private @NonNull Stage mainWindow;
@@ -179,7 +183,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     }
     
     @Property(trials=2)
-    public void testAddColumnAtRight(int n) throws InternalException, UserException
+    public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         for (Table table : tableManager.getAllTables())
         {
@@ -187,6 +191,11 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         }
         int row = Math.abs(n) % (originalRows + 2); 
         clickOnItemInBounds(lookup(".expand-arrow"), virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(row, 0), originalTableTopLeft.offsetByRowCols(row, originalColumns)));
+        
+        // We borrow n as a seed:
+        ColumnDetails columnDetails = new ColumnDetails(name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
+        enterColumnDetails(columnDetails, new Random(n + 100));
+        
         TestUtil.sleep(500);
         
         // Check neither table moved:
@@ -201,13 +210,16 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             // Check that the original two columns have the right names:
             assertEquals(new ColumnId("A"), columns.get(0).getName());
             assertEquals(new ColumnId("B"), columns.get(1).getName());
-            // Check that the third column has automatic type:
-            assertEquals(DataType.array() /* TODO */, columns.get(2).getType());
+            // Check that the third column has right details:
+            assertEquals(columnDetails.columnId, columns.get(2).getName());
+            assertEquals(columnDetails.dataType, columns.get(2).getType());
+            // Should this be equals or our own method?
+            assertEquals(columnDetails.defaultValue, columns.get(2).getDefaultValue());
         }
     }
 
     @Property(trials=4)
-    public void testAddColumnBeforeAfter(int positionIndicator) throws InternalException, UserException
+    public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         // 2 tables, 2 columns, each with 2 header rows:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
@@ -223,7 +235,10 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             virtualGrid, rectangleBounds,
             MouseButton.SECONDARY);
         clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>tryQuery().get());
-        
+
+        // We borrow n as a seed:
+        ColumnDetails columnDetails = new ColumnDetails(name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
+        enterColumnDetails(columnDetails, new Random(positionIndicator + 100));
         TestUtil.sleep(500);
 
         // Should now be one more column in each table:
@@ -245,8 +260,11 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             assertEquals("Position: " + pos, new ColumnId("A"), columns.get(pos).getName());
             pos = newPosition > 1 ? 1 : 2;
             assertEquals("Position " + pos, new ColumnId("B"), columns.get(pos).getName());
-            // Check that the third column has automatic type:
-            assertEquals(DataType.array() /* TODO */, columns.get(newPosition).getType());
+            // Check that the new column has right details:
+            assertEquals(columnDetails.columnId, columns.get(newPosition).getName());
+            assertEquals(columnDetails.dataType, columns.get(newPosition).getType());
+            // Should this be equals or our own method?
+            assertEquals(columnDetails.defaultValue, columns.get(newPosition).getDefaultValue());
         }
     }
     

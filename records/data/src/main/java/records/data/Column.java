@@ -122,6 +122,7 @@ public abstract class Column
      * (Used for immediate columns which have a default for when
      * you add a new row.)  Null if N/A.
      */
+    @OnThread(Tag.Any)
     public @Nullable @Value Object getDefaultValue()
     {
         return null;

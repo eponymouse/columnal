@@ -40,13 +40,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     private @Nullable ConsecutiveChild<?, ?> curHoverDropTarget;
     private boolean selectionLocked;
 
-    public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TableManager tableManager)
+    public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TableManager tableManager, String... styleClasses)
     {
         super(operations, null, null, "");
         this.container = new TopLevelEditorFlowPane();
         this.tableManager = tableManager;
 
-        container.getStyleClass().add("expression-editor");
+        container.getStyleClass().addAll(styleClasses);
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
 
         container.getChildren().setAll(nodes());

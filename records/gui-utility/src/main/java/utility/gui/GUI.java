@@ -284,6 +284,13 @@ public class GUI
         return comboBox;
     }
 
+    public static RadioButton radioButton(ToggleGroup toggleGroup, @LocalizableKey String labelKey)
+    {
+        RadioButton item = new RadioButton(TranslationUtility.getString(labelKey));
+        item.setToggleGroup(toggleGroup);
+        return item;
+    }
+    
     public static RadioMenuItem radioMenuItem(@LocalizableKey String labelKey, FXPlatformRunnable runWhenSelected)
     {
         RadioMenuItem item = new RadioMenuItem(TranslationUtility.getString(labelKey));

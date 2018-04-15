@@ -96,7 +96,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     @SuppressWarnings("initialization")
     public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(EXPRESSION_OPS, tableManager);
+        super(EXPRESSION_OPS, tableManager, "expression-editor");
         this.allowsSameRow = allowsSameRow;
         
         

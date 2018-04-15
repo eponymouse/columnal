@@ -100,6 +100,7 @@ class Dialog<R>
     void setDialogPane(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, DialogPane value);
     void setResultConverter(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, Callback<ButtonType, @Nullable R> a);
     void setResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, @Nullable R r);
+    R getResult(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this);
     void setOnShown(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
     void setOnHidden(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
     void setOnShowing(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, EventHandler<DialogEvent> e);
