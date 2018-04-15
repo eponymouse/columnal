@@ -41,8 +41,8 @@ public class PickTablePane extends BorderPane
     {
         this.setResultAndClose = setResultAndFinishEditing;
         tableField.setText(initial.getRaw());
-        autoComplete = new AutoComplete(tableField,
-            (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()),
+        autoComplete = new AutoComplete<TableCompletion>(tableField,
+            (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.toList()),
             getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
         
         setCenter(tableField);
@@ -69,38 +69,38 @@ public class PickTablePane extends BorderPane
     }
 
     @RequiresNonNull("setResultAndClose")
-    private CompletionListener getListener(@UnknownInitialization(BorderPane.class) PickTablePane this)
+    private CompletionListener<TableCompletion> getListener(@UnknownInitialization(BorderPane.class) PickTablePane this)
     {
         @NonNull FXPlatformConsumer<Table> setResultAndCloseFinal = setResultAndClose;
-        return new CompletionListener()
+        return new CompletionListener<TableCompletion>()
         {
             @Override
-            public String doubleClick(String currentText, Completion selectedItem)
+            public String doubleClick(String currentText, TableCompletion selectedItem)
             {
-                setResultAndCloseFinal.consume(((TableCompletion) selectedItem).t);
+                setResultAndCloseFinal.consume(selectedItem.t);
                 return ((TableCompletion) selectedItem).t.getId().getOutput();
             }
 
             @Override
-            public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
+            public String nonAlphabetCharacter(String textBefore, @Nullable TableCompletion selectedItem, String textAfter)
             {
                 return textBefore + textAfter; // Shouldn't happen as not using alphabets
             }
 
             @Override
-            public String keyboardSelect(String currentText, Completion selectedItem)
+            public String keyboardSelect(String currentText, TableCompletion selectedItem)
             {
                 return doubleClick(currentText, selectedItem);
             }
 
             @Override
-            public String exactCompletion(String currentText, Completion selectedItem)
+            public String exactCompletion(String currentText, TableCompletion selectedItem)
             {
                 return doubleClick(currentText, selectedItem);
             }
 
             @Override
-            public String focusLeaving(String currentText, @Nullable Completion selectedItem)
+            public String focusLeaving(String currentText, @Nullable TableCompletion selectedItem)
             {
                 if (selectedItem != null)
                     return doubleClick(currentText, selectedItem);

@@ -64,7 +64,7 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), WhitespacePolicy.DISALLOW, c -> c == '-' || (!parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete<Completion>(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), WhitespacePolicy.DISALLOW, c -> c == '-' || (!parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c)));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
@@ -236,7 +236,7 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         return super.toString() + ";" + textField;
     }
     
-    private class CompletionListener extends SimpleCompletionListener
+    private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         public CompletionListener()
         {

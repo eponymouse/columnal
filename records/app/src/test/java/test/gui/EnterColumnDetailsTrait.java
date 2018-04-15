@@ -5,16 +5,20 @@ import log.Log;
 import org.testfx.api.FxRobotInterface;
 import records.data.datatype.DataType;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.EditColumnDialog.ColumnDetails;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Random;
 
 public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait
 {
     // Call once the dialog is showing.  We will click Ok button before returning.
-    default public void enterColumnDetails(ColumnDetails columnDetails, Random r) throws InternalException
+    @OnThread(Tag.Simulation)
+    default public void enterColumnDetails(ColumnDetails columnDetails, Random r) throws InternalException, UserException
     {
         // We should be focused on name initially with the whole field selected, or blank:
         write(columnDetails.columnId.getRaw());
@@ -52,7 +56,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         }
         
         // We should already be in the default value:
-        enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue);
+        enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue, r);
         clickOn(".ok-button");
         
         // If we can still see the OK button, there was a problem.  Cancel the dialog instead:

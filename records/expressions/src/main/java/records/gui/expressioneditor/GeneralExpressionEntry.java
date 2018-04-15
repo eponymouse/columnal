@@ -349,7 +349,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         });
         updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
 
         updateGraphics();
         FXUtility.addChangeListenerPlatformNN(currentValue, v -> updateGraphics());
@@ -402,7 +402,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
-    private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
+    private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(ifCompletion);
@@ -883,7 +883,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    private class CompletionListener extends SimpleCompletionListener
+    private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         public CompletionListener()
         {

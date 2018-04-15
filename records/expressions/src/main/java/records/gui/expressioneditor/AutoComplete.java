@@ -30,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionAction;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionContent;
 import threadchecker.OnThread;
@@ -51,11 +52,11 @@ import java.util.function.Predicate;
  * Created by neil on 17/12/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class AutoComplete extends PopupControl
+public class AutoComplete<C extends Completion> extends PopupControl
 {
     private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
-    private final ListView<Completion> completions;
+    private final ListView<C> completions;
     private final BorderPane container;
     private final Instruction instruction;
     private boolean settingContentDirectly = false;
@@ -90,11 +91,11 @@ public class AutoComplete extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, CompletionListener onSelect, WhitespacePolicy whitespacePolicy, Predicate<Character> inNextAlphabet)
+    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
         this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
-        this.completions = new ListView<Completion>() {
+        this.completions = new ListView<C>() {
             @Override
             @OnThread(Tag.FX)
             public void requestFocus()
@@ -117,7 +118,7 @@ public class AutoComplete extends PopupControl
             return new CompleteCell();
         });
         completions.setOnMouseClicked(e -> {
-            @Nullable Completion selectedItem = completions.getSelectionModel().getSelectedItem();
+            @Nullable C selectedItem = completions.getSelectionModel().getSelectedItem();
             if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && selectedItem != null)
             {
                 @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
@@ -160,7 +161,7 @@ public class AutoComplete extends PopupControl
                     // e.g. they pressed closing bracket and that has been removed and
                     // is causing us to move focus:
                     updateCompletions(calculateCompletions, textField.getText());
-                    Completion completion = getCompletionIfFocusLeftNow();
+                    C completion = getCompletionIfFocusLeftNow();
                     if (completion != null)
                     {
                         //#error TODO I think setting the text isn't enough to clear the error state, we also need to set the status or something?
@@ -240,7 +241,7 @@ public class AutoComplete extends PopupControl
 
             text = text.trim();
             updatePosition(); // Just in case
-            List<Completion> available = updateCompletions(calculateCompletions, text);
+            List<C> available = updateCompletions(calculateCompletions, text);
             // If they type an operator or non-operator char, and there is
             // no completion containing such a char, finish with current and move
             // to next (e.g. user types "true&"; as long as there's no current completion
@@ -257,8 +258,8 @@ public class AutoComplete extends PopupControl
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
-                        List<Completion> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
-                        @Nullable Completion completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
+                        List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
+                        @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
                         @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last);
                         if (newContent != null)
                             change.setText(newContent);
@@ -274,7 +275,7 @@ public class AutoComplete extends PopupControl
             // We want to select top one, not last one, so keep track of
             // whether we've already selected top one:
             boolean haveSelected = false;
-            for (Completion completion : available)
+            for (C completion : available)
             {
                 CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
                 if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY && !settingContentDirectly)
@@ -374,7 +375,7 @@ public class AutoComplete extends PopupControl
             
             if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
             {
-                Completion selectedItem = completions.getSelectionModel().getSelectedItem();
+                C selectedItem = completions.getSelectionModel().getSelectedItem();
                 if (selectedItem != null)
                 {
                     e.consume();
@@ -395,7 +396,7 @@ public class AutoComplete extends PopupControl
         settingContentDirectly = false;
     }
 
-    private void updateHeight(@UnknownInitialization(Window.class) AutoComplete this, ListView<?> completions)
+    private void updateHeight(@UnknownInitialization(Window.class) AutoComplete<C> this, ListView<?> completions)
     {
         // Merging several answers from https://stackoverflow.com/questions/17429508/how-do-you-get-javafx-listview-to-be-the-height-of-its-items
         double itemHeight = CELL_HEIGHT;
@@ -404,7 +405,7 @@ public class AutoComplete extends PopupControl
     }
 
     @RequiresNonNull({"completions"})
-    private List<Completion> updateCompletions(@UnknownInitialization(Object.class) AutoComplete this, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, String text)
+    private List<C> updateCompletions(@UnknownInitialization(Object.class) AutoComplete<C> this, ExBiFunction<String, CompletionQuery, List<C>> calculateCompletions, String text)
     {
         try
         {
@@ -420,7 +421,7 @@ public class AutoComplete extends PopupControl
 
     @OnThread(Tag.FXPlatform)
     @RequiresNonNull({"textField"})
-    private @Nullable Pair<Double, Double> calculatePosition(@UnknownInitialization(Object.class) AutoComplete this)
+    private @Nullable Pair<Double, Double> calculatePosition(@UnknownInitialization(Object.class) AutoComplete<C> this)
     {
         @Nullable Point2D textToScene = textField.localToScene(0, textField.getHeight());
         @Nullable Scene textFieldScene = textField.getScene();
@@ -436,7 +437,7 @@ public class AutoComplete extends PopupControl
     }
 
     @OnThread(Tag.FXPlatform)
-    private void updatePosition(@UnknownInitialization(PopupControl.class) AutoComplete this)
+    private void updatePosition(@UnknownInitialization(PopupControl.class) AutoComplete<C> this)
     {
         if (isShowing() && textField != null)
         {
@@ -450,10 +451,10 @@ public class AutoComplete extends PopupControl
     }
 
     @RequiresNonNull({"textField", "completions"})
-    public @Nullable Completion getCompletionIfFocusLeftNow(@UnknownInitialization(Object.class) AutoComplete this)
+    public @Nullable C getCompletionIfFocusLeftNow(@UnknownInitialization(Object.class) AutoComplete<C> this)
     {
-        List<Completion> availableCompletions = completions.getItems();
-        for (Completion completion : availableCompletions)
+        List<C> availableCompletions = completions.getItems();
+        for (C completion : availableCompletions)
         {
             // Say it's the only completion, because otherwise e.g. column completions
             // won't fire because there are always two of them:
@@ -578,7 +579,7 @@ public class AutoComplete extends PopupControl
         }
     }
 
-    private class CompleteCell extends ListCell<Completion>
+    private class CompleteCell extends ListCell<C>
     {
         public CompleteCell()
         {
@@ -590,7 +591,7 @@ public class AutoComplete extends PopupControl
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        protected void updateItem(@Nullable Completion item, boolean empty)
+        protected void updateItem(@Nullable C item, boolean empty)
         {
             textProperty().unbind();
             if (empty || item == null)
@@ -608,57 +609,57 @@ public class AutoComplete extends PopupControl
         }
     }
 
-    public static interface CompletionListener
+    public static interface CompletionListener<C extends Completion>
     {
         // Item was double-clicked in the list
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String doubleClick(String currentText, Completion selectedItem);
+        @Nullable String doubleClick(String currentText, C selectedItem);
 
         // Moving on because non alphabet character entered
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter);
+        @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter);
 
         // Enter or Tab used to select
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String keyboardSelect(String currentText, Completion selectedItem);
+        @Nullable String keyboardSelect(String currentText, C selectedItem);
 
         // Selected because completesOnExactly returned true
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String exactCompletion(String currentText, Completion selectedItem);
+        @Nullable String exactCompletion(String currentText, C selectedItem);
         
         // Leaving the slot.  selectedItem is only non-null if
         // completesOnExactly is true.
         // Returns the new text for the textfield, or null if keep as-is
-        @Nullable String focusLeaving(String currentText, @Nullable Completion selectedItem);
+        @Nullable String focusLeaving(String currentText, @Nullable C selectedItem);
     }
 
-    public static abstract class SimpleCompletionListener implements CompletionListener
+    public static abstract class SimpleCompletionListener<C extends Completion> implements CompletionListener<C>
     {
         @Override
-        public @Nullable String doubleClick(String currentText, Completion selectedItem)
+        public @Nullable String doubleClick(String currentText, C selectedItem)
         {
             return selected(currentText, selectedItem, "");
         }
 
         @Override
-        public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
+        public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter)
         {
             return selected(textBefore, selectedItem != null && selectedItem.completesOnExactly(textBefore, true) != CompletionAction.NONE ? selectedItem : null, textAfter);
         }
 
         @Override
-        public @Nullable String keyboardSelect(String currentText, Completion selectedItem)
+        public @Nullable String keyboardSelect(String currentText, C selectedItem)
         {
             return selected(currentText, selectedItem, "");
         }
 
         @Override
-        public @Nullable String exactCompletion(String currentText, Completion selectedItem)
+        public @Nullable String exactCompletion(String currentText, C selectedItem)
         {
             return selected(currentText, selectedItem, "");
         }
 
-        protected abstract @Nullable String selected(String currentText, @Nullable Completion c, String rest);
+        protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest);
     }
 
     private class AutoCompleteSkin implements Skin<AutoComplete>

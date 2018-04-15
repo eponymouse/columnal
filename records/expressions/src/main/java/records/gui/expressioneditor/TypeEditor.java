@@ -7,15 +7,20 @@ import records.data.datatype.DataType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
-import utility.UnitType;
+import utility.FXPlatformConsumer;
 
 import java.util.stream.Stream;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> implements TypeParent
 {
-    public TypeEditor(TableManager tableManager, TypeExpression startingValue)
+    private final FXPlatformConsumer<@Nullable DataType> onChange;
+
+    public TypeEditor(TableManager tableManager, TypeExpression startingValue, FXPlatformConsumer<@Nullable DataType> onChange)
     {
         super(new TypeExpressionOps(), tableManager, "type-editor");
+        
+        this.onChange = onChange;
+        onChange.consume(null);
         
         loadContent(startingValue);
     }
@@ -29,7 +34,11 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
     @Override
     protected void selfChanged()
     {
-
+        ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
+        ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
+        clearAllErrors();
+        @Nullable DataType dataType = errorDisplayers.recordType(this, saveUnrecorded(errorDisplayers, recorder)).toDataType(getTypeManager());
+        onChange.consume(dataType);
     }
 
     @Override
@@ -74,11 +83,4 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
         return false;
     }
 
-    public @Nullable DataType getValue()
-    {
-        ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
-        ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
-        clearAllErrors();
-        return errorDisplayers.recordType(this, saveUnrecorded(errorDisplayers, recorder)).toDataType(getTypeManager());
-    }
 }

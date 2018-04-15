@@ -177,7 +177,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             currentValue = new SimpleObjectProperty<>(initialContent == null ? new Pair<>(new ColumnId(""), Direction.ASCENDING) : initialContent);
             columnField = new TextField(initialContent == null ? "" : initialContent.getFirst().getRaw());
             BorderPane.setMargin(columnField, new Insets(0, 2, 2, 5));
-            autoComplete = new AutoComplete(columnField,
+            autoComplete = new AutoComplete<ColumnCompletion>(columnField,
                 (s, q) -> possibleTables.stream().flatMap(t -> {
                     try
                     {
@@ -188,7 +188,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                         Log.log(e);
                         return Stream.empty();
                     }
-                }).filter(c -> c.getName().getOutput().contains(s)).map(ColumnCompletion::new).collect(Collectors.<Completion>toList()),
+                }).filter(c -> c.getName().getOutput().contains(s)).map(ColumnCompletion::new).collect(Collectors.toList()),
                 getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
             FXUtility.addChangeListenerPlatformNN(columnField.focusedProperty(), focus -> {
                 // Update whether focus is arriving or leaving:
@@ -212,37 +212,37 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
             return columnField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
         }
 
-        private CompletionListener getListener(@UnknownInitialization SortPane this)
+        private CompletionListener<ColumnCompletion> getListener(@UnknownInitialization SortPane this)
         {
-            return new CompletionListener()
+            return new CompletionListener<ColumnCompletion>()
             {
                 @Override
-                public String doubleClick(String currentText, Completion selectedItem)
+                public String doubleClick(String currentText, ColumnCompletion selectedItem)
                 {
                     // TODO update the sort button
-                    return ((ColumnCompletion) selectedItem).c.getName().getOutput();
+                    return selectedItem.c.getName().getOutput();
                 }
 
                 @Override
-                public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
+                public String nonAlphabetCharacter(String textBefore, @Nullable ColumnCompletion selectedItem, String textAfter)
                 {
                     return textBefore + textAfter; // Shouldn't happen as not using alphabets
                 }
 
                 @Override
-                public String keyboardSelect(String currentText, Completion selectedItem)
+                public String keyboardSelect(String currentText, ColumnCompletion selectedItem)
                 {
                     return doubleClick(currentText, selectedItem);
                 }
 
                 @Override
-                public String exactCompletion(String currentText, Completion selectedItem)
+                public String exactCompletion(String currentText, ColumnCompletion selectedItem)
                 {
                     return doubleClick(currentText, selectedItem);
                 }
 
                 @Override
-                public String focusLeaving(String currentText, @Nullable Completion selectedItem)
+                public String focusLeaving(String currentText, @Nullable ColumnCompletion selectedItem)
                 {
                     if (selectedItem != null)
                         return doubleClick(currentText, selectedItem);

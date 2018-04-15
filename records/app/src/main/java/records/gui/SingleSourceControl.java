@@ -19,6 +19,7 @@ import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.error.InternalException;
+import records.gui.SingleSourceControl.TableCompletion;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
  * A control for entering the name of a table which is the source of a transformation.
  */
 @OnThread(Tag.FXPlatform)
-public class SingleSourceControl extends HBox implements CompletionListener
+public class SingleSourceControl extends HBox implements CompletionListener<TableCompletion>
 {
     private final ObjectProperty<@Nullable TableId> curSelectionId;
     private final ObjectExpression<@Nullable Table> curSelection;
@@ -51,7 +52,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
         getStyleClass().add("single-source-control");
         Label label = new Label("Source:");
         TextField selected = new TextField(srcTableId == null ? "" : srcTableId.getOutput());
-        autoComplete = new AutoComplete(selected, (s, q) -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), this, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
+        autoComplete = new AutoComplete<TableCompletion>(selected, (s, q) -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.toList()), this, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
         Button select = new Button("Choose...");
         select.setOnAction(e -> {
             if (getScene() != null && getScene().getWindow() != null)
@@ -102,34 +103,34 @@ public class SingleSourceControl extends HBox implements CompletionListener
     // CompletionListener methods:
 
     @Override
-    public String doubleClick(String currentText, Completion selectedItem)
+    public String doubleClick(String currentText, TableCompletion selectedItem)
     {
-        return ((TableCompletion)selectedItem).t.getId().getOutput();
+        return selectedItem.t.getId().getOutput();
     }
 
     @Override
-    public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
+    public String nonAlphabetCharacter(String textBefore, @Nullable TableCompletion selectedItem, String textAfter)
     {
         return textBefore + textAfter; // Shouldn't happen as not using alphabets
     }
 
     @Override
-    public String keyboardSelect(String currentText, Completion selectedItem)
+    public String keyboardSelect(String currentText, TableCompletion selectedItem)
     {
-        return ((TableCompletion)selectedItem).t.getId().getOutput();
+        return selectedItem.t.getId().getOutput();
     }
 
     @Override
-    public String exactCompletion(String currentText, Completion selectedItem)
+    public String exactCompletion(String currentText, TableCompletion selectedItem)
     {
-        return ((TableCompletion)selectedItem).t.getId().getOutput();
+        return selectedItem.t.getId().getOutput();
     }
 
     @Override
-    public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+    public String focusLeaving(String currentText, @Nullable TableCompletion selectedItem)
     {
         if (selectedItem != null)
-            return ((TableCompletion)selectedItem).t.getId().getOutput();
+            return selectedItem.t.getId().getOutput();
         else
             return currentText;
     }
@@ -139,7 +140,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
         return curSelection;
     }
 
-    private static class TableCompletion extends Completion
+    protected static class TableCompletion extends Completion
     {
         private final Table t;
 

@@ -132,6 +132,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     }
     
     @Property(trials = 3)
+    @OnThread(Tag.Simulation)
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
         // 2 tables, 2 columns, each with 2 header rows:
@@ -144,7 +145,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         // Different ways of exiting:
 
         // Click on right-hand end of table header:
-        Bounds headerBox = virtualGrid._test_getRectangleBoundsScreen(rectangleBounds);
+        Bounds headerBox = TestUtil.fx(() -> virtualGrid._test_getRectangleBoundsScreen(rectangleBounds));
         clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
 
         // Renaming involves thread hopping, so wait for a bit:
@@ -157,19 +158,20 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     }
 
     @Property(trials = 3)
+    @OnThread(Tag.Simulation)
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
         // 2 tables, 2 columns, each with 2 header rows:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
         assertEquals(8, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        clickOnItemInBounds(lookup(".table-display-column-title .text-field").lookup((Predicate<Node>) n -> ((TextField)n).getText().equals("A")), virtualGrid, rectangleBounds);
+        clickOnItemInBounds(lookup(".table-display-column-title .text-field").lookup((Predicate<Node>) n -> TestUtil.fx(() -> ((TextField)n).getText()).equals("A")), virtualGrid, rectangleBounds);
         deleteAll();
         write(newColumnId.getRaw());
         // Different ways of exiting:
 
         // Click on right-hand end of table header:
-        Bounds headerBox = virtualGrid._test_getRectangleBoundsScreen(rectangleBounds);
+        Bounds headerBox = TestUtil.fx(() -> virtualGrid._test_getRectangleBoundsScreen(rectangleBounds));
         clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
 
         // Renaming involves thread hopping, so wait for a bit:
@@ -183,6 +185,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     }
     
     @Property(trials=2)
+    @OnThread(Tag.Simulation)
     public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         for (Table table : tableManager.getAllTables())
@@ -219,6 +222,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     }
 
     @Property(trials=4)
+    @OnThread(Tag.Simulation)
     public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         // 2 tables, 2 columns, each with 2 header rows:
@@ -231,7 +235,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         String targetColumnName = Arrays.asList("A", "B").get(Math.abs(positionIndicator) % originalColumns);
         // Bring up context menu and click item:
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        clickOnItemInBounds(lookup(".text-field").lookup((TextField t) -> t.getText().equals(targetColumnName)), 
+        clickOnItemInBounds(lookup(".text-field").lookup((TextField t) -> TestUtil.fx(() -> t.getText()).equals(targetColumnName)), 
             virtualGrid, rectangleBounds,
             MouseButton.SECONDARY);
         clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>tryQuery().get());
@@ -268,9 +272,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         }
     }
     
-    
-         
-
+    @OnThread(Tag.Any)
     private void deleteAll()
     {
         push(KeyCode.END);

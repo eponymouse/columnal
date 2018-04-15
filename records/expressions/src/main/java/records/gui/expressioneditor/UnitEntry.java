@@ -45,7 +45,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             initialContentEntered.set(true);
         }
         @SuppressWarnings("initialization") // Dummy variable to allow suppressing warning about the self method reference:
-        AutoComplete dummy = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        AutoComplete dummy = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
         updateNodes();
 
         if (userEntered)
@@ -167,7 +167,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
     }
 
-    private class CompletionListener extends SimpleCompletionListener
+    private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         @Override
         protected String selected(String currentText, AutoComplete.@Nullable Completion c, String rest)

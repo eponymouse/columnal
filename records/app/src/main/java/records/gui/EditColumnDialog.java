@@ -11,6 +11,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,6 +37,8 @@ import utility.gui.LightDialog;
 @OnThread(Tag.FXPlatform)
 public class EditColumnDialog extends LightDialog<ColumnDetails>
 {
+    private @Nullable DataType customDataType = null;
+
     public static class ColumnDetails
     {
         public final ColumnId columnId;
@@ -63,8 +66,26 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         radioNumber.setSelected(true);
         RadioButton radioText = GUI.radioButton(toggleGroup, "Text", "radio-type-text");
         RadioButton radioCustom = GUI.radioButton(toggleGroup, "Custom", "radio-type-custom");
-        TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""));
         StructuredTextField structuredTextField = new StructuredTextField();
+        TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
+            radioCustom.setSelected(true);
+            customDataType = t;
+            if (t == null)
+                structuredTextField.setDisable(true);
+            else
+            {
+                try
+                {
+                    structuredTextField.resetContent(makeEditorKit(t));
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                    structuredTextField.setDisable(true);
+                }
+            }
+        });
+        
         getDialogPane().setContent(GUI.vbox("",
             new Label("Column name"),
             columnNameTextField.getNode(),
@@ -90,9 +111,10 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
                 else if (radioText.isSelected())
                     dataType = DataType.TEXT;
                 else
-                    dataType = typeEditor.getValue();
+                    dataType = customDataType;
 
                 @Nullable ColumnId columnId = columnNameTextField.valueProperty().getValue();
+                Log.debug("Col: " + columnId + " type: " + dataType + " default: " + defaultValue);
                 if (columnId != null && dataType != null && defaultValue != null)
                     setResult(new ColumnDetails(columnId, dataType, defaultValue));
                 if (getResult() == null)
@@ -103,6 +125,10 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
             if (bt == ButtonType.OK && getResult() != null)
                 return getResult();
             return null;
+        });
+
+        setOnShown(e -> {
+            org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }
 

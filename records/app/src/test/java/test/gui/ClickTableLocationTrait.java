@@ -8,21 +8,25 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
+import test.TestUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public interface ClickTableLocationTrait extends FxRobotInterface
 {
+    @OnThread(Tag.Simulation)
     public default void clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
-        Bounds box = virtualGrid._test_getRectangleBoundsScreen(rectangleBounds);
+        Bounds box = TestUtil.fx(() -> virtualGrid._test_getRectangleBoundsScreen(rectangleBounds));
         
         Node target = nodeQuery.lookup((Predicate<Node>)(node -> {
-            return box.intersects(node.localToScreen(node.getBoundsInLocal()));
+            return TestUtil.fx(() -> box.intersects(node.localToScreen(node.getBoundsInLocal())));
         })).query(); 
         if (target == null)
-            throw new RuntimeException("Could not find node at given position, looked for " + box + " among " + nodeQuery.queryAll().stream().map(n -> n.localToScreen(n.getBoundsInLocal())).collect(Collectors.toList()));
+            throw new RuntimeException("Could not find node at given position, looked for " + box + " among " + nodeQuery.queryAll().stream().map(n -> TestUtil.fx(() -> n.localToScreen(n.getBoundsInLocal()))).collect(Collectors.toList()));
         clickOn(target, buttons);
     }
 }

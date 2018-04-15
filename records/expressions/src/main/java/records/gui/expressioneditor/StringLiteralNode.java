@@ -37,14 +37,14 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
         super(parent, Expression.class);
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
-        Completion currentCompletion = new EndStringCompletion();
-        this.autoComplete = new AutoComplete(textField, (s, q) ->
+        EndStringCompletion currentCompletion = new EndStringCompletion();
+        this.autoComplete = new AutoComplete<EndStringCompletion>(textField, (s, q) ->
         {
             return Collections.singletonList(currentCompletion);
-        }, new SimpleCompletionListener()
+        }, new SimpleCompletionListener<EndStringCompletion>()
         {
             @Override
-            public String exactCompletion(String currentText, Completion selectedItem)
+            public String exactCompletion(String currentText, EndStringCompletion selectedItem)
             {
                 super.exactCompletion(currentText, selectedItem);
                 if (currentText.endsWith("\""))
@@ -54,7 +54,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             }
 
             @Override
-            protected String selected(String currentText, @Nullable Completion c, String rest)
+            protected String selected(String currentText, @Nullable EndStringCompletion c, String rest)
             {
                 parent.setOperatorToRight(StringLiteralNode.this, "");
                 parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
@@ -62,7 +62,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             }
 
             @Override
-            public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+            public String focusLeaving(String currentText, @Nullable EndStringCompletion selectedItem)
             {
                 return currentText;
             }
