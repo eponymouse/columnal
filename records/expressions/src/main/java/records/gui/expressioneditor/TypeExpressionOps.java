@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -19,6 +20,7 @@ import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.List;
 
@@ -34,9 +36,9 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     public ImmutableList<Pair<String, @Localized String>> getValidOperators(TypeParent parent)
     {
         ImmutableList.Builder<Pair<String, @Localized String>> ops = ImmutableList.builder();
-        ops.add(new Pair<>(":", "Fill in tagged type"));
+        ops.add(new Pair<String, @Localized String>("-", TranslationUtility.getString("tagged.tuple.apply")));
         if (parent.isTuple())
-            ops.add(new Pair<>(",", "Pair/triple/etc"));
+            ops.add(new Pair<String, @Localized String>(",", TranslationUtility.getString("type.tuple")));
         return ops.build();
     }
 
