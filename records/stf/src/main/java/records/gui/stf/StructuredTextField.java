@@ -364,6 +364,10 @@ public class StructuredTextField extends StyleClassedTextArea
 */
         updateDocument(editorKit);
         selectRange(insertPos, insertPos);
+        if (!possibleCaretPositions.get(getCaretPosition()))
+        {
+            Log.logStackTrace("Caret position invalid");
+        }
         updateAutoComplete(getSelection());
     }
 

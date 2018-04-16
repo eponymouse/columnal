@@ -245,7 +245,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         // We borrow n as a seed:
         ColumnDetails columnDetails = new ColumnDetails(name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
         enterColumnDetails(columnDetails, new Random(positionIndicator + 100));
-        TestUtil.sleep(5000);
+        TestUtil.sleep(500);
 
         // Should now be one more column in each table:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());

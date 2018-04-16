@@ -54,9 +54,9 @@ public class YMD extends TerminalComponent<@Value TemporalAccessor/*LocalDate*/>
         }
 
         items.addAll(Arrays.asList(new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
-            new Item(getItemParents(), "/", " ", "-", "."),
+            new Item(getItemParents(), "/"),
             new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-            new Item(getItemParents(), "/", " ", "-", "."),
+            new Item(getItemParents(), "/"),
             new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"))));
     }
 

@@ -33,6 +33,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     private final ObservableList<Component<? extends T>> contentComponents;
     private final boolean canBeAbsent;
     private final SimpleBooleanProperty isAbsent;
+    // Includes the prefix, contents, dividers and suffix:
     private ImmutableList<Component<?>> allComponents;
     private final Function<List<T>, R> combine;
     private final int suffixCodepoint;
