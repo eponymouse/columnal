@@ -772,7 +772,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void focusChanged()
     {
-        Log.debug("Removing blanks");
+        //Log.debug("Removing blanks");
         removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation

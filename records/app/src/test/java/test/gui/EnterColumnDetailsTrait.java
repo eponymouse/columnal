@@ -24,21 +24,28 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
     {
         // We should be focused on name initially with the whole field selected, or blank:
         write(columnDetails.columnId.getRaw(), DELAY);
-        Log.debug("Entering type: " + columnDetails.dataType);
-        if (r.nextBoolean())
+        boolean useKeyboard = r.nextBoolean();
+        Log.debug("Entering type: " + columnDetails.dataType + " with keyboard: " + useKeyboard);
+        if (useKeyboard)
         {
             // Navigate with keyboard
             push(KeyCode.TAB);
             if (columnDetails.dataType.equals(DataType.NUMBER) && r.nextBoolean())
-                push(KeyCode.SPACE);
+            {
+                // Nothing to do
+            }
             else if (columnDetails.dataType.equals(DataType.TEXT) && r.nextBoolean())
             {
-                push(KeyCode.TAB);
-                push(KeyCode.SPACE);
+                push(KeyCode.DOWN);
             }
             else
             {
-                push(KeyCode.TAB);
+                // Don't have to select by keyboard; focusing custom field and typing should do the same:
+                if (r.nextBoolean())
+                {
+                    push(KeyCode.DOWN);
+                    push(KeyCode.DOWN);
+                }
                 push(KeyCode.TAB);
                 enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
             }
@@ -57,6 +64,8 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
                 enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
             }
         }
+        Log.debug("Pressing ESCAPE");
+        push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
         clickOn(".default-value");
         

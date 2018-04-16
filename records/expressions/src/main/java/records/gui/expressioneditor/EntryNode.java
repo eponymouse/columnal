@@ -77,7 +77,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     @Override
     public void focusWhenShown()
     {
-        FXUtility.onceNotNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
+        FXUtility.onceNotNull(textField.sceneProperty(), s -> FXUtility.runAfter(() -> focus(Focus.RIGHT)));
     }
 
 

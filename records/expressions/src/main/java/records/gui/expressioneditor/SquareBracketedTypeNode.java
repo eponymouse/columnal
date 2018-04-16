@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
+import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import records.types.TypeExp;
@@ -61,7 +62,7 @@ public class SquareBracketedTypeNode extends Consecutive<TypeExpression, TypePar
     @Override
     public @Recorded TypeExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
-        return errorDisplayer.recordType(this, saveUnrecorded(errorDisplayer, onError));
+        return errorDisplayer.recordType(this, new ListTypeExpression(saveUnrecorded(errorDisplayer, onError)));
     }
     
     @Override

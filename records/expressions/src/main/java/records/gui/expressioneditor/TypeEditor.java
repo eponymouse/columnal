@@ -1,7 +1,11 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -37,7 +41,9 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
         ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
         ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
         clearAllErrors();
-        @Nullable DataType dataType = errorDisplayers.recordType(this, saveUnrecorded(errorDisplayers, recorder)).toDataType(getTypeManager());
+        @UnknownIfRecorded TypeExpression typeExpression = saveUnrecorded(errorDisplayers, recorder);
+        @Nullable DataType dataType = errorDisplayers.recordType(this, typeExpression).toDataType(getTypeManager());
+        Log.debug("Latest type: " + dataType + " from expression: " + typeExpression.save(new TableAndColumnRenames(ImmutableMap.of())));
         onChange.consume(dataType);
     }
 

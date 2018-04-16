@@ -63,27 +63,33 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         ColumnNameTextField columnNameTextField = new ColumnNameTextField(initial);
         ToggleGroup toggleGroup = new ToggleGroup();
         RadioButton radioNumber = GUI.radioButton(toggleGroup, "Number (no units", "radio-type-number");
-        radioNumber.setSelected(true);
         RadioButton radioText = GUI.radioButton(toggleGroup, "Text", "radio-type-text");
         RadioButton radioCustom = GUI.radioButton(toggleGroup, "Custom", "radio-type-custom");
         StructuredTextField structuredTextField = new StructuredTextField();
         structuredTextField.getStyleClass().add("default-value");
         TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
-            radioCustom.setSelected(true);
             customDataType = t;
-            if (t == null)
-                structuredTextField.setDisable(true);
+            if (!radioCustom.isSelected())
+                radioCustom.setSelected(true); // This will call listener below anyway
+            else
+                updateType(structuredTextField, t);
+        });
+        FXUtility.addChangeListenerPlatform(toggleGroup.selectedToggleProperty(), sel -> {
+            if (sel == radioNumber)
+            {
+                updateType(structuredTextField, DataType.NUMBER);
+            }
+            else if (sel == radioText)
+            {
+                updateType(structuredTextField, DataType.TEXT);
+            }
+            else if (sel == radioCustom)
+            {
+                updateType(structuredTextField, customDataType);
+            }
             else
             {
-                try
-                {
-                    structuredTextField.resetContent(makeEditorKit(t));
-                }
-                catch (InternalException e)
-                {
-                    Log.log(e);
-                    structuredTextField.setDisable(true);
-                }
+                updateType(structuredTextField, null);
             }
         });
         
@@ -129,8 +135,31 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         });
 
         setOnShown(e -> {
+            radioNumber.setSelected(true);
+            // Have to use runAfter to combat ButtonBarSkin grabbing focus:
+            FXUtility.runAfter(columnNameTextField::requestFocusWhenInScene);
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private  void updateType(@UnknownInitialization(LightDialog.class) EditColumnDialog this, StructuredTextField structuredTextField, @Nullable DataType t)
+    {
+        if (t == null)
+            structuredTextField.setDisable(true);
+        else
+        {
+            try
+            {
+                structuredTextField.resetContent(makeEditorKit(t));
+                structuredTextField.setDisable(false);
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+                structuredTextField.setDisable(true);
+            }
+        }
     }
 
     private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class) EditColumnDialog this, DataType dataType) throws InternalException
