@@ -408,7 +408,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         super(parent.getManager(), table.getId(), renameTableSim(table), supplierFloating);
         this.parent = parent;
         this.table = table;
-        Log.logStackTrace("Created TableDisplay for " + table.getId());
         @Nullable RecordSet recordSet = null;
         try
         {

@@ -741,24 +741,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         @OnThread(Tag.FXPlatform)
         public Pane makeCell(VisibleBounds visibleBounds)
         {
-            ColumnNameTextField textField = new ColumnNameTextField(column.getColumnId());
-            textField.sizeToFit(30.0, 30.0);
-            @Nullable FXPlatformConsumer<ColumnId> renameColumn = column.getRenameColumn();
-            if (renameColumn == null)
-                textField.setEditable(false);
-            else
-            {
-                @NonNull FXPlatformConsumer<ColumnId> renameColumnFinal = renameColumn;
-                textField.addOnFocusLoss(newColumnId -> {
-                    if (newColumnId != null)
-                        renameColumnFinal.consume(newColumnId);
-                });
-            }
-
-            final BorderPane borderPane = new BorderPane(textField.getNode());
+            Label columnName = new Label(column.getColumnId().getRaw());
+            columnName.getStyleClass().add("column-title");
+            final BorderPane borderPane = new BorderPane(columnName);
             borderPane.getStyleClass().add("table-display-column-title");
-            BorderPane.setAlignment(textField.getNode(), Pos.CENTER_LEFT);
-            BorderPane.setMargin(textField.getNode(), new Insets(0, 0, 0, 2));
+            BorderPane.setAlignment(columnName, Pos.CENTER_LEFT);
+            BorderPane.setMargin(columnName, new Insets(0, 0, 0, 2));
             FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
                 for (CellStyle style : CellStyle.values())
                 {
@@ -776,7 +764,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 contextMenu.getItems().setAll(menuItem);
             }
             borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
-            textField.setContextMenu(contextMenu);
+            columnName.setContextMenu(contextMenu);
             
             return borderPane;
         }

@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -236,7 +237,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         String targetColumnName = Arrays.asList("A", "B").get(Math.abs(positionIndicator) % originalColumns);
         // Bring up context menu and click item:
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        clickOnItemInBounds(lookup(".text-field").lookup((TextField t) -> TestUtil.fx(() -> t.getText()).equals(targetColumnName)), 
+        clickOnItemInBounds(lookup(".column-title").lookup((Label t) -> TestUtil.fx(() -> t.getText()).equals(targetColumnName)), 
             virtualGrid, rectangleBounds,
             MouseButton.SECONDARY);
         clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>tryQuery().get());
@@ -269,7 +270,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             assertEquals(columnDetails.columnId, columns.get(newPosition).getName());
             assertEquals(columnDetails.dataType, columns.get(newPosition).getType());
             // Should this be equals or our own method?
-            assertEquals(columnDetails.defaultValue, columns.get(newPosition).getDefaultValue());
+            assertEquals(columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
         }
     }
     
