@@ -813,6 +813,11 @@ public class Utility
             r.add(d);
         return r.stream();
     }
+    
+    public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c)
+    {
+        return Stream.concat(a, Stream.concat(b, c));
+    }
 
     /**
      * Gets rid of beginning and trailing spaces, and collapses all other

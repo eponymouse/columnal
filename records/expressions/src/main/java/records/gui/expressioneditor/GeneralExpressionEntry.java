@@ -1027,12 +1027,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    private static <T extends EEDisplayNode> T focusWhenShown(T node)
-    {
-        node.focusWhenShown();
-        return node;
-    }
-
     public void addUnitSpecifier(@Nullable UnitExpression unitExpression)
     {
         if (unitSpecifier == null)

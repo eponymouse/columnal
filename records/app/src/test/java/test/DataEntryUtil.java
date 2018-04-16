@@ -123,4 +123,9 @@ public class DataEntryUtil
             }
         });
     }
+
+    public static void selectAll(FxRobotInterface robot)
+    {
+        robot.push(TestUtil.ctrlCmd(), KeyCode.A);
+    }
 }

@@ -44,13 +44,15 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent>
         DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))
     );
     private final TypeParent semanticParent;
+    private final TypeCompletion listCompletion = new TypeCompletion("[", 0);
     private final ImmutableList<TypeCompletion> allCompletions;
 
     public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, TypeParent typeParent, String initialContent)
     {
         super(TypeExpression.class, parent);
         this.semanticParent = typeParent;
-        this.allCompletions = Stream.concat(
+        this.allCompletions = Utility.concatStreams(
+            Stream.of(listCompletion),
             PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.toString(), 0)),
             parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream().map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), t.getTypeArguments().size()))
         ).collect(ImmutableList.toImmutableList());
@@ -77,7 +79,12 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent>
             @Override
             protected @Nullable String selected(String currentText, @Nullable TypeCompletion typeCompletion, String rest)
             {
-                if (typeCompletion != null && typeCompletion.numTypeParams > 0)
+                if (typeCompletion == listCompletion)
+                {
+                    parent.replace(TypeEntry.this, focusWhenShown(new SquareBracketedTypeNode(parent, null)));
+                    return null;
+                }
+                else if (typeCompletion != null && typeCompletion.numTypeParams > 0)
                 {
                     // TODO Tell parent to add them
                     //parent.addOperandToRight(TypeEntry.this, "-", "", true);

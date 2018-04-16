@@ -93,6 +93,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         return expressionInfoDisplay.isShowingError();
     }
 
+    protected static <T extends EEDisplayNode> T focusWhenShown(T node)
+    {
+        node.focusWhenShown();
+        return node;
+    }
+
     @Override
     public void clearAllErrors()
     {

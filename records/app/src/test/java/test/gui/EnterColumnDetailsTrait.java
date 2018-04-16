@@ -24,6 +24,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
     {
         // We should be focused on name initially with the whole field selected, or blank:
         write(columnDetails.columnId.getRaw(), DELAY);
+        Log.debug("Entering type: " + columnDetails.dataType);
         if (r.nextBoolean())
         {
             // Navigate with keyboard
@@ -40,7 +41,6 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
                 push(KeyCode.TAB);
                 push(KeyCode.TAB);
                 enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
-                push(KeyCode.TAB);
             }
         }
         else
@@ -55,10 +55,10 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
                 // Should be empty:
                 clickOn(".type-editor");
                 enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
-                push(KeyCode.ESCAPE);
-                clickOn(".default-value");
             }
         }
+        push(KeyCode.ESCAPE);
+        clickOn(".default-value");
         
         // We should already be in the default value:
         enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue, r);

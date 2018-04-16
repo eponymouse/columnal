@@ -46,6 +46,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         this.container = new TopLevelEditorFlowPane();
         this.tableManager = tableManager;
 
+        container.getStyleClass().add("top-level-editor");
         container.getStyleClass().addAll(styleClasses);
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
 
