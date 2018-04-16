@@ -62,9 +62,9 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
 
         ColumnNameTextField columnNameTextField = new ColumnNameTextField(initial);
         ToggleGroup toggleGroup = new ToggleGroup();
-        RadioButton radioNumber = GUI.radioButton(toggleGroup, "Number (no units", "radio-type-number");
-        RadioButton radioText = GUI.radioButton(toggleGroup, "Text", "radio-type-text");
-        RadioButton radioCustom = GUI.radioButton(toggleGroup, "Custom", "radio-type-custom");
+        RadioButton radioNumber = GUI.radioButton(toggleGroup, "type.number.plain", "radio-type-number");
+        RadioButton radioText = GUI.radioButton(toggleGroup, "type.text", "radio-type-text");
+        RadioButton radioCustom = GUI.radioButton(toggleGroup, "type.custom", "radio-type-custom");
         StructuredTextField structuredTextField = new StructuredTextField();
         structuredTextField.getStyleClass().add("default-value");
         TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
