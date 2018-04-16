@@ -21,7 +21,6 @@ import records.data.Table;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.gui.ColumnNameTextField;
-import records.gui.SingleSourceControl;
 import records.gui.TypeLabel;
 import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
@@ -53,10 +52,10 @@ public class ColumnExpressionList
     private final BorderPane outerPane;
     private final VBox columnEditors;
 
-    public ColumnExpressionList(TableManager mgr, SingleSourceControl srcTableControl, boolean allowSameRow, List<Pair<ColumnId, Expression>> initialColumns)
+    public ColumnExpressionList(TableManager mgr, boolean allowSameRow, List<Pair<ColumnId, Expression>> initialColumns)
     {
         this.allowSameRow = allowSameRow;
-        ObjectExpression<@Nullable Table> srcTable = srcTableControl.tableProperty();
+        ObjectExpression<@Nullable Table> srcTable = new ReadOnlyObjectWrapper<>(null);
         columnListScrollPane = new ScrollPaneFill();
 
         columnEditors = new VBox();

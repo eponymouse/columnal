@@ -195,6 +195,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         {
             return currentText;
         }
+
+        @Override
+        public void tabPressed()
+        {
+            parent.focusRightOf(UnitEntry.this, Focus.LEFT);
+        }
     }
 
     private static class KnownUnitCompletion extends Completion

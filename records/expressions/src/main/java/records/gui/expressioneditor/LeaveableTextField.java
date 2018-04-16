@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.control.TextField;
+import log.Log;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -40,6 +41,7 @@ public class LeaveableTextField extends TextField
         if (getCaretPosition() == 0)
         {
             leavingByPressingLeft = true;
+            Log.debug("Leaving to left from " + this);
             parent.focusLeftOf(us);
             leavingByPressingLeft = false;
             
@@ -52,5 +54,13 @@ public class LeaveableTextField extends TextField
     public boolean leavingByCursorLeft()
     {
         return leavingByPressingLeft;
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public String toString()
+    {
+        // Useful for debugging to see content:
+        return super.toString() + " {{{" + getText() + "}}}";
     }
 }

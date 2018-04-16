@@ -14,6 +14,7 @@ import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
+import records.transformations.expression.StringLiteral;
 import styled.StyledString;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -65,6 +66,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             public String focusLeaving(String currentText, @Nullable EndStringCompletion selectedItem)
             {
                 return currentText;
+            }
+
+            @Override
+            public void tabPressed()
+            {
+                parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
             }
         }, WhitespacePolicy.ALLOW_ANYWHERE, c -> false);
 

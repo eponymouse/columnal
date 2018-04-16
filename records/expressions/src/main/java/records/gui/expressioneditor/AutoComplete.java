@@ -385,6 +385,10 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     hide();
                     instruction.hide();
                 }
+                else if (selectedItem == null && e.getCode() == KeyCode.TAB)
+                {
+                    onSelect.tabPressed();
+                }
             }
         });
     }
@@ -631,6 +635,9 @@ public class AutoComplete<C extends Completion> extends PopupControl
         // completesOnExactly is true.
         // Returns the new text for the textfield, or null if keep as-is
         @Nullable String focusLeaving(String currentText, @Nullable C selectedItem);
+
+        // Tab has been pressed when we have no reason to handle it: 
+        void tabPressed();
     }
 
     public static abstract class SimpleCompletionListener<C extends Completion> implements CompletionListener<C>

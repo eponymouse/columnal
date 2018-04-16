@@ -49,7 +49,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
-import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionEditor;

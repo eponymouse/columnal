@@ -37,6 +37,8 @@ import static org.junit.Assert.fail;
 @SuppressWarnings("recorded")
 public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
 {
+    static final int DELAY = 1;
+    
     @OnThread(Tag.Any)
     public default void enterExpression(Expression expression, boolean needsBrackets, Random r)
     {
@@ -95,11 +97,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         }
         else if (Literal.class.isAssignableFrom(c))
         {
-            write(expression.toString());
+            write(expression.toString(), DELAY);
         }
         else if (c == ColumnReference.class)
         {
-            write(((ColumnReference)expression).getColumnId().getRaw());
+            write(((ColumnReference)expression).getColumnId().getRaw(), DELAY);
             push(KeyCode.ENTER);
         }
         else if (c == CallExpression.class)
@@ -113,7 +115,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == StandardFunction.class)
         {
             StandardFunction function = (StandardFunction) expression;
-            write(function._test_getName());
+            write(function._test_getName(), DELAY);
             push(KeyCode.ENTER);
             // Get rid of brackets; if in a call expression, we will add them again:
             push(KeyCode.BACK_SPACE);
@@ -121,7 +123,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == ConstructorExpression.class)
         {
             ConstructorExpression tag = (ConstructorExpression) expression;
-            write(tag._test_getName());
+            write(tag._test_getName(), DELAY);
             push(KeyCode.ENTER);
             if (tag._test_hasInner())
             {
@@ -132,25 +134,25 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == MatchExpression.class)
         {
             MatchExpression match = (MatchExpression)expression;
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH));
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH), DELAY);
             enterExpression(match.getExpression(), false, r);
             for (MatchClause matchClause : match.getClauses())
             {
-                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE));
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), DELAY);
                 for (int i = 0; i < matchClause.getPatterns().size(); i++)
                 {
                     if (i > 0)
-                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE));
+                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), DELAY);
                     Pattern pattern = matchClause.getPatterns().get(i);
                     enterExpression(pattern.getPattern(), false, r);
                     @Nullable Expression guard = pattern.getGuard();
                     if (guard != null)
                     {
-                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD));
+                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), DELAY);
                         enterExpression(guard, false, r);
                     }
                 }
-                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN));
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
                 enterExpression(matchClause.getOutcome(), false, r);
             }
             // To finish whole match expression:
@@ -159,11 +161,11 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == IfThenElseExpression.class)
         {
             IfThenElseExpression ite = (IfThenElseExpression) expression;
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF));
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF), DELAY);
             enterExpression(ite._test_getCondition(), false, r);
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN));
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), DELAY);
             enterExpression(ite._test_getThen(), false, r);
-            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE));
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), DELAY);
             enterExpression(ite._test_getElse(), false, r);
             write(")");
         }
@@ -196,18 +198,18 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         }
         else if (c == VarDeclExpression.class)
         {
-            write(((VarDeclExpression)expression).getName());
+            write(((VarDeclExpression)expression).getName(), DELAY);
             // Have to manually move on because it won't auto-complete:
             push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else if (c == VarUseExpression.class)
         {
-            write(((VarUseExpression)expression).getName());
+            write(((VarUseExpression)expression).getName(), DELAY);
             push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else if (c == FixedTypeExpression.class)
         {
-            write("@type");
+            write("@type", DELAY);
             FixedTypeExpression f = (FixedTypeExpression)expression; 
             enterType(f.getType(), r);
             push(KeyCode.RIGHT);

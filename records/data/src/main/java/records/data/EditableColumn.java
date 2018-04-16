@@ -37,6 +37,7 @@ public abstract class EditableColumn extends Column
         return true;
     }
 
+    @OnThread(Tag.Any)
     public abstract @NonNull @Value Object getDefaultValue();
 
     @Override

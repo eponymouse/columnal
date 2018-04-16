@@ -51,4 +51,9 @@ public class NumberTypeExpression extends TypeExpression
     {
         return StyledString.concat(StyledString.s("NUMBER {"), unitExpression.toStyledString(), StyledString.s("}"));
     }
+
+    public UnitExpression _test_getUnits()
+    {
+        return unitExpression;
+    }
 }

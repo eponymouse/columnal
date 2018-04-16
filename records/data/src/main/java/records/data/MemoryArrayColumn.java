@@ -64,6 +64,7 @@ public class MemoryArrayColumn extends EditableColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public @Value Object getDefaultValue()
     {
         return defaultValue;

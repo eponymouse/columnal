@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 public class MemoryNumericColumn extends EditableColumn
 {
     private final NumericColumnStorage storage;
+    @OnThread(Tag.Any)
     private final @Value Number defaultValue;
 
     private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Number defaultValue) throws InternalException
@@ -75,6 +76,7 @@ public class MemoryNumericColumn extends EditableColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public @Value Object getDefaultValue()
     {
         return defaultValue;

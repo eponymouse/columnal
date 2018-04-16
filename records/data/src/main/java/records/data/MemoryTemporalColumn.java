@@ -20,6 +20,7 @@ import java.util.List;
 public class MemoryTemporalColumn extends EditableColumn
 {
     private final TemporalColumnStorage storage;
+    @OnThread(Tag.Any)
     private final @Value TemporalAccessor defaultValue;
 
     public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<TemporalAccessor> list, TemporalAccessor defaultValue) throws InternalException
@@ -62,6 +63,7 @@ public class MemoryTemporalColumn extends EditableColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public @Value Object getDefaultValue()
     {
         return defaultValue;

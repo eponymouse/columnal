@@ -43,4 +43,9 @@ public class TaggedTypeNameExpression extends TypeExpression
         // By itself, not a valid type.  We rely on the type-application operator to spot us before calling us.
         return null;
     }
+
+    public String _test_getName()
+    {
+        return typeName.getRaw();
+    }
 }

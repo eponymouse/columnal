@@ -48,4 +48,9 @@ public class UnfinishedTypeExpression extends TypeExpression
     {
         return null;
     }
+
+    public String _test_getContent()
+    {
+        return value;
+    }
 }

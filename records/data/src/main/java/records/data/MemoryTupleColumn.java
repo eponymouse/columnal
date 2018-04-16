@@ -18,6 +18,7 @@ import java.util.List;
 public class MemoryTupleColumn extends EditableColumn
 {
     private final TupleColumnStorage storage;
+    @OnThread(Tag.Any)
     private final @Value Object @Value[] defaultValue;
 
     public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, @Value Object @Value[] defaultValue) throws InternalException
@@ -73,6 +74,7 @@ public class MemoryTupleColumn extends EditableColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public @Value Object getDefaultValue()
     {
         return defaultValue;

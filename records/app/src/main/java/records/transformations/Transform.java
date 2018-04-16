@@ -27,7 +27,6 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
-import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.loadsave.OutputBuilder;

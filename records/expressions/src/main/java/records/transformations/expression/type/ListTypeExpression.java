@@ -48,4 +48,9 @@ public class ListTypeExpression extends TypeExpression
             return DataType.array(inner);
         return null;
     }
+
+    public TypeExpression _test_getContent()
+    {
+        return innerType;
+    }
 }

@@ -18,6 +18,7 @@ import java.util.List;
 public class MemoryBooleanColumn extends EditableColumn
 {
     private final BooleanColumnStorage storage;
+    @OnThread(Tag.Any)
     private final @Value Boolean defaultValue;
 
     public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list, Boolean defaultValue) throws InternalException
@@ -59,6 +60,7 @@ public class MemoryBooleanColumn extends EditableColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public @Value Object getDefaultValue()
     {
         return defaultValue;

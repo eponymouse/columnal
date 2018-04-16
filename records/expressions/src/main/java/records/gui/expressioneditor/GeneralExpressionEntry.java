@@ -1019,6 +1019,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             return currentText;
         }
+
+        @Override
+        public void tabPressed()
+        {
+            parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+        }
     }
 
     private static <T extends EEDisplayNode> T focusWhenShown(T node)

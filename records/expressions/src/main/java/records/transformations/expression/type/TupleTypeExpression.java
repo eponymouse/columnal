@@ -73,4 +73,9 @@ public class TupleTypeExpression extends TypeExpression
         }
         return DataType.tuple(memberTypes.build());
     }
+
+    public ImmutableList<TypeExpression> _test_getItems()
+    {
+        return members;
+    }
 }

@@ -249,6 +249,12 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                     else
                         return currentText;
                 }
+
+                @Override
+                public void tabPressed()
+                {
+                    // TODO focus next item or add button
+                }
             };
         }
 

@@ -107,6 +107,12 @@ public class PickTablePane extends BorderPane
                 else
                     return currentText;
             }
+
+            @Override
+            public void tabPressed()
+            {
+                // TODO focus Ok button or equivalent
+            }
         };
     }
 

@@ -14,6 +14,8 @@ import threadchecker.Tag;
 
 import java.util.Random;
 
+import static org.junit.Assert.fail;
+
 public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait
 {
     // Call once the dialog is showing.  We will click Ok button before returning.
@@ -21,7 +23,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
     default public void enterColumnDetails(ColumnDetails columnDetails, Random r) throws InternalException, UserException
     {
         // We should be focused on name initially with the whole field selected, or blank:
-        write(columnDetails.columnId.getRaw());
+        write(columnDetails.columnId.getRaw(), DELAY);
         if (r.nextBoolean())
         {
             // Navigate with keyboard
@@ -38,6 +40,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
                 push(KeyCode.TAB);
                 push(KeyCode.TAB);
                 enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
+                push(KeyCode.TAB);
             }
         }
         else
@@ -52,6 +55,8 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
                 // Should be empty:
                 clickOn(".type-editor");
                 enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
+                push(KeyCode.ESCAPE);
+                clickOn(".default-value");
             }
         }
         
@@ -66,6 +71,7 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
             // Let us see what the problem is:
             TestUtil.sleep(1500);
             clickOn(".cancel-button");
+            fail("Could not click OK in dialog without error");
         }
     }
 }

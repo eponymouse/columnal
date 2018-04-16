@@ -55,6 +55,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent>
             parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream().map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), t.getTypeArguments().size()))
         ).collect(ImmutableList.toImmutableList());
         
+        FXUtility.sizeToFit(textField, 30.0, 30.0);
         new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> ",-[](){}".contains("" + c));
                 
         textField.setText(initialContent);
@@ -89,6 +90,12 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent>
             public @Nullable String focusLeaving(String currentText, @Nullable TypeCompletion selectedItem)
             {
                 return currentText;
+            }
+
+            @Override
+            public void tabPressed()
+            {
+                parent.focusRightOf(TypeEntry.this, Focus.LEFT);
             }
         };
     }

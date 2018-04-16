@@ -75,4 +75,14 @@ public class InvalidOpTypeExpression extends TypeExpression
     {
         return StyledString.s("Invalid"); // TODO
     }
+
+    public ImmutableList<TypeExpression> _test_getOperands()
+    {
+        return operands;
+    }
+    
+    public ImmutableList<String> _test_getOperators()
+    {
+        return operators;
+    }
 }

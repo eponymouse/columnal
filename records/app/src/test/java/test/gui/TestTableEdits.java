@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -184,7 +185,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         assertEquals(8, lookup(".table-display-column-title").queryAll().size());
     }
     
-    @Property(trials=2)
+    @Property(trials=2, shrink = false)
     @OnThread(Tag.Simulation)
     public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
@@ -221,9 +222,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         }
     }
 
-    @Property(trials=4)
+    @Property(trials=4, shrink = false)
     @OnThread(Tag.Simulation)
-    public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testAddColumnBeforeAfter(int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=3L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         // 2 tables, 2 columns, each with 2 header rows:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());

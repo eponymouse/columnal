@@ -67,6 +67,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         RadioButton radioText = GUI.radioButton(toggleGroup, "Text", "radio-type-text");
         RadioButton radioCustom = GUI.radioButton(toggleGroup, "Custom", "radio-type-custom");
         StructuredTextField structuredTextField = new StructuredTextField();
+        structuredTextField.getStyleClass().add("default-value");
         TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
             radioCustom.setSelected(true);
             customDataType = t;
@@ -128,7 +129,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         });
 
         setOnShown(e -> {
-            org.scenicview.ScenicView.show(getDialogPane().getScene());
+            //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }
 

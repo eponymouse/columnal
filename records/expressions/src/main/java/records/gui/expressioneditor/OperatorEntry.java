@@ -282,5 +282,11 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
             }
             return null;
         }
+
+        @Override
+        public void tabPressed()
+        {
+            parent.focusRightOf(OperatorEntry.this, Focus.LEFT);
+        }
     }
 }
