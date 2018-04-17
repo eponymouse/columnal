@@ -1,10 +1,15 @@
 package records.transformations.expression.type;
 
+import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeEntry;
 import records.loadsave.OutputBuilder;
@@ -40,7 +45,25 @@ public class TaggedTypeNameExpression extends TypeExpression
     @Override
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
-        // By itself, not a valid type.  We rely on the type-application operator to spot us before calling us.
+        TaggedTypeDefinition def = typeManager.getKnownTaggedTypes().get(typeName);
+        // Shouldn't happen, but if it does, we're no longer valid:
+        if (def == null)
+            return null;
+        if (def.getTypeArguments().isEmpty())
+        {
+            try
+            {
+                return def.instantiate(ImmutableList.of());
+            }
+            catch (InternalException | UserException e)
+            {
+                // TODO show the user an error
+                Log.log(e);
+                return null;
+            }
+        }
+        // If needs type arguments then by itself, not a valid type.
+        // We rely on the type-application operator to spot us before calling us.
         return null;
     }
 
