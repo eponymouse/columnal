@@ -852,6 +852,7 @@ public class DataType implements StyledShowable
         if (memberType != null ? !memberType.equals(dataType.memberType) : dataType.memberType != null) return false;
         if (taggedTypeName != null ? !taggedTypeName.equals(dataType.taggedTypeName) : dataType.taggedTypeName != null) return false;
         if (!Objects.equals(tagTypeVariableSubstitutions, ((DataType) o).tagTypeVariableSubstitutions)) return false;
+        if (!Objects.equals(typeVariableName, dataType.typeVariableName)) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -865,6 +866,7 @@ public class DataType implements StyledShowable
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
         result = 31 * result + (memberType != null ? memberType.hashCode() : 0);
         result = 31 * result + (taggedTypeName != null ? taggedTypeName.hashCode() : 0);
+        result = 31 * result + (typeVariableName != null ? typeVariableName.hashCode() : 0);
         return result;
     }
 
@@ -1361,7 +1363,7 @@ public class DataType implements StyledShowable
         if (b == null)
             throw new ParseException("tagged value", p);
 
-        String constructor = b.UNQUOTED_IDENT().getText();
+        String constructor = b.STRING() != null ? b.STRING().getText() : b.UNQUOTED_IDENT().getText();
         for (int i = 0; i < tags.size(); i++)
         {
             TagType<DataType> tag = tags.get(i);
@@ -1371,10 +1373,10 @@ public class DataType implements StyledShowable
                 if (innerType != null)
                 {
                     if (tryParse(() -> p.openRound()) == null)
-                        throw new ParseException("Bracketed inner value", p);
+                        throw new ParseException("Bracketed inner value for " + constructor, p);
                     @Value Object innerValue = loadSingleItem(innerType, p, true);
                     if (tryParse(() -> p.closeRound()) == null)
-                        throw new ParseException("Closing tagged value bracket", p);
+                        throw new ParseException("Closing tagged value bracket for " + constructor, p);
                     return new TaggedValue(i, innerValue);
                 }
 

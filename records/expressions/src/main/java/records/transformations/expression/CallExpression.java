@@ -164,7 +164,7 @@ public class CallExpression extends Expression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return function.save(BracketedStatus.MISC, renames) + "(" + param.save(BracketedStatus.DIRECT_ROUND_BRACKETED, renames) + ")";
+        return "@call " + function.save(BracketedStatus.MISC, renames) + "(" + param.save(BracketedStatus.DIRECT_ROUND_BRACKETED, renames) + ")";
     }
 
     @Override

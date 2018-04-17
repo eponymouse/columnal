@@ -14,7 +14,7 @@ offset: (UNQUOTED_IDENT { getCurrentToken().getText().equals("Z"); } | ((PLUS | 
 offsetTime: localTime offset;
 zone : UNQUOTED_IDENT ((SLASH | MINUS) UNQUOTED_IDENT ((PLUS | MINUS) POSITIVE_INTEGER)?)*;
 zonedDateTime: localDateTime WS? (offset | zone);
-tag : WS? UNQUOTED_IDENT WS?;
+tag : WS? (UNQUOTED_IDENT | STRING) WS?;
 openRound : WS? OPEN_ROUND WS?;
 closeRound : WS? CLOSE_ROUND WS?;
 openSquare : WS? OPEN_SQUARE WS?;
