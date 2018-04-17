@@ -262,8 +262,10 @@ public class AutoComplete<C extends Completion> extends PopupControl
                         @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
                         @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last);
                         if (newContent != null)
+                        {
                             change.setText(newContent);
-                        change.setRange(0, textField.getLength());
+                            change.setRange(0, textField.getLength());
+                        }
                         return change;
                     }
                 }
@@ -282,8 +284,10 @@ public class AutoComplete<C extends Completion> extends PopupControl
                 {
                     @Nullable String newContent = onSelect.exactCompletion(text, completion);
                     if (newContent != null)
+                    {
                         change.setText(newContent);
-                    change.setRange(0, textField.getLength());
+                        change.setRange(0, textField.getLength());
+                    }
                     hide();
                     instruction.hide();
                     return change;
