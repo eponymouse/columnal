@@ -190,6 +190,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     @OnThread(Tag.Simulation)
     public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
+        tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         for (Table table : tableManager.getAllTables())
         {
             assertEquals(originalColumns, table.getData().getColumns().size());
@@ -226,8 +227,9 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     @Property(trials=4, shrink = false)
     @OnThread(Tag.Simulation)
     //public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=6L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
-    public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=3L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=8L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
+        tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         // 2 tables, 2 columns, each with 2 header rows:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
         assertEquals(8, lookup(".table-display-column-title").queryAll().size());
