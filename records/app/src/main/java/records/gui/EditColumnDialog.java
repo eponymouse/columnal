@@ -3,6 +3,7 @@ package records.gui;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.event.ActionEvent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -73,7 +74,10 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
                 radioCustom.setSelected(true); // This will call listener below anyway
             else
                 updateType(structuredTextField, t);
-            getDialogPane().autosize();
+
+            Scene scene = getDialogPane().getScene();
+            if (scene != null && scene.getWindow() != null)
+                scene.getWindow().sizeToScene();
         });
         FXUtility.addChangeListenerPlatform(toggleGroup.selectedToggleProperty(), sel -> {
             if (sel == radioNumber)
