@@ -479,7 +479,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         if (ops.isEmpty()) // Must be valid in this case
         {
             // Only one operand:
-            return expressionExps.get(0);
+            // Must still call this method in case brackets make it a list:
+            return operations.makeExpression(errorDisplayers, ImmutableList.of(expressionExps.get(0)), ImmutableList.of(), bracketedStatus);
         }
 
         return operations.makeExpression(errorDisplayers, expressionExps, ops, bracketedStatus);

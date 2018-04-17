@@ -2,14 +2,12 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.FormatLexer;
-import records.grammar.FormatParser;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
@@ -18,7 +16,6 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.Pair;
-import utility.UnitType;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
@@ -37,7 +34,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     {
         ImmutableList.Builder<Pair<String, @Localized String>> ops = ImmutableList.builder();
         ops.add(new Pair<String, @Localized String>("-", TranslationUtility.getString("tagged.tuple.apply")));
-        if (parent.isTuple())
+        if (parent.isRoundBracketed())
             ops.add(new Pair<String, @Localized String>(",", TranslationUtility.getString("type.tuple")));
         return ops.build();
     }
@@ -45,7 +42,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     @Override
     public boolean isOperatorAlphabet(char character, TypeParent parent)
     {
-        return character == ':' || (parent.isTuple() && character == ',');
+        return character == '-' || (parent.isRoundBracketed() && character == ',');
     }
 
     @Override
@@ -63,13 +60,15 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     @Override
     public TypeExpression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded TypeExpression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
     {
+        Log.debug("Making expression from " + Utility.listToString(expressionExps) + " and " + Utility.listToString(ops));
+        
         // First, bunch up any colons into sub-expressions:
-        if (ops.stream().anyMatch(s -> s.equals(":")))
+        if (ops.stream().anyMatch(s -> s.equals("-")))
         {
             // TODO
         }
         
-        // From now on, there should be no colons left:
+        // From now on, there should be no type applications left:
                 
         if (ops.isEmpty())
         {

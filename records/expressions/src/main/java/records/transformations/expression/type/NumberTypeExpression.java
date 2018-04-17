@@ -13,9 +13,9 @@ import styled.StyledString;
 
 public class NumberTypeExpression extends TypeExpression
 {
-    private final UnitExpression unitExpression;
+    private final @Nullable UnitExpression unitExpression;
 
-    public NumberTypeExpression(UnitExpression unitExpression)
+    public NumberTypeExpression(@Nullable UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
@@ -23,7 +23,7 @@ public class NumberTypeExpression extends TypeExpression
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        if (unitExpression.isEmpty() || unitExpression.isScalar())
+        if (unitExpression == null || unitExpression.isEmpty() || unitExpression.isScalar())
             return "NUMBER";
         else
             return "NUMBER {" + unitExpression.save(true) + "}"; 
@@ -32,7 +32,7 @@ public class NumberTypeExpression extends TypeExpression
     @Override
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
-        return unitExpression.asUnit(typeManager.getUnitManager())
+        return unitExpression == null ? DataType.NUMBER : unitExpression.asUnit(typeManager.getUnitManager())
             .<@Nullable DataType>either(err -> null, unitExp -> {
                 @Nullable Unit unit = unitExp.toConcreteUnit();
                 return unit == null ? null : DataType.number(new NumberInfo(unit));
@@ -49,10 +49,13 @@ public class NumberTypeExpression extends TypeExpression
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.concat(StyledString.s("NUMBER {"), unitExpression.toStyledString(), StyledString.s("}"));
+        if (unitExpression == null)
+            return StyledString.s("Number");
+        else
+            return StyledString.concat(StyledString.s("Number{"), unitExpression.toStyledString(), StyledString.s("}"));
     }
 
-    public UnitExpression _test_getUnits()
+    public @Nullable UnitExpression _test_getUnits()
     {
         return unitExpression;
     }

@@ -84,7 +84,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
     }
 
     @Override
-    public boolean isTuple()
+    public boolean isRoundBracketed()
     {
         return false;
     }

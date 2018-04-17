@@ -54,7 +54,7 @@ public class SquareBracketedTypeNode extends Consecutive<TypeExpression, TypePar
     }
 
     @Override
-    public boolean isTuple()
+    public boolean isRoundBracketed()
     {
         return false;
     }
@@ -62,7 +62,7 @@ public class SquareBracketedTypeNode extends Consecutive<TypeExpression, TypePar
     @Override
     public @Recorded TypeExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
-        return errorDisplayer.recordType(this, new ListTypeExpression(saveUnrecorded(errorDisplayer, onError)));
+        return errorDisplayer.recordType(this, saveUnrecorded(errorDisplayer, onError));
     }
     
     @Override

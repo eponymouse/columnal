@@ -43,7 +43,7 @@ public class BracketedTypeNode extends Consecutive<TypeExpression, TypeParent> i
     }
 
     @Override
-    public boolean isTuple()
+    public boolean isRoundBracketed()
     {
         return true;
     }

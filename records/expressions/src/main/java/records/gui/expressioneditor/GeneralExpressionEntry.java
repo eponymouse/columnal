@@ -1127,7 +1127,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(" { ", "expression.autocomplete.units");
+            return new CompletionContent("{", "expression.autocomplete.units");
         }
 
         @Override

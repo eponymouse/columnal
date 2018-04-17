@@ -291,7 +291,7 @@ public class FixedTypeNode extends DeepNodeTree implements EEDisplayNodeParent, 
     }
 
     @Override
-    public boolean isTuple()
+    public boolean isRoundBracketed()
     {
         return false;
     }

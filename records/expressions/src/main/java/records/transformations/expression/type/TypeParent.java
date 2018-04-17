@@ -6,5 +6,5 @@ import threadchecker.Tag;
 @OnThread(Tag.FXPlatform)
 public interface TypeParent
 {
-    public boolean isTuple();
+    public boolean isRoundBracketed();
 }
