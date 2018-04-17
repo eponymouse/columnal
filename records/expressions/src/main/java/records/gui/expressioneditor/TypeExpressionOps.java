@@ -19,6 +19,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
@@ -58,9 +59,27 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     }
 
     @Override
-    public TypeExpression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded TypeExpression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+    public TypeExpression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded TypeExpression> originalExpressionExps, List<String> originalOps, BracketedStatus bracketedStatus)
     {
+        ArrayList<@Recorded TypeExpression> expressionExps = new ArrayList<>(originalExpressionExps);
+        ArrayList<String> ops = new ArrayList<>(originalOps);
+        
         Log.debug("Making expression from " + Utility.listToString(expressionExps) + " and " + Utility.listToString(ops));
+        
+        // Trim empty ops and expressions from the end until we find a non-empty:
+        for (int i = Math.max(expressionExps.size() - 1, ops.size() - 1); i >= 0; i--)
+        {
+            // Ops is later than expressionExps so remove that first:
+            if (i < ops.size() && ops.get(i).isEmpty())
+                ops.remove(i);
+            else
+                break;
+            
+            if (i > 0 && i < expressionExps.size() && expressionExps.get(i).isEmpty())
+                expressionExps.remove(i);
+            else
+                break;
+        }
         
         // First, bunch up any colons into sub-expressions:
         if (ops.stream().anyMatch(s -> s.equals("-")))
@@ -79,12 +98,12 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
         else if (ops.stream().allMatch(s -> s.equals(",")))
         {
             if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
-                return new TupleTypeExpression(expressionExps);
+                return new TupleTypeExpression(ImmutableList.copyOf(expressionExps));
             // else offer a quick fix to add brackets
         }
         
         // Return an unfinished expression:
-        return makeInvalidOpExpression(expressionExps, ops);
+        return makeInvalidOpExpression(ImmutableList.copyOf(expressionExps), ops);
     }
 
     @Override

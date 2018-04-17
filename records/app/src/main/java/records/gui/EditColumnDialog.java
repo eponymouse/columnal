@@ -59,7 +59,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
     public EditColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial)
     {
         super(parent);
-
+        
         ColumnNameTextField columnNameTextField = new ColumnNameTextField(initial);
         ToggleGroup toggleGroup = new ToggleGroup();
         RadioButton radioNumber = GUI.radioButton(toggleGroup, "type.number.plain", "radio-type-number");
@@ -73,6 +73,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
                 radioCustom.setSelected(true); // This will call listener below anyway
             else
                 updateType(structuredTextField, t);
+            getDialogPane().autosize();
         });
         FXUtility.addChangeListenerPlatform(toggleGroup.selectedToggleProperty(), sel -> {
             if (sel == radioNumber)
@@ -133,6 +134,8 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
                 return getResult();
             return null;
         });
+
+        FXUtility.preventCloseOnEscape(getDialogPane());
 
         setOnShown(e -> {
             radioNumber.setSelected(true);

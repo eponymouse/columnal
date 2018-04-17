@@ -30,6 +30,7 @@ import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
@@ -638,6 +639,16 @@ public class FXUtility
                     listView.scrollTo(Math.max(0, selIndex - pageSize + 1));
                 }
             }
+        });
+    }
+
+    public static void preventCloseOnEscape(DialogPane dialogPane)
+    {
+        // I tried to use setCancelButton(false) but that isn't enough to prevent escape cancelling, so we consume
+        // the keypress:
+        dialogPane.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.ESCAPE)
+                e.consume();
         });
     }
 

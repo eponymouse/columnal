@@ -113,16 +113,24 @@ public class TestUtil
     }
 
     @OnThread(Tag.Any)
-    public static void assertValueEqual(String prefix, @Value Object a, @Value Object b) throws UserException, InternalException
+    public static void assertValueEqual(String prefix, @Nullable @Value Object a, @Nullable @Value Object b) throws UserException, InternalException
     {
         try
         {
-            CompletableFuture<Integer> f = new CompletableFuture<>();
-            Workers.onWorkerThread("Comparison", Priority.FETCH, () -> checkedToRuntime(() -> f.complete(Utility.compareValues(a, b))));
-            int compare = f.get();
-            if (compare != 0)
+            if ((a == null) != (b == null))
+                fail(prefix + " differing nullness: " + (a == null) + " vs " + (b == null));
+            
+            if (a != null && b != null)
             {
-                fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
+                @NonNull @Value Object aNN = a;
+                @NonNull @Value Object bNN = b;
+                CompletableFuture<Integer> f = new CompletableFuture<>();
+                Workers.onWorkerThread("Comparison", Priority.FETCH, () -> checkedToRuntime(() -> f.complete(Utility.compareValues(aNN, bNN))));
+                int compare = f.get();
+                if (compare != 0)
+                {
+                    fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
+                }
             }
         }
         catch (ExecutionException | InterruptedException e)

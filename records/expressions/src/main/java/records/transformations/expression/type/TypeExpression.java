@@ -199,4 +199,6 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
         }
         
     }
+    
+    public abstract boolean isEmpty();
 }

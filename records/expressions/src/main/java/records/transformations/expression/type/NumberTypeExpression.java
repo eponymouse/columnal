@@ -40,6 +40,12 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
+    @Override
     public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
     {
         // TODO

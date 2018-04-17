@@ -1,7 +1,9 @@
 package test.gui;
 
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -14,6 +16,8 @@ import threadchecker.Tag;
 
 import java.util.Random;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait
@@ -67,6 +71,13 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         Log.debug("Pressing ESCAPE");
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
+        Node defValue = lookup(".default-value").<Node>query();
+        assertNotNull(defValue);
+        if (defValue != null)
+        {
+            @NonNull Node defValueFinal = defValue;
+            assertFalse(TestUtil.fx(() -> defValueFinal.isDisabled()));
+        }
         clickOn(".default-value");
         
         // We should already be in the default value:

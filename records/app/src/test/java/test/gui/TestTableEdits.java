@@ -225,7 +225,8 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
 
     @Property(trials=4, shrink = false)
     @OnThread(Tag.Simulation)
-    public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=6L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    //public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=6L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=3L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         // 2 tables, 2 columns, each with 2 header rows:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
@@ -269,8 +270,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             // Check that the new column has right details:
             assertEquals(columnDetails.columnId, columns.get(newPosition).getName());
             assertEquals(columnDetails.dataType, columns.get(newPosition).getType());
-            // Should this be equals or our own method?
-            assertEquals(columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
+            TestUtil.assertValueEqual("", columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
         }
     }
     

@@ -31,6 +31,7 @@ import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 import utility.ValueFunction;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -273,20 +274,7 @@ public class DataTypeUtility
     @SuppressWarnings("valuetype")
     public static Utility.@Value ListEx value(@UnknownIfValue List<@Value ? extends Object> list)
     {
-        return new ListEx()
-        {
-            @Override
-            public int size() throws InternalException, UserException
-            {
-                return list.size();
-            }
-
-            @Override
-            public @Value Object get(int index) throws InternalException, UserException
-            {
-                return list.get(index);
-            }
-        };
+        return new ListExList(list);
     }
 
     public static String _test_valueToString(@Value Object item)

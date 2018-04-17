@@ -44,6 +44,12 @@ public class TaggedTypeNameExpression extends TypeExpression
         return null;
     }
 
+    @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
     public String _test_getName()
     {
         return typeName.getRaw();

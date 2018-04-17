@@ -74,6 +74,12 @@ public class TupleTypeExpression extends TypeExpression
         return DataType.tuple(memberTypes.build());
     }
 
+    @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
     public ImmutableList<TypeExpression> _test_getItems()
     {
         return members;

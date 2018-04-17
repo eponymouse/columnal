@@ -72,7 +72,13 @@ public class TypePrimitiveLiteral extends TypeExpression
     {
         return dataType;
     }
-    
+
+    @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
     public DataType _test_getType()
     {
         return dataType;

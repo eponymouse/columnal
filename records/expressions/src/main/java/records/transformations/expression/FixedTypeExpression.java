@@ -97,7 +97,7 @@ public class FixedTypeExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@type {|" + type.save(renames) + "|} " + inner.save(BracketedStatus.MISC, renames);
+        return "@type {|" + type.save(renames) + "|} (" + inner.save(BracketedStatus.MISC, renames) + ")";
     }
 
     @Override

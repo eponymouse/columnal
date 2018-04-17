@@ -49,6 +49,12 @@ public class UnfinishedTypeExpression extends TypeExpression
         return null;
     }
 
+    @Override
+    public boolean isEmpty()
+    {
+        return value.isEmpty();
+    }
+
     public String _test_getContent()
     {
         return value;

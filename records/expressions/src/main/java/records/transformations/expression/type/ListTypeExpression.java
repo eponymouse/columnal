@@ -49,6 +49,12 @@ public class ListTypeExpression extends TypeExpression
         return null;
     }
 
+    @Override
+    public boolean isEmpty()
+    {
+        return false;
+    }
+
     public TypeExpression _test_getContent()
     {
         return innerType;

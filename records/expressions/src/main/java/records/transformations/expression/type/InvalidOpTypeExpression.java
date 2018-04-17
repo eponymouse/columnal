@@ -71,6 +71,12 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
+    public boolean isEmpty()
+    {
+        return operands.size() == 1 && operators.isEmpty() && operands.get(0).isEmpty();
+    }
+
+    @Override
     public StyledString toStyledString()
     {
         return StyledString.s("Invalid"); // TODO

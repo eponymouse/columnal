@@ -42,7 +42,8 @@ public interface EnterTypeTrait extends FxRobotInterface
             {
                 TypeExpression item = tuple._test_getItems().get(i);
                 enterType(item, r);
-                write(r.nextBoolean() ? "," : " , ", DELAY);
+                if (i < tuple._test_getItems().size() - 1)
+                    write(r.nextBoolean() ? "," : " , ", DELAY);
             }
             write(")");
         }

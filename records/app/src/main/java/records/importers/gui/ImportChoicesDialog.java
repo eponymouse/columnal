@@ -19,8 +19,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.SplitPane;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -189,12 +187,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         // Prevent enter/escape activating buttons:
         ((Button)getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
-        // I tried to use setCancelButton(false) but that isn't enough to prevent escape cancelling, so we consume
-        // the keypress:
-        getDialogPane().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.ESCAPE)
-                e.consume();
-        });
+        FXUtility.preventCloseOnEscape(getDialogPane());
+
         //TODO disable ok button if name isn't valid
         setResultConverter(bt -> {
             if (bt == ButtonType.OK && destFormat != null)
