@@ -261,6 +261,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
                         List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
                         @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
                         @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last);
+                        if (newContent == null)
+                            newContent = withoutLast;
                         if (newContent != null)
                         {
                             change.setText(newContent);

@@ -94,6 +94,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
             @Override
             protected @Nullable String selected(String currentText, @Nullable TypeCompletion typeCompletion, String rest)
             {
+                @Nullable String keep = null;
                 if (typeCompletion == listCompletion)
                 {
                     parent.replace(TypeEntry.this, focusWhenShown(new SquareBracketedTypeNode(parent, null)));
@@ -116,7 +117,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
                         if (rest.isEmpty())
                             unitSpecifier.focus(Focus.LEFT);
                     }
-                    return "Number";
+                    keep = "Number";
                 }
                 else if (typeCompletion == plainNumberCompletion)
                 {
@@ -126,21 +127,25 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
                         updateNodes();
                         updateListeners();
                     }
-                    return "Number";
+                    keep = "Number";
                 }
                 else if (typeCompletion != null && typeCompletion.numTypeParams > 0)
                 {
-                    // TODO Tell parent to add them
-                    //parent.addOperandToRight(TypeEntry.this, "-", "", true);
+                    // Should we auto-add operator ready for type-argument?
+                    keep = typeCompletion.completion;
                 }
                 else if (typeCompletion != null)
                 {
-                    parent.setOperatorToRight(TypeEntry.this, rest);
-                    parent.focusRightOf(TypeEntry.this, Focus.RIGHT);
-                    return typeCompletion.completion;
+                    keep = typeCompletion.completion;
                 }
+                else
+                {
+                    keep = null;
+                }
+                parent.setOperatorToRight(TypeEntry.this, rest);
+                parent.focusRightOf(TypeEntry.this, Focus.RIGHT);
                 
-                return null;
+                return keep;
             }
 
             @Override

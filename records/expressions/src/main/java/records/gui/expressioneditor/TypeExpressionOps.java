@@ -43,7 +43,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     @Override
     public boolean isOperatorAlphabet(char character, TypeParent parent)
     {
-        return character == '-' || (parent.isRoundBracketed() && character == ',');
+        return character == '-' || character == ',';
     }
 
     @Override
