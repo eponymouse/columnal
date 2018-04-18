@@ -4,22 +4,13 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-
-import java.util.Map;
 
 /**
  * An expression of the form "value ~ pattern", which is of boolean type:
@@ -82,9 +73,4 @@ public class MatchesOneExpression extends BinaryOpExpression
         return DataTypeUtility.value(rhs.matchAsPattern(rowIndex, lhs.getValue(rowIndex, state), state) != null);
     }
 
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
-    }
 }

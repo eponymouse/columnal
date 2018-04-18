@@ -138,8 +138,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
     }
 
-    public abstract Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException;
-
     @Pure
     public Optional<Rational> constantFold()
     {

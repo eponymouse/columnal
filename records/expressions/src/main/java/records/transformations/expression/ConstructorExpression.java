@@ -3,19 +3,13 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
-import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
@@ -23,7 +17,6 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
-import records.types.TypeCons;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -31,7 +24,6 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -100,12 +92,6 @@ public class ConstructorExpression extends NonOperatorExpression
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         return tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
-    }
-
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
     }
 
     @Override

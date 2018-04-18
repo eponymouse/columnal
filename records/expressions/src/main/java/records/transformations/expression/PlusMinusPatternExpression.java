@@ -3,13 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.TableId;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
@@ -20,9 +14,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * This is a pattern match item, value +- tolerance.
@@ -89,9 +80,4 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
         return match ? state : null;
     }
 
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
-    }
 }

@@ -3,14 +3,8 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.TableId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionNodeParent;
@@ -25,7 +19,6 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -85,11 +78,6 @@ public class InvalidOperatorExpression extends NaryOpExpression
         return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
     }
 
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
-    }
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {

@@ -2,35 +2,24 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
-import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.FixedTypeNode;
 import records.gui.expressioneditor.OperandNode;
-import records.loadsave.OutputBuilder;
 import records.transformations.expression.type.TypeExpression;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.Pair;
-import utility.Utility;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -104,12 +93,6 @@ public class FixedTypeExpression extends NonOperatorExpression
     public StyledString toDisplay(BracketedStatus surround)
     {
         return StyledString.concat(StyledString.s("type ("), type.toStyledString(), StyledString.s(") "), inner.toDisplay(BracketedStatus.MISC));
-    }
-    
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        return inner.toSolver(formulaManager, src, columnVariables);
     }
 
     @Override

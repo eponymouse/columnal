@@ -1,23 +1,15 @@
 package records.transformations.expression;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
@@ -76,21 +68,6 @@ public class EqualExpression extends NaryOpExpression
         }
 
         return DataTypeUtility.value(true);
-    }
-
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        /*
-        Formula lhsForm = lhs.toSolver(formulaManager, src, columnVariables);
-        Formula rhsForm = rhs.toSolver(formulaManager, src, columnVariables);
-        if (lhsForm instanceof BitvectorFormula && rhsForm instanceof BitvectorFormula)
-        {
-            BitvectorFormulaManager m = formulaManager.getBitvectorFormulaManager();
-            return m.equal((BitvectorFormula)lhsForm, (BitvectorFormula)rhsForm);
-        }
-        */
-        throw new UnimplementedException();
     }
 
     @Override

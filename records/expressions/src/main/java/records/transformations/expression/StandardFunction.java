@@ -4,20 +4,13 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
-import records.data.TableId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.StdFunc;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.transformations.function.FunctionDefinition;
@@ -27,9 +20,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.ValueFunction;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -73,12 +64,6 @@ public class StandardFunction extends NonOperatorExpression
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
         return "@function " + OutputBuilder.quotedIfNecessary(functionDefinition.getName());
-    }
-
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
     }
 
     @Override

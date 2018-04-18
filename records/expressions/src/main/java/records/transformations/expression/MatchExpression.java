@@ -4,16 +4,9 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ClauseNode;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
@@ -33,7 +26,6 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
@@ -366,12 +358,6 @@ public class MatchExpression extends NonOperatorExpression
             return null;
 
         return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes));
-    }
-
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
     }
 
     @Override

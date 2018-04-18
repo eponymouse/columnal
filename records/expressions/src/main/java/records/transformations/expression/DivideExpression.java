@@ -6,25 +6,17 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.sosy_lab.common.rationals.Rational;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.TableId;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -83,12 +75,6 @@ public class DivideExpression extends BinaryOpExpression
             return Optional.of(l.get().divides(r.get()));
         else
             return Optional.empty();
-    }
-
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
     }
 
     @SuppressWarnings("recorded")

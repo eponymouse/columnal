@@ -6,27 +6,16 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.sosy_lab.java_smt.api.BitvectorFormula;
-import org.sosy_lab.java_smt.api.BitvectorFormulaManager;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
-import utility.Pair;
 import utility.Utility;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -80,16 +69,4 @@ public class NotEqualExpression extends BinaryOpExpression
         return new NotEqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-    {
-        Formula lhsForm = lhs.toSolver(formulaManager, src, columnVariables);
-        Formula rhsForm = rhs.toSolver(formulaManager, src, columnVariables);
-        if (lhsForm instanceof BitvectorFormula && rhsForm instanceof BitvectorFormula)
-        {
-            BitvectorFormulaManager m = formulaManager.getBitvectorFormulaManager();
-            return formulaManager.getBooleanFormulaManager().not(m.equal((BitvectorFormula)lhsForm, (BitvectorFormula)rhsForm));
-        }
-        throw new UnimplementedException();
-    }
 }

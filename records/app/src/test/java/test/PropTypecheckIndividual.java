@@ -11,13 +11,8 @@ import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
-import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
@@ -48,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
@@ -102,12 +96,6 @@ public class PropTypecheckIndividual
         protected StyledString toDisplay(BracketedStatus bracketedStatus)
         {
             return StyledString.s("Testing");
-        }
-
-        @Override
-        public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-        {
-            throw new InternalException("Testing");
         }
 
         @Override
@@ -424,12 +412,6 @@ public class PropTypecheckIndividual
         protected StyledString toDisplay(BracketedStatus bracketedStatus)
         {
             return StyledString.s("Testing");
-        }
-
-        @Override
-        public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
-        {
-            throw new RuntimeException("N/A");
         }
 
         @Override

@@ -4,13 +4,7 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.ColumnId;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -18,7 +12,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Lit;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
@@ -31,7 +24,6 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.CURRENT;
@@ -117,16 +109,6 @@ public class NumericLiteral extends Literal
                 generalExpressionEntry.addUnitSpecifier(unit);
             return generalExpressionEntry;
         };
-    }
-
-    @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables)
-    {
-        // TODO handle non-integers properly
-        if (value instanceof BigDecimal)
-            return formulaManager.getIntegerFormulaManager().makeNumber((BigDecimal)value);
-        else
-            return formulaManager.getIntegerFormulaManager().makeNumber(value.longValue());
     }
 
     @Override
