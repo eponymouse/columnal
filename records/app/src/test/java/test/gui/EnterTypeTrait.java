@@ -8,6 +8,7 @@ import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TaggedTypeNameExpression;
 import records.transformations.expression.type.TupleTypeExpression;
+import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnfinishedTypeExpression;
@@ -33,6 +34,17 @@ public interface EnterTypeTrait extends FxRobotInterface
         {
             UnfinishedTypeExpression un = (UnfinishedTypeExpression) typeExpression;
             write(un._test_getContent(), DELAY);
+        }
+        else if (typeExpression instanceof TypeApplyExpression)
+        {
+            TypeApplyExpression appl = (TypeApplyExpression) typeExpression;
+            for (int i = 0; i < appl._test_getOperands().size(); i++)
+            {
+                TypeExpression item = appl._test_getOperands().get(i);
+                enterType(item, r);
+                if (i < appl._test_getOperands().size() - 1)
+                    write(r.nextBoolean() ? "-" : " - ", DELAY);
+            }
         }
         else if (typeExpression instanceof TupleTypeExpression)
         {
@@ -69,7 +81,7 @@ public interface EnterTypeTrait extends FxRobotInterface
         else if (typeExpression instanceof TaggedTypeNameExpression)
         {
             TaggedTypeNameExpression tag = (TaggedTypeNameExpression) typeExpression;
-            write(tag._test_getName(), DELAY);
+            write(tag.getTypeName().getRaw(), DELAY);
         }
         else if (typeExpression instanceof InvalidOpTypeExpression)
         {
@@ -83,6 +95,10 @@ public interface EnterTypeTrait extends FxRobotInterface
                 if (i < operators.size())
                     write(operators.get(i), DELAY);
             }
+        }
+        else
+        {
+            throw new RuntimeException("Unknown TypeExpression sub type: " + typeExpression.getClass());
         }
     }
 }

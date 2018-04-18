@@ -12,6 +12,7 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.TupleTypeExpression;
+import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import records.transformations.expression.type.UnfinishedTypeExpression;
@@ -81,10 +82,34 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
                 break;
         }
         
-        // First, bunch up any colons into sub-expressions:
+        // First, bunch up any type applications into sub-expressions:
         if (ops.stream().anyMatch(s -> s.equals("-")))
         {
-            // TODO
+            int i = 0;
+            while (i < ops.size())
+            {
+                if (ops.get(i).equals("-"))
+                {
+                    ImmutableList.Builder<TypeExpression> applArgs = ImmutableList.builder();
+                    applArgs.add(expressionExps.get(i));
+                    int opIndex = i;
+                    while (opIndex < ops.size() && ops.get(opIndex).equals("-") && opIndex + 1 < expressionExps.size())
+                    {
+                        applArgs.add(expressionExps.get(opIndex + 1));
+                        opIndex += 1;
+                    }
+                    expressionExps.subList(i, opIndex + 1).clear();
+                    ops.subList(i, opIndex).clear();
+                    expressionExps.add(i, new TypeApplyExpression(applArgs.build()));
+                    // Move on and keep going:
+                    i += 1;
+                }
+                else
+                {
+                    // Skip and examine next:
+                    i += 1;
+                }
+            }
         }
         
         // From now on, there should be no type applications left:

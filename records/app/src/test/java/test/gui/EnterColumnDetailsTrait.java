@@ -18,6 +18,7 @@ import java.util.Random;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrait, EnterStructuredValueTrait
@@ -77,8 +78,10 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
         {
             @NonNull Node defValueFinal = defValue;
             assertFalse(TestUtil.fx(() -> defValueFinal.isDisabled()));
+            clickOn(".default-value");
+            assertTrue(TestUtil.fx(() -> defValueFinal.isFocused()));
         }
-        clickOn(".default-value");
+        
         
         // We should already be in the default value:
         enterStructuredValue(columnDetails.dataType, columnDetails.defaultValue, r);

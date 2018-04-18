@@ -1126,6 +1126,16 @@ public class Utility
         return reAssembled.toString();
     }
 
+    public static <T> ImmutableList<T> replicateM(int length, Supplier<T> make)
+    {
+        ImmutableList.Builder<T> r = ImmutableList.builderWithExpectedSize(length);
+        for (int i = 0; i < length; i++)
+        {
+            r.add(make.get());
+        }
+        return r.build();
+    }
+    
     public static <T> ImmutableList<T> replicateM_Ex(int length, ExSupplier<T> make) throws InternalException, UserException
     {
         ImmutableList.Builder<T> r = ImmutableList.builderWithExpectedSize(length);

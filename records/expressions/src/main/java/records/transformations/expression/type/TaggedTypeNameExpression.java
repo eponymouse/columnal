@@ -73,8 +73,8 @@ public class TaggedTypeNameExpression extends TypeExpression
         return false;
     }
 
-    public String _test_getName()
+    public TypeId getTypeName()
     {
-        return typeName.getRaw();
+        return typeName;
     }
 }

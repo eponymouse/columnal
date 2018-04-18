@@ -219,15 +219,13 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
             // Check that the third column has right details:
             assertEquals(columnDetails.columnId, columns.get(2).getName());
             assertEquals(columnDetails.dataType, columns.get(2).getType());
-            // Should this be equals or our own method?
-            assertEquals(columnDetails.defaultValue, columns.get(2).getDefaultValue());
+            TestUtil.assertValueEqual("", columns.get(2) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(2).getDefaultValue());
         }
     }
 
     @Property(trials=4, shrink = false)
     @OnThread(Tag.Simulation)
-    //public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=6L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
-    public void testAddColumnBeforeAfter(@When(seed=1L) int positionIndicator, @When(seed=1L) @From(GenColumnId.class) ColumnId name, @When(seed=8L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
         // 2 tables, 2 columns, each with 2 header rows:

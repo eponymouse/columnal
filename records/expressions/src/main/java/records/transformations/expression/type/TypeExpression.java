@@ -72,8 +72,16 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                // TODO type vars
-                return new TaggedTypeNameExpression(typeName);
+                TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(typeName);
+                if (typeVars.isEmpty())
+                    return taggedTypeNameExpression;
+                ImmutableList.Builder<TypeExpression> args = ImmutableList.builderWithExpectedSize(typeVars.size() + 1);
+                args.add(taggedTypeNameExpression);
+                for (DataType typeVar : typeVars)
+                {
+                    args.add(fromDataType(typeVar));
+                }
+                return new TypeApplyExpression(args.build());
             }
 
             @Override
