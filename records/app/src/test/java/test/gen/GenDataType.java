@@ -95,7 +95,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         if (maxDepth > 1)
         {
             options.addAll(Arrays.asList(
-                () -> DataType.tuple(TestUtil.makeList(r, 2, 12, () -> genDepth(r, maxDepth - 1, gs, availableTypeVariables))),
+                () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs, availableTypeVariables))),
                 () -> DataType.array(genDepth(r, maxDepth - 1, gs, availableTypeVariables)),
                 () -> genTagged(r, maxDepth, gs, availableTypeVariables)
             ));
