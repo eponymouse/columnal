@@ -138,7 +138,7 @@ public class TypeManager
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
 
-            if (item.type() != null)
+            if (item.type() != null && item.type().size() > 0)
             {
                 if (item.type().size() == 1)
                     tags.add(new TagType<DataType>(tagName, loadTypeUse(item.type(0))));
