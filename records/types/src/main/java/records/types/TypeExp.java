@@ -1,6 +1,7 @@
 package records.types;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -23,8 +24,10 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -106,6 +109,10 @@ import java.util.function.Function;
 
 public abstract class TypeExp implements StyledShowable
 {
+    protected static final ImmutableSet<String> ALL_TYPE_CLASSES = ImmutableSet.of(
+        "Equatable", "Comparable"
+    );
+    
     public static final String CONS_TEXT = "Text";
     public static final String CONS_BOOLEAN = "Boolean";
     public static final String CONS_LIST = "List";
@@ -149,7 +156,7 @@ public abstract class TypeExp implements StyledShowable
     {
         TypeExp aPruned = prune();
         TypeExp bPruned = b.prune();
-        // Make sure param isn't a MutVar unless it has to be:
+        // Make sure param isn't a MutVar unless it has to be (because they are both MutVar):
         if (bPruned instanceof MutVar && !(aPruned instanceof MutVar))
         {
             return bPruned._unify(aPruned);
@@ -198,7 +205,7 @@ public abstract class TypeExp implements StyledShowable
             typeVarsByName.put(typeVarName, mutVar);
         }
 
-        TypeCons overallType = new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), typeVarsInOrder.build());
+        TypeCons overallType = new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), typeVarsInOrder.build(), ALL_TYPE_CLASSES);
         ImmutableList.Builder<TypeExp> tagTypes = ImmutableList.builder();
 
         for (TagType<DataType> tagType : taggedTypeDefinition.getTags())
@@ -210,7 +217,7 @@ public abstract class TypeExp implements StyledShowable
             else
             {
                 TypeExp innerTypeExp = fromDataType(src, tagType.getInner(), typeVarsByName::get);
-                tagTypes.add(new TypeCons(src, TypeExp.CONS_FUNCTION, innerTypeExp, overallType));
+                tagTypes.add(new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(innerTypeExp, overallType), ImmutableSet.of()));
             }
         }
         
@@ -221,17 +228,27 @@ public abstract class TypeExp implements StyledShowable
 
     public static TypeExp bool(@Nullable ExpressionBase src)
     {
-        return new TypeCons(src, TypeExp.CONS_BOOLEAN);
+        return new TypeCons(src, TypeExp.CONS_BOOLEAN, ALL_TYPE_CLASSES);
     }
     
     public static TypeExp text(@Nullable ExpressionBase src)
     {
-        return new TypeCons(src, CONS_TEXT);
+        return new TypeCons(src, CONS_TEXT, ALL_TYPE_CLASSES);
     }
 
     public static TypeExp plainNumber(@Nullable ExpressionBase src)
     {
         return new NumTypeExp(src, UnitExp.SCALAR);
+    }
+
+    public static TypeExp list(@Nullable ExpressionBase src, TypeExp inner)
+    {
+        return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(inner), ALL_TYPE_CLASSES);
+    }
+    
+    public static TypeExp function(@Nullable ExpressionBase src, TypeExp paramType, TypeExp returnType)
+    {
+        return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(paramType, returnType), ImmutableSet.of());
     }
     
     public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
@@ -258,7 +275,7 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
-                return new TypeCons(src, dateTimeInfo.getType().toString());
+                return new TypeCons(src, dateTimeInfo.getType().toString(), ALL_TYPE_CLASSES);
             }
 
             @Override
@@ -270,7 +287,7 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, v -> fromDataType(src, v, typeVarLookup)));
+                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, v -> fromDataType(src, v, typeVarLookup)), ALL_TYPE_CLASSES);
             }
 
             @Override
@@ -282,7 +299,7 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src) : fromDataType(src, inner, typeVarLookup));
+                return new TypeCons(src, CONS_LIST, ImmutableList.of(inner == null ? new MutVar(src) : fromDataType(src, inner, typeVarLookup)), ALL_TYPE_CLASSES);
             }
 
             @Override
@@ -320,4 +337,9 @@ public abstract class TypeExp implements StyledShowable
     {
         return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_LIST);
     }
+
+    /**
+     * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
+     */
+    protected abstract @Nullable StyledString requireTypeClasses(Set<String> typeClasses);
 }

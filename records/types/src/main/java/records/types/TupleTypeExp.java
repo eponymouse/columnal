@@ -2,6 +2,7 @@ package records.types;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ArrayColumnStorage;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
@@ -10,7 +11,9 @@ import styled.StyledString;
 import utility.Either;
 import utility.Utility;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TupleTypeExp extends TypeExp
@@ -19,6 +22,9 @@ public class TupleTypeExp extends TypeExp
     // If not complete, can have many more members than knownMembers
     // e.g. "first" uses this, has single knownMembers and complete==false
     public final boolean complete;
+    
+    // The type classes required by this tuple, if it is not complete:
+    private final HashSet<String> requiredTypeClasses = new HashSet<>();
 
     public TupleTypeExp(@Nullable ExpressionBase src, ImmutableList<TypeExp> knownMembers, boolean complete)
     {
@@ -50,6 +56,20 @@ public class TupleTypeExp extends TypeExp
             return Either.left(new TypeConcretisationError(StyledString.s("Error: tuple of indeterminate size"), assumingComplete));
         }
         return Either.mapMEx(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts));
+    }
+
+    @Override
+    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    {
+        for (TypeExp member : knownMembers)
+        {
+            @Nullable StyledString err = member.requireTypeClasses(typeClasses);
+            if (err != null)
+                return err;
+        }
+        if (!complete)
+            this.requiredTypeClasses.addAll(typeClasses);
+        return null;
     }
 
     @Override
@@ -90,10 +110,16 @@ public class TupleTypeExp extends TypeExp
             }
             else if (i < knownMembers.size())
             {
+                @Nullable StyledString err = knownMembers.get(i).requireTypeClasses(bt.requiredTypeClasses);
+                if (err != null)
+                    return Either.left(err);
                 unified.add(knownMembers.get(i));
             }
             else
             {
+                @Nullable StyledString err = bt.knownMembers.get(i).requireTypeClasses(requiredTypeClasses);
+                if (err != null)
+                    return Either.left(err);
                 unified.add(bt.knownMembers.get(i));
             }
         }

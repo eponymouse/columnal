@@ -1,6 +1,8 @@
 package records.types;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -14,25 +16,34 @@ import utility.Utility;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TypeCons extends TypeExp
 {
     public final String name;
     // Can be size 0+:
     public final ImmutableList<TypeExp> operands;
+    
+    // If operands is empty, this is the actual set of type-classes.  If operands is non-empty,
+    // this is the list of type-classes which can be derived as long as all of the inner types
+    // satisfy them (bit of a hack, but it will do for now)
+    private final ImmutableSet<String> typeClasses;
 
-    public TypeCons(@Nullable ExpressionBase src, String name, TypeExp... operands)
+    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableSet<String> typeClasses)
     {
         super(src);
         this.name = name;
-        this.operands = ImmutableList.copyOf(operands);
+        this.operands = ImmutableList.of();
+        this.typeClasses = typeClasses;
     }
     
-    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<TypeExp> operands)
+    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<TypeExp> operands, ImmutableSet<String> derivableTypeClasses)
     {
         super(src);
         this.name = name;
         this.operands = operands;
+        this.typeClasses = derivableTypeClasses;
     }
 
     @Override
@@ -58,7 +69,7 @@ public class TypeCons extends TypeExp
                 return sub;
             unifiedOperands.add(sub.getRight());
         }
-        return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build()));
+        return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build(), ImmutableSet.copyOf(Sets.intersection(typeClasses, ((TypeCons) b).typeClasses))));
     }
 
     @Override
@@ -72,7 +83,7 @@ public class TypeCons extends TypeExp
                 return null;
             without.add(t);
         }
-        return new TypeCons(src, name, without.build());
+        return new TypeCons(src, name, without.build(), typeClasses);
     }
 
     @Override
@@ -105,6 +116,34 @@ public class TypeCons extends TypeExp
                     return Either.left(new TypeConcretisationError(StyledString.s("Unknown type constructor: " + name)));
                 });
                 
+        }
+    }
+
+    @Override
+    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    {
+        if (operands.isEmpty())
+        {
+            if (this.typeClasses.containsAll(typeClasses))
+                return null;
+            else
+                return StyledString.s(name + " is not " + Sets.difference(this.typeClasses, typeClasses).stream().collect(Collectors.joining(" or ")));
+        }
+        else
+        {
+            // Apply all type constraints to children:
+            if (this.typeClasses.containsAll(typeClasses))
+            {
+                for (TypeExp operand : operands)
+                {
+                    @Nullable StyledString err = operand.requireTypeClasses(typeClasses);
+                    if (err != null)
+                        return err;
+                }
+                return null;
+            }
+            else
+                return StyledString.s(name + " cannot be " + Sets.difference(this.typeClasses, typeClasses).stream().collect(Collectors.joining(" or ")));
         }
     }
 

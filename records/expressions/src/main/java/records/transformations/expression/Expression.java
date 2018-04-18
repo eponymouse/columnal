@@ -525,7 +525,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         if (args.stream().anyMatch(a -> a instanceof ImplicitLambdaArg))
         {
             MutVar argType = new MutVar(src);
-            return new Pair<UnaryOperator<@Nullable TypeExp>, TypeState>(t -> t == null ? null : new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(argType, t)), typeState.addImplicitLambda(argType));
+            return new Pair<UnaryOperator<@Nullable TypeExp>, TypeState>(t -> t == null ? null : TypeExp.function(src, argType, t), typeState.addImplicitLambda(argType));
         }
         else
         {

@@ -38,7 +38,7 @@ public class Count extends FunctionDefinition
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
-        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(new TypeCons(null, TypeExp.CONS_LIST, new MutVar(null))));
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(TypeExp.list(null, new MutVar(null))));
     }
 
     private static class Instance extends ValueFunction

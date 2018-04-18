@@ -1,0 +1,45 @@
+We need polymorphism in several varieties.  Parametric polymorphism (e.g. first, map, filter etc) comes for free with Hindley-Milner.  We also need ad-hoc polymorphism, for situations such as:
+
+Core:
+ - Equality
+ - Comparison
+ - Show
+ - Read
+ 
+Possible core:
+ - to date, etc
+ - convert units, etc
+ 
+User-definable?
+ - to XML, etc
+ 
+Option 1: Built-in magic!
+===
+Make equality, comparison, show and read built-in functions that work on any type.
+Pros:
+ - Simple
+ - Could potentially be migrated to another scheme later.
+Cons:
+ - No possibility for user-defined functions
+ - Awkward corner cases: comparison/show/read for function types.
+ 
+Option 2: type-classes!
+===
+Use Haskell's type classes
+Pros:
+ - Known system, can be made to work
+ - Would reject equality and comparison for function types.
+Cons:
+ - To add user-definable bits, would need a whole new syntax which I don't want to add right now.
+ 
+
+Option 3: meta-programming
+===
+Use a system whereby a function can take a function type and return a function, then be able to apply this at compile-time.
+
+Pros:
+ - Incredibly flexible.
+ 
+Cons:
+ - Incredibly flexible.  Letting users do this feels a bit dangerous
+ - Potentially too complex for user-defined items.

@@ -58,7 +58,7 @@ public class ArrayExpression extends Expression
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return onError.recordType(this, new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this)));
+            return onError.recordType(this, TypeExp.list(this, new MutVar(this)));
         TypeExp[] typeArray = new TypeExp[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
@@ -71,7 +71,7 @@ public class ArrayExpression extends Expression
         _test_originalTypes = Arrays.asList(typeArray);
         if (elementType == null)
             return null;
-        return onError.recordType(this, new TypeCons(this, TypeExp.CONS_LIST, elementType));
+        return onError.recordType(this, TypeExp.list(this, elementType));
     }
 
     @Override
@@ -79,7 +79,7 @@ public class ArrayExpression extends Expression
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return new Pair<>(onError.recordTypeNN(this, new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this))), state);
+            return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, new MutVar(this))), state);
         TypeExp[] typeArray = new TypeExp[items.size()];
         TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
@@ -97,7 +97,7 @@ public class ArrayExpression extends Expression
         @Nullable TypeState endState = TypeState.union(state, onError.recordErrorCurried(this), typeStates);
         if (endState == null)
             return null;
-        return new Pair<>(onError.recordTypeNN(this, new TypeCons(this, TypeExp.CONS_LIST, elementType)), endState);
+        return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, elementType)), endState);
     }
 
     @Override
@@ -189,7 +189,7 @@ public class ArrayExpression extends Expression
             
             // We test if it is non-blank by unifying with an array type of MutVar, and seeing if the MutVat points to anything after pruning:
             MutVar mut = new MutVar(null);
-            TypeCons arrayOfMut = new TypeCons(null, TypeExp.CONS_LIST, mut);
+            TypeExp arrayOfMut = TypeExp.list(null, mut);
 
             Either<StyledString, TypeExp> unifyResult = TypeExp.unifyTypes(_test_originalTypes.get(i), arrayOfMut);
             // If it doesn't match, not an array:

@@ -1,5 +1,7 @@
 package records.types;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
@@ -11,9 +13,15 @@ import styled.StyledString;
 import utility.Either;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class NumTypeExp extends TypeExp
 {
+    private static final ImmutableSet<String> NATURAL_TYPE_CLASSES = ImmutableSet.of(
+        "Equatable", "Comparable"
+    );
+    
     public final UnitExp unit;
 
     public NumTypeExp(@Nullable ExpressionBase src, UnitExp unit)
@@ -52,6 +60,15 @@ public class NumTypeExp extends TypeExp
             return Either.left(new TypeConcretisationError(StyledString.concat(StyledString.s("Ambiguous unit: "), unit.toStyledString()), DataType.NUMBER));
         else
             return Either.right(DataType.number(new NumberInfo(concreteUnit)));
+    }
+
+    @Override
+    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    {
+        if (NATURAL_TYPE_CLASSES.containsAll(typeClasses))
+            return null;
+        else
+            return StyledString.s("Number is not " + Sets.difference(NATURAL_TYPE_CLASSES, typeClasses).stream().collect(Collectors.joining(" or ")));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package records.types;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -8,6 +10,9 @@ import styled.CommonStyles;
 import styled.StyledString;
 import styled.StyledString.Style;
 import utility.Either;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Named MutVar after the Sheard paper.  Essentially, any time there
@@ -25,16 +30,27 @@ public class MutVar extends TypeExp
     private static long nextId = 0;
     private final long id = nextId++;
     
-    //package-visible:
-    // mutable reference:
-    @Nullable TypeExp pointer;
+    //package-visible, mutable reference:
+    
+    // If we point to something, all type-class information is in the pointer destination.
+    // If we don't point to something, we have the type-class info:
+    Either<ImmutableSet<String>, TypeExp> typeClassesOrPointer;
+
+    public MutVar(@Nullable ExpressionBase src, ImmutableSet<String> typeClasses)
+    {
+        super(src);
+        this.typeClassesOrPointer = Either.left(typeClasses);
+    }
 
     public MutVar(@Nullable ExpressionBase src)
     {
-        super(src);
-        this.pointer = null;
+        this(src, ImmutableSet.of());
     }
 
+    /**
+     * You can assume that this is pruned, b is pruned, and b is not a MutVar unless
+     * this is also a MutVar.
+     */
     @Override
     public Either<StyledString, TypeExp> _unify(TypeExp b) throws InternalException
     {
@@ -45,7 +61,10 @@ public class MutVar extends TypeExp
         }
         else if (b instanceof MutVar)
         {
-            pointer = b;
+            @Nullable StyledString maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft());
+            if (maybeError != null)
+                return Either.left(maybeError);
+            typeClassesOrPointer = Either.right(b);
             return Either.right(this);
         }
         else
@@ -59,7 +78,11 @@ public class MutVar extends TypeExp
             }
             else
             {
-                pointer = without;
+                // Check that the item we are pointing to is a member of the needed type-classes:
+                @Nullable StyledString maybeError = without.requireTypeClasses(typeClassesOrPointer.getLeft());
+                if (maybeError != null)
+                    return Either.left(maybeError);
+                typeClassesOrPointer = Either.right(without);
                 return Either.right(this);
             }
         }
@@ -79,24 +102,27 @@ public class MutVar extends TypeExp
     }
 
     @Override
+    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    {
+        return typeClassesOrPointer.<@Nullable StyledString>either(t -> {
+            typeClassesOrPointer = Either.left(ImmutableSet.copyOf(Sets.union(t, typeClasses)));
+            return null;
+        }, p -> p.requireTypeClasses(typeClasses));
+    }
+
+    @Override
     public TypeExp prune()
     {
-        if (pointer != null)
-        {
-            pointer = pointer.prune();
-            return pointer;
-        }
-        return this;
+        typeClassesOrPointer = typeClassesOrPointer.either(t -> Either.left(t), p -> Either.right(p.prune()));
+        return typeClassesOrPointer.either(t -> this, p -> p);
     }
 
     @Override
     public StyledString toStyledString()
     {
         String name = "_t" + id;
-        if (pointer == null)
-            return StyledString.styled(name, CommonStyles.ITALIC);
-        else
-            return StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]"))
-                    .withStyle(CommonStyles.ITALIC);
+        return typeClassesOrPointer.either(t -> StyledString.styled(name, CommonStyles.ITALIC),
+           pointer -> StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]"))
+                    .withStyle(CommonStyles.ITALIC));
     }
 }

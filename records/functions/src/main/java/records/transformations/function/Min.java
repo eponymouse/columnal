@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableSet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.MutVar;
@@ -15,8 +16,8 @@ public class Min extends FunctionDefinition
     public Min()
     {
         super("minimum", "minimum.mini", typeManager -> {
-            TypeExp any = new MutVar(null);
-            return new FunctionTypesUniform(typeManager, Instance::new, any, new TypeCons(null, TypeExp.CONS_LIST, any));
+            TypeExp any = new MutVar(null, ImmutableSet.of("Comparable"));
+            return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
         });
     }
     

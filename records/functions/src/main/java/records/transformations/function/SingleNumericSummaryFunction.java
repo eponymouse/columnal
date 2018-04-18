@@ -10,6 +10,7 @@ import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionDefinition.TypeMatcher;
 import records.types.NumTypeExp;
 import records.types.TypeCons;
+import records.types.TypeExp;
 import records.types.units.UnitExp;
 import utility.Pair;
 import utility.ValueFunction;
@@ -29,7 +30,7 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
     {
         super(name, miniDescriptionKey, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
-            return new FunctionTypesUniform(typeManager, makeInstance, numType, new TypeCons(null, TypeCons.CONS_LIST, numType));
+            return new FunctionTypesUniform(typeManager, makeInstance, numType, TypeExp.list(null, numType));
         });
     }
 

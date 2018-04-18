@@ -166,7 +166,7 @@ public class FunctionDefinition
         
         public TypeExp getFunctionType(@Nullable ExpressionBase src)
         {
-            return new TypeCons(src, TypeExp.CONS_FUNCTION, paramType, returnType);
+            return TypeCons.function(src, paramType, returnType);
         }
     }
     

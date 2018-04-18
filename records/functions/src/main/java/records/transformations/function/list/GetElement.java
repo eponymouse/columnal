@@ -29,7 +29,7 @@ public class GetElement extends FunctionDefinition
                 TypeExp any = new MutVar(null);
                 return new FunctionTypesUniform(typeManager, Instance::new, any, new TupleTypeExp(null,
                     ImmutableList.of(
-                        new TypeCons(null, TypeExp.CONS_LIST, any),
+                        TypeExp.list(null, any),
                         new NumTypeExp(null, UnitExp.SCALAR)
                     ), true
                 ));

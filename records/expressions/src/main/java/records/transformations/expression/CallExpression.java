@@ -84,7 +84,7 @@ public class CallExpression extends Expression
         if (functionType == null)
             return null;
         TypeExp returnType = new MutVar(this);
-        TypeExp actualCallType = new TypeCons(this, TypeExp.CONS_FUNCTION, paramType, returnType);
+        TypeExp actualCallType = TypeExp.function(this, paramType, returnType);
         
         Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType, actualCallType);
         @Nullable TypeExp checked = onError.recordError(this, temp);
