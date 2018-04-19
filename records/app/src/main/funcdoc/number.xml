@@ -51,4 +51,45 @@
             </example>
         </function>
     </functionGroup>
+
+    <functionGroup id="list">
+        <function name="average">
+            <argType>[Number{*}]</argType>
+            <returnType>Number{*}</returnType>
+            <description>
+                <p>Calculates the average of a list of numbers.</p>
+            </description>
+            <example>
+                <input>[1, 1.5, 5]</input>
+                <output>2.5</output>
+            </example>
+            <example>
+                <input>[33.4]</input>
+                <output>33.4</output>
+            </example>
+            <example>
+                <input>[]</input>
+                <output>error</output>
+            </example>
+        </function>
+        <function name="sum">
+            <argType>[Number{*}]</argType>
+            <returnType>Number{*}</returnType>
+            <description>
+                <p>Calculates the sum (total) of a list of numbers.</p>
+            </description>
+            <example>
+                <input>[1, 1.5, 5]</input>
+                <output>7.5</output>
+            </example>
+            <example>
+                <input>[33.4]</input>
+                <output>33.4</output>
+            </example>
+            <example>
+                <input>[]</input>
+                <output>0</output>
+            </example>
+        </function>
+    </functionGroup>
 </functionDocumentation>

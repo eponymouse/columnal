@@ -16,8 +16,9 @@
     </xsl:template>
     
     <xsl:template match="/functionDocumentation">
+        <xsl:variable name="namespace" select="@namespace"/>
         <xsl:for-each select="functionGroup">
-            <xsl:result-document method="html" href="file:///{$myOutputDir}/group-{@id}.html">
+            <xsl:result-document method="html" href="file:///{$myOutputDir}/group-{$namespace}-{@id}.html">
                 <html>
                     <head>
                         <title><xsl:value-of select="@title"/></title>
@@ -30,7 +31,7 @@
                         </div>
                         <xsl:for-each select="function">
                             <xsl:variable name="functionName" select="@name"/>
-                            <div class="function-item" id="function-@name">
+                            <div class="function-item" id="function-{@name}">
                                 <span class="function-name-header"><xsl:value-of select="@name"/></span>
                                 <span class="function-name-type"><xsl:value-of select="@name"/></span>
                                 <span class="function-type"><!-- @any <xsl:value-of select="scope"/> -->(<xsl:call-template
