@@ -1,0 +1,60 @@
+@import 'fonts';
+
+html {
+    font-family: $font-main;
+    font-size: 13pt;
+}
+
+.function-group-item {
+    display: none;
+}
+
+.function-name-header {
+    display: none;
+}
+.function-name-type {
+    font-weight: bold;
+}
+.function-name-type, .function-type {   
+    font-size: 18pt;
+    .wild-unit {
+        display: inline;
+        position: relative;
+        /* From https://www.webdesignerdepot.com/2012/11/how-to-create-a-simple-css3-tooltip/ */
+        &:hover:after{
+             font-size: 10pt;
+             background: #333;
+             background: rgba(0,0,0,.8);
+             border-radius: 5px;
+             top: 120%;
+             color: #fff;
+             content: "Works for any unit";
+             left: 20%;
+             padding: 5px;
+             position: absolute;
+             z-index: 98;
+             width: 120px;
+        }
+    }
+}
+.function-arrow::before {
+    content: "\27F6";
+}
+.function-type .function-arrow {
+    padding-left: 8pt;
+    padding-right: 12pt;
+}
+
+.examples {
+    .examples-header {
+        font-weight: 14pt;
+        font-weight: bold;
+    }
+    .example .example-call {
+        padding-left: 20pt;
+    }
+    & .function-arrow {
+        padding-left: 4pt;
+        padding-right: 8pt;
+    }
+}

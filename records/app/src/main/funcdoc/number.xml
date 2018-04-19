@@ -5,11 +5,10 @@
             A set of functions for rounding.
         </description>
         <function name="round">
-            <scope>Unit u</scope>
-            <argType>Number{u}</argType>
-            <returnType>Number{u}</returnType>
+            <argType>Number{*}</argType>
+            <returnType>Number{*}</returnType>
             <description>
-                <p>Rounds the given number to the nearest number.</p>
+                <p>Rounds the given number to the nearest whole number (integer).</p>
                 <p>Numbers that end in .5 (which are halfway between two whole numbers) are rounded towards the nearest even number, sometimes known as <a href="https://en.wikipedia.org/wiki/Rounding#Round_half_to_even">banker's rounding</a>.</p>
             </description>
             <example>
@@ -33,10 +32,10 @@
     <functionGroup id="sign">
         <function name="abs">
             <scope>Unit u</scope>
-            <argType>Number{u}</argType>
-            <returnType>Number{u}</returnType>
+            <argType>Number{*}</argType>
+            <returnType>Number{*}</returnType>
             <description>
-                <p>Makes a number positive by discarding the minus sign</p>
+                <p>Makes a number positive by discarding the minus sign.</p>
             </description>
             <example>
                 <input>-3.6</input>
