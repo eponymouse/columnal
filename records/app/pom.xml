@@ -285,7 +285,7 @@
                         <transformationSet>
                             <dir>src/main/help</dir>
                             <outputDir>${project.build.directory}/classes</outputDir>
-                            <stylesheet>src/main/make-help.xsl</stylesheet>
+                            <stylesheet>src/main/xslt/make-help.xsl</stylesheet>
                             <fileMappers>
                                 <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
                                     <targetExtension>.help</targetExtension>
@@ -295,7 +295,7 @@
                         <transformationSet>
                             <dir>src/main/help</dir>
                             <outputDir>${project.build.directory}/classes</outputDir>
-                            <stylesheet>src/main/make-help-html.xsl</stylesheet>
+                            <stylesheet>src/main/xslt/make-help-html.xsl</stylesheet>
                             <fileMappers>
                                 <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
                                     <targetExtension>.html</targetExtension>
@@ -304,7 +304,7 @@
                         </transformationSet>
                         <transformationSet>
                             <dir>src/main/help</dir>
-                            <stylesheet>src/main/make-help-indiv.xsl</stylesheet>
+                            <stylesheet>src/main/xslt/make-help-indiv.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
                             <!-- <outputDir>${project.build.directory}/classes</outputDir> -->
