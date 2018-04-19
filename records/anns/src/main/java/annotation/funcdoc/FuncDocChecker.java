@@ -88,14 +88,14 @@ public class FuncDocChecker extends BaseTypeChecker
                                         nu.xom.Elements functions = group.getChildElements("function");
                                         for (int i = 0; i < functions.size(); i++)
                                         {
-                                            String funcId = functions.get(i).getAttributeValue("id");
-                                            if (funcId == null)
+                                            String funcName = functions.get(i).getAttributeValue("name");
+                                            if (funcName == null)
                                             {
-                                                errors.add("No id found for function item " + i + " in file " + fileName);
+                                                errors.add("No name found for function item " + i + " in file " + fileName);
                                             }
                                             else
                                             {
-                                                allKeys.add(ImmutableList.of(rootId, groupId, funcId));
+                                                allKeys.add(ImmutableList.of(rootId, groupId, funcName));
                                             }
                                         }
                                     }
