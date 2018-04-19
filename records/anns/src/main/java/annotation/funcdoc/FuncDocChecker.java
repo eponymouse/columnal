@@ -1,15 +1,15 @@
-package annotation.help;
+package annotation.funcdoc;
 
-import annotation.help.qual.HelpKey;
-import annotation.help.qual.HelpKeyBottom;
-import annotation.help.qual.UnknownIfHelp;
-import com.sun.source.tree.CompilationUnitTree;
+import annotation.funcdoc.qual.FuncDocKey;
+import annotation.funcdoc.qual.FuncDocKeyBottom;
+import annotation.funcdoc.qual.UnknownIfFuncDoc;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.Tree.Kind;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.ParsingException;
+import org.checkerframework.com.google.common.collect.ImmutableList;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
@@ -18,7 +18,6 @@ import org.checkerframework.framework.type.GenericAnnotatedTypeFactory;
 import org.checkerframework.framework.type.treeannotator.ListTreeAnnotator;
 import org.checkerframework.framework.type.treeannotator.TreeAnnotator;
 import org.checkerframework.javacutil.AnnotationBuilder;
-import org.checkerframework.javacutil.AnnotationUtils;
 
 import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.element.AnnotationMirror;
@@ -26,7 +25,6 @@ import javax.lang.model.util.Elements;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -36,8 +34,8 @@ import java.util.Set;
 /**
  * Created by neil on 29/04/2017.
  */
-@SupportedOptions({"helpfiles"})
-public class HelpFileChecker extends BaseTypeChecker
+@SupportedOptions({"funcdocfiles"})
+public class FuncDocChecker extends BaseTypeChecker
 {
     @Override
     protected BaseTypeVisitor<?> createSourceVisitor()
@@ -50,14 +48,14 @@ public class HelpFileChecker extends BaseTypeChecker
                 // Since we do a lot of checks on Strings, best to cache all available keys
                 // first and check against that, rather than reload files every time:
 
-                return new BaseAnnotatedTypeFactory(HelpFileChecker.this, false) {
-                    private final Set<String> allKeys = new HashSet<>();
+                return new BaseAnnotatedTypeFactory(FuncDocChecker.this, false) {
+                    private final Set<ImmutableList<String>> allKeys = new HashSet<>();
                     private final List<String> errors = new ArrayList<>();
 
                     {
-                        if (this.checker.hasOption("helpfiles"))
+                        if (this.checker.hasOption("funcdocfiles"))
                         {
-                            String[] allFiles = this.checker.getOption("helpfiles").split(";");
+                            String[] allFiles = this.checker.getOption("funcdocfiles").split(";");
                             Builder builder = new Builder();
                             for (String fileName : allFiles)
                             {
@@ -66,24 +64,39 @@ public class HelpFileChecker extends BaseTypeChecker
                                     File file = new File(fileName);
                                     Document doc = builder.build(file);
                                     Element root = doc.getRootElement();
-                                    if (!root.getLocalName().equals("dialog"))
+                                    if (!root.getLocalName().equals("functionDocumentation"))
                                     {
                                         errors.add("Unknown root element: " + root.getLocalName());
                                     }
-                                    String rootId = root.getAttributeValue("id");
-                                    if (rootId == null || !file.getName().equals(rootId + ".xml"))
+                                    String rootId = root.getAttributeValue("namespace");
+                                    if (rootId == null)
                                     {
-                                        errors.add("Id of root element doesn't match file name:" + fileName + " vs " + rootId);
+                                        errors.add("Missing namespace for " + file);
+                                        continue;
                                     }
-                                    nu.xom.Elements helps = root.getChildElements("help");
-                                    for (int i = 0; i < helps.size(); i++)
+                                    
+                                    nu.xom.Elements groups = root.getChildElements("functionGroup");
+                                    for (int groupIndex = 0; groupIndex < groups.size(); groupIndex++)
                                     {
-                                        String helpId = helps.get(i).getAttributeValue("id");
-                                        if (helpId == null)
+                                        String groupId = root.getAttributeValue("id");
+                                        if (groupId == null)
                                         {
-                                            errors.add("No id found for help item index " + i + " in file " + fileName);
+                                            errors.add("Missing group id for group " + groupIndex + " in " + file);
+                                            continue;
                                         }
-                                        allKeys.add(rootId + "/" + helpId);
+                                        nu.xom.Elements functions = root.getChildElements("function");
+                                        for (int i = 0; i < functions.size(); i++)
+                                        {
+                                            String funcId = functions.get(i).getAttributeValue("id");
+                                            if (funcId == null)
+                                            {
+                                                errors.add("No id found for function item " + i + " in file " + fileName);
+                                            }
+                                            else
+                                            {
+                                                allKeys.add(ImmutableList.of(rootId, groupId, funcId));
+                                            }
+                                        }
                                     }
                                 }
                                 catch(IOException | ParsingException e)
@@ -94,7 +107,7 @@ public class HelpFileChecker extends BaseTypeChecker
                         }
                         else
                         {
-                            errors.add("No helpfiles parameter specified");
+                            errors.add("No funcdocfiles parameter specified");
                         }
                     }
 
@@ -104,12 +117,12 @@ public class HelpFileChecker extends BaseTypeChecker
                     }
 
                     class ValueTypeTreeAnnotator extends TreeAnnotator {
-                        private final AnnotationMirror HELP_KEY;
+                        private final AnnotationMirror FUNCDOC_KEY;
 
                         public ValueTypeTreeAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
                         {
                             super(atypeFactory);
-                            this.HELP_KEY = AnnotationBuilder.fromClass(elements, HelpKey.class);
+                            this.FUNCDOC_KEY = AnnotationBuilder.fromClass(elements, FuncDocKey.class);
                         }
 
                         public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)
@@ -124,14 +137,13 @@ public class HelpFileChecker extends BaseTypeChecker
                                 errors.clear();
                             }
 
-                            if(!type.isAnnotatedInHierarchy(this.HELP_KEY))
+                            if(!type.isAnnotatedInHierarchy(this.FUNCDOC_KEY))
                             {
-                                // Empty string is automatically @Value
                                 if (tree.getKind() == Kind.STRING_LITERAL)
                                 {
                                     String value = tree.getValue().toString();
-                                    if (allKeys.contains(value))
-                                        type.addAnnotation(this.HELP_KEY);
+                                    if (allKeys.contains(ImmutableList.copyOf(value.split("/"))))
+                                        type.addAnnotation(this.FUNCDOC_KEY);
                                 }
                             }
 
@@ -150,9 +162,9 @@ public class HelpFileChecker extends BaseTypeChecker
                     protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers()
                     {
                         return new HashSet<>(Arrays.asList(
-                            UnknownIfHelp.class,
-                            HelpKey.class,
-                            HelpKeyBottom.class
+                            UnknownIfFuncDoc.class,
+                            FuncDocKey.class,
+                            FuncDocKeyBottom.class
                         ));
                     }
                 };

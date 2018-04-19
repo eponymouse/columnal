@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<functionDocumentation>
+<functionDocumentation namespace="number">
     <functionGroup id="rounding" title="Functions for rounding">
         <description>
             A set of functions for rounding.

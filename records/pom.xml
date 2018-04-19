@@ -137,6 +137,7 @@
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
                                     <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
                                     <annotationProcessor>annotation.help.HelpFileChecker</annotationProcessor>
+                                    <annotationProcessor>annotation.funcdoc.FuncDocChecker</annotationProcessor>
                                     <!-- Temporarily disabled while sorting out the LoadableExpression bug: -->
                                     <!-- <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor> -->
                                 </annotationProcessors>
