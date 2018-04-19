@@ -269,7 +269,7 @@
                 </executions>
             </plugin>
 
-            <!-- XSLT processor for help files -->
+            <!-- XSLT processor for help and funcdoc files -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>xml-maven-plugin</artifactId>
@@ -305,6 +305,21 @@
                         <transformationSet>
                             <dir>src/main/help</dir>
                             <stylesheet>src/main/xslt/make-help-indiv.xsl</stylesheet>
+                            <!-- When generating multiple files, outputDir is not respected.
+                                 So we must pass as a parameter instead -->
+                            <!-- <outputDir>${project.build.directory}/classes</outputDir> -->
+                            <parameters>
+                                <parameter>
+                                    <name>myOutputDir</name>
+                                    <value>${project.build.directory}/classes</value>
+                                </parameter>
+                            </parameters>
+                        </transformationSet>
+
+
+                        <transformationSet>
+                            <dir>src/main/funcdoc</dir>
+                            <stylesheet>src/main/xslt/funcdoc-indiv-html.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
                             <!-- <outputDir>${project.build.directory}/classes</outputDir> -->

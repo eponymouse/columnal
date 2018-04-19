@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<functionDocumentation>
+    <functionGroup id="rounding" title="Functions for rounding">
+        <description>
+            A set of functions for rounding.
+        </description>
+        <function name="round">
+            <scope>Unit u</scope>
+            <argType>Number{u}</argType>
+            <returnType>Number{u}</returnType>
+            <description>
+                <p>Rounds the given number to the nearest number.</p>
+                <p>Numbers that end in .5 (which are halfway between two whole numbers) are rounded towards the nearest even number, sometimes known as <a href="https://en.wikipedia.org/wiki/Rounding#Round_half_to_even">banker's rounding</a>.</p>
+            </description>
+            <example>
+                <input>0.333</input>
+                <output>0</output>
+            </example>
+            <example>
+                <input>2</input>
+                <output>2</output>
+            </example>
+            <example>
+                <input>0.5</input>
+                <output>0</output>
+            </example>
+            <example>
+                <input>1.5</input>
+                <output>2</output>
+            </example>
+        </function>
+    </functionGroup>
+    <functionGroup id="sign">
+        <function name="abs">
+            <scope>Unit u</scope>
+            <argType>Number{u}</argType>
+            <returnType>Number{u}</returnType>
+            <description>
+                <p>Makes a number positive by discarding the minus sign</p>
+            </description>
+            <example>
+                <input>-3.6</input>
+                <output>3.6</output>
+            </example>
+            <example>
+                <input>5</input>
+                <output>5</output>
+            </example>
+            <example>
+                <input>0</input>
+                <output>0</output>
+            </example>
+        </function>
+    </functionGroup>
+</functionDocumentation>
