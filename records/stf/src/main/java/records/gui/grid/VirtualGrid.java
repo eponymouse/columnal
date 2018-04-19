@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import annotation.funcdoc.qual.UnknownIfFuncDoc;
 import annotation.help.qual.UnknownIfHelp;
 import annotation.qual.UnknownIfValue;
 import annotation.recorded.qual.UnknownIfRecorded;
@@ -1069,7 +1070,7 @@ public final class VirtualGrid implements ScrollBindable
              * location.  For the third one we find the relevant grid area.
              */
             
-            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits MouseEvent> clickHandler = mouseEvent -> {
+            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc MouseEvent> clickHandler = mouseEvent -> {
 
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
@@ -1124,7 +1125,7 @@ public final class VirtualGrid implements ScrollBindable
             };
             addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
 
-            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits MouseEvent> capture = mouseEvent -> {
+            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc MouseEvent> capture = mouseEvent -> {
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
 
                 if (cellPosition != null)
