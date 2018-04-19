@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<functionDocumentation namespace="number">
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="number">
     <functionGroup id="rounding" title="Functions for rounding">
         <description>
             A set of functions for rounding.
@@ -29,9 +31,8 @@
             </example>
         </function>
     </functionGroup>
-    <functionGroup id="sign">
+    <functionGroup id="sign" title="Functions for manipulating sign">
         <function name="abs">
-            <scope>Unit u</scope>
             <argType>Number{*}</argType>
             <returnType>Number{*}</returnType>
             <description>
@@ -52,7 +53,7 @@
         </function>
     </functionGroup>
 
-    <functionGroup id="list">
+    <functionGroup id="list" title="Functions for dealing with lists of numbers">
         <function name="average">
             <argType>[Number{*}]</argType>
             <returnType>Number{*}</returnType>
