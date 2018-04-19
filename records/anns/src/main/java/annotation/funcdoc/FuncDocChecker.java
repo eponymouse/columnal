@@ -1,5 +1,6 @@
 package annotation.funcdoc;
 
+import annotation.funcdoc.qual.FuncDocGroupKey;
 import annotation.funcdoc.qual.FuncDocKey;
 import annotation.funcdoc.qual.FuncDocKeyBottom;
 import annotation.funcdoc.qual.UnknownIfFuncDoc;
@@ -9,7 +10,6 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.ParsingException;
-import org.checkerframework.com.google.common.collect.ImmutableList;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
@@ -32,7 +32,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by neil on 29/04/2017.
+ * We have two keys;
+ * @FuncDocKey, which checks that a given item is a namespace/function-name key,
+ *   and that the key is present in exactly one function group.
+ * @FuncDocGroupKey, which checks that a given item is a namespace/function-group key.
  */
 @SupportedOptions({"funcdocfiles"})
 public class FuncDocChecker extends BaseTypeChecker
@@ -49,7 +52,10 @@ public class FuncDocChecker extends BaseTypeChecker
                 // first and check against that, rather than reload files every time:
 
                 return new BaseAnnotatedTypeFactory(FuncDocChecker.this, false) {
-                    private final Set<ImmutableList<String>> allKeys = new HashSet<>();
+                    // Namespace, function group
+                    private final Set<List<String>> functionGroupKeys = new HashSet<>();
+                    // Namespace, function name
+                    private final Set<List<String>> individualFunctionKeys = new HashSet<>();
                     private final List<String> errors = new ArrayList<>();
 
                     {
@@ -68,8 +74,8 @@ public class FuncDocChecker extends BaseTypeChecker
                                     {
                                         errors.add("Unknown root element: " + root.getLocalName());
                                     }
-                                    String rootId = root.getAttributeValue("namespace");
-                                    if (rootId == null)
+                                    String namespace = root.getAttributeValue("namespace");
+                                    if (namespace == null)
                                     {
                                         errors.add("Missing namespace for " + file);
                                         continue;
@@ -85,6 +91,7 @@ public class FuncDocChecker extends BaseTypeChecker
                                             errors.add("Missing group id for group " + groupIndex + " in " + file);
                                             continue;
                                         }
+                                        functionGroupKeys.add(Arrays.asList(namespace, groupId));
                                         nu.xom.Elements functions = group.getChildElements("function");
                                         for (int i = 0; i < functions.size(); i++)
                                         {
@@ -95,12 +102,13 @@ public class FuncDocChecker extends BaseTypeChecker
                                             }
                                             else
                                             {
-                                                allKeys.add(ImmutableList.of(rootId, groupId, funcName));
+                                                if (!individualFunctionKeys.add(Arrays.asList(namespace, funcName)))
+                                                    errors.add("Duplicate key found for " + namespace + "/" + funcName);
                                             }
                                         }
                                     }
                                 }
-                                catch(IOException | ParsingException e)
+                                catch (IOException | ParsingException e)
                                 {
                                     errors.add("Error loading " + fileName + ": " + e.getLocalizedMessage());
                                 }
@@ -119,11 +127,13 @@ public class FuncDocChecker extends BaseTypeChecker
 
                     class ValueTypeTreeAnnotator extends TreeAnnotator {
                         private final AnnotationMirror FUNCDOC_KEY;
+                        private final AnnotationMirror FUNCDOCGROUP_KEY;
 
                         public ValueTypeTreeAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
                         {
                             super(atypeFactory);
                             this.FUNCDOC_KEY = AnnotationBuilder.fromClass(elements, FuncDocKey.class);
+                            this.FUNCDOCGROUP_KEY = AnnotationBuilder.fromClass(elements, FuncDocGroupKey.class);
                         }
 
                         public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)
@@ -138,13 +148,22 @@ public class FuncDocChecker extends BaseTypeChecker
                                 errors.clear();
                             }
 
-                            if(!type.isAnnotatedInHierarchy(this.FUNCDOC_KEY))
+                            if (!type.isAnnotatedInHierarchy(this.FUNCDOC_KEY))
                             {
                                 if (tree.getKind() == Kind.STRING_LITERAL)
                                 {
                                     String value = tree.getValue().toString();
-                                    if (allKeys.contains(ImmutableList.copyOf(value.split("/"))))
+                                    if (individualFunctionKeys.contains(Arrays.asList(value.split("/"))))
                                         type.addAnnotation(this.FUNCDOC_KEY);
+                                }
+                            }
+                            if (!type.isAnnotatedInHierarchy(this.FUNCDOCGROUP_KEY))
+                            {
+                                if (tree.getKind() == Kind.STRING_LITERAL)
+                                {
+                                    String value = tree.getValue().toString();
+                                    if (functionGroupKeys.contains(Arrays.asList(value.split("/"))))
+                                        type.addAnnotation(this.FUNCDOCGROUP_KEY);
                                 }
                             }
 
@@ -165,6 +184,7 @@ public class FuncDocChecker extends BaseTypeChecker
                         return new HashSet<>(Arrays.asList(
                             UnknownIfFuncDoc.class,
                             FuncDocKey.class,
+                            FuncDocGroupKey.class,
                             FuncDocKeyBottom.class
                         ));
                     }
