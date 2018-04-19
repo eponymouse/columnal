@@ -78,13 +78,14 @@ public class FuncDocChecker extends BaseTypeChecker
                                     nu.xom.Elements groups = root.getChildElements("functionGroup");
                                     for (int groupIndex = 0; groupIndex < groups.size(); groupIndex++)
                                     {
-                                        String groupId = root.getAttributeValue("id");
+                                        Element group = groups.get(groupIndex);
+                                        String groupId = group.getAttributeValue("id");
                                         if (groupId == null)
                                         {
                                             errors.add("Missing group id for group " + groupIndex + " in " + file);
                                             continue;
                                         }
-                                        nu.xom.Elements functions = root.getChildElements("function");
+                                        nu.xom.Elements functions = group.getChildElements("function");
                                         for (int i = 0; i < functions.size(); i++)
                                         {
                                             String funcId = functions.get(i).getAttributeValue("id");
