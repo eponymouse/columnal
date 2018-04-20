@@ -12,7 +12,6 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionDefinition.FunctionTypesUniform;
 import records.transformations.function.FunctionDefinition.TypeMatcher;
-import records.transformations.function.FunctionGroup;
 import records.types.MutVar;
 import records.types.TupleTypeExp;
 import records.types.TypeCons;
@@ -23,16 +22,9 @@ import utility.ValueFunction;
 
 import java.util.function.Supplier;
 
-public class AnyAllNone extends FunctionGroup
+// Maybe this should be a package
+public abstract class AnyAllNone
 {
-    public AnyAllNone()
-    {
-        super("any/all/none", "anyAllNone.short", ImmutableList.of(
-            new FunctionDefinition("any", "any.mini", new Matcher(() -> new Processor(true, null, false))),
-            new FunctionDefinition("all", "all.mini", new Matcher(() -> new Processor(null, false, true))),
-            new FunctionDefinition("none", "none.mini", new Matcher(() -> new Processor(false, null, true)))));
-    }
-    
     private static class Processor extends ValueFunction
     {
         private final @Nullable @Value Boolean returnIfTrueFound;
@@ -78,6 +70,30 @@ public class AnyAllNone extends FunctionGroup
         {
             MutVar elemType = new MutVar(null);
             return new FunctionTypesUniform(typeManager, makeInstance, TypeExp.bool(null), new TupleTypeExp(null, ImmutableList.of(TypeExp.list(null, elemType), TypeExp.function(null, elemType, TypeExp.bool(null))), true));
+        }
+    }
+
+    public static class Any extends FunctionDefinition
+    {
+        public Any()
+        {
+            super("any", "any.mini", new Matcher(() -> new Processor(true, null, false)));
+        }
+    }
+
+    public static class All extends FunctionDefinition
+    {
+        public All()
+        {
+            super("all", "all.mini", new Matcher(() -> new Processor(null, false, true)));
+        }
+    }
+
+    public static class None extends FunctionDefinition
+    {
+        public None()
+        {
+            super("none", "none.mini", new Matcher(() -> new Processor(false, null, true)));
         }
     }
 }

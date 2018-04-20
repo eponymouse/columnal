@@ -27,11 +27,6 @@ import java.util.List;
  */
 public class ToDateTime extends ToTemporalFunction
 {
-    public ToDateTime()
-    {
-        super("datetime", "datetime.short");
-    }
-
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override

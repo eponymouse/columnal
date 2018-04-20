@@ -35,11 +35,6 @@ import static records.transformations.function.ToTemporalFunction.F.YEAR4;
  */
 public class ToDate extends ToTemporalFunction
 {
-    public ToDate()
-    {
-        super("date", "date.short");
-    }
-
     // All the formats here use space as a separator, and assume that
     // the items have been fed through the pre-process function in here.
     public static List<List<DateTimeFormatter>> FORMATS = Arrays.asList(

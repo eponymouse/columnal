@@ -14,10 +14,6 @@ public class Xor extends FunctionDefinition
     {
         super("xor", "xor.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
     }
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("xor.short", new Xor());
-    }
 
     private static class Instance extends ValueFunction
     {

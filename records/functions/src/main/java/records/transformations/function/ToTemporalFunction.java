@@ -34,13 +34,8 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 15/12/2016.
  */
-public abstract class ToTemporalFunction extends FunctionGroup
+public abstract class ToTemporalFunction
 {
-    public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey)
-    {
-        super(name, shortDescripKey, ImmutableList.of());
-    }
-
     // public for testing
     public static DateTimeFormatter m(String sep, F... items)
     {
@@ -116,7 +111,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
     
     protected final FunctionDefinition fromString(String name, @LocalizableKey String miniDescriptionKey)
     {
-        return new FunctionDefinition(name, miniDescriptionKey, FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT);
+        return new FunctionDefinition(name, miniDescriptionKey, () -> new FromStringInstance(name), DataType.date(getResultType()), DataType.TEXT);
     }
 
     abstract DateTimeInfo getResultType();
@@ -128,6 +123,12 @@ public abstract class ToTemporalFunction extends FunctionGroup
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
+        private final String name;
+
+        private FromStringInstance(String name)
+        {
+            this.name = name;
+        }
 
         @Override
         public @Value Object call(@Value Object param) throws UserException, InternalException
@@ -172,7 +173,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
                 }
             }
 
-            throw new UserException("Function " + getName() + " could not parse date/time: \"" + src + "\"");
+            throw new UserException("Function " + name + " could not parse date/time: \"" + src + "\"");
         }
 
         @NonNull
@@ -214,17 +215,6 @@ public abstract class ToTemporalFunction extends FunctionGroup
     }
 
     abstract @Value Temporal fromTemporal(TemporalAccessor temporalAccessor);
-
-    @Override
-    public ImmutableList<FunctionDefinition> getFunctions(UnitManager mgr) throws InternalException
-    {
-        ImmutableList<FunctionDefinition> existing = super.getFunctions(mgr);
-        if (existing.isEmpty())
-        {
-            setFunctions(getTemporalFunctions(mgr));
-        }
-        return super.getFunctions(mgr);
-    }
 
     abstract ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException;
 }

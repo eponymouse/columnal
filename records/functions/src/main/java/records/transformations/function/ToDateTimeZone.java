@@ -29,11 +29,6 @@ import java.util.List;
  */
 public class ToDateTimeZone extends ToTemporalFunction
 {
-    public ToDateTimeZone()
-    {
-        super("datetimezoned", "datetimezoned.short");
-    }
-
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override

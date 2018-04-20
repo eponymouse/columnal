@@ -14,11 +14,6 @@ public class StringLeft extends FunctionDefinition
     {
         super("left", "left.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
     }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("left.short", new StringLeft());
-    }
 
     private static class Instance extends ValueFunction
     {

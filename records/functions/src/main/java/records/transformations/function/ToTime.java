@@ -35,11 +35,6 @@ import static records.transformations.function.ToTemporalFunction.F.SEC_OPT;
  */
 public class ToTime extends ToTemporalFunction
 {
-    public ToTime()
-    {
-        super("time", "time.short");
-    }
-
     public static List<DateTimeFormatter> FORMATS = Arrays.asList(
         m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), // HH:mm[:ss[.S]]
         m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM) // hh:mm[:ss[.S]] PM

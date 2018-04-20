@@ -13,7 +13,6 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.types.MutVar;
 import records.types.TypeExp;
@@ -55,16 +54,7 @@ public class TypeState
     {
         this.variables = variables;
         this.typeManager = typeManager;
-        ImmutableList<FunctionDefinition> allFunctions;
-        try
-        {
-            allFunctions = FunctionList.getAllFunctionDefinitions(unitManager).stream().map(p -> p.getSecond()).collect(ImmutableList.toImmutableList());
-        }
-        catch (InternalException e)
-        {
-            Utility.report(e);
-            allFunctions = ImmutableList.of();
-        }
+        ImmutableList<FunctionDefinition> allFunctions = FunctionList.getAllFunctions(unitManager);
         this.functions = allFunctions.stream().collect(ImmutableMap.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toImmutableMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
         this.unitManager = unitManager;
     }

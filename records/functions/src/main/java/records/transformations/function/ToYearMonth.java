@@ -24,12 +24,7 @@ import java.util.List;
  * Created by neil on 16/12/2016.
  */
 public class ToYearMonth extends ToTemporalFunction
-{
-    public ToYearMonth()
-    {
-        super("dateym", "dateym.short");
-    }
-    
+{    
     ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();

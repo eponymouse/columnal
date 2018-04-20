@@ -15,11 +15,6 @@ public class StringMid extends FunctionDefinition
         super("middle", "middle.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
     }
 
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("middle.short", new StringMid());
-    }
-
     private static class Instance extends ValueFunction
     {
         @Override

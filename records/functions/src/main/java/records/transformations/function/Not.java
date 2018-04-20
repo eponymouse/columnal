@@ -14,11 +14,6 @@ public class Not extends FunctionDefinition
     {
         super("not", "not.mini", Instance::new, DataType.BOOLEAN, DataType.BOOLEAN);
     }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("not.short", new Not());
-    }
 
     private static class Instance extends ValueFunction
     {

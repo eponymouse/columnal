@@ -29,11 +29,6 @@ public class ToTimeAndZone extends ToTemporalFunction
 {
     private static final List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
-    public ToTimeAndZone()
-    {
-        super("timezoned", "timez.short");
-    }
-
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {

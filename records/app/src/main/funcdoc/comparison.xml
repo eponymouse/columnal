@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="comparison">
+    <functionGroup id="minmax" title="Min-Max">
+        <description>Minimum and maximum functions.</description>
+        <function name="minimum">
+            <scope>Comparable t</scope>
+            <argType>[t]</argType>
+            <returnType>t</returnType>
+            <description>
+                <p>Gets the lowest item in the list.</p>
+            </description>
+            <example>
+                <input>[54, 7, 82]</input>
+                <output>7</output>
+            </example>
+            <example>
+                <input>["cat", "aardvark", "bear"]</input>
+                <output>"aardvark"</output>
+            </example>
+            <example>
+                <input>[]</input>
+                <output>error</output>
+            </example>
+        </function>
+        <function name="maximum">
+            <scope>Comparable t</scope>
+            <argType>[t]</argType>
+            <returnType>t</returnType>
+            <description>
+                <p>Gets the highest item in the list.</p>
+            </description>
+            <example>
+                <input>[54, 7, 82]</input>
+                <output>82</output>
+            </example>
+            <example>
+                <input>["zebra", "wolf", "vole"]</input>
+                <output>"zebra"</output>
+            </example>
+            <example>
+                <input>[]</input>
+                <output>error</output>
+            </example>
+        </function>
+    </functionGroup>
+</functionDocumentation>

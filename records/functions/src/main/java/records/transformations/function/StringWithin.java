@@ -15,11 +15,6 @@ public class StringWithin extends FunctionDefinition
         super("within", "within.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.TEXT, DataType.TEXT));
     }
 
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("within.short", new StringWithin());
-    }
-
     private static class Instance extends ValueFunction
     {
 

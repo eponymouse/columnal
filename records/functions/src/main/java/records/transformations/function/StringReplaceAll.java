@@ -14,11 +14,6 @@ public class StringReplaceAll extends FunctionDefinition
     {
         super("replace.all", "replace.all.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
     }
-
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("replace.all.short", new StringReplaceAll());
-    }
     
     private static class Instance extends ValueFunction
     {

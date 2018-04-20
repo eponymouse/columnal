@@ -19,11 +19,6 @@ public class StringWithinIndex extends FunctionDefinition
         super("within.positions", "within.positions.mini", Instance::new, DataType.array(DataType.NUMBER), DataType.tuple(DataType.TEXT, DataType.TEXT));
     }
 
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("within.indexes.short", new StringWithinIndex());
-    }
-
     private static class Instance extends ValueFunction
     {
 

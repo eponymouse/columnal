@@ -15,11 +15,6 @@ public class StringLength extends FunctionDefinition
         super("text length", "length.mini", Instance::new, DataType.NUMBER, DataType.TEXT);
     }
     
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("length.short", new StringLength());
-    }
-    
     private static class Instance extends ValueFunction
     {
 

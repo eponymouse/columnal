@@ -25,9 +25,4 @@ public class Round extends SingleNumericInOutFunction
             }
         });
     }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("round.short", new Round());
-    }
 }

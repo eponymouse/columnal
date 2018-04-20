@@ -38,11 +38,6 @@ public class ToString extends FunctionDefinition
             }
         });
     }
-
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("to.string.short", new ToString());
-    }
     
     private static class Instance extends ValueFunction
     {

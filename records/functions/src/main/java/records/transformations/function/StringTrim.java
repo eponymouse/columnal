@@ -14,11 +14,6 @@ public class StringTrim extends FunctionDefinition
     {
         super("trim", "trim.mini", Instance::new, DataType.TEXT, DataType.TEXT);
     }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("trim.short", new StringTrim());
-    }
 
     private static class Instance extends ValueFunction
     {

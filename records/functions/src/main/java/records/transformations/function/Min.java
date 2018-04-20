@@ -20,11 +20,6 @@ public class Min extends FunctionDefinition
             return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
         });
     }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("min.short", new Min());
-    }
 
     private static class Instance extends ValueFunction
     {

@@ -813,6 +813,11 @@ public class Utility
             r.add(d);
         return r.stream();
     }
+
+    public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b)
+    {
+        return Stream.concat(a, b);
+    }
     
     public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c)
     {

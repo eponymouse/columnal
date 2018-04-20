@@ -39,7 +39,6 @@ import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import styled.StyledString;
 import utility.Either;
@@ -517,9 +516,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @RequiresNonNull("parent")
     private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r) throws InternalException
     {
-        for (Pair<FunctionGroup, FunctionDefinition> function : FunctionList.getAllFunctionDefinitions(parent.getEditor().getTypeManager().getUnitManager()))
+        for (FunctionDefinition function : FunctionList.getAllFunctions(parent.getEditor().getTypeManager().getUnitManager()))
         {
-            r.add(new FunctionCompletion(function.getFirst(), function.getSecond(), parent.getEditor().getTypeManager().getUnitManager()));
+            r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
         }
     }
 
@@ -602,13 +601,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     public static class FunctionCompletion extends Completion
     {
-        private final FunctionGroup functionGroup;
         private final FunctionDefinition function;
         private final UnitManager unitManager;
 
-        public FunctionCompletion(FunctionGroup functionGroup, FunctionDefinition function, UnitManager unitManager)
+        public FunctionCompletion(FunctionDefinition function, UnitManager unitManager)
         {
-            this.functionGroup = functionGroup;
             this.function = function;
             this.unitManager = unitManager;
         }
@@ -647,14 +644,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public @Nullable Node getFurtherDetails()
         {
-            TextFlow textFlow = new TextFlow();
+            TextFlow textFlow = new TextFlow(); /*
             Text functionName = new Text(function.getName() + "\n");
             functionName.getStyleClass().add("function-info-name");
             textFlow.getChildren().add(functionName);
             textFlow.getChildren().addAll(
                 TranslationUtility.makeTextLine(functionGroup.getShortDescriptionKey(), "function-info-short-description")
             );
-            textFlow.getStyleClass().add("function-info");
+            textFlow.getStyleClass().add("function-info"); */
             return textFlow;
         }
     }

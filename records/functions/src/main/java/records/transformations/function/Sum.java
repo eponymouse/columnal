@@ -20,11 +20,6 @@ public class Sum extends SingleNumericSummaryFunction
         super(NAME, "sum.mini", Instance::new);
     }
     
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("sum.short", new Sum());
-    }
-
     private static class Instance extends ValueFunction
     {
         @Override

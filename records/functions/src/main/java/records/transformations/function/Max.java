@@ -18,11 +18,6 @@ public class Max extends FunctionDefinition
     {
         super("maximum", "maximum.mini", Max::listOfAny);
     }
-
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("max.short", new Max());
-    }
     
     private static FunctionTypes listOfAny(TypeManager typeManager)
     {

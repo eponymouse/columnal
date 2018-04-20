@@ -36,9 +36,4 @@ public class Mean extends SingleNumericSummaryFunction
             }
         });
     }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("average.short", new Mean());
-    }
 }

@@ -7,7 +7,6 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
 import records.types.MutVar;
 import records.types.NumTypeExp;
 import records.types.TupleTypeExp;
@@ -35,11 +34,6 @@ public class GetElement extends FunctionDefinition
                 ));
             }
         );
-    }
-    
-    public static FunctionGroup group()
-    {
-        return new FunctionGroup("element.short", new GetElement());
     }
 
     private static class Instance extends ValueFunction
