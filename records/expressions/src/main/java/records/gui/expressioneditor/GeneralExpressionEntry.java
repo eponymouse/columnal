@@ -12,6 +12,7 @@ import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.scene.web.WebView;
 import log.Log;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -48,6 +49,9 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -642,17 +646,17 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         
         @Override
-        public @Nullable Node getFurtherDetails()
+        public @Nullable String getFurtherDetailsURL()
         {
-            TextFlow textFlow = new TextFlow(); /*
-            Text functionName = new Text(function.getName() + "\n");
-            functionName.getStyleClass().add("function-info-name");
-            textFlow.getChildren().add(functionName);
-            textFlow.getChildren().addAll(
-                TranslationUtility.makeTextLine(functionGroup.getShortDescriptionKey(), "function-info-short-description")
-            );
-            textFlow.getStyleClass().add("function-info"); */
-            return textFlow;
+            String scopedName = "/function-" + function.getDocKey().replace("/", "-");
+            URL url = getClass().getResource(scopedName + ".html");
+            if (url != null)
+                return url.toExternalForm() + "#" + scopedName;
+            else
+            {
+                Log.error("Missing file: " + scopedName);
+                return null;
+            }
         }
     }
 

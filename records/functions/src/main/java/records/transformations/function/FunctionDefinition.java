@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -31,22 +32,29 @@ import java.util.function.Supplier;
  */
 public class FunctionDefinition
 {
+    // Namespace slash function name
+    private final @FuncDocKey String funcDocKey;
     private final String name;
     private final TypeMatcher typeMatcher;
     private final @LocalizableKey String miniDescriptionKey;
 
-    public FunctionDefinition(String name, @LocalizableKey String miniDescriptionKey, TypeMatcher typeMatcher)
+    public FunctionDefinition(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, TypeMatcher typeMatcher)
     {
-        this.name = name;
+        this.funcDocKey = funcDocKey;
+        this.name = extractName(funcDocKey);
         this.miniDescriptionKey = miniDescriptionKey;
         this.typeMatcher = typeMatcher;
     }
 
-    public FunctionDefinition(String name, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance, DataType returnType, DataType paramType)
+    private static String extractName(@FuncDocKey String funcDocKey)
     {
-        this.name = name;
-        this.miniDescriptionKey = miniDescriptionKey;
-        this.typeMatcher = new ExactType(makeInstance, returnType, paramType);
+        String[] split = funcDocKey.split("/");
+        return split[split.length - 1];
+    }
+
+    public FunctionDefinition(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance, DataType returnType, DataType paramType)
+    {
+        this(funcDocKey, miniDescriptionKey, new ExactType(makeInstance, returnType, paramType));
     }
 
     public @LocalizableKey String getMiniDescriptionKey()
@@ -105,6 +113,11 @@ public class FunctionDefinition
     public String getName()
     {
         return name;
+    }
+
+    public @FuncDocKey String getDocKey()
+    {
+        return funcDocKey;
     }
 
     public static interface TypeMatcher

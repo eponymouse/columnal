@@ -1,6 +1,8 @@
 package records.gui.expressioneditor;
 
 import com.sun.javafx.scene.control.skin.TextFieldSkin;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
@@ -9,8 +11,6 @@ import javafx.geometry.Point2D;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PopupControl;
@@ -20,6 +20,7 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.web.WebView;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -45,7 +46,6 @@ import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -59,6 +59,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
     private final ListView<C> completions;
     private final BorderPane container;
     private final Instruction instruction;
+    private final WebView webView;
+    private final NumberBinding webViewHeightBinding;
     private boolean settingContentDirectly = false;
 
     public static enum WhitespacePolicy
@@ -106,6 +108,10 @@ public class AutoComplete<C extends Completion> extends PopupControl
         completions.getStyleClass().add("autocomplete");
         completions.setPrefWidth(400.0);
         container = new BorderPane(null, null, null, null, completions);
+        this.webView = new WebView();
+        this.webView.setPrefWidth(400.0);
+        webViewHeightBinding = Bindings.max(300.0f, completions.heightProperty());
+        this.webView.prefHeightProperty().bind(webViewHeightBinding);
         
         FXUtility.listen(completions.getItems(), change -> {
             updateHeight(completions);
@@ -130,8 +136,16 @@ public class AutoComplete<C extends Completion> extends PopupControl
         FXUtility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
             if (selected != null)
             {
-                @Nullable Node furtherDetails = selected.getFurtherDetails();
-                container.setCenter(furtherDetails);
+                @Nullable String url = selected.getFurtherDetailsURL();
+                if (url != null)
+                {
+                    webView.getEngine().load(url);
+                    container.setCenter(webView);
+                }
+                else
+                {
+                    container.setCenter(null);
+                }
             }
             else
             {
@@ -537,10 +551,10 @@ public class AutoComplete<C extends Completion> extends PopupControl
         public abstract boolean features(String curInput, char character);
 
         /**
-         * Gets the details to show to the right of the list.  If null, nothing
+         * Gets the URL of the details to show to the right of the list.  If null, nothing
          * is shown to the right.
          */
-        public @Nullable Node getFurtherDetails()
+        public @Nullable String getFurtherDetailsURL()
         {
             return null;
         }

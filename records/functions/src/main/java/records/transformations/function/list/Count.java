@@ -26,7 +26,7 @@ public class Count extends FunctionDefinition
 {
     public Count()
     {
-        super("list length", "list.length.mini", Instance::new, DataType.NUMBER, DataType.array());
+        super("list/list length", "list.length.mini", Instance::new, DataType.NUMBER, DataType.array());
     }
     
     @Override
