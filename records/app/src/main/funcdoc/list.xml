@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="list">
+    <functionGroup id="length" title="List length">
+        <description>
+            Function for calculating list length
+        </description>
+        <function name="list length">
+            <scope>t</scope>
+            <argType>[t]</argType>
+            <returnType>Number</returnType>
+            <description>
+                <p>Gets the number of elements in the given list.</p>
+            </description>
+            <example>
+                <input>["a", "word", "list"]</input>
+                <output>3</output>
+            </example>
+            <example>
+                <input>[2, 4, 6, 8]</input>
+                <output>4</output>
+            </example>
+            <example>
+                <input>[]</input>
+                <output>0</output>
+            </example>
+        </function>
+    </functionGroup>
+    <functionGroup id="get" title="Functions for getting elements">
+        <description>
+            Function for getting an element from a list.
+        </description>
+        <function name="element">
+            <scope>t</scope>
+            <argType>([t], Number)</argType>
+            <returnType>t</returnType>
+            <description>
+                <p>Gets the list element at the given position (first position is 1).</p>
+            </description>
+            <example>
+                <input>(["x", "y", "z"], 1)</input>
+                <output>"x"</output>
+            </example>
+            <example>
+                <input>([2, 4, 6, 8], 4)</input>
+                <output>8</output>
+            </example>
+            <example>
+                <input>([], 1)</input>
+                <output>error</output>
+            </example>
+            <example>
+                <input>([true, false], 0)</input>
+                <output>error</output>
+            </example>
+        </function>
+    </functionGroup>
+</functionDocumentation>

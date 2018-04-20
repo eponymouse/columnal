@@ -14,6 +14,17 @@
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:template>
+    <xsl:template name="bracketed">
+        <xsl:param name="expression" select="."/>
+        <xsl:analyze-string select="$expression" regex="^\(.*\)$">
+            <xsl:matching-substring>
+                <xsl:value-of select="."/>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                (<xsl:value-of select="."/>)
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:template>
     
     <xsl:template match="/functionDocumentation">
         <xsl:variable name="namespace" select="@namespace"/>
@@ -34,15 +45,16 @@
                             <div class="function-item" id="function-{@name}">
                                 <span class="function-name-header"><xsl:value-of select="@name"/></span>
                                 <span class="function-name-type"><xsl:value-of select="@name"/></span>
-                                <span class="function-type"><!-- @any <xsl:value-of select="scope"/> -->(<xsl:call-template
-                                        name="processType"><xsl:with-param name="type" select="argType"/></xsl:call-template>) <span class="function-arrow"/> <xsl:call-template
+                                <span class="function-type"><!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
+                                        name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression" select="argType"/></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
                                         name="processType"><xsl:with-param name="type" select="returnType"/></xsl:call-template>
                                 </span>
                                 <div class="description"><xsl:copy-of select="description"/></div>
                                 <div class="examples">
                                     <span class="examples-header">Examples</span>
                                     <xsl:for-each select="example">
-                                        <div class="example"><span class="example-call"><xsl:value-of select="$functionName"/>(<xsl:value-of select="input"/>) <span class="function-arrow"/> <xsl:value-of select="output"/></span></div>
+                                        <div class="example"><span class="example-call"><xsl:value-of select="$functionName"/><xsl:call-template
+                                                name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template> <span class="function-arrow"/> <xsl:value-of select="output"/></span></div>
                                     </xsl:for-each>
                                 </div>
                             </div>
