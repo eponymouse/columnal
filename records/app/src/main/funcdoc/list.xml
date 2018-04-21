@@ -47,4 +47,25 @@
             <output>error</output>
         </example>
     </function>
+    
+    <function name="single">
+        <argType>[t]</argType>
+        <returnType>t</returnType>
+        <description>
+            <p>If this list has exactly one element, returns it.  Otherwise gives an error.</p>
+            <p>This is useful if you have a table where you store single values.  The column is a list, so you need to use a function, like single, to fetch out the one item in it.</p>
+        </description>
+        <example>
+            <input>[65]</input>
+            <output>65</output>
+        </example>
+        <example>
+            <input>[]</input>
+            <output>error</output>
+        </example>
+        <example>
+            <input>[1, 2]</input>
+            <output>error</output>
+        </example>
+    </function>
 </functionDocumentation>

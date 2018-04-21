@@ -14,7 +14,7 @@ public class Single extends FunctionDefinition
 {
     public Single()
     {
-        super("single", "single.mini", typeManager -> {
+        super("list/single", "single.mini", typeManager -> {
             TypeExp any = new MutVar(null);
             return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any)
             );

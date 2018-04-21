@@ -17,7 +17,7 @@ public class Sum extends SingleNumericSummaryFunction
 
     public Sum()
     {
-        super(NAME, "sum.mini", Instance::new);
+        super("number/sum", "sum.mini", Instance::new);
     }
     
     private static class Instance extends ValueFunction

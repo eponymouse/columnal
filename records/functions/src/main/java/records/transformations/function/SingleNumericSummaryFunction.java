@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import records.data.unit.Unit;
@@ -26,9 +27,9 @@ import java.util.function.Supplier;
  */
 public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
-    public SingleNumericSummaryFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
+    public SingleNumericSummaryFunction(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
     {
-        super(name, miniDescriptionKey, typeManager -> {
+        super(funcDocKey, miniDescriptionKey, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
             return new FunctionTypesUniform(typeManager, makeInstance, numType, TypeExp.list(null, numType));
         });

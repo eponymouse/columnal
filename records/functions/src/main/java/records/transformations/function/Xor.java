@@ -12,7 +12,7 @@ public class Xor extends FunctionDefinition
 {
     public Xor()
     {
-        super("xor", "xor.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
+        super("boolean/xor", "xor.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
     }
 
     private static class Instance extends ValueFunction

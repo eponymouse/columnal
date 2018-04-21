@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="text">
+    <function name="text length">
+        <argType>Text</argType>
+        <returnType>Number</returnType>
+        <description>
+            <p>Gets the length of the given text.</p>
+            <p>Technical note: this is actually the number of Unicode codepoints in the text.  For English text without accents, one character is one codepoint.  If you have accents or non-English characters in your text, what looks like one character may be made up of multiple codepoints.</p>
+        </description>
+        <example>
+            <input>"hello"</input>
+            <output>5</output>
+        </example>
+        <example>
+            <input>"a b."</input>
+            <output>4</output>
+        </example>
+        <example>
+            <input>""</input>
+            <output>0</output>
+        </example>
+    </function>
+</functionDocumentation>

@@ -17,7 +17,7 @@ public class Mean extends SingleNumericSummaryFunction
 
     public Mean()
     {
-        super(NAME, "average.mini", () -> new ValueFunction()
+        super("number/average", "average.mini", () -> new ValueFunction()
         {
             @Override
             public @Value Object call(@Value Object param) throws UserException, InternalException

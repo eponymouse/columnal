@@ -16,7 +16,7 @@ public class Absolute extends SingleNumericInOutFunction
 {
     public Absolute()
     {
-        super("abs", "abs.mini", Absolute::makeInstance);
+        super("number/abs", "abs.mini", Absolute::makeInstance);
     }
     
     private static ValueFunction makeInstance()

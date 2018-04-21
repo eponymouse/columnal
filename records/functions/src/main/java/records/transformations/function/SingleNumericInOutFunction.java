@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -23,9 +24,9 @@ import java.util.function.Supplier;
  */
 abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
-    SingleNumericInOutFunction(String name, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
+    SingleNumericInOutFunction(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
     {
-        super(name, miniDescriptionKey, typeManager -> {
+        super(funcDocKey, miniDescriptionKey, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
             return new FunctionTypesUniform(typeManager, makeInstance, numType, numType);
         });

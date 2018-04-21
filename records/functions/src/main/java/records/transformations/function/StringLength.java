@@ -12,7 +12,7 @@ public class StringLength extends FunctionDefinition
 {
     public StringLength()
     {
-        super("text length", "length.mini", Instance::new, DataType.NUMBER, DataType.TEXT);
+        super("text/text length", "length.mini", Instance::new, DataType.NUMBER, DataType.TEXT);
     }
     
     private static class Instance extends ValueFunction
