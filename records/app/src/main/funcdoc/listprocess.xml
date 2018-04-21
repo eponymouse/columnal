@@ -65,4 +65,29 @@
             </example>
         </function>
     </functionGroup>
+    
+    <function name="combine">
+        <argType>([t], (t, t) -&gt; t)</argType>
+        <returnType>t</returnType>
+        <description>
+            <p>Collapses the list into a single item by combining the elements using the given function.</p>
+        </description>
+        <example>
+            <input>([1, 2, 3], (? + ?))</input>
+            <output>6</output>
+        </example>
+        <example>
+            <input>(["a", "b", "c"], (? ; ?))</input>
+            <output>"abc"</output>
+        </example>
+        <example>
+            <input>([true, false, false, true], (? | ?))</input>
+            <output>true</output>
+        </example>
+
+        <example>
+            <input>([], (? + ?))</input>
+            <output>error</output>
+        </example>
+    </function>
 </functionDocumentation>
