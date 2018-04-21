@@ -330,6 +330,18 @@
                                 </parameter>
                             </parameters>
                         </transformationSet>
+
+                        <transformationSet>
+                            <dir>src/main/funcdoc</dir>
+                            <stylesheet>src/main/xslt/extract-tests.xsl</stylesheet>
+                            <outputDir>${project.build.directory}/classes</outputDir>
+                            <fileMappers>
+                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>.test</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
+                        </transformationSet>
+                        
                     </transformationSets>
                 </configuration>
                 <!-- For XSLT 2.0: -->

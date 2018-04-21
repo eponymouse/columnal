@@ -8,6 +8,7 @@ import records.error.InternalException;
 import records.transformations.function.list.AnyAllNone;
 import records.transformations.function.list.Count;
 import records.transformations.function.list.GetElement;
+import records.transformations.function.list.Single;
 import utility.Pair;
 import utility.Utility;
 
@@ -35,6 +36,7 @@ public class FunctionList
             new Min(),
             new Not(),
             new Round(),
+            new Single(),
             new StringLeft(),
             new StringLength(),
             new StringMid(),
@@ -44,7 +46,8 @@ public class FunctionList
             new StringWithin(),
             new StringWithinIndex(),
             new Sum(),
-            new ToString()            
+            new ToString(),
+            new Xor()
         ).stream(),
         
             Stream.of(

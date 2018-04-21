@@ -12,15 +12,15 @@
                 <p>If the list is empty, returns false.</p>
             </description>
             <example>
-                <input>(["a", "b", "c"], ? = "b")</input>
+                <input>(["a", "b", "c"], (? = "b"))</input>
                 <output>true</output>
             </example>
             <example>
-                <input>([0, 1, 2, 3], ? &gt; 5)</input>
+                <input>([0, 1, 2, 3], (? &gt; 5))</input>
                 <output>false</output>
             </example>
             <example>
-                <input>([], ? = 0)</input>
+                <input>([], (? = 0))</input>
                 <output>false</output>
             </example>
         </function>
@@ -32,15 +32,15 @@
                 <p>If the list is empty, returns true.</p>
             </description>
             <example>
-                <input>([0, 1, 2, 3], ? &lt; 5)</input>
+                <input>([0, 1, 2, 3], (? &lt; 5))</input>
                 <output>true</output>
             </example>
             <example>
-                <input>(["a", "b", "c"], ? = "b")</input>
+                <input>(["a", "b", "c"], (? = "b"))</input>
                 <output>false</output>
             </example>
             <example>
-                <input>([], ? = 0)</input>
+                <input>([], (? = 0))</input>
                 <output>true</output>
             </example>
         </function>
@@ -52,15 +52,15 @@
                 <p>If the list is empty, returns true.</p>
             </description>
             <example>
-                <input>([0, 1, 2, 3], ? &gt; 5)</input>
+                <input>([0, 1, 2, 3], (? &gt; 5))</input>
                 <output>true</output>
             </example>
             <example>
-                <input>(["a", "b", "c"], ? = "b")</input>
+                <input>(["a", "b", "c"], (? = "b"))</input>
                 <output>false</output>
             </example>
             <example>
-                <input>([], ? = 0)</input>
+                <input>([], (? = 0))</input>
                 <output>true</output>
             </example>
         </function>
