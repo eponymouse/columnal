@@ -15,7 +15,7 @@ public class Min extends FunctionDefinition
 {
     public Min()
     {
-        super("minimum", "minimum.mini", typeManager -> {
+        super("comparison/minimum", "minimum.mini", typeManager -> {
             TypeExp any = new MutVar(null, ImmutableSet.of("Comparable"));
             return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
         });

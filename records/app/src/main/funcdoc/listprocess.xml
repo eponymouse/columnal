@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="listprocess">
+    <functionGroup id="anyAllNone" title="Any, All, None">
+        <description>Functions to check if a property holds for any/all/no list element(s).</description>
+        <function name="any">
+            <argType>([t], t -&gt; Boolean)</argType>
+            <returnType>Boolean</returnType>
+            <description>
+                <p>Returns true if the given function returns true for any item in the list.</p>
+                <p>If the list is empty, returns false.</p>
+            </description>
+            <example>
+                <input>(["a", "b", "c"], ? = "b")</input>
+                <output>true</output>
+            </example>
+            <example>
+                <input>([0, 1, 2, 3], ? &gt; 5)</input>
+                <output>false</output>
+            </example>
+            <example>
+                <input>([], ? = 0)</input>
+                <output>false</output>
+            </example>
+        </function>
+        <function name="all">
+            <argType>([t], t -&gt; Boolean)</argType>
+            <returnType>Boolean</returnType>
+            <description>
+                <p>Returns true if the given function returns true for all items in the list.</p>
+                <p>If the list is empty, returns true.</p>
+            </description>
+            <example>
+                <input>([0, 1, 2, 3], ? &lt; 5)</input>
+                <output>true</output>
+            </example>
+            <example>
+                <input>(["a", "b", "c"], ? = "b")</input>
+                <output>false</output>
+            </example>
+            <example>
+                <input>([], ? = 0)</input>
+                <output>true</output>
+            </example>
+        </function>
+        <function name="none">
+            <argType>([t], t -&gt; Boolean)</argType>
+            <returnType>Boolean</returnType>
+            <description>
+                <p>Returns true if the given function returns true for no items in the list.</p>
+                <p>If the list is empty, returns true.</p>
+            </description>
+            <example>
+                <input>([0, 1, 2, 3], ? &gt; 5)</input>
+                <output>true</output>
+            </example>
+            <example>
+                <input>(["a", "b", "c"], ? = "b")</input>
+                <output>false</output>
+            </example>
+            <example>
+                <input>([], ? = 0)</input>
+                <output>true</output>
+            </example>
+        </function>
+    </functionGroup>
+</functionDocumentation>

@@ -12,7 +12,7 @@ public class Not extends FunctionDefinition
 {
     public Not()
     {
-        super("not", "not.mini", Instance::new, DataType.BOOLEAN, DataType.BOOLEAN);
+        super("boolean/not", "not.mini", Instance::new, DataType.BOOLEAN, DataType.BOOLEAN);
     }
 
     private static class Instance extends ValueFunction

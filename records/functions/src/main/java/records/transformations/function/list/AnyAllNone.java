@@ -77,7 +77,7 @@ public abstract class AnyAllNone
     {
         public Any()
         {
-            super("any", "any.mini", new Matcher(() -> new Processor(true, null, false)));
+            super("listprocess/any", "any.mini", new Matcher(() -> new Processor(true, null, false)));
         }
     }
 
@@ -85,7 +85,7 @@ public abstract class AnyAllNone
     {
         public All()
         {
-            super("all", "all.mini", new Matcher(() -> new Processor(null, false, true)));
+            super("listprocess/all", "all.mini", new Matcher(() -> new Processor(null, false, true)));
         }
     }
 
@@ -93,7 +93,7 @@ public abstract class AnyAllNone
     {
         public None()
         {
-            super("none", "none.mini", new Matcher(() -> new Processor(false, null, true)));
+            super("listprocess/none", "none.mini", new Matcher(() -> new Processor(false, null, true)));
         }
     }
 }

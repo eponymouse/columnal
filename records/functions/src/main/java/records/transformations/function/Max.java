@@ -16,7 +16,7 @@ public class Max extends FunctionDefinition
 {
     public Max()
     {
-        super("maximum", "maximum.mini", Max::listOfAny);
+        super("comparison/maximum", "maximum.mini", Max::listOfAny);
     }
     
     private static FunctionTypes listOfAny(TypeManager typeManager)

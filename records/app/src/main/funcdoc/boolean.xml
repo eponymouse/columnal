@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="boolean">
+    <function name="not">
+        <argType>Boolean</argType>
+        <returnType>Boolean</returnType>
+        <description>
+            <p>Returns the opposite Boolean (given true, returns false; given false, returns true)</p>
+        </description>
+        <example>
+            <input>true</input>
+            <output>false</output>
+        </example>
+        <example>
+            <input>false</input>
+            <output>true</output>
+        </example>
+    </function>
+</functionDocumentation>
