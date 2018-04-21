@@ -80,7 +80,6 @@ public class FuncDocChecker extends BaseTypeChecker
                                         errors.add("Missing namespace for " + file);
                                         continue;
                                     }
-                                    
                                     nu.xom.Elements groups = root.getChildElements("functionGroup");
                                     for (int groupIndex = 0; groupIndex < groups.size(); groupIndex++)
                                     {
@@ -93,20 +92,10 @@ public class FuncDocChecker extends BaseTypeChecker
                                         }
                                         functionGroupKeys.add(Arrays.asList(namespace, groupId));
                                         nu.xom.Elements functions = group.getChildElements("function");
-                                        for (int i = 0; i < functions.size(); i++)
-                                        {
-                                            String funcName = functions.get(i).getAttributeValue("name");
-                                            if (funcName == null)
-                                            {
-                                                errors.add("No name found for function item " + i + " in file " + fileName);
-                                            }
-                                            else
-                                            {
-                                                if (!individualFunctionKeys.add(Arrays.asList(namespace, funcName)))
-                                                    errors.add("Duplicate key found for " + namespace + "/" + funcName);
-                                            }
-                                        }
+                                        processFunctions(fileName, namespace, functions);
                                     }
+                                    nu.xom.Elements functions = root.getChildElements("function");
+                                    processFunctions(fileName, namespace, functions);
                                 }
                                 catch (IOException | ParsingException e)
                                 {
@@ -117,6 +106,23 @@ public class FuncDocChecker extends BaseTypeChecker
                         else
                         {
                             errors.add("No funcdocfiles parameter specified");
+                        }
+                    }
+
+                    private void processFunctions(String fileName, String namespace, nu.xom.Elements functions)
+                    {
+                        for (int i = 0; i < functions.size(); i++)
+                        {
+                            String funcName = functions.get(i).getAttributeValue("name");
+                            if (funcName == null)
+                            {
+                                errors.add("No name found for function item " + i + " in file " + fileName);
+                            }
+                            else
+                            {
+                                if (!individualFunctionKeys.add(Arrays.asList(namespace, funcName)))
+                                    errors.add("Duplicate key found for " + namespace + "/" + funcName);
+                            }
                         }
                     }
 
