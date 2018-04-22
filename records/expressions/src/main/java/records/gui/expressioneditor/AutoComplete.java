@@ -296,8 +296,11 @@ public class AutoComplete<C extends Completion> extends PopupControl
             for (C completion : available)
             {
                 CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
+                Log.debug("Completion for \"" + text + "\": " + completionAction);
                 if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY && !settingContentDirectly)
                 {
+                    completions.getSelectionModel().select(completion);
+                    
                     @Nullable String newContent = onSelect.exactCompletion(text, completion);
                     if (newContent != null)
                     {

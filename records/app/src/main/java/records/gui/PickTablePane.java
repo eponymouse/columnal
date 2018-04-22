@@ -94,9 +94,10 @@ public class PickTablePane extends BorderPane
             }
 
             @Override
-            public String exactCompletion(String currentText, TableCompletion selectedItem)
+            public @Nullable String exactCompletion(String currentText, TableCompletion selectedItem)
             {
-                return doubleClick(currentText, selectedItem);
+                // Don't close dialog just because they typed the exact name:
+                return null;
             }
 
             @Override

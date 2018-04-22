@@ -29,6 +29,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
     {
         super(parent.getWindow());
+        FXUtility.preventCloseOnEscape(getDialogPane());
         setResizable(true);
         curValue = initialExpression;
 
@@ -47,7 +48,10 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
             else
                 return null;
         });
-
+        setOnShown(e -> {
+            // Have to use runAfter to combat ButtonBarSkin grabbing focus:
+            FXUtility.runAfter(field::requestFocusWhenInScene);
+        });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
 

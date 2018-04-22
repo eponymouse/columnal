@@ -205,13 +205,18 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
             List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).collect(Collectors.toList());
             
-            assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
-            // TODO check error popup
-            
-            // Dismiss dialog:
-            push(KeyCode.ESCAPE);
-            push(KeyCode.ESCAPE);
-            clickOn(".cancel-button");
+            try
+            {
+                assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
+                // TODO check error popup
+            }
+            finally
+            {
+                // Dismiss dialog:
+                push(KeyCode.ESCAPE);
+                push(KeyCode.ESCAPE);
+                clickOn(".cancel-button");
+            }
         }
         catch (Exception e)
         {
