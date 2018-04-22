@@ -211,6 +211,12 @@ public class Calculate extends Transformation
         return new TableOperations(getManager().getRenameTableOperation(this), deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
     }
 
+    @OnThread(Tag.Any)
+    public TableId getSource()
+    {
+        return srcTableId;
+    }
+
     private void deleteColumn(ColumnId columnId)
     {
         //TODO

@@ -96,6 +96,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
+import records.transformations.expression.UnfinishedExpression;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledString;
@@ -285,7 +286,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     try
                     {
                         RecordSet data = table.getData();
-                        setDisplay(Display.CUSTOM, Utility.consList(columnId, data.getColumns().stream().filter(c -> c.isAltered()).map(c -> c.getName()).collect(Collectors.toList())));
+                        setDisplay(Display.CUSTOM, Utility.prependToList(columnId, data.getColumns().stream().filter(c -> c.isAltered()).map(c -> c.getName()).collect(Collectors.toList())));
                     }
                     catch (UserException | InternalException e)
                     {
@@ -294,7 +295,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     break;
                 case CUSTOM:
                     // Just tack this one on the blacklist:
-                    setDisplay(Display.CUSTOM, Utility.consList(columnId, columnDisplay.get().getSecond()));
+                    setDisplay(Display.CUSTOM, Utility.prependToList(columnId, columnDisplay.get().getSecond()));
                     break;
             }
         };
@@ -729,8 +730,26 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 FXUtility.mouse(this).addColumnBefore_IDS(ids, beforeColumn);
             };
         }
+        else if (table instanceof Calculate)
+        {
+            Calculate calc = (Calculate) table;
+            return beforeColumn -> {
+                FXUtility.mouse(this).addColumnBefore_Calc(calc, beforeColumn);
+            };
+        }
         return null;
-        // TODO add column for calculate
+    }
+    
+    private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn)
+    {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), new UnfinishedExpression("", null), true, null).showAndWait().ifPresent(p -> {
+            Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
+                FXUtility.alertOnError_(() -> {
+                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
+                        calc.getSource(), Utility.appendToList(calc.getCalculatedColumns(), p)), null);
+                })
+            );
+        });
     }
 
     public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)

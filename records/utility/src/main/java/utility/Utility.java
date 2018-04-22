@@ -427,11 +427,19 @@ public class Utility
         }
     }
 
-    public static <T> ImmutableList<T> consList(T header, List<T> data)
+    public static <T> ImmutableList<T> prependToList(T header, List<T> data)
     {
-        ImmutableList.Builder<T> r = ImmutableList.builder();
+        ImmutableList.Builder<T> r = ImmutableList.builderWithExpectedSize(data.size() + 1);
         r.add(header);
         r.addAll(data);
+        return r.build();
+    }
+
+    public static <T> ImmutableList<T> appendToList(List<T> data, T last)
+    {
+        ImmutableList.Builder<T> r = ImmutableList.builderWithExpectedSize(data.size() + 1);
+        r.addAll(data);
+        r.add(last);
         return r.build();
     }
 

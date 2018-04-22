@@ -46,7 +46,6 @@ import records.gui.grid.RectangularTableCellSelection.TableSelectionLimits;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGrid.SelectionListener;
-import records.gui.grid.VirtualGridSupplier;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -56,7 +55,6 @@ import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import records.gui.stf.EditorKitSimpleLabel;
-import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -67,7 +65,6 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -196,7 +193,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     public void addCellStyle(CellStyle cellStyle)
     {
-        cellStyles.set(Utility.consList(cellStyle, cellStyles.get()));
+        cellStyles.set(Utility.prependToList(cellStyle, cellStyles.get()));
     }
 
     public void removeCellStyle(CellStyle cellStyle)

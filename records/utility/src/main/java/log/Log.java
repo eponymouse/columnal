@@ -1,7 +1,6 @@
 package log;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,9 +9,6 @@ import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-
-import java.util.Map;
-import java.util.WeakHashMap;
 
 public class Log
 {
@@ -68,7 +64,7 @@ public class Log
     {
         StackTraceElement[] ourStack = Thread.currentThread().getStackTrace();
         @Nullable ImmutableList<StackTraceElement[]> prev = threadCaller.get();
-        return prev == null ? ImmutableList.of(ourStack) : Utility.consList(ourStack, prev);
+        return prev == null ? ImmutableList.of(ourStack) : Utility.prependToList(ourStack, prev);
     }
 
     public static void log(Exception e)

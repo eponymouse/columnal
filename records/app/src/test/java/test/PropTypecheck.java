@@ -16,7 +16,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.ConcreteDataTypeVisitor;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
@@ -57,7 +56,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static test.TestUtil.distinctTypes;
 
 /**
  * Created by neil on 09/12/2016.
@@ -68,7 +66,7 @@ public class PropTypecheck
     @Test
     public void testTypeComparison() throws InternalException, UserException
     {
-        List<DataType> types = Utility.consList(DataType.typeVariable("a"), Utility.consList(DataType.typeVariable("b"), TestUtil.distinctTypes));
+        List<DataType> types = Utility.prependToList(DataType.typeVariable("a"), Utility.prependToList(DataType.typeVariable("b"), TestUtil.distinctTypes));
         for (DataType a : types)
         {
             for (DataType b : types)
