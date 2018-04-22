@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.Saver;
-import records.data.TableOperations.RenameColumn;
 import records.data.TableOperations.RenameTable;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -446,15 +445,6 @@ public class TableManager
         return newName -> {
             FXUtility.alertOnError_(() -> {
                 edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
-            });
-        };
-    }
-
-    public RenameColumn getRenameColumnOperation(Table table, ColumnId oldColumnId)
-    {
-        return newColumnId -> {
-            FXUtility.alertOnError_(() -> {
-                edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(null, ImmutableMap.of(oldColumnId, newColumnId)))));
             });
         };
     }

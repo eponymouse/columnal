@@ -1,24 +1,17 @@
 package test.gui;
 
 import annotation.qual.Value;
-import annotation.units.AbsRowIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.A;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.NodeQuery;
@@ -38,12 +31,11 @@ import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.TableDisplay;
 import records.gui.grid.VirtualGrid;
 import records.gui.stf.StructuredTextField;
+import records.transformations.Calculate;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
-import records.transformations.Transform;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
@@ -117,7 +109,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         manager.record(srcData);
 
         InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())), null);
-        Table calculated = new Transform(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
+        Table calculated = new Calculate(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();

@@ -42,7 +42,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataOrTransformChoice.DataOrTransform;
-import records.gui.EditColumnDialog.ColumnDetails;
+import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.Picker;
@@ -565,7 +565,7 @@ public class View extends StackPane
                     switch (choice.get().getSecond())
                     {
                         case DATA:
-                            Optional<ColumnDetails> optInitialDetails = new EditColumnDialog(thisView.getWindow(), thisView.getManager(), new ColumnId("A")).showAndWait();
+                            Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView.getWindow(), thisView.getManager(), new ColumnId("A")).showAndWait();
                             optInitialDetails.ifPresent(initialDetails -> {
                                 Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
                                     FXUtility.alertOnError_(() -> {
@@ -627,10 +627,17 @@ public class View extends StackPane
         mainPane.addGridAreas(ImmutableList.of(tableDisplay));
         mainPane.addSelectionListener(tableDisplay);
         rowLabelSupplier.addTable(mainPane, tableDisplay, false);
-        TableOperations tableOps = tableDisplay.getTable().getOperations();
-        if (tableOps.addColumn != null || tableOps.appendRows != null)
+        @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumn = tableDisplay.addColumnOperation();
+        boolean addRows = tableDisplay.getTable().getOperations().appendRows != null;
+        if (addColumn != null || addRows)
         {
-            expandTableArrowSupplier.addTable(tableDisplay);
+            @Nullable FXPlatformRunnable addColumnAtEnd = null;
+            if (addColumn != null)
+            {
+                @NonNull FXPlatformConsumer<@Nullable ColumnId> addColumnFinal = addColumn;
+                addColumnAtEnd = () -> addColumnFinal.consume(null);
+            }
+            expandTableArrowSupplier.addTable(tableDisplay, addColumnAtEnd, addRows);
         }
     }
 

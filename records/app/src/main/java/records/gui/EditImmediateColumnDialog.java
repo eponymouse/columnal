@@ -6,11 +6,9 @@ import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -21,7 +19,7 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
-import records.gui.EditColumnDialog.ColumnDetails;
+import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.expressioneditor.TypeEditor;
 import records.gui.stf.Component;
 import records.gui.stf.StructuredTextField;
@@ -35,8 +33,11 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LightDialog;
 
+/**
+ * Edits an immediate column, which has a name, type, and default value
+ */
 @OnThread(Tag.FXPlatform)
-public class EditColumnDialog extends LightDialog<ColumnDetails>
+public class EditImmediateColumnDialog extends LightDialog<ColumnDetails>
 {
     private @Nullable DataType customDataType = null;
 
@@ -57,7 +58,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
     private @Nullable @Value Object defaultValue;
     
     @OnThread(Tag.FXPlatform)
-    public EditColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial)
+    public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial)
     {
         super(parent);
         
@@ -150,7 +151,7 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
     }
 
     @OnThread(Tag.FXPlatform)
-    private  void updateType(@UnknownInitialization(LightDialog.class) EditColumnDialog this, StructuredTextField structuredTextField, @Nullable DataType t)
+    private  void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, StructuredTextField structuredTextField, @Nullable DataType t)
     {
         if (t == null)
             structuredTextField.setDisable(true);
@@ -169,13 +170,13 @@ public class EditColumnDialog extends LightDialog<ColumnDetails>
         }
     }
 
-    private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class) EditColumnDialog this, DataType dataType) throws InternalException
+    private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
         defaultValue = DataTypeUtility.makeDefaultValue(dataType);
         return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class) EditColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
     {
         return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
     }

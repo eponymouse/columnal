@@ -8,7 +8,7 @@ import org.testfx.api.FxRobotInterface;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.EditColumnDialog.ColumnDetails;
+import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import threadchecker.OnThread;

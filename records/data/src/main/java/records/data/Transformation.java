@@ -119,6 +119,6 @@ public abstract class Transformation extends Table
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations(getManager().getRenameTableOperation(this), null, c -> null, c -> null, null, null, null);
+        return new TableOperations(getManager().getRenameTableOperation(this), c -> null, null, null, null);
     }
 }

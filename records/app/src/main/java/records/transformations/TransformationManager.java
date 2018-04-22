@@ -48,7 +48,7 @@ public class TransformationManager implements TransformationLoader
         // Note: the order here is the order they are shown in the transformation edit dialog,
         // but is otherwise unimportant.
         return Arrays.asList(
-            new Transform.Info(),
+            new Calculate.Info(),
             new SummaryStatistics.Info(),
             new Filter.Info(),
             new Sort.Info(),

@@ -12,9 +12,12 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
 import java.io.File;
+import java.util.Optional;
 
 /**
  * Created by neil on 09/11/2016.
@@ -30,7 +33,7 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData()
+    public @OnThread(Tag.Any) EditableRecordSet getData()
     {
         return data;
     }
@@ -80,14 +83,7 @@ public class ImmediateDataSource extends DataSource
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations(getManager().getRenameTableOperation(this), (addBefore, newColumnName, newColumnType, defaultValue) -> {
-            FXUtility.alertOnError_(() -> {
-                ColumnId name = newColumnName != null ? newColumnName : proposeNewColumnName();
-                if (name != null)
-                    data.addColumn(addBefore, newColumnType.makeImmediateColumn(name, defaultValue));
-            });
-            // All columns in ImmediateDataSource can be renamed:
-        }, oldId -> getManager().getRenameColumnOperation(this, oldId)
+        return new TableOperations(getManager().getRenameTableOperation(this)
         , _c -> new DeleteColumn()
         {
             @Override

@@ -4,7 +4,6 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -46,6 +45,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.InitialLoadDetails;
@@ -55,10 +55,8 @@ import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
-import records.data.TableOperations.AddColumn;
 import records.data.TableOperations.DeleteRows;
 import records.data.TableOperations.InsertRows;
-import records.data.TableOperations.RenameColumn;
 import records.data.TableOperations.RenameTable;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -93,6 +91,7 @@ import records.transformations.Filter;
 import records.transformations.HideColumnsPanel;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
+import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -256,28 +255,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
         if (recordSet != null)
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
-    }
-
-    private @Nullable FXPlatformConsumer<ColumnId> renameColumn(ColumnId columnId)
-    {
-        return renameColumnForTable(getTable(), columnId);
-    }
-    
-    private static @Nullable FXPlatformConsumer<ColumnId> renameColumnForTable(Table table, ColumnId columnId)
-    {
-        RenameColumn renameColumn = table.getOperations().renameColumn.apply(columnId);
-        if (renameColumn == null)
-            return null;
-        final @NonNull RenameColumn renameColumnFinal = renameColumn;
-        return newColumnId -> Workers.onWorkerThread("Renaming column", Priority.SAVE_ENTRY, () -> renameColumnFinal.renameColumn(newColumnId));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
     }
 
     @Override
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
         if (recordSet != null) 
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), this::renameColumn, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
     }
 
     //TODO @Override
@@ -322,7 +307,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private int internal_getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
     {
-        return (displayColumns == null ? 0 : displayColumns.size()) + (table.getOperations().addColumn != null ? 1 : 0);
+        return (displayColumns == null ? 0 : displayColumns.size()) + (addColumnOperation(table) != null ? 1 : 0);
     }
 
     @Override
@@ -477,7 +462,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @RequiresNonNull("onModify")
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, RecordSet recordSet)
     {
-        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> renameColumnForTable(table, c), this::getDataPosition, onModify);
+        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, this::getDataPosition, onModify);
         setColumns(displayColumns, table.getOperations(), c -> getColumnActions(tableManager, table, c));
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -508,7 +493,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
 
         FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> renameColumnForTable(table, c), this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> null, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
         });
 
         // Should be done last:
@@ -666,16 +651,17 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         ImmutableList.Builder<ColumnOperation> r = ImmutableList.builder();
 
         TableOperations operations = table.getOperations();
-        if (operations.addColumn != null)
+        @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumn = addColumnOperation(table);
+        if (addColumn != null)
         {
-            @NonNull AddColumn addColumnFinal = operations.addColumn;
+            @NonNull FXPlatformConsumer<@Nullable ColumnId> addColumnFinal = addColumn;
             r.add(new ColumnOperation("virtGrid.column.addBefore")
             {
                 @Override
                 @OnThread(Tag.FXPlatform)
                 public void executeFX()
                 {
-                    FXUtility.mouse(TableDisplay.this).addColumn(addColumnFinal, c);
+                    addColumnFinal.consume(c);
                 }
             });
 
@@ -693,7 +679,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         @OnThread(Tag.FXPlatform)
                         public void executeFX()
                         {
-                            FXUtility.mouse(TableDisplay.this).addColumn(addColumnFinal, columnAfter);
+                            addColumnFinal.consume(columnAfter);
                         }
                     });
                 }
@@ -727,12 +713,33 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return r.build();
     }
 
-    @OnThread(Tag.FXPlatform)
-    public void addColumn(TableOperations.AddColumn addColumnOperation, @Nullable ColumnId c)
+    public @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation()
     {
-        Optional<EditColumnDialog.ColumnDetails> optInitialDetails = new EditColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName()).showAndWait();
+        return addColumnOperation(table);
+    }
+
+    // If beforeColumn is null, add at end
+    @OnThread(Tag.FXPlatform)
+    private @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
+    {
+        if (table instanceof ImmediateDataSource)
+        {
+            @NonNull ImmediateDataSource ids = (ImmediateDataSource) table;
+            return beforeColumn -> {
+                FXUtility.mouse(this).addColumnBefore_IDS(ids, beforeColumn);
+            };
+        }
+        return null;
+        // TODO add column for calculate
+    }
+
+    public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
+    {
+        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName()).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
-            addColumnOperation.addColumn(c, initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue)
+            FXUtility.alertOnError_(() ->
+                ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))
+            )
         ));
     }
 

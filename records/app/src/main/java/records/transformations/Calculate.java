@@ -3,10 +3,6 @@ package records.transformations;
 import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.ObjectExpression;
-import javafx.scene.layout.Pane;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -35,25 +31,19 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
-import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import records.types.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,7 +54,7 @@ import java.util.stream.Stream;
  * by evaluating an expression for each.
  */
 @OnThread(Tag.Simulation)
-public class Transform extends Transformation
+public class Calculate extends Transformation
 {
     @OnThread(Tag.Any)
     private final ImmutableList<Pair<ColumnId, Expression>> newColumns;
@@ -74,7 +64,7 @@ public class Transform extends Transformation
     @OnThread(Tag.Any)
     private StyledString error = StyledString.s("");
 
-    public Transform(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
+    public Calculate(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
@@ -218,7 +208,7 @@ public class Transform extends Transformation
         // Renames and deletes are valid, if they refer to
         // columns derived from us.
         // TODO allow renames backwards through dependencies
-        return new TableOperations(getManager().getRenameTableOperation(this), null, c -> null, deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
+        return new TableOperations(getManager().getRenameTableOperation(this), deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
     }
 
     private void deleteColumn(ColumnId columnId)
@@ -229,10 +219,10 @@ public class Transform extends Transformation
     @Override
     public boolean transformationEquals(Transformation o)
     {
-        Transform transform = (Transform) o;
+        Calculate calculate = (Calculate) o;
 
-        if (!newColumns.equals(transform.newColumns)) return false;
-        return srcTableId.equals(transform.srcTableId);
+        if (!newColumns.equals(calculate.newColumns)) return false;
+        return srcTableId.equals(calculate.srcTableId);
     }
 
     @Override
@@ -266,13 +256,13 @@ public class Transform extends Transformation
                 columns.add(new Pair<>(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
 
-            return new Transform(mgr, initialLoadDetails, srcTableId, columns.build());
+            return new Calculate(mgr, initialLoadDetails, srcTableId, columns.build());
         }
         
         @Override
         protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Transform(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
+            return new Calculate(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
         }
     }
 }

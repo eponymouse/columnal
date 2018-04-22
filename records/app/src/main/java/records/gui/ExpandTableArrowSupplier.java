@@ -5,24 +5,19 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import log.Log;
-import org.checkerframework.checker.initialization.qual.Initialized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.ColumnId;
-import records.data.TableManager;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
-import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
 import records.gui.DataCellSupplier.CellStyle;
-import records.gui.EditColumnDialog.ColumnDetails;
+import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
@@ -85,7 +80,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
         return ItemState.DIRECTLY_CLICKABLE;
     }
 
-    public void addTable(TableDisplay tableDisplay)
+    public void addTable(TableDisplay tableDisplay, @Nullable FXPlatformRunnable addColumn, boolean addRows)
     {
         super.addGrid(tableDisplay, new GridCellInfo<Button, CellStyle>()
         {
@@ -105,7 +100,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @OnThread(Tag.FXPlatform)
             private boolean hasAddRowArrow(GridAreaCellPosition cellPosition)
             {
-                return tableDisplay.getTable().getOperations().appendRows != null
+                return addRows
                     && cellPosition.rowIndex == tableDisplay.getDataDisplayBottomRightIncl().rowIndex + 1
                     && cellPosition.columnIndex >= tableDisplay.getDataDisplayTopLeftIncl().columnIndex
                     && cellPosition.columnIndex <= tableDisplay.getDataDisplayBottomRightIncl().columnIndex;
@@ -114,7 +109,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             @OnThread(Tag.FXPlatform)
             public boolean hasAddColumnArrow(GridAreaCellPosition cellPosition)
             {
-                return tableDisplay.getTable().getOperations().addColumn != null
+                return addColumn != null
                     && cellPosition.columnIndex == tableDisplay.getDataDisplayBottomRightIncl().columnIndex + 1
                     && (cellPosition.rowIndex >= 1 && cellPosition.rowIndex <= tableDisplay.getDataDisplayBottomRightIncl().rowIndex);
             }
@@ -145,14 +140,9 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     item.setVisible(true);
                     item.setText(RIGHT_ARROW);
                     item.setOnAction(e -> {
-                        Optional<ColumnDetails> optInitialDetails = new EditColumnDialog(parent.getWindow(), parent.getManager(), tableDisplay.getTable().proposeNewColumnName()).showAndWait();
-                        optInitialDetails.ifPresent(initialDetails -> {
-                            Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () -> {
-                                TableOperations.@Nullable AddColumn appendOp = tableDisplay.getTable().getOperations().addColumn;
-                                if (appendOp != null)
-                                    appendOp.addColumn(null, initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue);
-                            });
-                        });
+                        // Shouldn't be null here, but satisfy checker:
+                        if (addColumn != null)
+                            addColumn.run();
                     });
                     buttonTableDisplaysAndHoverStyles.put(item, new Pair<>(tableDisplay, CellStyle.HOVERING_EXPAND_RIGHT));
                 }

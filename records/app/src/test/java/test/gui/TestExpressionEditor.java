@@ -1,7 +1,6 @@
 package test.gui;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -9,47 +8,28 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import jdk.nashorn.internal.codegen.CompilerConstants.Call;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.ColumnId;
 import records.data.Transformation;
-import records.error.InternalException;
-import records.error.UserException;
-import records.grammar.ExpressionLexer;
-import records.gui.MainWindow;
 import records.gui.View;
 import records.importers.ClipboardUtils;
-import records.transformations.Filter;
-import records.transformations.Transform;
+import records.transformations.Calculate;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.*;
-import records.transformations.expression.MatchExpression.MatchClause;
-import records.transformations.expression.MatchExpression.Pattern;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
-import test.gen.GenNonsenseExpression;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -107,10 +87,10 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             }
             TestUtil.sleep(500);
             assertNull(lookup(".ok-button").query());
-            Transform transform = (Transform) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
+            Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
             // Check expressions match:
-            Expression expression = transform.getCalculatedColumns().get(0).getSecond();
+            Expression expression = calculate.getCalculatedColumns().get(0).getSecond();
             assertEquals(expressionValue.expression, expression);
             // Just in case equals is wrong, check String comparison:
             assertEquals(expressionValue.expression.toString(), expression.toString());

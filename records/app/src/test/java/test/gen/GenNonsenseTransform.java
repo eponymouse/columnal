@@ -9,7 +9,7 @@ import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.Transform;
+import records.transformations.Calculate;
 import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.TestUtil;
@@ -19,9 +19,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by neil on 27/11/2016.
@@ -50,7 +48,7 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
                 Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
                 columns.add(new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), nonsenseExpression));
             }
-            return new Transformation_Mgr(mgr, new Transform(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(columns)));
+            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(columns)));
         }
         catch (InternalException | UserException e)
         {

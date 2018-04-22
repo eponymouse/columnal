@@ -22,21 +22,19 @@ import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
 import records.data.TableManager;
-import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.OperandOps;
-import records.transformations.Transform;
+import records.transformations.Calculate;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -321,12 +319,12 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             clickOn(".ok-button");
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
-            @Nullable Transform transform = Utility.filterClass(tableManager.getAllTables().stream(), Transform.class).findFirst().orElse(null);
-            assertNotNull(transform);
-            if (transform == null)
+            @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);
+            assertNotNull(calculate);
+            if (calculate == null)
                 return;
-            assertEquals(1, transform.getCalculatedColumns().size());
-            assertEquals(result, transform.getCalculatedColumns().get(0).getSecond().toString());
+            assertEquals(1, calculate.getCalculatedColumns().size());
+            assertEquals(result, calculate.getCalculatedColumns().get(0).getSecond().toString());
         }
         catch (Exception e)
         {

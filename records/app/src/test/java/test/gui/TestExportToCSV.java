@@ -1,20 +1,12 @@
 package test.gui;
 
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.scene.Node;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
-import org.testfx.service.query.NodeQuery;
-import org.testfx.util.WaitForAsyncUtils;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
@@ -22,35 +14,21 @@ import records.data.ImmediateDataSource;
 import records.data.Table;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue;
-import records.error.InternalException;
-import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.TableDisplay;
-import records.gui.grid.VirtualGrid;
-import records.transformations.Transform;
+import records.transformations.Calculate;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
-import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -83,7 +61,7 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         Table srcData = new ImmediateDataSource(manager, TestUtil.ILD, new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
-        Table calculated = new Transform(manager, TestUtil.ILD, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
+        Table calculated = new Calculate(manager, TestUtil.ILD, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();

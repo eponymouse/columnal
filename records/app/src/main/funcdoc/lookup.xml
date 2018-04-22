@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="lookup">
+    <functionGroup id="lookup" title="Lookup functions">
+        <description>Functions for looking up one item in a list using another</description>
+        <function name="lookup">
+            <argType>([a], a, [b])</argType>
+            <returnType>b</returnType>
+            <description>
+                <p>Given a list, finds a matching item, and returns the corresponding value from the other list.</p>
+                <p>This is useful for looking up one column via the value of another, e.g. lookup(Column A, value in A, Column B)</p>
+                <p>Gives an error if there are zero or multiple matches in the left side.</p>
+            </description>
+            <example>
+                <input>([4, 5, 6], 6, ["a", "b", "c"])</input>
+                <output>"c"</output>
+            </example>
+        </function>        
+        <function name="lookup single">
+            <argType>([(a, b)], a)</argType>
+            <returnType>b</returnType>
+            <description>
+                <p>Given a list of pairs, finds the single item with a matching left-hand value, and returns the right.</p>
+                <p>This is useful for looking up one column via the value of another, e.g. lookup single(pair lists(Column A, Column B), value)</p>
+                <p>Gives an error if there are zero or multiple matches in the left side.</p>
+            </description>
+            <example>
+                <input>([(1, "a"), (2, "b")], 1)</input>
+                <output>"a"</output>
+            </example>
+            <example>
+                <input>([(1, "a"), (2, "b"), (1, "f")], 1)</input>
+                <output>error</output>
+            </example>
+        </function>
+        <function name="lookup all">
+            <argType>([(a, b)], a)</argType>
+            <returnType>[b]</returnType>
+            <description>
+                <p>Given a list of pairs, finds all the items with a matching left-hand value, and returns the right-hand values for each.</p>
+                <p>This is useful for looking up one column via the value of another, e.g. lookup single(pair lists(Column A, Column B), value)</p>
+            </description>
+            <example>
+                <input>([(1, "a"), (2, "b"), (1, "f")], 1)</input>
+                <output>["a", "f"]</output>
+            </example>
+        </function>
+    </functionGroup>
+</functionDocumentation>

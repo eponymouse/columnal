@@ -5,18 +5,12 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
-import com.pholser.junit.quickcheck.generator.Precision;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.junit.Assume;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
-import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -28,7 +22,7 @@ import records.transformations.HideColumns;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
 import records.transformations.SummaryStatistics;
-import records.transformations.Transform;
+import records.transformations.Calculate;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -37,7 +31,6 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import test.gen.GenImmediateData;
-import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -48,7 +41,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -389,9 +381,9 @@ public class PropRunTransformation
         }
 
 
-        Transform transform = new Transform(original.mgr, TestUtil.ILD, original.data().getId(), newCols.build());
+        Calculate calculate = new Calculate(original.mgr, TestUtil.ILD, original.data().getId(), newCols.build());
 
-        assertDataSame(transform.getData(), original.data().getData(), c -> columnMapping.getOrDefault(c, new ColumnId("__TEST_UNKNOWN__")));
+        assertDataSame(calculate.getData(), original.data().getData(), c -> columnMapping.getOrDefault(c, new ColumnId("__TEST_UNKNOWN__")));
     }
 
     // Checks that all columns from first parameter have same data as
