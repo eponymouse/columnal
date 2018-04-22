@@ -733,7 +733,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         // Allow editing:
                         return () -> {
-                            FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, existing, table, c);
+                            FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, existing.get());
                         };
                     }
                 }
@@ -744,13 +744,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @OnThread(Tag.FXPlatform)
-    public void editColumn_Calc(Calculate calc, Optional<Pair<ColumnId, Expression>> existing, Table table, ColumnId c)
+    public void editColumn_Calc(Calculate calc, Pair<ColumnId, Expression> existing)
     {
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), c, existing.get().getSecond(), true, null).showAndWait().ifPresent(newDetails -> {
-            ImmutableList<Pair<ColumnId, Expression>> newColumns = Utility.mapListI(calc.getCalculatedColumns(), old -> old.getFirst().equals(c) ? newDetails : old);
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), existing.getFirst(), existing.getSecond(), true, null).showAndWait().ifPresent(newDetails -> {
+            ImmutableList<Pair<ColumnId, Expression>> newColumns = Utility.mapListI(calc.getCalculatedColumns(), old -> old.getFirst().equals(existing.getFirst()) ? newDetails : old);
             Workers.onWorkerThread("Editing column", Priority.SAVE_ENTRY, () -> {
                 FXUtility.alertOnError_(() ->
-                    parent.getManager().edit(table.getId(), () -> new Calculate(parent.getManager(), table.getDetailsForCopy(), calc.getSource(), newColumns), null)
+                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSource(), newColumns), null)
                 );
             });
         });
@@ -879,6 +879,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public int _test_getRowCount()
     {
         return currentKnownRows;
+    }
+
+    public void editAfterCreation()
+    {
+        if (table instanceof Calculate)
+        {
+            addColumnBefore_Calc((Calculate)table, null);
+        }
+        // For other tables, do nothing
     }
 
     @OnThread(Tag.FXPlatform)

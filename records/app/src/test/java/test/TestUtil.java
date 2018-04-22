@@ -879,7 +879,7 @@ public class TestUtil
     public static MainWindowActions openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
     {
         TableManager manager = new DummyManager();
-        Table t = new ImmediateDataSource(manager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), new EditableRecordSet(data));
+        Table t = new ImmediateDataSource(manager, new InitialLoadDetails(new TableId("Table1"), CellPosition.ORIGIN, null), new EditableRecordSet(data));
         manager.record(t);
         if (typeManager != null)
         {

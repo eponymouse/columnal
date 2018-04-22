@@ -24,9 +24,9 @@ import java.util.Optional;
  */
 public abstract class SingleSourceTransformationInfo extends TransformationInfo
 {
-    public SingleSourceTransformationInfo(String canonicalName, String displayName, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
+    public SingleSourceTransformationInfo(String canonicalName, String displayNameKey, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
     {
-        super(canonicalName, displayName, imageFileName, explanationKey, keywords);
+        super(canonicalName, displayNameKey, imageFileName, explanationKey, keywords);
     }
 
     @Override

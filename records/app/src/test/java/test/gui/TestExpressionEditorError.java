@@ -185,14 +185,16 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
-            targetWindow(gridNode);
             CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));
             for (int i = 0; i < 2; i++)
                 clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             clickOn(".id-new-transform");
-            clickOn(".id-calculate");
+            clickOn(".id-transform-calculate");
+            write("Table1");
+            push(KeyCode.ENTER);
+            TestUtil.sleep(200);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);

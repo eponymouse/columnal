@@ -249,7 +249,7 @@ public class Calculate extends Transformation
     {
         public Info()
         {
-            super("calculate", "Calculate", "preview-calculate.png", "calculate.explanation.short", Arrays.asList("transform"));
+            super("calculate", "transform.calculate", "preview-calculate.png", "calculate.explanation.short", Arrays.asList("transform"));
         }
 
         @Override

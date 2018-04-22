@@ -587,7 +587,13 @@ public class View extends StackPane
                                     @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                                     Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
                                         FXUtility.alertOnError_(() -> {
-                                            tableManager.record(makeTransFinal.get());
+                                            @OnThread(Tag.Simulation) Transformation transformation = makeTransFinal.get();
+                                            tableManager.record(transformation);
+                                            Platform.runLater(() -> {
+                                                TableDisplay display = (TableDisplay) transformation.getDisplay();
+                                                if (display != null)
+                                                    display.editAfterCreation();
+                                            });
                                         });
                                     });
                                 }
