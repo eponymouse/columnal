@@ -21,6 +21,8 @@ import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
@@ -28,6 +30,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.TableId;
@@ -60,6 +63,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -144,7 +148,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     }
 
     @OnThread(Tag.FXPlatform)
-    public void setColumns(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
+    public void setColumns(@UnknownInitialization(DataDisplay.class) DataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
     {
         // Remove old columns:
         columnHeaderItems.forEach(floatingItems::removeItem);
@@ -155,17 +159,18 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         {
             final int columnIndex = i;
             ColumnDetails column = columns.get(i);
+            @Nullable ColumnHeaderOps ops = columnActions == null ? null : columnActions.apply(column.getColumnId());
             // Item for column name:
             if (headerRows.showingColumnNameRow)
             {
-                FloatingItem<Pane> columnNameItem = new ColumnNameItem(columnIndex, column, columnActions);
+                FloatingItem<Pane> columnNameItem = new ColumnNameItem(columnIndex, column, ops);
                 columnHeaderItems.add(columnNameItem);
                 floatingItems.addItem(columnNameItem);
             }
             // Item for column type:
             if (headerRows.showingColumnTypeRow)
             {
-                FloatingItem<Label> columnTypeItem = new ColumnTypeItem(columnIndex, column);
+                FloatingItem<Label> columnTypeItem = new ColumnTypeItem(columnIndex, column, ops);
                 columnHeaderItems.add(columnTypeItem);
                 floatingItems.addItem(columnTypeItem);
             }
@@ -680,18 +685,26 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
         return new Pair<>(ListenerOutcome.KEEP, null);
     }
+    
+    public static interface ColumnHeaderOps
+    {
+        public ImmutableList<ColumnOperation> contextOperations();
+        
+        // Used as the hyperlinked edit operation on column headers, if non-null.
+        @Pure
+        public @Nullable FXPlatformRunnable getPrimaryEditOperation(); 
+    }
 
     private class ColumnNameItem extends FloatingItem<Pane>
     {
         private final int columnIndex;
         private final ColumnDetails column;
-        private @Nullable
-        final FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions;
+        private final @Nullable ColumnHeaderOps columnActions;
         private double containerTranslateY;
         // minTranslateY is zero; we can't scroll above our current position.
         private double maxTranslateY;
 
-        public ColumnNameItem(int columnIndex, ColumnDetails column, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
+        public ColumnNameItem(int columnIndex, ColumnDetails column, @Nullable ColumnHeaderOps columnActions)
         {
             super(ViewOrder.FLOATING);
             this.columnIndex = columnIndex;
@@ -740,6 +753,18 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         {
             Label columnName = new Label(column.getColumnId().getRaw());
             columnName.getStyleClass().add("column-title");
+            if (columnActions != null && columnActions.getPrimaryEditOperation() != null)
+            {
+                @NonNull FXPlatformRunnable primaryEditOp = columnActions.getPrimaryEditOperation();
+                columnName.getStyleClass().add("column-title-edit");
+                columnName.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (e.getButton() == MouseButton.PRIMARY)
+                    {
+                        primaryEditOp.run();
+                        e.consume();
+                    }
+                });
+            }
             final BorderPane borderPane = new BorderPane(columnName);
             borderPane.getStyleClass().add("table-display-column-title");
             BorderPane.setAlignment(columnName, Pos.CENTER_LEFT);
@@ -753,7 +778,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
             ContextMenu contextMenu = new ContextMenu();
             if (columnActions != null)
-                contextMenu.getItems().setAll(Utility.mapList(columnActions.apply(column.getColumnId()), c -> c.makeMenuItem()));
+                contextMenu.getItems().setAll(Utility.mapList(columnActions.contextOperations(), c -> c.makeMenuItem()));
             if (contextMenu.getItems().isEmpty())
             {
                 MenuItem menuItem = new MenuItem("No operations");
@@ -790,12 +815,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     {
         private final int columnIndex;
         private final ColumnDetails column;
+        private final @Nullable FXPlatformRunnable editOp;
 
-        public ColumnTypeItem(int columnIndex, ColumnDetails column)
+        public ColumnTypeItem(int columnIndex, ColumnDetails column, @Nullable ColumnHeaderOps columnHeaderOps)
         {
             super(ViewOrder.STANDARD_CELLS);
             this.columnIndex = columnIndex;
             this.column = column;
+            this.editOp = columnHeaderOps == null ? null : columnHeaderOps.getPrimaryEditOperation();
         }
 
         @OnThread(Tag.FXPlatform)
@@ -826,7 +853,19 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         public Label makeCell(VisibleBounds visibleBounds)
         {
             Label typeLabel = new TypeLabel(new ReadOnlyObjectWrapper<@Nullable DataType>(column.getColumnType()));
-            typeLabel.getStyleClass().add("table-display-column-title");
+            typeLabel.getStyleClass().add("table-display-column-type");
+            if (editOp != null)
+            {
+                @NonNull FXPlatformRunnable editOpFinal = editOp;
+                typeLabel.getStyleClass().add("column-title-edit");
+                typeLabel.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (e.getButton() == MouseButton.PRIMARY)
+                    {
+                        editOpFinal.run();
+                        e.consume();
+                    }
+                });
+            }
             return typeLabel;
         }
     }

@@ -547,7 +547,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) void setColumns(@UnknownInitialization(DataDisplay.class) SrcDataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ImmutableList<ColumnOperation>> columnActions)
+        public @OnThread(Tag.FXPlatform) void setColumns(@UnknownInitialization(DataDisplay.class) SrcDataDisplay this, ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, @Nullable FXPlatformFunction<ColumnId, ColumnHeaderOps> columnActions)
         {
             super.setColumns(columns, operations, columnActions);
             FXUtility.runAfter(() -> Utility.later(this).numRowsChanged());

@@ -239,6 +239,7 @@ public class Calculate extends Transformation
         return result;
     }
 
+    @OnThread(Tag.Any)
     public List<Pair<ColumnId, Expression>> getCalculatedColumns()
     {
         return newColumns;

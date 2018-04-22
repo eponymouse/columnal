@@ -105,6 +105,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 import utility.Workers.Priority;
+import utility.Workers.Worker;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.ResizableRectangle;
@@ -647,7 +648,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return mostRecentBounds.get();
     }
 
-    public ImmutableList<records.gui.stable.ColumnOperation> getColumnActions(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId c)
+    public ColumnHeaderOps getColumnActions(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, ColumnId c)
     {
         ImmutableList.Builder<ColumnOperation> r = ImmutableList.builder();
 
@@ -711,7 +712,48 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             Log.log(e);
         }
-        return r.build();
+
+        ImmutableList<ColumnOperation> ops = r.build();
+        return new ColumnHeaderOps()
+        {
+            @Override
+            public ImmutableList<ColumnOperation> contextOperations()
+            {
+                return ops;
+            }
+
+            @Override
+            public @Nullable FXPlatformRunnable getPrimaryEditOperation()
+            {
+                if (table instanceof Calculate)
+                {
+                    Calculate calc = (Calculate) table;
+                    Optional<Pair<ColumnId, Expression>> existing = calc.getCalculatedColumns().stream().filter(p -> p.getFirst().equals(c)).findFirst();
+                    if (existing.isPresent())
+                    {
+                        // Allow editing:
+                        return () -> {
+                            FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, existing, table, c);
+                        };
+                    }
+                }
+                
+                return null;
+            }
+        };
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void editColumn_Calc(Calculate calc, Optional<Pair<ColumnId, Expression>> existing, Table table, ColumnId c)
+    {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), c, existing.get().getSecond(), true, null).showAndWait().ifPresent(newDetails -> {
+            ImmutableList<Pair<ColumnId, Expression>> newColumns = Utility.mapListI(calc.getCalculatedColumns(), old -> old.getFirst().equals(c) ? newDetails : old);
+            Workers.onWorkerThread("Editing column", Priority.SAVE_ENTRY, () -> {
+                FXUtility.alertOnError_(() ->
+                    parent.getManager().edit(table.getId(), () -> new Calculate(parent.getManager(), table.getDetailsForCopy(), calc.getSource(), newColumns), null)
+                );
+            });
+        });
     }
 
     public @Nullable FXPlatformConsumer<@Nullable ColumnId> addColumnOperation()
