@@ -1,11 +1,15 @@
 package test.gui;
 
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -17,9 +21,11 @@ import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.gui.expressioneditor.TopLevelEditor;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
+import records.gui.grid.RectangleBounds;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -40,7 +46,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorError extends ApplicationTest implements ScrollToTrait, ListUtilTrait
+public class TestExpressionEditorError extends ApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait
 {
     @SuppressWarnings("nullness")
     private Stage windowToUse;
@@ -176,15 +182,19 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
-            TableManager tableManager = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
 
-            scrollTo(".id-tableDisplay-menu-button");
-            clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-            selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().startsWith("calculate"));
-            push(KeyCode.TAB);
+            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            targetWindow(gridNode);
+            CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));
+            for (int i = 0; i < 2; i++)
+                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            // Not sure why this doesn't work:
+            //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            clickOn(".id-new-transform");
+            clickOn(".id-calculate");
             write("DestCol");
             // Focus expression editor:
-            push(KeyCode.TAB);
             push(KeyCode.TAB);
             write(original);
             TopLevelEditorFlowPane editorPane = lookup(".expression-editor").<TopLevelEditorFlowPane>query();
@@ -199,7 +209,7 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             // Dismiss dialog:
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
-            clickOn(".ok-button");
+            clickOn(".cancel-button");
         }
         catch (Exception e)
         {

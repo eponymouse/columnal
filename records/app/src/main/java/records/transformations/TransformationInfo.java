@@ -32,7 +32,7 @@ public abstract class TransformationInfo
     /**
      * The name, as will be shown in the search bar and display.
      */
-    protected final String displayName;
+    protected final @LocalizableKey String displayNameKey;
 
     private final String imageFileName;
 
@@ -48,10 +48,10 @@ public abstract class TransformationInfo
 
 
     @OnThread(Tag.Any)
-    public TransformationInfo(String canonicalName, String displayName, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
+    public TransformationInfo(String canonicalName, @LocalizableKey String displayNameKey, String imageFileName, @LocalizableKey String explanationKey, List<String> keywords)
     {
         this.canonicalName = canonicalName;
-        this.displayName = displayName;
+        this.displayNameKey = displayNameKey;
         this.imageFileName = imageFileName;
         this.keywords = keywords;
         this.explanationKey = explanationKey;
@@ -62,9 +62,9 @@ public abstract class TransformationInfo
         return canonicalName;
     }
 
-    public final String getDisplayName()
+    public final @LocalizableKey String getDisplayNameKey()
     {
-        return displayName;
+        return displayNameKey;
     }
 
     @OnThread(Tag.Simulation)

@@ -55,7 +55,7 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
 
         for (TransformationInfo transformationInfo : TransformationManager.getInstance().getTransformations())
         {
-            Button button = new ExplainedButton(transformationInfo.getDisplayName(), transformationInfo.getExplanationKey(), transformationInfo.getImageFileName(), BUTTON_WIDTH, p -> {
+            Button button = new ExplainedButton(transformationInfo.getDisplayNameKey(), transformationInfo.getExplanationKey(), transformationInfo.getImageFileName(), BUTTON_WIDTH, p -> {
                 FXUtility.mouse(this).setResult(new Pair<>(p, transformationInfo));
                 close();
             });

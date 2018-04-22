@@ -17,6 +17,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
@@ -59,6 +61,7 @@ class ExplainedButton extends Button
     public ExplainedButton(@LocalizableKey String titleKey, @LocalizableKey String explanationKey, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
         this(buttonWidth, onAction);
+        GUI.addIdClass(Utility.later(this), titleKey);
         setAccessibleText(TranslationUtility.getString(titleKey) + "\n" + TranslationUtility.getString(explanationKey));
         setContentDisplay(ContentDisplay.BOTTOM);
         Label explanation = GUI.labelWrap(explanationKey, "explanation-button-explanation");
@@ -74,13 +77,16 @@ class ExplainedButton extends Button
      * @param buttonWidth The width of the button
      * @param onAction The action to run when the button is clicked.
      */
-    public ExplainedButton(String titleText, @LocalizableKey String explanationKey, String imageFileName, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
+    public ExplainedButton(@LocalizableKey String titleKey, @LocalizableKey String explanationKey, String imageFileName, double buttonWidth, FXPlatformConsumer<Point2D> onAction)
     {
         this(buttonWidth, onAction);
+        String titleText = TranslationUtility.getString(titleKey);
         // Set text in case the screen reader uses that even when graphic only.
         setAccessibleText(titleText + "\n" + TranslationUtility.getString(explanationKey));
         setContentDisplay(ContentDisplay.BOTTOM);
         setText(titleText);
+        // Safe because just modifies style classes:
+        GUI.addIdClass(Utility.later(this), titleKey);
         setAlignment(Pos.TOP_CENTER);
         Label explanation = GUI.labelWrap(explanationKey, "explanation-button-explanation");
         explanation.setMaxWidth(buttonWidth * 0.85);

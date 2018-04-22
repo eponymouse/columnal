@@ -37,6 +37,8 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
 
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer(), field.getNode(), null, null, null));
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
+        getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> {
             @Nullable ColumnId columnId = field.valueProperty().getValue();

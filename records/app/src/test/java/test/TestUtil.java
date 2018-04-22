@@ -876,7 +876,7 @@ public class TestUtil
     }*/
 
     @OnThread(Tag.Simulation)
-    public static TableManager openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
+    public static MainWindowActions openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws Exception
     {
         TableManager manager = new DummyManager();
         Table t = new ImmediateDataSource(manager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), new EditableRecordSet(data));
@@ -885,7 +885,7 @@ public class TestUtil
         {
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         }
-        return openDataAsTable(windowToUse, manager).get()._test_getTableManager();
+        return openDataAsTable(windowToUse, manager).get();
     }
 
     // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.
