@@ -2,13 +2,17 @@ package records.gui;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.datatype.DataType;
 import records.gui.View;
+import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
@@ -34,7 +38,23 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         curValue = initialExpression;
 
         ColumnNameTextField field = new ColumnNameTextField(initialName);
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), perRow, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager(), e -> {curValue = e;});
+        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), perRow, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager(), e -> {curValue = e;}) {
+            @Override
+            protected void parentFocusRightOfThis(Focus side)
+            {
+                Node button = getDialogPane().lookupButton(ButtonType.OK);
+                if (button != null)
+                    button.requestFocus();
+            }
+        };
+        // Tab doesn't seem to work right by itself:
+        field.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.TAB)
+            {
+                expressionEditor.focus(Focus.LEFT);
+                e.consume();
+            }
+        });
 
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer(), field.getNode(), null, null, null));
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
