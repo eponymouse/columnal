@@ -38,11 +38,13 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         curValue = initialExpression;
 
         ColumnNameTextField field = new ColumnNameTextField(initialName);
-        expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), perRow, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager(), e -> {curValue = e;}) {
+        ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
+        ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
+        expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, perRow, expectedTypeWrapper, parent.getManager(), e -> {curValue = e;}) {
             @Override
             protected void parentFocusRightOfThis(Focus side)
             {
-                Node button = getDialogPane().lookupButton(ButtonType.OK);
+                @Nullable Node button = getDialogPane().lookupButton(ButtonType.OK);
                 if (button != null)
                     button.requestFocus();
             }

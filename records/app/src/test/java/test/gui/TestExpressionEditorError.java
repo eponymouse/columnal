@@ -216,6 +216,7 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
                 push(KeyCode.ESCAPE);
                 push(KeyCode.ESCAPE);
                 clickOn(".cancel-button");
+                TestUtil.sleep(1000);
             }
         }
         catch (Exception e)
