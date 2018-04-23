@@ -7,13 +7,18 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import log.Log;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.Transformation;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.View;
+import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
 import records.transformations.Calculate;
 import records.transformations.TransformationInfo;
@@ -39,7 +44,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditor extends ApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait
+public class TestExpressionEditor extends ApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait
 {
     @SuppressWarnings("nullness")
     private Stage windowToUse;
@@ -53,20 +58,24 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
 
     // TODO this test seems to cause later tests to fail
     @Property(trials = 10)
-    public void testEntry(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testEntry(@When(seed=1L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
-        TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
         try
         {
-            scrollTo(".id-tableDisplay-menu-button");
-            clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
+            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));
+            for (int i = 0; i < 2; i++)
+                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            // Not sure why this doesn't work:
+            //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            clickOn(".id-new-transform");
+            clickOn(".id-transform-calculate");
+            write("Table1");
+            push(KeyCode.ENTER);
             TestUtil.sleep(200);
-            // TODO fix this
-            //selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().startsWith("calculate"));
-            push(KeyCode.TAB);
             write("DestCol");
             // Focus expression editor:
-            push(KeyCode.TAB);
             push(KeyCode.TAB);
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
             enterExpression(expressionValue.expression, false, r);
@@ -97,8 +106,9 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             assertEquals(expressionValue.expression.toString(), expression.toString());
 
             // Now check values match:
-            scrollTo(".tableDisplay-transformation .id-tableDisplay-menu-button");
-            clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
+            // TODO make sure we pick the right table!
+            clickOn(".table-display-table-title", MouseButton.SECONDARY)
+                .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
             Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<List<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
             assertTrue(clip.isPresent());
