@@ -74,6 +74,9 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
             FXUtility.runAfter(field::requestFocusWhenInScene);
         });
+        setOnHiding(e -> {
+            expressionEditor.cleanup();
+        });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
 

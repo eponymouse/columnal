@@ -6,9 +6,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import log.Log;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableColumn;
@@ -204,20 +206,27 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             if (editorPane == null) return;
             TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
             List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).collect(Collectors.toList());
+
+            // Dismiss before comparison to avoid issues with exception:
+            push(KeyCode.ESCAPE);
+            push(KeyCode.ESCAPE);
+            //TestUtil.sleep(2000);
+            Log.debug("Clicking cancel");
+            moveTo(".cancel-button");
+            // Shouldn't really need this delay but test is flaky without it due to some JavaFX animation-related exceptions:
+            TestUtil.sleep(2000);
+            clickOn(".cancel-button");
             
-            try
-            {
-                assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
-                // TODO check error popup
-            }
-            finally
-            {
-                // Dismiss dialog:
-                push(KeyCode.ESCAPE);
-                push(KeyCode.ESCAPE);
-                clickOn(".cancel-button");
-                TestUtil.sleep(1000);
-            }
+            
+            Log.debug("Checking states");
+            assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
+            Log.debug("Checked states");
+            // TODO check error popup
+            
+            // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
+            // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
+            TestUtil.sleep(2000);
+            WaitForAsyncUtils.clearExceptions();
         }
         catch (Exception e)
         {

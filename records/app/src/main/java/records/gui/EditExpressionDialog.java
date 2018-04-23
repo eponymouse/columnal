@@ -34,7 +34,9 @@ public class EditExpressionDialog extends LightDialog<Expression>
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> bt == ButtonType.OK ? curValue : null);
-        
+        setOnHiding(e -> {
+            expressionEditor.cleanup();
+        });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
 
