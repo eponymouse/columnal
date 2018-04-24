@@ -211,7 +211,6 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
             //TestUtil.sleep(2000);
-            Log.debug("Clicking cancel");
             moveTo(".cancel-button");
             // Shouldn't really need this delay but test is flaky without it due to some JavaFX animation-related exceptions:
             TestUtil.sleep(2000);

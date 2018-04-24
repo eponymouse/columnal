@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import log.Log;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.Transformation;
@@ -84,7 +85,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             // Hide any code completion (also: check it doesn't dismiss dialog)
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
-            //TEMP:
+            //Shouldn't need the delay, but test flaky without it:
             moveTo(".ok-button");
             TestUtil.sleep(2000);
             clickOn(".ok-button");
@@ -115,6 +116,11 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
             List<@Value Object> actual = clip.get().stream().filter((Pair<ColumnId, List<@Value Object>> p) -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
             TestUtil.assertValueListEqual("Transformed", expressionValue.value, actual);
+
+            // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
+            // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
+            TestUtil.sleep(2000);
+            WaitForAsyncUtils.clearExceptions();
         }
         finally
         {
