@@ -22,6 +22,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import utility.gui.FXUtility.DragHandler;
+import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +33,7 @@ import java.util.stream.Stream;
 public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
 {
     private final FlowPane container;
+    private final ScrollPaneFill scrollPane;
     private final List<FXPlatformConsumer<Node>> focusListeners = new ArrayList<>();
     protected final TableManager tableManager;
     
@@ -44,6 +46,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     {
         super(operations, null, null, "");
         this.container = new TopLevelEditorFlowPane();
+        scrollPane = new ScrollPaneFill(container) {
+            @Override
+            @OnThread(Tag.FX)
+            public void requestFocus()
+            {
+            }
+        };
         this.tableManager = tableManager;
 
         container.getStyleClass().add("top-level-editor");
@@ -154,10 +163,15 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         FXUtility.setPseudoclass(container, "focus-within", childIsFocused());
     }
 
+    @Override
+    protected void selfChanged()
+    {
+        scrollPane.fillViewport();
+    }
 
     public Node getContainer()
     {
-        return container;
+        return scrollPane;
     }
 
     public @Nullable Window getWindow()

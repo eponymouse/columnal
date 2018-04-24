@@ -266,6 +266,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     @Override
     protected void selfChanged()
     {
+        super.selfChanged();
         //Log.debug("selfChanged: " + atomicEdit.get());
         clearSelection();
         // Can be null during initialisation
