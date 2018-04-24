@@ -90,6 +90,16 @@ class Scene
 }
 
 package javafx.scene.control;
+class DialogPane
+{
+    /* The initialisation is a slight lie.  This method is called from
+       DialogPane's constructor, but after all other initialisation: */
+    protected Node createButtonBar(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this);
+    
+    public final ObservableList<ButtonType> getButtonTypes(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this);
+    
+    protected Node createButton(@UnknownInitialization(javafx.scene.control.DialogPane.class) DialogPane this, ButtonType buttonType);
+}
 class Dialog<R>
 {
     void setResizable(@UnknownInitialization(javafx.scene.control.Dialog.class) Dialog<R> this, boolean b);

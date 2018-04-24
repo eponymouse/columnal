@@ -19,6 +19,7 @@ import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
 import utility.gui.LightDialog;
 
@@ -33,7 +34,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
 
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
     {
-        super(parent.getWindow());
+        super(parent.getWindow(), new DialogPaneWithSideButtons());
         setResizable(true);
         curValue = initialExpression;
 
