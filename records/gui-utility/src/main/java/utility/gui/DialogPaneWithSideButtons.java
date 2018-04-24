@@ -30,6 +30,17 @@ public class DialogPaneWithSideButtons extends DialogPane
 
     private @MonotonicNonNull Map<ButtonType, Node> buttonNodes;
     
+    public DialogPaneWithSideButtons()
+    {
+        // Should be non-null because parent constructor calls createButtonBar.
+        if (buttonBar != null)
+        {
+            // Important that our listener comes after the parent class's listener which is added in their constructor.
+            updateButtons();
+            FXUtility.listen(getButtonTypes(), c -> updateButtons());
+        }
+    }
+    
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected Node createButtonBar(@UnknownInitialization(DialogPane.class) DialogPaneWithSideButtons this)
@@ -37,10 +48,6 @@ public class DialogPaneWithSideButtons extends DialogPane
         buttonBar = new VBox();
         buttonBar.setMaxHeight(Double.MAX_VALUE);
         buttonBar.setFillWidth(true);
-
-        updateButtons();
-        FXUtility.listen(getButtonTypes(), c -> updateButtons());
-
         return buttonBar;
     }
 
@@ -56,7 +63,7 @@ public class DialogPaneWithSideButtons extends DialogPane
         boolean hasDefault = false;
         for (ButtonType cmd : getButtonTypes())
         {
-            Node genButton = buttonNodes.computeIfAbsent(cmd, dialogButton -> createButton(cmd));
+            Node genButton = lookupButton(cmd);
             
             // keep only first default button
             if (genButton instanceof Button)
