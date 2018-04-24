@@ -3,6 +3,7 @@ package records.gui;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -33,7 +34,6 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
     public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
     {
         super(parent.getWindow());
-        FXUtility.preventCloseOnEscape(getDialogPane());
         setResizable(true);
         curValue = initialExpression;
 
@@ -62,6 +62,9 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
+        // Prevent enter/escape activating buttons:
+        ((Button)getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
+        FXUtility.preventCloseOnEscape(getDialogPane());
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> {
             @Nullable ColumnId columnId = field.valueProperty().getValue();

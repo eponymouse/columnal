@@ -106,8 +106,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             assertEquals(expressionValue.expression.toString(), expression.toString());
 
             // Now check values match:
-            // TODO make sure we pick the right table!
-            clickOn(".table-display-table-title", MouseButton.SECONDARY)
+            clickOn(".table-display-table-title.transformation-table-title", MouseButton.SECONDARY)
                 .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
             Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<List<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
