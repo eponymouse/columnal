@@ -36,6 +36,9 @@ html {
              width: 120px;
         }
     }
+    .type-var {
+        font-style: italic;
+    }
 }
 .function-arrow::before {
     content: "\27F6";

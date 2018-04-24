@@ -3,17 +3,27 @@
     <xsl:strip-space elements="*"/>
     <xsl:param name="myOutputDir"/>
     <xsl:output method="html"/>
+    
     <xsl:template name="processType">
         <xsl:param name="type" select="."/>
         <xsl:analyze-string select="$type" regex="\{{\*\}}">
             <xsl:matching-substring>
-                <span class="wild-unit"><xsl:value-of select="."/></span>
+                <span class="wild-unit"><xsl:copy-of select="."/></span>
             </xsl:matching-substring>
+            <!-- All words beginning with lower-case are assumed to be vars: -->
             <xsl:non-matching-substring>
-                <xsl:value-of select="."/>
+                <xsl:analyze-string select="." regex="[a-z][a-zA-Z]*">
+                    <xsl:matching-substring>
+                        <span class="type-var"><xsl:copy-of select="."/></span>
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring>
+                        <xsl:copy-of select="."/>
+                    </xsl:non-matching-substring>
+                </xsl:analyze-string>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:template>
+    
     <xsl:template name="bracketed">
         <xsl:param name="expression" select="."/>
         <xsl:analyze-string select="$expression" regex="^\(.*\)$">
