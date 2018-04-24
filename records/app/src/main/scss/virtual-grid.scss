@@ -7,6 +7,10 @@
 
 .table-display-table-title {
     -fx-background-color: $table-header-background-color;
+    &.transformation-table-title {
+        -fx-background-color: $table-header-transformation-background-color;
+    }
+    
     &:table-selected {
         -fx-cursor: move;
         -fx-background-color: $table-header-background-color-selected;

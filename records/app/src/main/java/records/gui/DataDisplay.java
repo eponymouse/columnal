@@ -610,6 +610,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             }
             final BorderPane borderPane = new BorderPane(tableNameField.getNode());
             borderPane.getStyleClass().add("table-display-table-title");
+            borderPane.getStyleClass().addAll(getExtraTitleStyleClasses());
             BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
             BorderPane.setMargin(tableNameField.getNode(), new Insets(0, 0, 0, 8.0));
             ArrayList<MoveDestination> overlays = new ArrayList<>();
@@ -675,6 +676,11 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             if (getNode() != null)
                 FXUtility.setPseudoclass(getNode(), "table-selected", selected);
         }
+    }
+
+    protected ImmutableList<String> getExtraTitleStyleClasses()
+    {
+        return ImmutableList.of();
     }
 
     @Override

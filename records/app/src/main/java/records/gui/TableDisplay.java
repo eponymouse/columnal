@@ -876,6 +876,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         return slideOutProportion;
     }
 
+    @Override
+    protected ImmutableList<String> getExtraTitleStyleClasses()
+    {
+        return table instanceof Transformation ? ImmutableList.of("transformation-table-title") : ImmutableList.of("immediate-table-title");
+    }
+
     public int _test_getRowCount()
     {
         return currentKnownRows;
