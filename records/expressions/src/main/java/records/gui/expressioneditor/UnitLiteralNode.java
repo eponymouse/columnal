@@ -26,6 +26,8 @@ public class UnitLiteralNode extends OtherLiteralNode implements UnitNodeParent
     {
         super(parent);
         this.unit = new UnitCompoundBase(Utility.later(this), true, withSemanticParent(unitExpression.loadAsConsecutive(false), Utility.later(this)));
+        updateNodes();
+        Utility.later(this).updateListeners();
     }
 
     @Override

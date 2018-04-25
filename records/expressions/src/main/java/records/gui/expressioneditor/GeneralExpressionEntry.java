@@ -48,6 +48,7 @@ import utility.gui.FXUtility;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -58,7 +59,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>, EEDisplayNodeParent, UnitNodeParent
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
@@ -293,12 +294,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private final AutoComplete autoComplete;
 
     /**
-     * An optional component appearing after the text field, for specifying units.
-     * Surrounded by curly brackets.
-     */
-    private @Nullable UnitCompoundBase unitSpecifier;
-
-    /**
      * The semantic parent which can be asked about available variables, etc
      */
     private final ExpressionNodeParent semanticParent;
@@ -375,13 +370,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     protected Stream<Node> calculateNodes()
     {
-        return Stream.concat(Stream.of(container), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
-    }
-
-    @Override
-    protected Stream<EEDisplayNode> calculateChildren()
-    {
-        return Utility.streamNullable(unitSpecifier);
+        return Stream.of(container);
     }
 
     @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
@@ -709,7 +698,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
-        @Nullable UnitExpression units = unitSpecifier == null ? null : unitSpecifier.saveUnrecorded(errorDisplayer, onError);
         return errorDisplayer.record(this, currentValue.get().saveUnrecorded(onError));
         /*
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
@@ -900,18 +888,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
                 }
             }
-            else if (c == unitCompletion)
+            else if (Objects.equals(c, unitCompletion))
             {
-                if (unitSpecifier == null)
-                {
-                    addUnitSpecifier(null); // Should we put rest in the curly brackets?
-                }
-                else
-                {
-                    // If it's null and we're at the end, move into it:
-                    if (rest.isEmpty())
-                        unitSpecifier.focus(Focus.LEFT);
-                }
+                parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralNode, () -> {
+                    UnitLiteralNode unitLiteralNode = new UnitLiteralNode(parent, new UnfinishedUnitExpression(""));
+                    unitLiteralNode.focusWhenShown();
+                    return unitLiteralNode;
+                });
             }
             else if (c != null && c.equals(ifCompletion))
             {
@@ -1008,40 +991,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    public void addUnitSpecifier(@Nullable UnitExpression unitExpression)
-    {
-        if (unitSpecifier == null)
-        {
-            if (unitExpression == null)
-                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, null));
-            else
-                unitSpecifier = new UnitCompoundBase(this, true, SingleLoader.withSemanticParent(unitExpression.loadAsConsecutive(true), this));
-        }
-        updateNodes();
-        updateListeners();
-    }
-
-    @Override
-    public void focusChanged()
-    {
-        if (unitSpecifier != null)
-            unitSpecifier.focusChanged();
-    }
-
     @Override
     public void focus(Focus side)
     {
-        if (side == Focus.RIGHT && unitSpecifier != null)
-            unitSpecifier.focus(Focus.RIGHT);
-        else
-        {
-            super.focus(side);
-            FXUtility.onceTrue(initialContentEntered, () -> {
-                // Only if we haven't lost focus in the mean time, adjust ours:
-                if (isFocused())
-                    super.focus(side);
-            });
-        }
+        super.focus(side);
+        FXUtility.onceTrue(initialContentEntered, () -> {
+            // Only if we haven't lost focus in the mean time, adjust ours:
+            if (isFocused())
+                super.focus(side);
+        });
     }
 
     @Override
@@ -1051,49 +1009,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
-    {
-        // Child is bound to be units:
-        parent.focusRightOf(this, side);
-    }
-
-    @Override
-    public void focusLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
-    {
-        textField.requestFocus();
-        textField.positionCaret(textField.getLength());
-    }
-
-    @Override
-    public Stream<String> getParentStyles()
-    {
-        return Stream.empty();
-    }
-
-    @Override
     public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
     {
         return currentValue.get().getDeclaredVariables();
-    }
-
-    @Override
-    public UnitManager getUnitManager()
-    {
-        return parent.getEditor().getTypeManager().getUnitManager();
-    }
-
-    @Override
-    public TopLevelEditor<?, ?> getEditor()
-    {
-        return parent.getEditor();
-    }
-
-    @Override
-    public void clearAllErrors()
-    {
-        super.clearAllErrors();
-        if (unitSpecifier != null)
-            unitSpecifier.clearAllErrors();
     }
 
     @Override

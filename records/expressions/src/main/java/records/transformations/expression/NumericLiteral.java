@@ -2,6 +2,8 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.TableAndColumnRenames;
@@ -9,10 +11,14 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.UnitLiteralNode;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
@@ -103,12 +109,23 @@ public class NumericLiteral extends Literal
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> {
-            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new GeneralExpressionEntry.NumLit(value), p, s);
-            if (unit != null)
-                generalExpressionEntry.addUnitSpecifier(unit);
-            return generalExpressionEntry;
-        };
+        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
+    }
+
+    @Override
+    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    {
+        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>> builder = ImmutableList.builder();
+        builder.add((p, s) -> new GeneralExpressionEntry(new NumLit(value), p, s));
+        if (unit != null)
+        {
+            @NonNull UnitExpression unitFinal = unit;
+            builder.add((p, s) -> new UnitLiteralNode(p, unitFinal));
+        }
+        return new Pair<>(
+            builder.build(),
+            ImmutableList.of((p, s) -> new OperatorEntry<>(Expression.class, p))
+        );
     }
 
     @Override

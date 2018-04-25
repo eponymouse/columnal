@@ -51,6 +51,8 @@ public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
                 return childIsFocused();
             }
         };
+        updateNodes();
+        updateListeners();
     }
 
 
