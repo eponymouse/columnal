@@ -117,6 +117,7 @@ public abstract class TypeExp implements StyledShowable
     public static final String CONS_BOOLEAN = "Boolean";
     public static final String CONS_LIST = "List";
     public static final String CONS_FUNCTION = "->";
+    public static final String CONS_TYPE = "Type";
     // For recording errors:
     protected final @Nullable ExpressionBase src;
     
@@ -150,7 +151,13 @@ public abstract class TypeExp implements StyledShowable
         }
         
     }
-    
+
+    // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
+    public static TypeExp dataTypeToTypeGADT(@Nullable ExpressionBase src, DataType dataType) throws InternalException
+    {
+        return new TypeCons(src, CONS_TYPE, ImmutableList.of(fromDataType(src, dataType, s -> null)), ImmutableSet.of());
+    }
+
     // package-protected:
     final Either<StyledString, TypeExp> unifyWith(TypeExp b) throws InternalException
     {

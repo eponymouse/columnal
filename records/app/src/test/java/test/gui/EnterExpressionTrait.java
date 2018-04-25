@@ -3,18 +3,15 @@ package test.gui;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.stringtemplate.v4.ST;
 import org.testfx.api.FxRobotInterface;
-import records.error.InternalException;
 import records.grammar.ExpressionLexer;
-import records.loadsave.OutputBuilder;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.Expression;
-import records.transformations.expression.FixedTypeExpression;
+import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.Literal;
 import records.transformations.expression.MatchExpression;
@@ -107,9 +104,9 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == CallExpression.class)
         {
             CallExpression call = (CallExpression) expression;
-            enterExpression(call._test_getFunction(), false, r);
+            enterExpression(call.getFunction(), false, r);
             write("(");
-            enterExpression(call._test_getParam(), false, r);
+            enterExpression(call.getParam(), false, r);
             write(")");
         }
         else if (c == StandardFunction.class)
@@ -207,14 +204,12 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
             write(((VarUseExpression)expression).getName(), DELAY);
             push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
-        else if (c == FixedTypeExpression.class)
+        else if (c == TypeLiteralExpression.class)
         {
-            write("@type", DELAY);
-            FixedTypeExpression f = (FixedTypeExpression)expression; 
+            write("`", DELAY);
+            TypeLiteralExpression f = (TypeLiteralExpression)expression; 
             enterType(f.getType(), r);
-            push(KeyCode.RIGHT);
-            enterExpression(f.getInner(), false, r);
-            write(")");
+            write("`");
         }
         else
         {

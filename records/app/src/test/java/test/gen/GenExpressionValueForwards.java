@@ -6,7 +6,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
@@ -15,14 +14,12 @@ import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
-import records.transformations.expression.CallExpression;
 import records.transformations.expression.StringConcatExpression;
-import records.transformations.expression.FixedTypeExpression;
+import records.transformations.expression.TypeLiteralExpression;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
@@ -695,9 +692,10 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     
     private ExpressionMaker fix(int maxLevels, DataType type)
     {
+        UnitManager m = DummyManager.INSTANCE.getUnitManager();
         return () -> {
             Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
-            return new Pair<>(inner.getFirst(), FixedTypeExpression.fixType(type, inner.getSecond()));
+            return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, type, inner.getSecond()));
         };
     }
 

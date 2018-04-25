@@ -2,7 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -11,13 +11,16 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.FixedTypeNode;
+import records.gui.expressioneditor.TypeLiteralNode;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionList;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 
 import java.util.Objects;
@@ -29,76 +32,75 @@ import java.util.stream.Stream;
  * An expression, and a fixed type it should conform to.  Like the :: operator in Haskell expressions,
  * (or like the `asTypeOf` function if you specified a type).  Just wraps an inner expression with a type. 
  */
-public class FixedTypeExpression extends NonOperatorExpression
+public class TypeLiteralExpression extends NonOperatorExpression
 {
     // This may a type expression that doesn't save to a valid type:
     private final TypeExpression type;
-    private final @Recorded Expression inner;
     
-    public FixedTypeExpression(@Recorded TypeExpression type, @Recorded Expression innerExpression)
+    public TypeLiteralExpression(@Recorded TypeExpression type)
     {
         this.type = type;
-        this.inner = innerExpression;
     }
 
-    public static Expression fixType(DataType fix, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(UnitManager unitManager, DataType fix, @Recorded Expression expression) throws InternalException
     {
         TypeExpression typeExpression = TypeExpression.fromDataType(fix);
-        if (expression instanceof FixedTypeExpression)
+        FunctionDefinition asType = FunctionList.lookup(unitManager, "asType");
+        if (asType == null)
+            throw new InternalException("Missing asType function");
+        if (expression instanceof CallExpression
+            && ((CallExpression)expression).getFunction().equals(new StandardFunction(asType))
+            && ((CallExpression)expression).getParam() instanceof TupleExpression)
         {
-            return new FixedTypeExpression(typeExpression, ((FixedTypeExpression)expression).inner);
+            expression = ((TupleExpression)((CallExpression)expression).getParam()).getMembers().get(1);
         }
-        else
-            return new FixedTypeExpression(typeExpression, expression);
+        
+        return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(
+            new TypeLiteralExpression(typeExpression),
+            expression
+        )));
     }
 
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeExp innerType = inner.check(dataLookup, typeState, onError);
-        if (innerType == null)
-            return null;
-        else
+        @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
+        if (dataType == null)
         {
-            @NonNull TypeExp innerTypeFinal = innerType;
-            @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
-            if (dataType == null)
-            {
-                // TODO should we record an error here?
-                return null;
-            }
-            return onError.recordTypeAndError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, dataType), innerTypeFinal));
+            // Should already be an error in the type itself
+            return null;
         }
+        return onError.recordTypeAndError(this, Either.right(TypeExp.dataTypeToTypeGADT(this, dataType)));
     }
 
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return inner.getValue(rowIndex, state);
+        throw new InternalException("Trying to fetch type literal at run-time");
     }
 
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return inner.allColumnReferences();
+        return Stream.of();
     }
 
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@type {|" + type.save(renames) + "|} (" + inner.save(BracketedStatus.MISC, renames) + ")";
+        return "`" + type.save(renames) + "`";
     }
 
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        return StyledString.concat(StyledString.s("type ("), type.toStyledString(), StyledString.s(") "), inner.toDisplay(BracketedStatus.MISC));
+        return StyledString.concat(StyledString.s("`"), type.toStyledString(), StyledString.s("`"));
     }
 
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> new FixedTypeNode(p, s, type, inner);
+        return (p, s) -> new TypeLiteralNode(p, s, type);
     }
 
     @Override
@@ -121,24 +123,18 @@ public class FixedTypeExpression extends NonOperatorExpression
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FixedTypeExpression that = (FixedTypeExpression) o;
-        return Objects.equals(type, that.type) &&
-            Objects.equals(inner, that.inner);
+        TypeLiteralExpression that = (TypeLiteralExpression) o;
+        return Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(type, inner);
+        return Objects.hash(type);
     }
 
     public TypeExpression getType()
     {
         return type;
-    }
-
-    public Expression getInner()
-    {
-        return inner;
     }
 }

@@ -10,9 +10,6 @@ import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
-import javafx.scene.web.WebView;
 import log.Log;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -47,10 +44,7 @@ import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
 
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,13 +94,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         String getTypeLabel(boolean focused);
 
         @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError);
-        
-        default @UnknownIfRecorded Expression saveUnrecordedWithUnits(ErrorAndTypeRecorder onError, @Nullable UnitExpression units)
-        {
-            if (units == null)
-                return saveUnrecorded(onError);
-            return new UnfinishedExpression(getContent(), units);
-        }
     }
     
     public static class Unfinished implements GeneralValue
@@ -140,14 +127,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
-            // Shouldn't actually get called, but haven't extracted parent class to prevent this:
-            return saveUnrecordedWithUnits(onError, null);
-        }
-
-        @Override
-        public @UnknownIfRecorded Expression saveUnrecordedWithUnits(ErrorAndTypeRecorder onError, @Nullable UnitExpression units)
-        {
-            UnfinishedExpression unfinishedExpression = new UnfinishedExpression(value.trim(), units);
+            UnfinishedExpression unfinishedExpression = new UnfinishedExpression(value.trim());
             onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
             return unfinishedExpression;
         }
@@ -343,7 +323,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF, "autocomplete.if");
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
-        fixedTypeCompletion = new KeywordCompletion(ExpressionLexer.FIX_TYPE, "autocomplete.fixType");
+        fixedTypeCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
         varDeclCompletion = new VarDeclCompletion();
         currentValue = new SimpleObjectProperty<>(initialValue.either(s -> new Unfinished(s), v -> v));
         initialValue.ifRight(v -> {
@@ -730,7 +710,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         @Nullable UnitExpression units = unitSpecifier == null ? null : unitSpecifier.saveUnrecorded(errorDisplayer, onError);
-        return errorDisplayer.record(this, currentValue.get().saveUnrecordedWithUnits(onError, units));
+        return errorDisplayer.record(this, currentValue.get().saveUnrecorded(onError));
         /*
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
@@ -943,7 +923,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c != null && c.equals(fixedTypeCompletion))
             {
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FixedTypeNode(parent, semanticParent, null, null)));
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, semanticParent, null)));
             }
             else if (c instanceof FunctionCompletion)
             {
@@ -1423,13 +1403,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
-            return saveUnrecordedWithUnits(onError, null);
-        }
-
-        @Override
-        public @UnknownIfRecorded Expression saveUnrecordedWithUnits(ErrorAndTypeRecorder onError, @Nullable UnitExpression units)
-        {
-            return new NumericLiteral(number, units);
+            return new NumericLiteral(number, null);
         }
     }
 }

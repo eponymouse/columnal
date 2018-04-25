@@ -12,17 +12,20 @@ columnRef : columnRefType (tableId COLON)? columnId;
 numericLiteral : NUMBER UNIT?;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
-unfinished : UNFINISHED STRING UNIT?;
+unfinished : UNFINISHED STRING;
 
 varRef  : ident;
 
 any : ANY;
 
 implicitLambdaParam : IMPLICIT_LAMBDA_PARAM;
+typeExpression : TYPE;
+unitExpression : UNIT;
+
 
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
 // Similar,y constructor may need an argument, but that's sorted out in type checking.
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | constructor | standardFunction | unfinished;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | constructor | standardFunction | typeExpression | unitExpression | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
@@ -44,7 +47,6 @@ ifThenElseExpression : IF expression THEN expression ELSE expression;
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | MATCHES | PLUS_MINUS | COMMA;
 invalidOpExpression : INVALIDOPS expression (STRING expression)+;
-fixTypeExpression : FIX_TYPE TYPE_BEGIN TYPE_CONTENT TYPE_END OPEN_BRACKET expression CLOSE_BRACKET;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
 
@@ -74,7 +76,7 @@ match : MATCH expression matchClause+;
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor
-expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | fixTypeExpression;
+expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;

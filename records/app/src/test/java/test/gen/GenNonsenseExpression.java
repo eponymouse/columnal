@@ -112,7 +112,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 new StringLiteral(TestUtil.makeStringV(r, gs)),
                 new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
                 new VarUseExpression(TestUtil.generateVarName(r)),
-                new UnfinishedExpression(TestUtil.makeUnfinished(r), r.nextBoolean() ? null : genUnit(r, gs))
+                new UnfinishedExpression(TestUtil.makeUnfinished(r))
             ));
         }
         catch (UserException e)

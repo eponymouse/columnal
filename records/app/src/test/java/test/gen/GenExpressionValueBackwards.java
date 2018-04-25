@@ -6,7 +6,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
@@ -22,14 +21,12 @@ import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.FixedTypeExpression;
+import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
@@ -73,7 +70,6 @@ import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 
-import java.awt.AWTEventMulticaster;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
@@ -689,7 +685,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     
     private ExpressionMaker fixType(int maxLevels, DataType type, @Value Object value)
     {
-        return () -> FixedTypeExpression.fixType(type, make(type, value, maxLevels - 1));
+        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        return () -> TypeLiteralExpression.fixType(m, type, make(type, value, maxLevels - 1));
     }
 
     private Expression columnRef(DataType type, @Value Object value)

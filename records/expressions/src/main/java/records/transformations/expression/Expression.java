@@ -38,6 +38,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.UnfinishedTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.types.ExpressionBase;
@@ -304,17 +305,32 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
-        public Expression visitFixTypeExpression(FixTypeExpressionContext ctx)
+        public Expression visitTypeExpression(TypeExpressionContext ctx)
         {
-            String typeSrc = ctx.TYPE_CONTENT().getText();
+            String typeSrc = ctx.TYPE().getText();
             try
             {
-                return new FixedTypeExpression(TypeExpression.parseTypeExpression(typeManager, typeSrc), visitExpression(ctx.expression()));
+                return new TypeLiteralExpression(TypeExpression.parseTypeExpression(typeManager, typeSrc));
             }
             catch (InternalException | UserException e)
             {
                 Log.log(e);
-                throw new RuntimeException("Cannot parse type {{" + typeSrc + "}}", e);
+                return new TypeLiteralExpression(new UnfinishedTypeExpression(typeSrc));
+            }
+        }
+
+        @Override
+        public Expression visitUnitExpression(UnitExpressionContext ctx)
+        {
+            String unitSrc = ctx.UNIT().getText();
+            try
+            {
+                return new UnitLiteralExpression(UnitExpression.load(unitSrc));
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                return new UnitLiteralExpression(new UnfinishedUnitExpression(unitSrc));
             }
         }
 
@@ -366,7 +382,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             if (functionDefinition == null)
             {
-                return new UnfinishedExpression(functionName, null);
+                return new UnfinishedExpression(functionName);
             }
             else
             {
@@ -423,14 +439,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
-            try
-            {
-                return new UnfinishedExpression(ctx.STRING().getText(), ctx.UNIT() == null ? null : UnitExpression.load(ctx.UNIT().getText()));
-            }
-            catch (InternalException | UserException e)
-            {
-                throw new RuntimeException("Error parsing unit: \"" + ctx.UNIT().getText() + "\"", e);
-            }
+            return new UnfinishedExpression(ctx.STRING().getText());
         }
 
         @Override

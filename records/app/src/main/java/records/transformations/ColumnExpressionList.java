@@ -135,7 +135,7 @@ public class ColumnExpressionList
 
     private static Pair<ColumnId, Expression> makeNewColumnDetails()
     {
-        return new Pair<>(new ColumnId(""), new UnfinishedExpression("", null));
+        return new Pair<>(new ColumnId(""), new UnfinishedExpression(""));
     }
 
 

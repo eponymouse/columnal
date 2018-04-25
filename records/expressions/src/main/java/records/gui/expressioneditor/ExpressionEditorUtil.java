@@ -12,16 +12,15 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
-import records.error.InternalException;
+import records.data.unit.UnitManager;
 import records.gui.TypeDialog;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.QuickFixParams;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
-import records.transformations.expression.FixedTypeExpression;
+import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.NumericLiteral;
@@ -34,7 +33,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
 import utility.FXPlatformFunctionInt;
 import utility.Pair;
 import utility.Utility;
@@ -182,7 +180,7 @@ public class ExpressionEditorUtil
 
     @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionNodeParent>> quickFixesForTypeError(Expression src, @Nullable DataType fix)
+    public static List<QuickFix<Expression,ExpressionNodeParent>> quickFixesForTypeError(UnitManager unitManager, Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression,ExpressionNodeParent>> quickFixes = new ArrayList<>();
         FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionNodeParent>>> makeTypeFix = params -> {
@@ -190,7 +188,7 @@ public class ExpressionEditorUtil
             @Nullable DataType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
             {
-                return new Pair<>(CURRENT, FixedTypeExpression.fixType(dataType, src));
+                return new Pair<>(CURRENT, TypeLiteralExpression.fixType(unitManager, dataType, src));
             } else
             {
                 return new Pair<>(CURRENT, src);
@@ -200,7 +198,7 @@ public class ExpressionEditorUtil
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, FixedTypeExpression.fixType(fixFinal, src))));
+            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(unitManager, fixFinal, src))));
         }
         return quickFixes;
     }

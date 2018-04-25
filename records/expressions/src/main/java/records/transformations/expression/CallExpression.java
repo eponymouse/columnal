@@ -71,7 +71,7 @@ public class CallExpression extends Expression
         {
             Log.log(e);
         }
-        return new UnfinishedExpression(functionName, null);
+        return new UnfinishedExpression(functionName);
     }
 
     @Override
@@ -230,12 +230,12 @@ public class CallExpression extends Expression
         return result;
     }
 
-    public Expression _test_getFunction()
+    public Expression getFunction()
     {
         return function;
     }
 
-    public Expression _test_getParam()
+    public Expression getParam()
     {
         return param;
     }

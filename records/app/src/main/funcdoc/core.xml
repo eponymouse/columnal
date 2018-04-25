@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="core">
+    <function name="asType">
+        <argType>(Type t, t)</argType>
+        <returnType>t</returnType>
+        <description>
+            <p>Clarifies the type of a value.</p>
+            <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
+        </description>
+        <example>
+            <input>(`Boolean`, from string("True"))</input>
+            <output>True</output>
+        </example>
+        <example>
+            <input>(`[Date]`, [])</input>
+            <output>[]</output>
+        </example>
+    </function>
+    <function name="typeOf">
+        <argType>t</argType>
+        <returnType>Type t</returnType>
+        <description>
+            <p>Gets the type of the given value.</p>
+        </description>
+        <example>
+            <input>asType(typeOf([3]), from string("[1, 2, 5]")</input>
+            <output>[1, 2, 5]</output>
+        </example>
+    </function>
+</functionDocumentation>

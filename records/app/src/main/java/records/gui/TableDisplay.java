@@ -784,7 +784,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn)
     {
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), new UnfinishedExpression("", null), true, null).showAndWait().ifPresent(p -> {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), new UnfinishedExpression(""), true, null).showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
                 FXUtility.alertOnError_(() -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),

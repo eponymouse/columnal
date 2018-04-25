@@ -9,10 +9,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
 import records.gui.expressioneditor.OperandNode;
-import records.loadsave.OutputBuilder;
+import records.gui.expressioneditor.UnitLiteralNode;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -24,29 +22,28 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-/**
- * Created by neil on 18/02/2017.
- */
-public class UnfinishedExpression extends NonOperatorExpression
+public class UnitLiteralExpression extends NonOperatorExpression
 {
-    private final String text;
+    private final UnitExpression unitExpression;
 
-    public UnfinishedExpression(String text)
+    public UnitLiteralExpression(UnitExpression unitExpression)
     {
-        this.text = text;
+        this.unitExpression = unitExpression;
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, StyledString.s("Incomplete expression: \"" + text + "\""));
-        return null; // Unfinished expressions can't type check
+        // It's always invalid at the moment to have an unattached unit expression.
+        // Numeric literals, where is valid, should not call check on us.
+        return null;
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Cannot get value for unfinished expression");
+        throw new InternalException("Trying to fetch unit literal at run-time");
     }
 
     @Override
@@ -58,28 +55,19 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@unfinished " + OutputBuilder.quoted(text);
-    }
-
-    @Override
-    protected StyledString toDisplay(BracketedStatus bracketedStatus)
-    {
-        return StyledString.s(text);
+        return "{" + unitExpression.save(true) + "}";
     }
 
     @Override
     public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
     {
-        return (p, s) -> {
-            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new Unfinished(text), p, s);
-            return generalExpressionEntry;
-        };
+        return (p, s) -> new UnitLiteralNode(p, unitExpression);
     }
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
-        return Stream.empty();
+        return Stream.of();
     }
 
     @Override
@@ -91,17 +79,22 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return o instanceof UnfinishedExpression && text.equals(((UnfinishedExpression)o).text);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UnitLiteralExpression that = (UnitLiteralExpression) o;
+        return Objects.equals(unitExpression, that.unitExpression);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(text);
+
+        return Objects.hash(unitExpression);
     }
 
-    public String getText()
+    @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return text;
+        return StyledString.concat(StyledString.s("{"), unitExpression.toStyledString(), StyledString.s("}"));
     }
 }
