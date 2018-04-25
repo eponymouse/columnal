@@ -88,7 +88,6 @@ public class UnitLiteralExpression extends NonOperatorExpression
     @Override
     public int hashCode()
     {
-
         return Objects.hash(unitExpression);
     }
 
@@ -96,5 +95,10 @@ public class UnitLiteralExpression extends NonOperatorExpression
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
         return StyledString.concat(StyledString.s("{"), unitExpression.toStyledString(), StyledString.s("}"));
+    }
+
+    public UnitExpression getUnit()
+    {
+        return unitExpression;
     }
 }

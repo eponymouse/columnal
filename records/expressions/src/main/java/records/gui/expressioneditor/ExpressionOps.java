@@ -22,6 +22,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.expression.MatchesOneExpression;
 import records.transformations.expression.NotEqualExpression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.PlusMinusPatternExpression;
 import records.transformations.expression.RaiseExpression;
@@ -29,6 +30,7 @@ import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.UnfinishedExpression;
+import records.transformations.expression.UnitLiteralExpression;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -243,6 +245,29 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         }
         else
         {
+            // Two things to group up: function calls with function args, and numeric literals with units
+
+            int i = 0;
+            while (i < expressionExps.size())
+            {
+                if (i + 1 < expressionExps.size()
+                    && expressionExps.get(i) instanceof NumericLiteral
+                    && ops.get(i).isEmpty()
+                    && expressionExps.get(i + 1) instanceof UnitLiteralExpression)
+                {
+                    NumericLiteral numericLiteral = (NumericLiteral) expressionExps.get(i);
+                    UnitLiteralExpression unitLiteralExpression = (UnitLiteralExpression) expressionExps.get(i + 1);
+                    expressionExps.set(i, new NumericLiteral(numericLiteral.getNumber(), unitLiteralExpression.getUnit()));
+                    ops.remove(i);
+                    expressionExps.remove(i + 1);
+                    
+                }
+                else
+                {
+                    i += 1;
+                }
+            }
+
             expression = OperandOps.makeExpressionWithOperators(this, OPERATORS, errorDisplayers.getRecorder(), ImmutableList.copyOf(expressionExps), ops, bracketedStatus);
         }
         if (expression == null)

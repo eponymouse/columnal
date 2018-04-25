@@ -163,4 +163,9 @@ public class NumericLiteral extends Literal
     {
         return new NumericLiteral(value, UnitExpression.load(unit));
     }
+
+    public Number getNumber()
+    {
+        return value;
+    }
 }

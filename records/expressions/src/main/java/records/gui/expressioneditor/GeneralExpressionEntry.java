@@ -683,15 +683,20 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         GeneralValue getValue(String currentText)
         {
-            try
-            {
-                return new NumLit(Utility.parseNumber(currentText.replace("_", "")));
-            }
-            catch (UserException e)
-            {
-                Log.log(e);
-                return new Unfinished(currentText);
-            }
+            return getNumberOrUnfinished(currentText);
+        }
+    }
+
+    private GeneralValue getNumberOrUnfinished(String currentText)
+    {
+        try
+        {
+            return new NumLit(Utility.parseNumber(currentText.replace("_", "")));
+        }
+        catch (UserException e)
+        {
+            Log.log(e);
+            return new Unfinished(currentText);
         }
     }
 
@@ -890,8 +895,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (Objects.equals(c, unitCompletion))
             {
+                currentValue.setValue(getNumberOrUnfinished(currentText.replace("{", "")));
                 parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralNode, () -> {
-                    UnitLiteralNode unitLiteralNode = new UnitLiteralNode(parent, new UnfinishedUnitExpression(""));
+                    UnitLiteralNode unitLiteralNode = new UnitLiteralNode(parent, new UnfinishedUnitExpression(rest));
                     unitLiteralNode.focusWhenShown();
                     return unitLiteralNode;
                 });
