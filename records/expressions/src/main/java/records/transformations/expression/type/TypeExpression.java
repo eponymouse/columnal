@@ -209,4 +209,10 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
     }
     
     public abstract boolean isEmpty();
+
+    // Force sub-expressions to implement equals and hashCode:
+    @Override
+    public abstract boolean equals(@Nullable Object o);
+    @Override
+    public abstract int hashCode();
 }

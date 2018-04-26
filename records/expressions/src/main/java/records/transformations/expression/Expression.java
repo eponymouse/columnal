@@ -500,6 +500,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // in this node.  E.g. an equals expression might replace the lhs or rhs with a different type
     public abstract @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException;
 
+    // Force sub-expressions to implement equals and hashCode:
     @Override
     public abstract boolean equals(@Nullable Object o);
     @Override
