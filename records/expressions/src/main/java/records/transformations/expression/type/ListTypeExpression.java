@@ -10,6 +10,8 @@ import records.gui.expressioneditor.SquareBracketedExpression;
 import records.gui.expressioneditor.SquareBracketedTypeNode;
 import styled.StyledString;
 
+import java.util.Objects;
+
 import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
 
 public class ListTypeExpression extends TypeExpression
@@ -58,5 +60,21 @@ public class ListTypeExpression extends TypeExpression
     public TypeExpression _test_getContent()
     {
         return innerType;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ListTypeExpression that = (ListTypeExpression) o;
+        return Objects.equals(innerType, that.innerType);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(innerType);
     }
 }

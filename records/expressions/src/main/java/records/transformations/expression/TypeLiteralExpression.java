@@ -22,6 +22,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
 
 import java.util.Objects;
 import java.util.Random;
@@ -76,7 +77,8 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Trying to fetch type literal at run-time");
+        // TODO return the actual type literal once we define the GADT
+        return new TaggedValue(0, null);
     }
 
     @Override

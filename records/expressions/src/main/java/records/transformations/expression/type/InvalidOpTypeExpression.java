@@ -17,6 +17,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
+import java.util.Objects;
 
 import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
 
@@ -90,5 +91,22 @@ public class InvalidOpTypeExpression extends TypeExpression
     public ImmutableList<String> _test_getOperators()
     {
         return operators;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InvalidOpTypeExpression that = (InvalidOpTypeExpression) o;
+        return Objects.equals(operands, that.operands) &&
+            Objects.equals(operators, that.operators);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(operands, operators);
     }
 }

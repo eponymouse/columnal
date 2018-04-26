@@ -17,6 +17,7 @@ import threadchecker.OnThread;
 import utility.Pair;
 
 import java.util.List;
+import java.util.Objects;
 
 // For a named, fully-formed type (not a tagged type name)
 public class TypePrimitiveLiteral extends TypeExpression
@@ -82,5 +83,21 @@ public class TypePrimitiveLiteral extends TypeExpression
     public DataType _test_getType()
     {
         return dataType;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TypePrimitiveLiteral that = (TypePrimitiveLiteral) o;
+        return Objects.equals(dataType, that.dataType);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(dataType);
     }
 }

@@ -15,6 +15,7 @@ import utility.UnitType;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class UnfinishedTypeExpression extends TypeExpression
 {
@@ -58,5 +59,21 @@ public class UnfinishedTypeExpression extends TypeExpression
     public String _test_getContent()
     {
         return value;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UnfinishedTypeExpression that = (UnfinishedTypeExpression) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(value);
     }
 }

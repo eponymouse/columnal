@@ -11,6 +11,8 @@ import records.gui.expressioneditor.TypeEntry;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 
+import java.util.Objects;
+
 public class NumberTypeExpression extends TypeExpression
 {
     private final @Nullable UnitExpression unitExpression;
@@ -64,5 +66,21 @@ public class NumberTypeExpression extends TypeExpression
     public @Nullable UnitExpression _test_getUnits()
     {
         return unitExpression;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NumberTypeExpression that = (NumberTypeExpression) o;
+        return Objects.equals(unitExpression, that.unitExpression);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(unitExpression);
     }
 }

@@ -21,6 +21,7 @@ import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
@@ -115,5 +116,20 @@ public class TypeApplyExpression extends TypeExpression
     public ImmutableList<TypeExpression> _test_getOperands()
     {
         return arguments;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TypeApplyExpression that = (TypeApplyExpression) o;
+        return Objects.equals(arguments, that.arguments);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(arguments);
     }
 }

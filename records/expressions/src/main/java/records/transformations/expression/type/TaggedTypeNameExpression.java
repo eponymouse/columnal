@@ -15,6 +15,8 @@ import records.gui.expressioneditor.TypeEntry;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 
+import java.util.Objects;
+
 public class TaggedTypeNameExpression extends TypeExpression
 {
     private final TypeId typeName;
@@ -76,5 +78,21 @@ public class TaggedTypeNameExpression extends TypeExpression
     public TypeId getTypeName()
     {
         return typeName;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaggedTypeNameExpression that = (TaggedTypeNameExpression) o;
+        return Objects.equals(typeName, that.typeName);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(typeName);
     }
 }
