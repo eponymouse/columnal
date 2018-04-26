@@ -10,7 +10,7 @@
             <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
         </description>
         <example>
-            <input>(`Boolean`, from string("True"))</input>
+            <input>(`Boolean`, from text("True"))</input>
             <output>True</output>
         </example>
         <example>
@@ -25,7 +25,7 @@
             <p>Gets the type of the given value.</p>
         </description>
         <example>
-            <input>asType(typeOf([3]), from string("[1, 2, 5]")</input>
+            <input>asType(typeOf([3]), from text("[1, 2, 5]")</input>
             <output>[1, 2, 5]</output>
         </example>
     </function>

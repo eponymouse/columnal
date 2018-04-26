@@ -18,19 +18,24 @@
             </ul>
         </description>
         <example>
-            <input>from text("65") > 64</input>
+            <inputDisplay>from text("65") > 64</inputDisplay>
+            <inputParse>@call @function from text("65") > 64</inputParse>
             <output>true</output>
         </example>
         <example>
-            <input>from text("TRUE") | false</input>
+            <inputDisplay>from text("TRUE") | false</inputDisplay>
+            <inputParse>@call @function from text("TRUE") | false</inputParse>
             <output>true</output>
         </example>
         <example>
-            <input>asType(`Date`, from text("21st March 2004"))</input>
-            <output>date(2004{year}, 3{month}, 21{day})</output>
+            <inputDisplay>asType(`Date`, from text("21st March 2004"))</inputDisplay>
+            <inputParse>@call @function asType(`Date`, @call @function from text("21st March 2004"))</inputParse>
+            <outputDisplay>date(2004{year}, 3{month}, 21{day})</outputDisplay>
+            <outputParse>@call @function date(2004{year}, 3{month}, 21{day})</outputParse>
         </example>
         <example>
-            <input>asType(`[(Boolean, Number{m})]`, from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</input>
+            <inputDisplay>asType(`[(Boolean, Number{m})]`, from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</inputDisplay>
+            <inputParse>@call @function asType(`[(Boolean, Number{m})]`, @call @function from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</inputParse>
             <output>[(True, 0{m}), (False, -1.6{m})]</output>
         </example>
     </function>
