@@ -155,7 +155,13 @@ public abstract class TypeExp implements StyledShowable
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
     public static TypeExp dataTypeToTypeGADT(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
-        return new TypeCons(src, CONS_TYPE, ImmutableList.of(fromDataType(src, dataType, s -> null)), ImmutableSet.of());
+        return typeExpToTypeGADT(src, fromDataType(src, dataType, s -> null));
+    }
+
+    // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
+    public static TypeExp typeExpToTypeGADT(@Nullable ExpressionBase src, TypeExp exp) throws InternalException
+    {
+        return new TypeCons(src, CONS_TYPE, ImmutableList.of(exp), ImmutableSet.of());
     }
 
     // package-protected:

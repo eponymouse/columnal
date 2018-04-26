@@ -5,6 +5,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.transformations.function.core.AsType;
 import records.transformations.function.list.AnyAllNone;
 import records.transformations.function.list.Count;
 import records.transformations.function.list.GetElement;
@@ -27,6 +28,7 @@ public class FunctionList
             new AnyAllNone.Any(),
             new AnyAllNone.All(),
             new AnyAllNone.None(),
+            new AsType(),
             //new AsUnit(),
             new Count(),
             new FromString(),
