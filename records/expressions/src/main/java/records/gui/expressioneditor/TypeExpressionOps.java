@@ -65,7 +65,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
         ArrayList<@Recorded TypeExpression> expressionExps = new ArrayList<>(originalExpressionExps);
         ArrayList<String> ops = new ArrayList<>(originalOps);
         
-        Log.debug("Making expression from " + Utility.listToString(expressionExps) + " and " + Utility.listToString(ops));
+        //Log.debug("Making expression from " + Utility.listToString(expressionExps) + " and " + Utility.listToString(ops));
         
         // Trim empty ops and expressions from the end until we find a non-empty:
         for (int i = Math.max(expressionExps.size() - 1, ops.size() - 1); i >= 0; i--)

@@ -77,8 +77,8 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
         ArrayList<@Recorded UnitExpression> operands = new ArrayList<>(originalOperands);
         ops = new ArrayList<>(ops);
 
-        System.err.println("Original ops: " + Utility.listToString(ops) + " " + ops.size());
-        System.err.println("  Operands: " + Utility.listToString(Utility.mapList(operands, o -> o.getClass().getName() + ":" + o.save(false))));
+        //System.err.println("Original ops: " + Utility.listToString(ops) + " " + ops.size());
+        //System.err.println("  Operands: " + Utility.listToString(Utility.mapList(operands, o -> o.getClass().getName() + ":" + o.save(false))));
 
         // Trim blanks from end:
         ConsecutiveBase.removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
