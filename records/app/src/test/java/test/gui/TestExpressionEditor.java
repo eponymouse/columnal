@@ -12,6 +12,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import log.Log;
 import org.junit.runner.RunWith;
+import org.testfx.api.FxRobot;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
@@ -55,6 +56,30 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     public void start(Stage stage) throws Exception
     {
         this.windowToUse = stage;
+    }
+
+    @Override
+    @OnThread(value = Tag.Any)
+    public FxRobot write(char character)
+    {
+        Log.normal("Pressing: {{{" + character + "}}}");
+        return super.write(character);
+    }
+
+    @Override
+    @OnThread(value = Tag.Any)
+    public FxRobot write(String text)
+    {
+        Log.normal("Pressing: {{{" + text + "}}}");
+        return super.write(text);
+    }
+
+    @Override
+    @OnThread(value = Tag.Any)
+    public FxRobot write(String text, int sleepMillis)
+    {
+        Log.normal("Pressing: {{{" + text + "}}}");
+        return super.write(text, sleepMillis);
     }
 
     // TODO this test seems to cause later tests to fail
