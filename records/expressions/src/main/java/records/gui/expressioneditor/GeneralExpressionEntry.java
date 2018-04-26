@@ -35,7 +35,6 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import styled.StyledString;
@@ -273,7 +272,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /**
      * Completion for fixed-type expressions
      */
-    private final Completion fixedTypeCompletion;
+    private final Completion typeLiteralCompletion;
 
     private final SimpleCompletion questionCompletion;
 
@@ -318,7 +317,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF, "autocomplete.if");
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
-        fixedTypeCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
+        typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
         varDeclCompletion = new VarDeclCompletion();
         currentValue = new SimpleObjectProperty<>(initialValue.either(s -> new Unfinished(s), v -> v));
         initialValue.ifRight(v -> {
@@ -373,13 +372,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return Stream.of(container);
     }
 
-    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "fixedTypeCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
+    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "typeLiteralCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(ifCompletion);
         r.add(matchCompletion);
-        r.add(fixedTypeCompletion);
+        r.add(typeLiteralCompletion);
         
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "anything", "autocomplete.match.anything", new MatchAnything()));
@@ -892,6 +891,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 {
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
                 }
+                else if (ksc == typeLiteralCompletion)
+                {
+                    parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, semanticParent, null)));
+                }
             }
             else if (Objects.equals(c, unitCompletion))
             {
@@ -909,10 +912,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c != null && c.equals(matchCompletion))
             {
                 parent.replace(GeneralExpressionEntry.this, focusWhenShown(new PatternMatchNode(parent, null)));
-            }
-            else if (c != null && c.equals(fixedTypeCompletion))
-            {
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, semanticParent, null)));
             }
             else if (c instanceof FunctionCompletion)
             {

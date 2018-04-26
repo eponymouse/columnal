@@ -31,7 +31,7 @@ public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
     public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable TypeExpression startingType)
     {
         super(parent);
-        this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : withSemanticParent(startingType.loadAsConsecutive(false), this), '}')
+        this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : withSemanticParent(startingType.loadAsConsecutive(false), this), '`')
         {
             @Override
             public TypeParent getThisAsSemanticParent()
