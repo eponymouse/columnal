@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="conversion">
+    <function name="from text">
+        <scope>Readable t</scope>
+        <argType>Text</argType>
+        <returnType>t</returnType>
+        <description>
+            <p>Converts a value from text.</p>
+            <p>This function works for any readable type (the only non-readable types are function types).  If the intended type cannot be inferred automatically, you may need to wrap this using the asType function.</p>
+            <p>Some notes for specific types:</p>
+            <ul>
+                <li>For boolean values, lower-case and upper-case are allowed in the names.</li>
+                <li>Dates are read using a variety of formats.  Be careful with the DD-MM-YY formats and similar as they are ambiguous against MM-DD-YY.  If this is an issue, use the date from string function to specify a format.</li>
+                <li>Numbers must use dot as the decimal separator, commas are not supported.</li>
+                <li>If you want to get a Text out of from text, it must be in quotes.</li>
+            </ul>
+        </description>
+        <example>
+            <input>from string("65") > 64</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>from string("TRUE") | false</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>asType(`Date`, from string("21st March 2004"))</input>
+            <output>date(2004{year}, 3{month}, 21{day})</output>
+        </example>
+        <example>
+            <input>asType(`[(Boolean, Number{m})]`, "[(true, 0{m}), (FALSE, -1.6{m}]")</input>
+            <output>[(True, 0{m}), (False, -1.6{m})]</output>
+        </example>
+    </function>
+</functionDocumentation>

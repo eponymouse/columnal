@@ -8,9 +8,16 @@
                 <xs:element name="returnType" type="xs:string"/>
                 <xs:element name="description">
                     <xs:complexType>
-                        <xs:sequence maxOccurs="unbounded">
+                        <xs:choice maxOccurs="unbounded">
                             <xs:element name="p" type="xs:string"/>
-                        </xs:sequence>
+                            <xs:element name="ul">
+                                <xs:complexType>
+                                    <xs:sequence maxOccurs="unbounded">
+                                        <xs:element name="li" type="xs:string"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:choice>
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="example" maxOccurs="unbounded">
