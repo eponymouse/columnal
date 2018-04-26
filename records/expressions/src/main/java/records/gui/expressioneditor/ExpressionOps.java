@@ -10,27 +10,10 @@ import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
-import records.transformations.expression.AndExpression;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.InvalidOperatorExpression;
-import records.transformations.expression.MatchesOneExpression;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.OrExpression;
-import records.transformations.expression.PlusMinusPatternExpression;
-import records.transformations.expression.RaiseExpression;
-import records.transformations.expression.StringConcatExpression;
-import records.transformations.expression.TimesExpression;
-import records.transformations.expression.TupleExpression;
-import records.transformations.expression.UnfinishedExpression;
-import records.transformations.expression.UnitLiteralExpression;
+import records.transformations.expression.type.TaggedTypeNameExpression;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -262,6 +245,15 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
                     expressionExps.remove(i + 1);
                     
                 }
+                else if (i + 1 < expressionExps.size()
+                    && isCallTarget(expressionExps.get(i))
+                    && ops.get(i).isEmpty())
+                {
+                    // TODO do we somehow need to check that arg is bracketed?
+                    expressionExps.set(i, new CallExpression(expressionExps.get(i), expressionExps.get(i + 1)));
+                    ops.remove(i);
+                    expressionExps.remove(i + 1);
+                }
                 else
                 {
                     i += 1;
@@ -340,6 +332,14 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             // TODO offer fix to bracket this?
         }
         */
+    }
+
+    private static boolean isCallTarget(Expression expression)
+    {
+        // callTarget : varRef | standardFunction | constructor | unfinished;
+        return expression instanceof VarUseExpression
+                || expression instanceof StandardFunction
+                || expression instanceof ConstructorExpression;
     }
 
     @Override
