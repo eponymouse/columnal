@@ -18,19 +18,19 @@
             </ul>
         </description>
         <example>
-            <input>from string("65") > 64</input>
+            <input>from text("65") > 64</input>
             <output>true</output>
         </example>
         <example>
-            <input>from string("TRUE") | false</input>
+            <input>from text("TRUE") | false</input>
             <output>true</output>
         </example>
         <example>
-            <input>asType(`Date`, from string("21st March 2004"))</input>
+            <input>asType(`Date`, from text("21st March 2004"))</input>
             <output>date(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
-            <input>asType(`[(Boolean, Number{m})]`, "[(true, 0{m}), (FALSE, -1.6{m}]")</input>
+            <input>asType(`[(Boolean, Number{m})]`, from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</input>
             <output>[(True, 0{m}), (False, -1.6{m})]</output>
         </example>
     </function>
