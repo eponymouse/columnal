@@ -335,18 +335,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
-        public Expression visitBracketedCompound(BracketedCompoundContext ctx)
-        {
-            return visitCompoundExpression(ctx.compoundExpression());
-        }
-
-        @Override
-        public Expression visitBracketedMatch(BracketedMatchContext ctx)
-        {
-            return visitMatch(ctx.match());
-        }
-
-        @Override
         public Expression visitVarRef(VarRefContext ctx)
         {
             return new VarUseExpression(ctx.getText());
@@ -434,6 +422,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitTupleExpression(TupleExpressionContext ctx)
         {
             return new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
+        }
+
+        @Override
+        public Expression visitBracketedExpression(BracketedExpressionContext ctx)
+        {
+            return visitTopLevelExpression(ctx.topLevelExpression());
         }
 
         @Override

@@ -73,10 +73,9 @@ pattern : expression (CASEGUARD expression)?;
 matchClause : CASE pattern (ORCASE pattern)* THEN expression;
 match : MATCH expression matchClause+;
 
-bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
-bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
+bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor
-expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression;
+expression : bracketedExpression | terminal | callExpression | tupleExpression | arrayExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;
