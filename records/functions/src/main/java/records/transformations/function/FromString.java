@@ -129,9 +129,9 @@ public class FromString extends FunctionDefinition
                 @OnThread(Tag.Simulation)
                 public @Value Object bool() throws InternalException, UserException
                 {
-                    if (src.tryRead("true"))
+                    if (src.tryReadIgnoreCase("true"))
                         return DataTypeUtility.value(true);
-                    else if (src.tryRead("false"))
+                    else if (src.tryReadIgnoreCase("false"))
                         return DataTypeUtility.value(false);
                     else
                         throw new UserException("Expected boolean but found: " + src.snippet());
@@ -255,6 +255,17 @@ public class FromString extends FunctionDefinition
             return false;
         }
 
+        public boolean tryReadIgnoreCase(String literal)
+        {
+            skipSpaces();
+            if (original.regionMatches(true, charStart, literal, 0, literal.length()))
+            {
+                charStart += literal.length();
+                return true;
+            }
+            return false;
+        }
+
         private void skipSpaces()
         {
             // Don't try and get clever recurse to call tryRead, because it calls us!
@@ -262,6 +273,7 @@ public class FromString extends FunctionDefinition
                 charStart += 1;
         }
 
+        // TODO use styledstring here
         public String snippet()
         {
             StringBuilder s = new StringBuilder();
