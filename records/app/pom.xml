@@ -277,10 +277,25 @@
                     <execution>
                         <goals>
                             <goal>transform</goal>
+                            <goal>validate</goal>
                         </goals>
+                        <phase>process-resources</phase>
                     </execution>
                 </executions>
                 <configuration>
+                    <validationSets>
+                        <validationSet>
+                            <dir>src/main/help</dir>
+                            <includes>*.xml</includes>
+                            <systemId>src/main/help/help.xsd</systemId>
+                        </validationSet>
+                        <validationSet>
+                            <dir>src/main/funcdoc</dir>
+                            <includes>*.xml</includes>
+                            <systemId>src/main/funcdoc/funcdoc.xsd</systemId>
+                        </validationSet>
+                    </validationSets>
+                    
                     <transformationSets>
                         <transformationSet>
                             <dir>src/main/help</dir>
