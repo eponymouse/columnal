@@ -9,7 +9,13 @@
                 <xs:element name="description">
                     <xs:complexType>
                         <xs:choice maxOccurs="unbounded">
-                            <xs:element name="p" type="xs:string"/>
+                            <xs:element name="p">
+                                <xs:complexType mixed="true">
+                                    <xs:sequence>
+                                        <xs:element name="a" minOccurs="0" maxOccurs="unbounded"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="ul">
                                 <xs:complexType>
                                     <xs:sequence maxOccurs="unbounded">
@@ -23,8 +29,20 @@
                 <xs:element name="example" maxOccurs="unbounded">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="input" type="xs:string"/>
-                            <xs:element name="output" type="xs:string"/>
+                            <xs:choice>
+                                <xs:element name="input" type="xs:string"/>
+                                <xs:sequence>
+                                    <xs:element name="inputDisplay" type="xs:string"/>
+                                    <xs:element name="inputParse" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:choice>
+                            <xs:choice>
+                                <xs:element name="output" type="xs:string"/>
+                                <xs:sequence>
+                                    <xs:element name="outputDisplay" type="xs:string"/>
+                                    <xs:element name="outputParse" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:choice>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>

@@ -32,6 +32,9 @@
         </function>
     </functionGroup>
     <functionGroup id="sign" title="Functions for manipulating sign">
+        <description>
+            Functions for manipulating sign of numbers.
+        </description>
         <function name="abs">
             <argType>Number{*}</argType>
             <returnType>Number{*}</returnType>
@@ -54,6 +57,7 @@
     </functionGroup>
 
     <functionGroup id="list" title="Functions for dealing with lists of numbers">
+        <description>Functions for dealing with lists of numbers.</description>
         <function name="average">
             <argType>[Number{*}]</argType>
             <returnType>Number{*}</returnType>
