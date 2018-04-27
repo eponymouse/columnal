@@ -70,12 +70,21 @@ public class GrammarUtility
         if (!Character.isAlphabetic(firstCodepoint))
             return false;
         // Underscore is not letter or digit, so needs special case here:
-        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_' || c == '.');
+        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_' || c == '.' || c ==' ');
     }
 
     public static String escapeChars(String s)
     {
         // Order matters; must replace ^ first:
         return s.replace("^", "^c").replace("\"", "^q").replace("\n", "^n");
+    }
+
+    /**
+     * Gets rid of beginning and trailing spaces, and collapses all other
+     * consecutive whitespace into a single space.
+     */
+    public static String collapseSpaces(String s)
+    {
+        return s.replaceAll("(?U)\\s+", " ").trim();
     }
 }

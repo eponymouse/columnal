@@ -4,15 +4,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
 import records.data.TableManager;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +25,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
         super(s -> {
-            s = Utility.collapseSpaces(s);
+            s = GrammarUtility.collapseSpaces(s);
             if (s.isEmpty())
                 return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.error.missing"));
             TableId tableId = new TableId(s);

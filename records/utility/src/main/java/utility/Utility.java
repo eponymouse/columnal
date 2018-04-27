@@ -833,15 +833,6 @@ public class Utility
     }
 
     /**
-     * Gets rid of beginning and trailing spaces, and collapses all other
-     * consecutive whitespace into a single space.
-     */
-    public static String collapseSpaces(String s)
-    {
-        return s.replaceAll("(?U)\\s+", " ").trim();
-    }
-
-    /**
      * Filters a stream down to only the items of the given class
      */
     public static <S, T extends S /*precludes interfaces*/> Stream<@NonNull T> filterClass(Stream<@NonNull S> stream, Class<T> targetClass)

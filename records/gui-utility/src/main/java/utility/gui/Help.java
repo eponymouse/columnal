@@ -12,7 +12,7 @@ import nu.xom.Elements;
 import nu.xom.Nodes;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import utility.Utility;
+import records.grammar.GrammarUtility;
 
 import java.io.FileNotFoundException;
 import java.net.URL;
@@ -67,7 +67,7 @@ class Help
                 List<@Localized String> fullText = new ArrayList<>();
                 for (int j = 0; j < fullParas.size(); j++)
                 {
-                    fullText.add(Utility.collapseSpaces(fullParas.get(j).getValue()));
+                    fullText.add(GrammarUtility.collapseSpaces(fullParas.get(j).getValue()));
                 }
                 foundNodes.put(id, new HelpInfo(title, shortText, fullText));
             }

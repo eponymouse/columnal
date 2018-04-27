@@ -53,5 +53,7 @@ NUMBER : [+\-]? [0-9]+ ('.' [0-9]+)?;
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\,`]+ {GrammarUtility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\,`]+ (' '+ ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\,`]+)* 
+  {setText(GrammarUtility.collapseSpaces(getText()));}
+  {GrammarUtility.validUnquoted(getText())}?;
 

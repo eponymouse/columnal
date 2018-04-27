@@ -4,9 +4,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import records.data.ColumnId;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
 import utility.gui.TranslationUtility;
 
 /**
@@ -21,7 +21,7 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
         super(s -> {
-            s = Utility.collapseSpaces(s);
+            s = GrammarUtility.collapseSpaces(s);
             if (s.isEmpty())
                 return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getString("column.name.error.missing"));
             return checkAlphabet(s, ColumnId::validCharacter, ColumnId::new);

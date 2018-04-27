@@ -8,14 +8,12 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
-import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
@@ -31,15 +29,11 @@ import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.NumberDisplayInfo;
-import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
-import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.grid.VirtualGrid;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -202,7 +196,7 @@ public class TestUtil
         else
         {
             // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
-            String trimmed = Utility.collapseSpaces("" + sourceOfRandomness.nextChar('a', 'z') + TestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
+            String trimmed = GrammarUtility.collapseSpaces("" + sourceOfRandomness.nextChar('a', 'z') + TestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
                 "a", "r", "n", " ", "Z", "0", "9"
             ))).stream().collect(Collectors.joining()));
             if (trimmed.isEmpty())
