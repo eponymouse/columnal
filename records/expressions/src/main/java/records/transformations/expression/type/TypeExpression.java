@@ -195,6 +195,23 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                         Utility.mapListI(ctx.STRING(), s -> s.getText())
                     );
                 }
+
+                public TypeExpression visitChildren(RuleNode node) {
+                    @Nullable TypeExpression result = this.defaultResult();
+                    int n = node.getChildCount();
+
+                    for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
+                        ParseTree c = node.getChild(i);
+                        TypeExpression childResult = c.accept(this);
+                        if (childResult == null)
+                            break;
+                        result = this.aggregateResult(result, childResult);
+                    }
+                    if (result == null)
+                        throw new WrappedInternalException(new InternalException("No parseTypeExpression rules matched for " + node.getText()));
+                    else
+                        return result;
+                }
             });
         }
         catch (WrappedUserException e)
