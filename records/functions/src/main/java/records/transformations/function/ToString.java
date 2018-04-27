@@ -77,7 +77,7 @@ public class ToString extends FunctionDefinition
                 @OnThread(Tag.Simulation)
                 public String date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
                 {
-                    return dateTimeInfo.getFormatter().format(Utility.cast(param, TemporalAccessor.class));
+                    return dateTimeInfo.getStrictFormatter().format(Utility.cast(param, TemporalAccessor.class));
                 }
 
                 @Override

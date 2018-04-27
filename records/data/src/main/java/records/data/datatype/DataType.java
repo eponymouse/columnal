@@ -1426,7 +1426,7 @@ public class DataType implements StyledShowable
                 });
                 if (ctx == null)
                     throw new ParseException(dateTimeInfo.getType().toString(), p);
-                DateTimeFormatter formatter = dateTimeInfo.getFormatter();
+                DateTimeFormatter formatter = dateTimeInfo.getStrictFormatter();
                 try
                 {
                     return DataTypeUtility.value(dateTimeInfo, formatter.parse(ctx.getText().trim()));
@@ -1589,7 +1589,7 @@ public class DataType implements StyledShowable
     {
         private static final Map<DateTimeType, DateTimeFormatter> FORMATTERS = new HashMap<>();
 
-        public DateTimeFormatter getFormatter()
+        public DateTimeFormatter getStrictFormatter()
         {
             return FORMATTERS.computeIfAbsent(getType(), DateTimeInfo::makeFormatter);
         }
@@ -1659,7 +1659,7 @@ public class DataType implements StyledShowable
             });
             if (c == null)
                 throw new ParseException("Date value ", p);
-            DateTimeFormatter formatter = getFormatter();
+            DateTimeFormatter formatter = getStrictFormatter();
             try
             {
                 return fromParsed(formatter.parse(c.getText().trim()));

@@ -234,7 +234,7 @@ public class OutputBuilder
             @OnThread(Tag.Simulation)
             public String date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                return dateTimeInfo.getFormatter().format(g.get(index));
+                return dateTimeInfo.getStrictFormatter().format(g.get(index));
             }
 
             @Override

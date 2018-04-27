@@ -324,9 +324,9 @@ public class DataTypeUtility
             @Override
             public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                String s = dateTimeInfo.getFormatter().format((TemporalAccessor) item);
+                String s = dateTimeInfo.getStrictFormatter().format((TemporalAccessor) item);
                 if (asExpression)
-                    return "@type {|" + dataType.save(new OutputBuilder()).toString() + "|} from.string(\"" + GrammarUtility.escapeChars(s) + "\")";
+                    return "@call @function asType(`" + dataType.save(new OutputBuilder()).toString() + "`, from text(\"" + GrammarUtility.escapeChars(s) + "\"))";
                 else
                     return s;
             }
