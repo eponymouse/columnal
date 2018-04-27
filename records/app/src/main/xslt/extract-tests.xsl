@@ -16,10 +16,22 @@
         <xsl:for-each select="example">
             <xsl:choose>
                 <xsl:when test="output='error'">
-!!! @call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template>
-                </xsl:when>
+!!! @call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:when>
                 <xsl:otherwise>
-@call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template> = <xsl:value-of select="output"/>                    
+                    <xsl:choose>
+                        <xsl:when test="inputParse">
+                            <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="inputParse"/></xsl:call-template></xsl:when>
+                        <xsl:otherwise>
+@call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:otherwise>
+                    </xsl:choose> = <xsl:choose>
+                        <xsl:when test="outputParse">
+                            <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="outputParse"/></xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+<xsl:value-of select="output"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                    <xsl:text>&#xa;</xsl:text>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:for-each>
