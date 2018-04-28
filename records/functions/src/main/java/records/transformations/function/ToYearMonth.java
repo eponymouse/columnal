@@ -45,18 +45,6 @@ public class ToYearMonth extends ToTemporalFunction
         return new DateTimeInfo(DateTimeType.YEARMONTH);
     }
 
-    // We assume source text has been through ToDate.preprocessDate
-    @Override
-    protected List<List<DateTimeFormatter>> getFormats()
-    {
-        return Arrays.asList(
-            l(m(" ", F.MONTH_NUM, F.YEAR4)),
-            l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR2)),
-            l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR4)),
-            l(m(" ", F.MONTH_TEXT_LONG, F.YEAR4)),
-            l(m(" ", F.YEAR4, F.MONTH_NUM))
-        );
-    }
 
     @Override
     @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)

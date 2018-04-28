@@ -28,8 +28,8 @@
             <output>true</output>
         </example>
         <example>
-            <inputDisplay>asType(`Date`, from text("21st March 2004"))</inputDisplay>
-            <inputParse>@call @function asType(`Date`, @call @function from text("21st March 2004"))</inputParse>
+            <inputDisplay>asType(`Date`, from text("21 March 2004"))</inputDisplay>
+            <inputParse>@call @function asType(`Date`, @call @function from text("21 March 2004"))</inputParse>
             <outputDisplay>date(2004{year}, 3{month}, 21{day})</outputDisplay>
             <outputParse>@call @function date(2004{year}, 3{month}, 21{day})</outputParse>
         </example>

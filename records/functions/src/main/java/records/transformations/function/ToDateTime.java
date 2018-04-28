@@ -27,8 +27,6 @@ import java.util.List;
  */
 public class ToDateTime extends ToTemporalFunction
 {
-    private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
-
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
@@ -43,30 +41,6 @@ public class ToDateTime extends ToTemporalFunction
     DateTimeInfo getResultType()
     {
         return new DateTimeInfo(DateTimeType.DATETIME);
-    }
-
-    @Override
-    protected List<List<DateTimeFormatter>> getFormats()
-    {
-        return FORMATS();
-    }
-
-    static List<List<DateTimeFormatter>> FORMATS()
-    {
-        if (FORMATS.isEmpty())
-        {
-            for (@NonNull DateTimeFormatter timeFormat : ToTime.FORMATS)
-            {
-                for (List<DateTimeFormatter> dateFormats : ToDate.FORMATS)
-                {
-                    List<DateTimeFormatter> newFormatsSpace = Utility.<DateTimeFormatter, DateTimeFormatter>mapList(dateFormats, f -> new DateTimeFormatterBuilder().append(f).appendLiteral(" ").append(timeFormat).toFormatter());
-                    List<DateTimeFormatter> newFormatsT = Utility.<DateTimeFormatter, DateTimeFormatter>mapList(dateFormats, f -> new DateTimeFormatterBuilder().append(f).appendLiteral("T").append(timeFormat).toFormatter());
-                    FORMATS.add(newFormatsSpace);
-                    FORMATS.add(newFormatsT);
-                }
-            }
-        }
-        return FORMATS;
     }
 
     @Override

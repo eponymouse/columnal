@@ -14,6 +14,7 @@ import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -830,6 +831,19 @@ public class Utility
     public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c)
     {
         return Stream.concat(a, Stream.concat(b, c));
+    }
+    
+    public static <A, B, R> ImmutableList<R> allPairs(List<A> as, List<B> bs, BiFunction<A, B, R> function)
+    {
+        ImmutableList.Builder<R> r = ImmutableList.builderWithExpectedSize(as.size() * bs.size());
+        for (A a : as)
+        {
+            for (B b : bs)
+            {
+                r.add(function.apply(a, b));
+            }
+        }
+        return r.build();
     }
 
     /**

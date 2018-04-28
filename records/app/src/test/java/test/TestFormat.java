@@ -32,14 +32,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
-import static records.transformations.function.ToTemporalFunction.F.DAY;
-import static records.transformations.function.ToTemporalFunction.F.FRAC_SEC_OPT;
-import static records.transformations.function.ToTemporalFunction.F.HOUR;
-import static records.transformations.function.ToTemporalFunction.F.MIN;
-import static records.transformations.function.ToTemporalFunction.F.MONTH_NUM;
-import static records.transformations.function.ToTemporalFunction.F.SEC_OPT;
-import static records.transformations.function.ToTemporalFunction.F.YEAR2;
-import static records.transformations.function.ToTemporalFunction.m;
+import static records.data.datatype.DataType.DateTimeInfo.F.*;
+import static records.data.datatype.DataType.DateTimeInfo.m;
 
 /**
  * Created by neil on 28/10/2016.

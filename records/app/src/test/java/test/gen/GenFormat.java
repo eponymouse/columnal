@@ -10,6 +10,7 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -77,7 +78,7 @@ public class GenFormat extends Generator<FinalTextFormat>
         int columnCount = sourceOfRandomness.nextInt(2, 40);
         for (int i = 0; i < columnCount; i++)
         {
-            List<DateTimeFormatter> dateFormats = ToDate.FORMATS.stream().flatMap(l -> l.stream()).collect(Collectors.toList());
+            List<DateTimeFormatter> dateFormats = new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters().stream().flatMap(l -> l.stream()).collect(Collectors.toList());
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),

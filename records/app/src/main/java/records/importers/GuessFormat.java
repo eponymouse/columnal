@@ -28,6 +28,7 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -734,11 +735,11 @@ public class GuessFormat
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
             ArrayList<DateFormat> possibleDateFormats = new ArrayList<>(
-                ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(l -> l.stream())
+                new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters().stream().<DateTimeFormatter>flatMap(l -> l.stream())
                     .map(formatter -> new DateFormat(DateTimeType.YEARMONTHDAY, true, formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList())
             );
             possibleDateFormats.addAll(
-                ToTime.FORMATS.stream()
+                    new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters().stream().flatMap(l -> l.stream())
                     .map(formatter -> new DateFormat(DateTimeType.TIMEOFDAY, false, formatter, LocalTime::from)).collect(Collectors.<DateFormat>toList())
             );
             ArrayList<ImmutableList<String>> possibleBooleanSets = new ArrayList<>(BOOLEAN_SETS);

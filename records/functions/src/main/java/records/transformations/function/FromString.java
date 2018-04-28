@@ -30,6 +30,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class FromString extends FunctionDefinition
 {
@@ -110,19 +111,31 @@ public class FromString extends FunctionDefinition
                 @OnThread(Tag.Simulation)
                 public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
-                    DateTimeFormatter formatter = dateTimeInfo.getFormatter();
-                    try
+                    src.skipSpaces();
+                    ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.toImmutableList());
+                    // Updated char position and return value:
+                    ArrayList<Pair<Integer, TemporalAccessor>> possibles = new ArrayList<>();
+                    for (DateTimeFormatter formatter : formatters)
                     {
-                        src.skipSpaces();
-                        ParsePosition position = new ParsePosition(src.charStart);
-                        TemporalAccessor temporalAccessor = formatter.parse(src.original, position);
-                        src.charStart = position.getIndex();
-                        return DataTypeUtility.value(dateTimeInfo, temporalAccessor);
+                        try
+                        {
+                            ParsePosition position = new ParsePosition(src.charStart);
+                            TemporalAccessor temporalAccessor = formatter.parse(src.original, position);
+                            possibles.add(new Pair<>(position.getIndex(), temporalAccessor));
+                        }
+                        catch (DateTimeParseException e)
+                        {
+                            // Try next one
+                        }
                     }
-                    catch (DateTimeParseException e)
+                    if (possibles.size() == 1)
                     {
-                        throw new UserException("Expected date/time value but found: " + src.snippet());
+                        src.charStart = possibles.get(0).getFirst();
+                        return DataTypeUtility.value(dateTimeInfo, possibles.get(0).getSecond());
                     }
+                    // TODO give custom message when multiple match
+                    
+                    throw new UserException("Expected date/time value but found: " + src.snippet());
                 }
 
                 @Override

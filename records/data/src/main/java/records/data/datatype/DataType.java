@@ -3,6 +3,7 @@ package records.data.datatype;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import log.Log;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -61,6 +62,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
+import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -69,6 +71,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.format.SignStyle;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -90,6 +93,7 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.NANO_OF_SECOND;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
+import static records.data.datatype.DataType.DateTimeInfo.F.*;
 
 /**
  * A data type can be the following:
@@ -1587,12 +1591,180 @@ public class DataType implements StyledShowable
 
     public static class DateTimeInfo
     {
-        private static final Map<DateTimeType, DateTimeFormatter> FORMATTERS = new HashMap<>();
+        private static final Map<DateTimeType, DateTimeFormatter> STRICT_FORMATTERS = new HashMap<>();
+        private static final Map<DateTimeType, ImmutableList<ImmutableList
+        <DateTimeFormatter>>> FLEXIBLE_FORMATTERS = new HashMap<>();
 
         public DateTimeFormatter getStrictFormatter()
         {
-            return FORMATTERS.computeIfAbsent(getType(), DateTimeInfo::makeFormatter);
+            return STRICT_FORMATTERS.computeIfAbsent(getType(), DateTimeInfo::makeFormatter);
         }
+        
+        // Each inner list is a grouping that is likely to have
+        // multiple matches and thus show up an ambiguous parse.
+        public ImmutableList<ImmutableList<DateTimeFormatter>> getFlexibleFormatters()
+        {
+            return FLEXIBLE_FORMATTERS.computeIfAbsent(getType(), type -> {
+                // Shared among some branches:
+                ImmutableList.Builder<ImmutableList<DateTimeFormatter>> r = ImmutableList.builder();
+                switch (type)
+                {
+                    case YEARMONTHDAY:
+                        // All the formats here use space as a separator, and assume that
+                        // the items have been fed through the pre-process function in here.
+                        return ImmutableList.of(
+                                l(m(" ", DAY, MONTH_TEXT_SHORT, YEAR4)), // dd MMM yyyy
+                                l(m(" ", DAY, MONTH_TEXT_LONG, YEAR4)), // dd MMM yyyy
+
+                                l(m(" ", MONTH_TEXT_SHORT, DAY, YEAR4)), // MMM dd yyyy
+                                l(m(" ", MONTH_TEXT_LONG, DAY, YEAR4)), // MMM dd yyyy
+
+                                l(m(" ", YEAR4, MONTH_TEXT_SHORT, DAY)), // yyyy MMM dd
+
+                                l(m(" ", YEAR4, MONTH_NUM, DAY)), // yyyy MM dd
+
+                                l(m(" ", DAY, MONTH_NUM, YEAR4), m(" ", MONTH_NUM, DAY, YEAR4)), // dd MM yyyy or MM dd yyyy
+
+                                l(m(" ", DAY, MONTH_NUM, YEAR2), m(" ", MONTH_NUM, DAY, YEAR2)) // dd MM yy or MM dd yy
+                        );
+                    case TIMEOFDAY:
+                        return ImmutableList.of(
+                                l(m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT)), // HH:mm[:ss[.S]]
+                                l(m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
+                        );
+                    case DATETIME:
+                        for (List<DateTimeFormatter> timeFormats : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
+                        {
+                            for (List<DateTimeFormatter> dateFormats : new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters())
+                            {
+                                ImmutableList<DateTimeFormatter> newFormatsSpace = Utility.allPairs(dateFormats, timeFormats, (d, t) -> new DateTimeFormatterBuilder().append(d).appendLiteral(" ").append(t).toFormatter());
+                                ImmutableList<DateTimeFormatter> newFormatsT = Utility.allPairs(dateFormats, timeFormats, (d, t) -> new DateTimeFormatterBuilder().append(d).appendLiteral("T").append(t).toFormatter());
+                                r.add(newFormatsSpace);
+                                r.add(newFormatsT);
+                            }
+                        }
+                        return r.build();
+                    case YEARMONTH:
+                        return ImmutableList.of(
+                            l(m(" ", F.MONTH_NUM, F.YEAR4)),
+                            l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR2)),
+                            l(m(" ", F.MONTH_TEXT_SHORT, F.YEAR4)),
+                            l(m(" ", F.MONTH_TEXT_LONG, F.YEAR4)),
+                            l(m(" ", F.YEAR4, F.MONTH_NUM))
+                        );
+                    case DATETIMEZONED:
+                        for (ImmutableList<DateTimeFormatter> dateTimeFormats : new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters())
+                        {
+                            r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
+                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                                b.optionalStart().appendLiteral(" ").optionalEnd();
+                                b.appendZoneId();
+                                return b.toFormatter();
+                            }));
+                            r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
+                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                                b.optionalStart().appendLiteral(" ").optionalEnd();
+                                b.appendOffsetId().appendLiteral("[").appendZoneRegionId().appendLiteral("]");
+                                return b.toFormatter();
+                            }));
+                        }
+                        return r.build();
+                    case TIMEOFDAYZONED:
+                        for (List<DateTimeFormatter> formatters : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
+                        {
+                            ImmutableList.Builder<DateTimeFormatter> inner = ImmutableList.builder();
+                            for (DateTimeFormatter dateTimeFormat : formatters)
+                            {
+
+                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                                b.optionalStart().appendLiteral(" ").optionalEnd();
+                                b.appendZoneId();
+                                inner.add(b.toFormatter());
+                                b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                                b.optionalStart().appendLiteral(" ").optionalEnd();
+                                b.appendOffsetId();
+                                inner.add(b.toFormatter());
+                                b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                                b.optionalStart().appendLiteral(" ").optionalEnd();
+                                b.appendOffsetId().appendLiteral("[").appendZoneRegionId().appendLiteral("]");
+                                inner.add(b.toFormatter());
+                            }
+                            r.add(inner.build());
+                        }
+                        return r.build();
+                }
+                return ImmutableList.of(ImmutableList.of(getStrictFormatter()));
+            });
+        }
+
+        // public for testing
+        public static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT_SHORT, MONTH_TEXT_LONG, MONTH_NUM, YEAR2, YEAR4 }
+
+        // public for testing
+        public static DateTimeFormatter m(String sep, F... items)
+        {
+            DateTimeFormatterBuilder b = new DateTimeFormatterBuilder();
+            for (int i = 0; i < items.length; i++)
+            {
+                switch (items[i])
+                {
+                    case FRAC_SEC_OPT:
+                        // From http://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+                        b.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true);
+                        break;
+                    case SEC_OPT:
+                        b.optionalStart();
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendValue(ChronoField.SECOND_OF_MINUTE, 2, 2, SignStyle.NEVER).optionalEnd();
+                        break;
+                    case MIN:
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendValue(ChronoField.MINUTE_OF_HOUR, 2, 2, SignStyle.NEVER);
+                        break;
+                    case HOUR:
+                        b.appendValue(ChronoField.HOUR_OF_DAY, 1, 2, SignStyle.NEVER);
+                        break;
+                    case HOUR12:
+                        b.appendValue(ChronoField.CLOCK_HOUR_OF_AMPM, 1, 2, SignStyle.NEVER);
+                        break;
+                    case AMPM:
+                        b.optionalStart().appendLiteral(" ").optionalEnd().appendText(ChronoField.AMPM_OF_DAY);
+                        break;
+                    case DAY:
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NEVER);
+                        break;
+                    case MONTH_TEXT_SHORT:
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.SHORT);
+                        break;
+                    case MONTH_TEXT_LONG:
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.FULL);
+                        break;
+                    case MONTH_NUM:
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NEVER);
+                        break;
+                    case YEAR2:
+                        if (i != 0) b.appendLiteral(sep);
+                        // From http://stackoverflow.com/questions/29490893/parsing-string-to-local-date-doesnt-use-desired-century
+                        b.appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80);
+                        break;
+                    case YEAR4:
+                        if (i != 0) b.appendLiteral(sep);
+                        b.appendValue(ChronoField.YEAR, 4, 4, SignStyle.NEVER);
+                        break;
+                }
+            }
+            return b.toFormatter();
+        }
+
+        static ImmutableList<DateTimeFormatter> l(DateTimeFormatter... args)
+        {
+            return ImmutableList.copyOf(args);
+        }
+
 
         private static DateTimeFormatter makeFormatter(DateTimeType type)
         {

@@ -54,30 +54,6 @@ public class ToDateTimeZone extends ToTemporalFunction
     }
 
     @Override
-    protected List<List<DateTimeFormatter>> getFormats()
-    {
-        if (FORMATS.isEmpty())
-        {
-            for (List<DateTimeFormatter> dateTimeFormats : ToDateTime.FORMATS())
-            {
-                FORMATS.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapList(dateTimeFormats, dateTimeFormat -> {
-                    DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                    b.optionalStart().appendLiteral(" ").optionalEnd();
-                    b.appendZoneId();
-                    return b.toFormatter();
-                }));
-                FORMATS.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapList(dateTimeFormats, dateTimeFormat -> {
-                    DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                    b.optionalStart().appendLiteral(" ").optionalEnd();
-                    b.appendOffsetId().appendLiteral("[").appendZoneRegionId().appendLiteral("]");
-                    return b.toFormatter();
-                }));
-            }
-        }
-        return FORMATS;
-    }
-
-    @Override
     @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return ZonedDateTime.from(temporalAccessor);

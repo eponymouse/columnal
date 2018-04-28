@@ -22,23 +22,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static records.transformations.function.ToTemporalFunction.F.AMPM;
-import static records.transformations.function.ToTemporalFunction.F.FRAC_SEC_OPT;
-import static records.transformations.function.ToTemporalFunction.F.HOUR;
-import static records.transformations.function.ToTemporalFunction.F.HOUR12;
-import static records.transformations.function.ToTemporalFunction.F.MIN;
-import static records.transformations.function.ToTemporalFunction.F.SEC_OPT;
-
-
 /**
  * Created by neil on 15/12/2016.
  */
 public class ToTime extends ToTemporalFunction
 {
-    public static List<DateTimeFormatter> FORMATS = Arrays.asList(
-        m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), // HH:mm[:ss[.S]]
-        m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM) // hh:mm[:ss[.S]] PM
-    );
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
@@ -60,12 +48,6 @@ public class ToTime extends ToTemporalFunction
     DateTimeInfo getResultType()
     {
         return new DateTimeInfo(DateTimeType.TIMEOFDAY);
-    }
-
-    @Override
-    protected List<List<@NonNull DateTimeFormatter>> getFormats()
-    {
-        return Utility.<DateTimeFormatter, List<@NonNull DateTimeFormatter>>mapList(FORMATS, f -> Collections.singletonList(f));
     }
 
     @NonNull

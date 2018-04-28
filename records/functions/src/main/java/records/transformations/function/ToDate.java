@@ -23,35 +23,12 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.List;
 
-import static records.transformations.function.ToTemporalFunction.F.DAY;
-import static records.transformations.function.ToTemporalFunction.F.MONTH_NUM;
-import static records.transformations.function.ToTemporalFunction.F.MONTH_TEXT_SHORT;
-import static records.transformations.function.ToTemporalFunction.F.MONTH_TEXT_LONG;
-import static records.transformations.function.ToTemporalFunction.F.YEAR2;
-import static records.transformations.function.ToTemporalFunction.F.YEAR4;
-
 /**
  * Created by neil on 14/12/2016.
  */
 public class ToDate extends ToTemporalFunction
 {
-    // All the formats here use space as a separator, and assume that
-    // the items have been fed through the pre-process function in here.
-    public static List<List<DateTimeFormatter>> FORMATS = Arrays.asList(
-        l(m(" ", DAY, MONTH_TEXT_SHORT, YEAR4)), // dd MMM yyyy
-        l(m(" ", DAY, MONTH_TEXT_LONG, YEAR4)), // dd MMM yyyy
-
-        l(m(" ", MONTH_TEXT_SHORT, DAY, YEAR4)), // MMM dd yyyy
-        l(m(" ", MONTH_TEXT_LONG, DAY, YEAR4)), // MMM dd yyyy
-
-        l(m(" ", YEAR4, MONTH_TEXT_SHORT, DAY)), // yyyy MMM dd
-
-        l(m(" ", YEAR4, MONTH_NUM, DAY)), // yyyy MM dd
-
-        l(m(" ", DAY, MONTH_NUM, YEAR4), m(" ", MONTH_NUM, DAY, YEAR4)), // dd MM yyyy or MM dd yyyy
-
-        l(m(" ", DAY, MONTH_NUM, YEAR2), m(" ", MONTH_NUM, DAY, YEAR2)) // dd MM yy or MM dd yy
-    );
+    
 
     @Override
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
@@ -73,12 +50,6 @@ public class ToDate extends ToTemporalFunction
     DateTimeInfo getResultType()
     {
         return new DataType.DateTimeInfo(DateTimeType.YEARMONTHDAY);
-    }
-
-    @Override
-    protected List<List<@NonNull DateTimeFormatter>> getFormats()
-    {
-        return FORMATS;
     }
 
     @Override
