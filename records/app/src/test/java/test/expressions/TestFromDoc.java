@@ -64,7 +64,7 @@ public class TestFromDoc
                         return null;
                     }
                 }, new TypeState(DummyManager.INSTANCE.getUnitManager(), DummyManager.INSTANCE.getTypeManager()), errors);
-                assertEquals(line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
+                assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
                 assertNotNull(line, typeExp);
                 if (typeExp == null) continue; // Won't happen
                 Either<TypeConcretisationError, DataType> concreteType = typeExp.toConcreteType(DummyManager.INSTANCE.getTypeManager());

@@ -10,8 +10,9 @@
             <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
         </description>
         <example>
-            <input>(`Boolean`, from text("True"))</input>
-            <output>True</output>
+            <inputDisplay>(`Boolean`, from text("True"))</inputDisplay>
+            <inputParse>(`Boolean`, @call @function from text("True"))</inputParse>
+            <output>true</output>
         </example>
         <example>
             <input>(`[Date]`, [])</input>

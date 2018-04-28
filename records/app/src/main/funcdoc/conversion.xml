@@ -35,8 +35,8 @@
         </example>
         <example>
             <inputDisplay>asType(`[(Boolean, Number{m})]`, from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</inputDisplay>
-            <inputParse>@call @function asType(`[(Boolean, Number{m})]`, @call @function from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</inputParse>
-            <output>[(True, 0{m}), (False, -1.6{m})]</output>
+            <inputParse>@call @function asType(`[(Boolean, Number{m})]`, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</inputParse>
+            <output>[(true, 0{m}), (false, -1.6{m})]</output>
         </example>
     </function>
 </functionDocumentation>
