@@ -24,7 +24,7 @@ public class TupleTypeExp extends TypeExp
     public final boolean complete;
     
     // The type classes required by this tuple, if it is not complete:
-    private final HashSet<String> requiredTypeClasses = new HashSet<>();
+    private TypeClassRequirements requiredTypeClasses = TypeClassRequirements.empty();
 
     public TupleTypeExp(@Nullable ExpressionBase src, ImmutableList<TypeExp> knownMembers, boolean complete)
     {
@@ -59,7 +59,7 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         for (TypeExp member : knownMembers)
         {
@@ -68,7 +68,9 @@ public class TupleTypeExp extends TypeExp
                 return err;
         }
         if (!complete)
-            this.requiredTypeClasses.addAll(typeClasses);
+        {
+            this.requiredTypeClasses = TypeClassRequirements.union(this.requiredTypeClasses, typeClasses);
+        }
         return null;
     }
 

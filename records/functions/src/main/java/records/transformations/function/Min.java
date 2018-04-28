@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.MutVar;
+import records.types.TypeClassRequirements;
 import records.types.TypeCons;
 import records.types.TypeExp;
 import utility.Utility;
@@ -16,7 +17,7 @@ public class Min extends FunctionDefinition
     public Min()
     {
         super("comparison/minimum", "minimum.mini", typeManager -> {
-            TypeExp any = new MutVar(null, ImmutableSet.of("Comparable"));
+            TypeExp any = new MutVar(null, TypeClassRequirements.require("Comparable", "minimum"));
             return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
         });
     }

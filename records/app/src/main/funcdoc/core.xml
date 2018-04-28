@@ -11,7 +11,7 @@
         </description>
         <example>
             <inputDisplay>(`Boolean`, from text("True"))</inputDisplay>
-            <inputParse>(`Boolean`, @call @function from text("True"))</inputParse>
+            <inputParse>@call @function asType(`Boolean`, @call @function from text("True"))</inputParse>
             <output>true</output>
         </example>
         <example>
@@ -26,7 +26,8 @@
             <p>Gets the type of the given value.</p>
         </description>
         <example>
-            <input>asType(typeOf([3]), from text("[1, 2, 5]")</input>
+            <inputDisplay>asType(typeOf([3]), from text("[1, 2, 5]")</inputDisplay>
+            <inputParse>@call @function asType(@call @function typeOf([3]), @call @function from text("[1, 2, 5]")</inputParse>
             <output>[1, 2, 5]</output>
         </example>
     </function>

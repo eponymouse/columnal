@@ -14,6 +14,7 @@ import styled.StyledString;
 import utility.Either;
 import utility.Utility;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -120,20 +121,29 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         if (operands.isEmpty())
         {
-            if (this.typeClasses.containsAll(typeClasses))
-                return null;
-            else
-                return StyledString.s(name + " is not " + Sets.difference(this.typeClasses, typeClasses).stream().collect(Collectors.joining(" or ")));
+            return typeClasses.checkIfSatisfiedBy(StyledString.s(name), this.typeClasses);
+            
+            /*
+                StyledString.Builder b = StyledString.builder();
+                b.append("Type: ");
+                b.append(name).append(operands.stream().map(s -> StyledString.concat(StyledString.s("-"), s.toStyledString())).collect(StyledString.joining("")));
+                b.append(" is not " + Sets.difference(typeClasses, this.typeClasses).stream().collect(Collectors.joining(" or ")));
+                return b.build();
+                */
         }
         else
         {
-            // Apply all type constraints to children:
-            if (this.typeClasses.containsAll(typeClasses))
+            // Apply all type constraints to children.
+            // First check that everything they want can be derived:
+            @Nullable StyledString derivationError = typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses);
+            if (derivationError == null)
             {
+                // Apply constraints to children so that they know them
+                // for future unification:
                 for (TypeExp operand : operands)
                 {
                     @Nullable StyledString err = operand.requireTypeClasses(typeClasses);
@@ -143,7 +153,9 @@ public class TypeCons extends TypeExp
                 return null;
             }
             else
-                return StyledString.s(name + " cannot be " + Sets.difference(this.typeClasses, typeClasses).stream().collect(Collectors.joining(" or ")));
+            {
+                return derivationError;
+            }
         }
     }
 

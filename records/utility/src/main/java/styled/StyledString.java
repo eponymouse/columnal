@@ -19,6 +19,11 @@ import java.util.stream.Collectors;
 
 public final class StyledString
 {
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
     // There will only be one style of a given class in any list of styles.
     public static abstract class Style<S extends Style<S>>
     {

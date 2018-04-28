@@ -34,9 +34,9 @@ public class MutVar extends TypeExp
     
     // If we point to something, all type-class information is in the pointer destination.
     // If we don't point to something, we have the type-class info:
-    Either<ImmutableSet<String>, TypeExp> typeClassesOrPointer;
+    Either<TypeClassRequirements, TypeExp> typeClassesOrPointer;
 
-    public MutVar(@Nullable ExpressionBase src, ImmutableSet<String> typeClasses)
+    public MutVar(@Nullable ExpressionBase src, TypeClassRequirements typeClasses)
     {
         super(src);
         this.typeClassesOrPointer = Either.left(typeClasses);
@@ -44,7 +44,7 @@ public class MutVar extends TypeExp
 
     public MutVar(@Nullable ExpressionBase src)
     {
-        this(src, ImmutableSet.of());
+        this(src, TypeClassRequirements.empty());
     }
 
     /**
@@ -102,10 +102,10 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         return typeClassesOrPointer.<@Nullable StyledString>either(t -> {
-            typeClassesOrPointer = Either.left(ImmutableSet.copyOf(Sets.union(t, typeClasses)));
+            typeClassesOrPointer = Either.left(TypeClassRequirements.union(t, typeClasses));
             return null;
         }, p -> p.requireTypeClasses(typeClasses));
     }

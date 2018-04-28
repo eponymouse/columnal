@@ -63,12 +63,9 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(Set<String> typeClasses)
+    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
-        if (NATURAL_TYPE_CLASSES.containsAll(typeClasses))
-            return null;
-        else
-            return StyledString.s("Number is not " + Sets.difference(NATURAL_TYPE_CLASSES, typeClasses).stream().collect(Collectors.joining(" or ")));
+        return typeClasses.checkIfSatisfiedBy(StyledString.s("Number"), NATURAL_TYPE_CLASSES);
     }
 
     @Override

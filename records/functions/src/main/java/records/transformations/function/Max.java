@@ -6,6 +6,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.MutVar;
+import records.types.TypeClassRequirements;
 import records.types.TypeCons;
 import records.types.TypeExp;
 import utility.Utility;
@@ -21,7 +22,7 @@ public class Max extends FunctionDefinition
     
     private static FunctionTypes listOfAny(TypeManager typeManager)
     {
-        TypeExp any = new MutVar(null, ImmutableSet.of("Comparable"));
+        TypeExp any = new MutVar(null, TypeClassRequirements.require("Comparable", "maximum"));
         return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
     }    
 

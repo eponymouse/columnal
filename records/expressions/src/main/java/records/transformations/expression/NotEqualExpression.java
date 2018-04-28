@@ -38,6 +38,7 @@ public class NotEqualExpression extends BinaryOpExpression
     @RequiresNonNull({"lhsType", "rhsType"})
     public @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        // TODO require Equatable
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType, rhsType)) == null)
         {
             if (lhsType instanceof NumTypeExp && rhsType instanceof NumTypeExp)
