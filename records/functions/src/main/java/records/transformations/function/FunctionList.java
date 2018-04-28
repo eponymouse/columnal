@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.function.core.AsType;
+import records.transformations.function.core.TypeOf;
 import records.transformations.function.list.AnyAllNone;
 import records.transformations.function.list.Count;
 import records.transformations.function.list.GetElement;
@@ -49,6 +50,7 @@ public class FunctionList
             new StringWithinIndex(),
             new Sum(),
             new ToString(),
+            new TypeOf(),
             new Xor()
         ).stream(),
         
