@@ -27,7 +27,7 @@ WS : ( ' ' | '\t' )+ -> skip;
 COLUMN : 'COLUMN';
 
 CONS: ':';
-UNQUOTED_NAME : ~[ \t\r\n:(),\[\]|"-]+;
+UNQUOTED_NAME : ~[ \t\r\n:(),\[\]|"-{}]+;
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 COMMA: ',';
