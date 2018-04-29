@@ -12,9 +12,37 @@
                 <p>This is useful for looking up one column via the value of another, e.g. lookup(Column A, value in A, Column B)</p>
                 <p>Gives an error if there are zero or multiple matches in the left side.</p>
             </description>
+            <exampleGroup>
+                <table name="Scores">
+                    <column name="Person" type="Text">
+                        Janet
+                        Asim
+                        Qing
+                    </column>
+                    <column name="Score" type="Number">
+                        78
+                        36
+                        45
+                    </column>
+                </table>
+                <example>
+                    <inputDisplay>lookup(Person, "Qing", Score)</inputDisplay>
+                    <inputParse>@call @function lookup(@entirecolumn Scores\Person, "Qing", @entirecolumn Scores\Score)</inputParse>
+                    <output>45</output>
+                </example>
+                <example>
+                    <inputDisplay>lookup(Person, "Hannah", Score)</inputDisplay>
+                    <inputParse>@call @function lookup(@entirecolumn Scores\Person, "Hannah", @entirecolumn Scores\Score)</inputParse>
+                    <output>error</output>
+                </example>
+            </exampleGroup>
             <example>
                 <input>([4, 5, 6], 6, ["a", "b", "c"])</input>
                 <output>"c"</output>
+            </example>
+            <example>
+                <input>([1, 1, 2, 3], 6, ["a", "b", "c", "d"])</input>
+                <output>error</output>
             </example>
         </function>        
         <function name="lookup single">

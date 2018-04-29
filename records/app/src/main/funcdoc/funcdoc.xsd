@@ -1,5 +1,54 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="exampleGroup">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="table" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="column" minOccurs="1" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute name="name" use="required" type="xs:string"/>
+                                            <xs:attribute name="type" use="required" type="xs:string"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="name" use="required" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+                
+                <xs:element ref="example" minOccurs="1" maxOccurs="unbounded"/>
+                
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="example">
+        <xs:complexType>
+            <xs:sequence minOccurs="1" maxOccurs="1">
+                <xs:choice>
+                    <xs:element name="input" type="xs:string"/>
+                    <xs:sequence>
+                        <xs:element name="inputDisplay" type="xs:string"/>
+                        <xs:element name="inputParse" type="xs:string"/>
+                    </xs:sequence>
+                </xs:choice>
+                <xs:choice>
+                    <xs:element name="output" type="xs:string"/>
+                    <xs:sequence>
+                        <xs:element name="outputDisplay" type="xs:string"/>
+                        <xs:element name="outputParse" type="xs:string"/>
+                    </xs:sequence>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+    
     <xs:element name="function">
         <xs:complexType>
             <xs:sequence>
@@ -26,26 +75,10 @@
                         </xs:choice>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="example" maxOccurs="unbounded">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:choice>
-                                <xs:element name="input" type="xs:string"/>
-                                <xs:sequence>
-                                    <xs:element name="inputDisplay" type="xs:string"/>
-                                    <xs:element name="inputParse" type="xs:string"/>
-                                </xs:sequence>
-                            </xs:choice>
-                            <xs:choice>
-                                <xs:element name="output" type="xs:string"/>
-                                <xs:sequence>
-                                    <xs:element name="outputDisplay" type="xs:string"/>
-                                    <xs:element name="outputParse" type="xs:string"/>
-                                </xs:sequence>
-                            </xs:choice>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
+                <xs:choice minOccurs="1" maxOccurs="unbounded">
+                    <xs:element ref="example"/>
+                    <xs:element ref="exampleGroup"/>
+                </xs:choice>
             </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required"/>
         </xs:complexType>

@@ -13,27 +13,23 @@
     <xsl:template name="processFunction">
         <xsl:param name="function" select="."/>
         <xsl:variable name="functionName" select="@name"/>
+        <!-- TODO process exampleGroup as well -->
         <xsl:for-each select="example">
+            <xsl:if test="output='error'">!!! </xsl:if>
             <xsl:choose>
-                <xsl:when test="output='error'">
-!!! @call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:when>
-                <xsl:otherwise>
-                    <xsl:choose>
-                        <xsl:when test="inputParse">
-                            <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="inputParse"/></xsl:call-template></xsl:when>
-                        <xsl:otherwise>
-@call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:otherwise>
-                    </xsl:choose> = <xsl:choose>
-                        <xsl:when test="outputParse">
-                            <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="outputParse"/></xsl:call-template>
-                        </xsl:when>
-                        <xsl:otherwise>
-<xsl:value-of select="output"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                    <xsl:text>&#xa;</xsl:text>
-                </xsl:otherwise>
+                <xsl:when test="inputParse"> <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="inputParse"/></xsl:call-template></xsl:when>
+                <xsl:otherwise> @call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:otherwise>
             </xsl:choose>
+            <xsl:if test="not(output='error')"> = <xsl:choose>
+                    <xsl:when test="outputParse">
+                        <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="outputParse"/></xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+    <xsl:value-of select="output"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:if>
+            <xsl:text>&#xa;</xsl:text>
         </xsl:for-each>
     </xsl:template>
     <xsl:template match="/functionDocumentation">
