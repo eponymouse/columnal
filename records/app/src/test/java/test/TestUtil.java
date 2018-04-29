@@ -39,7 +39,8 @@ import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionDefinition.FunctionTypes;
+import records.types.MutVar;
+import records.types.TypeCons;
 import records.types.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -972,46 +973,46 @@ public class TestUtil
         };
     }
 
+    @OnThread(Tag.Simulation)
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
     {
         return typeCheckFunction(function, units, paramType, null);
     }
 
+    @OnThread(Tag.Simulation)
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
-        FunctionTypes functionTypes = function.makeParamAndReturnType(typeManager);
+        TypeExp functionType = function.getType(typeManager).getFirst();
+        MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
-        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(functionTypes.paramType, TypeExp.fromConcrete(null, paramType)));
+        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, paramType), returnTypeVar), functionType));
         if (paramTypeExp == null)
             return null;
         
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, functionTypes.returnType.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(functionTypes.getInstanceAfterTypeCheck(), returnType);
+            return new Pair<>(function.getInstance(s -> {throw new InternalException("Type unavailable: " + s);}), returnType);
         return null;
     }
 
+    @OnThread(Tag.Simulation)
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
-        FunctionTypes functionTypes = function.makeParamAndReturnType(typeManager);
+        TypeExp functionType = function.getType(typeManager).getFirst();
         @SuppressWarnings("nullness") // For null src
-        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(functionTypes.paramType, TypeExp.fromConcrete(null, paramType)));
-        if (paramTypeExp == null)
+        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, expectedReturnType), TypeExp.fromConcrete(null, paramType)), functionType));
+        if (funcTypeExp == null)
             return null;
+            
         @SuppressWarnings("nullness") // For null src
-        @Nullable TypeExp typeExp = onError.recordError(null, TypeExp.unifyTypes(TypeExp.fromConcrete(null, expectedReturnType), functionTypes.returnType));
-        if (typeExp != null)
-        {
-            @SuppressWarnings("nullness") // For null src
-            @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, typeExp.toConcreteType(typeManager));
-            if (returnType != null)
-                return new Pair<>(functionTypes.getInstanceAfterTypeCheck(), returnType);
-        }
+        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, funcTypeExp.toConcreteType(typeManager));
+        if (returnType != null)
+            return new Pair<>(function.getInstance(s -> {throw new InternalException("Type unavailable: " + s);}), returnType);
         return null;
     }
 
@@ -1107,7 +1108,7 @@ public class TestUtil
         DummyManager mgr = managerWithTestTypes();
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
         expression.check(r -> null, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), excOnError());
-        return expression.getValue(0, new EvaluateState());
+        return expression.getValue(0, new EvaluateState(mgr.getTypeManager()));
     }
 
 

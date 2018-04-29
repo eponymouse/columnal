@@ -3,7 +3,7 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="list">
     <function name="list length">
-        <scope>t</scope>
+        <typeArg>t</typeArg>
         <argType>[t]</argType>
         <returnType>Number</returnType>
         <description>
@@ -24,7 +24,7 @@
     </function>
     
     <function name="element">
-        <scope>t</scope>
+        <typeArg>t</typeArg>
         <argType>([t], Number)</argType>
         <returnType>t</returnType>
         <description>

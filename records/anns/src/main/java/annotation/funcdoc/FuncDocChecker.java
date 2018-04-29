@@ -121,7 +121,7 @@ public class FuncDocChecker extends BaseTypeChecker
                             else
                             {
                                 if (!individualFunctionKeys.add(Arrays.asList(namespace, funcName)))
-                                    errors.add("Duplicate key found for " + namespace + "/" + funcName);
+                                    errors.add("Duplicate key found for " + namespace + ":" + funcName);
                             }
                         }
                     }
@@ -159,7 +159,7 @@ public class FuncDocChecker extends BaseTypeChecker
                                 if (tree.getKind() == Kind.STRING_LITERAL)
                                 {
                                     String value = tree.getValue().toString();
-                                    if (individualFunctionKeys.contains(Arrays.asList(value.split("/"))))
+                                    if (individualFunctionKeys.contains(Arrays.asList(value.split(":"))))
                                         type.addAnnotation(this.FUNCDOC_KEY);
                                 }
                             }
@@ -168,7 +168,7 @@ public class FuncDocChecker extends BaseTypeChecker
                                 if (tree.getKind() == Kind.STRING_LITERAL)
                                 {
                                     String value = tree.getValue().toString();
-                                    if (functionGroupKeys.contains(Arrays.asList(value.split("/"))))
+                                    if (functionGroupKeys.contains(Arrays.asList(value.split(":"))))
                                         type.addAnnotation(this.FUNCDOCGROUP_KEY);
                                 }
                             }

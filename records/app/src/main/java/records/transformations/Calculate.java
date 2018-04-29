@@ -136,7 +136,7 @@ public class Calculate extends Transformation
                 if (type == null || concrete == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
                 @NonNull DataType typeFinal = concrete;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(index, new EvaluateState())));
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(index, new EvaluateState(mgr.getTypeManager()))));
             }
 
             theResult = new RecordSet(columns)

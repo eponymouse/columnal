@@ -5,19 +5,25 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class StringWithin extends FunctionDefinition
 {
-    public StringWithin()
+    public StringWithin() throws InternalException
     {
-        super("within", "within.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.TEXT, DataType.TEXT));
+        super("text:within");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction
     {
-
         @Override
         public @Value Object call(@Value Object param) throws UserException, InternalException
         {

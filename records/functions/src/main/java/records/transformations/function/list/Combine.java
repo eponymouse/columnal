@@ -1,18 +1,13 @@
 package records.transformations.function.list;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
-import records.data.datatype.TypeManager;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TupleTypeExp;
-import records.types.TypeClassRequirements;
-import records.types.TypeCons;
-import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
@@ -20,24 +15,15 @@ import utility.ValueFunction;
 // Foldr, by another name.
 public class Combine extends FunctionDefinition
 {
-    public Combine()
+    public Combine() throws InternalException
     {
-        super("listprocess/combine", "combine.mini", Combine::combine);
+        super("listprocess:combine");
     }
 
-    private static FunctionTypes combine(TypeManager typeManager)
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
-        TypeExp innerType = new MutVar(null, TypeClassRequirements.empty());
-        TypeExp listOfInner = TypeCons.list(null, innerType);
-        TypeExp combineFunction = TypeCons.function(null,
-            new TupleTypeExp(null, ImmutableList.of(innerType, innerType), true),
-            innerType    
-        );
-        
-        return new FunctionTypesUniform(typeManager, Instance::new,
-            innerType,
-            new TupleTypeExp(null, ImmutableList.of(listOfInner, combineFunction), true)
-        );
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

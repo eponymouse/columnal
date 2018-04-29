@@ -76,7 +76,7 @@ public class TestFromDoc
                     // Must be user exception
                     try
                     {
-                        expression.getBoolean(0, new EvaluateState(), null);
+                        expression.getBoolean(0, new EvaluateState(DummyManager.INSTANCE.getTypeManager()), null);
                         Assert.fail("Expected error but got none for\n" + line);
                     }
                     catch (UserException e)
@@ -86,7 +86,7 @@ public class TestFromDoc
                 }
                 else
                 {
-                    boolean result = expression.getBoolean(0, new EvaluateState(), null);
+                    boolean result = expression.getBoolean(0, new EvaluateState(DummyManager.INSTANCE.getTypeManager()), null);
                     assertTrue(line, result);
                 }
             }

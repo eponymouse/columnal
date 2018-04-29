@@ -5,16 +5,23 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class StringRight extends FunctionDefinition
 {
-    public StringRight()
+    public StringRight() throws InternalException
     {
-        super("right", "right.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
+        super("text:right");
     }
-    
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
+    }
+
     private static class Instance extends ValueFunction
     {
 

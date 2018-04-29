@@ -1,25 +1,25 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableSet;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.MutVar;
-import records.types.TypeClassRequirements;
-import records.types.TypeCons;
-import records.types.TypeExp;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
 
 public class Min extends FunctionDefinition
 {
-    public Min()
+    public Min() throws InternalException
     {
-        super("comparison/minimum", "minimum.mini", typeManager -> {
-            TypeExp any = new MutVar(null, TypeClassRequirements.require("Comparable", "minimum"));
-            return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
-        });
+        super("comparison:minimum");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

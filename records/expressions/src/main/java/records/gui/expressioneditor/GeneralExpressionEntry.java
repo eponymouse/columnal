@@ -585,7 +585,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(function.getName() + "(...)", function.getMiniDescriptionKey());
+            return new CompletionContent(function.getName() + "(...)", function.getMiniDescription());
         }
 
         @Override

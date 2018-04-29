@@ -3,6 +3,7 @@ package records.transformations.function;
 import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -15,57 +16,130 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.ExpressionBase;
+import records.types.MutVar;
+import records.types.TypeClassRequirements;
 import records.types.TypeCons;
 import records.types.TypeExp;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.ValueFunction;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Random;
+import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
  * This class is one function, it will have a unique name, a single type and a single implementation
  */
-public class FunctionDefinition
+public abstract class FunctionDefinition
 {
     // Namespace slash function name
     private final @FuncDocKey String funcDocKey;
     private final String name;
     private final TypeMatcher typeMatcher;
-    private final @LocalizableKey String miniDescriptionKey;
+    private final @Localized String miniDescription;
 
-    public FunctionDefinition(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, TypeMatcher typeMatcher)
+    public FunctionDefinition(@FuncDocKey String funcDocKey) throws InternalException
     {
         this.funcDocKey = funcDocKey;
         this.name = extractName(funcDocKey);
-        this.miniDescriptionKey = miniDescriptionKey;
-        this.typeMatcher = typeMatcher;
+        Details details = lookupFunction(name, funcDocKey);
+        this.miniDescription = details.miniDescription;
+        this.typeMatcher = details.typeMatcher;
     }
 
     private static String extractName(@FuncDocKey String funcDocKey)
     {
-        String[] split = funcDocKey.split("/");
+        String[] split = funcDocKey.split(":");
         return split[split.length - 1];
     }
-
-    public FunctionDefinition(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance, DataType returnType, DataType paramType)
+    
+    private static class Details
     {
-        this(funcDocKey, miniDescriptionKey, new ExactType(makeInstance, returnType, paramType));
+        private final @Localized String miniDescription;
+        private final TypeMatcher typeMatcher;
+
+        private Details(@Localized String miniDescription, TypeMatcher typeMatcher)
+        {
+            this.miniDescription = miniDescription;
+            this.typeMatcher = typeMatcher;
+        }
+    }
+    
+    private static Details lookupFunction(String functionName, @FuncDocKey String funcDocKey) throws InternalException
+    {
+        try
+        {
+            return new Details(
+                ResourceBundle.getBundle("function_minis").getString(funcDocKey),
+                parseFunctionType(functionName,
+                    Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_typeargs").getString(funcDocKey), ";")),
+                    Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_constraints").getString(funcDocKey), ";")),
+                    ResourceBundle.getBundle("function_types").getString(funcDocKey)
+                )
+            );
+        }
+        catch (MissingResourceException e)
+        {
+            throw new InternalException("Missing information for " + funcDocKey, e);
+        }
     }
 
-    public @LocalizableKey String getMiniDescriptionKey()
+    private static TypeMatcher parseFunctionType(String functionName, List<String> typeArgs, List<String> constraints, String functionType)
     {
-        return miniDescriptionKey;
+        Map<String, TypeExp> typeVars = new HashMap<>();
+        for (String typeArg : typeArgs)
+        {
+            TypeClassRequirements typeClassRequirements = TypeClassRequirements.empty();
+            for (String constraint : constraints)
+            {
+                if (constraint.endsWith(" " + typeArg));
+                {
+                    typeClassRequirements = TypeClassRequirements.union(typeClassRequirements, 
+                        TypeClassRequirements.require(StringUtils.removeEnd(constraint, " " + typeArg), functionName)); 
+                }
+            }
+            
+            typeVars.put(typeArg, new MutVar(null));
+        }
+        
+        return typeManager -> {
+            try
+            {
+                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get), typeVars);
+            }
+            catch (UserException e)
+            {
+                // It's us that wrote the type, so user exceptions become internal exceptions:
+                throw new InternalException("Error in built-in function", e);
+            }
+        };
     }
 
-    public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
+
+    public @Localized String getMiniDescription()
+    {
+        return miniDescription;
+    }
+
+    // Function type, and map from named typed vars to type expression
+    public Pair<TypeExp, Map<String, TypeExp>> getType(TypeManager typeManager) throws InternalException
     {
         return typeMatcher.makeParamAndReturnType(typeManager);
     }
+    
+    @OnThread(Tag.Simulation)
+    public abstract ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException;
     
     /**
      * For autocompleting parameters: what are likely types to this function?
@@ -124,81 +198,8 @@ public class FunctionDefinition
     {
         // We have to make it fresh for each type inference, because the params and return may
         // share a type variable which will get unified during the inference
-        
-        public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException;
-    }
-
-    // For functions which have no type variables (or unit variables) shared between params and return
-    public static class ExactType implements TypeMatcher
-    {
-        private final DataType exactReturnType;
-        private final DataType exactParamType;
-        private final Supplier<ValueFunction> makeInstance;
-
-
-        public ExactType(Supplier<ValueFunction> makeInstance, DataType exactReturnType, DataType exactParamType)
-        {
-            this.makeInstance = makeInstance;
-            this.exactReturnType = exactReturnType;
-            this.exactParamType = exactParamType;
-        }
-
-        @Override
-        public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
-        {
-            return new FunctionTypesUniform(typeManager, makeInstance, TypeExp.fromConcrete(null, exactReturnType), TypeExp.fromConcrete(null, exactParamType));
-        }
-    }
-
-
-    public static abstract class FunctionTypes
-    {
-        public final TypeExp paramType;
-        public final TypeExp returnType;
-        protected final TypeManager typeManager;
-        @MonotonicNonNull
-        private ValueFunction instance;
-
-        FunctionTypes(TypeManager typeManager, TypeExp returnType, TypeExp paramType)
-        {
-            this.typeManager = typeManager;
-            this.returnType = returnType;
-            this.paramType = paramType;
-        }
-        
-        protected abstract ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException;
-
-        public final @Value ValueFunction getInstanceAfterTypeCheck() throws InternalException, UserException
-        {
-            if (instance == null)
-            {
-                instance = makeInstanceAfterTypeCheck();
-            }
-            return DataTypeUtility.value(instance);
-        }
-        
-        public TypeExp getFunctionType(@Nullable ExpressionBase src)
-        {
-            return TypeCons.function(src, paramType, returnType);
-        }
-    }
-    
-    // A version that has a single instance generator, regardless of type.
-    public static class FunctionTypesUniform extends FunctionTypes
-    {
-        private final Supplier<ValueFunction> makeInstance;
-
-        public FunctionTypesUniform(TypeManager typeManager, Supplier<ValueFunction> makeInstance, TypeExp returnType, TypeExp paramType)
-        {
-            super(typeManager, returnType, paramType);
-            this.makeInstance = makeInstance;
-        }
-
-        @Override
-        protected ValueFunction makeInstanceAfterTypeCheck()
-        {
-            return makeInstance.get();
-        }
+        // Returns type of function, and type vars by name.
+        public Pair<TypeExp, Map<String, TypeExp>> makeParamAndReturnType(TypeManager typeManager) throws InternalException;
     }
 
     // Only for testing:
@@ -217,6 +218,7 @@ public class FunctionDefinition
     }
 
     // For testing: give a unit list and parameter list that should fail typechecking
+    /*
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getTypes(1, type ->
@@ -224,4 +226,5 @@ public class FunctionDefinition
             return TypeExp.unifyTypes(typeMatcher.makeParamAndReturnType(newExpressionOfDifferentType.getTypeManager()).paramType, TypeExp.fromConcrete(null, type.get(0))).isLeft();
         }).get(0));
     }
+    */
 }

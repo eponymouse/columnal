@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -40,7 +41,7 @@ public class PropRunExpression
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)
             {
-                @Value Object actualValue = src.expression.getValue(row, new EvaluateState());
+                @Value Object actualValue = src.expression.getValue(row, new EvaluateState(DummyManager.INSTANCE.getTypeManager()));
                 assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
                     Utility.compareValues(src.value.get(row), actualValue, new BigDecimal("0.000000001")) == 0);
             }

@@ -203,7 +203,7 @@ public class Filter extends Transformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
-            boolean keep = filterExpression.getBoolean(nextIndexToExamine, new EvaluateState(), prog);
+            boolean keep = filterExpression.getBoolean(nextIndexToExamine, new EvaluateState(getManager().getTypeManager()), prog);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

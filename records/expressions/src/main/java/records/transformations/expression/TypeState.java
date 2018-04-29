@@ -41,7 +41,6 @@ public class TypeState
     // If variable is in there but > size 1, means it is known but it is defined by multiple guards
     // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
     private final ImmutableMap<String, ImmutableList<TypeExp>> variables;
-    private final ImmutableMap<String, FunctionDefinition> functions;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
 
@@ -54,8 +53,6 @@ public class TypeState
     {
         this.variables = variables;
         this.typeManager = typeManager;
-        ImmutableList<FunctionDefinition> allFunctions = FunctionList.getAllFunctions(unitManager);
-        this.functions = allFunctions.stream().collect(ImmutableMap.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toImmutableMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
         this.unitManager = unitManager;
     }
 
@@ -216,9 +213,6 @@ public class TypeState
                 throw new InternalException("Type manager changed between different type states");
             if (!typeState.unitManager.equals(original.unitManager))
                 throw new InternalException("Unit manager changed between different type states");
-            // Functions shouldn't have changed:
-            if (!typeState.functions.keySet().equals(original.functions.keySet()))
-                throw new InternalException("Functions changed between different type states");
             // Variables: we first remove all the variables which already existed
             // What is left must not overlap
             MapDifference<String, ImmutableList<TypeExp>> diff = Maps.difference(typeState.variables, original.variables);

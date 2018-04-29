@@ -1,34 +1,28 @@
 package records.transformations.function.list;
 
 import annotation.qual.Value;
-import records.data.datatype.TypeManager;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TypeClassRequirements;
-import records.types.TypeCons;
-import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
 
 public class JoinLists extends FunctionDefinition
 {
-    public JoinLists()
+    public JoinLists() throws InternalException
     {
-        super("list/join lists", "joinLists.mini", JoinLists::joinLists);
+        super("list:join lists");
     }
 
-    private static FunctionTypes joinLists(TypeManager typeManager)
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
-        TypeExp innerType = new MutVar(null, TypeClassRequirements.empty());
-        TypeExp listOfInner = TypeCons.list(null, innerType);
-        TypeExp listOfLists = TypeCons.list(null, listOfInner);
-        
-        return new FunctionTypesUniform(typeManager, Instance::new, listOfInner, listOfLists);
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

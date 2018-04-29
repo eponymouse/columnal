@@ -5,14 +5,21 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class StringMid extends FunctionDefinition
 {
-    public StringMid()
+    public StringMid() throws InternalException
     {
-        super("middle", "middle.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
+        super("text:middle");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

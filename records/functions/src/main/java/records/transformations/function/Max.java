@@ -1,30 +1,26 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableSet;
-import records.data.datatype.TypeManager;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.MutVar;
-import records.types.TypeClassRequirements;
-import records.types.TypeCons;
-import records.types.TypeExp;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
 
 public class Max extends FunctionDefinition
 {
-    public Max()
+    public Max() throws InternalException
     {
-        super("comparison/maximum", "maximum.mini", Max::listOfAny);
+        super("comparison:maximum");
     }
-    
-    private static FunctionTypes listOfAny(TypeManager typeManager)
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
-        TypeExp any = new MutVar(null, TypeClassRequirements.require("Comparable", "maximum"));
-        return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any));
-    }    
+        return new Instance();
+    }
 
     private static class Instance extends ValueFunction
     {

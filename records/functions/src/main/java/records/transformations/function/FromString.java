@@ -12,11 +12,10 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.MutVar;
-import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -30,22 +29,22 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 public class FromString extends FunctionDefinition
 {
-    public FromString()
+    public FromString() throws InternalException
     {
-        super("from text", "from.string.mini", typeManager -> new FunctionTypes(typeManager,
-            new MutVar(null),
-            TypeExp.text(null)
-        ) {
-            @Override
-            protected ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException
-            {
-                return new Instance(returnType.toConcreteType(typeManager).eitherEx(err -> {throw new UserException(err.getErrorText().toPlain());}, x -> x));
-            }
-        });
+        super("conversion:from text");
+    }
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+    {
+        DataType type = paramTypes.apply("t");
+        if (type == null)
+            throw new InternalException("Type t not found for from text");
+        return new Instance(type);
     }
 
     private static class Instance extends ValueFunction

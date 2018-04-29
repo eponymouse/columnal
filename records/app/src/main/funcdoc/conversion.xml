@@ -3,7 +3,7 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="conversion">
     <function name="from text">
-        <scope>Readable t</scope>
+        <typeConstraint>Readable t</typeConstraint>
         <argType>Text</argType>
         <returnType>t</returnType>
         <description>

@@ -7,7 +7,6 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionDefinition.TypeMatcher;
 import records.types.NumTypeExp;
 import records.types.TypeCons;
@@ -27,17 +26,16 @@ import java.util.function.Supplier;
  */
 public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
-    public SingleNumericSummaryFunction(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
+    public SingleNumericSummaryFunction(@FuncDocKey String funcDocKey) throws InternalException
     {
-        super(funcDocKey, miniDescriptionKey, typeManager -> {
-            NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
-            return new FunctionTypesUniform(typeManager, makeInstance, numType, TypeExp.list(null, numType));
-        });
+        super(funcDocKey);
     }
 
+    /*
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.makeArrayExpression(ImmutableList.of(newExpressionOfDifferentType.getNonNumericType())));
     }
+    */
 }

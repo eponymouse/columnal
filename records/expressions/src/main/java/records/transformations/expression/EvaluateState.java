@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableMap;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 
 import java.util.HashMap;
@@ -12,16 +13,18 @@ import java.util.Map;
  */
 public class EvaluateState
 {
+    private final TypeManager typeManager;
     private final ImmutableMap<String, @Value Object> variables;
 
-    public EvaluateState()
+    public EvaluateState(TypeManager typeManager)
     {
-        this(ImmutableMap.of());
+        this(ImmutableMap.of(), typeManager);
     }
 
-    private EvaluateState(ImmutableMap<String, @Value Object> variables)
+    private EvaluateState(ImmutableMap<String, @Value Object> variables, TypeManager typeManager)
     {
         this.variables = variables;
+        this.typeManager = typeManager;
     }
 
     public EvaluateState add(String varName, @Value Object value) throws InternalException
@@ -33,7 +36,7 @@ public class EvaluateState
         }
         copy.putAll(variables);
         copy.put(varName, value);
-        return new EvaluateState(copy.build());
+        return new EvaluateState(copy.build(), typeManager);
     }
 
     public @Value Object get(String varName) throws InternalException
@@ -42,5 +45,10 @@ public class EvaluateState
         if (value == null)
             throw new InternalException("Trying to access undeclared variable: \"" + varName + "\"");
         return value;
+    }
+
+    public TypeManager getTypeManager()
+    {
+        return typeManager;
     }
 }

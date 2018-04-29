@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <!-- From https://stackoverflow.com/questions/22774425/attempting-to-connect-xml-files-with-xinclude-attribute-xmlbase-error -->
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/03/xml.xsd" />
+    
     <xs:element name="exampleGroup">
         <xs:complexType>
             <xs:sequence>
@@ -52,9 +55,11 @@
     <xs:element name="function">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="scope" type="xs:string" minOccurs="0"/>
+                <xs:element name="typeArg" type="xs:string" minOccurs="0"/>
+                <xs:element name="typeConstraint" type="xs:string" minOccurs="0"/>
                 <xs:element name="argType" type="xs:string"/>
                 <xs:element name="returnType" type="xs:string"/>
+                <!-- TODO add mini as mandatory here -->
                 <xs:element name="description">
                     <xs:complexType>
                         <xs:choice maxOccurs="unbounded">
@@ -84,7 +89,6 @@
         </xs:complexType>
     </xs:element>
     
-    
     <xs:element name="functionDocumentation">
         <xs:complexType>
             <xs:choice  minOccurs="1" maxOccurs="unbounded">
@@ -102,6 +106,16 @@
                 <xs:element ref="function"/>
             </xs:choice>
             <xs:attribute name="namespace" type="xs:string" use="required"/>
+            <!-- For when it's imported by XInclude -->
+            <xs:attribute ref="xml:base"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="all">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="functionDocumentation" maxOccurs="unbounded"/>
+            </xs:sequence>
         </xs:complexType>
     </xs:element>
 </xs:schema>

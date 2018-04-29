@@ -5,7 +5,8 @@
     <functionGroup id="minmax" title="Min-Max">
         <description>Minimum and maximum functions.</description>
         <function name="minimum">
-            <scope>Comparable t</scope>
+            <typeArg>t</typeArg>
+            <typeConstraint>Comparable t</typeConstraint>
             <argType>[t]</argType>
             <returnType>t</returnType>
             <description>
@@ -25,7 +26,8 @@
             </example>
         </function>
         <function name="maximum">
-            <scope>Comparable t</scope>
+            <typeArg>t</typeArg>
+            <typeConstraint>Comparable t</typeConstraint>
             <argType>[t]</argType>
             <returnType>t</returnType>
             <description>

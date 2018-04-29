@@ -5,16 +5,23 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class StringReplaceAll extends FunctionDefinition
 {
-    public StringReplaceAll()
+    public StringReplaceAll() throws InternalException
     {
-        super("replace.all", "replace.all.mini", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
+        super("text:replace all");
     }
-    
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+    {
+        return new Instance();
+    }
+
     private static class Instance extends ValueFunction
     {
 

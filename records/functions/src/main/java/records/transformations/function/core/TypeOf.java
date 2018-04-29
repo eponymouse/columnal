@@ -1,32 +1,27 @@
 package records.transformations.function.core;
 
 import annotation.qual.Value;
-import records.data.datatype.TypeManager;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TypeClassRequirements;
-import records.types.TypeCons;
-import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.ValueFunction;
 
 public class TypeOf extends FunctionDefinition
 {
-    public TypeOf()
+    public TypeOf() throws InternalException
     {
-        super("core/typeOf", "typeOf.mini", TypeOf::valueToType);
+        super("core:typeOf");
     }
 
-    private static FunctionTypes valueToType(TypeManager typeManager) throws InternalException
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
-        MutVar paramType = new MutVar(null, TypeClassRequirements.empty());
-        TypeExp returnType = TypeCons.typeExpToTypeGADT(null, paramType);        
-        
-        return new FunctionTypesUniform(typeManager, Instance::new, returnType, paramType);
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

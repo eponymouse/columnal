@@ -3,37 +3,36 @@ package records.transformations.function.list;
 import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.Unit;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TypeCons;
-import records.types.TypeExp;
-import utility.Pair;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
 /**
  * Created by neil on 14/01/2017.
  */
 public class Count extends FunctionDefinition
 {
-    public Count()
+    public Count() throws InternalException
     {
-        super("list/list length", "list.length.mini", Instance::new, DataType.NUMBER, DataType.array());
+        super("list:list length");
     }
-    
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
+    }
+
+    /*
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(TypeExp.list(null, new MutVar(null))));
     }
+    */
 
     private static class Instance extends ValueFunction
     {

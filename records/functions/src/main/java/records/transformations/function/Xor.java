@@ -5,14 +5,21 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class Xor extends FunctionDefinition
 {
-    public Xor()
+    public Xor() throws InternalException
     {
-        super("boolean/xor", "xor.mini", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
+        super("boolean:xor");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

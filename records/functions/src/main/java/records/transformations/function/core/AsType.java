@@ -1,32 +1,27 @@
 package records.transformations.function.core;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
-import records.data.datatype.TypeManager;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TupleTypeExp;
-import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class AsType extends FunctionDefinition
 {
-    public AsType()
+    public AsType() throws InternalException
     {
-        super("asType", "asType.mini", AsType::type);
+        super("core:asType");
     }
 
-    private static FunctionTypes type(TypeManager typeManager) throws InternalException
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
-        TypeExp innerType = new MutVar(null);
-        TypeExp typeType = TypeExp.typeExpToTypeGADT(null, innerType);
-        
-        return new FunctionTypesUniform(typeManager, Instance::new, innerType, new TupleTypeExp(null, ImmutableList.of(typeType, innerType), true));
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

@@ -5,6 +5,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
@@ -14,9 +15,15 @@ import java.util.List;
 
 public class StringWithinIndex extends FunctionDefinition
 {
-    public StringWithinIndex()
+    public StringWithinIndex() throws InternalException
     {
-        super("within.positions", "within.positions.mini", Instance::new, DataType.array(DataType.NUMBER), DataType.tuple(DataType.TEXT, DataType.TEXT));
+        super("text:positions within");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

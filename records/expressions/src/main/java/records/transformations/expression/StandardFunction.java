@@ -3,8 +3,10 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -14,23 +16,25 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StandardFunction extends NonOperatorExpression
 {
     private final FunctionDefinition functionDefinition;
     // null if type check fails for some reason:
-    private @MonotonicNonNull FunctionTypes type;
+    private @MonotonicNonNull Pair<TypeExp, Map<String, TypeExp>> type;
 
     public StandardFunction(FunctionDefinition functionDefinition)
     {
@@ -40,8 +44,8 @@ public class StandardFunction extends NonOperatorExpression
     @Override
     public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = functionDefinition.makeParamAndReturnType(typeState.getTypeManager());
-        return type.getFunctionType(this);
+        type = functionDefinition.getType(typeState.getTypeManager());
+        return type.getFirst();
     }
 
     @Override
@@ -50,8 +54,17 @@ public class StandardFunction extends NonOperatorExpression
     {
         if (type == null)
             throw new InternalException("Attempting to fetch function despite failing type check");
-        
-        return type.getInstanceAfterTypeCheck();
+
+        @NonNull Pair<TypeExp, Map<String, TypeExp>> typeFinal = type;
+        return functionDefinition.getInstance(s -> {
+            TypeExp typeExp = typeFinal.getSecond().get(s);
+            if (typeExp == null)
+                throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
+            return typeExp.toConcreteType(state.getTypeManager()).eitherEx(
+                l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
+                t -> t
+            );
+        });
     }
 
     @Override
@@ -81,7 +94,7 @@ public class StandardFunction extends NonOperatorExpression
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
-        return type == null ? null : newExpressionOfDifferentType.getDifferentType(type.getFunctionType(this));
+        return type == null ? null : newExpressionOfDifferentType.getDifferentType(type.getFirst());
     }
 
     @Override

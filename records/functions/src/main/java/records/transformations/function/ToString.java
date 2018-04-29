@@ -12,10 +12,9 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.MutVar;
-import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -25,20 +24,21 @@ import java.time.temporal.TemporalAccessor;
 
 public class ToString extends FunctionDefinition
 {
-    public ToString()
+    public ToString() throws InternalException
     {
-        super("to text", "to.string.mini", typeManager -> new FunctionTypes(typeManager, 
-            TypeExp.text(null),
-            new MutVar(null)
-        ) {
-            @Override
-            protected ValueFunction makeInstanceAfterTypeCheck() throws UserException, InternalException
-            {
-                return new Instance(paramType.toConcreteType(typeManager).eitherEx(err -> {throw new UserException(err.getErrorText().toPlain());}, x -> x));
-            }
-        });
+        super("to text");
     }
-    
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+    {
+        DataType type = paramTypes.apply("t");
+        if (type == null)
+            throw new InternalException("");
+        return new Instance(type);
+    }
+
     private static class Instance extends ValueFunction
     {
         private final DataType type;

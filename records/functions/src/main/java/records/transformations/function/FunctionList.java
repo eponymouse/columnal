@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  */
 public class FunctionList
 {
-    public static ImmutableList<FunctionDefinition> getAllFunctions(UnitManager unitManager)
+    public static ImmutableList<FunctionDefinition> getAllFunctions(UnitManager unitManager) throws InternalException
     {
         return Utility.concatStreams(Arrays.asList(
             new Absolute(),

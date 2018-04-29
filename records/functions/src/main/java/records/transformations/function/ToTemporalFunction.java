@@ -1,8 +1,8 @@
 package records.transformations.function;
 
+import annotation.funcdoc.qual.FuncDocKey;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -10,21 +10,16 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 import java.time.DateTimeException;
-import java.time.Year;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
-import java.time.format.SignStyle;
-import java.time.format.TextStyle;
-import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -37,16 +32,20 @@ import java.util.stream.Collectors;
 public abstract class ToTemporalFunction
 {
     // Public for testing purposes only
-    public final FunctionDefinition _test_fromString(String name)
+    public final FunctionDefinition _test_fromString(@FuncDocKey String name) throws InternalException
     {
-        @SuppressWarnings("all")
-        @LocalizableKey String key = name;
-        return fromString(name, key);
+        return fromString(name);
     }
     
-    protected final FunctionDefinition fromString(String name, @LocalizableKey String miniDescriptionKey)
+    protected final FunctionDefinition fromString(@FuncDocKey String name) throws InternalException
     {
-        return new FunctionDefinition(name, miniDescriptionKey, () -> new FromStringInstance(name), DataType.date(getResultType()), DataType.TEXT);
+        return new FunctionDefinition(name) {
+            @Override
+            public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+            {
+                return new FromStringInstance(name);
+            }
+        };
     }
 
     abstract DateTimeInfo getResultType();

@@ -28,6 +28,7 @@ public class ToYearMonth extends ToTemporalFunction
     ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        /* TODO
         r.add(fromString("dateym.from.string", "dateym.from.string.mini"));
         r.add(new FunctionDefinition("dateym.from.date", "dateym.from.date.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
         r.add(new FunctionDefinition("dateym.from.datetime", "dateym.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
@@ -36,6 +37,7 @@ public class ToYearMonth extends ToTemporalFunction
             DataType.number(new NumberInfo(mgr.loadBuiltIn("year"))),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("month")))
         )));
+        */
         return r.build();
     }
 

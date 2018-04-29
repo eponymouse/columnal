@@ -1,9 +1,11 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -14,12 +16,13 @@ import java.math.BigDecimal;
  */
 public class Absolute extends SingleNumericInOutFunction
 {
-    public Absolute()
+    public Absolute() throws InternalException
     {
-        super("number/abs", "abs.mini", Absolute::makeInstance);
+        super("number:abs");
     }
     
-    private static ValueFunction makeInstance()
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
         return new ValueFunction()
         {

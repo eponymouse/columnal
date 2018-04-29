@@ -1,26 +1,16 @@
 package records.transformations.function.list;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionDefinition.FunctionTypes;
-import records.transformations.function.FunctionDefinition.FunctionTypesUniform;
-import records.transformations.function.FunctionDefinition.TypeMatcher;
-import records.types.MutVar;
-import records.types.TupleTypeExp;
-import records.types.TypeCons;
-import records.types.TypeExp;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
-
-import java.util.function.Supplier;
 
 // Maybe this should be a package
 public abstract class AnyAllNone
@@ -56,44 +46,45 @@ public abstract class AnyAllNone
         }
     }
 
-    private static class Matcher implements TypeMatcher
+    public static class Any extends FunctionDefinition
     {
-        private final Supplier<ValueFunction> makeInstance;
-
-        private Matcher(Supplier<ValueFunction> makeInstance)
+        public Any() throws InternalException
         {
-            this.makeInstance = makeInstance;
+            super("listprocess:any");
         }
 
         @Override
-        public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
+        public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
         {
-            MutVar elemType = new MutVar(null);
-            return new FunctionTypesUniform(typeManager, makeInstance, TypeExp.bool(null), new TupleTypeExp(null, ImmutableList.of(TypeExp.list(null, elemType), TypeExp.function(null, elemType, TypeExp.bool(null))), true));
-        }
-    }
-
-    public static class Any extends FunctionDefinition
-    {
-        public Any()
-        {
-            super("listprocess/any", "any.mini", new Matcher(() -> new Processor(true, null, false)));
+            return new Processor(true, null, false);
         }
     }
 
     public static class All extends FunctionDefinition
     {
-        public All()
+        public All() throws InternalException
         {
-            super("listprocess/all", "all.mini", new Matcher(() -> new Processor(null, false, true)));
+            super("listprocess:all");
+        }
+
+        @Override
+        public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+        {
+            return new Processor(null, false, true);
         }
     }
 
     public static class None extends FunctionDefinition
     {
-        public None()
+        public None() throws InternalException
         {
-            super("listprocess/none", "none.mini", new Matcher(() -> new Processor(false, null, true)));
+            super("listprocess:none");
+        }
+
+        @Override
+        public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+        {
+            return new Processor(false, null, true);
         }
     }
 }

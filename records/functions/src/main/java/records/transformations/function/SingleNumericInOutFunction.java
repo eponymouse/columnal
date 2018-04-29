@@ -24,18 +24,17 @@ import java.util.function.Supplier;
  */
 abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
-    SingleNumericInOutFunction(@FuncDocKey String funcDocKey, @LocalizableKey String miniDescriptionKey, Supplier<ValueFunction> makeInstance)
+    SingleNumericInOutFunction(@FuncDocKey String funcDocKey) throws InternalException
     {
-        super(funcDocKey, miniDescriptionKey, typeManager -> {
-            NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
-            return new FunctionTypesUniform(typeManager, makeInstance, numType, numType);
-        });
+        super(funcDocKey);
     }
 
+    /*
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         //TODO randomly pick from a few other options (e.g. zero param, 2 param, units)
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getNonNumericType());
     }
+    */
 }

@@ -501,13 +501,13 @@ public class AutoComplete<C extends Completion> extends PopupControl
             private final ObservableStringValue completion;
             private final @Localized String description;
 
-            public CompletionContent(ObservableStringValue completion, @Nullable @LocalizableKey String descriptionKey)
+            public CompletionContent(ObservableStringValue completion, @Nullable @Localized String description)
             {
                 this.completion = completion;
-                this.description = descriptionKey == null ? Utility.universal("") : TranslationUtility.getString(descriptionKey);
+                this.description = description == null ? Utility.universal("") : description;
             }
 
-            public CompletionContent(String completion, @Nullable @LocalizableKey String description)
+            public CompletionContent(String completion, @Nullable @Localized String description)
             {
                 this(new ReadOnlyStringWrapper(completion), description);
             }

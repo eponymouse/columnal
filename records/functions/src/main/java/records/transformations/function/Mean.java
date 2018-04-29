@@ -1,9 +1,11 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
@@ -15,9 +17,15 @@ public class Mean extends SingleNumericSummaryFunction
 {
     public static final String NAME = "average";
 
-    public Mean()
+    public Mean() throws InternalException
     {
-        super("number/average", "average.mini", () -> new ValueFunction()
+        super("number:average");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new ValueFunction()
         {
             @Override
             public @Value Object call(@Value Object param) throws UserException, InternalException
@@ -34,6 +42,6 @@ public class Mean extends SingleNumericSummaryFunction
                 }
                 return DataTypeUtility.value(average);
             }
-        });
+        };
     }
 }

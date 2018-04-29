@@ -32,6 +32,7 @@ public class ToTime extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        /* TODO
         r.add(fromString("time.from.text", "time.from.string.mini"));
         r.add(new FunctionDefinition("time.from.datetime", "time.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionDefinition("time.from.datetimezoned", "time.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
@@ -41,6 +42,7 @@ public class ToTime extends ToTemporalFunction
             DataType.number(new NumberInfo(mgr.loadBuiltIn("min"))),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("s")))
         )));
+        */
         return r.build();
     }
 

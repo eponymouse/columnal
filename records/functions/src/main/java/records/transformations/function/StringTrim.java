@@ -5,14 +5,21 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
 public class StringTrim extends FunctionDefinition
 {
-    public StringTrim()
+    public StringTrim() throws InternalException
     {
-        super("trim", "trim.mini", Instance::new, DataType.TEXT, DataType.TEXT);
+        super("text:trim");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

@@ -2,17 +2,12 @@ package records.transformations.function.list;
 
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
-import com.google.common.collect.ImmutableList;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.NumTypeExp;
-import records.types.TupleTypeExp;
-import records.types.TypeCons;
-import records.types.TypeExp;
-import records.types.units.UnitExp;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -22,18 +17,15 @@ import utility.ValueFunction;
 public class GetElement extends FunctionDefinition
 {
     // Takes parameters: column/array, index
-    public GetElement()
+    public GetElement() throws InternalException
     {
-        super("list/element", "element.mini", typeManager -> {
-                TypeExp any = new MutVar(null);
-                return new FunctionTypesUniform(typeManager, Instance::new, any, new TupleTypeExp(null,
-                    ImmutableList.of(
-                        TypeExp.list(null, any),
-                        new NumTypeExp(null, UnitExp.SCALAR)
-                    ), true
-                ));
-            }
-        );
+        super("list:element");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction

@@ -1,24 +1,26 @@
 package records.transformations.function.list;
 
 import annotation.qual.Value;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TypeExp;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.ValueFunction;
 
 public class Single extends FunctionDefinition
 {
-    public Single()
+    public Single() throws InternalException
     {
-        super("list/single", "single.mini", typeManager -> {
-            TypeExp any = new MutVar(null);
-            return new FunctionTypesUniform(typeManager, Instance::new, any, TypeExp.list(null, any)
-            );
-        });
+        super("list:single");
+    }
+
+    @Override
+    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+    {
+        return new Instance();
     }
 
     private static class Instance extends ValueFunction
