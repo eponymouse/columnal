@@ -44,14 +44,14 @@ public class ParseException extends UserException
         line -= 1;
         
         String[] lines = input.split("\\r?\\n");
-        if (line < lines.length && charPositionInLine < lines[line].length())
+        if (line < lines.length && charPositionInLine <= lines[line].length())
         {
             // Position is valid.
             return lines[line] + "\n" + StringUtils.leftPad("", charPositionInLine) + "^-- Unexpected\n";
         }
         else
         {
-            return "Internal error: parse error position invalid";
+            return "Internal error: parse error position invalid: " + line + ":" + charPositionInLine + " in {{{" + input + "}}}";
         }
     }
 
