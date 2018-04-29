@@ -72,12 +72,17 @@ public class TypeState
         return new TypeState(copy.build(), typeManager, unitManager);
     }
 
-    public TypeState addImplicitLambda(MutVar type)
+    public TypeState addImplicitLambdas(ImmutableList<ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes)
     {
-        return addAllowShadow("?", type);
+        TypeState typeState = this;
+        for (int i = 0; i < lambdaArgs.size(); i++)
+        {
+            typeState = typeState.addAllowShadow(lambdaArgs.get(i).getVarName(), argTypes.get(i));
+        }
+        return typeState;
     }
 
-    public TypeState addAllowShadow(String varName, MutVar type)
+    public TypeState addAllowShadow(String varName, TypeExp type)
     {
         // We allow name shadowing without complaint:
         ImmutableMap.Builder<String, ImmutableList<TypeExp>> copy = ImmutableMap.builder();

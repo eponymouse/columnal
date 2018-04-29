@@ -520,22 +520,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
         */
     }
-    
-    // If any of the list are implicit lambda args ('?'), returns a new type state
-    // with a type for '?' and a wrap function which will turn the item into a function.
-    // If none are, returns identity and unaltered type state.
-    protected static Pair<UnaryOperator<@Nullable TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
-    {
-        if (args.stream().anyMatch(a -> a instanceof ImplicitLambdaArg))
-        {
-            MutVar argType = new MutVar(src);
-            return new Pair<UnaryOperator<@Nullable TypeExp>, TypeState>(t -> t == null ? null : TypeExp.function(src, argType, t), typeState.addImplicitLambda(argType));
-        }
-        else
-        {
-            return new Pair<>(x -> x, typeState);
-        }
-    }
 
     public static class SingleTableLookup implements TableLookup
     {

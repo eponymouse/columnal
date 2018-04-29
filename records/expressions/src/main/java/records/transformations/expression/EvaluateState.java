@@ -27,7 +27,7 @@ public class EvaluateState
     public EvaluateState add(String varName, @Value Object value) throws InternalException
     {
         ImmutableMap.Builder<String, @Value Object> copy = ImmutableMap.builder();
-        if (!varName.equals("?") && variables.containsKey(varName))
+        if (!varName.startsWith("?") && variables.containsKey(varName))
         {
             throw new InternalException("Duplicate variable name: " + varName);
         }

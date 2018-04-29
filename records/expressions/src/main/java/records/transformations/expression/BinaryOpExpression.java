@@ -6,12 +6,10 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
-import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
@@ -22,7 +20,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.ValueFunction;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -128,15 +125,7 @@ public abstract class BinaryOpExpression extends Expression
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
         {
-            return DataTypeUtility.value(new ValueFunction()
-            {
-                @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object call(@Value Object arg) throws InternalException, UserException
-                {
-                    return getValueBinaryOp(rowIndex, state.add("?", arg));
-                }
-            });
+            return ImplicitLambdaArg.makeImplicitFunction(ImmutableList.of(lhs, rhs), state, s -> getValueBinaryOp(rowIndex, s));
         }
         else
             return getValueBinaryOp(rowIndex, state);
@@ -148,7 +137,7 @@ public abstract class BinaryOpExpression extends Expression
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState);
+        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState);
         typeState = lambda.getSecond();
         lhsType = lhs.check(dataLookup, typeState, onError);
         rhsType = rhs.check(dataLookup, typeState, onError);

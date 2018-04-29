@@ -6,14 +6,11 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.ColumnId;
-import records.data.RecordSet;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
-import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
@@ -55,7 +52,7 @@ public abstract class NaryOpExpression extends Expression
     @Override
     public final @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = detectImplicitLambda(this, expressions, typeState);
+        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState);
         typeState = lambda.getSecond();
         return onError.recordType(this, lambda.getFirst().apply(checkNaryOp(dataLookup, typeState, onError)));
     }
@@ -68,15 +65,7 @@ public abstract class NaryOpExpression extends Expression
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
-            return DataTypeUtility.value(new ValueFunction()
-            {
-                @Override
-                @OnThread(Tag.Simulation)
-                public @Value Object call(@Value Object arg) throws InternalException, UserException
-                {
-                    return getValueNaryOp(rowIndex, state.add("?", arg));
-                }
-            });
+            return ImplicitLambdaArg.makeImplicitFunction(expressions, state, s -> getValueNaryOp(rowIndex, s));
         }
         else
             return getValueNaryOp(rowIndex, state);
