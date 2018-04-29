@@ -329,9 +329,14 @@ public class DataType implements StyledShowable
     {
         return new DataType(Kind.TYPE_VARIABLE, null, null, null, null, name);
     }
+    
+    public static DataType function(DataType argType, DataType resultType)
+    {
+        return new DataType(Kind.FUNCTION, null, null, null, ImmutableList.of(argType, resultType), null);
+    }
 
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, TYPE_VARIABLE }
+    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, FUNCTION, TYPE_VARIABLE }
     final Kind kind;
     // For NUMBER:
     final @Nullable NumberInfo numberInfo;
@@ -343,7 +348,7 @@ public class DataType implements StyledShowable
     // in case we need to turn this concrete type back into a TypeExp for unification:
     final @Nullable ImmutableList<DataType> tagTypeVariableSubstitutions;
     final @Nullable ImmutableList<TagType<DataType>> tagTypes;
-    // For TUPLE (2+) and ARRAY (1).  If ARRAY and memberType is empty, indicates
+    // For TUPLE (2+) and ARRAY (1) and FUNCTION(2).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
     final @Nullable ImmutableList<DataType> memberType;
     // For TYPE_VARIABLE: the name of the variable being used here.
@@ -416,6 +421,11 @@ public class DataType implements StyledShowable
         R tuple(ImmutableList<DataType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(@Nullable DataType inner) throws InternalException, E;
+        
+        default R function(DataType argType, DataType resultType) throws InternalException, E
+        {
+            throw new InternalException("Functions are unsupported, plain data values expected");
+        };
         
         default R typeVariable(String typeVariableName) throws InternalException, E
         {
@@ -502,6 +512,8 @@ public class DataType implements StyledShowable
                 return visitor.tuple(memberType);
             case TYPE_VARIABLE:
                 return visitor.typeVariable(typeVariableName);
+            case FUNCTION:
+                return visitor.function(memberType.get(0), memberType.get(1));
             default:
                 throw new InternalException("Missing kind case");
         }

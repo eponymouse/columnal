@@ -26,7 +26,7 @@ public class ToString extends FunctionDefinition
 {
     public ToString() throws InternalException
     {
-        super("to text");
+        super("conversion:to text");
     }
 
     @Override

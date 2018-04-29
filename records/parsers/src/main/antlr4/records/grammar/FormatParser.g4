@@ -7,7 +7,8 @@ number : NUMBER decimalPlaces? UNIT?;
 date : YEARMONTHDAY | YEARMONTH | TIMEOFDAY | TIMEOFDAYZONED | DATETIME | DATETIMEZONED;
 tuple : OPEN_BRACKET type (COMMA type)+ CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
-type : BOOLEAN | number | TEXT | date | tagRef | tuple | array | typeVar;
+functionType : OPEN_BRACKET type ARROW type CLOSE_BRACKET;
+type : BOOLEAN | number | TEXT | date | tagRef | tuple | array | typeVar | functionType;
 taggedDecl : TAGGED ident* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
 tagRef : TAGGED ident (DASH type)*; // First ident is name, rest are type params
 typeVar : TYPEVAR ident;
@@ -30,7 +31,7 @@ completeType : type EOF;
 // Version for editing.  Number is treated as terminal here because UNIT is self-contained:
 typeExpressionTerminal : number | date | BOOLEAN | TEXT | INCOMPLETE STRING;
 arrayTypeExpression : OPEN_SQUARE typeExpression CLOSE_SQUARE;
-roundTypeExpression : OPEN_BRACKET typeExpression (COMMA typeExpression)? CLOSE_BRACKET;
+roundTypeExpression : OPEN_BRACKET typeExpression (ARROW typeExpression | (COMMA typeExpression)+)? CLOSE_BRACKET;
 typeExpression : typeExpressionTerminal | arrayTypeExpression | roundTypeExpression | invalidOpsTypeExpression;
 invalidOpsTypeExpression : INVALIDOPS OPEN_BRACKET typeExpression (STRING typeExpression)+ CLOSE_BRACKET;
 

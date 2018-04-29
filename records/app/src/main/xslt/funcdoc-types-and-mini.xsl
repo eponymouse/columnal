@@ -28,7 +28,7 @@
     <xsl:template name="processFunctionTypes">
         <xsl:param name="namespace" select="."/>
 
-        <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>=<xsl:value-of select="argType"/> -&gt; <xsl:value-of select="returnType"/>  
+        <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>=(<xsl:value-of select="argType"/> -&gt; <xsl:value-of select="returnType"/>)  
         <xsl:text>&#xa;</xsl:text>
     </xsl:template>
     

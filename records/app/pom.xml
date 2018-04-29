@@ -338,6 +338,7 @@
                             <xincludeAware>true</xincludeAware>
                             <dir>src/main/funcdoc</dir>
                             <includes>_all.xml</includes>
+                            <otherDepends>*.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-indiv-html.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->

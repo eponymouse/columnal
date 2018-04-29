@@ -34,6 +34,7 @@ COMMA: ',';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 DASH: '-';
+ARROW: '->';
 TAGOR: '|';
 
 INCOMPLETE : '@INCOMPLETE';

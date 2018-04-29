@@ -44,27 +44,32 @@ public class FunctionList
             new Not(),
             new Round(),
             new Single(),
-            new StringLeft(),
+            // TODO document and put back all these string functions:
+            //new StringLeft(),
             new StringLength(),
-            new StringMid(),
-            new StringReplaceAll(),
-            new StringRight(),
-            new StringTrim(),
-            new StringWithin(),
-            new StringWithinIndex(),
+            //new StringMid(),
+            //new StringReplaceAll(),
+            //new StringRight(),
+            //new StringTrim(),
+            //new StringWithin(),
+            //new StringWithinIndex(),
             new Sum(),
-            new ToString(),
+            // TODO ditto
+            //new ToString(),
             new TypeOf(),
             new Xor()
         ).stream(),
         
-            Stream.of(
+            Stream.<ToTemporalFunction>of(
+                // TODO document and put back all these date conversion functions:
+                /*
                 new ToDate(),
                 new ToDateTime(),
                 new ToDateTimeZone(),
                 new ToTime(),
                 new ToTimeAndZone(),
                 new ToYearMonth()
+                */
         ).flatMap(t -> {
             try
             {

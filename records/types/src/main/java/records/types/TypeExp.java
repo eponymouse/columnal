@@ -316,6 +316,12 @@ public abstract class TypeExp implements StyledShowable
             }
 
             @Override
+            public TypeExp function(DataType argType, DataType resultType) throws InternalException, InternalException
+            {
+                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(fromDataType(null, argType, typeVarLookup), fromDataType(null, resultType, typeVarLookup)), ImmutableSet.of());
+            }
+
+            @Override
             public TypeExp typeVariable(String typeVariableName) throws InternalException, InternalException
             {
                 @Nullable TypeExp lookedUp = typeVarLookup.apply(typeVariableName);

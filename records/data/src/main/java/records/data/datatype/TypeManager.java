@@ -219,6 +219,10 @@ public class TypeManager
         {
             return DataType.typeVariable(type.typeVar().ident().getText());
         }
+        else if (type.functionType() != null)
+        {
+            return DataType.function(loadTypeUse(type.functionType().type(0)), loadTypeUse(type.functionType().type(1)));
+        }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
     }

@@ -121,7 +121,7 @@ public abstract class FunctionDefinition
             catch (UserException e)
             {
                 // It's us that wrote the type, so user exceptions become internal exceptions:
-                throw new InternalException("Error in built-in function", e);
+                throw new InternalException("Error in built-in function " + functionName, e);
             }
         };
     }
