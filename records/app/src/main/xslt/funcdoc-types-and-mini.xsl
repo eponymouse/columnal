@@ -33,6 +33,8 @@
     </xsl:template>
     
     <xsl:template match="/all">
+        <xsl:text>DUMMY OUTPUT</xsl:text>
+        
         <xsl:result-document method="text" href="file:///{$myOutputDir}/function_minis_en.properties">
             <xsl:for-each select=".//functionDocumentation">
                 <xsl:variable name="namespace" select="@namespace"/>
