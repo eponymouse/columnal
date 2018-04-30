@@ -17,7 +17,7 @@ DATETIME : 'DATETIME';
 DATETIMEZONED : 'DATETIMEZONED';
 TAGGED : 'TAGGED';
 TYPE : 'TYPE';
-TYPEVAR : 'TYPEVAR';
+TYPEVAR : '@typevar';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
 DEFAULT : 'DEFAULT' -> pushMode(VALUE_MODE);
@@ -27,7 +27,7 @@ WS : ( ' ' | '\t' )+ -> skip;
 COLUMN : 'COLUMN';
 
 CONS: ':';
-UNQUOTED_NAME : ~[ \t\r\n:(),\[\]|"-{}]+;
+UNQUOTED_NAME : ~[ \t\r\n:(),[\]|"\-{}@]+;
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 COMMA: ',';
