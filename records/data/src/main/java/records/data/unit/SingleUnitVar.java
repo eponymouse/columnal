@@ -44,4 +44,13 @@ public class SingleUnitVar extends SingleUnit
     {
         return unitVarName;
     }
+
+    @Override
+    public int compareTo(SingleUnit o)
+    {
+        if (o instanceof SingleUnitVar)
+            return ((SingleUnitVar) o).unitVarName.compareTo(((SingleUnitVar)o).unitVarName);
+        else
+            return -1;
+    }
 }

@@ -3,7 +3,7 @@ package records.data.unit;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class SpecificSingleUnit extends SingleUnit implements Comparable<SpecificSingleUnit>
+public class SpecificSingleUnit extends SingleUnit
 {
     private final String unitName;
     private final String description;
@@ -58,8 +58,11 @@ public class SpecificSingleUnit extends SingleUnit implements Comparable<Specifi
     }
     
     @Override
-    public int compareTo(@NonNull SpecificSingleUnit o)
+    public int compareTo(@NonNull SingleUnit o)
     {
-        return unitName.compareTo(o.unitName);
+        if (o instanceof SpecificSingleUnit)
+            return unitName.compareTo(((SpecificSingleUnit)o).unitName);
+        else
+            return 1; // type vars come before us
     }
 }

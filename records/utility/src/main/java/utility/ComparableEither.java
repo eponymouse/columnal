@@ -3,19 +3,19 @@ package utility;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ComparableEither<A extends Comparable<A>, B extends Comparable<B>> extends Either<A, B> implements Comparable<ComparableEither<A, B>>
+public class ComparableEither<A extends Comparable<?super A>, B extends Comparable<? super B>> extends Either<A, B> implements Comparable<ComparableEither<A, B>>
 {
     private ComparableEither(@Nullable A a, @Nullable B b, boolean isA)
     {
         super(a, b, isA);
     }
 
-    public static <A extends Comparable<A>, B extends Comparable<B>> ComparableEither<A, B> left(A a)
+    public static <A extends Comparable<? super A>, B extends Comparable<? super B>> ComparableEither<A, B> left(A a)
     {
         return new ComparableEither<>(a, null, true);
     }
 
-    public static <A extends Comparable<A>, B extends Comparable<B>> ComparableEither<A, B> right(B b)
+    public static <A extends Comparable<? super A>, B extends Comparable<? super B>> ComparableEither<A, B> right(B b)
     {
         return new ComparableEither<>(null, b, false);
     }

@@ -8,8 +8,8 @@
         </description>
         <function name="round">
             <unitArg>u</unitArg>
-            <argType>Number{u}</argType>
-            <returnType>Number{u}</returnType>
+            <argType>Number{@unitvar u}</argType>
+            <returnType>Number{@unitvar u}</returnType>
             <description>
                 <p>Rounds the given number to the nearest whole number (integer).</p>
                 <p>Numbers that end in .5 (which are halfway between two whole numbers) are rounded towards the nearest even number, sometimes known as <a href="https://en.wikipedia.org/wiki/Rounding#Round_half_to_even">banker's rounding</a>.</p>
@@ -38,8 +38,8 @@
         </description>
         <function name="abs">
             <unitArg>u</unitArg>
-            <argType>Number{u}</argType>
-            <returnType>Number{u}</returnType>
+            <argType>Number{@unitvar u}</argType>
+            <returnType>Number{@unitvar u}</returnType>
             <description>
                 <p>Makes a number positive by discarding the minus sign.</p>
             </description>
@@ -62,8 +62,8 @@
         <description>Functions for dealing with lists of numbers.</description>
         <function name="average">
             <unitArg>u</unitArg>
-            <argType>[Number{u}]</argType>
-            <returnType>Number{u}</returnType>
+            <argType>[Number{@unitvar u}]</argType>
+            <returnType>Number{@unitvar u}</returnType>
             <description>
                 <p>Calculates the average of a list of numbers.</p>
             </description>
@@ -82,8 +82,8 @@
         </function>
         <function name="sum">
             <unitArg>u</unitArg>
-            <argType>[Number{u}]</argType>
-            <returnType>Number{u}</returnType>
+            <argType>[Number{@unitvar u}]</argType>
+            <returnType>Number{@unitvar u}</returnType>
             <description>
                 <p>Calculates the sum (total) of a list of numbers.</p>
             </description>

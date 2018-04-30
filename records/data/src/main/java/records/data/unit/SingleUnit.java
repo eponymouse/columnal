@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * Created by neil on 09/12/2016.
  */
-public abstract class SingleUnit// implements Comparable<SingleUnit>
+public abstract class SingleUnit implements Comparable<SingleUnit>
 {
     public abstract String getPrefix();
     public abstract String getSuffix();
