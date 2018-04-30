@@ -13,7 +13,7 @@
     <xsl:template name="processFunction">
         <xsl:param name="function" select="."/>
         <xsl:variable name="functionName" select="@name"/>
-        <!-- TODO process exampleGroup as well -->
+        <#error TODO process exampleGroup as well
         <xsl:for-each select="example">
             <xsl:if test="output='error'">!!! </xsl:if>
             <xsl:choose>
