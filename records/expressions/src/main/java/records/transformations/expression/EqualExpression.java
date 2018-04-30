@@ -1,12 +1,8 @@
 package records.transformations.expression;
 
-import java.util.List;
-import java.util.Random;
-
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -22,6 +18,9 @@ import records.types.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
+
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by neil on 30/11/2016.

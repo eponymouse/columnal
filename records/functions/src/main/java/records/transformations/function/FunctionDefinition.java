@@ -20,6 +20,7 @@ import records.types.MutVar;
 import records.types.TypeClassRequirements;
 import records.types.TypeCons;
 import records.types.TypeExp;
+import records.types.units.MutUnitVar;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -85,6 +86,7 @@ public abstract class FunctionDefinition
                 parseFunctionType(functionName,
                     Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_typeargs").getString(funcDocKey), ";")),
                     Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_constraints").getString(funcDocKey), ";")),
+                    Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_unitargs").getString(funcDocKey), ";")),
                     ResourceBundle.getBundle("function_types").getString(funcDocKey)
                 )
             );
@@ -95,9 +97,9 @@ public abstract class FunctionDefinition
         }
     }
 
-    private static TypeMatcher parseFunctionType(String functionName, List<String> typeArgs, List<String> constraints, String functionType)
+    private static TypeMatcher parseFunctionType(String functionName, List<String> typeArgs, List<String> constraints, List<String> unitArgs, String functionType)
     {
-        Map<String, TypeExp> typeVars = new HashMap<>();
+        Map<String, MutVar> typeVars = new HashMap<>();
         for (String typeArg : typeArgs)
         {
             TypeClassRequirements typeClassRequirements = TypeClassRequirements.empty();
@@ -112,11 +114,16 @@ public abstract class FunctionDefinition
             
             typeVars.put(typeArg, new MutVar(null));
         }
+        Map<String, MutUnitVar> unitVars = new HashMap<>();
+        for (String unitArg : unitArgs)
+        {
+            unitVars.put(unitArg, new MutUnitVar());
+        }
         
         return typeManager -> {
             try
             {
-                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get), typeVars);
+                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get, unitVars::get), typeVars);
             }
             catch (UserException | InternalException e)
             {
@@ -133,7 +140,7 @@ public abstract class FunctionDefinition
     }
 
     // Function type, and map from named typed vars to type expression
-    public Pair<TypeExp, Map<String, TypeExp>> getType(TypeManager typeManager) throws InternalException
+    public Pair<TypeExp, Map<String, MutVar>> getType(TypeManager typeManager) throws InternalException
     {
         return typeMatcher.makeParamAndReturnType(typeManager);
     }
@@ -199,7 +206,7 @@ public abstract class FunctionDefinition
         // We have to make it fresh for each type inference, because the params and return may
         // share a type variable which will get unified during the inference
         // Returns type of function, and type vars by name.
-        public Pair<TypeExp, Map<String, TypeExp>> makeParamAndReturnType(TypeManager typeManager) throws InternalException;
+        public Pair<TypeExp, Map<String, MutVar>> makeParamAndReturnType(TypeManager typeManager) throws InternalException;
     }
 
     // Only for testing:

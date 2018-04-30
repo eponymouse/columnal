@@ -6,7 +6,10 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
+import records.data.unit.SingleUnitVar;
+import records.data.unit.SpecificSingleUnit;
 import records.data.unit.Unit;
+import records.error.InternalException;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.ComparableEither;
@@ -23,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,7 +40,7 @@ public final class UnitExp implements StyledShowable
 {
     // scalar if empty.  Maps single unit to power (can be negative, can't be zero)
     // A long is a type variable.
-    private final TreeMap<ComparableEither<MutUnitVar, SingleUnit>, Integer> units = new TreeMap<>();
+    private final TreeMap<ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> units = new TreeMap<>();
     
     private UnitExp()
     {
@@ -60,7 +64,7 @@ public final class UnitExp implements StyledShowable
 
     private void timesInPlace(UnitExp rhs)
     {
-        for (Entry<@KeyFor("rhs.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
+        for (Entry<@KeyFor("rhs.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
             units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
                 return addButZeroIsNull(l, r);
@@ -84,7 +88,7 @@ public final class UnitExp implements StyledShowable
     public UnitExp reciprocal()
     {
         UnitExp u = new UnitExp();
-        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
+        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> entry : units.entrySet())
         {
             u.units.put(entry.getKey(), - entry.getValue());
         }
@@ -129,9 +133,9 @@ public final class UnitExp implements StyledShowable
         do
         {
             substituted = false;
-            for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+                Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> entry = iterator.next();
                 @Nullable UnitExp pointer = entry.getKey().<@Nullable UnitExp>either(mut -> mut.pointer, s -> null);
                 if (pointer != null)
                 {
@@ -162,7 +166,7 @@ public final class UnitExp implements StyledShowable
         // so no type vars to resolve:
         if (units.isEmpty())
             return true;
-        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.empty())).collect(Collectors.toList());
+        List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> e) -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.empty())).collect(Collectors.toList());
         
         // If no type vars (and not empty overall) then we can't unify to one: fail
         if (typeVars.isEmpty())
@@ -171,7 +175,7 @@ public final class UnitExp implements StyledShowable
         if (typeVars.size() == 1)
         {
             int powerOfTypeVar = typeVars.get(0).getSecond();
-            if (units.entrySet().stream().filter((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> e.getKey().isRight()).allMatch((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e) -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
+            if (units.entrySet().stream().filter((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> e) -> e.getKey().isRight()).allMatch((Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> e) -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
             {
                 // It does divide all remaining fixed units: Do it!
                 UnitExp result = new UnitExp();
@@ -225,9 +229,9 @@ public final class UnitExp implements StyledShowable
         units.forEach((k, v) -> subst.units.put(k, -(v / divisor)));
         lowestAbsPower.getFirst().pointer = subst;
         
-        for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+            Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> entry = iterator.next();
             int mod = IntMath.mod(entry.getValue(), Math.abs(lowestAbsPower.getSecond()));
             if (mod == 0)
             {
@@ -248,7 +252,7 @@ public final class UnitExp implements StyledShowable
     {
         substituteMutVars();
         Unit u = Unit.SCALAR;
-        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<@KeyFor("this.units") ComparableEither<MutUnitVar, SpecificSingleUnit>, Integer> e : units.entrySet())
         {
             @Nullable Unit multiplier = e.getKey().<@Nullable Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
             if (multiplier == null)
@@ -258,12 +262,21 @@ public final class UnitExp implements StyledShowable
         return u;
     }
 
-    public static UnitExp fromConcrete(Unit unit)
+    public static UnitExp fromConcrete(Unit unit, Function<String, @Nullable MutUnitVar> unitVarLookup) throws InternalException
     {
         UnitExp unitExp = new UnitExp();
-        unit.getDetails().forEach((k, v) -> {
-            unitExp.units.put(ComparableEither.right(k), v);
-        });
+        for (Entry<SingleUnit, Integer> e : unit.getDetails().entrySet())
+        {
+            if (e.getKey() instanceof SpecificSingleUnit)
+                unitExp.units.put(ComparableEither.right((SpecificSingleUnit)e.getKey()), e.getValue());
+            else
+            {
+                MutUnitVar unitVar = unitVarLookup.apply(((SingleUnitVar)e.getKey()).getVarName());
+                if (unitVar == null)
+                    throw new InternalException("Type variable lookup for " + e.getKey() + " failed in " + unit);
+                unitExp.units.put(ComparableEither.left(unitVar), 1);
+            }
+        }
         return unitExp;
     }
 
@@ -343,7 +356,7 @@ public final class UnitExp implements StyledShowable
         }
     }
 
-    private static StyledString etoString(ComparableEither<MutUnitVar, SingleUnit> u)
+    private static StyledString etoString(ComparableEither<MutUnitVar, SpecificSingleUnit> u)
     {
         return u.either(mut -> mut.toStyledString(), singleUnit -> StyledString.s(singleUnit.getName()));
     }

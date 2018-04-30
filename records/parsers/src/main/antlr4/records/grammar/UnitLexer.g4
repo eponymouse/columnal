@@ -19,6 +19,8 @@ PREFIX : 'PREFIX';
 SUFFIX : 'SUFFIX';
 ALIAS : 'ALIAS';
 
+UNITVAR : '@unitvar';
+
 IDENT : ~[0-9 \t\r\n^*/@()={}[\]"]+;
 
 COMMENT : '//' ~[\r\n]* NEWLINE -> skip;

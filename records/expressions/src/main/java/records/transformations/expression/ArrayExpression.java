@@ -16,7 +16,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.SquareBracketedExpression;
 import records.types.MutVar;
-import records.types.TypeCons;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;

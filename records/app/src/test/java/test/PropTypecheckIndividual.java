@@ -182,8 +182,8 @@ public class PropTypecheckIndividual
             // Will actually type-check
             Unit aOverB = a.getNumberInfo().getUnit().divideBy(b.getNumberInfo().getUnit());
             Unit bOverA = b.getNumberInfo().getUnit().divideBy(a.getNumberInfo().getUnit());
-            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB, u -> null)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA, u -> null)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
         else
         {

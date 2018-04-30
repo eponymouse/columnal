@@ -105,7 +105,7 @@ public class UnitManager
             }
             equiv = new Pair<>(scale, loadUnit(decl.unit()));
         }
-        return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
+        return new UnitDeclaration(new SpecificSingleUnit(defined, description, prefix, suffix), equiv);
     }
 
     // Like loadUse, but any UserException is treated as an InternalException
@@ -161,11 +161,19 @@ public class UnitManager
         Unit base;
         if (singleOrScaleContext.singleUnit() != null)
         {
-            @Nullable UnitDeclaration lookedUp = knownUnits.get(singleOrScaleContext.singleUnit().getText());
-            if (lookedUp == null)
-                throw new UserException("Unknown unit: \"" + singleOrScaleContext.singleUnit().getText() + "\"");
-            base = lookedUp.getUnit();
-        }else
+            if (singleOrScaleContext.singleUnit().UNITVAR() != null)
+            {
+                base = new Unit(new SingleUnitVar(singleOrScaleContext.singleUnit().IDENT().getText()));
+            }
+            else
+            {
+                @Nullable UnitDeclaration lookedUp = knownUnits.get(singleOrScaleContext.singleUnit().getText());
+                if (lookedUp == null)
+                    throw new UserException("Unknown unit: \"" + singleOrScaleContext.singleUnit().getText() + "\"");
+                base = lookedUp.getUnit();
+            }
+        }
+        else
             throw new UserException("Error parsing unit: \"" + singleOrScaleContext.getText() + "\"");
 
         if (singleOrScaleContext.NUMBER() != null)
@@ -196,7 +204,7 @@ public class UnitManager
             return possUnit.getUnit();
     }
 
-    private Pair<Rational, Unit> canonicalise(SingleUnit original) throws UserException
+    private Pair<Rational, Unit> canonicalise(SpecificSingleUnit original) throws UserException
     {
         UnitDeclaration decl = knownUnits.get(original.getName());
         if (decl == null)
@@ -220,7 +228,8 @@ public class UnitManager
         Map<SingleUnit, Integer> details = original.getSecond().getDetails();
         for (Entry<@KeyFor("details") SingleUnit, Integer> entry : details.entrySet())
         {
-            Pair<Rational, Unit> canonicalised = canonicalise(entry.getKey());
+            Pair<Rational, Unit> canonicalised = entry.getKey() instanceof SpecificSingleUnit ?
+                canonicalise((SpecificSingleUnit)entry.getKey()) : new Pair<>(Rational.ONE, new Unit(entry.getKey()));
             accumScale = accumScale.times(Utility.rationalToPower(canonicalised.getFirst(), entry.getValue()));
             accumUnit = accumUnit.times(canonicalised.getSecond().raisedTo(entry.getValue()));
         }
@@ -235,9 +244,9 @@ public class UnitManager
         return unitDeclaration.getDefined();
     }
 
-    public List<SingleUnit> getAllDeclared()
+    public List<SpecificSingleUnit> getAllDeclared()
     {
-        return knownUnits.values().stream().map(d -> d.getDefined()).collect(Collectors.<@NonNull SingleUnit>toList());
+        return knownUnits.values().stream().map(d -> d.getDefined()).collect(Collectors.<@NonNull SpecificSingleUnit>toList());
     }
 
     public boolean isUnit(String unitName)

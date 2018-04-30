@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.unit.SingleUnit;
+import records.data.unit.SpecificSingleUnit;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -18,7 +19,7 @@ import java.util.List;
 public class GenUnit extends Generator<Unit>
 {
     @MonotonicNonNull
-    private List<SingleUnit> units;
+    private List<SpecificSingleUnit> units;
 
     public GenUnit()
     {

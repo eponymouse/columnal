@@ -12,19 +12,19 @@ import java.util.List;
  */
 public class UnitDeclaration
 {
-    private final SingleUnit definedUnit;
+    private final SpecificSingleUnit definedUnit;
     private final List<String> otherNames = new ArrayList<>();
     private final @Nullable Pair<Rational, Unit> equivalentTo;
     private final Unit cachedSingleUnit;
 
-    public UnitDeclaration(SingleUnit definedUnit, @Nullable Pair<Rational, Unit> equivalentTo)
+    public UnitDeclaration(SpecificSingleUnit definedUnit, @Nullable Pair<Rational, Unit> equivalentTo)
     {
         this.definedUnit = definedUnit;
         this.equivalentTo = equivalentTo;
         cachedSingleUnit = new Unit(definedUnit);
     }
 
-    public SingleUnit getDefined()
+    public SpecificSingleUnit getDefined()
     {
         return definedUnit;
     }

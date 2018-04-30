@@ -31,6 +31,13 @@
         <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>=(<xsl:value-of select="argType"/> -&gt; <xsl:value-of select="returnType"/>)  
         <xsl:text>&#xa;</xsl:text>
     </xsl:template>
+
+    <xsl:template name="processFunctionUnitArgs">
+        <xsl:param name="namespace" select="."/>
+
+        <xsl:value-of select="$namespace"/>\:<xsl:value-of select="replace(@name,' ','\\ ')"/>=<xsl:value-of select="unitArg" separator=";"/>
+        <xsl:text>&#xa;</xsl:text>
+    </xsl:template>
     
     <xsl:template match="/all">
         <xsl:text>DUMMY OUTPUT</xsl:text>
@@ -40,6 +47,16 @@
                 <xsl:variable name="namespace" select="@namespace"/>
                 <xsl:for-each select=".//function">
                     <xsl:call-template name="processFunctionMini">
+                        <xsl:with-param name="namespace" select="$namespace"/>
+                    </xsl:call-template>
+                </xsl:for-each>
+            </xsl:for-each>
+        </xsl:result-document>
+        <xsl:result-document method="text" href="file:///{$myOutputDir}/function_unitargs_en.properties">
+            <xsl:for-each select=".//functionDocumentation">
+                <xsl:variable name="namespace" select="@namespace"/>
+                <xsl:for-each select=".//function">
+                    <xsl:call-template name="processFunctionUnitArgs">
                         <xsl:with-param name="namespace" select="$namespace"/>
                     </xsl:call-template>
                 </xsl:for-each>

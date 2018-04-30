@@ -35,7 +35,7 @@ public class SingleUnitExpression extends UnitExpression
     {
         try
         {
-            return Either.right(UnitExp.fromConcrete(unitManager.loadUse(name)));
+            return Either.right(UnitExp.fromConcrete(unitManager.loadUse(name), u -> null));
         }
         catch (InternalException | UserException e)
         {

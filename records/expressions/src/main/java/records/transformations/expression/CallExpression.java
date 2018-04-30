@@ -21,7 +21,6 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.types.MutVar;
 import records.types.TupleTypeExp;
-import records.types.TypeCons;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;

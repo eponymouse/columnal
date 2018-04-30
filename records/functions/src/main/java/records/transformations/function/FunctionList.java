@@ -13,6 +13,7 @@ import records.transformations.function.list.Count;
 import records.transformations.function.list.GetElement;
 import records.transformations.function.list.JoinLists;
 import records.transformations.function.list.Single;
+import records.transformations.function.lookup.LookupFunctions;
 import utility.Pair;
 import utility.Utility;
 
@@ -58,7 +59,7 @@ public class FunctionList
             new TypeOf(),
             new Xor()
         ).stream(),
-        
+            LookupFunctions.getLookupFunctions().stream(),
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:
                 new ToDate()

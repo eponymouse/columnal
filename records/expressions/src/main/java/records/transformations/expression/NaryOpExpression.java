@@ -7,7 +7,6 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
@@ -23,7 +22,6 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
-import utility.ValueFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;

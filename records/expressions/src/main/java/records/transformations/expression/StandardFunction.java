@@ -6,7 +6,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -16,25 +15,24 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.transformations.function.FunctionDefinition;
+import records.types.MutVar;
 import records.types.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StandardFunction extends NonOperatorExpression
 {
     private final FunctionDefinition functionDefinition;
     // null if type check fails for some reason:
-    private @MonotonicNonNull Pair<TypeExp, Map<String, TypeExp>> type;
+    private @MonotonicNonNull Pair<TypeExp, Map<String, MutVar>> type;
 
     public StandardFunction(FunctionDefinition functionDefinition)
     {
@@ -55,7 +53,7 @@ public class StandardFunction extends NonOperatorExpression
         if (type == null)
             throw new InternalException("Attempting to fetch function despite failing type check");
 
-        @NonNull Pair<TypeExp, Map<String, TypeExp>> typeFinal = type;
+        @NonNull Pair<TypeExp, Map<String, MutVar>> typeFinal = type;
         return functionDefinition.getInstance(s -> {
             TypeExp typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)

@@ -111,9 +111,9 @@ public class Unit
             if (p >= 1)
             {
                 if (p > 1)
-                    top.add(u.getName() + "^" + p);
+                    top.add(u.toString() + "^" + p);
                 else
-                    top.add(u.getName());
+                    top.add(u.toString());
                 pos[0] += 1;
             }
         });
@@ -128,9 +128,9 @@ public class Unit
             units.forEach((u, p) ->
             {
                 if (p < -1 || (p == -1 && showAsNegative))
-                    bottom.add(u.getName() + "^" + (showAsNegative ? p : -p));
+                    bottom.add(u.toString() + "^" + (showAsNegative ? p : -p));
                 else if (p == -1)
-                    bottom.add(u.getName());
+                    bottom.add(u.toString());
             });
             if (allUnits.isEmpty())
                 allUnits = bottom.toString();

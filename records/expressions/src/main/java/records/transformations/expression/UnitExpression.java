@@ -42,7 +42,8 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
             .filter((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> p.getValue() > 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> {
-                SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
+                // TODO support loading type vars
+                SingleUnitExpression single = new SingleUnitExpression(p.getKey().toString());
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
         
@@ -51,7 +52,8 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
             .filter((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> p.getValue() < 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> {
-                SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
+                // TODO support loading type vars
+                SingleUnitExpression single = new SingleUnitExpression(p.getKey().toString());
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
         

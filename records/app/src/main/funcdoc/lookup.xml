@@ -5,8 +5,11 @@
     <functionGroup id="lookup" title="Lookup functions">
         <description>Functions for looking up one item in a list using another</description>
         <function name="lookup">
-            <argType>([a], a, [b])</argType>
-            <returnType>b</returnType>
+            <typeArg>a</typeArg>
+            <typeArg>b</typeArg>
+            <typeConstraint>Equatable a</typeConstraint>
+            <argType>([@typevar a], @typevar a, [@typevar b])</argType>
+            <returnType>@typevar b</returnType>
             <description>
                 <p>Given a list, finds a matching item, and returns the corresponding value from the other list.</p>
                 <p>This is useful for looking up one column via the value of another, e.g. lookup(Column A, value in A, Column B)</p>
@@ -41,28 +44,30 @@
                 <output>"c"</output>
             </example>
             <example>
-                <input>([1, 1, 2, 3], 6, ["a", "b", "c", "d"])</input>
-                <output>error</output>
-            </example>
-        </function>        
-        <function name="lookup single">
-            <argType>([(a, b)], a)</argType>
-            <returnType>b</returnType>
-            <description>
-                <p>Given a list of pairs, finds the single item with a matching left-hand value, and returns the right.</p>
-                <p>This is useful for looking up one column via the value of another, e.g. lookup single(pair lists(Column A, Column B), value)</p>
-                <p>Gives an error if there are zero or multiple matches in the left side.</p>
-            </description>
-            <example>
-                <input>([(1, "a"), (2, "b")], 1)</input>
-                <output>"a"</output>
-            </example>
-            <example>
-                <input>([(1, "a"), (2, "b"), (1, "f")], 1)</input>
+                <input>([1, 1, 2, 3], 1, ["a", "b", "c", "d"])</input>
                 <output>error</output>
             </example>
         </function>
         <function name="lookup all">
+            <typeArg>a</typeArg>
+            <typeArg>b</typeArg>
+            <typeConstraint>Equatable a</typeConstraint>
+            <argType>([@typevar a], @typevar a, [@typevar b])</argType>
+            <returnType>[@typevar b]</returnType>
+            <description>
+                <p>Given two lists, finds all the items with a matching value in left list, and returns the right list values for each.</p>
+                <p>This is useful for looking up one column via the value of another, e.g. lookup all(Column A, value in A, Column B)</p>
+            </description>
+            <example>
+                <input>([1, 2, 1, 3], 1, ["a", "b", "c", "d"])</input>
+                <output>["a", "c"]</output>
+            </example>
+        </function>     
+        <!--
+        <function name="lookup all paired">
+            <typeArg>a</typeArg>
+            <typeArg>b</typeArg>
+            <typeConstraint>Equatable a</typeConstraint>
             <argType>([(a, b)], a)</argType>
             <returnType>[b]</returnType>
             <description>
@@ -74,5 +79,6 @@
                 <output>["a", "f"]</output>
             </example>
         </function>
+        -->
     </functionGroup>
 </functionDocumentation>

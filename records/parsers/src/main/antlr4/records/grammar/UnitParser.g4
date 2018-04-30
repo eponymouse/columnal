@@ -2,7 +2,7 @@ parser grammar UnitParser;
 
 options { tokenVocab = UnitLexer; }
 
-singleUnit : IDENT;
+singleUnit : IDENT | UNITVAR IDENT;
 scale : NUMBER (POWER NUMBER)?;
 single : singleUnit (POWER NUMBER)? | ({_input.LT(1).getText().equals("1")}? NUMBER);
 divideBy : (WS? DIVIDE WS? unit);
