@@ -5,7 +5,8 @@
     <functionGroup id="anyAllNone" title="Any, All, None">
         <description>Functions to check if a property holds for any/all/no list element(s).</description>
         <function name="any">
-            <argType>([t], t -&gt; Boolean)</argType>
+            <typeArg>t</typeArg>
+            <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
             <returnType>Boolean</returnType>
             <description>
                 <p>Returns true if the given function returns true for any item in the list.</p>
@@ -25,7 +26,8 @@
             </example>
         </function>
         <function name="all">
-            <argType>([t], t -&gt; Boolean)</argType>
+            <typeArg>t</typeArg>
+            <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
             <returnType>Boolean</returnType>
             <description>
                 <p>Returns true if the given function returns true for all items in the list.</p>
@@ -45,7 +47,8 @@
             </example>
         </function>
         <function name="none">
-            <argType>([t], t -&gt; Boolean)</argType>
+            <typeArg>t</typeArg>
+            <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
             <returnType>Boolean</returnType>
             <description>
                 <p>Returns true if the given function returns true for no items in the list.</p>
@@ -67,8 +70,9 @@
     </functionGroup>
     
     <function name="combine">
-        <argType>([t], (t, t) -&gt; t)</argType>
-        <returnType>t</returnType>
+        <typeArg>t</typeArg>
+        <argType>([@typevar t], ((@typevar t, @typevar t) -&gt; @typevar t))</argType>
+        <returnType>@typevar t</returnType>
         <description>
             <p>Collapses the list into a single item by combining the elements using the given function.</p>
         </description>

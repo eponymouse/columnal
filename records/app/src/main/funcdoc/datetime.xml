@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="datetime">
+    <function name="date">
+        <argType>(Number{year}, Number{month}, Number{day})</argType>
+        <returnType>Date</returnType>
+        <description>
+            <p>Creates a date from the given year, month and day.</p>
+        </description>
+        <example>
+            <inputDisplay>to text(date(1998{year}, 07{month}, 10{day}))</inputDisplay>
+            <inputParse>@call @function to text(@call @function date(1998{year}, 07{month}, 10{day}))</inputParse>
+            <output>"1998-07-10"</output>
+        </example>
+    </function>
+</functionDocumentation>

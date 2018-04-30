@@ -354,11 +354,20 @@
                             <xincludeAware>true</xincludeAware>
                             <dir>src/main/funcdoc</dir>
                             <includes>_all.xml</includes>
-                            <otherDepends>src/main/funcdoc/boolean.xml</otherDepends>
+                            <otherDepends>boolean.xml</otherDepends>
+                            <otherDepends>comparison.xml</otherDepends>
+                            <otherDepends>conversion.xml</otherDepends>
+                            <otherDepends>core.xml</otherDepends>
+                            <otherDepends>datetime.xml</otherDepends>
+                            <otherDepends>list.xml</otherDepends>
+                            <otherDepends>listprocess.xml</otherDepends>
+                            <otherDepends>lookup.xml</otherDepends>
+                            <otherDepends>number.xml</otherDepends>
+                            <otherDepends>text.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-types-and-mini.xsl</stylesheet>
+                            <outputDir>${project.build.directory}/classes</outputDir>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
-                            <!-- <outputDir>${project.build.directory}/classes</outputDir> -->
                             <parameters>
                                 <parameter>
                                     <name>myOutputDir</name>

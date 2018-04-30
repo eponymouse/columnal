@@ -28,8 +28,8 @@
         <function name="maximum">
             <typeArg>t</typeArg>
             <typeConstraint>Comparable t</typeConstraint>
-            <argType>[t]</argType>
-            <returnType>t</returnType>
+            <argType>[@typevar t]</argType>
+            <returnType>@typevar t</returnType>
             <description>
                 <p>Gets the highest item in the list.</p>
             </description>

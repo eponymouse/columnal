@@ -4,7 +4,7 @@
                        namespace="list">
     <function name="list length">
         <typeArg>t</typeArg>
-        <argType>[t]</argType>
+        <argType>[@typevar t]</argType>
         <returnType>Number</returnType>
         <description>
             <p>Gets the number of elements in the given list.</p>
@@ -25,8 +25,8 @@
     
     <function name="element">
         <typeArg>t</typeArg>
-        <argType>([t], Number)</argType>
-        <returnType>t</returnType>
+        <argType>([@typevar t], Number)</argType>
+        <returnType>@typevar t</returnType>
         <description>
             <p>Gets the list element at the given position (first position is 1).</p>
         </description>
@@ -49,8 +49,9 @@
     </function>
     
     <function name="single">
-        <argType>[t]</argType>
-        <returnType>t</returnType>
+        <typeArg>t</typeArg>
+        <argType>[@typevar t]</argType>
+        <returnType>@typevar t</returnType>
         <description>
             <p>If this list has exactly one element, returns it.  Otherwise gives an error.</p>
             <p>This is useful if you have a table where you store single values.  The column is a list, so you need to use a function, like single, to fetch out the one item in it.</p>
@@ -70,8 +71,9 @@
     </function>
     
     <function name="join lists">
-        <argType>[[t]]</argType>
-        <returnType>[t]</returnType>
+        <typeArg>t</typeArg>
+        <argType>[[@typevar t]]</argType>
+        <returnType>[@typevar t]</returnType>
         <description>
             <p>Takes a list of lists, and joins them all in order into one list.</p>
             <p>Each item in the passed list must be a list.  To include single items, wrap them in square brackets [].</p>

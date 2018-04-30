@@ -3,9 +3,10 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="conversion">
     <function name="from text">
-        <typeConstraint>Readable t</typeConstraint>
+        <typeArg>t</typeArg>
+        <typeConstraint>Readable t</typeConstraint>        
         <argType>Text</argType>
-        <returnType>t</returnType>
+        <returnType>@typevar t</returnType>
         <description>
             <p>Converts a value from text.</p>
             <p>This function works for any readable type (the only non-readable types are function types).  If the intended type cannot be inferred automatically, you may need to wrap this using the asType function.</p>
@@ -38,5 +39,23 @@
             <inputParse>@call @function asType(`[(Boolean, Number{m})]`, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</inputParse>
             <output>[(true, 0{m}), (false, -1.6{m})]</output>
         </example>
+    </function>
+    <function name="to text">
+        <typeArg>t</typeArg>
+        <typeConstraint>Showable t</typeConstraint>
+        <argType>@typevar t</argType>
+        <returnType>Text</returnType>
+        <description>
+            <p>Converts a value to text.</p>
+        </description>
+        <example>
+            <input>true</input>
+            <output>"true"</output>
+        </example>
+        <example>
+            <input>65{m}</input>
+            <output>"65"</output>
+        </example>
+        <!-- TODO add more examples -->
     </function>
 </functionDocumentation>

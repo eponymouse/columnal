@@ -693,9 +693,15 @@ public class DataType implements StyledShowable
             }
 
             @Override
+            public String function(DataType argType, DataType resultType) throws InternalException, UserException
+            {
+                return argType.toDisplay(drillIntoTagged) + " -> " + resultType.toDisplay(drillIntoTagged);
+            }
+
+            @Override
             public String typeVariable(String typeVariableName) throws InternalException, UserException
             {
-                return typeVariableName + "*";
+                return typeVariableName;
             }
         });
     }
@@ -1781,16 +1787,16 @@ public class DataType implements StyledShowable
         private static DateTimeFormatter makeFormatter(DateTimeType type)
         {
             DateTimeFormatterBuilder builder = new DateTimeFormatterBuilder();
-            if (type.hasDay())
-                builder.appendValue(DAY_OF_MONTH, 2).appendLiteral('/');
             if (type.hasYearMonth())
             {
-                builder.appendValue(MONTH_OF_YEAR, 2)
-                    .appendLiteral('/')
-                    .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD);
-                if (type.hasTime())
-                    builder.appendLiteral(' ');
+                builder.appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+                    .appendLiteral('-')
+                    .appendValue(MONTH_OF_YEAR, 2);
             }
+            if (type.hasDay())
+                builder.appendLiteral('-').appendValue(DAY_OF_MONTH, 2);
+            if ((type.hasYearMonth() || type.hasDay()) && type.hasTime())
+                builder.appendLiteral(' ');
             if (type.hasTime())
                 builder.appendValue(HOUR_OF_DAY, 2)
                     .appendLiteral(':')

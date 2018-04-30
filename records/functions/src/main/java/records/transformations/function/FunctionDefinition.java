@@ -118,7 +118,7 @@ public abstract class FunctionDefinition
             {
                 return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get), typeVars);
             }
-            catch (UserException e)
+            catch (UserException | InternalException e)
             {
                 // It's us that wrote the type, so user exceptions become internal exceptions:
                 throw new InternalException("Error in built-in function " + functionName, e);

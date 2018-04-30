@@ -326,7 +326,7 @@ public abstract class TypeExp implements StyledShowable
             {
                 @Nullable TypeExp lookedUp = typeVarLookup.apply(typeVariableName);
                 if (lookedUp == null)
-                    throw new InternalException("Cannot find type variable: " + typeVariableName + " in " + dataType);
+                    throw new InternalException("Cannot find type variable: " + typeVariableName);
                 return lookedUp;
             }
         });

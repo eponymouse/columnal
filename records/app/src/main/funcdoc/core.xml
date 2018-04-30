@@ -3,8 +3,9 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="core">
     <function name="asType">
-        <argType>(Type t, t)</argType>
-        <returnType>t</returnType>
+        <typeArg>t</typeArg>
+        <argType>(@tagged Type-@typevar t, @typevar t)</argType>
+        <returnType>@typevar t</returnType>
         <description>
             <p>Clarifies the type of a value.</p>
             <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
@@ -20,8 +21,9 @@
         </example>
     </function>
     <function name="typeOf">
-        <argType>t</argType>
-        <returnType>Type t</returnType>
+        <typeArg>t</typeArg>
+        <argType>@typevar t</argType>
+        <returnType>@tagged Type-@typevar t</returnType>
         <description>
             <p>Gets the type of the given value.</p>
         </description>

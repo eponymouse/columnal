@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -71,6 +72,8 @@ public class TypeManager
         ));
         maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
+        // TODO make this into a GADT:
+        knownTypes.put(new TypeId("Type"), new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of("t"), ImmutableList.of(new TagType<>("Type", null))));
     }
     
     public TaggedValue maybeMissing()

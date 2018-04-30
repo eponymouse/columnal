@@ -54,16 +54,15 @@ public class FunctionList
             //new StringWithin(),
             //new StringWithinIndex(),
             new Sum(),
-            // TODO ditto
-            //new ToString(),
+            new ToString(),
             new TypeOf(),
             new Xor()
         ).stream(),
         
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:
+                new ToDate()
                 /*
-                new ToDate(),
                 new ToDateTime(),
                 new ToDateTimeZone(),
                 new ToTime(),
