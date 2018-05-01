@@ -22,4 +22,24 @@
             <output>0</output>
         </example>
     </function>
+    <function name="replace all">
+        <argType>(Text, Text, Text)</argType>
+        <returnType>Text</returnType>
+        <description>
+            <p>Replaces all occurrences of the first text with the second text, within the third text</p>
+            <p>If the first text is empty, no replacement is performed.  If any occurrences overlap, the earlier part is replaced first.</p>
+        </description>
+        <example>
+            <input>("at", "og", "The cat in the hat")</input>
+            <output>"The cog in the hog"</output>
+        </example>
+        <example>
+            <input>("oo", "a", "Mooo!")</input>
+            <output>"Mao!"</output>
+        </example>
+        <example>
+            <input>("", "x", "Orange")</input>
+            <output>"Orange"</output>
+        </example>
+    </function>
 </functionDocumentation>

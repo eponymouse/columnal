@@ -49,7 +49,7 @@ public class FunctionList
             //new StringLeft(),
             new StringLength(),
             //new StringMid(),
-            //new StringReplaceAll(),
+            new StringReplaceAll(),
             //new StringRight(),
             //new StringTrim(),
             //new StringWithin(),
