@@ -77,7 +77,7 @@ public class TestFromDoc
                     String[] columnTypes = StringUtils.removeStart(lines.get(++i), "##").trim().split("//");
                     // Stored as column major:
                     List<List<String>> columnValues = Utility.replicateM(columnNames.length, ArrayList::new);
-                    int length = 0;
+                    int length = -1;
                     i += 1;
                     while (i < lines.size()) // while (true), really -- file shouldn't end that early
                     {
@@ -105,6 +105,11 @@ public class TestFromDoc
                             return Utility.parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
                                 DataType.loadSingleItem(dataType, p, false));
                         });
+                        if (length == -1)
+                            length = loadedValues.size();
+                        else if (length != loadedValues.size())
+                            throw new InternalException("Column length mismatch in table data for " + tableName);
+                            
                         columns.add(dataType.makeImmediateColumn(new ColumnId(columnNames[c]),
                             loadedValues,
                             loadedValues.get(0)    

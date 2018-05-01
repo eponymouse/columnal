@@ -3,6 +3,7 @@ package records.transformations.function.lookup;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
@@ -43,7 +44,7 @@ public class LookupFunctions
                             if (listA.size() != listB.size())
                                 throw new UserException("Lists passed to lookup function must be the same size, but first list was size: " + listA.size() + " and second list was size: " + listB.size());
                             
-                            int index = getSingleItem(lookupIndexes(listA, args[1]));
+                            int index = getSingleItem(lookupIndexes(listA, args[1]), paramTypes.apply("a"), args[1]);
                             return listB.get(index);
                         }
                     };
@@ -103,15 +104,15 @@ public class LookupFunctions
     }
 
     @OnThread(Tag.Simulation)
-    private static int getSingleItem(SimulationSupplier<OptionalInt> nextIndex) throws InternalException, UserException
+    private static int getSingleItem(SimulationSupplier<OptionalInt> nextIndex, DataType targetType, @Value Object target) throws InternalException, UserException
     {
         // Check that there's one:
         OptionalInt first = nextIndex.get();
         if (!first.isPresent())
-            throw new UserException("No matching item found in lookup function");
+            throw new UserException("No matching item found in lookup function for " + DataTypeUtility.valueToString(targetType, target, null));
         OptionalInt second = nextIndex.get();
         if (second.isPresent())
-            throw new UserException("More than one matching item found in lookup function");
+            throw new UserException("More than one matching item found in lookup function for " + DataTypeUtility.valueToString(targetType, target, null));
         return first.getAsInt();
     }
 

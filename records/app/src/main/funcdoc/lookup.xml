@@ -22,9 +22,9 @@
                         <column name="Score" type="Number"/>
                     </columns>
                     <data>
-                        <row><d>Janet</d><d>78</d></row>
-                        <row><d>Asim</d><d>36</d></row>
-                        <row><d>Qing</d><d>45</d></row>
+                        <row><d>"Janet"</d><d>78</d></row>
+                        <row><d>"Asim"</d><d>36</d></row>
+                        <row><d>"Qing"</d><d>45</d></row>
                     </data>
                 </table>
                 <example>
