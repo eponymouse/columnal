@@ -15,6 +15,7 @@ import records.transformations.function.list.JoinLists;
 import records.transformations.function.list.Single;
 import records.transformations.function.lookup.LookupFunctions;
 import records.transformations.function.text.StringJoin;
+import records.transformations.function.text.StringJoinWith;
 import utility.Pair;
 import utility.Utility;
 
@@ -47,13 +48,14 @@ public class FunctionList
             new Round(),
             new Single(),
             new StringJoin(),
+            new StringJoinWith(),
             // TODO document and put back all these string functions:
             //new StringLeft(),
             new StringLength(),
             //new StringMid(),
             new StringReplaceAll(),
             //new StringRight(),
-            //new StringTrim(),
+            new StringTrim(),
             //new StringWithin(),
             //new StringWithinIndex(),
             new Sum(),

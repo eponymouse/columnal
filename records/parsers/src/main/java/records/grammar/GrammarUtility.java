@@ -36,6 +36,9 @@ public class GrammarUtility
                     case 'a':
                         c = '@';
                         break;
+                    case 't':
+                        c = '\t';
+                        break;
                     default:
                         // Invalid escape, probably came from user edit.  Best bet
                         // is just to preserve it:

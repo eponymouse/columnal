@@ -74,4 +74,66 @@
             <output>""</output>
         </example>
     </function>
+
+    <function name="join text with">
+        <argType>([Text], Text)</argType>
+        <returnType>Text</returnType>
+        <description>
+            <p>Joins a list of text values together as one text item, inserting a separator between each.</p>
+        </description>
+        <equivalence>
+            <forany name="x">[Text]</forany>
+            <lhs>@call @function join text with(x, "")</lhs>
+            <rhs>@call @function join text(x)</rhs>
+        </equivalence>
+        <equivalence>
+            <forany name="x">[Text]</forany>
+            <lhs>@call @function join text with(x, sep)</lhs>
+            <rhs>@call @function combine(x, (? ; sep ; ?))</rhs>
+        </equivalence>
+        <example>
+            <input>(["a", "b", "c"], "+")</input>
+            <output>"a+b+c"</output>
+        </example>
+        <example>
+            <input>(["Blanks", "", "Count"], ";")</input>
+            <output>"Blanks;;Count"</output>
+        </example>
+        <example>
+            <input>(["Hello", " ", "Moon"], "-")</input>
+            <output>"Hello- -Moon"</output>
+        </example>
+        <example>
+            <input>(["Hi"], ",")</input>
+            <output>"Hi"</output>
+        </example>
+        <example>
+            <input>([], ",")</input>
+            <output>""</output>
+        </example>
+    </function>
+    <function name="trim">
+        <argType>Text</argType>
+        <returnType>Text</returnType>
+        <description>
+            <p>Removes white space from beginning and end of the text.</p>
+        </description>
+        <equivalence>
+            <forany name="x">Text</forany>
+            <lhs>trim(trim(x))</lhs>
+            <rhs>x</rhs>
+        </equivalence>
+        <example>
+            <input>"No spaces  either side."</input>
+            <output>"No spaces  either side."</output>
+        </example>
+        <example>
+            <input>"  Several spaces    "</input>
+            <output>"Several spaces"</output>
+        </example>
+        <example>
+            <input>"^t Tabs and newlines also removed.^n"</input>
+            <output>"Tabs and newlines also removed."</output>
+        </example>
+    </function>
 </functionDocumentation>
