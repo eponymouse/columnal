@@ -26,7 +26,7 @@ GREATER_THAN: '>=' | '>';
 MATCHES: '~';
 BACKSLASH: '\\';
 COLUMN : '@column';
-WHOLECOLUMN: '@wholecolumn';
+WHOLECOLUMN: '@entirecolumn';
 MATCH : '@match';
 CASE : '@case';
 COLON: ':';

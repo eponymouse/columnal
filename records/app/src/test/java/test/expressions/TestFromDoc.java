@@ -1,15 +1,23 @@
 package test.expressions;
 
+import annotation.qual.Value;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
+import records.data.Column;
+import records.data.ColumnId;
+import records.data.EditableColumn;
+import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DataLexer;
+import records.grammar.DataParser;
+import records.grammar.FormatParser;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -21,12 +29,17 @@ import test.DummyManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.SimulationFunction;
+import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -41,19 +54,66 @@ public class TestFromDoc
     {        
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
         {
+            // Tables are scoped by file:
+            Map<TableId, RecordSet> tables = new HashMap<>();
+            
             List<String> lines = FileUtils.readLines(file, StandardCharsets.UTF_8);
-            for (String line : lines)
+            for (int i = 0; i < lines.size(); i++)
             {
+                String line = lines.get(i);
                 if (line.trim().isEmpty())
                     continue;
-                
+
                 boolean errorLine = false;
                 if (line.startsWith("!!!"))
                 {
                     errorLine = true;
                     line = StringUtils.removeStart(line, "!!!");
                 }
-                
+                else if (line.startsWith("## "))
+                {
+                    String tableName = StringUtils.removeStart(lines.get(i), "##").trim();
+                    String[] columnNames = StringUtils.removeStart(lines.get(++i), "##").trim().split("//");
+                    String[] columnTypes = StringUtils.removeStart(lines.get(++i), "##").trim().split("//");
+                    // Stored as column major:
+                    List<List<String>> columnValues = Utility.replicateM(columnNames.length, ArrayList::new);
+                    int length = 0;
+                    i += 1;
+                    while (i < lines.size()) // while (true), really -- file shouldn't end that early
+                    {
+                        line = lines.get(i);
+                        if (line.startsWith("#### "))
+                        {
+                            String[] values = StringUtils.removeStart(line, "####").trim().split("//");
+                            for (int j = 0; j < values.length; j++)
+                            {
+                                columnValues.get(j).add(values[j]); 
+                            }
+                            i += 1;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+                    for (int c = 0; c < columnNames.length; c++)
+                    {
+                        DataType dataType = DummyManager.INSTANCE.getTypeManager().loadTypeUse(columnTypes[c]);
+                        List<@Value Object> loadedValues = Utility.mapListEx(columnValues.get(c), unparsed -> {
+                            return Utility.parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
+                                DataType.loadSingleItem(dataType, p, false));
+                        });
+                        columns.add(dataType.makeImmediateColumn(new ColumnId(columnNames[c]),
+                            loadedValues,
+                            loadedValues.get(0)    
+                        ));
+                    }
+                    
+                    tables.put(new TableId(tableName), new KnownLengthRecordSet(columns, length));
+                }
+
                 Expression expression = Expression.parse(null, line, DummyManager.INSTANCE.getTypeManager());
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
                 TypeExp typeExp = expression.check(new TableLookup()
@@ -61,7 +121,7 @@ public class TestFromDoc
                     @Override
                     public @Nullable RecordSet getTable(@Nullable TableId tableId)
                     {
-                        return null;
+                        return tables.get(tableId);
                     }
                 }, new TypeState(DummyManager.INSTANCE.getUnitManager(), DummyManager.INSTANCE.getTypeManager()), errors);
                 assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));

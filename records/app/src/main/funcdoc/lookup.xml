@@ -17,25 +17,24 @@
             </description>
             <exampleGroup>
                 <table name="Scores">
-                    <column name="Person" type="Text">
-                        Janet
-                        Asim
-                        Qing
-                    </column>
-                    <column name="Score" type="Number">
-                        78
-                        36
-                        45
-                    </column>
+                    <columns>
+                        <column name="Person" type="Text"/>
+                        <column name="Score" type="Number"/>
+                    </columns>
+                    <data>
+                        <row><d>Janet</d><d>78</d></row>
+                        <row><d>Asim</d><d>36</d></row>
+                        <row><d>Qing</d><d>45</d></row>
+                    </data>
                 </table>
                 <example>
                     <inputDisplay>lookup(Person, "Qing", Score)</inputDisplay>
-                    <inputParse>@call @function lookup(@entirecolumn Scores\Person, "Qing", @entirecolumn Scores\Score)</inputParse>
+                    <inputParse>@call @function lookup(@entirecolumn Scores:Person, "Qing", @entirecolumn Scores:Score)</inputParse>
                     <output>45</output>
                 </example>
                 <example>
                     <inputDisplay>lookup(Person, "Hannah", Score)</inputDisplay>
-                    <inputParse>@call @function lookup(@entirecolumn Scores\Person, "Hannah", @entirecolumn Scores\Score)</inputParse>
+                    <inputParse>@call @function lookup(@entirecolumn Scores:Person, "Hannah", @entirecolumn Scores:Score)</inputParse>
                     <output>error</output>
                 </example>
             </exampleGroup>

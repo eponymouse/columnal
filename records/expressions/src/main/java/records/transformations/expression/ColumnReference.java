@@ -69,7 +69,7 @@ public class ColumnReference extends NonOperatorExpression
     {
         @Nullable RecordSet recordSet = dataLookup.getTable(tableName);
         if (recordSet == null)
-            throw new UserException("Could not find source table" + (tableName == null ? "" : tableName.getRaw()));
+            throw new UserException("Could not find source table " + (tableName == null ? "" : tableName.getRaw()));
         column = recordSet.getColumn(columnName);
         switch (referenceType)
         {

@@ -15,7 +15,7 @@ public class KnownLengthRecordSet extends RecordSet
 {
     private final int length;
 
-    public KnownLengthRecordSet(List<SimulationFunction<RecordSet, Column>> columns, int length) throws InternalException, UserException
+    public <C extends Column> KnownLengthRecordSet(List<SimulationFunction<RecordSet, C>> columns, int length) throws InternalException, UserException
     {
         super(columns);
         this.length = length;

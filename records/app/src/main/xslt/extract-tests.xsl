@@ -10,10 +10,8 @@
             <xsl:non-matching-substring>(<xsl:value-of select="."/>)</xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:template>
-    <xsl:template name="processFunction">
-        <xsl:param name="function" select="."/>
-        <xsl:variable name="functionName" select="@name"/>
-        <#error TODO process exampleGroup as well
+    <xsl:template name="processExamples">
+        <xsl:param name="functionName" select="."/>
         <xsl:for-each select="example">
             <xsl:if test="output='error'">!!! </xsl:if>
             <xsl:choose>
@@ -21,15 +19,37 @@
                 <xsl:otherwise> @call @function "<xsl:value-of select="$functionName"/>"<xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:otherwise>
             </xsl:choose>
             <xsl:if test="not(output='error')"> = <xsl:choose>
-                    <xsl:when test="outputParse">
-                        <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="outputParse"/></xsl:call-template>
-                    </xsl:when>
-                    <xsl:otherwise>
-    <xsl:value-of select="output"/>
-                    </xsl:otherwise>
-                </xsl:choose>
+                <xsl:when test="outputParse">
+                    <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="outputParse"/></xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="output"/>
+                </xsl:otherwise>
+            </xsl:choose>
             </xsl:if>
             <xsl:text>&#xa;</xsl:text>
+        </xsl:for-each>
+    </xsl:template>
+    
+    <xsl:template name="processFunction">
+        <xsl:param name="function" select="."/>
+        <xsl:variable name="functionName" select="@name"/>
+        <xsl:call-template name="processExamples">
+            <xsl:with-param name="functionName" select="$functionName"/>
+        </xsl:call-template>
+        <xsl:for-each select="exampleGroup">
+            <xsl:for-each select="table">
+## <xsl:value-of select="@name"/>
+## <xsl:value-of select="columns/column/@name" separator="//"/>
+## <xsl:value-of select="columns/column/@type" separator="//"/>
+                <xsl:for-each select="data/row">
+#### <xsl:value-of select="d" separator="//"/>
+                </xsl:for-each>
+                <xsl:text>&#xa;</xsl:text>
+            </xsl:for-each>
+            <xsl:call-template name="processExamples">
+                <xsl:with-param name="functionName" select="$functionName"/>
+            </xsl:call-template>
         </xsl:for-each>
     </xsl:template>
     <xsl:template match="/functionDocumentation">
