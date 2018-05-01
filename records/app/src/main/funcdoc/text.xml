@@ -22,6 +22,7 @@
             <output>0</output>
         </example>
     </function>
+    
     <function name="replace all">
         <argType>(Text, Text, Text)</argType>
         <returnType>Text</returnType>
@@ -40,6 +41,37 @@
         <example>
             <input>("", "x", "Orange")</input>
             <output>"Orange"</output>
+        </example>
+    </function>
+    
+    <function name="join text">
+        <argType>[Text]</argType>
+        <returnType>Text</returnType>
+        <description>
+            <p>Joins a list of text values together as one text item.</p>
+            <p>If you want to add a separator between each text item, use <link function="join text with"/> instead.</p>
+        </description>
+        <equivalence>
+            <forany name="x">[Text]</forany>
+            <lhs>@call @function join text(x)</lhs>
+            <rhs>@call @function join text with(x, "")</rhs>
+        </equivalence>
+        <equivalence>
+            <forany name="x">[Text]</forany>
+            <lhs>@call @function join text(x)</lhs>
+            <rhs>@call @function combine(x, (? ; ?))</rhs> 
+        </equivalence>
+        <example>
+            <input>["a", "b", "c"]</input>
+            <output>"abc"</output>
+        </example>
+        <example>
+            <input>["Hello", " ", "Moon"]</input>
+            <output>"Hello Moon"</output>
+        </example>
+        <example>
+            <input>[]</input>
+            <output>""</output>
         </example>
     </function>
 </functionDocumentation>

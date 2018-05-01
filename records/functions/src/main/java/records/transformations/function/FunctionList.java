@@ -14,6 +14,7 @@ import records.transformations.function.list.GetElement;
 import records.transformations.function.list.JoinLists;
 import records.transformations.function.list.Single;
 import records.transformations.function.lookup.LookupFunctions;
+import records.transformations.function.text.StringJoin;
 import utility.Pair;
 import utility.Utility;
 
@@ -45,6 +46,7 @@ public class FunctionList
             new Not(),
             new Round(),
             new Single(),
+            new StringJoin(),
             // TODO document and put back all these string functions:
             //new StringLeft(),
             new StringLength(),
