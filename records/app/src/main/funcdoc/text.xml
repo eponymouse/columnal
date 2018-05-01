@@ -88,6 +88,7 @@
         </equivalence>
         <equivalence>
             <forany name="x">[Text]</forany>
+            <forany name="sep">Text</forany>
             <lhs>@call @function join text with(x, sep)</lhs>
             <rhs>@call @function combine(x, (? ; sep ; ?))</rhs>
         </equivalence>
@@ -120,8 +121,8 @@
         </description>
         <equivalence>
             <forany name="x">Text</forany>
-            <lhs>trim(trim(x))</lhs>
-            <rhs>x</rhs>
+            <lhs>@call @function trim(@call @function trim(x))</lhs>
+            <rhs>@call @function trim(x)</rhs>
         </equivalence>
         <example>
             <input>"No spaces  either side."</input>

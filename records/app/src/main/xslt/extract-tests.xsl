@@ -51,6 +51,14 @@
                 <xsl:with-param name="functionName" select="$functionName"/>
             </xsl:call-template>
         </xsl:for-each>
+        <xsl:for-each select="equivalence">
+            <xsl:for-each select="forany">
+== <xsl:value-of select="@name"/>//<xsl:value-of select="."/>                
+            </xsl:for-each>
+==== <xsl:value-of select="lhs"/>
+==== <xsl:value-of select="rhs"/>
+            <xsl:text>&#xa;</xsl:text>
+        </xsl:for-each>
     </xsl:template>
     <xsl:template match="/functionDocumentation">
         <xsl:variable name="namespace" select="@namespace"/>

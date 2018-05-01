@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.base.CharMatcher;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
@@ -29,8 +30,8 @@ public class StringTrim extends FunctionDefinition
         public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             String src = Utility.cast(param, String.class);
-            // From https://stackoverflow.com/a/28295733
-            return DataTypeUtility.value(src.replaceAll("(^(\\h|[\r\n])*)|((\\h|[\n\r])*$)",""));
+            String trimmed = CharMatcher.breakingWhitespace().trimFrom(src);
+            return DataTypeUtility.value(trimmed);
         }
     }
 }

@@ -56,7 +56,7 @@ public class TypeState
         this.unitManager = unitManager;
     }
 
-    public @Nullable TypeState add(String varName, MutVar type, Consumer<StyledString> error)
+    public @Nullable TypeState add(String varName, TypeExp type, Consumer<StyledString> error)
     {
         if (variables.containsKey(varName))
         {

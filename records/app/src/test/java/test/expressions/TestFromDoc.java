@@ -1,11 +1,16 @@
 package test.expressions;
 
 import annotation.qual.Value;
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableColumn;
@@ -13,6 +18,7 @@ import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;
@@ -26,9 +32,12 @@ import records.transformations.expression.TypeState;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
 import test.DummyManager;
+import test.gen.GenValueSpecifiedType;
+import test.gen.GenValueSpecifiedType.ValueGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 
@@ -40,17 +49,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(JUnitQuickcheck.class)
 public class TestFromDoc
 {
-    @Test
+    @Property(trials=100)
     @OnThread(Tag.Simulation)
-    public void testFromDoc() throws IOException, InternalException, UserException
+    public void testFromDoc(@From(GenValueSpecifiedType.class) ValueGenerator valueGen) throws IOException, InternalException, UserException
     {        
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
         {
@@ -64,11 +75,35 @@ public class TestFromDoc
                 if (line.trim().isEmpty())
                     continue;
 
+                Map<String, DataType> variables = new HashMap<>();
                 boolean errorLine = false;
+                
                 if (line.startsWith("!!!"))
                 {
                     errorLine = true;
                     line = StringUtils.removeStart(line, "!!!");
+                }
+                else if (line.startsWith("== "))
+                {
+                    // Hoover up for the variables:
+                    while (i < lines.size())
+                    {
+                        line = lines.get(i);
+                        if (line.startsWith("== "))
+                        {
+                            String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
+                            variables.put(nameType[0], DummyManager.INSTANCE.getTypeManager().loadTypeUse(nameType[1]));
+                            i += 1;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    String lhs = StringUtils.removeStart(lines.get(i++), "==== ");
+                    String rhs = StringUtils.removeStart(lines.get(i), "==== ");
+
+                    line = "(" + lhs + ")=(" + rhs + ")";
                 }
                 else if (line.startsWith("## "))
                 {
@@ -121,6 +156,19 @@ public class TestFromDoc
 
                 Expression expression = Expression.parse(null, line, DummyManager.INSTANCE.getTypeManager());
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
+                TypeState typeState = new TypeState(DummyManager.INSTANCE.getUnitManager(), DummyManager.INSTANCE.getTypeManager());
+                EvaluateState evaluateState = new EvaluateState(DummyManager.INSTANCE.getTypeManager());
+                List<Pair<String, String>> varValues = new ArrayList<>();
+                for (Entry<String, DataType> e : variables.entrySet())
+                {
+                    typeState = typeState.add(e.getKey(), TypeExp.fromDataType(null, e.getValue(), s -> null, u -> null), s -> {throw new RuntimeException(e.toString());});
+                    assertNotNull(typeState);
+                    if (typeState == null) // Won't happen
+                        return;
+                    @Value Object value = valueGen.makeValue(e.getValue());
+                    evaluateState = evaluateState.add(e.getKey(), value);
+                    varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(e.getValue(), value, null)));
+                }
                 TypeExp typeExp = expression.check(new TableLookup()
                 {
                     @Override
@@ -128,7 +176,7 @@ public class TestFromDoc
                     {
                         return tables.get(tableId);
                     }
-                }, new TypeState(DummyManager.INSTANCE.getUnitManager(), DummyManager.INSTANCE.getTypeManager()), errors);
+                }, typeState, errors);
                 assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
                 assertNotNull(line, typeExp);
                 if (typeExp == null) continue; // Won't happen
@@ -141,7 +189,7 @@ public class TestFromDoc
                     // Must be user exception
                     try
                     {
-                        expression.getBoolean(0, new EvaluateState(DummyManager.INSTANCE.getTypeManager()), null);
+                        expression.getBoolean(0, evaluateState, null);
                         Assert.fail("Expected error but got none for\n" + line);
                     }
                     catch (UserException e)
@@ -151,8 +199,8 @@ public class TestFromDoc
                 }
                 else
                 {
-                    boolean result = expression.getBoolean(0, new EvaluateState(DummyManager.INSTANCE.getTypeManager()), null);
-                    assertTrue(line, result);
+                    boolean result = expression.getBoolean(0, evaluateState, null);
+                    assertTrue(line + Utility.listToString(varValues), result);
                 }
             }
         }
