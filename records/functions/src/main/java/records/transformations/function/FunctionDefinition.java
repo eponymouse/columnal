@@ -87,7 +87,7 @@ public abstract class FunctionDefinition
     {
         // We call ResourceBundle.getString() here, but it's covered by @FuncDocKey rather than @LocalizableKey,
         // especially since the keys occur duplicated in each file.
-        @SuppressWarnings("i18n")
+        @SuppressWarnings({"i18n", "propkey"})
         @LocalizableKey String key = funcDocKey;
         try
         {
