@@ -63,7 +63,7 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         return typeClasses.checkIfSatisfiedBy(StyledString.s("Number"), NATURAL_TYPE_CLASSES);
     }

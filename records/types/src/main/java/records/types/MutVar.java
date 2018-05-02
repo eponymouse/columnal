@@ -102,7 +102,7 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         return typeClassesOrPointer.<@Nullable StyledString>either(t -> {
             typeClassesOrPointer = Either.left(TypeClassRequirements.union(t, typeClasses));

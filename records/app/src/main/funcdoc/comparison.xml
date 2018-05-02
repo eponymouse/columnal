@@ -12,6 +12,16 @@
             <description>
                 <p>Gets the lowest item in the list.</p>
             </description>
+            <equivalence display="false">
+                <foranyclass name="x">Comparable</foranyclass>
+                <lhs>@call @function all(x, (@call @function minimum(x) &lt;= ?))</lhs>
+                <rhs>true</rhs>
+            </equivalence>
+            <equivalence display="false">
+                <foranyclass name="x">Comparable</foranyclass>
+                <lhs>@call @function in list(@call @function minimum(x), x)</lhs>
+                <rhs>true</rhs>
+            </equivalence>
             <example>
                 <input>[54, 7, 82]</input>
                 <output>7</output>
@@ -33,6 +43,21 @@
             <description>
                 <p>Gets the highest item in the list.</p>
             </description>
+            <equivalence display="false">
+                <foranyclass name="x">Comparable</foranyclass>
+                <lhs>@call @function all(x, (@call @function maximum(x) &gt;= ?))</lhs>
+                <rhs>true</rhs>
+            </equivalence>
+            <equivalence display="false">
+                <foranyclass name="x">Comparable</foranyclass>
+                <lhs>@call @function minimum(x) &lt; @call @function maximum(x)</lhs>
+                <rhs>true</rhs>
+            </equivalence>
+            <equivalence display="false">
+                <foranyclass name="x">Comparable</foranyclass>
+                <lhs>@call @function in list(@call @function maximum(x), x)</lhs>
+                <rhs>true</rhs>
+            </equivalence>
             <example>
                 <input>[54, 7, 82]</input>
                 <output>82</output>

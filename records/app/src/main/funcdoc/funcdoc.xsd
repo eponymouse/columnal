@@ -40,6 +40,7 @@
                             </xs:element>
                         </xs:sequence>
                         <xs:attribute name="name" use="required" type="xs:string"/>
+                        <xs:attribute name="display" use="optional" default="true" type="xs:boolean"/>
                     </xs:complexType>
                 </xs:element>
                 
@@ -104,6 +105,17 @@
                 <xs:element name="equivalence" minOccurs="0" maxOccurs="unbounded">
                     <xs:complexType>
                         <xs:sequence>
+                            <!-- Any value of any type that satisfies a specific class -->
+                            <xs:element name="foranyclass" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute name="name" type="xs:string"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                            <!-- Any value of specific type -->
                             <xs:element name="forany" minOccurs="0" maxOccurs="unbounded">
                                 <xs:complexType>
                                     <xs:simpleContent>
@@ -116,6 +128,7 @@
                             <xs:element name="lhs" minOccurs="1" maxOccurs="1" type="xs:string"/>
                             <xs:element name="rhs" minOccurs="1" maxOccurs="1" type="xs:string"/>
                         </xs:sequence>
+                        <xs:attribute name="display" use="optional" default="true" type="xs:boolean"/>
                     </xs:complexType>
                 </xs:element>
                 <xs:choice minOccurs="1" maxOccurs="unbounded">

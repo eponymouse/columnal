@@ -361,6 +361,6 @@ public abstract class TypeExp implements StyledShowable
     /**
      * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
      */
-    protected abstract @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses);
+    public abstract @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses);
 
 }

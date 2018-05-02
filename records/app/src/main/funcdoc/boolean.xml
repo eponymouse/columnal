@@ -8,6 +8,11 @@
         <description>
             <p>Returns the opposite Boolean (given true, returns false; given false, returns true)</p>
         </description>
+        <equivalence display="false">
+            <forany name="x">Boolean</forany>
+            <lhs>@call @function not(@call @function not(x))</lhs>
+            <rhs>x</rhs>
+        </equivalence>
         <example>
             <input>true</input>
             <output>false</output>
@@ -23,6 +28,11 @@
         <description>
             <p>Returns the exclusive-or of the two items: returns true if exactly one of the items is true, but false if both are true.</p>
         </description>
+        <equivalence display="false">
+            <forany name="x">Boolean</forany>
+            <lhs>@call @function xor(x, true)</lhs>
+            <rhs>@call @function not(x)</rhs>
+        </equivalence>
         <example>
             <input>(true, true)</input>
             <output>false</output>

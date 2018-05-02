@@ -29,9 +29,12 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
+import records.types.TypeClassRequirements;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
 import test.DummyManager;
+import test.gen.GenTypeAndValueGen;
+import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.GenValueSpecifiedType;
 import test.gen.GenValueSpecifiedType.ValueGenerator;
 import threadchecker.OnThread;
@@ -54,6 +57,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
@@ -61,7 +65,7 @@ public class TestFromDoc
 {
     @Property(trials=100)
     @OnThread(Tag.Simulation)
-    public void testFromDoc(@From(GenValueSpecifiedType.class) ValueGenerator valueGen) throws IOException, InternalException, UserException
+    public void testFromDoc(@From(GenValueSpecifiedType.class) ValueGenerator valueGen, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
     {        
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
         {
@@ -77,13 +81,14 @@ public class TestFromDoc
 
                 Map<String, DataType> variables = new HashMap<>();
                 boolean errorLine = false;
+                boolean typeError = false;
                 
                 if (line.startsWith("!!!"))
                 {
                     errorLine = true;
                     line = StringUtils.removeStart(line, "!!!");
                 }
-                else if (line.startsWith("== "))
+                else if (line.startsWith("== ") || line.startsWith("==* "))
                 {
                     // Hoover up for the variables:
                     while (i < lines.size())
@@ -93,6 +98,13 @@ public class TestFromDoc
                         {
                             String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
                             variables.put(nameType[0], DummyManager.INSTANCE.getTypeManager().loadTypeUse(nameType[1]));
+                            i += 1;
+                        }
+                        else if (line.startsWith("==* "))
+                        {
+                            String nameType[] = StringUtils.removeStart(line, "==* ").trim().split("//");
+                            typeError = TypeExp.fromConcrete(null, typeAndValueGen.getType()).requireTypeClasses(TypeClassRequirements.require(nameType[1], "")) != null;
+                            variables.put(nameType[0], typeAndValueGen.getType());
                             i += 1;
                         }
                         else
@@ -177,9 +189,17 @@ public class TestFromDoc
                         return tables.get(tableId);
                     }
                 }, typeState, errors);
-                assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
-                assertNotNull(line, typeExp);
-                if (typeExp == null) continue; // Won't happen
+                if (!typeError)
+                {
+                    assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
+                    assertNotNull(line, typeExp);
+                    if (typeExp == null) continue; // Won't happen
+                }
+                else
+                {
+                    assertNull(line, typeExp);
+                    continue;
+                }
                 Either<TypeConcretisationError, DataType> concreteType = typeExp.toConcreteType(DummyManager.INSTANCE.getTypeManager());
                 // It may be a type concretisation error e.g. for minimum([])
                 if (!errorLine)

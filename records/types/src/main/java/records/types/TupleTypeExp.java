@@ -59,7 +59,7 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         for (TypeExp member : knownMembers)
         {

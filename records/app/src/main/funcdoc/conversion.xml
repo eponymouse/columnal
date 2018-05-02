@@ -48,6 +48,11 @@
         <description>
             <p>Converts a value to text.</p>
         </description>
+        <equivalence>
+            <foranyclass name="x">Readable,Showable</foranyclass>
+            <lhs>@call @function from text(@call @function to text(x))</lhs>
+            <rhs>x</rhs>
+        </equivalence>
         <example>
             <input>true</input>
             <output>"true"</output>

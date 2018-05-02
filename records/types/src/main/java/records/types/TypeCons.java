@@ -121,7 +121,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    protected @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
     {
         if (operands.isEmpty())
         {
