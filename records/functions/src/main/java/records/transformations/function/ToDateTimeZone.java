@@ -35,7 +35,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        r.add(fromString("datetimezoned from string"));
+        //r.add(fromString("datetimezoned from string"));
         /* TODO
         r.add(new FunctionDefinition("datetimezoned.from.datetime.zone", "datetimezoned.from.datetime.zone.mini", DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));

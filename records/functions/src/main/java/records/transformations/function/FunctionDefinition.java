@@ -77,6 +77,9 @@ public abstract class FunctionDefinition
         }
     }
     
+    // We call ResourceBundle.getString() here, but it's covered by @FuncDocKey rather than @LocalizableKey,
+    // especially since the keys occur duplicated in each file.
+    @SuppressWarnings("i18n")
     private static Details lookupFunction(String functionName, @FuncDocKey String funcDocKey) throws InternalException
     {
         try

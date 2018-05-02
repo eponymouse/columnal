@@ -2,6 +2,7 @@ package records.transformations.function.text;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
@@ -39,7 +40,7 @@ public class StringJoinWith extends FunctionDefinition
                     b.append(separator);
                 b.append(Utility.cast(textList.get(i), String.class));
             }
-            return b.toString();
+            return DataTypeUtility.value(b.toString());
         }
     }
 }
