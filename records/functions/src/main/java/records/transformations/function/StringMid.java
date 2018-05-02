@@ -9,14 +9,14 @@ import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
-public class StringMid extends FunctionDefinition
+public class StringMid //extends FunctionDefinition
 {
     public StringMid() throws InternalException
     {
-        super("text:middle");
+        //super("text:middle");
     }
 
-    @Override
+    //@Override
     public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
     {
         return new Instance();

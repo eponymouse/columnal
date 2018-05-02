@@ -13,14 +13,14 @@ import utility.ValueFunction;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StringWithinIndex extends FunctionDefinition
+public class StringWithinIndex //extends FunctionDefinition
 {
     public StringWithinIndex() throws InternalException
     {
-        super("text:positions within");
+        //super("text:positions within");
     }
 
-    @Override
+    //@Override
     public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
     {
         return new Instance();

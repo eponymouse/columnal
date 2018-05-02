@@ -9,14 +9,14 @@ import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
-public class StringLeft extends FunctionDefinition
+public class StringLeft //extends FunctionDefinition
 {
     public StringLeft() throws InternalException
     {
-        super("text:left");
+        //super("text:left");
     }
 
-    @Override
+    //@Override
     public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
     {
         return new Instance();
