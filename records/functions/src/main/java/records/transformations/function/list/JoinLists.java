@@ -2,6 +2,7 @@ package records.transformations.function.list;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
@@ -25,13 +26,13 @@ public class JoinLists extends FunctionDefinition
         return new Instance();
     }
 
-    private static class Instance extends ValueFunction
+    private static @Value class Instance extends ValueFunction
     {
         @Override
         public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
         {
             ListEx listOfLists = Utility.cast(arg, ListEx.class);
-            return new ListEx()
+            return DataTypeUtility.value(new ListEx()
             {
                 private int cachedSize = -1;
                 
@@ -69,7 +70,7 @@ public class JoinLists extends FunctionDefinition
                     // Add one to convert back to user index:
                     throw new UserException("Element index " + (index + 1) + " beyond end of list, which is of size " + size());
                 }
-            };
+            });
         }
     }
 }

@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -54,7 +55,7 @@ public class StandardFunction extends NonOperatorExpression
             throw new InternalException("Attempting to fetch function despite failing type check");
 
         @NonNull Pair<TypeExp, Map<String, MutVar>> typeFinal = type;
-        return functionDefinition.getInstance(s -> {
+        return DataTypeUtility.value(functionDefinition.getInstance(s -> {
             TypeExp typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)
                 throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
@@ -62,7 +63,7 @@ public class StandardFunction extends NonOperatorExpression
                 l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
                 t -> t
             );
-        });
+        }));
     }
 
     @Override

@@ -32,7 +32,7 @@ public class LookupFunctions
                 @Override
                 public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
                 {
-                    return new ValueFunction()
+                    return DataTypeUtility.value(new ValueFunction()
                     {
                         @Override
                         public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
@@ -47,7 +47,7 @@ public class LookupFunctions
                             int index = getSingleItem(lookupIndexes(listA, args[1]), paramTypes.apply("a"), args[1]);
                             return listB.get(index);
                         }
-                    };
+                    });
                 }
             },
             new FunctionDefinition("lookup:lookup all")
@@ -55,7 +55,7 @@ public class LookupFunctions
                 @Override
                 public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
                 {
-                    return new ValueFunction()
+                    return DataTypeUtility.value(new ValueFunction()
                     {
                         @Override
                         public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
@@ -83,7 +83,7 @@ public class LookupFunctions
                                 }
                             };
                         }
-                    };
+                    });
                 }
             }
         );

@@ -2,6 +2,7 @@ package records.transformations.function.list;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
@@ -39,7 +40,7 @@ public class Combine extends FunctionDefinition
             ValueFunction function = Utility.cast(args[1], ValueFunction.class);
             for (int i = 1; i < list.size(); i++)
             {
-                acc = function.call(new @Value Object[] {acc, list.get(i)});
+                acc = function.call(DataTypeUtility.value(new @Value Object[] {acc, list.get(i)}));
             }
             return acc;
         }
