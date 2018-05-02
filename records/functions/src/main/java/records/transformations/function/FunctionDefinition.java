@@ -83,26 +83,27 @@ public abstract class FunctionDefinition
         }
     }
     
-    // We call ResourceBundle.getString() here, but it's covered by @FuncDocKey rather than @LocalizableKey,
-    // especially since the keys occur duplicated in each file.
-    @SuppressWarnings("i18n")
     private static Details lookupFunction(String functionName, @FuncDocKey String funcDocKey) throws InternalException
     {
+        // We call ResourceBundle.getString() here, but it's covered by @FuncDocKey rather than @LocalizableKey,
+        // especially since the keys occur duplicated in each file.
+        @SuppressWarnings("i18n")
+        @LocalizableKey String key = funcDocKey;
         try
         {
             return new Details(
-                FUNCTION_MINIS.getString(funcDocKey),
+                FUNCTION_MINIS.getString(key),
                 parseFunctionType(functionName,
-                    Arrays.asList(StringUtils.split(FUNCTION_TYPEARGS.getString(funcDocKey), ";")),
-                    Arrays.asList(StringUtils.split(FUNCTION_CONSTRAINTS.getString(funcDocKey), ";")),
-                    Arrays.asList(StringUtils.split(FUNCTION_UNITARGS.getString(funcDocKey), ";")),
-                    FUNCTION_TYPES.getString(funcDocKey)
+                    Arrays.asList(StringUtils.split(FUNCTION_TYPEARGS.getString(key), ";")),
+                    Arrays.asList(StringUtils.split(FUNCTION_CONSTRAINTS.getString(key), ";")),
+                    Arrays.asList(StringUtils.split(FUNCTION_UNITARGS.getString(key), ";")),
+                    FUNCTION_TYPES.getString(key)
                 )
             );
         }
         catch (MissingResourceException e)
         {
-            throw new InternalException("Missing information for " + funcDocKey, e);
+            throw new InternalException("Missing information for " + key, e);
         }
     }
 
