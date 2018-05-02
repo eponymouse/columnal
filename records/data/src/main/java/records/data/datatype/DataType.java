@@ -1671,7 +1671,7 @@ public class DataType implements StyledShowable
                             l(m(" ", F.YEAR4, F.MONTH_NUM))
                         );
                     case DATETIMEZONED:
-                        for (ImmutableList<DateTimeFormatter> dateTimeFormats : new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters())
+                        for (ImmutableList<DateTimeFormatter> dateTimeFormats : new DateTimeInfo(DateTimeType.DATETIME).getFlexibleFormatters())
                         {
                             r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
                                 DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);

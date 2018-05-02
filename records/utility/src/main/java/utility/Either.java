@@ -189,7 +189,7 @@ public class Either<A, B>
         if (b != null)
             return b;
         else
-            throw new InternalException("Getting left out of right");
+            throw new InternalException("Getting right out of left");
     }
 
     //Use either/either_ instead if at all possible

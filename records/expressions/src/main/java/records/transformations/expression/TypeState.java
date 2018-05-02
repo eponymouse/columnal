@@ -236,4 +236,12 @@ public class TypeState
         allNewVars.putAll(original.variables);
         return new TypeState(ImmutableMap.copyOf(allNewVars), original.typeManager, original.unitManager);
     }
+
+    @Override
+    public String toString()
+    {
+        return "TypeState{" +
+                "variables=" + variables +
+                '}';
+    }
 }

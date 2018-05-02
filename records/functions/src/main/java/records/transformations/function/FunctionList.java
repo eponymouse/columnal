@@ -11,6 +11,7 @@ import records.transformations.function.list.AnyAllNone;
 import records.transformations.function.list.Combine;
 import records.transformations.function.list.Count;
 import records.transformations.function.list.GetElement;
+import records.transformations.function.list.InList;
 import records.transformations.function.list.JoinLists;
 import records.transformations.function.list.Single;
 import records.transformations.function.lookup.LookupFunctions;
@@ -40,6 +41,7 @@ public class FunctionList
             new Count(),
             new FromString(),
             new GetElement(),
+            new InList(),
             new JoinLists(),
             new Max(),
             new Mean(),

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class NumTypeExp extends TypeExp
 {
     private static final ImmutableSet<String> NATURAL_TYPE_CLASSES = ImmutableSet.of(
-        "Equatable", "Comparable"
+        "Equatable", "Comparable", "Readable", "Showable"
     );
     
     public final UnitExp unit;

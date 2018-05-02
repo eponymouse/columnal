@@ -19,6 +19,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;
@@ -29,6 +30,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
+import records.types.MutVar;
 import records.types.TypeClassRequirements;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
@@ -55,18 +57,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestFromDoc
 {
     @Property(trials=100)
     @OnThread(Tag.Simulation)
-    public void testFromDoc(@From(GenValueSpecifiedType.class) ValueGenerator valueGen, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
-    {        
+    public void testFromDoc(
+        @When(seed=-1885787209602221757L) @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
+        @When(seed=23103875440372886L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
+    {
+        TypeManager typeManager = typeAndValueGen.getTypeManager();
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
         {
             // Tables are scoped by file:
@@ -79,10 +81,11 @@ public class TestFromDoc
                 if (line.trim().isEmpty())
                     continue;
 
-                Map<String, DataType> variables = new HashMap<>();
+                Map<String, MutVar> typeVariables = new HashMap<>();
+                Map<String, TypeExp> variables = new HashMap<>();
                 boolean errorLine = false;
                 boolean typeError = false;
-                
+
                 if (line.startsWith("!!!"))
                 {
                     errorLine = true;
@@ -97,14 +100,16 @@ public class TestFromDoc
                         if (line.startsWith("== "))
                         {
                             String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
-                            variables.put(nameType[0], DummyManager.INSTANCE.getTypeManager().loadTypeUse(nameType[1]));
+                            variables.put(nameType[0], TypeExp.fromDataType(null, typeManager.loadTypeUse(nameType[1]), typeVariables::get, u -> null));
                             i += 1;
                         }
                         else if (line.startsWith("==* "))
                         {
                             String nameType[] = StringUtils.removeStart(line, "==* ").trim().split("//");
-                            typeError = TypeExp.fromConcrete(null, typeAndValueGen.getType()).requireTypeClasses(TypeClassRequirements.require(nameType[1], "")) != null;
-                            variables.put(nameType[0], typeAndValueGen.getType());
+                            TypeExp picked = TypeExp.fromConcrete(null, typeAndValueGen.getType());
+                            MutVar mutVar = new MutVar(null, TypeClassRequirements.require(StringUtils.removeEnd(nameType[1], " " + nameType[0]), ""));
+                            typeError = TypeExp.unifyTypes(picked, mutVar).isLeft();
+                            typeVariables.put(nameType[0], mutVar);
                             i += 1;
                         }
                         else
@@ -147,7 +152,7 @@ public class TestFromDoc
                     List<SimulationFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
                     for (int c = 0; c < columnNames.length; c++)
                     {
-                        DataType dataType = DummyManager.INSTANCE.getTypeManager().loadTypeUse(columnTypes[c]);
+                        DataType dataType = typeManager.loadTypeUse(columnTypes[c]);
                         List<@Value Object> loadedValues = Utility.mapListEx(columnValues.get(c), unparsed -> {
                             return Utility.parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
                                 DataType.loadSingleItem(dataType, p, false));
@@ -166,20 +171,15 @@ public class TestFromDoc
                     tables.put(new TableId(tableName), new KnownLengthRecordSet(columns, length));
                 }
 
-                Expression expression = Expression.parse(null, line, DummyManager.INSTANCE.getTypeManager());
+                Expression expression = Expression.parse(null, line, typeManager);
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                TypeState typeState = new TypeState(DummyManager.INSTANCE.getUnitManager(), DummyManager.INSTANCE.getTypeManager());
-                EvaluateState evaluateState = new EvaluateState(DummyManager.INSTANCE.getTypeManager());
-                List<Pair<String, String>> varValues = new ArrayList<>();
-                for (Entry<String, DataType> e : variables.entrySet())
+                TypeState typeState = new TypeState(DummyManager.INSTANCE.getUnitManager(), typeManager);
+                for (Entry<String, TypeExp> e : variables.entrySet())
                 {
-                    typeState = typeState.add(e.getKey(), TypeExp.fromDataType(null, e.getValue(), s -> null, u -> null), s -> {throw new RuntimeException(e.toString());});
+                    typeState = typeState.add(e.getKey(), e.getValue(), s -> {throw new RuntimeException(e.toString());});
                     assertNotNull(typeState);
                     if (typeState == null) // Won't happen
                         return;
-                    @Value Object value = valueGen.makeValue(e.getValue());
-                    evaluateState = evaluateState.add(e.getKey(), value);
-                    varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(e.getValue(), value, null)));
                 }
                 TypeExp typeExp = expression.check(new TableLookup()
                 {
@@ -197,13 +197,27 @@ public class TestFromDoc
                 }
                 else
                 {
-                    assertNull(line, typeExp);
+                    assertNull(line + typeState, typeExp);
                     continue;
                 }
-                Either<TypeConcretisationError, DataType> concreteType = typeExp.toConcreteType(DummyManager.INSTANCE.getTypeManager());
+                Either<TypeConcretisationError, DataType> concreteReturnType = typeExp.toConcreteType(typeManager);
                 // It may be a type concretisation error e.g. for minimum([])
                 if (!errorLine)
-                    assertEquals(line, Either.right(DataType.BOOLEAN), concreteType);
+                    assertEquals(line, Either.right(DataType.BOOLEAN), concreteReturnType);
+
+                EvaluateState evaluateState = new EvaluateState(typeManager);
+                List<Pair<String, String>> varValues = new ArrayList<>();
+                for (Entry<String, TypeExp> e : variables.entrySet())
+                {
+                    Either<TypeConcretisationError, DataType> errorOrType = e.getValue().toConcreteType(typeManager);
+                    if (errorOrType.isLeft())
+                        fail(errorOrType.getLeft().toString());
+                    DataType concreteVarType = errorOrType.getRight();
+                    @Value Object value = valueGen.makeValue(concreteVarType);
+                    evaluateState = evaluateState.add(e.getKey(), value);
+                    varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(concreteVarType, value, null)));
+                }
+                
                 if (errorLine)
                 {
                     // Must be user exception
@@ -220,7 +234,7 @@ public class TestFromDoc
                 else
                 {
                     boolean result = expression.getBoolean(0, evaluateState, null);
-                    assertTrue(line + Utility.listToString(varValues), result);
+                    assertTrue(line + " values: " + Utility.listToString(varValues), result);
                 }
             }
         }

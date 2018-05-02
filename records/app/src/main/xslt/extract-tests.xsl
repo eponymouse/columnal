@@ -52,8 +52,8 @@
             </xsl:call-template>
         </xsl:for-each>
         <xsl:for-each select="equivalence">
-            <xsl:for-each select="foranyclass">
-==* <xsl:value-of select="@name"/>//<xsl:value-of select="."/>
+            <xsl:for-each select="foranytype">
+==* <xsl:value-of select="@name"/>//<xsl:value-of select="typeConstraint" separator="//"/>
             </xsl:for-each>
             <xsl:for-each select="forany">
 == <xsl:value-of select="@name"/>//<xsl:value-of select="."/>                

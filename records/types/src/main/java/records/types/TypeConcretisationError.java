@@ -40,4 +40,11 @@ public class TypeConcretisationError
     {
         return suggestedTypeFix;
     }
+
+    // For debugging:
+    @Override
+    public String toString()
+    {
+        return errorText.toPlain();
+    }
 }

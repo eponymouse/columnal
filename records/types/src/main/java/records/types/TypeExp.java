@@ -111,7 +111,7 @@ import java.util.function.Function;
 public abstract class TypeExp implements StyledShowable
 {
     protected static final ImmutableSet<String> ALL_TYPE_CLASSES = ImmutableSet.of(
-        "Equatable", "Comparable"
+        "Equatable", "Comparable", "Readable", "Showable"
     );
     
     public static final String CONS_TEXT = "Text";

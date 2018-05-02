@@ -49,7 +49,8 @@
             <p>Converts a value to text.</p>
         </description>
         <equivalence>
-            <foranyclass name="x">Readable,Showable</foranyclass>
+            <foranytype name="t"><typeConstraint>Readable</typeConstraint><typeConstraint>Showable</typeConstraint><typeConstraint>Equatable</typeConstraint></foranytype>
+            <forany name="x">@typevar t</forany>
             <lhs>@call @function from text(@call @function to text(x))</lhs>
             <rhs>x</rhs>
         </equivalence>
