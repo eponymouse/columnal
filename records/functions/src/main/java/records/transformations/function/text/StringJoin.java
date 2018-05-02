@@ -35,7 +35,7 @@ public class StringJoin extends FunctionDefinition
             {
                 b.append(Utility.cast(textList.get(i), String.class));
             }
-            return b.toString();
+            return DataTypeUtility.value(b.toString());
         }
     }
 }

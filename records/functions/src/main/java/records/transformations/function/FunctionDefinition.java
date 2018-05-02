@@ -44,6 +44,12 @@ import java.util.function.Supplier;
  */
 public abstract class FunctionDefinition
 {
+    private static final ResourceBundle FUNCTION_MINIS = ResourceBundle.getBundle("function_minis");
+    private static final ResourceBundle FUNCTION_TYPEARGS = ResourceBundle.getBundle("function_typeargs");
+    private static final ResourceBundle FUNCTION_CONSTRAINTS = ResourceBundle.getBundle("function_constraints");
+    private static final ResourceBundle FUNCTION_UNITARGS = ResourceBundle.getBundle("function_unitargs");
+    private static final ResourceBundle FUNCTION_TYPES = ResourceBundle.getBundle("function_types");
+    
     // Namespace slash function name
     private final @FuncDocKey String funcDocKey;
     private final String name;
@@ -85,12 +91,12 @@ public abstract class FunctionDefinition
         try
         {
             return new Details(
-                ResourceBundle.getBundle("function_minis").getString(funcDocKey),
+                FUNCTION_MINIS.getString(funcDocKey),
                 parseFunctionType(functionName,
-                    Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_typeargs").getString(funcDocKey), ";")),
-                    Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_constraints").getString(funcDocKey), ";")),
-                    Arrays.asList(StringUtils.split(ResourceBundle.getBundle("function_unitargs").getString(funcDocKey), ";")),
-                    ResourceBundle.getBundle("function_types").getString(funcDocKey)
+                    Arrays.asList(StringUtils.split(FUNCTION_TYPEARGS.getString(funcDocKey), ";")),
+                    Arrays.asList(StringUtils.split(FUNCTION_CONSTRAINTS.getString(funcDocKey), ";")),
+                    Arrays.asList(StringUtils.split(FUNCTION_UNITARGS.getString(funcDocKey), ";")),
+                    FUNCTION_TYPES.getString(funcDocKey)
                 )
             );
         }
