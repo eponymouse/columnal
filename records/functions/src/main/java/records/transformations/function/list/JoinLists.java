@@ -26,7 +26,7 @@ public class JoinLists extends FunctionDefinition
         return new Instance();
     }
 
-    private static @Value class Instance extends ValueFunction
+    private static class Instance extends ValueFunction
     {
         @Override
         public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException

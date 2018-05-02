@@ -68,7 +68,7 @@ public class LookupFunctions
                                 throw new UserException("Lists passed to lookup function must be the same size, but first list was size: " + listA.size() + " and second list was size: " + listB.size());
 
                             List<Integer> indexes = getAllItems(lookupIndexes(listA, args[1]));
-                            return new ListEx()
+                            return DataTypeUtility.value(new ListEx()
                             {
                                 @Override
                                 public int size() throws InternalException, UserException
@@ -81,7 +81,7 @@ public class LookupFunctions
                                 {
                                     return listB.get(indexes.get(index));
                                 }
-                            };
+                            });
                         }
                     });
                 }
