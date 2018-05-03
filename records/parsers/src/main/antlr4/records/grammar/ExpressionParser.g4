@@ -62,7 +62,7 @@ arrayExpression : OPEN_SQUARE (compoundExpression | (expression (COMMA expressio
 newVariable : NEWVAR ident;
 typeName : ident;
 constructorName : ident;
-pattern : expression (CASEGUARD expression)?;
+pattern : topLevelExpression (CASEGUARD topLevelExpression)?;
 
 /* Single argument, matched once as variable name or tuple pattern */
 // functionArg : (newVariable | patternTuple) COLON expression;
@@ -71,7 +71,7 @@ pattern : expression (CASEGUARD expression)?;
 //function: FUNCTION (functionArg | functionCase);
 
 matchClause : CASE pattern (ORCASE pattern)* THEN expression;
-match : MATCH expression matchClause+;
+match : MATCH expression matchClause* ENDMATCH;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor

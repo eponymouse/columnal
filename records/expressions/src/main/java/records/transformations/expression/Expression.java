@@ -51,6 +51,7 @@ import records.grammar.ExpressionParser.StringConcatExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParser.TimesExpressionContext;
+import records.grammar.ExpressionParser.TopLevelExpressionContext;
 import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.TypeExpressionContext;
 import records.grammar.ExpressionParser.UnitExpressionContext;
@@ -423,9 +424,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                     List<Pattern> patterns = new ArrayList<>();
                     for (PatternContext patternContext : matchClauseContext.pattern())
                     {
-                        @Nullable ExpressionContext guardExpression = patternContext.expression().size() < 2 ? null : patternContext.expression(1);
-                        @Nullable Expression guard = guardExpression == null ? null : visitExpression(guardExpression);
-                        patterns.add(new Pattern(visitExpression(patternContext.expression(0)), guard));
+                        @Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
+                        @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
+                        patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
                     }
                     return me.new MatchClause(patterns, visitExpression(matchClauseContext.expression()));
                 });

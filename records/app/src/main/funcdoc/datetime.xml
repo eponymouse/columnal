@@ -8,6 +8,11 @@
         <description>
             <p>Creates a date from the given year, month and day.</p>
         </description>
+        <equivalence display="false">
+            <forany name="x">Date</forany>
+            <lhs>@match @call @function to text(x) @case y ; "-" ; m ; "-" ; d @then @call @function date(@call @function from text(y), @call @function from text(m), @call @function from text(d)) @endmatch</lhs>
+            <rhs>x</rhs>
+        </equivalence>
         <example>
             <inputDisplay>to text(date(1998{year}, 07{month}, 10{day}))</inputDisplay>
             <inputParse>@call @function to text(@call @function date(1998{year}, 07{month}, 10{day}))</inputParse>

@@ -28,6 +28,7 @@ BACKSLASH: '\\';
 COLUMN : '@column';
 WHOLECOLUMN: '@entirecolumn';
 MATCH : '@match';
+ENDMATCH : '@endmatch';
 CASE : '@case';
 COLON: ':';
 ORCASE : '@or';
