@@ -98,13 +98,13 @@ public class TestGenDataType
                 @Override
                 public Stream<Pair<@Nullable Container, @Nullable Container>> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
-                    return tags.stream().flatMap(t -> Utility.streamNullable(t.getInner())).flatMap(TestGenDataType::calculateNesting).map(wrap(Container.TAGGED));
+                    return tags.stream().flatMap(t -> Utility.streamNullable(t.getInner())).<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)(t -> TestGenDataType.calculateNesting(t))).map(wrap(Container.TAGGED));
                 }
 
                 @Override
                 public Stream<Pair<@Nullable Container, @Nullable Container>> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
                 {
-                    return inner.stream().flatMap(TestGenDataType::calculateNesting).map(wrap(Container.TUPLE));
+                    return inner.stream().<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)TestGenDataType::calculateNesting).map(wrap(Container.TUPLE));
                 }
 
                 @Override
