@@ -110,6 +110,7 @@ public class PropStringFunctions
         return DataTypeUtility.value(n);
     }
 
+    /*
     @Property
     @OnThread(Tag.Simulation)
     public void propLeft(@From(UnicodeStringGenerator.class) String str) throws Throwable
@@ -247,6 +248,7 @@ public class PropStringFunctions
             assertEquals(replaced.toString(), checkedReplace.getFirst().call(DataTypeUtility.value(new @Value Object[]{v(target), v(replacement), v(s.toString())})));
         }
     }
+    */
 
     @Property(trials = 200)
     @OnThread(Tag.Simulation)
