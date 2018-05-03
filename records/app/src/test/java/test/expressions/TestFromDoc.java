@@ -65,8 +65,8 @@ public class TestFromDoc
     @Property(trials=100)
     @OnThread(Tag.Simulation)
     public void testFromDoc(
-        @When(seed=-1885787209602221757L) @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
-        @When(seed=23103875440372886L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
+        @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
+        @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
     {
         TypeManager typeManager = typeAndValueGen.getTypeManager();
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
