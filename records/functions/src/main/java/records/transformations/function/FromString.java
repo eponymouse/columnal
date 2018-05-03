@@ -20,6 +20,7 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.Utility.WrappedCharSequence;
 import utility.ValueFunction;
 
 import java.text.ParsePosition;
@@ -114,13 +115,14 @@ public class FromString extends FunctionDefinition
                     ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.toImmutableList());
                     // Updated char position and return value:
                     ArrayList<Pair<Integer, TemporalAccessor>> possibles = new ArrayList<>();
+                    WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.original, src.charStart);
                     for (DateTimeFormatter formatter : formatters)
                     {
                         try
                         {
                             ParsePosition position = new ParsePosition(src.charStart);
-                            TemporalAccessor temporalAccessor = formatter.parse(src.original, position);
-                            possibles.add(new Pair<>(position.getIndex(), temporalAccessor));
+                            TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
+                            possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), temporalAccessor));
                         }
                         catch (DateTimeParseException e)
                         {
@@ -132,9 +134,14 @@ public class FromString extends FunctionDefinition
                         src.charStart = possibles.get(0).getFirst();
                         return DataTypeUtility.value(dateTimeInfo, possibles.get(0).getSecond());
                     }
-                    // TODO give custom message when multiple match
-                    
-                    throw new UserException("Expected date/time value but found: " + src.snippet());
+                    else if (possibles.size() > 1)
+                    {
+                        throw new UserException("Multiple ways to interpret " + type + " value"
+                            + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond())));
+                    }
+
+                    //Log.debug("Wrapped: " + wrapped.toString() + " matches: " + possibles.size());
+                    throw new UserException("Expected " + type + " value but found: " + src.snippet());
                 }
 
                 @Override

@@ -1143,6 +1143,127 @@ public class Utility
         }
         return reAssembled.toString();
     }
+    
+    public interface WrappedCharSequence extends CharSequence
+    {
+        public int translateWrappedToOriginalPos(int position);
+    }
+    
+    
+    // We wrap the entire original sequence, but we only do
+    // the date preprocess beginning at startPos
+    public static WrappedCharSequence wrapPreprocessDate(CharSequence original, final int startPos)
+    {
+        // Until we see first colon, we replace any sequences of
+        // non-alphanumeric characters with a single space
+        return new WrappedCharSequence()
+        {
+            List<IndexRange> replaceRanges = new ArrayList<>();
+            int checkedUpToInOriginal = startPos;
+            int firstColonIndexInOriginal = Integer.MAX_VALUE;
+            
+            @Override
+            public int length()
+            {
+                int length;
+                for (length = startPos; length < original.length() && length < translateWrappedToOriginalPos(original.length()); length++)
+                {
+                    charAt(length);
+                }
+                return length;
+            }
+
+            @Override
+            public int translateWrappedToOriginalPos(int target)
+            {
+                return translateWrappedToOriginal(target).getFirst();
+            }
+
+            // Translated pos, and true if in a replaced range
+            private Pair<Integer, Boolean> translateWrappedToOriginal(int target)
+            {
+                for (IndexRange rr : replaceRanges)
+                {
+                    if (target >= rr.start)
+                    {
+                        if (target < rr.end)
+                        {
+                            return new Pair<>(rr.start, true);
+                        }
+                        else
+                        {
+                            // Ranges are start(incl) to end(excl) and are replaced by single space.
+                            // So e.g. given "a   b" range will be 1, 4 and we should subtract two chars:
+                            target -= (rr.end - rr.start - 1);
+                        }
+                    }
+                    else
+                    {
+                        // Ranges are in order, so future ranges
+                        // won't be before us, either
+                        break;
+                    }
+                }
+                return new Pair<>(target, false);
+            }
+
+            @Override
+            public char charAt(final int index)
+            {
+                if (index < 0)
+                    throw new IllegalArgumentException("Index cannot be negative: " + index);
+                if (index < startPos)
+                    return original.charAt(index);
+                
+                while (checkedUpToInOriginal < index && checkedUpToInOriginal < firstColonIndexInOriginal)
+                {
+                    // Must do more checking:
+                    checkedUpToInOriginal += 1;
+                    char c = original.charAt(checkedUpToInOriginal);
+                    if (c == ':')
+                    {
+                        firstColonIndexInOriginal = Math.min(firstColonIndexInOriginal, checkedUpToInOriginal);
+                    }
+                    else if (!Character.isLetterOrDigit(c))
+                    {
+                        int start = checkedUpToInOriginal;
+                        int end = start + 1;
+                        while (end < original.length() && !Character.isLetterOrDigit(original.charAt(end)))
+                        {
+                            end += 1;
+                        }
+                        // Form a replacement range
+                        replaceRanges.add(new IndexRange(start, end));
+                        checkedUpToInOriginal = end;
+                    }
+                }
+
+                Pair<Integer, Boolean> mapped = translateWrappedToOriginal(index);
+                if (mapped.getSecond())
+                    return ' ';
+                else
+                    return original.charAt(mapped.getFirst());
+            }
+
+            @Override
+            public CharSequence subSequence(int start, int end)
+            {
+                // For this, we use a string copy:
+                char[] chars = new char[end - start];
+                for (int i = start; i < end; i++)
+                {
+                    chars[i - start] = charAt(i);
+                }
+                return new String(chars);
+            }
+
+            @Override
+            public String toString()
+            {
+                return subSequence(0, length()).toString();
+            }
+        };
+    }
 
     public static <T> ImmutableList<T> replicateM(int length, Supplier<T> make)
     {
@@ -1198,11 +1319,6 @@ public class Utility
         {
             this.start = start;
             this.end = end;
-        }
-
-        public int getLength()
-        {
-            return end - start;
         }
     }
 
