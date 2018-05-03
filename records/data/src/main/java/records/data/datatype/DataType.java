@@ -1693,18 +1693,11 @@ public class DataType implements StyledShowable
                             ImmutableList.Builder<DateTimeFormatter> inner = ImmutableList.builder();
                             for (DateTimeFormatter dateTimeFormat : formatters)
                             {
-
+                                // Since we don't have a date, a named zone doesn't help, only a specific
+                                // offset time is valid:
                                 DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
                                 b.optionalStart().appendLiteral(" ").optionalEnd();
-                                b.appendZoneId();
-                                inner.add(b.toFormatter());
-                                b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                                b.optionalStart().appendLiteral(" ").optionalEnd();
                                 b.appendOffsetId();
-                                inner.add(b.toFormatter());
-                                b = new DateTimeFormatterBuilder().append(dateTimeFormat);
-                                b.optionalStart().appendLiteral(" ").optionalEnd();
-                                b.appendOffsetId().appendLiteral("[").appendZoneRegionId().appendLiteral("]");
                                 inner.add(b.toFormatter());
                             }
                             r.add(inner.build());

@@ -116,6 +116,7 @@ public class FromString extends FunctionDefinition
                     // Updated char position and return value:
                     ArrayList<Pair<Integer, TemporalAccessor>> possibles = new ArrayList<>();
                     WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.original, src.charStart);
+                    ArrayList<DateTimeFormatter> possibleFormatters = new ArrayList<>();
                     for (DateTimeFormatter formatter : formatters)
                     {
                         try
@@ -123,6 +124,7 @@ public class FromString extends FunctionDefinition
                             ParsePosition position = new ParsePosition(src.charStart);
                             TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
                             possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), temporalAccessor));
+                            possibleFormatters.add(formatter);
                         }
                         catch (DateTimeParseException e)
                         {
@@ -136,8 +138,10 @@ public class FromString extends FunctionDefinition
                     }
                     else if (possibles.size() > 1)
                     {
-                        throw new UserException("Multiple ways to interpret " + type + " value"
-                            + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond())));
+                        throw new UserException("Multiple ways to interpret " + type + " value: "
+                            + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond()))
+                            + " using formatters "
+                            + Utility.listToString(possibleFormatters));
                     }
 
                     //Log.debug("Wrapped: " + wrapped.toString() + " matches: " + possibles.size());
