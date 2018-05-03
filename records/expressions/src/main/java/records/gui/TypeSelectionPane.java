@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -165,7 +166,7 @@ public class TypeSelectionPane
             }
             tupleType.setValue(Optional.of(DataType.tuple(types)));
         };
-        FXUtility.listen(tupleTypes, c -> recalcTupleType.run());
+        FXUtility.listen(tupleTypes, (Change<? extends ObservableObjectValue<@Nullable Optional<DataType>>> c) -> recalcTupleType.run());
         FXUtility.listen(commas, c -> {
             for (int i = 0; i < commas.size(); i++)
             {
