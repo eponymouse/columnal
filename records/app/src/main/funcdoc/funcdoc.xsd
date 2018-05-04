@@ -55,18 +55,11 @@
             <xs:sequence minOccurs="1" maxOccurs="1">
                 <xs:element name="description" type="xs:string" minOccurs="0"/>
                 <xs:choice>
+                    <xs:element name="inputArg" type="xs:string"/>
                     <xs:element name="input" type="xs:string"/>
-                    <xs:sequence>
-                        <xs:element name="inputDisplay" type="xs:string"/>
-                        <xs:element name="inputParse" type="xs:string"/>
-                    </xs:sequence>
                 </xs:choice>
                 <xs:choice>
                     <xs:element name="output" type="xs:string"/>
-                    <xs:sequence>
-                        <xs:element name="outputDisplay" type="xs:string"/>
-                        <xs:element name="outputParse" type="xs:string"/>
-                    </xs:sequence>
                 </xs:choice>
             </xs:sequence>
         </xs:complexType>
@@ -178,6 +171,28 @@
             <xs:attribute name="title" type="xs:string" use="required"/>
         </xs:complexType>
     </xs:element>
+    
+    <xs:element name="a">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name="href" use="required" type="xs:anyURI"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="link">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name="function" use="optional" type="xs:string"/>
+                    <xs:attribute name="operator" use="optional" type="xs:string"/>
+                    <xs:attribute name="keyword" use="optional" type="xs:string"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
 
     <xs:element name="description">
         <xs:complexType>
@@ -185,7 +200,7 @@
                 <xs:element name="p">
                     <xs:complexType mixed="true">
                         <xs:sequence>
-                            <xs:element name="a" minOccurs="0" maxOccurs="unbounded"/>
+                            <xs:element ref="a" minOccurs="0" maxOccurs="unbounded"/>
                             <xs:element name="link" minOccurs="0" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
@@ -193,7 +208,14 @@
                 <xs:element name="ul">
                     <xs:complexType>
                         <xs:sequence maxOccurs="unbounded">
-                            <xs:element name="li" type="xs:string"/>
+                            <xs:element name="li">
+                                <xs:complexType mixed="true">
+                                    <xs:sequence>
+                                        <xs:element ref="a" minOccurs="0" maxOccurs="unbounded"/>
+                                        <xs:element name="link" minOccurs="0" maxOccurs="unbounded"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>

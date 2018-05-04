@@ -125,7 +125,7 @@ public class TypeCons extends TypeExp
     {
         if (operands.isEmpty())
         {
-            return typeClasses.checkIfSatisfiedBy(StyledString.s(name), this.typeClasses);
+            return typeClasses.checkIfSatisfiedBy(toStyledString(), this.typeClasses);
             
             /*
                 StyledString.Builder b = StyledString.builder();
@@ -162,7 +162,7 @@ public class TypeCons extends TypeExp
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s(" "), t.toStyledString())).toArray(StyledString[]::new)));
+        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("-("), t.toStyledString(), StyledString.s(")"))).toArray(StyledString[]::new)));
     }
 
     @Override

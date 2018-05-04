@@ -4,7 +4,7 @@
                        namespace="number">
     <functionGroup id="rounding" title="Functions for rounding">
         <description>
-            A set of functions for rounding.
+            <p>A set of functions for rounding.</p>
         </description>
         <function name="round">
             <unitArg>u</unitArg>
@@ -15,26 +15,26 @@
                 <p>Numbers that end in .5 (which are halfway between two whole numbers) are rounded towards the nearest even number, sometimes known as <a href="https://en.wikipedia.org/wiki/Rounding#Round_half_to_even">banker's rounding</a>.</p>
             </description>
             <example>
-                <input>0.333</input>
+                <inputArg>0.333</inputArg>
                 <output>0</output>
             </example>
             <example>
-                <input>2</input>
+                <inputArg>2</inputArg>
                 <output>2</output>
             </example>
             <example>
-                <input>0.5</input>
+                <inputArg>0.5</inputArg>
                 <output>0</output>
             </example>
             <example>
-                <input>1.5</input>
+                <inputArg>1.5</inputArg>
                 <output>2</output>
             </example>
         </function>
     </functionGroup>
     <functionGroup id="sign" title="Functions for manipulating sign">
         <description>
-            Functions for manipulating sign of numbers.
+            <p>Functions for manipulating sign of numbers.</p>
         </description>
         <function name="abs">
             <unitArg>u</unitArg>
@@ -44,22 +44,22 @@
                 <p>Makes a number positive by discarding the minus sign.</p>
             </description>
             <example>
-                <input>-3.6</input>
+                <inputArg>-3.6</inputArg>
                 <output>3.6</output>
             </example>
             <example>
-                <input>5</input>
+                <inputArg>5</inputArg>
                 <output>5</output>
             </example>
             <example>
-                <input>0</input>
+                <inputArg>0</inputArg>
                 <output>0</output>
             </example>
         </function>
     </functionGroup>
 
     <functionGroup id="list" title="Functions for dealing with lists of numbers">
-        <description>Functions for dealing with lists of numbers.</description>
+        <description><p>Functions for dealing with lists of numbers.</p></description>
         <function name="average">
             <unitArg>u</unitArg>
             <argType>[Number{@unitvar u}]</argType>
@@ -68,15 +68,15 @@
                 <p>Calculates the average of a list of numbers.</p>
             </description>
             <example>
-                <input>[1, 1.5, 5]</input>
+                <inputArg>[1, 1.5, 5]</inputArg>
                 <output>2.5</output>
             </example>
             <example>
-                <input>[33.4]</input>
+                <inputArg>[33.4]</inputArg>
                 <output>33.4</output>
             </example>
             <example>
-                <input>[]</input>
+                <inputArg>[]</inputArg>
                 <output>error</output>
             </example>
         </function>
@@ -88,15 +88,15 @@
                 <p>Calculates the sum (total) of a list of numbers.</p>
             </description>
             <example>
-                <input>[1, 1.5, 5]</input>
+                <inputArg>[1, 1.5, 5]</inputArg>
                 <output>7.5</output>
             </example>
             <example>
-                <input>[33.4]</input>
+                <inputArg>[33.4]</inputArg>
                 <output>33.4</output>
             </example>
             <example>
-                <input>[]</input>
+                <inputArg>[]</inputArg>
                 <output>0</output>
             </example>
         </function>

@@ -3,7 +3,7 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="listprocess">
     <functionGroup id="anyAllNone" title="Any, All, None">
-        <description>Functions to check if a property holds for any/all/no list element(s).</description>
+        <description><p>Functions to check if a property holds for any/all/no list element(s).</p></description>
         <function name="any">
             <typeArg>t</typeArg>
             <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
@@ -13,15 +13,15 @@
                 <p>If the list is empty, returns false.</p>
             </description>
             <example>
-                <input>(["a", "b", "c"], (? = "b"))</input>
+                <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
                 <output>true</output>
             </example>
             <example>
-                <input>([0, 1, 2, 3], (? &gt; 5))</input>
+                <inputArg>([0, 1, 2, 3], (? &gt; 5))</inputArg>
                 <output>false</output>
             </example>
             <example>
-                <input>([], (? = 0))</input>
+                <inputArg>([], (? = 0))</inputArg>
                 <output>false</output>
             </example>
         </function>
@@ -34,15 +34,15 @@
                 <p>If the list is empty, returns true.</p>
             </description>
             <example>
-                <input>([0, 1, 2, 3], (? &lt; 5))</input>
+                <inputArg>([0, 1, 2, 3], (? &lt; 5))</inputArg>
                 <output>true</output>
             </example>
             <example>
-                <input>(["a", "b", "c"], (? = "b"))</input>
+                <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
                 <output>false</output>
             </example>
             <example>
-                <input>([], (? = 0))</input>
+                <inputArg>([], (? = 0))</inputArg>
                 <output>true</output>
             </example>
         </function>
@@ -55,15 +55,15 @@
                 <p>If the list is empty, returns true.</p>
             </description>
             <example>
-                <input>([0, 1, 2, 3], (? &gt; 5))</input>
+                <inputArg>([0, 1, 2, 3], (? &gt; 5))</inputArg>
                 <output>true</output>
             </example>
             <example>
-                <input>(["a", "b", "c"], (? = "b"))</input>
+                <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
                 <output>false</output>
             </example>
             <example>
-                <input>([], (? = 0))</input>
+                <inputArg>([], (? = 0))</inputArg>
                 <output>true</output>
             </example>
         </function>
@@ -77,20 +77,20 @@
             <p>Collapses the list into a single item by combining the elements using the given function.</p>
         </description>
         <example>
-            <input>([1, 2, 3], (? + ?))</input>
+            <inputArg>([1, 2, 3], (? + ?))</inputArg>
             <output>6</output>
         </example>
         <example>
-            <input>(["a", "b", "c"], (? ; ?))</input>
+            <inputArg>(["a", "b", "c"], (? ; ?))</inputArg>
             <output>"abc"</output>
         </example>
         <example>
-            <input>([true, false, false, true], (? | ?))</input>
+            <inputArg>([true, false, false, true], (? | ?))</inputArg>
             <output>true</output>
         </example>
 
         <example>
-            <input>([], (? + ?))</input>
+            <inputArg>([], (? + ?))</inputArg>
             <output>error</output>
         </example>
     </function>

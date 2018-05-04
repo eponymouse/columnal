@@ -14,8 +14,7 @@
             <rhs>x</rhs>
         </equivalence>
         <example>
-            <inputDisplay>to text(date(1998{year}, 07{month}, 10{day}))</inputDisplay>
-            <inputParse>@call @function to text(@call @function date(1998{year}, 07{month}, 10{day}))</inputParse>
+            <input>@call @function to text(@call @function date(1998{year}, 07{month}, 10{day}))</input>
             <output>"1998-07-10"</output>
         </example>
     </function>

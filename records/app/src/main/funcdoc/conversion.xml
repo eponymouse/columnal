@@ -19,24 +19,19 @@
             </ul>
         </description>
         <example>
-            <inputDisplay>from text("65") > 64</inputDisplay>
-            <inputParse>@call @function from text("65") > 64</inputParse>
+            <input>@call @function from text("65") &gt; 64</input>
             <output>true</output>
         </example>
         <example>
-            <inputDisplay>from text("TRUE") | false</inputDisplay>
-            <inputParse>@call @function from text("TRUE") | false</inputParse>
+            <input>@call @function from text("TRUE") | false</input>
             <output>true</output>
         </example>
         <example>
-            <inputDisplay>asType(`Date`, from text("21 March 2004"))</inputDisplay>
-            <inputParse>@call @function asType(`Date`, @call @function from text("21 March 2004"))</inputParse>
-            <outputDisplay>date(2004{year}, 3{month}, 21{day})</outputDisplay>
-            <outputParse>@call @function date(2004{year}, 3{month}, 21{day})</outputParse>
+            <input>@call @function asType(`Date`, @call @function from text("21 March 2004"))</input>
+            <output>@call @function date(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
-            <inputDisplay>asType(`[(Boolean, Number{m})]`, from text("[(true, 0{m}), (FALSE, -1.6{m}]"))</inputDisplay>
-            <inputParse>@call @function asType(`[(Boolean, Number{m})]`, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</inputParse>
+            <input>@call @function asType(`[(Boolean, Number{m})]`, @call @function from text("[(True, 0), (FALSE, -1.6)]"))</input>
             <output>[(true, 0{m}), (false, -1.6{m})]</output>
         </example>
     </function>
@@ -55,11 +50,11 @@
             <rhs>x</rhs>
         </equivalence>
         <example>
-            <input>true</input>
+            <inputArg>true</inputArg>
             <output>"true"</output>
         </example>
         <example>
-            <input>65{m}</input>
+            <inputArg>65{m}</inputArg>
             <output>"65"</output>
         </example>
         <!-- TODO add more examples -->

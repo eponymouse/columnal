@@ -10,15 +10,15 @@
             <p>Technical note: this is actually the number of Unicode codepoints in the text.  For English text without accents, one character is one codepoint.  If you have accents or non-English characters in your text, what looks like one character may be made up of multiple codepoints.</p>
         </description>
         <example>
-            <input>"hello"</input>
+            <inputArg>"hello"</inputArg>
             <output>5</output>
         </example>
         <example>
-            <input>"a b."</input>
+            <inputArg>"a b."</inputArg>
             <output>4</output>
         </example>
         <example>
-            <input>""</input>
+            <inputArg>""</inputArg>
             <output>0</output>
         </example>
     </function>
@@ -31,15 +31,15 @@
             <p>If the first text is empty, no replacement is performed.  If any occurrences overlap, the earlier part is replaced first.</p>
         </description>
         <example>
-            <input>("at", "og", "The cat in the hat")</input>
+            <inputArg>("at", "og", "The cat in the hat")</inputArg>
             <output>"The cog in the hog"</output>
         </example>
         <example>
-            <input>("oo", "a", "Mooo!")</input>
+            <inputArg>("oo", "a", "Mooo!")</inputArg>
             <output>"Mao!"</output>
         </example>
         <example>
-            <input>("", "x", "Orange")</input>
+            <inputArg>("", "x", "Orange")</inputArg>
             <output>"Orange"</output>
         </example>
     </function>
@@ -62,15 +62,15 @@
             <rhs>@call @function combine(x, (? ; ?))</rhs> 
         </equivalence>
         <example>
-            <input>["a", "b", "c"]</input>
+            <inputArg>["a", "b", "c"]</inputArg>
             <output>"abc"</output>
         </example>
         <example>
-            <input>["Hello", " ", "Moon"]</input>
+            <inputArg>["Hello", " ", "Moon"]</inputArg>
             <output>"Hello Moon"</output>
         </example>
         <example>
-            <input>[]</input>
+            <inputArg>[]</inputArg>
             <output>""</output>
         </example>
     </function>
@@ -93,23 +93,23 @@
             <rhs>@call @function combine(x, (? ; sep ; ?))</rhs>
         </equivalence>
         <example>
-            <input>(["a", "b", "c"], "+")</input>
+            <inputArg>(["a", "b", "c"], "+")</inputArg>
             <output>"a+b+c"</output>
         </example>
         <example>
-            <input>(["Blanks", "", "Count"], ";")</input>
+            <inputArg>(["Blanks", "", "Count"], ";")</inputArg>
             <output>"Blanks;;Count"</output>
         </example>
         <example>
-            <input>(["Hello", " ", "Moon"], "-")</input>
+            <inputArg>(["Hello", " ", "Moon"], "-")</inputArg>
             <output>"Hello- -Moon"</output>
         </example>
         <example>
-            <input>(["Hi"], ",")</input>
+            <inputArg>(["Hi"], ",")</inputArg>
             <output>"Hi"</output>
         </example>
         <example>
-            <input>([], ",")</input>
+            <inputArg>([], ",")</inputArg>
             <output>""</output>
         </example>
     </function>
@@ -125,15 +125,15 @@
             <rhs>@call @function trim(x)</rhs>
         </equivalence>
         <example>
-            <input>"No spaces  either side."</input>
+            <inputArg>"No spaces  either side."</inputArg>
             <output>"No spaces  either side."</output>
         </example>
         <example>
-            <input>"  Several spaces    "</input>
+            <inputArg>"  Several spaces    "</inputArg>
             <output>"Several spaces"</output>
         </example>
         <example>
-            <input>"^t Tabs and newlines also removed.^n"</input>
+            <inputArg>"^t Tabs and newlines also removed.^n"</inputArg>
             <output>"Tabs and newlines also removed."</output>
         </example>
     </function>

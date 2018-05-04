@@ -10,15 +10,15 @@
             <p>Gets the number of elements in the given list.</p>
         </description>
         <example>
-            <input>["a", "word", "list"]</input>
+            <inputArg>["a", "word", "list"]</inputArg>
             <output>3</output>
         </example>
         <example>
-            <input>[2, 4, 6, 8]</input>
+            <inputArg>[2, 4, 6, 8]</inputArg>
             <output>4</output>
         </example>
         <example>
-            <input>[]</input>
+            <inputArg>[]</inputArg>
             <output>0</output>
         </example>
     </function>
@@ -31,19 +31,19 @@
             <p>Gets the list element at the given position (first position is 1).</p>
         </description>
         <example>
-            <input>(["x", "y", "z"], 1)</input>
+            <inputArg>(["x", "y", "z"], 1)</inputArg>
             <output>"x"</output>
         </example>
         <example>
-            <input>([2, 4, 6, 8], 4)</input>
+            <inputArg>([2, 4, 6, 8], 4)</inputArg>
             <output>8</output>
         </example>
         <example>
-            <input>([], 1)</input>
+            <inputArg>([], 1)</inputArg>
             <output>error</output>
         </example>
         <example>
-            <input>([true, false], 0)</input>
+            <inputArg>([true, false], 0)</inputArg>
             <output>error</output>
         </example>
     </function>
@@ -57,11 +57,11 @@
             <p>Checks if the item is in the list.</p>
         </description>
         <example>
-            <input>(2, [1, 2, 3])</input>
+            <inputArg>(2, [1, 2, 3])</inputArg>
             <output>true</output>
         </example>
         <example>
-            <input>("A", ["a", "b", "c"])</input>
+            <inputArg>("A", ["a", "b", "c"])</inputArg>
             <output>false</output>
         </example>
     </function>
@@ -75,15 +75,15 @@
             <p>This is useful if you have a table where you store single values.  The column is a list, so you need to use a function, like single, to fetch out the one item in it.</p>
         </description>
         <example>
-            <input>[65]</input>
+            <inputArg>[65]</inputArg>
             <output>65</output>
         </example>
         <example>
-            <input>[]</input>
+            <inputArg>[]</inputArg>
             <output>error</output>
         </example>
         <example>
-            <input>[1, 2]</input>
+            <inputArg>[1, 2]</inputArg>
             <output>error</output>
         </example>
     </function>
@@ -97,15 +97,15 @@
             <p>Each item in the passed list must be a list.  To include single items, wrap them in square brackets [].</p>
         </description>
         <example>
-            <input>[[0, 1], [3, 4], [7]]</input>
+            <inputArg>[[0, 1], [3, 4], [7]]</inputArg>
             <output>[0, 1, 3, 4, 7]</output>
         </example>
         <example>
-            <input>[[true], [], [false]]</input>
+            <inputArg>[[true], [], [false]]</inputArg>
             <output>[true, false]</output>
         </example>
         <example>
-            <input>[]</input>
+            <inputArg>[]</inputArg>
             <output>[]</output>
         </example>
     </function>

@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -72,6 +73,7 @@ public class TestFromDoc
         TypeManager typeManager = typeAndValueGen.getTypeManager();
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
         {
+            //Log.debug("Processing: " + file.getName());
             // Tables are scoped by file:
             Map<TableId, RecordSet> tables = new HashMap<>();
             

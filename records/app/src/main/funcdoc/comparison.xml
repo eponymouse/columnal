@@ -3,7 +3,7 @@
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="comparison">
     <functionGroup id="minmax" title="Min-Max">
-        <description>Minimum and maximum functions.</description>
+        <description><p>Minimum and maximum functions.</p></description>
         <function name="minimum">
             <typeArg>t</typeArg>
             <typeConstraint>Comparable t</typeConstraint>
@@ -25,15 +25,15 @@
                 <rhs>true</rhs>
             </equivalence>
             <example>
-                <input>[54, 7, 82]</input>
+                <inputArg>[54, 7, 82]</inputArg>
                 <output>7</output>
             </example>
             <example>
-                <input>["cat", "aardvark", "bear"]</input>
+                <inputArg>["cat", "aardvark", "bear"]</inputArg>
                 <output>"aardvark"</output>
             </example>
             <example>
-                <input>[]</input>
+                <inputArg>[]</inputArg>
                 <output>error</output>
             </example>
         </function>
@@ -64,15 +64,15 @@
                 <rhs>true</rhs>
             </equivalence>
             <example>
-                <input>[54, 7, 82]</input>
+                <inputArg>[54, 7, 82]</inputArg>
                 <output>82</output>
             </example>
             <example>
-                <input>["zebra", "wolf", "vole"]</input>
+                <inputArg>["zebra", "wolf", "vole"]</inputArg>
                 <output>"zebra"</output>
             </example>
             <example>
-                <input>[]</input>
+                <inputArg>[]</inputArg>
                 <output>error</output>
             </example>
         </function>

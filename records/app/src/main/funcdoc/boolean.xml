@@ -24,11 +24,11 @@
             <rhs>x &lt;&gt; true</rhs>
         </equivalence>
         <example>
-            <input>true</input>
+            <inputArg>true</inputArg>
             <output>false</output>
         </example>
         <example>
-            <input>false</input>
+            <inputArg>false</inputArg>
             <output>true</output>
         </example>
     </function>
@@ -44,19 +44,19 @@
             <rhs>@call @function not(x)</rhs>
         </equivalence>
         <example>
-            <input>(true, true)</input>
+            <inputArg>(true, true)</inputArg>
             <output>false</output>
         </example>
         <example>
-            <input>(true, false)</input>
+            <inputArg>(true, false)</inputArg>
             <output>true</output>
         </example>
         <example>
-            <input>(false, true)</input>
+            <inputArg>(false, true)</inputArg>
             <output>true</output>
         </example>
         <example>
-            <input>(false, false)</input>
+            <inputArg>(false, false)</inputArg>
             <output>false</output>
         </example>
     </function>
