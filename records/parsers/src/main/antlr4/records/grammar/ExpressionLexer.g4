@@ -35,6 +35,7 @@ ORCASE : '@or';
 IF : '@if';
 THEN : '@then';
 ELSE : '@else';
+ENDIF : '@endif';
 CASEGUARD: '@given';
 FUNCTION : '@function';
 NEWVAR : '@newvar';

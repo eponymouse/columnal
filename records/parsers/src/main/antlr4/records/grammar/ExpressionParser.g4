@@ -43,7 +43,7 @@ greaterThanExpression :  expression (GREATER_THAN expression)+;
 andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
 matchesExpression : expression MATCHES expression;
-ifThenElseExpression : IF expression THEN expression ELSE expression;
+ifThenElseExpression : IF expression THEN expression ELSE expression ENDIF;
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | MATCHES | PLUS_MINUS | COMMA;
 invalidOpExpression : INVALIDOPS expression (STRING expression)+;
