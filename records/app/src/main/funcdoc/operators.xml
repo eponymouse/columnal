@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="">
+    <naryOperatorGroup title="Adding and Subtracting">
+        <operator>+</operator>
+        <operator>-</operator>
+        <argType>Number{@unitvar u}</argType>
+        <resultType>Number{@unitvar u}</resultType>
+        <description>
+            <p>Adds or subtracts numbers.  All the numbers must have no units, or the same units.</p>
+            <p>Plus cannot be used for non-numbers.  Some other types:</p>
+            <ul>
+                <li>To join text values together, use <link operator=";"/>.</li>
+                <li>To join lists together use the <link function="list:join lists"/> function.</li>
+                <li>To manipulate dates and times, see <link namespace="datetime"/>.</li>
+            </ul>
+        </description>
+        <example>
+            <input>1 + 2 + 3</input>
+            <output>6</output>
+        </example>
+        <example>
+            <input>10 - 2 - 3 + 1</input>
+            <output>6</output>
+        </example>
+    </naryOperatorGroup>
+    <naryOperatorGroup title="Joining text">
+        <operator>;</operator>
+        <argType>Text</argType>
+        <resultType>Text</resultType>
+        <description>
+            <p>Joins text items together in order.</p>
+            <p>This operator can also be used in match expressions, usually to match and remove items from the beginning or end of a text item (see examples, below).</p>
+        </description>
+        <!-- TODO an example joining a table column together ? -->
+        <example>
+            <input>"a" ; "b" ; "c"</input>
+            <output>"abc"</output>
+        </example>
+        <example>
+            <input>@match "T-2000" @case "T-" ; @newvar y @then @call @function from text(y) @endmatch</input>
+            <output>2000</output>
+        </example>
+    </naryOperatorGroup>
+    <binaryOperator title="Approximate numbers">
+        <operator>&#x00B1;</operator>
+        <argTypeLeft>Number{@unitvar u}</argTypeLeft>
+        <argTypeRight>Number{@unitvar u}</argTypeRight>
+        <resultType>Number{@unitvar u}</resultType>
+        <description>
+            <p>This is only valid in match cases or the right-hand side of the <link operator="~"/> operator.</p>
+            <p>It specifies a pattern that a number must be close to the left-hand operator, within the tolerance specified by the right-hand side.</p>
+        </description>
+        <example>
+            <description>Deal with inexact fractions by using a tolerance</description>
+            <input>(1 / 3) ~ (0.333 &#x00B1; 0.001)</input>
+            <output>true</output>
+        </example>
+    </binaryOperator>
+    <binaryOperator title="Match test">
+        <operator>~</operator>
+        <argTypeLeft>@typevar t</argTypeLeft>
+        <argTypeRight>@typevar t</argTypeRight>
+        <resultType>Boolean</resultType>
+        <description>
+            <p>Checks if the value on the left, matches the pattern on the right.</p>
+            <p>If there are no special patterns on the right-hand side (e.g. <link keyword="@anything"/>, <link operator="&#x00B1;"/>, new variables) then it is equivalent to <link operator="="/>.</p>
+            <p>If you do declare a variable in the right-hand side, the variable will not be accessible outside the pattern.  For that, use the full <link keyword="@match"/> expression.</p>
+        </description>
+        <example>
+            <description>Check if text starts with a dollar sign</description>
+            <input>"$50" ~ ("$" ; @anything)</input>
+            <output>true</output>
+        </example>
+        <example>
+            <description>Check if number is close to another</description>
+            <input>50.0006 ~ (50 &#x00B1; 0.01)</input>
+            <output>true</output>
+        </example>
+        <example>
+            <description>Check if a list has two items, and the first is an empty text value</description>
+            <input>["Hi", "there"] ~ ["", @anything]</input>
+            <output>false</output>
+        </example>
+        <example>
+            <description>Check if a pair has two values the same</description>
+            <input>("Bye", "Bye") ~ (@newvar s, s)</input>
+            <output>true</output>
+        </example>
+    </binaryOperator>
+    <binaryOperator title="Not equal">
+        <operator>&lt;&gt;</operator>
+        <argTypeLeft>t</argTypeLeft>
+        <argTypeRight>t</argTypeRight>
+        <resultType>Boolean</resultType>
+        <description>
+            <p>Tests whether two values are not-equal</p>
+        </description>
+        <equivalence>
+            <foranytype name="t"><typeConstraint>Equatable</typeConstraint></foranytype>
+            <forany name="x">@typevar t</forany>
+            <forany name="y">@typevar t</forany>
+            <lhs>x &lt;&gt; y</lhs>
+            <rhs>not(x = y)</rhs>
+        </equivalence>
+        <example>
+            <input>3 &lt;&gt; 6</input>
+            <output>true</output>
+        </example>
+    </binaryOperator>
+    <!--
+    <naryOperatorGroup title="Multiplying">
+        <operator>*</operator>
+        <argTypes unit="u">Number{@unitvar $u}</argTypes>
+        <resultType>Number{@unitvar u1 * @unitvar u2 * @unitvar un}</resultType>
+        <description>
+            <
+        </description>
+        <
+    </naryOperatorGroup>
+    -->
+</functionDocumentation>

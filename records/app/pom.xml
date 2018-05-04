@@ -363,6 +363,7 @@
                             <otherDepends>listprocess.xml</otherDepends>
                             <otherDepends>lookup.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>
+                            <otherDepends>operator.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-types-and-mini.xsl</stylesheet>
                             <outputDir>${project.build.directory}/classes</outputDir>

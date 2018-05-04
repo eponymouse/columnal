@@ -9,5 +9,6 @@
     <xi:include href="listprocess.xml"/>
     <xi:include href="lookup.xml"/>
     <xi:include href="number.xml"/>
+    <xi:include href="operators.xml"/>
     <xi:include href="text.xml"/>
 </all>

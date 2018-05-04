@@ -13,6 +13,16 @@
             <lhs>@call @function not(@call @function not(x))</lhs>
             <rhs>x</rhs>
         </equivalence>
+        <equivalence display="false">
+            <forany name="x">Boolean</forany>
+            <lhs>@call @function not(x)</lhs>
+            <rhs>x = false</rhs>
+        </equivalence>
+        <equivalence display="false">
+            <forany name="x">Boolean</forany>
+            <lhs>@call @function not(x)</lhs>
+            <rhs>x &lt;&gt; true</rhs>
+        </equivalence>
         <example>
             <input>true</input>
             <output>false</output>
