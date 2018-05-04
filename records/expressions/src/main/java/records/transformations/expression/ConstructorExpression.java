@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -17,6 +18,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
+import records.types.TypeCons;
 import records.types.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -58,17 +60,8 @@ public class ConstructorExpression extends NonOperatorExpression
     private TypeExp makeTagType(TagInfo t) throws InternalException
     {
         TagType<DataType> tt = t.getTagInfo();
-        TypeExp taggedType = TypeExp.fromTagged(this, t.wholeType).getFirst();
-        if (tt.getInner() == null)
-        {
-            return taggedType;
-        }
-        else
-        {
-            // TODO
-            return taggedType;
-        }
-        
+        Pair<TypeExp, ImmutableList<TypeExp>> taggedType = TypeExp.fromTagged(this, t.wholeType);
+        return taggedType.getSecond().get(t.tagIndex);
     }
 
     @Override

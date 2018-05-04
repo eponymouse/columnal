@@ -206,7 +206,7 @@ public abstract class TypeExp implements StyledShowable
     }
     
     // The first part of the pair is the overall tagged type.  The second part is a list, for all the constructors,
-    // 
+    // of the types of that constructor
     public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
     {
         ImmutableList.Builder<TypeExp> typeVarsInOrder = ImmutableList.builder();
