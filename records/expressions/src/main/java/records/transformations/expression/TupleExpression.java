@@ -60,24 +60,20 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
-        @NonNull TypeState[] typeStates = new TypeState[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
             @Nullable Pair<@Recorded TypeExp, TypeState> t = members.get(i).checkAsPattern(data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();
-            typeStates[i] = t.getSecond();
+            state = t.getSecond();
         }
         memberTypes = ImmutableList.copyOf(typeArray);
-        tupleType = new TupleTypeExp(this, memberTypes, true);        
-        @Nullable TypeState endState = TypeState.union(state, onError.recordErrorCurried(this), typeStates);
-        if (endState == null)
-            return null;
-        return new Pair<>(onError.recordTypeNN(this, tupleType), endState);
+        tupleType = new TupleTypeExp(this, memberTypes, true);
+        return new Pair<>(onError.recordTypeNN(this, tupleType), state);
     }
 
     @Override
