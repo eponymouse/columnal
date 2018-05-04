@@ -19,8 +19,6 @@ import records.transformations.function.FunctionDefinition;
 import records.types.MutVar;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Map;
@@ -48,8 +46,7 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         if (type == null)
             throw new InternalException("Attempting to fetch function despite failing type check");

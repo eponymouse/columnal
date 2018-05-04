@@ -14,8 +14,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.types.MutVar;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Random;
@@ -58,13 +56,13 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         return state.add(varName, value);
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
     }

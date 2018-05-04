@@ -82,14 +82,14 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         if (column == null)
             throw new InternalException("Attempting to fetch value despite type check failure");
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return column.getType().getCollapsed(rowIndex);
+                return column.getType().getCollapsed(state.getRowIndex());
             case WHOLE_COLUMN:
                 @NonNull Column columnFinal = column;
                 return DataTypeUtility.value(new ListEx() {

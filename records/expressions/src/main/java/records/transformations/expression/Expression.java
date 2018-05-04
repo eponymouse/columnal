@@ -94,9 +94,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
     @OnThread(Tag.Simulation)
-    public boolean getBoolean(int rowIndex, EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
+    public boolean getBoolean(EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
     {
-        Object val = getValue(rowIndex, state);
+        Object val = getValue(state);
         if (val instanceof Boolean)
             return (Boolean) val;
         else
@@ -130,11 +130,10 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     }
 
     /**
-     * Gets the value for this expression at the given row index
-     * (zero if N/A) and evaluation state
+     * Gets the value for this expression at the given evaluation state
      */
     @OnThread(Tag.Simulation)
-    public abstract @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
+    public abstract @Value Object getValue(EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
@@ -187,9 +186,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // as the current expression (and throw an InternalException if not)
     // If you override this, you should also override checkAsPattern
     @OnThread(Tag.Simulation)
-    public @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        @Value Object ourValue = getValue(rowIndex, state);
+        @Value Object ourValue = getValue(state);
         return Utility.compareValues(value, ourValue) == 0 ? state : null;
     }
 

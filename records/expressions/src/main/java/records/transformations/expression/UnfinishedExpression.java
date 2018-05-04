@@ -15,8 +15,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Objects;
@@ -44,7 +42,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Cannot get value for unfinished expression");
     }

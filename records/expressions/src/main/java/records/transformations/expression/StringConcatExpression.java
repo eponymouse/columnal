@@ -103,19 +103,20 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         StringBuilder sb = new StringBuilder();
         for (Expression expression : expressions)
         {
-            String s = Utility.cast(expression.getValue(rowIndex, state), String.class);
+            String s = Utility.cast(expression.getValue(state), String.class);
             sb.append(s);
         }
         return DataTypeUtility.value(sb.toString());
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, @NonNull EvaluateState state) throws InternalException, UserException
+    public @Nullable EvaluateState matchAsPattern(@Value Object value, @NonNull EvaluateState state) throws InternalException, UserException
     {
         String s = Utility.cast(value, String.class);
         int curOffset = 0;
@@ -130,7 +131,7 @@ public class StringConcatExpression extends NaryOpExpression
             else
             {
                 // It's a value; get that value:
-                String subValue = Utility.cast(expressions.get(i).getValue(rowIndex, state), String.class);
+                String subValue = Utility.cast(expressions.get(i).getValue(state), String.class);
                 if (subValue.isEmpty())
                 {
                     // Matches, but nothing to do.  Keep going...
@@ -156,7 +157,7 @@ public class StringConcatExpression extends NaryOpExpression
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
                         return null;
-                    EvaluateState newState = pendingMatch.matchAsPattern(rowIndex, s.substring(curOffset, nextPos), state);
+                    EvaluateState newState = pendingMatch.matchAsPattern(s.substring(curOffset, nextPos), state);
                     if (newState == null)
                         return null;
                     state = newState;
@@ -167,7 +168,7 @@ public class StringConcatExpression extends NaryOpExpression
         }
         if (pendingMatch != null)
         {
-            return pendingMatch.matchAsPattern(rowIndex, s.substring(curOffset), state);
+            return pendingMatch.matchAsPattern(s.substring(curOffset), state);
         }
         else
             return state;

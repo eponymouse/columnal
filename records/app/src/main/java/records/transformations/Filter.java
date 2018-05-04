@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -163,7 +164,7 @@ public class Filter extends Transformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
-            boolean keep = filterExpression.getBoolean(nextIndexToExamine, new EvaluateState(getManager().getTypeManager()), prog);
+            boolean keep = filterExpression.getBoolean(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine)), prog);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

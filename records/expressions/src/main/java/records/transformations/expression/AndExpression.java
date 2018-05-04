@@ -49,11 +49,11 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         for (Expression expression : expressions)
         {
-            Boolean b = Utility.cast(expression.getValue(rowIndex, state), Boolean.class);
+            Boolean b = Utility.cast(expression.getValue(state), Boolean.class);
             if (b == false)
                 return DataTypeUtility.value(false);
         }

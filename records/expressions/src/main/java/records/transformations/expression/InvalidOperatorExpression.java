@@ -12,8 +12,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -43,7 +41,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Cannot get value for invalid expression");
     }

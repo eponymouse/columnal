@@ -13,8 +13,6 @@ import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Random;
@@ -63,13 +61,13 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
-        Boolean b = (Boolean)condition.getValue(rowIndex, state);
+        Boolean b = (Boolean)condition.getValue(state);
         if (b)
-            return thenExpression.getValue(rowIndex, state);
+            return thenExpression.getValue(state);
         else
-            return elseExpression.getValue(rowIndex, state);
+            return elseExpression.getValue(state);
     }
 
     @Override

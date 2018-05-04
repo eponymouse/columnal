@@ -13,8 +13,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitLiteralNode;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Objects;
@@ -40,8 +38,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Trying to fetch unit literal at run-time");
     }

@@ -92,11 +92,11 @@ public class MatchExpression extends NonOperatorExpression
 
         //Returns null if no match
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState matches(@Value Object value, EvaluateState state, int rowIndex) throws UserException, InternalException
+        public @Nullable EvaluateState matches(@Value Object value, EvaluateState state) throws UserException, InternalException
         {
             for (Pattern p : patterns)
             {
-                EvaluateState newState = p.match(value, rowIndex, state);
+                EvaluateState newState = p.match(value, state);
                 if (newState != null) // Did it match?
                     return newState;
             }
@@ -190,12 +190,12 @@ public class MatchExpression extends NonOperatorExpression
 
         // Returns non-null if it matched, null if it didn't match.
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(@Value Object value, int rowIndex, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(@Value Object value, EvaluateState state) throws InternalException, UserException
         {
-            @Nullable EvaluateState newState = pattern.matchAsPattern(rowIndex, value, state);
+            @Nullable EvaluateState newState = pattern.matchAsPattern(value, state);
             if (newState == null)
                 return null;
-            if (guard != null && !guard.getBoolean(rowIndex, newState, null))
+            if (guard != null && !guard.getBoolean(newState, null))
                 return null;
             return newState;
         }
@@ -269,16 +269,16 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        @Value Object value = expression.getValue(rowIndex, state);
+        @Value Object value = expression.getValue(state);
         for (MatchClause clause : clauses)
         {
-            EvaluateState newState = clause.matches(value, state, rowIndex);
+            EvaluateState newState = clause.matches(value, state);
             if (newState != null)
             {
-                return clause.outcome.getValue(rowIndex, newState);
+                return clause.outcome.getValue(newState);
             }
         }
         throw new UserException("No matching clause found in expression: \"" + save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");

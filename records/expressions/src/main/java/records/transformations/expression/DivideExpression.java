@@ -13,8 +13,6 @@ import records.error.UserException;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.Optional;
@@ -60,10 +58,9 @@ public class DivideExpression extends BinaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        return DataTypeUtility.value(Utility.divideNumbers((Number)lhs.getValue(rowIndex, state), (Number)rhs.getValue(rowIndex, state)));
+        return DataTypeUtility.value(Utility.divideNumbers((Number)lhs.getValue(state), (Number)rhs.getValue(state)));
     }
 
     @Override

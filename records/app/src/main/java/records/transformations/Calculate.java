@@ -45,6 +45,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -136,7 +137,7 @@ public class Calculate extends Transformation
                 if (type == null || concrete == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
                 @NonNull DataType typeFinal = concrete;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(index, new EvaluateState(mgr.getTypeManager()))));
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index)))));
             }
 
             theResult = new RecordSet(columns)

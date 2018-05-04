@@ -23,8 +23,6 @@ import records.types.MutVar;
 import records.types.TupleTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -139,11 +137,11 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
-        ValueFunction functionValue = Utility.cast(function.getValue(rowIndex, state), ValueFunction.class);
+        ValueFunction functionValue = Utility.cast(function.getValue(state), ValueFunction.class);
             
-        return functionValue.call(param.getValue(rowIndex, state));
+        return functionValue.call(param.getValue(state));
     }
 
     @Override

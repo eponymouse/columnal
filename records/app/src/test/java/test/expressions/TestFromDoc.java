@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -205,7 +206,7 @@ public class TestFromDoc
                 if (!errorLine)
                     assertEquals(line, Either.right(DataType.BOOLEAN), concreteReturnType);
 
-                EvaluateState evaluateState = new EvaluateState(typeManager);
+                EvaluateState evaluateState = new EvaluateState(typeManager, OptionalInt.empty());
                 List<Pair<String, String>> varValues = new ArrayList<>();
                 for (Entry<String, TypeExp> e : variables.entrySet())
                 {
@@ -223,7 +224,7 @@ public class TestFromDoc
                     // Must be user exception
                     try
                     {
-                        expression.getBoolean(0, evaluateState, null);
+                        expression.getBoolean(evaluateState, null);
                         Assert.fail("Expected error but got none for\n" + line);
                     }
                     catch (UserException e)
@@ -233,7 +234,7 @@ public class TestFromDoc
                 }
                 else
                 {
-                    boolean result = expression.getBoolean(0, evaluateState, null);
+                    boolean result = expression.getBoolean(evaluateState, null);
                     assertTrue(line + " values: " + Utility.listToString(varValues), result);
                 }
             }

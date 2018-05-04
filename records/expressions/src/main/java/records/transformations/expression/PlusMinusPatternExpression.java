@@ -10,8 +10,6 @@ import records.types.TypeExp;
 import records.types.units.MutUnitVar;
 import records.types.units.UnitExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -47,7 +45,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on plus minus pattern (should only call matchAsPattern)");
     }
@@ -74,9 +72,9 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        boolean match = Utility.compareNumbers(value, lhs.getValue(rowIndex, state), Utility.toBigDecimal((Number)rhs.getValue(rowIndex, state))) == 0;
+        boolean match = Utility.compareNumbers(value, lhs.getValue(state), Utility.toBigDecimal((Number)rhs.getValue(state))) == 0;
         return match ? state : null;
     }
 

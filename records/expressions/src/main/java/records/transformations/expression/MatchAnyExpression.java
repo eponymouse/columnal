@@ -14,8 +14,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.types.MutVar;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Random;
@@ -43,7 +41,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on \"any\" pattern (should only call matchAsPattern)");
     }

@@ -59,7 +59,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         return state.get(getVarName());
     }

@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -178,7 +179,7 @@ public class SummaryStatistics extends Transformation
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 @NonNull DataType typeFinal = concrete;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(i, new EvaluateState(mgr.getTypeManager()))));
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty()))));
                 
             }
 

@@ -30,7 +30,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         return value;
     }

@@ -35,6 +35,7 @@ import utility.Utility;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 @OnThread(Tag.Simulation)
@@ -95,7 +96,7 @@ public class Check extends Transformation
 
             type = typeFinal;
         }
-        return checkExpression.getValue(0, new EvaluateState(getManager().getTypeManager()));
+        return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty()));
     }
 
     @Override

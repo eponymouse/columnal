@@ -58,18 +58,18 @@ public abstract class NaryOpExpression extends Expression
     public abstract @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @Override
-    @OnThread(Tag.Simulation)
-    public final @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public final @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         if (expressions.stream().anyMatch(e -> e instanceof ImplicitLambdaArg))
         {
-            return ImplicitLambdaArg.makeImplicitFunction(expressions, state, s -> getValueNaryOp(rowIndex, s));
+            return ImplicitLambdaArg.makeImplicitFunction(expressions, state, s -> getValueNaryOp(s));
         }
         else
-            return getValueNaryOp(rowIndex, state);
+            return getValueNaryOp(state);
     }
-    
-    public abstract @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException;
+
+    @OnThread(Tag.Simulation)
+    public abstract @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
     public Stream<ColumnReference> allColumnReferences()

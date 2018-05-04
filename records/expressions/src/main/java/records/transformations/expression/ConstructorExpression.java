@@ -19,8 +19,6 @@ import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 
@@ -74,8 +72,7 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         return tag.<@Value Object>eitherEx(s -> {
             throw new InternalException("Attempting to fetch function despite failing type check");

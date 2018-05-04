@@ -16,6 +16,8 @@ import records.types.NumTypeExp;
 import records.types.TypeClassRequirements;
 import records.types.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -58,12 +60,13 @@ public class EqualExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object first = expressions.get(0).getValue(rowIndex, state);
+        @Value Object first = expressions.get(0).getValue(state);
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object rhsVal = expressions.get(i).getValue(rowIndex, state);
+            @Value Object rhsVal = expressions.get(i).getValue(state);
             if (0 != Utility.compareValues(first, rhsVal))
                 return DataTypeUtility.value(false);
         }

@@ -11,8 +11,6 @@ import records.error.UserException;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.List;
@@ -78,11 +76,11 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        Number n = (Number) expressions.get(0).getValue(rowIndex, state);
+        Number n = (Number) expressions.get(0).getValue(state);
         for (int i = 1; i < expressions.size(); i++)
-            n = Utility.multiplyNumbers(n, (Number) expressions.get(i).getValue(rowIndex, state));
+            n = Utility.multiplyNumbers(n, (Number) expressions.get(i).getValue(state));
         return DataTypeUtility.value(n);
     }
 

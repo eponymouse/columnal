@@ -34,8 +34,6 @@ import records.types.units.UnitExp;
 import styled.StyledString;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -75,7 +73,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+        public @Value Object getValue(EvaluateState state) throws UserException, InternalException
         {
             throw new InternalException("Testing");
         }
@@ -391,7 +389,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+        public @Value Object getValue(EvaluateState state) throws UserException, InternalException
         {
             throw new InternalException("Should not be called");
         }

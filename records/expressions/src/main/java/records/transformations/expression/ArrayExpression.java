@@ -100,7 +100,8 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    @OnThread(Tag.Simulation)
+    public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
         if (value instanceof ListEx)
         {
@@ -110,7 +111,7 @@ public class ArrayExpression extends Expression
             @Nullable EvaluateState curState = state;
             for (int i = 0; i < items.size(); i++)
             {
-                curState = items.get(i).matchAsPattern(rowIndex, list.get(i), curState);
+                curState = items.get(i).matchAsPattern(list.get(i), curState);
                 if (curState == null)
                     return null;
             }
@@ -120,12 +121,12 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         List<@Value Object> values = new ArrayList<>(items.size());
         for (Expression item : items)
         {
-            values.add(item.getValue(rowIndex, state));
+            values.add(item.getValue(state));
         }
         return DataTypeUtility.value(values);
     }

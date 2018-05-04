@@ -117,12 +117,13 @@ public class ComparisonExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValueNaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object cur = expressions.get(0).getValue(rowIndex, state);
+        @Value Object cur = expressions.get(0).getValue(state);
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object next = expressions.get(i).getValue(rowIndex, state);
+            @Value Object next = expressions.get(i).getValue(state);
             if (!operators.get(i - 1).comparisonTrue(cur, next))
                 return DataTypeUtility.value(false);
             cur = next;

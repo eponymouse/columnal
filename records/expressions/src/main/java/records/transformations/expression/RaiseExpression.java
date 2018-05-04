@@ -14,8 +14,6 @@ import records.types.TypeExp;
 import records.types.units.MutUnitVar;
 import records.types.units.UnitExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Utility;
 
 import java.math.BigInteger;
@@ -107,9 +105,9 @@ public class RaiseExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        return DataTypeUtility.value(Utility.raiseNumber((Number)lhs.getValue(rowIndex, state), (Number) rhs.getValue(rowIndex, state)));
+        return DataTypeUtility.value(Utility.raiseNumber((Number)lhs.getValue(state), (Number) rhs.getValue(state)));
     }
 
 }

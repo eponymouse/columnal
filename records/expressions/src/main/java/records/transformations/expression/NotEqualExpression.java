@@ -14,6 +14,8 @@ import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.Optional;
@@ -57,10 +59,11 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Value Object getValueBinaryOp(int rowIndex, EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object lhsVal = lhs.getValue(rowIndex, state);
-        @Value Object rhsVal = rhs.getValue(rowIndex, state);
+        @Value Object lhsVal = lhs.getValue(state);
+        @Value Object rhsVal = rhs.getValue(state);
         return DataTypeUtility.value(0 != Utility.compareValues(lhsVal, rhsVal));
     }
 

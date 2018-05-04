@@ -20,6 +20,7 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
@@ -41,7 +42,7 @@ public class PropRunExpression
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)
             {
-                @Value Object actualValue = src.expression.getValue(row, new EvaluateState(DummyManager.INSTANCE.getTypeManager()));
+                @Value Object actualValue = src.expression.getValue(new EvaluateState(DummyManager.INSTANCE.getTypeManager(), OptionalInt.of(row)));
                 assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
                     Utility.compareValues(src.value.get(row), actualValue, new BigDecimal("0.000000001")) == 0);
             }

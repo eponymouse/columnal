@@ -18,8 +18,6 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.types.TupleTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -83,7 +81,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, final EvaluateState state) throws InternalException, UserException
+    public @Nullable EvaluateState matchAsPattern(@Value Object value, final EvaluateState state) throws InternalException, UserException
     {
         if (value instanceof Object[])
         {
@@ -93,7 +91,7 @@ public class TupleExpression extends Expression
             @Nullable EvaluateState curState = state;
             for (int i = 0; i < tuple.length; i++)
             {
-                curState = members.get(i).matchAsPattern(rowIndex, tuple[i], curState);
+                curState = members.get(i).matchAsPattern(tuple[i], curState);
                 if (curState == null)
                     return null;
             }
@@ -103,12 +101,12 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         @Value Object[] values = new Object[members.size()];
         for (int i = 0; i < values.length; i++)
         {
-            values[i] = members.get(i).getValue(rowIndex, state);
+            values[i] = members.get(i).getValue(state);
         }
         return DataTypeUtility.value(values);
     }
