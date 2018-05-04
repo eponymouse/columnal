@@ -24,38 +24,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.AddSubtractExpressionContext;
-import records.grammar.ExpressionParser.AndExpressionContext;
-import records.grammar.ExpressionParser.ArrayExpressionContext;
-import records.grammar.ExpressionParser.BooleanLiteralContext;
-import records.grammar.ExpressionParser.BracketedExpressionContext;
-import records.grammar.ExpressionParser.CallExpressionContext;
-import records.grammar.ExpressionParser.ColumnRefContext;
-import records.grammar.ExpressionParser.ConstructorContext;
-import records.grammar.ExpressionParser.DivideExpressionContext;
-import records.grammar.ExpressionParser.ExpressionContext;
-import records.grammar.ExpressionParser.GreaterThanExpressionContext;
-import records.grammar.ExpressionParser.IfThenElseExpressionContext;
-import records.grammar.ExpressionParser.ImplicitLambdaParamContext;
-import records.grammar.ExpressionParser.InvalidOpExpressionContext;
-import records.grammar.ExpressionParser.LessThanExpressionContext;
-import records.grammar.ExpressionParser.MatchClauseContext;
-import records.grammar.ExpressionParser.MatchContext;
-import records.grammar.ExpressionParser.NotEqualExpressionContext;
-import records.grammar.ExpressionParser.NumericLiteralContext;
-import records.grammar.ExpressionParser.OrExpressionContext;
-import records.grammar.ExpressionParser.PatternContext;
-import records.grammar.ExpressionParser.RaisedExpressionContext;
-import records.grammar.ExpressionParser.StandardFunctionContext;
-import records.grammar.ExpressionParser.StringConcatExpressionContext;
-import records.grammar.ExpressionParser.StringLiteralContext;
-import records.grammar.ExpressionParser.TableIdContext;
-import records.grammar.ExpressionParser.TimesExpressionContext;
-import records.grammar.ExpressionParser.TopLevelExpressionContext;
-import records.grammar.ExpressionParser.TupleExpressionContext;
-import records.grammar.ExpressionParser.TypeExpressionContext;
-import records.grammar.ExpressionParser.UnitExpressionContext;
-import records.grammar.ExpressionParser.VarRefContext;
+import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
@@ -117,7 +86,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
     // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // By default, check as normal, and return same TypeState:
         @Nullable @Recorded TypeExp type = check(data, typeState, onError);
@@ -470,6 +439,24 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitImplicitLambdaParam(ImplicitLambdaParamContext ctx)
         {
             return new ImplicitLambdaArg();
+        }
+
+        @Override
+        public Expression visitMatchesExpression(MatchesExpressionContext ctx)
+        {
+            return new MatchesOneExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitPlusMinusPattern(PlusMinusPatternContext ctx)
+        {
+            return new PlusMinusPatternExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitAny(AnyContext ctx)
+        {
+            return new MatchAnythingExpression();
         }
 
         @Override

@@ -43,7 +43,7 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Items in a String concat expression can be:
         // - Variable declaration
@@ -51,7 +51,7 @@ public class StringConcatExpression extends NaryOpExpression
         // With the added restriction that two variables cannot be adjacent.
         // Although it's a bit hacky, we check for variables directly from here using instanceof
         if (expressions.size() == 1) // Shouldn't happen; how are we a concat expression?
-            return expressions.get(0).checkAsPattern(varDeclAllowed, data, typeState, onError);
+            return expressions.get(0).checkAsPattern(data, typeState, onError);
         
         boolean lastWasVariable = false;
         TypeExp ourType = TypeExp.text(this);
@@ -67,13 +67,13 @@ public class StringConcatExpression extends NaryOpExpression
                 }
                 else
                 {
-                    p = expressions.get(i).checkAsPattern(true, data, typeState, onError);
+                    p = expressions.get(i).checkAsPattern(data, typeState, onError);
                     lastWasVariable = true;
                 }
             }
             else
             {
-                p = expressions.get(i).checkAsPattern(false, data, typeState, onError);
+                p = expressions.get(i).checkAsPattern(data, typeState, onError);
                 lastWasVariable = false;
             }
             if (p == null)
@@ -121,12 +121,12 @@ public class StringConcatExpression extends NaryOpExpression
         String s = Utility.cast(value, String.class);
         int curOffset = 0;
 
-        @Nullable VarDeclExpression pendingMatch = null;
+        @Nullable Expression pendingMatch = null;
         for (int i = 0; i < expressions.size(); i++)
         {
-            if (expressions.get(i) instanceof VarDeclExpression)
+            if (expressions.get(i) instanceof VarDeclExpression || expressions.get(i) instanceof MatchAnythingExpression)
             {
-                pendingMatch = (VarDeclExpression)expressions.get(i);
+                pendingMatch = expressions.get(i);
             }
             else
             {

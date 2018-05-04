@@ -60,13 +60,13 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         @NonNull TypeState[] typeStates = new TypeState[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<@Recorded TypeExp, TypeState> t = members.get(i).checkAsPattern(varAllowed, data, state, onError);
+            @Nullable Pair<@Recorded TypeExp, TypeState> t = members.get(i).checkAsPattern(data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();

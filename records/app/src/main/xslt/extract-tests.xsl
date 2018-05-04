@@ -15,11 +15,10 @@
         <xsl:for-each select="example">
             <xsl:if test="output='error'">!!! </xsl:if>
             <xsl:choose>
-                <xsl:when test="input"> <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:when>
+                <xsl:when test="input">(<xsl:value-of select="input"/>)</xsl:when>
                 <xsl:otherwise> @call @function <xsl:value-of select="$functionName"/><xsl:call-template name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:otherwise>
             </xsl:choose>
-            <xsl:if test="not(output='error')"> = <xsl:call-template name="bracketed"><xsl:with-param name="expression" select="output"/></xsl:call-template>
-            </xsl:if>
+            <xsl:if test="not(output='error')"> = (<xsl:value-of select="output"/>)</xsl:if>
             <xsl:text>&#xa;</xsl:text>
         </xsl:for-each>
     </xsl:template>
@@ -81,6 +80,10 @@
             <xsl:call-template name="processFunction">
                 <xsl:with-param name="function" select="."/>
             </xsl:call-template>
+        </xsl:for-each>
+        
+        <xsl:for-each select="binaryOperator">
+            <xsl:call-template name="processBinaryOperator"/>
         </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>

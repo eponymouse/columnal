@@ -74,7 +74,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
@@ -83,7 +83,7 @@ public class ArrayExpression extends Expression
         TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<@Recorded TypeExp, TypeState> t = items.get(i).checkAsPattern(varAllowed, data, state, onError);
+            @Nullable Pair<@Recorded TypeExp, TypeState> t = items.get(i).checkAsPattern(data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();

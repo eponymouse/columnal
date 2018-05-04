@@ -1182,7 +1182,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
-            return new MatchAnyExpression();
+            return new MatchAnythingExpression();
         }
     }
     

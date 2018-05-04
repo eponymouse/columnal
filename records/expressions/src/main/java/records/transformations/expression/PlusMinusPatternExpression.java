@@ -51,7 +51,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // The LHS and RHS must be numbers with matching units.  The result is then that same number
         

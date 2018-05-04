@@ -13,7 +13,7 @@ UNIT : '{' ~[}]* '}'
 TYPE : '`' ~[`]* '`'
     { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
 
-PLUS_MINUS: '+-';
+PLUS_MINUS: '\u00B1';
 ADD_OR_SUBTRACT: [+\-];
 TIMES: '*';
 DIVIDE: '/';
@@ -39,7 +39,7 @@ ENDIF : '@endif';
 CASEGUARD: '@given';
 FUNCTION : '@function';
 NEWVAR : '@newvar';
-ANY : '@any';
+ANY : '@anything';
 UNFINISHED : '@unfinished';
 INVALIDOPS : '@invalidops';
 CONSTRUCTOR : '@tag';

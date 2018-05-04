@@ -47,7 +47,7 @@ public class MatchesOneExpression extends BinaryOpExpression
         if (lhsType == null)
             return null;
         @NonNull TypeExp lhsFinal = lhsType;
-        @Nullable Pair<@Recorded TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(false, dataLookup, typeState, onError);
+        @Nullable Pair<@Recorded TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(dataLookup, typeState, onError);
         if (rhsPatType == null)
             return null;
         // We can just discard the RHS type state because it can't introduce any new variables

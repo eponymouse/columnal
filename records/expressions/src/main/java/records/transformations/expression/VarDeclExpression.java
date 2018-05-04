@@ -42,11 +42,8 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        if (!varDeclAllowed)
-            return null; // We are a variable declaration, so clearly not allowed!
-
         MutVar type = new MutVar(this);
         @Nullable TypeState newState = typeState.add(varName, type, onError.recordErrorCurried(this));
         if (newState == null)

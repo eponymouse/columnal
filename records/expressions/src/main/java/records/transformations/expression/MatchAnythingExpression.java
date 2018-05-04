@@ -14,6 +14,8 @@ import records.gui.expressioneditor.OperandNode;
 import records.types.MutVar;
 import records.types.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.Random;
@@ -23,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 23/02/2017.
  */
-public class MatchAnyExpression extends NonOperatorExpression
+public class MatchAnythingExpression extends NonOperatorExpression
 {
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
@@ -35,7 +37,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return new Pair<>(onError.recordTypeNN(this, new MutVar(this)), typeState);
     }
@@ -44,6 +46,13 @@ public class MatchAnyExpression extends NonOperatorExpression
     public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on \"any\" pattern (should only call matchAsPattern)");
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        // Like the name says, we match anything:
+        return state;
     }
 
     @Override
@@ -85,7 +94,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return o instanceof MatchAnyExpression;
+        return o instanceof MatchAnythingExpression;
     }
 
     @Override

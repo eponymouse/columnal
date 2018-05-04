@@ -383,7 +383,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
             return new Pair<>(onError.recordTypeNN(this, TypeExp.fromConcrete(this, expected)), state);
         }

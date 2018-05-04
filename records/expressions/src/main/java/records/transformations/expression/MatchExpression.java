@@ -173,7 +173,7 @@ public class MatchExpression extends NonOperatorExpression
          */
         public @Nullable Pair<@Recorded TypeExp, TypeState> check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            final @Nullable Pair<@Recorded TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, data, state, onError);
+            final @Nullable Pair<@Recorded TypeExp, TypeState> rhsState = pattern.checkAsPattern(data, state, onError);
             if (rhsState == null)
                 return null;
             
