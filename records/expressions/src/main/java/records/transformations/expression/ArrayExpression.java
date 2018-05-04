@@ -74,29 +74,25 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
             return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, new MutVar(this))), state);
         TypeExp[] typeArray = new TypeExp[items.size()];
-        TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
             @Nullable Pair<@Recorded TypeExp, TypeState> t = items.get(i).checkAsPattern(data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();
-            typeStates[i] = t.getSecond();
+            state = t.getSecond();
         }
         this.elementType = onError.recordError(this, TypeExp.unifyTypes(ImmutableList.copyOf(typeArray)));
         _test_originalTypes = Arrays.asList(typeArray);
         if (elementType == null)
             return null;
-        @Nullable TypeState endState = TypeState.union(state, onError.recordErrorCurried(this), typeStates);
-        if (endState == null)
-            return null;
-        return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, elementType)), endState);
+        return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, elementType)), state);
     }
 
     @Override

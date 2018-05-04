@@ -84,8 +84,13 @@
             <output>false</output>
         </example>
         <example>
-            <description>Check if a pair has two values the same</description>
-            <input>("Bye", "Bye") ~ (@newvar s, s)</input>
+            <description>Check if a pair has two numbers, with the second being one higher than the first</description>
+            <input>(2, 4) ~ (@newvar x, (x + 1))</input>
+            <output>false</output>
+        </example>
+        <example>
+            <description>Check if a list has two values, and they are the same</description>
+            <input>["Bye", "Bye"] ~ [@newvar s, s]</input>
             <output>true</output>
         </example>
     </binaryOperator>

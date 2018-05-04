@@ -189,6 +189,7 @@
                     <xs:attribute name="function" use="optional" type="xs:string"/>
                     <xs:attribute name="operator" use="optional" type="xs:string"/>
                     <xs:attribute name="keyword" use="optional" type="xs:string"/>
+                    <xs:attribute name="namespace" use="optional" type="xs:string"/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>
@@ -201,7 +202,7 @@
                     <xs:complexType mixed="true">
                         <xs:sequence>
                             <xs:element ref="a" minOccurs="0" maxOccurs="unbounded"/>
-                            <xs:element name="link" minOccurs="0" maxOccurs="unbounded"/>
+                            <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -212,7 +213,7 @@
                                 <xs:complexType mixed="true">
                                     <xs:sequence>
                                         <xs:element ref="a" minOccurs="0" maxOccurs="unbounded"/>
-                                        <xs:element name="link" minOccurs="0" maxOccurs="unbounded"/>
+                                        <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
