@@ -44,28 +44,38 @@
             </xsl:call-template>
         </xsl:for-each>
         <xsl:for-each select="equivalence">
-            <xsl:for-each select="foranytype">
+            <xsl:call-template name="processEquivalence"/>
+        </xsl:for-each>
+    </xsl:template>
+    
+    <xsl:template name="processEquivalence">
+        <xsl:for-each select="foranytype">
 ==* <xsl:value-of select="@name"/>//<xsl:value-of select="typeConstraint" separator="//"/>
-            </xsl:for-each>
-            <xsl:for-each select="forany">
-== <xsl:value-of select="@name"/>//<xsl:value-of select="."/>                
-            </xsl:for-each>
+        </xsl:for-each>
+        <xsl:for-each select="forany">
+== <xsl:value-of select="@name"/>//<xsl:value-of select="."/>
+        </xsl:for-each>
 ==== <xsl:value-of select="lhs"/>
 ==== <xsl:value-of select="rhs"/>
-            <xsl:text>&#xa;</xsl:text>
-        </xsl:for-each>
+        <xsl:text>&#xa;</xsl:text>
     </xsl:template>
     
     <xsl:template name="processBinaryOperator">
         <xsl:call-template name="processExamples">
             <xsl:with-param name="functionName" select="OPERATOR_NO_INPUTARG_ALLOWED"/>
-        </xsl:call-template>        
+        </xsl:call-template>
+        <xsl:for-each select="equivalence">
+            <xsl:call-template name="processEquivalence"/>
+        </xsl:for-each>
     </xsl:template>
 
     <xsl:template name="processNaryOperator">
         <xsl:call-template name="processExamples">
             <xsl:with-param name="functionName" select="OPERATOR_NO_INPUTARG_ALLOWED"/>
         </xsl:call-template>
+        <xsl:for-each select="equivalence">
+            <xsl:call-template name="processEquivalence"/>
+        </xsl:for-each>
     </xsl:template>
     
     

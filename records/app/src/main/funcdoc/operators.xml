@@ -107,7 +107,7 @@
             <forany name="x">@typevar t</forany>
             <forany name="y">@typevar t</forany>
             <lhs>x &lt;&gt; y</lhs>
-            <rhs>not(x = y)</rhs>
+            <rhs>@call @function not(x = y)</rhs>
         </equivalence>
         <example>
             <input>3 &lt;&gt; 6</input>
