@@ -61,6 +61,12 @@
             <xsl:with-param name="functionName" select="OPERATOR_NO_INPUTARG_ALLOWED"/>
         </xsl:call-template>        
     </xsl:template>
+
+    <xsl:template name="processNaryOperator">
+        <xsl:call-template name="processExamples">
+            <xsl:with-param name="functionName" select="OPERATOR_NO_INPUTARG_ALLOWED"/>
+        </xsl:call-template>
+    </xsl:template>
     
     
     <xsl:template match="/functionDocumentation">
@@ -84,6 +90,10 @@
         
         <xsl:for-each select="binaryOperator">
             <xsl:call-template name="processBinaryOperator"/>
+        </xsl:for-each>
+
+        <xsl:for-each select="naryOperatorGroup">
+            <xsl:call-template name="processNaryOperator"/>
         </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>

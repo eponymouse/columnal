@@ -24,7 +24,6 @@ NON_EQUALITY : '<>';
 LESS_THAN: '<=' | '<';
 GREATER_THAN: '>=' | '>';
 MATCHES: '~';
-BACKSLASH: '\\';
 COLUMN : '@column';
 WHOLECOLUMN: '@entirecolumn';
 MATCH : '@match';
@@ -50,7 +49,7 @@ COMMA: ',';
 STRING_CONCAT : ';';
 IMPLICIT_LAMBDA_PARAM : '?';
 
-NUMBER : [+\-]? [0-9]+ ('.' [0-9]+)?;
+NUMBER : [0-9]+ ('.' [0-9]+)?;
 
 TRUE: 'true';
 FALSE: 'false';

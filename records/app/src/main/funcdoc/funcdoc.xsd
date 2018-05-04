@@ -141,6 +141,9 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="operator" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="unitArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="typeArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="typeConstraint" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="argTypeLeft" type="xs:string"/>
                 <xs:element name="argTypeRight" type="xs:string"/>
                 <xs:element name="resultType" type="xs:string"/>
@@ -159,6 +162,9 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="operator" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+                <xs:element name="unitArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="typeArg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="typeConstraint" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="argType" type="xs:string"/>
                 <xs:element name="resultType" type="xs:string"/>
                 <xs:element ref="description"/>

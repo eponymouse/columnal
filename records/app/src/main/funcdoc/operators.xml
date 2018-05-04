@@ -114,6 +114,111 @@
             <output>true</output>
         </example>
     </binaryOperator>
+    <naryOperatorGroup title="Equal">
+        <operator>=</operator>
+        <typeArg>t</typeArg>
+        <typeConstraint>Equatable t</typeConstraint>
+        <argType>t</argType>
+        <resultType>Boolean</resultType>
+        <description>
+            <p>Checks that all the items are equal.</p>
+            <p>Note that you can compare more than two items at once.  The equals expression is true only if all the items are equal to each other.</p>
+        </description>
+        <equivalence display="false">
+            <foranytype name="t"><typeConstraint>Equatable</typeConstraint></foranytype>
+            <forany name="x">@typevar t</forany>
+            <forany name="y">@typevar t</forany>
+            <forany name="z">@typevar t</forany>
+            <lhs>x = y = z</lhs>
+            <rhs>(x = y) &amp; (y = z) &amp; (x = y)</rhs>
+        </equivalence>
+        <example>
+            <input>1 = 2</input>
+            <output>false</output>
+        </example>
+        <example>
+            <input>@call @function from text("1") = 1</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>(1-1)=(0.3-0.3)=0</input>
+            <output>true</output>
+        </example>
+    </naryOperatorGroup>
+    <naryOperatorGroup title="And">
+        <operator>&amp;</operator>
+        <argType>Boolean</argType>
+        <resultType>Boolean</resultType>
+        <description>
+            <p>Checks if all items are true.</p>
+            <p>The items are checked left-to-right and are not evaluated beyond the first false item.  See the first example for how this is useful.</p>
+        </description>
+        <example>
+            <!-- TODO have a table to provide list -->
+            <description>Will not cause an error because list size is checked before getting the item.</description>
+            <input>(@call @function list length([6, 7]) &gt;= 2) &amp; (@call @function element([6, 7], 2) = 5)</input>
+            <output>false</output>
+        </example>
+        <example>
+            <input>("a" = "a") &amp; ("a" &lt;&gt; "b")</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>true &amp; true &amp; false</input>
+            <output>false</output>
+        </example>
+    </naryOperatorGroup>
+    <!-- TODO or -->
+    
+    <naryOperatorGroup title="Less-than comparison">
+        <operator>&lt;</operator>
+        <operator>&lt;=</operator>
+        <typeArg>t</typeArg>
+        <typeConstraint>Comparable t</typeConstraint>
+        <argType>t</argType>
+        <resultType>Boolean</resultType>
+        <description>
+            <p>Compares the values.</p>
+            <p>Note that you can chain multiple less-than and less-than-or-equals in the same expression.</p>
+            <p>The rules for different types are as follows:</p>
+            <ul>
+                <li>Numbers are compared in the usual way.  All the numbers must have the same units.</li>
+                <li>For booleans, false is less than true.</li>
+                <li>Text is compared lexicographically using the Unicode codepoints -- see the examples.</li>
+                <li>Date, YearMonth, Time and DateTime are compared in the usual way (earlier dates or times are less than later dates or times).</li>
+                <li>DateTimeZoned is compared by converting to the UTC DateTime and then comparing that.</li>
+                <li>TimeZoned is compared by converting to a notional UTC time and then comparing that.</li>
+                <li>Tuples are compared by initially comparing the first item.  If the first items differ, that is the result of the comparison.  Only if the first items are equal will the second values be compared, and so on until they are all equal, or there is a result.</li>
+                <li>Lists are compared lexicographically.  The empty list is less than all other lists.  If both lists are non-empty, the first item is compared.  If these differ, that is the result.  Only if the first items are the same are the second values compared.  If lists are equal until one of them ends, the shorter list is less than the longer list.</li>
+                <li>Tagged items are compared using their tag order.  Earlier tags are less than later tags.  Items with the same tag are compared using their inner value, if present.</li>
+            </ul>
+        </description>
+        <example>
+            <input>1 &lt; @call @function abs(-2) &lt; 3</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>false &lt; true</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>"mud" &lt; "muddle"</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>@call @function asType(`DateTimeZoned`, @call @function from text("2013-05-02 12:00 Europe/London")) &lt; @call @function from text("2013-05-02 11:37 America/Toronto")</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>@tag Maybe:Missing &lt; @call @tag Maybe:Present(0)</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>(0, 5) &lt; (1, 3)</input>
+            <output>true</output>
+        </example>
+    </naryOperatorGroup>
+    
     <!--
     <naryOperatorGroup title="Multiplying">
         <operator>*</operator>

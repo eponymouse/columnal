@@ -185,7 +185,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         {
             try
             {
-                return new NumericLiteral(Utility.parseNumber(ctx.NUMBER().getText()), ctx.UNIT() == null ? null : UnitExpression.load(ctx.UNIT().getText()));
+                return new NumericLiteral(Utility.parseNumber((ctx.ADD_OR_SUBTRACT() == null ? "" : ctx.ADD_OR_SUBTRACT().getText()) + ctx.NUMBER().getText()), ctx.UNIT() == null ? null : UnitExpression.load(ctx.UNIT().getText()));
             }
             catch (InternalException | UserException e)
             {

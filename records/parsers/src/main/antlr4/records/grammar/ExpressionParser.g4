@@ -9,7 +9,7 @@ columnId : ident;
 columnRefType : COLUMN | WHOLECOLUMN;
 columnRef : columnRefType (tableId COLON)? columnId;
 
-numericLiteral : NUMBER UNIT?;
+numericLiteral : ADD_OR_SUBTRACT? NUMBER UNIT?;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
 unfinished : UNFINISHED STRING;
@@ -50,7 +50,7 @@ invalidOpExpression : INVALIDOPS expression (STRING expression)+;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
 
-constructor : CONSTRUCTOR typeName BACKSLASH constructorName | UNKNOWNCONSTRUCTOR constructorName;
+constructor : CONSTRUCTOR typeName COLON constructorName | UNKNOWNCONSTRUCTOR constructorName;
 
 standardFunction : FUNCTION ident;
 callTarget : varRef | standardFunction | constructor | unfinished;
