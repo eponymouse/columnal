@@ -15,9 +15,11 @@ import records.transformations.function.list.InList;
 import records.transformations.function.list.JoinLists;
 import records.transformations.function.list.Single;
 import records.transformations.function.lookup.LookupFunctions;
+import records.transformations.function.number.Round;
+import records.transformations.function.number.RoundDP;
+import records.transformations.function.number.RoundSF;
 import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -48,6 +50,8 @@ public class FunctionList
             new Min(),
             new Not(),
             new Round(),
+            new RoundDP(),
+            new RoundSF(),
             new Single(),
             new StringJoin(),
             new StringJoinWith(),

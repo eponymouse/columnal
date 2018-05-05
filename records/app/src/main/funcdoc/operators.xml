@@ -219,6 +219,25 @@
         </example>
     </naryOperatorGroup>
     
+    <binaryOperator title="Divide">
+        <operator>/</operator>
+        <argTypeLeft>Number{@unitvar u}</argTypeLeft>
+        <argTypeRight>Number{@unitvar v}</argTypeRight>
+        <resultType>Number{@unitvar u/@unitvar v}</resultType>
+        <description>
+            <p>Divides the left side by the right side.</p>
+            <p>This will produce a decimal component if necessary.  If you want integer division, round the result.</p>
+            <p>The result will have appropriate units, dividing the top units by the bottom units.</p>
+        </description>
+        <example>
+            <input>5 / 2</input>
+            <output>2.5</output>
+        </example>
+        <example>
+            <input>@call @function round decimal((100{m} / 9.58{s}), 2)</input>
+            <output>10.44{m/s}</output>
+        </example>
+    </binaryOperator>
     <!--
     <naryOperatorGroup title="Multiplying">
         <operator>*</operator>

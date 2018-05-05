@@ -18,7 +18,7 @@ import records.error.UserException;
 import records.transformations.function.Absolute;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.Mean;
-import records.transformations.function.Round;
+import records.transformations.function.number.Round;
 import records.transformations.function.Sum;
 import test.TestUtil;
 import test.gen.GenNumber;
