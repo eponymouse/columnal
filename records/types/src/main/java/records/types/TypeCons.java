@@ -10,6 +10,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.types.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Utility;
@@ -24,7 +25,7 @@ public class TypeCons extends TypeExp
 {
     public final String name;
     // Can be size 0+:
-    public final ImmutableList<TypeExp> operands;
+    public final ImmutableList<Either<UnitExp, TypeExp>> operands;
     
     // If operands is empty, this is the actual set of type-classes.  If operands is non-empty,
     // this is the list of type-classes which can be derived as long as all of the inner types
@@ -39,7 +40,7 @@ public class TypeCons extends TypeExp
         this.typeClasses = typeClasses;
     }
     
-    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<TypeExp> operands, ImmutableSet<String> derivableTypeClasses)
+    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<Either<UnitExp, TypeExp>> operands, ImmutableSet<String> derivableTypeClasses)
     {
         super(src);
         this.name = name;

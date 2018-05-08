@@ -4,10 +4,13 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.loadsave.OutputBuilder;
+import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.HashMap;
@@ -17,23 +20,25 @@ import java.util.Objects;
 
 public class TaggedTypeDefinition
 {
+    public static enum TypeVariableKind { TYPE, UNIT }
+    
     private final TypeId name;
     // Order matters here:
-    private final ImmutableList<String> typeVariables;
+    private final ImmutableList<Pair<TypeVariableKind, String>> typeVariables;
     // Version with the type variables unsubstituted:
     // The only free variables should be the ones in the typeVariables list:
     private final ImmutableList<TagType<DataType>> tags;
     
-    public TaggedTypeDefinition(TypeId name, ImmutableList<String> typeVariables, ImmutableList<TagType<DataType>> tags) throws InternalException
+    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<DataType>> tags) throws InternalException
     {
         this.name = name;
         this.typeVariables = typeVariables;
         this.tags = tags;
         // Caller is responsible for checking name, type variables and tags.  Hence any violations here are InternalException, not UserException
         HashSet<String> uniqueTypeVars = new HashSet<>();
-        for (String typeVariable : typeVariables)
+        for (Pair<TypeVariableKind, String> typeVariable : typeVariables)
         {
-            if (!uniqueTypeVars.add(typeVariable))
+            if (!uniqueTypeVars.add(typeVariable.getSecond()))
             {
                 throw new InternalException("Duplicate type variable: \"" + typeVariable + "\"");
             }
@@ -53,7 +58,7 @@ public class TaggedTypeDefinition
         return tags;
     }
 
-    public DataType instantiate(ImmutableList<DataType> typeVariableSubs) throws UserException, InternalException
+    public DataType instantiate(ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws UserException, InternalException
     {
         if (typeVariableSubs.size() != typeVariables.size())
             throw new UserException("Attempting to use type with " + typeVariables.size() + " variables but trying to substitute " + typeVariableSubs.size());
@@ -83,9 +88,10 @@ public class TaggedTypeDefinition
     public void save(OutputBuilder b) throws InternalException
     {
         b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
-        for (String typeVariable : typeVariables)
+        for (Pair<TypeVariableKind, String> typeVariable : typeVariables)
         {
-            b.raw(b.quotedIfNecessary(typeVariable));
+            b.t(typeVariable.getFirst() == TypeVariableKind.TYPE ? FormatLexer.TYPEVAR : FormatLexer.UNITVAR, FormatLexer.VOCABULARY)
+                .raw(b.quotedIfNecessary(typeVariable.getSecond()));
         }
         b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
         boolean first = true;
@@ -123,7 +129,7 @@ public class TaggedTypeDefinition
         return Objects.hash(name, typeVariables, tags);
     }
 
-    public ImmutableList<String> getTypeArguments()
+    public ImmutableList<Pair<TypeVariableKind, String>> getTypeArguments()
     {
         return typeVariables;
     }

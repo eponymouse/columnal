@@ -60,6 +60,7 @@
                 </xs:choice>
                 <xs:choice>
                     <xs:element name="output" type="xs:string"/>
+                    <xs:element name="outputPattern" type="xs:string"/>
                 </xs:choice>
             </xs:sequence>
         </xs:complexType>

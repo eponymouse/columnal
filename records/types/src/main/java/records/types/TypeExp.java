@@ -119,6 +119,7 @@ public abstract class TypeExp implements StyledShowable
     public static final String CONS_LIST = "List";
     public static final String CONS_FUNCTION = "->";
     public static final String CONS_TYPE = "Type";
+    public static final String CONS_UNIT = "Unit";
     // For recording errors:
     protected final @Nullable ExpressionBase src;
     
@@ -162,7 +163,13 @@ public abstract class TypeExp implements StyledShowable
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
     public static TypeExp typeExpToTypeGADT(@Nullable ExpressionBase src, TypeExp exp) throws InternalException
     {
-        return new TypeCons(src, CONS_TYPE, ImmutableList.of(exp), ImmutableSet.of());
+        return new TypeCons(src, CONS_TYPE, ImmutableList.of(Either.right(exp)), ImmutableSet.of());
+    }
+
+    // This is like a function: unit -> Unit unit, except that the parameter is not a value of that unit, it's the unit itself.
+    public static TypeExp unitExpToUnitGADT(@Nullable ExpressionBase src, UnitExp exp) throws InternalException
+    {
+        return new TypeCons(src, CONS_UNIT, ImmutableList.of(Either.left(exp)), ImmutableSet.of());
     }
 
     // package-protected:
@@ -209,7 +216,7 @@ public abstract class TypeExp implements StyledShowable
     // of the types of that constructor
     public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
     {
-        ImmutableList.Builder<TypeExp> typeVarsInOrder = ImmutableList.builder();
+        ImmutableList.Builder<Either<UnitExp, TypeExp>> typeVarsInOrder = ImmutableList.builder();
         Map<String, MutVar> typeVarsByName = new HashMap<>();
 
         for (String typeVarName : taggedTypeDefinition.getTypeArguments())

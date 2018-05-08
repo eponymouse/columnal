@@ -195,7 +195,7 @@ public class TestFromDoc
                 if (!typeError)
                 {
                     assertEquals("Errors for " + line, Arrays.asList(), errors.getAllErrors().collect(Collectors.toList()));
-                    assertNotNull(line, typeExp);
+                    assertNotNull("Type check for " + line, typeExp);
                     if (typeExp == null) continue; // Won't happen
                 }
                 else

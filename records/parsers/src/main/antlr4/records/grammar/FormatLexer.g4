@@ -18,6 +18,7 @@ DATETIMEZONED : 'DateTimeZoned';
 TAGGED : '@tagged';
 TYPE : 'TYPE';
 TYPEVAR : '@typevar';
+UNITVAR : '@unitvar';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
 DEFAULT : 'DEFAULT' -> pushMode(VALUE_MODE);

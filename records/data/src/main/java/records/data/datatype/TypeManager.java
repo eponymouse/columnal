@@ -11,6 +11,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberDisplayInfo.Padding;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -66,14 +67,16 @@ public class TypeManager
     public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
-        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of("a"), ImmutableList.of(
+        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
             new TagType<>("Missing", null),
             new TagType<>("Present", DataType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
         // TODO make this into a GADT:
-        knownTypes.put(new TypeId("Type"), new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of("t"), ImmutableList.of(new TagType<>("Type", null))));
+        knownTypes.put(new TypeId("Type"), new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null))));
+        // TODO make this into a GADT:
+        knownTypes.put(new TypeId("Unit"), new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null))));
     }
     
     public TaggedValue maybeMissing()

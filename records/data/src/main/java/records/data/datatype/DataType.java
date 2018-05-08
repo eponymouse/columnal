@@ -48,6 +48,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.BiFunctionInt;
+import utility.Either;
 import utility.ExBiConsumer;
 import utility.ExFunction;
 import utility.Pair;
@@ -374,10 +375,10 @@ public class DataType implements StyledShowable
     protected static class TagTypeDetails
     {
         private final TypeId name;
-        private final ImmutableList<DataType> typeVariableSubstitutions;
+        private final ImmutableList<Either<Unit, DataType>> typeVariableSubstitutions;
         private final ImmutableList<TagType<DataType>> tagTypes;
 
-        protected TagTypeDetails(TypeId name, ImmutableList<DataType> typeVariableSubstitutions, ImmutableList<TagType<DataType>> tagTypes)
+        protected TagTypeDetails(TypeId name, ImmutableList<Either<Unit, DataType>> typeVariableSubstitutions, ImmutableList<TagType<DataType>> tagTypes)
         {
             this.name = name;
             this.typeVariableSubstitutions = typeVariableSubstitutions;
@@ -735,7 +736,7 @@ public class DataType implements StyledShowable
     }
 
     // package-visible
-    static DataType tagged(TypeId name, ImmutableList<DataType> typeVariableSubstitutes, ImmutableList<TagType<DataType>> tagTypes)
+    static DataType tagged(TypeId name, ImmutableList<Either<Unit, DataType>> typeVariableSubstitutes, ImmutableList<TagType<DataType>> tagTypes)
     {
         return new DataType(Kind.TAGGED, null, null, new TagTypeDetails(name, typeVariableSubstitutes, tagTypes), null, null);
     }

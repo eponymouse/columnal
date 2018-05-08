@@ -13,7 +13,9 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitLiteralNode;
 import records.types.TypeExp;
 import styled.StyledString;
+import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
 
 import java.util.Objects;
 import java.util.Random;
@@ -32,15 +34,16 @@ public class UnitLiteralExpression extends NonOperatorExpression
     @Override
     public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // It's always invalid at the moment to have an unattached unit expression.
-        // Numeric literals, where is valid, should not call check on us.
-        return null;
+        // Numeric literals, should not call check on us.
+        // Everyone else sees a Unit GADT
+        return onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unitExpression.asUnit(typeState.getUnitManager()))));
     }
 
     @Override
     public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Trying to fetch unit literal at run-time");
+        // TODO return the actual type literal once we define the GADT
+        return new TaggedValue(0, null);
     }
 
     @Override

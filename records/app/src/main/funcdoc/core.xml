@@ -31,4 +31,24 @@
             <output>[1, 2, 5]</output>
         </example>
     </function>
+    
+    <function name="asUnit">
+        <unitArg>u</unitArg>
+        <unitArg>v</unitArg>
+        <argType>(Unit(@unitvar u), Number{@unitvar v})</argType>
+        <returnType>Number{@unitvar u}</returnType>
+        <description>
+            <p>Converts a number from one unit to another (if possible).</p>
+            <p>Unit conversion is only available for exact conversions (e.g. metres to centimetres), not for approximate or changing conversions (e.g. euros to dollars).</p>
+            <p>Attempting to convert between unrelated units (e.g. metres to seconds) will result in an error.</p>
+        </description>
+        <example>
+            <inputArg>({mile/hour}, (100{m} / 9.58{s}))</inputArg>
+            <outputPattern>23.350 &#x00B1; 0.001</outputPattern>
+        </example>
+        <example>
+            <inputArg>({m^2}, 10{m})</inputArg>
+            <output>error</output>
+        </example>
+    </function>
 </functionDocumentation>
