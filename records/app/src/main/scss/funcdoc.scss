@@ -17,6 +17,7 @@ html {
 }
 .function-name-type, .function-type {   
     font-size: 18pt;
+    
     .wild-unit {
         display: inline;
         position: relative;
@@ -46,6 +47,10 @@ html {
 .function-type .function-arrow {
     padding-left: 8pt;
     padding-right: 12pt;
+}
+.function-type {
+    font-family: 'Droid Sans Mono';
+    color: #333;
 }
 
 .examples {

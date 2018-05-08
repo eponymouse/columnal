@@ -338,6 +338,18 @@
                             <xincludeAware>true</xincludeAware>
                             <dir>src/main/funcdoc</dir>
                             <includes>_all.xml</includes>
+                            <otherDepends>boolean.xml</otherDepends>
+                            <otherDepends>comparison.xml</otherDepends>
+                            <otherDepends>conversion.xml</otherDepends>
+                            <otherDepends>core.xml</otherDepends>
+                            <otherDepends>datetime.xml</otherDepends>
+                            <otherDepends>list.xml</otherDepends>
+                            <otherDepends>listprocess.xml</otherDepends>
+                            <otherDepends>lookup.xml</otherDepends>
+                            <otherDepends>number.xml</otherDepends>
+                            <otherDepends>operators.xml</otherDepends>
+                            <otherDepends>text.xml</otherDepends>
+                            <otherDepends>../xslt/funcdoc-shared.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-indiv-html.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
                                  So we must pass as a parameter instead -->
@@ -348,6 +360,20 @@
                                     <value>${project.build.directory}/classes</value>
                                 </parameter>
                             </parameters>
+                        </transformationSet>
+
+                        <transformationSet>
+                            <xincludeAware>true</xincludeAware>
+                            <dir>src/main/funcdoc</dir>
+                            <includes>*.xml</includes>
+                            <otherDepends>../xslt/funcdoc-shared.xml</otherDepends>
+                            <stylesheet>src/main/xslt/funcdoc-joined-html.xsl</stylesheet>
+                            <outputDir>${project.build.directory}/classes</outputDir>
+                            <fileMappers>
+                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>.html</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
                         </transformationSet>
 
                         <transformationSet>
