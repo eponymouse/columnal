@@ -25,6 +25,7 @@ import records.grammar.FormatParser;
 import records.grammar.FormatParser.ArrayTypeExpressionContext;
 import records.grammar.FormatParser.InvalidOpsTypeExpressionContext;
 import records.grammar.FormatParser.RoundTypeExpressionContext;
+import records.grammar.FormatParser.TaggedTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
 import records.gui.expressioneditor.OperandNode;
@@ -197,6 +198,18 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                     return new InvalidOpTypeExpression(Utility.mapListI(ctx.typeExpression(), t -> visitTypeExpression(t)),
                         Utility.mapListI(ctx.STRING(), s -> s.getText())
                     );
+                }
+
+                @Override
+                public TypeExpression visitTaggedTypeExpression(TaggedTypeExpressionContext ctx)
+                {
+                    ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builder();
+                    args.add(Either.right(new TaggedTypeNameExpression(new TypeId(ctx.ident().getText()))));
+                    for (RoundTypeExpressionContext roundTypeExpressionContext : ctx.roundTypeExpression())
+                    {
+                        args.add(Either.right(visitRoundTypeExpression(roundTypeExpressionContext)));
+                    }
+                    return new TypeApplyExpression(args.build());
                 }
 
                 public TypeExpression visitChildren(RuleNode node) {

@@ -34,9 +34,10 @@ completeType : type EOF;
 
 // Version for editing.  Number is treated as terminal here because UNIT is self-contained:
 typeExpressionTerminal : number | date | BOOLEAN | TEXT | INCOMPLETE STRING;
+taggedTypeExpression : TAGGED ident roundTypeExpression*;
 arrayTypeExpression : OPEN_SQUARE typeExpression CLOSE_SQUARE;
 roundTypeExpression : OPEN_BRACKET typeExpression (ARROW typeExpression | (COMMA typeExpression)+)? CLOSE_BRACKET;
-typeExpression : typeExpressionTerminal | arrayTypeExpression | roundTypeExpression | invalidOpsTypeExpression;
+typeExpression : typeExpressionTerminal | arrayTypeExpression | roundTypeExpression | invalidOpsTypeExpression | taggedTypeExpression;
 invalidOpsTypeExpression : INVALIDOPS OPEN_BRACKET typeExpression (STRING typeExpression)+ CLOSE_BRACKET;
 
 completeTypeExpression : typeExpression EOF;
