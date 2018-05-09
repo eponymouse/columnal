@@ -81,7 +81,7 @@ public class ConstructorExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
+        return tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + ":" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
     }
 
     @Override

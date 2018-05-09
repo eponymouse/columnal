@@ -327,7 +327,7 @@ public class DataTypeUtility
             {
                 String s = dateTimeInfo.getStrictFormatter().format((TemporalAccessor) item);
                 if (asExpression)
-                    return "@call @function asType(`" + dataType.save(new OutputBuilder()).toString() + "`, from text(\"" + GrammarUtility.escapeChars(s) + "\"))";
+                    return "@call @function asType(`" + dataType.save(new OutputBuilder()).toString() + "`, @call @function from text(\"" + GrammarUtility.escapeChars(s) + "\"))";
                 else
                     return s;
             }
@@ -343,7 +343,7 @@ public class DataTypeUtility
             public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 TaggedValue tv = (TaggedValue)item;
-                String tagName = (asExpression ? ("@tag " + typeName.getRaw() + "\\") : "") + tags.get(tv.getTagIndex()).getName();
+                String tagName = (asExpression ? ("@tag " + typeName.getRaw() + ":") : "") + tags.get(tv.getTagIndex()).getName();
                 @Nullable @Value Object tvInner = tv.getInner();
                 if (tvInner != null)
                 {
