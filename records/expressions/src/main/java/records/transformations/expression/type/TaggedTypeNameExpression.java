@@ -41,7 +41,7 @@ public class TaggedTypeNameExpression extends TypeExpression
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        return "TAGGED " + OutputBuilder.quotedIfNecessary(typeName.getRaw());
+        return "@tagged " + OutputBuilder.quotedIfNecessary(typeName.getRaw());
     }
 
     @Override

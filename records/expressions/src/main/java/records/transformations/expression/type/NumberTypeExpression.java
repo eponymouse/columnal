@@ -26,9 +26,9 @@ public class NumberTypeExpression extends TypeExpression
     public String save(TableAndColumnRenames renames)
     {
         if (unitExpression == null || unitExpression.isEmpty() || unitExpression.isScalar())
-            return "NUMBER";
+            return "Number";
         else
-            return "NUMBER {" + unitExpression.save(true) + "}"; 
+            return "Number {" + unitExpression.save(true) + "}"; 
     }
 
     @Override
