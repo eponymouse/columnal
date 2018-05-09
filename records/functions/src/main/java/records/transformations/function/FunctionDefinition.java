@@ -23,6 +23,7 @@ import records.types.TypeExp;
 import records.types.units.MutUnitVar;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -109,7 +110,7 @@ public abstract class FunctionDefinition
 
     private static TypeMatcher parseFunctionType(String functionName, List<String> typeArgs, List<String> constraints, List<String> unitArgs, String functionType)
     {
-        Map<String, MutVar> typeVars = new HashMap<>();
+        Map<String, Either<MutUnitVar, MutVar>> typeVars = new HashMap<>();
         for (String typeArg : typeArgs)
         {
             TypeClassRequirements typeClassRequirements = TypeClassRequirements.empty();
@@ -122,18 +123,17 @@ public abstract class FunctionDefinition
                 }
             }
             
-            typeVars.put(typeArg, new MutVar(null));
+            typeVars.put(typeArg, Either.right(new MutVar(null)));
         }
-        Map<String, MutUnitVar> unitVars = new HashMap<>();
         for (String unitArg : unitArgs)
         {
-            unitVars.put(unitArg, new MutUnitVar());
+            typeVars.put(unitArg, Either.left(new MutUnitVar()));
         }
         
         return typeManager -> {
             try
             {
-                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get, unitVars::get), typeVars);
+                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get), typeVars);
             }
             catch (UserException | InternalException e)
             {
@@ -150,7 +150,7 @@ public abstract class FunctionDefinition
     }
 
     // Function type, and map from named typed vars to type expression
-    public Pair<TypeExp, Map<String, MutVar>> getType(TypeManager typeManager) throws InternalException
+    public Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> getType(TypeManager typeManager) throws InternalException
     {
         return typeMatcher.makeParamAndReturnType(typeManager);
     }
@@ -216,7 +216,7 @@ public abstract class FunctionDefinition
         // We have to make it fresh for each type inference, because the params and return may
         // share a type variable which will get unified during the inference
         // Returns type of function, and type vars by name.
-        public Pair<TypeExp, Map<String, MutVar>> makeParamAndReturnType(TypeManager typeManager) throws InternalException;
+        public Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> makeParamAndReturnType(TypeManager typeManager) throws InternalException;
     }
 
     // Only for testing:

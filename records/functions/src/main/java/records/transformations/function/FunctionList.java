@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.function.core.AsType;
+import records.transformations.function.core.AsUnit;
 import records.transformations.function.core.TypeOf;
 import records.transformations.function.list.AnyAllNone;
 import records.transformations.function.list.Combine;
@@ -38,7 +39,7 @@ public class FunctionList
             new AnyAllNone.All(),
             new AnyAllNone.None(),
             new AsType(),
-            //new AsUnit(),
+            new AsUnit(),
             new Combine(),
             new Count(),
             new FromString(),

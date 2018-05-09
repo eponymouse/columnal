@@ -6,10 +6,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
@@ -53,7 +55,7 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null);
     }
 
-    public static DataTypeValue tagged(TypeId name, ImmutableList<DataType> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
+    public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
         return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.upcast()).collect(ImmutableList.toImmutableList())), null, null, null, null, null, getTag, null);
     }
@@ -126,7 +128,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TaggedValue taggedValue = (TaggedValue)value;
                 g.set(rowIndex, taggedValue.getTagIndex());
@@ -216,7 +218,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tagged data type");
         }
@@ -253,7 +255,7 @@ public class DataTypeValue extends DataType
         R bool(GetValue<@Value Boolean> g) throws InternalException, E;
         R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
-        R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         R tuple(ImmutableList<DataTypeValue> types) throws InternalException, E;
 
         // Each item is a pair of size and accessor.  The inner type gives the type
@@ -348,7 +350,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 Integer tagIndex = g.get(index);
                 @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();;

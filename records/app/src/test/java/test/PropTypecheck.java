@@ -285,7 +285,7 @@ public class PropTypecheck
             }
 
             @Override
-            public DataType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return original;
             }
@@ -336,7 +336,7 @@ public class PropTypecheck
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return DataTypeValue.tagged(typeName, typeVars, Utility.mapListExI(tags, tt -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : toValue(tt.getInner()))), (i, prog) -> {throw new InternalException("");});
             }

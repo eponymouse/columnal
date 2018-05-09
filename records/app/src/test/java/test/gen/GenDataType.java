@@ -14,6 +14,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -21,6 +22,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import test.TestUtil;
 import test.gen.GenDataType.DataTypeAndManager;
+import utility.Either;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 13/01/2017.
@@ -80,7 +83,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         }
     }
 
-    private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableList<String> availableTypeVariables) throws UserException, InternalException
+    private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableList<Pair<TypeVariableKind, String>> availableTypeVariables) throws UserException, InternalException
     {
         List<ExSupplier<DataType>> options = new ArrayList<>(Arrays.asList(
             () -> DataType.BOOLEAN,
@@ -90,7 +93,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         ));
         if (!availableTypeVariables.isEmpty())
         {
-            options.add(() -> DataType.typeVariable(r.choose(availableTypeVariables)));
+            options.add(() -> DataType.typeVariable(r.choose(availableTypeVariables.stream().filter(p -> p.getFirst() == TypeVariableKind.TYPE).map(p -> p.getSecond()).collect(Collectors.toList()))));
         }
         if (maxDepth > 1)
         {
@@ -123,7 +126,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         }
     }
 
-    protected DataType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableList<String> originalTypeVars) throws InternalException, UserException
+    protected DataType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableList<Pair<TypeVariableKind, String>> originalTypeVars) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition;
 
@@ -133,11 +136,11 @@ public class GenDataType extends Generator<DataTypeAndManager>
         {
             // Don't need to add N more, just add one for now:
 
-            final ImmutableList<String> typeVars;
+            final ImmutableList<Pair<TypeVariableKind, String>> typeVars;
             if (r.nextBoolean())
             {
                 // Must use distinct to make sure no duplicates:
-                typeVars = TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().collect(ImmutableList.toImmutableList());
+                typeVars = TestUtil.makeList(r, 1, 4, () -> new Pair<>(TypeVariableKind.TYPE, "" + r.nextChar('a', 'z'))).stream().distinct().collect(ImmutableList.toImmutableList());
             }
             else
             {
@@ -156,6 +159,11 @@ public class GenDataType extends Generator<DataTypeAndManager>
         {
             typeDefinition = r.choose(typeManager.getKnownTaggedTypes().values());
         }
-        return typeDefinition.instantiate(Utility.mapListExI(typeDefinition.getTypeArguments(), _arg -> genDepth(r, maxDepth - 1, gs, originalTypeVars)));
+        return typeDefinition.instantiate(Utility.mapListExI(typeDefinition.getTypeArguments(), arg -> {
+            if (arg.getFirst() == TypeVariableKind.TYPE)
+                return Either.right(genDepth(r, maxDepth - 1, gs, originalTypeVars));
+            else
+                return Either.left(new GenUnit().generate(r, gs));
+        }));
     }
 }

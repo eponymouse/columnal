@@ -31,6 +31,7 @@ import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
+import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
@@ -414,9 +415,9 @@ public class TestUtil
             DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER))).instantiate(ImmutableList.of());
             DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
             DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("A", a), new TagType<DataType>("C", c))).instantiate(ImmutableList.of());
-            DataType maybeMaybe = DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(
-                DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(DataType.TEXT))
-            ));
+            DataType maybeMaybe = DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(
+                DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)))
+            )));
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -717,7 +718,7 @@ public class TestUtil
             }
 
             @Override
-            public @Nullable Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), tags);
                 for (TagType<DataType> tag : tags)
@@ -1045,7 +1046,7 @@ public class TestUtil
             }
 
             @Override
-            public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 for (TagType<DataType> tag : tags)
                 {

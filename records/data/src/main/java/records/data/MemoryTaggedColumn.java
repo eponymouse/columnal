@@ -7,10 +7,12 @@ import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationRunnable;
 import utility.TaggedValue;
 import utility.Utility;
@@ -25,9 +27,9 @@ public class MemoryTaggedColumn extends EditableColumn
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
     private final TaggedValue defaultValue;
-    private final ImmutableList<DataType> typeVars;
+    private final ImmutableList<Either<Unit, DataType>> typeVars;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DataType>> tags, List<TaggedValue> list, TaggedValue defaultValue) throws InternalException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DataType>> tags, List<TaggedValue> list, TaggedValue defaultValue) throws InternalException
     {
         super(rs, title);
         this.typeName = typeName;
@@ -50,7 +52,7 @@ public class MemoryTaggedColumn extends EditableColumn
         List<TagType<DataType>> tags = getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {
             @Override
-            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags;
             }

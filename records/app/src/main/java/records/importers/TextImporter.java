@@ -29,6 +29,7 @@ import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -186,9 +187,9 @@ public class TextImporter implements Importer
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) orBlankColumnType.getInner();
                     DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
-                    DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(numberType));
+                    DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(numberType)));
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return new TaggedValue(1, null);

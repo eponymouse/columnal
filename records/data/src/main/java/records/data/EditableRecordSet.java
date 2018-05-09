@@ -17,8 +17,10 @@ import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.Either;
 import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -108,7 +110,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public EditableColumn tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<TaggedValue> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)

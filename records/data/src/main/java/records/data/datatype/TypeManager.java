@@ -19,6 +19,7 @@ import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
+import records.grammar.FormatParser.BracketedTypeContext;
 import records.grammar.FormatParser.DateContext;
 import records.grammar.FormatParser.DecimalPlacesContext;
 import records.grammar.FormatParser.NumberContext;
@@ -26,6 +27,7 @@ import records.grammar.FormatParser.TagItemContext;
 import records.grammar.FormatParser.TypeContext;
 import records.grammar.FormatParser.TypeDeclContext;
 import records.grammar.FormatParser.TypeDeclsContext;
+import records.grammar.FormatParser.UnbracketedTypeContext;
 import records.grammar.MainParser.TypesContext;
 import records.loadsave.OutputBuilder;
 import styled.StyledShowable;
@@ -92,7 +94,7 @@ public class TypeManager
     
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
-    public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<String> typeVariables, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+    public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
     {
         if (tagTypes.isEmpty())
             throw new InternalException("Tagged type cannot have zero tags");
@@ -135,7 +137,9 @@ public class TypeManager
     private void loadTypeDecl(TypeDeclContext typeDeclContext) throws UserException, InternalException
     {
         TypeId typeName = new TypeId(typeDeclContext.typeName().getText());
-        ImmutableList<String> typeParams = Utility.mapListExI(typeDeclContext.taggedDecl().ident(), var -> var.getText());
+        ImmutableList<Pair<TypeVariableKind, String>> typeParams = Utility.mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
+            return new Pair<>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, var.ident().getText());
+        });
         List<TagType<DataType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
@@ -149,7 +153,7 @@ public class TypeManager
                 if (item.type().size() == 1)
                     tags.add(new TagType<DataType>(tagName, loadTypeUse(item.type(0))));
                 else
-                    tags.add(new TagType<DataType>(tagName, DataType.tuple(Utility.mapListEx(item.type(), t -> loadTypeUse(t)))));
+                    tags.add(new TagType<DataType>(tagName, DataType.tuple(Utility.mapListEx(item.type(), this::loadTypeUse))));
             }
             else
                 tags.add(new TagType<DataType>(tagName, null));
@@ -162,8 +166,36 @@ public class TypeManager
     {
         return Utility.parseAsOne(type, FormatLexer::new, FormatParser::new, p -> loadTypeUse(p.completeType().type()));
     }
-    
+
     public DataType loadTypeUse(TypeContext type) throws InternalException, UserException
+    {
+        if (type.bracketedType() != null)
+            return loadTypeUse(type.bracketedType());
+        else if (type.unbracketedType() != null)
+            return loadTypeUse(type.unbracketedType());
+        else
+            throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
+    }
+
+    private DataType loadTypeUse(BracketedTypeContext type) throws InternalException, UserException
+    {
+        if (type.tuple() != null)
+        {
+            return DataType.tuple(Utility.mapListEx(type.tuple().type(), t -> loadTypeUse(t)));
+        }
+        else if (type.functionType() != null)
+        {
+            return DataType.function(loadTypeUse(type.functionType().type(0)), loadTypeUse(type.functionType().type(1)));
+        }
+        else if (type.type() != null)
+        {
+            return loadTypeUse(type.type());
+        }
+        else
+            throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
+    }
+    
+    private DataType loadTypeUse(UnbracketedTypeContext type) throws InternalException, UserException
     {
         if (type.BOOLEAN() != null)
             return BOOLEAN;
@@ -207,15 +239,17 @@ public class TypeManager
         {
             if (type.tagRef().ident() == null)
                 throw new UserException("Missing tag name: " + type.tagRef());
-            ImmutableList<DataType> typeParams = Utility.mapListExI(type.tagRef().type(), t -> loadTypeUse(t));
+            ImmutableList<Either<Unit, DataType>> typeParams = Utility.mapListExI(type.tagRef().tagRefParam(), t -> {
+                if (t.UNIT() != null)
+                    return Either.left(unitManager.loadUse(t.UNIT().getText()));
+                // TODO UNITVAR
+                else
+                    return Either.right(loadTypeUse(t.bracketedType()));
+            });
             DataType taggedType = lookupType(new TypeId(type.tagRef().ident().getText()), typeParams);
             if (taggedType == null)
                 throw new UserException("Undeclared tagged type: \"" + type.tagRef().ident().getText() + "\"");
             return taggedType;
-        }
-        else if (type.tuple() != null)
-        {
-            return DataType.tuple(Utility.mapListEx(type.tuple().type(), this::loadTypeUse));
         }
         else if (type.array() != null)
         {
@@ -224,10 +258,6 @@ public class TypeManager
         else if (type.typeVar() != null)
         {
             return DataType.typeVariable(type.typeVar().ident().getText());
-        }
-        else if (type.functionType() != null)
-        {
-            return DataType.function(loadTypeUse(type.functionType().type(0)), loadTypeUse(type.functionType().type(1)));
         }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
@@ -252,12 +282,12 @@ public class TypeManager
         return str.substring(0, i) + num.add(BigInteger.ONE).toString();
     }
 
-    public @Nullable DataType lookupType(String typeName, ImmutableList<DataType> typeVariableSubs) throws UserException, InternalException
+    public @Nullable DataType lookupType(String typeName, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws UserException, InternalException
     {
         return lookupType(new TypeId(typeName), typeVariableSubs);
     }
 
-    public @Nullable DataType lookupType(TypeId typeId, ImmutableList<DataType> typeVariableSubs) throws InternalException, UserException
+    public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, UserException
     {
         TaggedTypeDefinition taggedTypeDefinition = knownTypes.get(typeId);
         if (taggedTypeDefinition == null)
@@ -317,7 +347,7 @@ public class TypeManager
                     }
                     
                     @Override
-                    public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                    public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                     {
                         @Nullable TaggedTypeDefinition referencedType = knownTypes.get(typeName);
                         if (referencedType != null)

@@ -35,6 +35,7 @@ import records.types.MutVar;
 import records.types.TypeClassRequirements;
 import records.types.TypeConcretisationError;
 import records.types.TypeExp;
+import records.types.units.MutUnitVar;
 import test.DummyManager;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
@@ -84,7 +85,7 @@ public class TestFromDoc
                 if (line.trim().isEmpty())
                     continue;
 
-                Map<String, MutVar> typeVariables = new HashMap<>();
+                Map<String, Either<MutUnitVar, MutVar>> typeVariables = new HashMap<>();
                 Map<String, TypeExp> variables = new HashMap<>();
                 boolean errorLine = false;
                 boolean typeError = false;
@@ -103,7 +104,7 @@ public class TestFromDoc
                         if (line.startsWith("== "))
                         {
                             String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
-                            variables.put(nameType[0], TypeExp.fromDataType(null, typeManager.loadTypeUse(nameType[1]), typeVariables::get, u -> null));
+                            variables.put(nameType[0], TypeExp.fromDataType(null, typeManager.loadTypeUse(nameType[1]), typeVariables::get));
                             i += 1;
                         }
                         else if (line.startsWith("==* "))
@@ -112,7 +113,7 @@ public class TestFromDoc
                             TypeExp picked = TypeExp.fromConcrete(null, typeAndValueGen.getType());
                             MutVar mutVar = new MutVar(null, TypeClassRequirements.require(StringUtils.removeEnd(nameType[1], " " + nameType[0]), ""));
                             typeError = TypeExp.unifyTypes(picked, mutVar).isLeft();
-                            typeVariables.put(nameType[0], mutVar);
+                            typeVariables.put(nameType[0], Either.right(mutVar));
                             i += 1;
                         }
                         else

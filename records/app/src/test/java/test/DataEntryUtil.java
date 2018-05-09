@@ -13,10 +13,12 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -70,7 +72,7 @@ public class DataEntryUtil
             
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 robot.write(DataTypeUtility.valueToString(dataType, value, null));
                 return UnitType.UNIT;

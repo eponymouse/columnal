@@ -10,8 +10,10 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.units.MutUnitVar;
@@ -157,7 +159,7 @@ public abstract class TypeExp implements StyledShowable
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
     public static TypeExp dataTypeToTypeGADT(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
-        return typeExpToTypeGADT(src, fromDataType(src, dataType, s -> null, u -> null));
+        return typeExpToTypeGADT(src, fromDataType(src, dataType, s -> null));
     }
 
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
@@ -217,13 +219,13 @@ public abstract class TypeExp implements StyledShowable
     public static Pair<TypeExp, ImmutableList<TypeExp>> fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
     {
         ImmutableList.Builder<Either<UnitExp, TypeExp>> typeVarsInOrder = ImmutableList.builder();
-        Map<String, MutVar> typeVarsByName = new HashMap<>();
+        Map<String, Either<MutUnitVar, MutVar>> typeVarsByName = new HashMap<>();
 
-        for (String typeVarName : taggedTypeDefinition.getTypeArguments())
+        for (Pair<TypeVariableKind, String> typeVar : taggedTypeDefinition.getTypeArguments())
         {
-            MutVar mutVar = new MutVar(src);
-            typeVarsInOrder.add(mutVar);
-            typeVarsByName.put(typeVarName, mutVar);
+            Either<MutUnitVar, MutVar> mutVar = typeVar.getFirst() == TypeVariableKind.TYPE ? Either.right(new MutVar(src)) : Either.left(new MutUnitVar());
+            typeVarsInOrder.add(mutVar.<UnitExp, TypeExp>mapBoth(UnitExp::new, v -> v));
+            typeVarsByName.put(typeVar.getSecond(), mutVar);
         }
 
         TypeCons overallType = new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), typeVarsInOrder.build(), ALL_TYPE_CLASSES);
@@ -237,8 +239,8 @@ public abstract class TypeExp implements StyledShowable
             }
             else
             {
-                TypeExp innerTypeExp = fromDataType(src, tagType.getInner(), typeVarsByName::get, u -> null);
-                tagTypes.add(new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(innerTypeExp, overallType), ImmutableSet.of()));
+                TypeExp innerTypeExp = fromDataType(src, tagType.getInner(), typeVarsByName::get);
+                tagTypes.add(new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.right(innerTypeExp), Either.right(overallType)), ImmutableSet.of()));
             }
         }
         
@@ -264,27 +266,27 @@ public abstract class TypeExp implements StyledShowable
 
     public static TypeExp list(@Nullable ExpressionBase src, TypeExp inner)
     {
-        return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(inner), ALL_TYPE_CLASSES);
+        return new TypeCons(src, TypeExp.CONS_LIST, ImmutableList.of(Either.right(inner)), ALL_TYPE_CLASSES);
     }
     
     public static TypeExp function(@Nullable ExpressionBase src, TypeExp paramType, TypeExp returnType)
     {
-        return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(paramType, returnType), ImmutableSet.of());
+        return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.right(paramType), Either.right(returnType)), ImmutableSet.of());
     }
     
     public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
-        return fromDataType(src, dataType, t -> null, u -> null);
+        return fromDataType(src, dataType, t -> null);
     }
 
-    public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType, Function<String, @Nullable MutVar> typeVarLookup, Function<String, @Nullable MutUnitVar> unitVarLookup) throws InternalException
+    public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType, Function<String, @Nullable Either<MutUnitVar, MutVar>> typeVarLookup) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
         {
             @Override
             public TypeExp number(NumberInfo numberInfo) throws InternalException, InternalException
             {
-                return new NumTypeExp(src, UnitExp.fromConcrete(numberInfo.getUnit(), unitVarLookup));
+                return new NumTypeExp(src, UnitExp.fromConcrete(numberInfo.getUnit(), typeVarLookup));
             }
 
             @Override
@@ -306,36 +308,38 @@ public abstract class TypeExp implements StyledShowable
             }
 
             @Override
-            public TypeExp tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public TypeExp tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, v -> fromDataType(src, v, typeVarLookup, unitVarLookup)), ALL_TYPE_CLASSES);
+                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, e -> e.mapBothInt(u -> UnitExp.fromConcrete(u, typeVarLookup), v -> fromDataType(src, v, typeVarLookup))), ALL_TYPE_CLASSES);
             }
 
             @Override
             public TypeExp tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
             {
-                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromDataType(src, t, typeVarLookup, unitVarLookup)), true);
+                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromDataType(src, t, typeVarLookup)), true);
             }
 
             @Override
             public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_LIST, ImmutableList.of(inner == null ? new MutVar(src) : fromDataType(src, inner, typeVarLookup, unitVarLookup)), ALL_TYPE_CLASSES);
+                return new TypeCons(src, CONS_LIST, ImmutableList.of(Either.right(inner == null ? new MutVar(src) : fromDataType(src, inner, typeVarLookup))), ALL_TYPE_CLASSES);
             }
 
             @Override
             public TypeExp function(DataType argType, DataType resultType) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(fromDataType(null, argType, typeVarLookup, unitVarLookup), fromDataType(null, resultType, typeVarLookup, unitVarLookup)), ImmutableSet.of());
+                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(Either.right(fromDataType(null, argType, typeVarLookup)), Either.right(fromDataType(null, resultType, typeVarLookup))), ImmutableSet.of());
             }
 
             @Override
             public TypeExp typeVariable(String typeVariableName) throws InternalException, InternalException
             {
-                @Nullable TypeExp lookedUp = typeVarLookup.apply(typeVariableName);
+                @Nullable Either<MutUnitVar, MutVar> lookedUp = typeVarLookup.apply(typeVariableName);
                 if (lookedUp == null)
                     throw new InternalException("Cannot find type variable: " + typeVariableName);
-                return lookedUp;
+                if (lookedUp.isLeft())
+                    throw new InternalException("Looked for type variable " + typeVariableName + " but found unit variable");
+                return lookedUp.getRight();
             }
         });
     }

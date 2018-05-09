@@ -14,10 +14,12 @@ import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.SimulationRunnable;
 import utility.TaggedValue;
@@ -64,13 +66,13 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DT>> copyTagTypes) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes) throws InternalException
     {
         this(typeName, typeVars, copyTagTypes, null);
     }
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
     {
         tagStore = new NumericColumnStorage();
         innerValueIndex = new NumericColumnStorage();
@@ -222,7 +224,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 return DataTypeValue.tagged(typeName, typeVars, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : reMap(tt.getInner()))), reMapGV(g));
             }

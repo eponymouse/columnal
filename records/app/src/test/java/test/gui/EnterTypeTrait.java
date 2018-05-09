@@ -2,6 +2,7 @@ package test.gui;
 
 import com.google.common.collect.ImmutableList;
 import org.testfx.api.FxRobotInterface;
+import records.error.InternalException;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
@@ -23,7 +24,7 @@ public interface EnterTypeTrait extends FxRobotInterface
     static final int DELAY = 1;
     
     @OnThread(Tag.Any)
-    public default void enterType(TypeExpression typeExpression, Random r)
+    public default void enterType(TypeExpression typeExpression, Random r) throws InternalException
     {
         if (typeExpression instanceof TypePrimitiveLiteral)
         {
@@ -40,7 +41,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             TypeApplyExpression appl = (TypeApplyExpression) typeExpression;
             for (int i = 0; i < appl._test_getOperands().size(); i++)
             {
-                TypeExpression item = appl._test_getOperands().get(i);
+                TypeExpression item = appl._test_getOperands().get(i).getRight();
                 enterType(item, r);
                 if (i < appl._test_getOperands().size() - 1)
                     write(r.nextBoolean() ? "-" : " - ", DELAY);

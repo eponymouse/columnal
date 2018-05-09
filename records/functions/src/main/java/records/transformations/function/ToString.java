@@ -10,10 +10,12 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.Utility;
@@ -89,7 +91,7 @@ public class ToString extends FunctionDefinition
 
                 @Override
                 @OnThread(Tag.Simulation)
-                public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     TaggedValue taggedValue = Utility.cast(param, TaggedValue.class);
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());

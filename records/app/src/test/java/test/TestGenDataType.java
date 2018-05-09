@@ -13,9 +13,11 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenDataType;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -96,7 +98,7 @@ public class TestGenDataType
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                public Stream<Pair<@Nullable Container, @Nullable Container>> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     return tags.stream().flatMap(t -> Utility.streamNullable(t.getInner())).<Pair<@Nullable Container, @Nullable Container>>flatMap((Function<DataType, Stream<Pair<@Nullable Container, @Nullable Container>>>)(t -> TestGenDataType.calculateNesting(t))).map(wrap(Container.TAGGED));
                 }

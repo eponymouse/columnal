@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import records.error.InternalException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BinaryOpExpression;
@@ -37,7 +38,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
     static final int DELAY = 1;
     
     @OnThread(Tag.Any)
-    public default void enterExpression(Expression expression, boolean needsBrackets, Random r)
+    public default void enterExpression(Expression expression, boolean needsBrackets, Random r) throws InternalException
     {
         Class<?> c = expression.getClass();
         if (c == TupleExpression.class)

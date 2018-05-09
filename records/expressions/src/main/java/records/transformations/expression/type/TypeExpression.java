@@ -16,6 +16,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -28,9 +29,11 @@ import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
+import utility.Either;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
@@ -70,16 +73,16 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             }
 
             @Override
-            public TypeExpression tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public TypeExpression tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(typeName);
                 if (typeVars.isEmpty())
                     return taggedTypeNameExpression;
-                ImmutableList.Builder<TypeExpression> args = ImmutableList.builderWithExpectedSize(typeVars.size() + 1);
-                args.add(taggedTypeNameExpression);
-                for (DataType typeVar : typeVars)
+                ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(typeVars.size() + 1);
+                args.add(Either.right(taggedTypeNameExpression));
+                for (Either<Unit, DataType> typeVar : typeVars)
                 {
-                    args.add(fromDataType(typeVar));
+                    args.add(typeVar.<UnitExpression, TypeExpression>mapBothInt(u -> UnitExpression.load(u), t -> fromDataType(t)));
                 }
                 return new TypeApplyExpression(args.build());
             }

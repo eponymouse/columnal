@@ -15,6 +15,7 @@ import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
@@ -213,7 +214,7 @@ public class OutputBuilder
 
             @Override
             @OnThread(Tag.Simulation)
-            public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                 @Nullable DataTypeValue inner = t.getInner();
@@ -345,9 +346,10 @@ public class OutputBuilder
     }
 
     @OnThread(Tag.Any)
-    public synchronized void unit(String s)
+    public synchronized OutputBuilder unit(String s)
     {
         cur().add("{" + s + "}");
+        return this;
     }
 
     @OnThread(Tag.Any)

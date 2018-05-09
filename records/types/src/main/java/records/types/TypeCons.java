@@ -8,6 +8,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.units.UnitExp;
@@ -63,13 +64,30 @@ public class TypeCons extends TypeExp
         if (operands.size() != bt.operands.size())
             return typeMismatch(b);
 
-        ImmutableList.Builder<TypeExp> unifiedOperands = ImmutableList.builder();
+        ImmutableList.Builder<Either<UnitExp, TypeExp>> unifiedOperands = ImmutableList.builder();
         for (int i = 0; i < operands.size(); i++)
         {
-            Either<StyledString, TypeExp> sub = operands.get(i).unifyWith(bt.operands.get(i));
-            if (sub.isLeft())
-                return sub;
-            unifiedOperands.add(sub.getRight());
+            Either<UnitExp, TypeExp> us = operands.get(i);
+            Either<UnitExp, TypeExp> them = bt.operands.get(i);
+            
+            if (us.isLeft() && them.isLeft())
+            {
+                @Nullable UnitExp unified = us.getLeft().unifyWith(them.getLeft());
+                if (unified == null)
+                    return Either.left(StyledString.s("Cannot match units " + us.getLeft() + " with " + them.getLeft()));
+                unifiedOperands.add(Either.left(unified));
+            }
+            else if (us.isRight() && them.isRight())
+            {
+                Either<StyledString, TypeExp> sub = us.getRight().unifyWith(them.getRight());
+                if (sub.isLeft())
+                    return sub;
+                unifiedOperands.add(Either.right(sub.getRight()));
+            }
+            else
+            {
+                return Either.left(StyledString.s("Cannot match units with a type"));
+            }
         }
         return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build(), ImmutableSet.copyOf(Sets.intersection(typeClasses, ((TypeCons) b).typeClasses))));
     }
@@ -77,13 +95,16 @@ public class TypeCons extends TypeExp
     @Override
     public @Nullable TypeExp withoutMutVar(MutVar mutVar)
     {
-        ImmutableList.Builder<TypeExp> without = ImmutableList.builder();
-        for (TypeExp operand : operands)
+        ImmutableList.Builder<Either<UnitExp, TypeExp>> without = ImmutableList.builder();
+        for (Either<UnitExp, TypeExp> operand : operands)
         {
-            TypeExp t = operand.withoutMutVar(mutVar);
-            if (t == null)
+            @Nullable Either<UnitExp, TypeExp> e = operand.<@Nullable Either<UnitExp, TypeExp>>either(u -> Either.left(u), t -> {
+                @Nullable TypeExp r = t.withoutMutVar(mutVar);
+                return r == null ? null : Either.right(r);
+            });
+            if (e == null)
                 return null;
-            without.add(t);
+            without.add(e);
         }
         return new TypeCons(src, name, without.build(), typeClasses);
     }
@@ -98,18 +119,24 @@ public class TypeCons extends TypeExp
             case CONS_BOOLEAN:
                 return Either.right(DataType.BOOLEAN);
             case CONS_LIST:
-                return operands.get(0).toConcreteType(typeManager).map(t -> DataType.array(t));
+                if (operands.get(0).isLeft())
+                    throw new UserException("List must be of a type, not a unit");
+                else
+                    return operands.get(0).getRight().toConcreteType(typeManager).map(t -> DataType.array(t));
             default:
                 try
                 {
                     return Either.right(DataType.date(new DateTimeInfo(DateTimeType.valueOf(name))));
                 }
-                catch (IllegalArgumentException e)
+                catch (IllegalArgumentException e) // Thrown by valueOf()
                 {
                     // Not a date type, continue...
                 }
-                Either<TypeConcretisationError, List<DataType>> errOrOperandsAsTypes = Either.mapMEx(operands, o -> o.toConcreteType(typeManager));
-                return errOrOperandsAsTypes.eitherEx(err -> Either.left(new TypeConcretisationError(err.getErrorText(), null)), (List<DataType> operandsAsTypes) -> {
+                Either<TypeConcretisationError, List<Either<Unit, DataType>>> errOrOperandsAsTypes = Either.mapMEx(operands, o -> {
+                    // So, the outer either here is for units versus types, but the return type is either error or either-unit-or-type.
+                    return o.eitherEx(u -> Either.right(Either.left(u.toConcreteUnit())), t -> t.toConcreteType(typeManager).map(Either::right));
+                });
+                return errOrOperandsAsTypes.eitherEx(err -> Either.left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
                     @Nullable DataType tagged = typeManager.lookupType(name, ImmutableList.copyOf(operandsAsTypes));
                     if (tagged != null)
                     {
@@ -145,9 +172,9 @@ public class TypeCons extends TypeExp
             {
                 // Apply constraints to children so that they know them
                 // for future unification:
-                for (TypeExp operand : operands)
+                for (Either<UnitExp, TypeExp> operand : operands)
                 {
-                    @Nullable StyledString err = operand.requireTypeClasses(typeClasses);
+                    @Nullable StyledString err = operand.<@Nullable StyledString>either(u -> null, t -> t.requireTypeClasses(typeClasses));
                     if (err != null)
                         return err;
                 }
@@ -163,7 +190,7 @@ public class TypeCons extends TypeExp
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("-("), t.toStyledString(), StyledString.s(")"))).toArray(StyledString[]::new)));
+        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("-("), t.either(UnitExp::toStyledString, TypeExp::toStyledString), StyledString.s(")"))).toArray(StyledString[]::new)));
     }
 
     @Override

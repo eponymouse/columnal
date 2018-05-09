@@ -38,6 +38,7 @@ import records.gui.stable.ReadOnlyStringColumnHandler;
 import records.gui.stable.ColumnDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.SimulationFunction;
@@ -103,10 +104,10 @@ public class ImporterUtility
                 NumericColumnType inner = (NumericColumnType) or.getInner();
                 DataType numberType = DataType.number(new NumberInfo(inner.unit));
                 @Nullable DataType type = mgr.getMaybeType().instantiate(
-                    ImmutableList.of(numberType)
+                    ImmutableList.of(Either.right(numberType))
                 );
                 @NonNull DataType typeFinal = type;
-                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(numberType), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
+                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return new TaggedValue(0, null);
                     else

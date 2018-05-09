@@ -63,11 +63,16 @@ public class TaggedTypeDefinition
         if (typeVariableSubs.size() != typeVariables.size())
             throw new UserException("Attempting to use type with " + typeVariables.size() + " variables but trying to substitute " + typeVariableSubs.size());
         
-        Map<String, DataType> substitutions = new HashMap<>();
+        Map<String, Either<Unit, DataType>> substitutions = new HashMap<>();
 
         for (int i = 0; i < typeVariables.size(); i++)
         {
-            substitutions.put(typeVariables.get(i), typeVariableSubs.get(i));
+            if ((typeVariables.get(i).getFirst() == TypeVariableKind.TYPE) && typeVariableSubs.get(i).isLeft())
+                throw new UserException("Expected type variable but found unit variable for variable #" + (i + 1));
+            if ((typeVariables.get(i).getFirst() == TypeVariableKind.UNIT) && typeVariableSubs.get(i).isRight())
+                throw new UserException("Expected unit variable but found type variable for variable #" + (i + 1));
+            
+            substitutions.put(typeVariables.get(i).getSecond(), typeVariableSubs.get(i));
         }
 
         ImmutableList<TagType<DataType>> substitutedTags = Utility.mapListExI(tags, tag -> {

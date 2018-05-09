@@ -9,6 +9,7 @@ import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.TupleTypeExpression;
@@ -16,6 +17,7 @@ import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import records.transformations.expression.type.UnfinishedTypeExpression;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
@@ -90,12 +92,12 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
             {
                 if (ops.get(i).equals("-"))
                 {
-                    ImmutableList.Builder<TypeExpression> applArgs = ImmutableList.builder();
-                    applArgs.add(expressionExps.get(i));
+                    ImmutableList.Builder<Either<UnitExpression, TypeExpression>> applArgs = ImmutableList.builder();
+                    applArgs.add(Either.right(expressionExps.get(i)));
                     int opIndex = i;
                     while (opIndex < ops.size() && ops.get(opIndex).equals("-") && opIndex + 1 < expressionExps.size())
                     {
-                        applArgs.add(expressionExps.get(opIndex + 1));
+                        applArgs.add(Either.right(expressionExps.get(opIndex + 1)));
                         opIndex += 1;
                     }
                     expressionExps.subList(i, opIndex + 1).clear();

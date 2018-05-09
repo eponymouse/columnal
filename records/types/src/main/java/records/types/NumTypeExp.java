@@ -16,6 +16,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// Note: this is separate to TypeCons because (a) unit is optional, so special treatment needed, and
+// (b) the unit is treated specially in multiplication and division.
 public class NumTypeExp extends TypeExp
 {
     private static final ImmutableSet<String> NATURAL_TYPE_CLASSES = ImmutableSet.of(

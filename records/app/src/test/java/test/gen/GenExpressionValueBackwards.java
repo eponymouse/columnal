@@ -519,7 +519,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(Tag.Simulation)
-            public Expression tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Expression tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
@@ -724,7 +724,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new MemoryTaggedColumn(rs, name, typeName, typeVars, tags, Collections.singletonList((TaggedValue) value), (TaggedValue)makeValue(type));
             }
@@ -831,7 +831,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return t.apply(new SpecificDataTypeVisitor<Pair<Expression, @Nullable Expression>>()
                 {
                     @Override
-                    public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
+                    public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
                         TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                         @Nullable DataType inner = tagType.getInner();

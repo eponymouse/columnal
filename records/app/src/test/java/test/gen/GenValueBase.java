@@ -21,6 +21,7 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
+import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -120,7 +121,7 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 @Nullable @Value Object o;

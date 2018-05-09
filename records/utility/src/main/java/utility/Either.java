@@ -1,5 +1,6 @@
 package utility;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.Covariant;
 import records.error.InternalException;
@@ -99,6 +100,7 @@ public class Either<A, B>
         return Either.right(r);
     }
 
+    // Maps the items to Either, but stops at the first Left and returns it.  If no Lefts, returns all the Rights as list.
     @SuppressWarnings("nullness")
     public static <E, R, T> Either<E, List<R>> mapMEx(List<T> xs, ExFunction<? super T, Either<E, R>> applyOne) throws InternalException, UserException
     {
@@ -248,5 +250,21 @@ public class Either<A, B>
     public void ifRight(Consumer<B> withRight)
     {
         either_(a -> {}, withRight);
+    }
+
+    public <C, D> Either<C, D> mapBoth(Function<A, C> withLeft, Function <B, D> withRight)
+    {
+        return either(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
+    }
+
+    public <C, D> Either<C, D> mapBothInt(FunctionInt<A, C> withLeft, FunctionInt<B, D> withRight) throws InternalException
+    {
+        return eitherInt(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
+    }
+
+    // If the value in the either is null, return null, else return a new either without the nullable qualifier
+    public static <A, B> @Nullable Either<@NonNull A, @NonNull B> surfaceNull(Either<@Nullable A, @Nullable B> e)
+    {
+        return e.<@Nullable Either<@NonNull A, @NonNull B>>either((@Nullable A l) -> l == null ? null : Either.<@NonNull A, @NonNull B>left(l), (@Nullable B r) -> r == null ? null : Either.<@NonNull A, @NonNull B>right(r));
     }
 }

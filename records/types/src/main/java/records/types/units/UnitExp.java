@@ -10,6 +10,7 @@ import records.data.unit.SingleUnitVar;
 import records.data.unit.SpecificSingleUnit;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.types.MutVar;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.ComparableEither;
@@ -262,7 +263,7 @@ public final class UnitExp implements StyledShowable
         return u;
     }
 
-    public static UnitExp fromConcrete(Unit unit, Function<String, @Nullable MutUnitVar> unitVarLookup) throws InternalException
+    public static UnitExp fromConcrete(Unit unit, Function<String, @Nullable Either<MutUnitVar, MutVar>> unitVarLookup) throws InternalException
     {
         UnitExp unitExp = new UnitExp();
         for (Entry<SingleUnit, Integer> e : unit.getDetails().entrySet())
@@ -271,10 +272,13 @@ public final class UnitExp implements StyledShowable
                 unitExp.units.put(ComparableEither.right((SpecificSingleUnit)e.getKey()), e.getValue());
             else
             {
-                MutUnitVar unitVar = unitVarLookup.apply(((SingleUnitVar)e.getKey()).getVarName());
+                String varName = ((SingleUnitVar) e.getKey()).getVarName();
+                Either<MutUnitVar, MutVar> unitVar = unitVarLookup.apply(varName);
                 if (unitVar == null)
                     throw new InternalException("Type variable lookup for " + e.getKey() + " failed in " + unit);
-                unitExp.units.put(ComparableEither.left(unitVar), 1);
+                if (unitVar.isRight())
+                    throw new InternalException("Variable " + varName + " should be unit variable but is type variable");
+                unitExp.units.put(ComparableEither.left(unitVar.getLeft()), 1);
             }
         }
         return unitExp;

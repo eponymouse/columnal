@@ -6,15 +6,18 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedTypeNode;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -31,9 +34,9 @@ public class TypeApplyExpression extends TypeExpression
 {
     // To be valid, first one must be TaggedTypeNameExpression, but we don't enforce that
     // because it may be an incomplete expression, etc.
-    private final ImmutableList<TypeExpression> arguments;
+    private final ImmutableList<Either<UnitExpression, TypeExpression>> arguments;
 
-    public TypeApplyExpression(ImmutableList<TypeExpression> arguments)
+    public TypeApplyExpression(ImmutableList<Either<UnitExpression, TypeExpression>> arguments)
     {
         this.arguments = arguments;
     }
@@ -41,15 +44,19 @@ public class TypeApplyExpression extends TypeExpression
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        return arguments.stream().map(x -> x.save(renames)).collect(Collectors.joining("-"));
+        return arguments.stream().map(e -> e.either(u -> "{" + u.save(true) + "}", x -> "(" + x.save(renames) + ")")).collect(Collectors.joining());
     }
 
     @Override
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
-        if (arguments.size() > 1 && arguments.get(0) instanceof TaggedTypeNameExpression)
+        if (arguments.isEmpty())
+            return null;
+
+        TaggedTypeNameExpression taggedType = arguments.get(0).<@Nullable TaggedTypeNameExpression>either(u -> null, t -> t instanceof TaggedTypeNameExpression ? (TaggedTypeNameExpression)t : null);
+        if (taggedType != null)
         {
-            TaggedTypeDefinition def = typeManager.getKnownTaggedTypes().get(((TaggedTypeNameExpression)arguments.get(0)).getTypeName());
+            TaggedTypeDefinition def = typeManager.getKnownTaggedTypes().get(taggedType.getTypeName());
             if (def == null)
                 return null; // It should give error by itself anyway
             if (def.getTypeArguments().size() != arguments.size() - 1)
@@ -59,14 +66,14 @@ public class TypeApplyExpression extends TypeExpression
             }
             
             // If we're here, right number of arguments!
-            List<DataType> typeArgs = new ArrayList<>();
+            List<Either<Unit, DataType>> typeArgs = new ArrayList<>();
             // Start at one:
             for (int i = 1; i < arguments.size(); i++)
             {
-                DataType dataType = arguments.get(i).toDataType(typeManager);
-                if (dataType == null)
+                @Nullable Either<Unit, DataType> type = Either.surfaceNull(arguments.get(i).<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> u2.toConcreteUnit()), t -> t.toDataType(typeManager)));
+                if (type == null)
                     return null;
-                typeArgs.add(dataType);
+                typeArgs.add(type);
             }
             try
             {
@@ -96,7 +103,8 @@ public class TypeApplyExpression extends TypeExpression
     @Override
     public Pair<List<SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>>>, List<SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
-        return new Pair<>(Utility.mapList(arguments, (TypeExpression o) -> o.loadAsSingle()), Utility.replicateM(arguments.size() - 1, () -> new SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>()
+        // TODo support unit literal editing.
+        return new Pair<>(Utility.mapList(arguments, e -> e.either(u -> new UnfinishedTypeExpression(u.save(true)).loadAsSingle(), (TypeExpression o) -> o.loadAsSingle())), Utility.replicateM(arguments.size() - 1, () -> new SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>()
         {
             @Override
             @OnThread(Tag.FXPlatform)
@@ -110,10 +118,10 @@ public class TypeApplyExpression extends TypeExpression
     @Override
     public StyledString toStyledString()
     {
-        return arguments.stream().map(x -> x.toStyledString()).collect(StyledString.joining("-"));
+        return arguments.stream().map(e -> e.either(UnitExpression::toStyledString, TypeExpression::toStyledString)).collect(StyledString.joining("-"));
     }
 
-    public ImmutableList<TypeExpression> _test_getOperands()
+    public ImmutableList<Either<UnitExpression, TypeExpression>> _test_getOperands()
     {
         return arguments;
     }

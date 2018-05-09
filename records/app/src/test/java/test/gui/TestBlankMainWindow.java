@@ -36,6 +36,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
@@ -45,6 +46,7 @@ import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -210,7 +212,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             }
 
             @Override
-            public Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-tagged");
                 @SuppressWarnings("unchecked")

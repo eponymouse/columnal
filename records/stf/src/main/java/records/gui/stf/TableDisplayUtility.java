@@ -29,6 +29,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ColumnHandler;
@@ -406,7 +407,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ImmutableList<String> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public ImmutableList<String> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 return ImmutableList.of("stf-cell-tagged");
             }
@@ -476,7 +477,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
                 return new GetValueAndComponent<TaggedValue>(getTagged, (parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
@@ -624,7 +625,7 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+            public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
             {
                 return (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, (TaggedValue)value);
             }

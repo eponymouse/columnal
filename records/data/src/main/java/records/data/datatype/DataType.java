@@ -170,7 +170,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g), cache -> {
                     cache.add(castTo(TaggedValue.class, getItem.apply(cache.filled())));
@@ -246,7 +246,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
                 return DataTypeValue.tagged(typeName, typeVars, Utility.mapListExI(tags, tag -> {
@@ -295,7 +295,7 @@ public class DataType implements StyledShowable
         });
     }
 
-    public DataType substitute(Map<String, DataType> substitutions) throws InternalException, UserException
+    public DataType substitute(Map<String, Either<Unit, DataType>> substitutions) throws InternalException, UserException
     {
         switch (kind)
         {
@@ -304,7 +304,9 @@ public class DataType implements StyledShowable
                 if (tagTypes == null) throw new InternalException("Null tags for tagged type");
                 if (tagTypeVariableSubstitutions == null) throw new InternalException("Null substitutions for tagged type");
                 
-                return DataType.tagged(taggedTypeName, Utility.mapListExI(this.tagTypeVariableSubstitutions, t -> t.substitute(substitutions)), Utility.mapListExI(tagTypes, t -> {
+                return DataType.tagged(taggedTypeName, Utility.mapListExI(this.tagTypeVariableSubstitutions, e -> {
+                    return e.<Either<Unit, DataType>>eitherEx(u -> Either.<Unit, DataType>left(u), t -> Either.<Unit, DataType>right(t.substitute(substitutions)));
+                }), Utility.mapListExI(tagTypes, t -> {
                     @Nullable DataType inner = t.getInner();
                     if (inner == null)
                         return t;
@@ -317,7 +319,10 @@ public class DataType implements StyledShowable
                 if (memberType == null) throw new InternalException("Null members for array");
                 return memberType.isEmpty() ? DataType.array() : DataType.array(memberType.get(0).substitute(substitutions));
             case TYPE_VARIABLE:
-                DataType substitute = substitutions.get(typeVariableName);
+                Either<Unit, DataType> either = substitutions.get(typeVariableName);
+                if (either == null)
+                    return this;
+                DataType substitute = either.eitherEx(u -> {throw new UserException("Looking for type variable named \"" + typeVariableName + "\" but found unit variable instead.");}, t -> t);
                 if (substitute == null)
                     return this;
                 return substitute;
@@ -347,7 +352,7 @@ public class DataType implements StyledShowable
     final @Nullable TypeId taggedTypeName;
     // We store the declared type variables here even through they should already be substituted,
     // in case we need to turn this concrete type back into a TypeExp for unification:
-    final @Nullable ImmutableList<DataType> tagTypeVariableSubstitutions;
+    final @Nullable ImmutableList<Either<Unit, DataType>> tagTypeVariableSubstitutions;
     final @Nullable ImmutableList<TagType<DataType>> tagTypes;
     // For TUPLE (2+) and ARRAY (1) and FUNCTION(2).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
@@ -418,7 +423,7 @@ public class DataType implements StyledShowable
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
         R tuple(ImmutableList<DataType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(@Nullable DataType inner) throws InternalException, E;
@@ -458,7 +463,7 @@ public class DataType implements StyledShowable
         }
 
         @Override
-        public R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
         {
             throw new InternalException("Unexpected tagged data type");
         }
@@ -616,7 +621,7 @@ public class DataType implements StyledShowable
             }
 
             @Override
-            public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 @Localized String typeStr = typeName.getRaw();
                 if (!typeVars.isEmpty())
@@ -955,6 +960,21 @@ public class DataType implements StyledShowable
         return checkSame(a, b, TypeRelation.SYMMETRIC, onError);
     }
 
+    public static @Nullable Either<Unit, DataType> checkSame(@Nullable Either<Unit, DataType> a, @Nullable Either<Unit, DataType> b, Consumer<String> onError) throws UserException, InternalException
+    {
+        if (a == null || b == null)
+            return null;
+        else if (a.isRight() && b.isRight())
+        {
+            DataType t = checkSame(a.getRight(), b.getRight(), TypeRelation.SYMMETRIC, onError);
+            return t == null ? null : Either.right(t);
+        }
+        else if (a.isLeft() && b.isLeft())
+            return a.getLeft().equals(b.getLeft()) ? a : null;
+        else
+            return null;
+    }
+
 
     public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, TypeRelation relation, Consumer<String> onError) throws UserException, InternalException
     {
@@ -1007,7 +1027,7 @@ public class DataType implements StyledShowable
                 }
 
                 @Override
-                public @Nullable DataType tagged(DataType a, DataType b, TypeId typeNameA, ImmutableList<DataType> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<DataType> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException
+                public @Nullable DataType tagged(DataType a, DataType b, TypeId typeNameA, ImmutableList<Either<Unit, DataType>> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<Either<Unit, DataType>> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException
                 {
                     // Because of the way tagged types work, there's no need to dig any deeper.  The types in a
                     // tagged type are known a priori because they're declared upfront, so as soon as you know
@@ -1022,7 +1042,7 @@ public class DataType implements StyledShowable
                         }
                         for (int i = 0; i < varsA.size(); i++)
                         {
-                            DataType t = checkSame(varsA.get(i), varsB.get(i), onError);
+                            Either<Unit, DataType> t = checkSame(varsA.get(i), varsB.get(i), onError);
                             if (t == null)
                                 return null;
                         }
@@ -1202,7 +1222,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public SimulationFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public SimulationFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Utility.mapListEx(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
@@ -1270,7 +1290,7 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValue, TaggedValue.class, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTaggedValue(tags, p);
@@ -1467,7 +1487,7 @@ public class DataType implements StyledShowable
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return loadTaggedValue(tags, p);
             }
@@ -1547,13 +1567,13 @@ public class DataType implements StyledShowable
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
                 b.quote(typeName);
-                for (DataType typeVar : typeVars)
+                for (Either<Unit, DataType> typeVar : typeVars)
                 {
-                    typeVar.save(b);
+                    typeVar.eitherInt(u -> b.unit(u.toString()), t -> t.save(b));
                 }
                 return UnitType.UNIT;
             }
@@ -1601,7 +1621,7 @@ public class DataType implements StyledShowable
     {
         return apply(new SpecificDataTypeVisitor<Boolean>() {
             @Override
-            public Boolean tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Boolean tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
             }
@@ -2072,7 +2092,7 @@ public class DataType implements StyledShowable
         R date(T a, T b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException;
         R bool(T a, T b) throws InternalException, UserException;
 
-        R tagged(T a, T b, TypeId typeNameA, ImmutableList<DataType> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<DataType> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
+        R tagged(T a, T b, TypeId typeNameA, ImmutableList<Either<Unit, DataType>> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<Either<Unit, DataType>> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
         R tuple(T a, T b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException;
         // If null, array is empty and thus of unknown type
         R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;

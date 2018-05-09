@@ -552,7 +552,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();

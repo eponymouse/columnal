@@ -27,6 +27,7 @@ import records.grammar.TransformationParser.ConcatMissingContext;
 import records.gui.View;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformSupplier;
 import utility.Pair;
@@ -132,7 +133,7 @@ public class Concatenate extends Transformation
                             break;
                         case WRAPMAYBE:
                             
-                            DataType wrappedInMaybe = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(origType));
+                            DataType wrappedInMaybe = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(origType)));
                             ourColumns.put(entry.getKey(), new ColumnDetails(wrappedInMaybe, mgr.getTypeManager().maybeMissing(), orig -> {
                                 return mgr.getTypeManager().maybePresent(orig);
                             }));

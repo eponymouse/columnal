@@ -10,11 +10,13 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExBiConsumer;
 import utility.ExFunction;
 import utility.Pair;
@@ -118,7 +120,7 @@ public final class TextFileColumn extends Column
         );
     }
 
-    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
+    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
             (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, typeVars, tagTypes, fill),

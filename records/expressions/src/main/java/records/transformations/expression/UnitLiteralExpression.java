@@ -12,11 +12,13 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitLiteralNode;
 import records.types.TypeExp;
+import records.types.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.TaggedValue;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -36,7 +38,9 @@ public class UnitLiteralExpression extends NonOperatorExpression
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
-        return onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unitExpression.asUnit(typeState.getUnitManager()))));
+        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> saved = unitExpression.asUnit(typeState.getUnitManager());
+        return saved.<@Nullable TypeExp>eitherInt(error -> {onError.recordError(this, error.getFirst()); return null;}, unit -> 
+            onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit))));
     }
 
     @Override

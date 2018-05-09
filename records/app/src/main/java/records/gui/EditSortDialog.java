@@ -32,6 +32,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete;
@@ -41,6 +42,7 @@ import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.Sort.Direction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.UnitType;
 import utility.gui.FXUtility;
@@ -361,7 +363,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                         }
 
                         @Override
-                        public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                        public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             if (tags.size() == 1 && tags.get(0).getInner() != null)
                             {
