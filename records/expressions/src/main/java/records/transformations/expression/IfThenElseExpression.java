@@ -79,7 +79,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = "@if " + condition.save(BracketedStatus.MISC, renames) + " @then " + thenExpression.save(BracketedStatus.MISC,renames) + " @else " + elseExpression.save(BracketedStatus.MISC, renames);
+        String content = "@if " + condition.save(BracketedStatus.MISC, renames) + " @then " + thenExpression.save(BracketedStatus.MISC,renames) + " @else " + elseExpression.save(BracketedStatus.MISC, renames) + " @endif";
         return surround != BracketedStatus.MISC ? content : ("(" + content + ")");
     }
 
