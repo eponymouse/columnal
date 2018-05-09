@@ -44,9 +44,9 @@ public class PropLoadSaveTransformation
     @Property(trials = 1000)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testLoadSaveTransformation(
-        @From(GenTableManager.class) TableManager mgr1,
-        @From(GenTableManager.class) TableManager mgr2,
-        @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original)
+        @When(seed=7775242752500851022L) @From(GenTableManager.class) TableManager mgr1,
+        @When(seed=-4371589959709192009L) @From(GenTableManager.class) TableManager mgr2,
+        @When(seed=5904142488277326750L) @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);

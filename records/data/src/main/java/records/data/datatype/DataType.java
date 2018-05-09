@@ -1573,7 +1573,7 @@ public class DataType implements StyledShowable
                 b.quote(typeName);
                 for (Either<Unit, DataType> typeVar : typeVars)
                 {
-                    typeVar.eitherInt(u -> b.unit(u.toString()), t -> t.save(b));
+                    typeVar.eitherInt(u -> b.unit(u.toString()), t -> {b.raw("("); t.save(b); return b.raw(")");});
                 }
                 return UnitType.UNIT;
             }

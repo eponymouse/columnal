@@ -149,7 +149,7 @@ public class PropListFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propAny(@When(seed=1617322152122940307L) @From(GenValueList.class) GenValueList.ListAndType src, @When(seed=1L) @From(GenRandom.class) Random r) throws Throwable
+    public void propAny(@From(GenValueList.class) GenValueList.ListAndType src, @When(seed=1L) @From(GenRandom.class) Random r) throws Throwable
     {
         if (src.list.size() == 0)
         {
