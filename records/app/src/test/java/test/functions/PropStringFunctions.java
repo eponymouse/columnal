@@ -80,7 +80,7 @@ public class PropStringFunctions
         else
         {
             assertEquals(DataType.TEXT, checked.getSecond());
-            String SPACES = " \n\t\r\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A";
+            String SPACES = " \n\t\r\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200A\u2028\u2029\u205f\u3000";
             String withSpaces = orig;
             int before = r.nextInt(4);
             int after = r.nextInt(4);
