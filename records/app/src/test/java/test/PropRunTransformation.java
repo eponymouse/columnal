@@ -205,7 +205,7 @@ public class PropRunTransformation
         }).findFirst();
         assumeTrue(numericColumn.isPresent());
 
-        Expression countExpression = new CallExpression(original.mgr.getUnitManager(), "count", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
+        Expression countExpression = new CallExpression(original.mgr.getUnitManager(), "list length", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
         SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, TestUtil.ILD, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
         RecordSet summaryRS = summaryStatistics.getData();
         assertEquals(1, summaryRS.getLength());
