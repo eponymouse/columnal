@@ -240,7 +240,7 @@ public abstract class TypeExp implements StyledShowable
             else
             {
                 TypeExp innerTypeExp = fromDataType(src, tagType.getInner(), typeVarsByName::get);
-                tagTypes.add(new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.right(innerTypeExp), Either.right(overallType)), ImmutableSet.of()));
+                tagTypes.add(TypeCons.function(src, innerTypeExp, overallType));
             }
         }
         

@@ -137,6 +137,30 @@ public class CallExpression extends Expression
     }
 
     @Override
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    {
+        if (function instanceof ConstructorExpression)
+        {
+            @Nullable TypeExp functionType = function.check(data, typeState, onError);
+            if (functionType == null)
+                return null;
+            @Nullable Pair<@Recorded TypeExp, TypeState> paramType = param.checkAsPattern(data, typeState, onError);
+            if (paramType == null)
+                return null;
+            TypeExp returnType = new MutVar(this);
+            TypeExp actualCallType = TypeExp.function(this, paramType.getFirst(), returnType);
+            Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType, actualCallType);
+            @Nullable TypeExp checked = onError.recordError(this, temp);
+            if (checked != null)
+                return new Pair<>(returnType, paramType.getSecond());
+            else
+                return null;
+        }
+        
+        return super.checkAsPattern(data, typeState, onError);
+    }
+
+    @Override
     public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
         ValueFunction functionValue = Utility.cast(function.getValue(state), ValueFunction.class);

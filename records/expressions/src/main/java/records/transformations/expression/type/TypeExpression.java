@@ -80,6 +80,8 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 if (typeVars.isEmpty())
                     return taggedTypeNameExpression;
                 ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(typeVars.size() + 1);
+                if (typeVars.isEmpty())
+                    return taggedTypeNameExpression;
                 args.add(Either.right(taggedTypeNameExpression));
                 for (Either<Unit, DataType> typeVar : typeVars)
                 {
@@ -204,7 +206,10 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 public TypeExpression visitTaggedTypeExpression(TaggedTypeExpressionContext ctx)
                 {
                     ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builder();
-                    args.add(Either.right(new TaggedTypeNameExpression(new TypeId(ctx.ident().getText()))));
+                    TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(new TypeId(ctx.ident().getText()));
+                    if (ctx.roundTypeExpression().isEmpty())
+                        return taggedTypeNameExpression;
+                    args.add(Either.right(taggedTypeNameExpression));
                     for (RoundTypeExpressionContext roundTypeExpressionContext : ctx.roundTypeExpression())
                     {
                         args.add(Either.right(visitRoundTypeExpression(roundTypeExpressionContext)));

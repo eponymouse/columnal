@@ -3,6 +3,7 @@ package test.expressions;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.error.InternalException;
@@ -33,7 +34,7 @@ public class PropRunExpression
 {
     @Property(trials = 2000)
     @OnThread(Tag.Simulation)
-    public void propRunExpression(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
+    public void propRunExpression(@When(seed=-671841290956508488L) @From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         try
         {

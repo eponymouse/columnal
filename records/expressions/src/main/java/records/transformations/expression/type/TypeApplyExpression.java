@@ -44,7 +44,14 @@ public class TypeApplyExpression extends TypeExpression
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        return arguments.stream().map(e -> e.either(u -> "{" + u.save(true) + "}", x -> "(" + x.save(renames) + ")")).collect(Collectors.joining());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < arguments.size(); i++)
+        {
+            Either<UnitExpression, TypeExpression> e = arguments.get(i);
+            boolean first = i == 0;
+            sb.append(e.<String>either(u -> "{" + u.save(true) + "}", x -> first ? x.save(renames ) : ("(" + x.save(renames) + ")")));
+        }
+        return sb.toString();
     }
 
     @Override

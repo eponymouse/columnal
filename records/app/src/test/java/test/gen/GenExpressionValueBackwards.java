@@ -23,6 +23,7 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
+import records.transformations.expression.type.TypeExpression;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -265,7 +266,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
-                deep.add(() -> call(getStringCreator(dateTimeInfo.getType()), make(DataType.TEXT, targetValue.toString(), maxLevels - 1)));
+                deep.add(() -> call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", make(DataType.TEXT, targetValue.toString(), maxLevels - 1))));
 
                 switch (dateTimeInfo.getType())
                 {
@@ -371,7 +372,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 deep.add(fixType(maxLevels - 1, type, targetValue));
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
-                    return call(getStringCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.toString()));
+                    return call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", new StringLiteral(targetValue.toString())));
                 }, () -> columnRef(type, targetValue)), deep);
             }
 

@@ -350,7 +350,10 @@ public class DataTypeUtility
                     @Nullable DataType typeInner = tags.get(tv.getTagIndex()).getInner();
                     if (typeInner == null)
                         throw new InternalException("Tag value inner but missing type inner: " + typeName + " " + tagName);
-                    return tagName + "(" + valueToString(typeInner, tvInner, dataType, asExpression) + ")";
+                    if (asExpression)
+                        return "@call " + tagName + "(" + valueToString(typeInner, tvInner, dataType, asExpression) + ")";
+                    else
+                        return tagName + "(" + valueToString(typeInner, tvInner, dataType, asExpression) + ")";
                 }
                 else
                 {

@@ -173,6 +173,10 @@ public class UnitManager
                 base = lookedUp.getUnit();
             }
         }
+        else if (singleOrScaleContext.NUMBER() != null && singleOrScaleContext.NUMBER().getText().equals("1"))
+        {
+            return Unit.SCALAR;
+        }
         else
             throw new UserException("Error parsing unit: \"" + singleOrScaleContext.getText() + "\"");
 
