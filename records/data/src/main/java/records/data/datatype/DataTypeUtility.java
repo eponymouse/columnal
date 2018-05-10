@@ -235,11 +235,13 @@ public class DataTypeUtility
                     return t;
                 else
                     return LocalTime.from(t);
+            /*
             case TIMEOFDAYZONED:
                 if (t instanceof OffsetTime)
                     return t;
                 else
                     return OffsetTime.from(t);
+            */
             case DATETIME:
                 if (t instanceof LocalDateTime)
                     return t;

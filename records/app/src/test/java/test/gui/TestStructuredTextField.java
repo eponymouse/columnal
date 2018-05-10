@@ -843,6 +843,7 @@ public class TestStructuredTextField extends ApplicationTest
         // TODO also test errors
     }
 
+    /*
     @Property(trials = 15)
     public void propTimeZoned(@From(GenOffsetTime.class) OffsetTime timeZoned, @From(GenRandom.class) Random r) throws InternalException
     {
@@ -856,6 +857,7 @@ public class TestStructuredTextField extends ApplicationTest
         type(timeVal, timeVal, timeZoned);
         // TODO also test errors
     }
+    */
 
     // There's only two possible values, so no need to make it a property!
     @Test

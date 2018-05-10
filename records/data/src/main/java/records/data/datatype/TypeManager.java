@@ -215,8 +215,8 @@ public class TypeManager
                 return DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
             else if (d.TIMEOFDAY() != null)
                 return DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY));
-            else if (d.TIMEOFDAYZONED() != null)
-                return DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED));
+            //else if (d.TIMEOFDAYZONED() != null)
+                //return DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED));
 
             throw new UserException("Unrecognised date/time type: " + d.getText());
         }

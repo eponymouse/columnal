@@ -351,13 +351,14 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     case TIMEOFDAY:
                         deep.add(() -> {
                             Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                                new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
+                                //new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
                                 new Pair<>("time.from.datetime", DateTimeType.DATETIME), 
                                 new Pair<>("time.from.datetimezoned", DateTimeType.DATETIMEZONED)));
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
                             return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         break;
+                    /*
                     case TIMEOFDAYZONED:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), maxLevels - 1);
@@ -369,6 +370,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> call("timezoned", e, new StringLiteral(zone.toString())));
                         });
                         break;
+                    */
                     case DATETIME:
                         // down cast:
                         deep.add(() -> {
@@ -412,9 +414,9 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         case TIMEOFDAY:
                             @Value LocalTime time = TestUtil.generateTime(r, gs);
                             return literal(time, call("time.from.string", new StringLiteral(time.toString())));
-                        case TIMEOFDAYZONED:
-                            @Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
-                            return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
+                        //case TIMEOFDAYZONED:
+                            //@Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
+                            //return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
                         case DATETIME:
                             @Value LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
                             return literal(dateTime, call("datetime.from.string", new StringLiteral(dateTime.toString())));

@@ -97,8 +97,8 @@ public abstract class GenValueBase<T> extends Generator<T>
                         return YearMonth.of(r.nextInt(1, 9999), r.nextInt(1, 12));
                     case TIMEOFDAY:
                         return TestUtil.generateTime(r, gs);
-                    case TIMEOFDAYZONED:
-                        return OffsetTime.of(TestUtil.generateTime(r, gs), ZoneOffset.ofTotalSeconds(60 * r.nextInt(-18*60, 18*60)));
+                    //case TIMEOFDAYZONED:
+                        //return OffsetTime.of(TestUtil.generateTime(r, gs), ZoneOffset.ofTotalSeconds(60 * r.nextInt(-18*60, 18*60)));
                     case DATETIME:
                         return TestUtil.generateDateTime(r, gs);
                     case DATETIMEZONED:

@@ -39,21 +39,4 @@
             <output>"13:31:00"</output>
         </example>
     </function>
-    
-    <function name="time zoned">
-        <argType>(Time, Text)</argType>
-        <returnType>TimeZoned</returnType>
-        <description>
-            <p>Creates a time with zone from the given time, and zone.</p>
-            <p>The zone must be an exact offset (in minutes, or hours/ minutes).  Named time zones or cities are not supported because their offset can vary throughout the year, which would require a date (see <link function="date time zoned"/>).</p>
-        </description>
-        <example>
-            <input>@call @function to text(@call @function time zoned(@call @function time(11{hour}, 21{min}, 0{s}), "PST"))</input>
-            <output>"11:21:00 PST"</output>
-        </example>
-        <example>
-            <input>@call @function to text(@call @function time zoned(@call @function time(1{hour}, 5{min}, 27.450{s}), "Europe/London")</input>
-            <output>"01:05:27.450 Europe/London"</output>
-        </example>
-    </function>
 </functionDocumentation>

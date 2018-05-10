@@ -682,8 +682,8 @@ public class DataType implements StyledShowable
                         return "DateYM";
                     case TIMEOFDAY:
                         return "Time";
-                    case TIMEOFDAYZONED:
-                        return "TimeZoned";
+                    //case TIMEOFDAYZONED:
+                        //return "TimeZoned";
                     case DATETIME:
                         return "DateTime";
                     case DATETIMEZONED:
@@ -1458,8 +1458,8 @@ public class DataType implements StyledShowable
                             return p.ym();
                         case TIMEOFDAY:
                             return p.localTime();
-                        case TIMEOFDAYZONED:
-                            return p.offsetTime();
+                        //case TIMEOFDAYZONED:
+                            //return p.offsetTime();
                         case DATETIME:
                             return p.localDateTime();
                         case DATETIMEZONED:
@@ -1545,9 +1545,9 @@ public class DataType implements StyledShowable
                     case TIMEOFDAY:
                         b.t(FormatLexer.TIMEOFDAY, FormatLexer.VOCABULARY);
                         break;
-                    case TIMEOFDAYZONED:
-                        b.t(FormatLexer.TIMEOFDAYZONED, FormatLexer.VOCABULARY);
-                        break;
+                    //case TIMEOFDAYZONED:
+                        //b.t(FormatLexer.TIMEOFDAYZONED, FormatLexer.VOCABULARY);
+                        //break;
                     case DATETIME:
                         b.t(FormatLexer.DATETIME, FormatLexer.VOCABULARY);
                         break;
@@ -1708,6 +1708,7 @@ public class DataType implements StyledShowable
                             }));
                         }
                         return r.build();
+                        /*
                     case TIMEOFDAYZONED:
                         for (List<DateTimeFormatter> formatters : new DateTimeInfo(DateTimeType.TIMEOFDAY).getFlexibleFormatters())
                         {
@@ -1724,6 +1725,7 @@ public class DataType implements StyledShowable
                             r.add(inner.build());
                         }
                         return r.build();
+                        */
                 }
                 return ImmutableList.of(ImmutableList.of(getStrictFormatter()));
             });
@@ -1852,8 +1854,8 @@ public class DataType implements StyledShowable
                         return p.ym();
                     case TIMEOFDAY:
                         return p.localTime();
-                    case TIMEOFDAYZONED:
-                        return p.offsetTime();
+                    //case TIMEOFDAYZONED:
+                        //return p.offsetTime();
                     case DATETIME:
                         return p.localDateTime();
                     case DATETIMEZONED:
@@ -1883,7 +1885,7 @@ public class DataType implements StyledShowable
             /** LocalTime */
             TIMEOFDAY,
             /** OffsetTime */
-            TIMEOFDAYZONED,
+            //TIMEOFDAYZONED,
             /** LocalDateTime */
             DATETIME,
             /** ZonedDateTime */
@@ -1922,7 +1924,7 @@ public class DataType implements StyledShowable
                 switch (this)
                 {
                     case TIMEOFDAY:
-                    case TIMEOFDAYZONED:
+                    //case TIMEOFDAYZONED:
                     case DATETIME:
                     case DATETIMEZONED:
                         return true;
@@ -1934,7 +1936,7 @@ public class DataType implements StyledShowable
 
             public boolean hasZoneOffset()
             {
-                return this == TIMEOFDAYZONED;
+                return false; //this == TIMEOFDAYZONED;
             }
 
             public boolean hasZoneId()
@@ -1962,8 +1964,8 @@ public class DataType implements StyledShowable
                     return YearMonth.from(DEFAULT_VALUE);
                 case TIMEOFDAY:
                     return LocalTime.from(DEFAULT_VALUE);
-                case TIMEOFDAYZONED:
-                    return OffsetTime.from(DEFAULT_VALUE);
+                //case TIMEOFDAYZONED:
+                //    return OffsetTime.from(DEFAULT_VALUE);
                 case DATETIME:
                     return LocalDateTime.from(DEFAULT_VALUE);
                 case DATETIMEZONED:
@@ -1982,8 +1984,8 @@ public class DataType implements StyledShowable
                     return DataTypeUtility.value(this, YearMonth.from(t));
                 case TIMEOFDAY:
                     return DataTypeUtility.value(this, LocalTime.from(t));
-                case TIMEOFDAYZONED:
-                    return DataTypeUtility.value(this, OffsetTime.from(t));
+                //case TIMEOFDAYZONED:
+                //    return DataTypeUtility.value(this, OffsetTime.from(t));
                 case DATETIME:
                     return DataTypeUtility.value(this, LocalDateTime.from(t));
                 case DATETIMEZONED:
@@ -2035,6 +2037,7 @@ public class DataType implements StyledShowable
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND));
+                /*
                 case TIMEOFDAYZONED:
                     return Comparator.comparing((TemporalAccessor t) -> {
                             if (pool)
@@ -2048,6 +2051,7 @@ public class DataType implements StyledShowable
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.OFFSET_SECONDS))
                     );
+                */
                 case DATETIME:
                     return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MONTH_OF_YEAR))

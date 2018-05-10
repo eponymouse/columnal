@@ -345,7 +345,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                                     largeItem = "2016";
                                     break;
                                 case TIMEOFDAY:
-                                case TIMEOFDAYZONED:
+                                //case TIMEOFDAYZONED:
                                     smallItem = "00:00";
                                     largeItem = "11:21";
                                     break;

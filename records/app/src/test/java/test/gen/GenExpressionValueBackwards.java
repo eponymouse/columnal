@@ -307,7 +307,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     case TIMEOFDAY:
                     {
                         Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                            new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
+                            //new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
                             new Pair<>("time.from.datetime", DateTimeType.DATETIME),
                             new Pair<>("time.from.datetimezoned", DateTimeType.DATETIMEZONED)));
                         DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
@@ -321,6 +321,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         ));
                     }
                         break;
+                    /*
                     case TIMEOFDAYZONED:
                     {
                         DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED));
@@ -333,6 +334,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         ));
                     }
                         break;
+                    */
                     case DATETIME:
                     {
                         LocalDateTime target = (LocalDateTime) targetValue;
@@ -351,6 +353,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                             make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), target.toLocalDateTime(), maxLevels - 1),
                             make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
                         ));
+                        /*
                         //date + time&zone
                         // only if using offset, not a zone:
                         if (target.getZone().equals(target.getOffset()))
@@ -359,7 +362,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                                 make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
                                 make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), target.toOffsetDateTime().toOffsetTime(), maxLevels - 1)
                             ));
-                        }
+                        }*/
                         //date+time+zone:
                         deep.add(() -> call("datetimezoned",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
@@ -594,8 +597,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return "dateym.from.string";
             case TIMEOFDAY:
                 return "time.from.string";
-            case TIMEOFDAYZONED:
-                return "timezoned.from.string";
+            //case TIMEOFDAYZONED:
+                //return "timezoned.from.string";
             case DATETIME:
                 return "datetime.from.string";
             case DATETIMEZONED:
@@ -641,8 +644,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return YearMonth.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR));
             case TIMEOFDAY:
                 return LocalTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND));
+            /*
             case TIMEOFDAYZONED:
-                return OffsetTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS)));
+                return OffsetTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS)));*/
             case DATETIME:
                 return LocalDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND));
             case DATETIMEZONED:

@@ -46,8 +46,8 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)),
         DataType.date(new DateTimeInfo(DateTimeType.DATETIME)),
         DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),
-        DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)),
-        DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))
+        DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))
+        //DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))
     );
     private final TypeParent semanticParent;
     private final TypeCompletion bracketCompletion = new TypeCompletion("(", 0);

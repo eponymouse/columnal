@@ -74,12 +74,10 @@ public class FunctionList
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:
                 new ToDate(),
-                new ToTime(),
-                new ToTimeAndZone()
+                new ToTime()
                 /*
                 new ToDateTime(),
                 new ToDateTimeZone(),
-                new ToTimeAndZone(),
                 new ToYearMonth()
                 */
         ).flatMap(t -> {
