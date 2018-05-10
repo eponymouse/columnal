@@ -73,7 +73,8 @@ public class FunctionList
             LookupFunctions.getLookupFunctions().stream(),
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:
-                new ToDate()
+                new ToDate(),
+                new ToTimeAndZone()
                 /*
                 new ToDateTime(),
                 new ToDateTimeZone(),

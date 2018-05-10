@@ -17,5 +17,25 @@
             <input>@call @function to text(@call @function date(1998{year}, 07{month}, 10{day}))</input>
             <output>"1998-07-10"</output>
         </example>
+        <example>
+            <inputArg>(2004{year}, 08{month}, 06{day}))</inputArg>
+            <output>@call @function from text("6 August 2004")</output>
+        </example>
+    </function>
+    <function name="time zoned">
+        <argType>(Time, Text)</argType>
+        <returnType>TimeZoned</returnType>
+        <description>
+            <p>Creates a time with zone from the given time, and zone.</p>
+            <p>The zone can either be an offset (in minutes, or hours/ minutes), a zone name (e.g. EDT), or a time zone city.</p>
+        </description>
+        <example>
+            <input>@call @function to text(@call @function time zoned(time(11{hour}, 21{minute}, 0{second}), "PST")</input>
+            <output>"11:21:00 PST"</output>
+        </example>
+        <example>
+            <input>@call @function to text(@call @function time zoned(time(1{hour}, 5{minute}, 27.450{second}), "Europe/London")</input>
+            <output>"01:05:27.450 Europe/London"</output>
+        </example>
     </function>
 </functionDocumentation>

@@ -8,6 +8,9 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -36,9 +39,15 @@ public class ToTimeAndZone extends ToTemporalFunction
         //r.add(fromString("timezoned.from.string"));
         /* TODO
         r.add(new FunctionDefinition("timezoned.from.datetimezoned", "timezoned.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionDefinition("timezoned", "timezoned.mini", T_Z::new, DataType.date(getResultType()),
-            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
         */
+        r.add(new FunctionDefinition("datetime:time zoned") {
+                  @Override
+                  public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                  {
+                      return new T_Z();
+                  }
+              });
+        
         return r.build();
     }
 
