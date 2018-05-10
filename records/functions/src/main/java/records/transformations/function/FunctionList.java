@@ -74,11 +74,11 @@ public class FunctionList
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:
                 new ToDate(),
+                new ToTime(),
                 new ToTimeAndZone()
                 /*
                 new ToDateTime(),
                 new ToDateTimeZone(),
-                new ToTime(),
                 new ToTimeAndZone(),
                 new ToYearMonth()
                 */

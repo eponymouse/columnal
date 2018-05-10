@@ -16,6 +16,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.ParseException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
@@ -243,6 +244,8 @@ public class TypeManager
                 if (t.UNIT() != null)
                     return Either.left(unitManager.loadUse(t.UNIT().getText()));
                 // TODO UNITVAR
+                else if (t.UNITVAR() != null)
+                    return Either.right(DataType.BOOLEAN);
                 else
                     return Either.right(loadTypeUse(t.bracketedType()));
             });

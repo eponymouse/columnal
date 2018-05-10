@@ -11,6 +11,9 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -37,12 +40,13 @@ public class ToTime extends ToTemporalFunction
         r.add(new FunctionDefinition("time.from.datetime", "time.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionDefinition("time.from.datetimezoned", "time.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionDefinition("time.from.timezoned", "time.from.timezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
-        r.add(new FunctionDefinition("time", "time.mini", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"))),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("min"))),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("s")))
-        )));
         */
+        r.add(new FunctionDefinition("datetime:time") {
+            @Override
+            public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+            {
+                return new FromNumbers();
+            }});
         return r.build();
     }
 

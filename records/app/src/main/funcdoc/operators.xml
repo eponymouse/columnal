@@ -238,7 +238,7 @@
             <output>10.44{m/s}</output>
         </example>
     </binaryOperator>
-    <!--
+    <!-- TODO need special case for types
     <naryOperatorGroup title="Multiplying">
         <operator>*</operator>
         <argTypes unit="u">Number{@unitvar $u}</argTypes>
@@ -247,6 +247,18 @@
             <
         </description>
         <
+    </naryOperatorGroup>
+    -->
+    <!-- TODO need special case for types
+    <naryOperatorGroup title="Function chaining">
+        <operator>&gt;&gt;</operator>
+        <argType></argType>
+        <resultType></resultType>
+        <description>
+            <p>Takes the item on the left and feeds it to the function on the right
+        </description>
+        <example>
+        </example>
     </naryOperatorGroup>
     -->
 </functionDocumentation>
