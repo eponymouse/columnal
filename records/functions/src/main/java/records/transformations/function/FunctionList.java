@@ -33,7 +33,7 @@ public class FunctionList
 {
     public static ImmutableList<FunctionDefinition> getAllFunctions(UnitManager unitManager) throws InternalException
     {
-        return Utility.concatStreams(Arrays.asList(
+        return Utility.concatStreams(Arrays.<FunctionDefinition>asList(
             new Absolute(),
             new AnyAllNone.Any(),
             new AnyAllNone.All(),
@@ -42,7 +42,6 @@ public class FunctionList
             new AsUnit(),
             new Combine(),
             new Count(),
-            new FromString(),
             new GetElement(),
             new InList(),
             new JoinLists(),
@@ -70,6 +69,7 @@ public class FunctionList
             new TypeOf(),
             new Xor()
         ).stream(),
+            FromString.getFunctions().stream(),
             LookupFunctions.getLookupFunctions().stream(),
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:

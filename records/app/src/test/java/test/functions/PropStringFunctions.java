@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
@@ -12,6 +13,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.*;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
@@ -251,7 +253,8 @@ public class PropStringFunctions
     public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         FunctionDefinition toString = new ToString();
-        FunctionDefinition fromString = new FromString();
+        @SuppressWarnings("nullness") // Will throw if null
+        @NonNull FunctionDefinition fromString = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "from text");
         @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
         @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), Collections.emptyList(), DataType.TEXT, typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)

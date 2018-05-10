@@ -46,11 +46,11 @@
             <p>See <link function="from text"/> for more details.</p>
         </description>
         <example>
-            <input>@call @function typed from text(`Date`, "21 March 2004")</input>
+            <inputArg>(`Date`, "21 March 2004")</inputArg>
             <output>@call @function date(2004{year}, 3{month}, 21{day})</output>
         </example>
         <example>
-            <input>@call @function typed from text(`[(Boolean, Number{m})]`, "[(True, 0), (FALSE, -1.6)]"))</input>
+            <inputArg>(`[(Boolean, Number{m})]`, "[(True, 0), (FALSE, -1.6)]")</inputArg>
             <output>[(true, 0{m}), (false, -1.6{m})]</output>
         </example>
     </function>

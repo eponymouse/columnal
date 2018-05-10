@@ -33,42 +33,53 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class FromString extends FunctionDefinition
+public class FromString
 {
-    public FromString() throws InternalException
+    public static ImmutableList<FunctionDefinition> getFunctions() throws InternalException
     {
-        super("conversion:from text");
+        return ImmutableList.of(
+            new FunctionDefinition("conversion:from text")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                {
+                    DataType type = paramTypes.apply("t");
+                    if (type == null)
+                        throw new InternalException("Type t not found for from text");
+                    return new ValueFunction()
+                    {
+                        @Override
+                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        {
+                            return convertFromString(type, new StringView(Utility.cast(arg, String.class)));
+                        }
+                    };
+                }
+            },
+            new FunctionDefinition("conversion:typed from text")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                {
+                    DataType type = paramTypes.apply("t");
+                    if (type == null)
+                        throw new InternalException("Type t not found for from text");
+                    return new ValueFunction()
+                    {
+                        @Override
+                        public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                        {
+                            @Value Object[] args = Utility.castTuple(arg, 2);
+                            return convertFromString(type, new StringView(Utility.cast(args[1], String.class)));
+                        }
+                    };
+                }
+            }
+        );
     }
-
-    @Override
-    @OnThread(Tag.Simulation)
-    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
-    {
-        DataType type = paramTypes.apply("t");
-        if (type == null)
-            throw new InternalException("Type t not found for from text");
-        return new Instance(type);
-    }
-
-    private static class Instance extends ValueFunction
-    {
-        private final DataType type;
-
-        public Instance(DataType type)
-        {
-            this.type = type;
-        }
-
-
-        @Override
-        public @Value Object call(@Value Object param) throws UserException, InternalException
-        {
-            return convertFromString(type, new StringView(param.toString()));
-        }
-
         // The StringView gets modified as we process it.
         @OnThread(Tag.Simulation)
-        private @Value Object convertFromString(DataType type, StringView src) throws InternalException, UserException
+        private static @Value Object convertFromString(DataType type, StringView src) throws InternalException, UserException
         {
             return type.apply(new DataTypeVisitorEx<@Value Object, UserException>()
             {
@@ -245,7 +256,6 @@ public class FromString extends FunctionDefinition
                 }
             });
         }
-    }
     
     // Keeps track of a trailing substring of a string.  Saves memory compared to copying
     // the substrings over and over.  The data is immutable, the position is mutable.

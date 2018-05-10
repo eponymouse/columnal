@@ -832,6 +832,11 @@ public class Utility
     {
         return Stream.concat(a, Stream.concat(b, c));
     }
+
+    public static <T> Stream<T> concatStreams(Stream<T> a, Stream<T> b, Stream<T> c, Stream<T> d)
+    {
+        return Stream.concat(Stream.concat(a, b), Stream.concat(c, d));
+    }
     
     public static <A, B, R> ImmutableList<R> allPairs(List<A> as, List<B> bs, BiFunction<A, B, R> function)
     {
