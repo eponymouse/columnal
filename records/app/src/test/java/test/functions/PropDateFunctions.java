@@ -10,15 +10,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionList;
 import records.transformations.function.ToDate;
 import records.transformations.function.ToDateTime;
 import records.transformations.function.ToDateTimeZone;
 import records.transformations.function.ToTime;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenDate;
 import test.gen.GenZoneId;
@@ -34,7 +38,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
@@ -198,7 +201,10 @@ public class PropDateFunctions
     @OnThread(Tag.Simulation)
     private Object strToDate(String src) throws Throwable
     {
-        return runFunction1(v(src), DataType.TEXT, new ToDate()._test_fromString("date.from.string"));
+        @Nullable FunctionDefinition fromText = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "typed from text");
+        if (fromText == null)
+            throw new RuntimeException("Cannot find typed from text function");
+        return runFunction1(v(src), DataType.tuple(DummyManager.INSTANCE.getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))), DataType.TEXT), fromText);
     }
 
     // Tests single numeric input, numeric output function
@@ -208,7 +214,7 @@ public class PropDateFunctions
     {
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), srcType);
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, srcType);
             assertNotNull(instance);
             return instance.getFirst().call(src);
         }

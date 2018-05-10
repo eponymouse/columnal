@@ -17,8 +17,6 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.ValueFunction;
 
-import java.util.Collections;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -42,7 +40,7 @@ public class TestBooleanFunctions
     public void testNot() throws UserException, InternalException
     {
         FunctionDefinition function = new Not();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.BOOLEAN);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, DataType.BOOLEAN);
         if (checked == null)
         {
             fail("Type check failure");
@@ -61,7 +59,7 @@ public class TestBooleanFunctions
     public void testXor() throws InternalException, UserException
     {
         FunctionDefinition function = new Xor();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
         if (checked == null)
         {
             fail("Type check failure");

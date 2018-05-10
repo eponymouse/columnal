@@ -31,7 +31,6 @@ import utility.Utility;
 import utility.ValueFunction;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
@@ -127,7 +126,7 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit))));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, DataType.number(new NumberInfo(mgr.loadUse(srcUnit))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
@@ -153,7 +152,7 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(function, DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();

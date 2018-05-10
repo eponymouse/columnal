@@ -9,6 +9,8 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -132,19 +134,31 @@ public abstract class ToTemporalFunction
         return getResultType().getFlexibleFormatters();
     }
 
-    class FromTemporalInstance extends ValueFunction
+    class FromTemporal extends FunctionDefinition
     {
-        @Override
-        public @Value Object call(@Value Object param) throws UserException
+        public FromTemporal(@FuncDocKey String funcDocKey) throws InternalException
         {
-            try
+            super(funcDocKey);
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+        {
+            return new ValueFunction()
             {
-                return fromTemporal((TemporalAccessor) param);
-            }
-            catch (DateTimeException e)
-            {
-                throw new UserException("Could not convert to date: " + e.getLocalizedMessage(), e);
-            }
+                @Override
+                public @Value Object call (@Value Object param) throws UserException
+                {
+                    try
+                    {
+                        return fromTemporal((TemporalAccessor) param);
+                    }
+                    catch (DateTimeException e)
+                    {
+                        throw new UserException("Could not convert to date: " + e.getLocalizedMessage(), e);
+                    }
+                }
+            };
         }
     }
 

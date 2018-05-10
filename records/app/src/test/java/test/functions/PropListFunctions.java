@@ -26,7 +26,6 @@ import utility.Utility;
 import utility.ValueFunction;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Random;
 
 import static junit.framework.TestCase.assertTrue;
@@ -47,8 +46,8 @@ public class PropListFunctions
 
         FunctionDefinition minFunction = new Min();
         FunctionDefinition maxFunction = new Max();
-        @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, Collections.emptyList(), src.type);
-        @Nullable Pair<ValueFunction, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, Collections.emptyList(), src.type);
+        @Nullable Pair<ValueFunction, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, src.type);
+        @Nullable Pair<ValueFunction, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, src.type);
 
         if (minChecked == null || maxChecked == null)
         {
@@ -89,7 +88,7 @@ public class PropListFunctions
     public void propCount(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
         Count function = new Count();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), src.type);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, src.type);
         if (checked == null)
         {
             fail("Type check failure");
@@ -110,7 +109,7 @@ public class PropListFunctions
         @Nullable Pair<ValueFunction, DataType> checked = null;
         try
         {
-            checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER));
+            checked = TestUtil.typeCheckFunction(function, DataType.tuple(src.type, DataType.NUMBER));
         }
         catch (Exception e)
         {

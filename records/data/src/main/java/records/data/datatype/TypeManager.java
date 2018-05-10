@@ -66,6 +66,8 @@ public class TypeManager
     private final TaggedTypeDefinition maybeType;
     // Only need one value for Missing:
     private final TaggedValue maybeMissing;
+    
+    private final TaggedTypeDefinition typeGADT;
 
     public TypeManager(UnitManager unitManager) throws InternalException
     {
@@ -77,7 +79,8 @@ public class TypeManager
         maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
         // TODO make this into a GADT:
-        knownTypes.put(new TypeId("Type"), new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null))));
+        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
+        knownTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
         knownTypes.put(new TypeId("Unit"), new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null))));
     }
@@ -441,6 +444,12 @@ public class TypeManager
     public TaggedTypeDefinition getMaybeType()
     {
         return maybeType;
+    }
+
+    // Basically, t -> Type t
+    public DataType typeGADTFor(DataType type) throws InternalException, UserException
+    {
+        return typeGADT.instantiate(ImmutableList.of(Either.right(type)));
     }
 
     public static class TagInfo

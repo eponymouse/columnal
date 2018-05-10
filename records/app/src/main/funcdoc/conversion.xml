@@ -35,6 +35,27 @@
             <output>[(true, 0{m}), (false, -1.6{m})]</output>
         </example>
     </function>
+
+    <function name="typed from text">
+        <typeArg>t</typeArg>
+        <typeConstraint>Readable t</typeConstraint>
+        <argType>(@tagged Type(@typevar t), Text)</argType>
+        <returnType>@typevar t</returnType>
+        <description>
+            <p>Converts a value from text, specifying the target type.</p>
+            <p>See <link function="from text"/> for more details.</p>
+        </description>
+        <example>
+            <input>@call @function typed from text(`Date`, "21 March 2004")</input>
+            <output>@call @function date(2004{year}, 3{month}, 21{day})</output>
+        </example>
+        <example>
+            <input>@call @function typed from text(`[(Boolean, Number{m})]`, "[(True, 0), (FALSE, -1.6)]"))</input>
+            <output>[(true, 0{m}), (false, -1.6{m})]</output>
+        </example>
+    </function>
+    
+    
     <function name="to text">
         <typeArg>t</typeArg>
         <typeConstraint>Showable t</typeConstraint>

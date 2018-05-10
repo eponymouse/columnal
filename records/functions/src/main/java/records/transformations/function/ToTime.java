@@ -35,12 +35,8 @@ public class ToTime extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        /* TODO
-        r.add(fromString("time.from.text", "time.from.string.mini"));
-        r.add(new FunctionDefinition("time.from.datetime", "time.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
-        r.add(new FunctionDefinition("time.from.datetimezoned", "time.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionDefinition("time.from.timezoned", "time.from.timezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
-        */
+        r.add(new FromTemporal("datetime:time from datetime"));
+        r.add(new FromTemporal("datetime:time from datetimezoned"));
         r.add(new FunctionDefinition("datetime:time") {
             @Override
             public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException

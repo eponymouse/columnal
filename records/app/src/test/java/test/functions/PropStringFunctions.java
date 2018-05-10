@@ -20,13 +20,9 @@ import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility.ListEx;
-import utility.Utility.ListExList;
 import utility.ValueFunction;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -53,7 +49,7 @@ public class PropStringFunctions
     public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLength function = new StringLength();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, DataType.TEXT);
         if (checked == null)
         {
             fail("Type check failure");
@@ -72,7 +68,7 @@ public class PropStringFunctions
     public void propTrim(@From(UnicodeStringGenerator.class) String orig, @From(GenRandom.class) Random r) throws Throwable
     {
         StringTrim function = new StringTrim();
-        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
+        @Nullable Pair<ValueFunction, DataType> checked = TestUtil.typeCheckFunction(function, DataType.TEXT);
         if (checked == null)
         {
             fail("Type check failure");
@@ -256,7 +252,7 @@ public class PropStringFunctions
     {
         FunctionDefinition toString = new ToString();
         FunctionDefinition fromString = new FromString();
-        @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, Collections.emptyList(), typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
+        @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
         @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), Collections.emptyList(), DataType.TEXT, typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)
         {

@@ -975,13 +975,13 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction, DataType> typeCheckFunction(FunctionDefinition function, DataType paramType) throws InternalException, UserException
     {
-        return typeCheckFunction(function, units, paramType, null);
+        return typeCheckFunction(function, paramType, null);
     }
 
     @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
