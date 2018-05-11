@@ -352,8 +352,8 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> {
                             Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
                                 //new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
-                                new Pair<>("time.from.datetime", DateTimeType.DATETIME), 
-                                new Pair<>("time.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                                new Pair<>("time from datetime", DateTimeType.DATETIME), 
+                                new Pair<>("time from datetimezoned", DateTimeType.DATETIMEZONED)));
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
                             return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });

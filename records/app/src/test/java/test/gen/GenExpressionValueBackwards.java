@@ -308,8 +308,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
                             //new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
-                            new Pair<>("time.from.datetime", DateTimeType.DATETIME),
-                            new Pair<>("time.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                            new Pair<>("time from datetime", DateTimeType.DATETIME),
+                            new Pair<>("time from datetimezoned", DateTimeType.DATETIMEZONED)));
                         DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
                         deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalTime target = (LocalTime) targetValue;
