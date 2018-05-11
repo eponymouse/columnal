@@ -151,7 +151,15 @@ public class FromString
                     }
                     else if (possibles.size() > 1)
                     {
-                        throw new UserException("Multiple ways to interpret " + type + " value: "
+                        ArrayList<Pair<Integer, TemporalAccessor>> possiblesByLength = new ArrayList<>(possibles);
+                        Collections.sort(possiblesByLength, Pair.comparatorFirst());
+                        // Choose the longest one, if it's strictly longer than the others:
+                        if (possiblesByLength.get(possiblesByLength.size() - 1).getFirst() > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
+                            return DataTypeUtility.value(dateTimeInfo, possiblesByLength.get(possiblesByLength.size() - 1).getSecond());
+                        
+                        // Otherwise, throw because it's too ambiguous:
+                        throw new UserException("Multiple ways to interpret " + type + " value "
+                            + src.snippet() + ": "
                             + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond()))
                             + " using formatters "
                             + Utility.listToString(possibleFormatters));
@@ -314,7 +322,7 @@ public class FromString
             StringBuilder s = new StringBuilder();
             // Add prefix:
             s.append("\"" + original.substring(Math.max(0, charStart - 20), charStart) + ">>>");
-            return s.append(original.substring(charStart, Math.min(charStart + 20, original.length())) + "\"").toString();
+            return s.append(original.substring(charStart, Math.min(charStart + 40, original.length())) + "\"").toString();
         }
 
         // Reads up until that character, and also consumes that character

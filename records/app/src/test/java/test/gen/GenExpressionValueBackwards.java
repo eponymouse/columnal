@@ -349,10 +349,12 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         ZonedDateTime target = (ZonedDateTime) targetValue;
                         //datetime+zone
+                        /*
                         deep.add(() -> call("datetimezoned.from.datetime.zone",
                             make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), target.toLocalDateTime(), maxLevels - 1),
                             make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
                         ));
+                        */
                         /*
                         //date + time&zone
                         // only if using offset, not a zone:

@@ -123,6 +123,12 @@ public class ConstructorExpression extends NonOperatorExpression
         return Objects.hash(tag);
     }
 
+    // For use at run-time.  Throws an exception if didn't type check
+    public int getTagIndex() throws InternalException
+    {
+        return tag.eitherInt(s -> {throw new InternalException("Could not find tag " + s);}, t -> t.tagIndex);        
+    }
+    
     public String _test_getName()
     {
         return tag.either(s -> s, t -> t.getTagInfo().getName());

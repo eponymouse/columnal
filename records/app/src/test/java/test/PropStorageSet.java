@@ -19,6 +19,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import javax.swing.SwingUtilities;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,14 @@ import static org.junit.Assert.assertEquals;
 public class PropStorageSet
 {
     static {
-        SwingUtilities.invokeLater(() -> new JFXPanel());        
+        try
+        {
+            SwingUtilities.invokeAndWait(() -> new JFXPanel());
+        }
+        catch (InterruptedException | InvocationTargetException e)
+        {
+            e.printStackTrace();
+        }
     }
     
     @Property(trials = 1000)

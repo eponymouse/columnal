@@ -154,6 +154,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Given that the expression has type-checked, you can assume the value is of the same type
     // as the current expression (and throw an InternalException if not)
     // If you override this, you should also override checkAsPattern
+    // If there is a match, returns non-null.  If no match, returns null.
     @OnThread(Tag.Simulation)
     public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {

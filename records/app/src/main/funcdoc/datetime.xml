@@ -90,6 +90,19 @@
         </example>
     </function>
 
+    <function name="datetime from datetimezoned">
+        <argType>DateTimeZoned</argType>
+        <returnType>DateTime</returnType>
+        <description>
+            <p>Gets the DateTime part of a DateTimeZoned.</p>
+            <p>No timezone conversions are performed, this just takes the DateTime part, ignoring the zone.</p>
+        </description>
+        <example>
+            <inputArg>@call @function from text("2001-03-04 06:54 PDT")</inputArg>
+            <output>@call @function from text("2001-03-04 06:54")</output>
+        </example>
+    </function>
+
     <function name="dateym">
         <argType>(Number{year}, Number{month})</argType>
         <returnType>DateYM</returnType>

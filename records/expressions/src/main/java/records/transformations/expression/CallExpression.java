@@ -23,8 +23,11 @@ import records.types.MutVar;
 import records.types.TupleTypeExp;
 import records.types.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -166,6 +169,25 @@ public class CallExpression extends Expression
         ValueFunction functionValue = Utility.cast(function.getValue(state), ValueFunction.class);
             
         return functionValue.call(param.getValue(state));
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        if (function instanceof ConstructorExpression)
+        {
+            ConstructorExpression constructor = (ConstructorExpression) function;
+            TaggedValue taggedValue = Utility.cast(value, TaggedValue.class);
+            if (taggedValue.getTagIndex() != constructor.getTagIndex())
+                return null;
+            // If we do match, go to the inner:
+            @Nullable @Value Object inner = taggedValue.getInner();
+            if (inner == null)
+                throw new InternalException("Matching missing value against tag with inner pattern");
+            return param.matchAsPattern(inner, state);
+        }
+        
+        return super.matchAsPattern(value, state);
     }
 
     @Override
