@@ -9,6 +9,9 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -34,8 +37,16 @@ public class ToDateTime extends ToTemporalFunction
         /* TODO
         r.add(fromString("datetime.from.string", "datetime.from.string.mini"));
         r.add(new FunctionDefinition("datetime.from.datetimezoned", "datetime.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionDefinition("datetime", "datetime.mini", DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))));
         */
+        r.add(new FunctionDefinition("datetime")
+        {
+            @Override
+            public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+            {
+                return new DateAndTimeInstance();
+            }
+        });
+        
         return r.build();
     }
 

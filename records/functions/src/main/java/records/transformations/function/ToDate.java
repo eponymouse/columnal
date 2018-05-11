@@ -37,6 +37,8 @@ public class ToDate extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        r.add(new FromTemporal("datetime:date from datetime"));
+        r.add(new FromTemporal("datetime:date from datetimezoned"));
         /* TODO
         r.add(fromString("date.from.string", "date.from.string.mini"));
         r.add(new FunctionDefinition("date.from.datetime", "date.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));

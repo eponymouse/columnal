@@ -273,8 +273,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     case YEARMONTHDAY:
                     {
                         Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                            new Pair<>("date.from.datetime", DateTimeType.DATETIME),
-                            new Pair<>("date.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                            new Pair<>("date from datetime", DateTimeType.DATETIME),
+                            new Pair<>("date from datetimezoned", DateTimeType.DATETIMEZONED)));
                         DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
                         deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalDate target = (LocalDate) targetValue;
@@ -283,18 +283,18 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                             make(DataType.number(new NumberInfo(getUnit("month"))), target.getMonthValue(), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("day"))), target.getDayOfMonth(), maxLevels - 1)
                         ));
+                        /*
                         deep.add(() -> call("date.from.ym.day",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), YearMonth.of(target.getYear(), target.getMonth()), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("day"))), target.getDayOfMonth(), maxLevels - 1)
                         ));
+                        */
                     }
                         break;
                     case YEARMONTH:
                     {
                         Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                            new Pair<>("dateym.from.date", DateTimeType.YEARMONTHDAY),
-                            new Pair<>("dateym.from.datetime", DateTimeType.DATETIME),
-                            new Pair<>("dateym.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                            new Pair<>("dateym from date", DateTimeType.YEARMONTHDAY)));
                         DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
                         deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         YearMonth target = (YearMonth) targetValue;

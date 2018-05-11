@@ -64,4 +64,75 @@
             <output>@call @function from text("06:54")</output>
         </example>
     </function>
+
+    <function name="date from datetime">
+        <argType>DateTime</argType>
+        <returnType>Date</returnType>
+        <description>
+            <p>Gets the Date part of a DateTime.</p>
+        </description>
+        <example>
+            <inputArg>@call @function from text("2001-03-04 06:54")</inputArg>
+            <output>@call @function from text("2001-03-04")</output>
+        </example>
+    </function>
+
+    <function name="date from datetimezoned">
+        <argType>DateTimeZoned</argType>
+        <returnType>Date</returnType>
+        <description>
+            <p>Gets the Date part of a DateTimeZoned.</p>
+            <p>No timezone conversions are performed, this just takes the time part, ignoring the date and the zone.</p>
+        </description>
+        <example>
+            <inputArg>@call @function from text("2001-03-04 06:54 PDT")</inputArg>
+            <output>@call @function from text("2001-03-04")</output>
+        </example>
+    </function>
+
+    <function name="dateym">
+        <argType>(Number{year}, Number{month})</argType>
+        <returnType>DateYM</returnType>
+        <description>
+            <p>Creates a year-month value from the given year and month.</p>
+        </description>
+        <example>
+            <input>@call @function to text(@call @function date(1998{year}, 07{month}))</input>
+            <output>"1998-07"</output>
+        </example>
+        <example>
+            <inputArg>(2004{year}, 08{month})</inputArg>
+            <output>@call @function from text("August 2004")</output>
+        </example>
+    </function>
+
+    <function name="dateym from date">
+        <argType>Date</argType>
+        <returnType>DateYM</returnType>
+        <description>
+            <p>Gets the year and month part of a Date as a DateYM.</p>
+        </description>
+        <example>
+            <inputArg>@call @function from text("2001-03-04")</inputArg>
+            <output>@call @function from text("2001-03")</output>
+        </example>
+    </function>
+
+    <function name="datetime">
+        <argType>(Date, Time)</argType>
+        <returnType>DateTime</returnType>
+        <description>
+            <p>Creates a DateTime from the given Date and Time.</p>
+        </description>
+    </function>
+    
+    <function name="datetimezoned">
+        <argType>(Date, Time, Text)</argType>
+        <returnType>DateTimeZoned</returnType>
+        <description>
+            <p>Creates a datetime with a time zone from the given Date, Time and time zone.</p>
+        </description>
+    </function>
+    
+    
 </functionDocumentation>

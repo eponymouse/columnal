@@ -8,6 +8,9 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -39,9 +42,15 @@ public class ToDateTimeZone extends ToTemporalFunction
         /* TODO
         r.add(new FunctionDefinition("datetimezoned.from.datetime.zone", "datetimezoned.from.datetime.zone.mini", DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
-        r.add(new FunctionDefinition("datetimezoned", "datetimezoned.mini", D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
+        */
+        r.add(new FunctionDefinition("datetimezoned") {
+            @Override
+            public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+            {
+                return new D_T_Z();
+            }
+        });
+        /*
         r.add(new FunctionDefinition("datetimezoned.from.date.timezoned", "datetimezoned.from.date.timezoned.mini", D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)))));
