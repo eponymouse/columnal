@@ -35,17 +35,10 @@ import static org.junit.Assert.assertEquals;
 public class PropStorageSet
 {
     static {
-        try
-        {
-            SwingUtilities.invokeAndWait(() -> new JFXPanel());
-        }
-        catch (InterruptedException | InvocationTargetException e)
-        {
-            e.printStackTrace();
-        }
+        SwingUtilities.invokeLater(() -> new JFXPanel());
     }
     
-    @Property(trials = 1000)
+    @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
     {

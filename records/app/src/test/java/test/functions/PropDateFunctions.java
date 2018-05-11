@@ -183,13 +183,13 @@ public class PropDateFunctions
     @OnThread(Tag.Simulation)
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime()._test_fromString("datetime.from.string")));
+        assertEquals(of, strTo(src, DateTimeType.DATETIME));
     }
 
     @OnThread(Tag.Simulation)
     private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone()._test_fromString("datetimezoned.from.string")));
+        assertEquals(of, strTo(src, DateTimeType.DATETIMEZONED));
     }
 
     @OnThread(Tag.Simulation)

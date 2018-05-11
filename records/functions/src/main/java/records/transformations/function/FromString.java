@@ -51,7 +51,7 @@ public class FromString
                         @Override
                         public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
                         {
-                            return convertFromString(type, new StringView(Utility.cast(arg, String.class)));
+                            return convertEntireString(arg, type);
                         }
                     };
                 }
@@ -70,14 +70,28 @@ public class FromString
                         public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
                         {
                             @Value Object[] args = Utility.castTuple(arg, 2);
-                            return convertFromString(type, new StringView(Utility.cast(args[1], String.class)));
+                            return convertEntireString(args[1], type);
                         }
                     };
                 }
             }
         );
     }
-        // The StringView gets modified as we process it.
+
+    @OnThread(Tag.Simulation)
+    @Value
+    protected static Object convertEntireString(@Value Object arg, DataType type) throws InternalException, UserException
+    {
+        @Value String src = Utility.cast(arg, String.class);
+        StringView stringView = new StringView(src);
+        @Value Object value = convertFromString(type, stringView);
+        stringView.skipSpaces();
+        if (stringView.charStart < src.length())
+            throw new UserException("Entire string was not used during conversion, remainder: " + stringView.snippet());
+        return value;
+    }
+
+    // The StringView gets modified as we process it.
         @OnThread(Tag.Simulation)
         private static @Value Object convertFromString(DataType type, StringView src) throws InternalException, UserException
         {
@@ -155,7 +169,11 @@ public class FromString
                         Collections.sort(possiblesByLength, Pair.comparatorFirst());
                         // Choose the longest one, if it's strictly longer than the others:
                         if (possiblesByLength.get(possiblesByLength.size() - 1).getFirst() > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
-                            return DataTypeUtility.value(dateTimeInfo, possiblesByLength.get(possiblesByLength.size() - 1).getSecond());
+                        {
+                            Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
+                            src.charStart = chosen.getFirst();
+                            return DataTypeUtility.value(dateTimeInfo, chosen.getSecond());
+                        }
                         
                         // Otherwise, throw because it's too ambiguous:
                         throw new UserException("Multiple ways to interpret " + type + " value "
