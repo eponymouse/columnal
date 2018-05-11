@@ -10,7 +10,7 @@ BOOLEAN : 'Boolean';
 NUMBER : 'Number';
 TEXT : 'Text';
 YEARMONTHDAY : 'Date';
-YEARMONTH : 'YearMonth';
+YEARMONTH : 'DateYM';
 TIMEOFDAY : 'Time';
 TIMEOFDAYZONED : 'TimeZoned';
 DATETIME : 'DateTime';

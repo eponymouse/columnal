@@ -38,7 +38,7 @@ public class ToDateTime extends ToTemporalFunction
         r.add(fromString("datetime.from.string", "datetime.from.string.mini"));
         r.add(new FunctionDefinition("datetime.from.datetimezoned", "datetime.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         */
-        r.add(new FunctionDefinition("datetime")
+        r.add(new FunctionDefinition("datetime:datetime")
         {
             @Override
             public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException

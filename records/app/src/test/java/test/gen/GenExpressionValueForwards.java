@@ -329,6 +329,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
                             return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
+                        /*
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), maxLevels - 1);
                             int day = r.nextInt(1, 28);
@@ -338,6 +339,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                                 return LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day);
                             }, e -> call("date.from.ym.day", e, new NumericLiteral(day, makeUnitExpression(getUnit("day")))));
                         });
+                        */
                         break;
                     case YEARMONTH:
                         deep.add(() -> {
@@ -374,7 +376,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         // down cast:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> call("datetime.from.datetimezoned", e));
+                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> call("datetime from datetimezoned", e));
                         });
                         // date + time:
                         deep.add(() -> {

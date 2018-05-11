@@ -10,6 +10,9 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
 
@@ -34,11 +37,14 @@ public class ToYearMonth extends ToTemporalFunction
         r.add(new FunctionDefinition("dateym.from.date", "dateym.from.date.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
         r.add(new FunctionDefinition("dateym.from.datetime", "dateym.from.datetime.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionDefinition("dateym.from.datetimezoned", "dateym.from.datetimezoned.mini", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionDefinition("dateym", "dateym.mini", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"))),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("month")))
-        )));
         */
+        r.add(new FunctionDefinition("datetime:dateym") {
+            @Override
+            public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+            {
+                return new FromNumbers();
+            }
+        });
         return r.build();
     }
 
