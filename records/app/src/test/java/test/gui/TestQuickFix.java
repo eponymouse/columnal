@@ -219,7 +219,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testSimpleFix("sum(ACC1)", "sum", "sum(@wholecolumn ACC1)");
+        testSimpleFix("sum(ACC1)", "sum", "sum(@entirecolumn ACC1)");
     }
 
     @Test

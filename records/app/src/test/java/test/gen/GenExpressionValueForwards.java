@@ -16,6 +16,7 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TypeLiteralExpression;
+import records.transformations.expression.type.TypePrimitiveLiteral;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -403,29 +404,32 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> shallow = new ArrayList<>();
                 shallow.add((ExpressionMaker)() ->
                 {
+                    @Value TemporalAccessor value;
                     switch (dateTimeInfo.getType())
                     {
                         case YEARMONTHDAY:
-                            @Value LocalDate date = TestUtil.generateDate(r, gs);
-                            return literal(date, call("date.from.string", new StringLiteral(date.toString())));
+                            value = TestUtil.generateDate(r, gs);
+                            break;
                         case YEARMONTH:
-                            @Value YearMonth ym = YearMonth.from(TestUtil.generateDate(r, gs));
-                            return literal(ym, call("dateym.from.string", new StringLiteral(ym.toString())));
+                            value = YearMonth.from(TestUtil.generateDate(r, gs));
+                            break;
                         case TIMEOFDAY:
-                            @Value LocalTime time = TestUtil.generateTime(r, gs);
-                            return literal(time, call("time.from.string", new StringLiteral(time.toString())));
+                            value = TestUtil.generateTime(r, gs);
+                            break;
                         //case TIMEOFDAYZONED:
                             //@Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
                             //return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
                         case DATETIME:
-                            @Value LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
-                            return literal(dateTime, call("datetime.from.string", new StringLiteral(dateTime.toString())));
+                            value = TestUtil.generateDateTime(r, gs);
+                            break;
                         case DATETIMEZONED:
-                            @Value ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return literal(zonedDateTime, call("datetimezoned.from.string", new StringLiteral(zonedDateTime.toString())));
-
+                            value = TestUtil.generateDateTimeZoned(r, gs);
+                            break;
+                        default:
+                            throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
                     }
-                    throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
+                    return literal(value, call("typed from text", new TupleExpression(ImmutableList.of(new TypeLiteralExpression(new TypePrimitiveLiteral(DataType.date(dateTimeInfo))), new StringLiteral(value.toString())))));
+                    
                 });
 
                 switch (dateTimeInfo.getType())

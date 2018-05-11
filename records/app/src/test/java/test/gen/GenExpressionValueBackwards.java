@@ -586,26 +586,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             }
         });
     }
-    
-    private String getStringCreator(DateTimeType t)
-    {
-        switch (t)
-        {
-            case YEARMONTHDAY:
-                return "date.from.string";
-            case YEARMONTH:
-                return "dateym.from.string";
-            case TIMEOFDAY:
-                return "time.from.string";
-            //case TIMEOFDAYZONED:
-                //return "timezoned.from.string";
-            case DATETIME:
-                return "datetime.from.string";
-            case DATETIMEZONED:
-                return "datetimezoned.from.string";
-        }
-        throw new RuntimeException("Unknown date type: " + t);
-    }
 
     // Makes a value which, when the right fields are extracted, will give the value target
     // That is, you pass a type which is "bigger" than the intended (e.g. datetimezone)

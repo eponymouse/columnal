@@ -91,14 +91,14 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public synchronized OutputBuilder id(TableId id)
     {
-        return id(id.getOutput());
+        return id(id.getOutput(), QuoteBehaviour.QUOTE_SPACES);
     }
 
     // Outputs a column identifier, quoted if necessary
     @OnThread(Tag.Any)
     public synchronized OutputBuilder id(ColumnId id)
     {
-        return id(id.getOutput());
+        return id(id.getOutput(), QuoteBehaviour.QUOTE_SPACES);
     }
 
     @OnThread(Tag.Any)
@@ -115,12 +115,33 @@ public class OutputBuilder
         cur().add(quoted(id.getOutput()));
         return this;
     }
+    
+    public static enum QuoteBehaviour
+    {
+        ALWAYS_QUOTE, QUOTE_SPACES, DEFAULT;
+        
+        public String process(String original)
+        {
+            switch (this)
+            {
+                case ALWAYS_QUOTE:
+                    return quoted(original);
+                case QUOTE_SPACES:
+                    if (original.contains(" "))
+                        return quoted(original);
+                    else
+                        return quotedIfNecessary(original);
+                default:
+                    return quotedIfNecessary(original);
+            }
+        }
+    }
 
     // Outputs an identifier, quoted if necessary
     @OnThread(Tag.Any)
-    public synchronized OutputBuilder id(String id)
+    public synchronized OutputBuilder id(String id, QuoteBehaviour quoteBehaviour)
     {
-        cur().add(quotedIfNecessary(id));
+        cur().add(quoteBehaviour.process(id));
         return this;
     }
 

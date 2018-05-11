@@ -50,7 +50,7 @@ invalidOpExpression : INVALIDOPS expression (STRING expression)+;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
 
-constructor : CONSTRUCTOR typeName COLON constructorName | UNKNOWNCONSTRUCTOR constructorName;
+constructor : CONSTRUCTOR typeName COLON constructorName;
 
 standardFunction : FUNCTION ident;
 callTarget : varRef | standardFunction | constructor | unfinished;

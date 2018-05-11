@@ -42,7 +42,6 @@ ANY : '@anything';
 UNFINISHED : '@unfinished';
 INVALIDOPS : '@invalidops';
 CONSTRUCTOR : '@tag';
-UNKNOWNCONSTRUCTOR : '@unknowntag';
 CALL: '@call'; 
 RAISEDTO : '^';
 COMMA: ',';

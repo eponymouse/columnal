@@ -1,9 +1,11 @@
 package records.data.datatype;
 
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -143,5 +145,22 @@ public class TaggedTypeDefinition
     public String toString()
     {
         return name + " " + Utility.listToString(typeVariables) + " " + Utility.listToString(tags);
+    }
+
+    public ImmutableList<TagInfo> _test_getTagInfos()
+    {
+        try
+        {
+            ImmutableList.Builder<TagInfo> r = ImmutableList.builder();
+            for (int i = 0; i < tags.size(); i++)
+            {
+                r.add(new TagInfo(this, i));
+            }
+            return r.build();
+        }
+        catch (InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

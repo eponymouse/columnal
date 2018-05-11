@@ -3,6 +3,7 @@ package test.functions;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -250,7 +251,7 @@ public class PropStringFunctions
 
     @Property(trials = 200)
     @OnThread(Tag.Simulation)
-    public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    public void propShow(@When(seed=6768073241854344243L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         FunctionDefinition toString = new ToString();
         @SuppressWarnings("nullness") // Will throw if null

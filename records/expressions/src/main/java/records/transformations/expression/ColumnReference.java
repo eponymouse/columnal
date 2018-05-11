@@ -118,7 +118,7 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@wholecolumn " : "@column ")
+        return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entirecolumn " : "@column ")
             + OutputBuilder.quotedIfNecessary(renames.columnId(tableName, columnName).getOutput());
     }
 

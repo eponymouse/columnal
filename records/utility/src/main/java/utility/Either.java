@@ -227,12 +227,11 @@ public class Either<A, B>
         result = 31 * result + (isA ? 1 : 0);
         return result;
     }
-
-    @SuppressWarnings("nullness")
+    
     @Override
     public String toString()
     {
-        return isA ? ("Left(" + a.toString() + ")") : ("Right(" + b.toString() + ")"); 
+        return isA ? ("Left(" + a + ")") : ("Right(" + b + ")"); 
     }
 
     // Equivalent to either(l -> null, r -> r), but saves adding the annoying

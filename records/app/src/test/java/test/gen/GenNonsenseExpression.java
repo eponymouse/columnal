@@ -6,11 +6,14 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.datatype.TypeManager.TagInfo;
+import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import utility.Either;
@@ -54,7 +57,7 @@ public class GenNonsenseExpression extends Generator<Expression>
         if (r.nextInt(0, 3 - depth) == 0)
         {
             // Terminal:
-            return genTerminal(r, gs);
+            return genTerminal(r, gs, false);
         }
         else
         {
@@ -79,7 +82,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> !tagAllowed ? genTerminal(r, gs) : TestUtil.tagged(Either.left(TestUtil.makeString(r, gs).trim()), genDepth(r, depth + 1, gs)),
+                () -> !tagAllowed ? genTerminal(r, gs, false) : TestUtil.tagged(genTag(r), genDepth(r, depth + 1, gs)),
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
@@ -89,7 +92,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                () -> new CallExpression(DummyManager.INSTANCE.getUnitManager(), TestUtil.generateVarName(r), genDepth(true, r, depth + 1, gs)),
+                () -> new CallExpression(genTerminal(r, gs, true), genDepth(true, r, depth + 1, gs)),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
                 () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
                 () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
@@ -102,23 +105,41 @@ public class GenNonsenseExpression extends Generator<Expression>
         }
     }
 
-    private Expression genTerminal(SourceOfRandomness r, GenerationStatus gs)
+    private Expression genTerminal(SourceOfRandomness r, GenerationStatus gs, boolean onlyCallTargets)
     {
         try
         {
-            return r.<Expression>choose(Arrays.asList(
-                new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
-                new BooleanLiteral(r.nextBoolean()),
-                new StringLiteral(TestUtil.makeStringV(r, gs)),
-                new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
-                new VarUseExpression(TestUtil.generateVarName(r)),
-                new UnfinishedExpression(TestUtil.makeUnfinished(r))
+            // Call targets:
+            ArrayList<Expression> items = new ArrayList<>(Arrays.asList(
+                new ConstructorExpression(genTag(r)),
+                new StandardFunction(r.choose(FunctionList.getAllFunctions(DummyManager.INSTANCE.getUnitManager()))),
+                new VarUseExpression(TestUtil.generateVarName(r))
             ));
+            // Although unfinished is a valid call target, it doesn't survive a
+            // round trip, so we put it below:
+            
+            if (!onlyCallTargets)
+            {
+                items.addAll(Arrays.asList(
+                    new UnfinishedExpression(TestUtil.makeUnfinished(r)),
+                    new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
+                    new BooleanLiteral(r.nextBoolean()),
+                    new StringLiteral(TestUtil.makeStringV(r, gs)),
+                    new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW)  
+                ));
+            }
+            
+            return r.<Expression>choose(items);
         }
-        catch (UserException e)
+        catch (UserException | InternalException e)
         {
             throw new RuntimeException(e);
         }
+    }
+
+    private Either<String, TagInfo> genTag(SourceOfRandomness r)
+    {
+        return Either.right(r.choose(DummyManager.INSTANCE.getTypeManager().getKnownTaggedTypes().values().stream().flatMap(vs -> vs._test_getTagInfos().stream()).collect(Collectors.toList())));
     }
 
     private UnitExpression genUnit(SourceOfRandomness r, GenerationStatus gs)
@@ -145,7 +166,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             () ->
             {
                 String constructorName = TestUtil.makeNonEmptyString(r, gs).trim();
-                return TestUtil.tagged(Either.left(constructorName), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
+                return TestUtil.tagged(genTag(r), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
             }
         )).get();
     }
