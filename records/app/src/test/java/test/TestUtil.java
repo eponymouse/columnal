@@ -44,6 +44,7 @@ import records.transformations.function.FunctionDefinition;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;
+import records.types.units.MutUnitVar;
 import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.GenString;
@@ -985,35 +986,43 @@ public class TestUtil
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
-        TypeExp functionType = function.getType(typeManager).getFirst();
+        Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
-        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, paramType), returnTypeVar), functionType));
+        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, paramType), returnTypeVar), functionType.getFirst()));
         if (paramTypeExp == null)
             return null;
         
         @SuppressWarnings("nullness") // For null src
         @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(function.getInstance(s -> {throw new InternalException("Type unavailable: " + s);}), returnType);
+            return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
     }
 
+    private static DataType getConcrete(String s, Map<String, Either<MutUnitVar, MutVar>> vars, TypeManager typeManager) throws InternalException, UserException
+    {
+        Either<MutUnitVar, MutVar> var = vars.get(s);
+        if (var == null)
+            throw new InternalException("Var " + s + " not found");
+        return var.eitherEx(u -> {throw new InternalException("Var " + s + " is a unit");}, v -> v.toConcreteType(typeManager).getRight());
+    }
+
     @OnThread(Tag.Simulation)
-    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
-        TypeExp functionType = function.getType(typeManager).getFirst();
+        Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         @SuppressWarnings("nullness") // For null src
-        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, expectedReturnType), TypeExp.fromConcrete(null, paramType)), functionType));
+        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, expectedReturnType), TypeExp.fromConcrete(null, paramType)), functionType.getFirst()));
         if (funcTypeExp == null)
             return null;
             
         @SuppressWarnings("nullness") // For null src
         @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, funcTypeExp.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(function.getInstance(s -> {throw new InternalException("Type unavailable: " + s);}), returnType);
+            return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
     }
 

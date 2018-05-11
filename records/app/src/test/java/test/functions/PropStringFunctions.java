@@ -256,7 +256,7 @@ public class PropStringFunctions
         @SuppressWarnings("nullness") // Will throw if null
         @NonNull FunctionDefinition fromString = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "from text");
         @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
-        @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), Collections.emptyList(), DataType.TEXT, typeAndValueGen.getTypeManager());
+        @Nullable Pair<ValueFunction, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), DataType.TEXT, typeAndValueGen.getTypeManager());
         if (checkedToString == null || checkedFromString == null)
         {
             fail("Type check failure");

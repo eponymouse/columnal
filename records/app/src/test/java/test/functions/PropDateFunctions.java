@@ -66,7 +66,7 @@ public class PropDateFunctions
     public void testStringToDate(@From(GenDate.class) LocalDate src) throws Throwable
     {
         // Test with string input:
-        Object o = strToDate(src.toString());
+        Object o = strTo(src.toString(), DateTimeType.YEARMONTHDAY);
         assertEquals(LocalDate.class, o.getClass());
         assertEquals(src, o);
     }
@@ -76,7 +76,7 @@ public class PropDateFunctions
     public void testStringToTime(LocalTime src) throws Throwable
     {
         // Test with string input:
-        Object o = strToTime(src.toString());
+        Object o = strTo(src.toString(), DateTimeType.TIMEOFDAY);
         assertEquals(LocalTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -87,7 +87,7 @@ public class PropDateFunctions
     {
         LocalDateTime src = LocalDateTime.of(date, time);
         // Test with string input:
-        Object o = runFunction1(v(src.toString()), DataType.TEXT, new ToDateTime()._test_fromString("datetime.from.string"));
+        Object o = strTo(v(src.toString()), DateTimeType.DATETIME);
         assertEquals(LocalDateTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -104,7 +104,7 @@ public class PropDateFunctions
     {
         ZonedDateTime src = ZonedDateTime.of(date, time, zone);
         // Test with string input:
-        Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone()._test_fromString("datetimezoned.from.string"));
+        Object o = strTo(v(src.toLocalDateTime().toString() + " " + zone.toString()),  DateTimeType.DATETIMEZONED);
         assertEquals(ZonedDateTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -118,23 +118,23 @@ public class PropDateFunctions
         checkDate(LocalDate.of(2001, 01, 01), "1 Jan 2001");
         checkDate(LocalDate.of(2001, 01, 01), "1-Jan-2001");
         checkDate(LocalDate.of(2001, 01, 01), "Jan 1 2001");
-        assertThrows(UserException.class, () -> strToDate("01/01/01"));
+        assertThrows(UserException.class, () -> strTo("01/01/01", DateTimeType.YEARMONTHDAY));
         checkDate(LocalDate.of(2013, 12, 13), "13/12/13");
         checkDate(LocalDate.of(2012, 12, 13), "13/12/12");
-        assertThrows(UserException.class, () -> strToDate("12/12/12"));
+        assertThrows(UserException.class, () -> strTo("12/12/12", DateTimeType.YEARMONTHDAY));
         checkDate(LocalDate.of(9345, 8, 6), "9345-08-06");
 
-        assertThrows(UserException.class, () -> strToTime("1:2"));
+        assertThrows(UserException.class, () -> strTo("1:2", DateTimeType.TIMEOFDAY));
         checkTime(LocalTime.of(1, 2), "1:02");
         checkTime(LocalTime.of(21, 2), "21:02");
         checkTime(LocalTime.of(21, 2, 34), "21:02:34");
-        assertThrows(UserException.class, () -> strToTime("21:02:3"));
+        assertThrows(UserException.class, () -> strTo("21:02:3", DateTimeType.TIMEOFDAY));
         checkTime(LocalTime.of(21, 2, 34, 0), "21:02:34.0");
         checkTime(LocalTime.of(21, 2, 34, 20_000_000), "21:02:34.020");
         checkTime(LocalTime.of(21, 2, 34, 3_000_000), "21:02:34.003");
         checkTime(LocalTime.of(21, 2, 34, 100_000), "21:02:34.0001");
         checkTime(LocalTime.of(21, 2, 34, 7), "21:02:34.000000007");
-        assertThrows(UserException.class, () -> strToTime("21:02:34.0000000007"));
+        assertThrows(UserException.class, () -> strTo("21:02:34.0000000007", DateTimeType.TIMEOFDAY));
 
         checkTime(LocalTime.of(1, 2), "1:02AM");
         checkTime(LocalTime.of(11, 59), "11:59AM");
@@ -144,7 +144,7 @@ public class PropDateFunctions
         checkTime(LocalTime.of(12, 2), "12:02 PM");
         checkTime(LocalTime.of(3, 2, 34), "3:02:34 AM");
         checkTime(LocalTime.of(15, 2, 34), "3:02:34 PM");
-        assertThrows(UserException.class, () -> strToTime("20:06 PM"));
+        assertThrows(UserException.class, () -> strTo("20:06 PM", DateTimeType.TIMEOFDAY));
 
         // Must come after checkDate and checkTime calls
         checkDateTimes();
@@ -170,14 +170,14 @@ public class PropDateFunctions
     private void checkTime(LocalTime of, String src) throws Throwable
     {
         times.add(new Pair<>(of, src));
-        assertEquals(of, strToTime(src));
+        assertEquals(of, strTo(src, DateTimeType.TIMEOFDAY));
     }
 
     @OnThread(Tag.Simulation)
     private void checkDate(LocalDate of, String src) throws Throwable
     {
         dates.add(new Pair<>(of, src));
-        assertEquals(of, strToDate(src));
+        assertEquals(of, strTo(src, DateTimeType.YEARMONTHDAY));
     }
 
     @OnThread(Tag.Simulation)
@@ -193,18 +193,14 @@ public class PropDateFunctions
     }
 
     @OnThread(Tag.Simulation)
-    private Object strToTime(String src) throws Throwable
-    {
-        return runFunction1(v(src), DataType.TEXT, new ToTime()._test_fromString("time.from.string"));
-    }
-
-    @OnThread(Tag.Simulation)
-    private Object strToDate(String src) throws Throwable
+    private Object strTo(String src, DateTimeType dateTimeType) throws Throwable
     {
         @Nullable FunctionDefinition fromText = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "typed from text");
         if (fromText == null)
             throw new RuntimeException("Cannot find typed from text function");
-        return runFunction1(v(src), DataType.tuple(DummyManager.INSTANCE.getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))), DataType.TEXT), fromText);
+        // First param should be Type Date, but it shouldn't be used....
+        @Value Object[] args = new Object[] {v(""), src};
+        return runFunction1(DataTypeUtility.value(args), DataType.tuple(DummyManager.INSTANCE.getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
     }
 
     // Tests single numeric input, numeric output function
