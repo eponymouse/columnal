@@ -123,6 +123,16 @@ public class TypeCons extends TypeExp
                     throw new UserException("List must be of a type, not a unit");
                 else
                     return operands.get(0).getRight().toConcreteType(typeManager).map(t -> DataType.array(t));
+            case CONS_FUNCTION:
+                if (operands.get(0).isLeft() || operands.get(1).isLeft())
+                    throw new UserException("Function cannot take or return a unit");
+                Either<TypeConcretisationError, DataType> arg = operands.get(0).getRight().toConcreteType(typeManager);
+                if (arg.isLeft())
+                    return arg;
+                Either<TypeConcretisationError, DataType> ret = operands.get(1).getRight().toConcreteType(typeManager);
+                if (ret.isLeft())
+                    return ret;
+                return Either.right(DataType.function(arg.getRight(), ret.getRight()));
             default:
                 try
                 {

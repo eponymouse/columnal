@@ -1697,7 +1697,13 @@ public class DataType implements StyledShowable
                             r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
                                 DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
                                 b.optionalStart().appendLiteral(" ").optionalEnd();
-                                b.appendZoneId();
+                                b.appendZoneRegionId();
+                                return b.toFormatter();
+                            }));
+                            r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {
+                                DateTimeFormatterBuilder b = new DateTimeFormatterBuilder().append(dateTimeFormat);
+                                b.optionalStart().appendLiteral(" ").optionalEnd();
+                                b.appendZoneText(TextStyle.SHORT);
                                 return b.toFormatter();
                             }));
                             r.add(Utility.<DateTimeFormatter, DateTimeFormatter>mapListI(dateTimeFormats, dateTimeFormat -> {

@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.TableManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
 import records.error.UserException;
@@ -34,10 +35,16 @@ import java.util.stream.Collectors;
 public class GenNonsenseExpression extends Generator<Expression>
 {
     private final GenUnit genUnit = new GenUnit();
+    private TableManager tableManager = DummyManager.INSTANCE;
     
     public GenNonsenseExpression()
     {
         super(Expression.class);
+    }
+
+    public void setTableManager(TableManager tableManager)
+    {
+        this.tableManager = tableManager;
     }
 
     @Override
@@ -112,7 +119,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             // Call targets:
             ArrayList<Expression> items = new ArrayList<>(Arrays.asList(
                 new ConstructorExpression(genTag(r)),
-                new StandardFunction(r.choose(FunctionList.getAllFunctions(DummyManager.INSTANCE.getUnitManager()))),
+                new StandardFunction(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager()))),
                 new VarUseExpression(TestUtil.generateVarName(r))
             ));
             // Although unfinished is a valid call target, it doesn't survive a
@@ -139,7 +146,7 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     private Either<String, TagInfo> genTag(SourceOfRandomness r)
     {
-        return Either.right(r.choose(DummyManager.INSTANCE.getTypeManager().getKnownTaggedTypes().values().stream().flatMap(vs -> vs._test_getTagInfos().stream()).collect(Collectors.toList())));
+        return Either.right(r.choose(tableManager.getTypeManager().getKnownTaggedTypes().values().stream().flatMap(vs -> vs._test_getTagInfos().stream()).collect(Collectors.toList())));
     }
 
     private UnitExpression genUnit(SourceOfRandomness r, GenerationStatus gs)

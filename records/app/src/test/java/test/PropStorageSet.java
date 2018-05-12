@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.junit.runner.RunWith;
@@ -27,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 05/06/2017.
@@ -34,14 +36,14 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropStorageSet
 {
-    static {
-        SwingUtilities.invokeLater(() -> new JFXPanel());
-    }
-    
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
-    public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException, Exception
     {
+        // Make sure FX is initialised:
+        SwingUtilities.invokeAndWait(() -> new JFXPanel());
+        Platform.runLater(() -> {});
+        
         @SuppressWarnings({"keyfor", "units"})
         EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(rs -> typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"), Collections.emptyList(), typeAndValueGen.makeValue()).apply(rs)), () -> 0);
         Column c = recordSet.getColumns().get(0);

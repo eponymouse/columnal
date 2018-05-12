@@ -981,6 +981,7 @@ public class TestUtil
         return typeCheckFunction(function, paramType, null);
     }
 
+    // Returns the function and the return type of the function
     @OnThread(Tag.Simulation)
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
@@ -1014,13 +1015,18 @@ public class TestUtil
         ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
+        MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
-        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, expectedReturnType), TypeExp.fromConcrete(null, paramType)), functionType.getFirst()));
+        @Nullable TypeExp unifiedReturn = onError.recordError(null, TypeExp.unifyTypes(returnTypeVar, TypeExp.fromConcrete(null, expectedReturnType)));
+        if (null == unifiedReturn)
+            return null;
+        @SuppressWarnings("nullness") // For null src
+        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, paramType), returnTypeVar), functionType.getFirst()));
         if (funcTypeExp == null)
             return null;
             
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, funcTypeExp.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
             return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;

@@ -261,7 +261,8 @@ public class PropStringFunctions
         if (checkedToString == null || checkedFromString == null)
         {
             fail("Type check failure");
-        } else
+        }
+        else
         {
             assertEquals(DataType.TEXT, checkedToString.getSecond());
             assertEquals(typeAndValueGen.getType(), checkedFromString.getSecond());

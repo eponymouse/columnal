@@ -39,7 +39,9 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
         try
         {
             DummyManager mgr = new DummyManager();
+            mgr.getTypeManager()._test_copyTaggedTypesFrom(DummyManager.INSTANCE.getTypeManager());
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
+            genNonsenseExpression.setTableManager(mgr);
 
             List<Pair<ColumnId, Expression>> columns = new ArrayList<>();
             int numColumns = sourceOfRandomness.nextInt(0, 5);

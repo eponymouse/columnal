@@ -32,6 +32,8 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 public class FromString
 {
@@ -141,7 +143,7 @@ public class FromString
                     src.skipSpaces();
                     ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.toImmutableList());
                     // Updated char position and return value:
-                    ArrayList<Pair<Integer, TemporalAccessor>> possibles = new ArrayList<>();
+                    ArrayList<Pair<Integer, @Value TemporalAccessor>> possibles = new ArrayList<>();
                     WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.original, src.charStart);
                     ArrayList<DateTimeFormatter> possibleFormatters = new ArrayList<>();
                     for (DateTimeFormatter formatter : formatters)
@@ -150,7 +152,7 @@ public class FromString
                         {
                             ParsePosition position = new ParsePosition(src.charStart);
                             TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
-                            possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), temporalAccessor));
+                            possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), DataTypeUtility.value(dateTimeInfo, temporalAccessor)));
                             possibleFormatters.add(formatter);
                         }
                         catch (DateTimeParseException e)
@@ -168,15 +170,26 @@ public class FromString
                         ArrayList<Pair<Integer, TemporalAccessor>> possiblesByLength = new ArrayList<>(possibles);
                         Collections.sort(possiblesByLength, Pair.comparatorFirst());
                         // Choose the longest one, if it's strictly longer than the others:
-                        if (possiblesByLength.get(possiblesByLength.size() - 1).getFirst() > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
+                        int longest = possiblesByLength.get(possiblesByLength.size() - 1).getFirst();
+                        if (longest > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
                         {
                             Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
                             src.charStart = chosen.getFirst();
                             return DataTypeUtility.value(dateTimeInfo, chosen.getSecond());
                         }
+                        // If all the values of longest length are the same, that's fine:
+                        HashSet<Pair<Integer, TemporalAccessor>> distinctValues = new HashSet<>(
+                            possibles.stream().filter(p -> p.getFirst() == longest).collect(Collectors.toList())
+                        );
+                        if (distinctValues.size() == 1)
+                        {
+                            Pair<Integer, TemporalAccessor> chosen = distinctValues.iterator().next();
+                            src.charStart = chosen.getFirst();
+                            return DataTypeUtility.value(dateTimeInfo, chosen.getSecond());
+                        }
                         
                         // Otherwise, throw because it's too ambiguous:
-                        throw new UserException("Multiple ways to interpret " + type + " value "
+                        throw new UserException(Integer.toString(distinctValues.size()) + " ways to interpret " + type + " value "
                             + src.snippet() + ": "
                             + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond()))
                             + " using formatters "

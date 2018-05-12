@@ -118,10 +118,12 @@ public class PropDateFunctions
         checkDate(LocalDate.of(2001, 01, 01), "1 Jan 2001");
         checkDate(LocalDate.of(2001, 01, 01), "1-Jan-2001");
         checkDate(LocalDate.of(2001, 01, 01), "Jan 1 2001");
-        assertThrows(UserException.class, () -> strTo("01/01/01", DateTimeType.YEARMONTHDAY));
+        checkDate(LocalDate.of(2001, 01, 01), "01/01/01");
+        assertThrows(UserException.class, () -> strTo("01/02/01", DateTimeType.YEARMONTHDAY));
         checkDate(LocalDate.of(2013, 12, 13), "13/12/13");
         checkDate(LocalDate.of(2012, 12, 13), "13/12/12");
-        assertThrows(UserException.class, () -> strTo("12/12/12", DateTimeType.YEARMONTHDAY));
+        checkDate(LocalDate.of(2012, 12, 12), "12/12/12");
+        assertThrows(UserException.class, () -> strTo("11/12/12", DateTimeType.YEARMONTHDAY));
         checkDate(LocalDate.of(9345, 8, 6), "9345-08-06");
 
         assertThrows(UserException.class, () -> strTo("1:2", DateTimeType.TIMEOFDAY));

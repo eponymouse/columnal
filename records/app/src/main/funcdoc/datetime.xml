@@ -110,7 +110,7 @@
             <p>Creates a year-month value from the given year and month.</p>
         </description>
         <example>
-            <input>@call @function to text(@call @function date(1998{year}, 07{month}))</input>
+            <input>@call @function to text(@call @function dateym(1998{year}, 07{month}))</input>
             <output>"1998-07"</output>
         </example>
         <example>
