@@ -33,6 +33,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.function.FunctionDefinition;
@@ -400,7 +401,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             try
             {
-                List<TagType<DataType>> tagTypes = taggedType.getTags();
+                List<TagType<JellyType>> tagTypes = taggedType.getTags();
                 for (int i = 0; i < tagTypes.size(); i++)
                 {
                     r.add(new TagCompletion(new TagInfo(taggedType, i)));

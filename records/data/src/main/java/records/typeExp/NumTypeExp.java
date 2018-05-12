@@ -1,20 +1,17 @@
-package records.types;
+package records.typeExp;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
-import records.types.units.UnitExp;
+import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 // Note: this is separate to TypeCons because (a) unit is optional, so special treatment needed, and
 // (b) the unit is treated specially in multiplication and division.

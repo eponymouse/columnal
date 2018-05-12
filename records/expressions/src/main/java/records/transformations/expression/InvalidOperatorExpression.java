@@ -10,7 +10,7 @@ import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;

@@ -17,9 +17,9 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.gui.expressioneditor.OperandNode;
+import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
-import records.types.TypeCons;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -59,7 +59,7 @@ public class ConstructorExpression extends NonOperatorExpression
 
     private TypeExp makeTagType(TagInfo t) throws InternalException
     {
-        TagType<DataType> tt = t.getTagInfo();
+        TagType<JellyType> tt = t.getTagInfo();
         Pair<TypeExp, ImmutableList<TypeExp>> taggedType = TypeExp.fromTagged(this, t.wholeType);
         return taggedType.getSecond().get(t.tagIndex);
     }

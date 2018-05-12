@@ -14,24 +14,18 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
-import records.types.units.UnitExp;
+import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitNodeParent>, StyledShowable
@@ -96,6 +90,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             }
             else
             {
+                // TODO we need to support unit variables here.
                 SingleUnitExpression singleUnit = new SingleUnitExpression(singleItem.singleUnit().getText());
                 if (ctx.single().NUMBER() != null)
                 {

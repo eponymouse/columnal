@@ -43,6 +43,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -66,10 +67,10 @@ public class TypeSelectionPane
 {
     private final ToggleGroup typeGroup;
     private final VBox contents;
-    private final SimpleObjectProperty<@Nullable Optional<DataType>> selectedType = new SimpleObjectProperty<>(Optional.of(DataType.NUMBER));
+    private final SimpleObjectProperty<@Nullable Optional<JellyType>> selectedType = new SimpleObjectProperty<>(Optional.of(JellyType.fromPrimitive(DataType.NUMBER)));
     // Stored as fields to prevent GC.  We store not because we bind disable to it:
     private final BooleanBinding numberNotSelected, dateNotSelected, taggedNotSelected, tupleNotSelected, listNotSelected;
-    private final IdentityHashMap<Toggle, ObservableValue<@Nullable Optional<DataType>>> types = new IdentityHashMap<>();
+    private final IdentityHashMap<Toggle, ObservableValue<@Nullable Optional<JellyType>>> types = new IdentityHashMap<>();
 
     public TypeSelectionPane(TypeManager typeManager)
     {
@@ -93,18 +94,18 @@ public class TypeSelectionPane
         numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), ImmutableList.of(new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode()));
         units.getNode().getStyleClass().add("type-number-units");
         units.disableProperty().bind(numberNotSelected);
-        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(DataType.TEXT)), ImmutableList.of());
-        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(DataType.BOOLEAN)), ImmutableList.of());
-        ComboBox<DataType> dateTimeComboBox = new ComboBox<>();
-        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
-        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
-        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)));
-        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)));
+        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(JellyType.fromPrimitive(DataType.TEXT))), ImmutableList.of());
+        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(JellyType.fromPrimitive(DataType.BOOLEAN))), ImmutableList.of());
+        ComboBox<JellyType> dateTimeComboBox = new ComboBox<>();
+        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         //dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)));
-        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
+        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         dateTimeComboBox.getSelectionModel().selectFirst();
         dateTimeComboBox.getStyleClass().add("type-datetime-combo");
-        dateNotSelected = addType("type.datetime", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), ImmutableList.of(dateTimeComboBox));
+        dateNotSelected = addType("type.datetime", FXUtility.<@Nullable JellyType, @Nullable Optional<JellyType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), ImmutableList.of(dateTimeComboBox));
         dateTimeComboBox.disableProperty().bind(dateNotSelected);
 
         ComboBox<TaggedTypeDefinition> taggedComboBox = new ComboBox<>();
@@ -123,22 +124,23 @@ public class TypeSelectionPane
                 taggedComboBox.getSelectionModel().select(newType);
             }
         });
-        taggedNotSelected = addType("type.tagged", FXUtility.<@Nullable TaggedTypeDefinition, @Nullable Optional<DataType>>mapBindingEager(taggedComboBox.valueProperty(), x -> {
+        taggedNotSelected = addType("type.tagged", FXUtility.<@Nullable TaggedTypeDefinition, @Nullable Optional<JellyType>>mapBindingEager(taggedComboBox.valueProperty(), x -> {
             if (x == null)
             {
                 return null;
             }
             else
             {
-                try
-                {
-                    return Optional.of(x.instantiate(ImmutableList.of() /* TODO */));
-                }
-                catch (InternalException | UserException e)
-                {
-                    Log.log(e);
+                //try
+                //{
+                    //return Optional.of(x.instantiate(ImmutableList.of() /* TODO */));
                     return null;
-                }
+                //}
+                //catch (InternalException | UserException e)
+                //{
+                    //Log.log(e);
+                    //return null;
+                //}
             }
         }), ImmutableList.of(taggedComboBox, newTaggedTypeButton));
 
@@ -147,16 +149,16 @@ public class TypeSelectionPane
         taggedComboBox.disableProperty().bind(taggedNotSelected);
         newTaggedTypeButton.disableProperty().bind(taggedNotSelected);
 
-        ObservableList<ObservableObjectValue<@Nullable Optional<DataType>>> tupleTypes = FXCollections.observableArrayList();
+        ObservableList<ObservableObjectValue<@Nullable Optional<JellyType>>> tupleTypes = FXCollections.observableArrayList();
         ObservableList<Label> commas = FXCollections.observableArrayList();
         FlowPane tupleTypesPane = new FlowPane();
-        ObjectProperty<@Nullable Optional<DataType>> tupleType = new SimpleObjectProperty<>(null);
+        ObjectProperty<@Nullable Optional<JellyType>> tupleType = new SimpleObjectProperty<>(null);
         FXPlatformRunnable recalcTupleType = () -> {
-            List<@NonNull DataType> types = new ArrayList<>();
-            for (ObservableObjectValue<@Nullable Optional<DataType>> obsType : tupleTypes)
+            List<@NonNull JellyType> types = new ArrayList<>();
+            for (ObservableObjectValue<@Nullable Optional<JellyType>> obsType : tupleTypes)
             {
-                @Nullable Optional<DataType> opt = obsType.get();
-                @Nullable DataType type = opt == null ? null : opt.orElse(null);
+                @Nullable Optional<JellyType> opt = obsType.get();
+                @Nullable JellyType type = opt == null ? null : opt.orElse(null);
                 if (type == null)
                 {
                     tupleType.setValue(null);
@@ -164,9 +166,9 @@ public class TypeSelectionPane
                 }
                 types.add(type);
             }
-            tupleType.setValue(Optional.of(DataType.tuple(types)));
+            tupleType.setValue(Optional.of(JellyType.tuple(ImmutableList.copyOf(types))));
         };
-        FXUtility.listen(tupleTypes, (Change<? extends ObservableObjectValue<@Nullable Optional<DataType>>> c) -> recalcTupleType.run());
+        FXUtility.listen(tupleTypes, (Change<? extends ObservableObjectValue<@Nullable Optional<JellyType>>> c) -> recalcTupleType.run());
         FXUtility.listen(commas, c -> {
             for (int i = 0; i < commas.size(); i++)
             {
@@ -177,7 +179,7 @@ public class TypeSelectionPane
 
 
         FXPlatformRunnable addTupleType = () -> {
-            Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> typeButton = makeTypeButton(typeManager, false);
+            Pair<Button, ObservableObjectValue<@Nullable Optional<JellyType>>> typeButton = makeTypeButton(typeManager, false);
             typeButton.getFirst().disableProperty().bind(tupleNotSelected);
             // For testing purposes, to identify the different buttons:
             typeButton.getFirst().getStyleClass().add("type-tuple-element-" + tupleTypes.size());
@@ -211,9 +213,9 @@ public class TypeSelectionPane
         addTupleType.run();
 
 
-        Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> listSubType = makeTypeButton(typeManager, false);
+        Pair<Button, ObservableObjectValue<@Nullable Optional<JellyType>>> listSubType = makeTypeButton(typeManager, false);
         listSubType.getFirst().getStyleClass().add("type-list-of-set");
-        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<DataType>, @Nullable Optional<DataType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || !inner.isPresent() ? null : Optional.of(DataType.array(inner.get()))), ImmutableList.of(listSubType.getFirst()));
+        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<JellyType>, @Nullable Optional<JellyType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || !inner.isPresent() ? null : Optional.of(JellyType.list(inner.get()))), ImmutableList.of(listSubType.getFirst()));
         listSubType.getFirst().disableProperty().bind(listNotSelected);
 
         FXUtility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {
@@ -221,18 +223,18 @@ public class TypeSelectionPane
         });
     }
 
-    public static Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> makeTypeButton(TypeManager typeManager, boolean emptyAllowed)
+    public static Pair<Button, ObservableObjectValue<@Nullable Optional<JellyType>>> makeTypeButton(TypeManager typeManager, boolean emptyAllowed)
     {
         Button listSubTypeButton = new Button(TranslationUtility.getString("type.select"));
         listSubTypeButton.getStyleClass().add("type-select-button");
-        SimpleObjectProperty<@Nullable Optional<DataType>> listSubType = new SimpleObjectProperty<>(emptyAllowed ? Optional.empty() : null);
+        SimpleObjectProperty<@Nullable Optional<JellyType>> listSubType = new SimpleObjectProperty<>(emptyAllowed ? Optional.empty() : null);
         listSubTypeButton.setOnAction(e -> {
             Scene scene = listSubTypeButton.getScene();
-            @Nullable Optional<DataType> newValue = new TypeDialog(scene == null ? null : scene.getWindow(), typeManager, emptyAllowed).showAndWait().orElse(null);
+            @Nullable Optional<JellyType> newValue = new TypeDialog(scene == null ? null : scene.getWindow(), typeManager, emptyAllowed).showAndWait().orElse(null);
             // Don't overwrite existing one if they cancelled:
             if (newValue != null)
                 listSubType.setValue(newValue);
-            @Nullable Optional<DataType> dataType = listSubType.get();
+            @Nullable Optional<JellyType> dataType = listSubType.get();
             listSubTypeButton.setText(
                     dataType == null ? TranslationUtility.getString("type.select") :
                     (dataType.isPresent() ? dataType.get().toString() : TranslationUtility.getString("type.none")));
@@ -250,7 +252,7 @@ public class TypeSelectionPane
     private void updateSelectedType(@UnderInitialization(Object.class) TypeSelectionPane this)
     {
         // This bit shouldn't be null, but we know what to do in that case: set selectedType to null:
-        @Nullable ObservableValue<@Nullable Optional<DataType>> dataTypeObservableValue = types.get(typeGroup.getSelectedToggle());
+        @Nullable ObservableValue<@Nullable Optional<JellyType>> dataTypeObservableValue = types.get(typeGroup.getSelectedToggle());
         selectedType.setValue(dataTypeObservableValue == null ? null : dataTypeObservableValue.getValue());
     }
 
@@ -264,7 +266,7 @@ public class TypeSelectionPane
      * @return An observable which is *false* when this type is selected (useful to disable sub-items) and *true* when it is *not* selected
      */
     @RequiresNonNull({"contents", "typeGroup", "types"})
-    private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable Optional<DataType>> calculateType, ImmutableList<Node> furtherDetails)
+    private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable Optional<JellyType>> calculateType, ImmutableList<Node> furtherDetails)
     {
         RadioButton radioButton = new RadioButton(TranslationUtility.getString(typeKey));
         radioButton.getStyleClass().add("id-" + typeKey.replace(".", "-"));
@@ -287,12 +289,12 @@ public class TypeSelectionPane
 
     // null means not valid
     // Optional.empty() means that "None" was selected (if permitted: see constructor)
-    public ObservableObjectValue<@Nullable Optional<DataType>> selectedType()
+    public ObservableObjectValue<@Nullable Optional<JellyType>> selectedType()
     {
         return selectedType;
     }
 
-    private static class NumberTypeBinding extends ObjectBinding<@Nullable Optional<DataType>>
+    private static class NumberTypeBinding extends ObjectBinding<@Nullable Optional<JellyType>>
     {
         private final @NonNull ObjectExpression<@Nullable Unit> units;
         private final TypeManager typeManager;
@@ -305,12 +307,12 @@ public class TypeSelectionPane
         }
 
         @Override
-        protected @Nullable Optional<DataType> computeValue()
+        protected @Nullable Optional<JellyType> computeValue()
         {
             Unit u = units.get();
             if (u == null)
                 return null;
-            return Optional.of(DataType.number(new NumberInfo(u)));
+            return Optional.of(JellyType.fromPrimitive(DataType.number(new NumberInfo(u))));
         }
     }
 }

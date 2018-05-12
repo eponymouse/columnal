@@ -12,7 +12,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.CommonStyles;
 import styled.StyledString;
 

@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.SingleUnit;
-import records.data.unit.SpecificSingleUnit;
+import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.transformations.expression.CallExpression;
@@ -176,7 +176,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         // TODO add UnitRaiseExpression more (don't always split units into single powers)
 
         // Flatten into a list of units, true for numerator, false for denom:
-        List<Pair<SpecificSingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> e) -> Utility.replicate(Math.abs(e.getValue()), new Pair<>((SpecificSingleUnit)e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
+        List<Pair<SingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> e) -> Utility.replicate(Math.abs(e.getValue()), new Pair<>((SingleUnit)e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
 
         // Now shuffle them and form a compound expression:
         Collections.shuffle(singleUnits, new Random(r.nextLong()));
@@ -197,7 +197,7 @@ public abstract class GenValueBase<T> extends Generator<T>
 
         for (int i = 1; i < singleUnits.size(); i++)
         {
-            Pair<SpecificSingleUnit, Boolean> s = singleUnits.get(i);
+            Pair<SingleUnit, Boolean> s = singleUnits.get(i);
             SingleUnitExpression sExp = new SingleUnitExpression(s.getFirst().getName());
             if (s.getSecond())
             {

@@ -1,4 +1,4 @@
-package records.types;
+package records.typeExp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -11,16 +11,12 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.units.UnitExp;
+import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
-import utility.Utility;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class TypeCons extends TypeExp
 {

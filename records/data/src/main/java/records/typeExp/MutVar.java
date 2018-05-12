@@ -1,18 +1,12 @@
-package records.types;
+package records.typeExp;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import styled.CommonStyles;
 import styled.StyledString;
-import styled.StyledString.Style;
 import utility.Either;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Named MutVar after the Sheard paper.  Essentially, any time there

@@ -1,18 +1,13 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
-import records.types.units.UnitExp;
+import records.typeExp.units.UnitExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 

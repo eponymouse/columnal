@@ -1,10 +1,8 @@
-package records.types;
+package records.typeExp;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import styled.StyledString;
-
-import java.util.Optional;
 
 /**
  * Basically a wrapper for a String error, with a flag recording whether fixing the type

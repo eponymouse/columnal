@@ -84,6 +84,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -294,55 +295,14 @@ public class DataType implements StyledShowable
             }
         });
     }
-
-    public DataType substitute(Map<String, Either<Unit, DataType>> substitutions) throws InternalException, UserException
-    {
-        switch (kind)
-        {
-            case TAGGED:
-                if (taggedTypeName == null) throw new InternalException("Null name for tagged type");
-                if (tagTypes == null) throw new InternalException("Null tags for tagged type");
-                if (tagTypeVariableSubstitutions == null) throw new InternalException("Null substitutions for tagged type");
-                
-                return DataType.tagged(taggedTypeName, Utility.mapListExI(this.tagTypeVariableSubstitutions, e -> {
-                    return e.<Either<Unit, DataType>>eitherEx(u -> Either.<Unit, DataType>left(u), t -> Either.<Unit, DataType>right(t.substitute(substitutions)));
-                }), Utility.mapListExI(tagTypes, t -> {
-                    @Nullable DataType inner = t.getInner();
-                    if (inner == null)
-                        return t;
-                    return new TagType<>(t.getName(), inner.substitute(substitutions));
-                }));
-            case TUPLE:
-                if (memberType == null) throw new InternalException("Null members for tuple");
-                return DataType.tuple(Utility.mapListEx(memberType, t -> t.substitute(substitutions)));
-            case ARRAY:
-                if (memberType == null) throw new InternalException("Null members for array");
-                return memberType.isEmpty() ? DataType.array() : DataType.array(memberType.get(0).substitute(substitutions));
-            case TYPE_VARIABLE:
-                Either<Unit, DataType> either = substitutions.get(typeVariableName);
-                if (either == null)
-                    return this;
-                DataType substitute = either.eitherEx(u -> {throw new UserException("Looking for type variable named \"" + typeVariableName + "\" but found unit variable instead.");}, t -> t);
-                if (substitute == null)
-                    return this;
-                return substitute;
-            default:
-                return this;
-        }
-    }
-
-    public static DataType typeVariable(String name)
-    {
-        return new DataType(Kind.TYPE_VARIABLE, null, null, null, null, name);
-    }
     
     public static DataType function(DataType argType, DataType resultType)
     {
-        return new DataType(Kind.FUNCTION, null, null, null, ImmutableList.of(argType, resultType), null);
+        return new DataType(Kind.FUNCTION, null, null, null, ImmutableList.of(argType, resultType));
     }
 
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, FUNCTION, TYPE_VARIABLE }
+    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, FUNCTION }
     final Kind kind;
     // For NUMBER:
     final @Nullable NumberInfo numberInfo;
@@ -357,11 +317,9 @@ public class DataType implements StyledShowable
     // For TUPLE (2+) and ARRAY (1) and FUNCTION(2).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
     final @Nullable ImmutableList<DataType> memberType;
-    // For TYPE_VARIABLE: the name of the variable being used here.
-    final @Nullable String typeVariableName;
 
     // package-visible
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagInfo, @Nullable List<DataType> memberType, @Nullable String typeVariableName)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagInfo, @Nullable List<DataType> memberType)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
@@ -370,12 +328,11 @@ public class DataType implements StyledShowable
         this.tagTypeVariableSubstitutions = tagInfo == null ? null : tagInfo.typeVariableSubstitutions;
         this.tagTypes = tagInfo == null ? null : tagInfo.tagTypes;
         this.memberType = memberType == null ? null : ImmutableList.copyOf(memberType);
-        this.typeVariableName = typeVariableName;
     }
 
     public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
-    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null, null);
-    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null, null);
+    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null);
+    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null);
 
     protected static class TagTypeDetails
     {
@@ -393,12 +350,12 @@ public class DataType implements StyledShowable
     
     public static DataType array()
     {
-        return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList(), null);
+        return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList());
     }
 
     public static DataType array(DataType inner)
     {
-        return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner), null);
+        return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner));
     }
 
     public static DataType tuple(DataType... inner)
@@ -408,12 +365,12 @@ public class DataType implements StyledShowable
 
     public static DataType tuple(List<DataType> inner)
     {
-        return new DataType(Kind.TUPLE, null, null, null, new ArrayList<>(inner), null);
+        return new DataType(Kind.TUPLE, null, null, null, new ArrayList<>(inner));
     }
 
     public static DataType date(DateTimeInfo dateTimeInfo)
     {
-        return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null, null);
+        return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null);
     }
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>
@@ -431,11 +388,6 @@ public class DataType implements StyledShowable
         default R function(DataType argType, DataType resultType) throws InternalException, E
         {
             throw new InternalException("Functions are unsupported, plain data values expected");
-        };
-        
-        default R typeVariable(String typeVariableName) throws InternalException, E
-        {
-            throw new InternalException("Free variable " + typeVariableName + " in type");
         };
     }
 
@@ -516,8 +468,6 @@ public class DataType implements StyledShowable
                     return visitor.array(memberType.get(0));
             case TUPLE:
                 return visitor.tuple(memberType);
-            case TYPE_VARIABLE:
-                return visitor.typeVariable(typeVariableName);
             case FUNCTION:
                 return visitor.function(memberType.get(0), memberType.get(1));
             default:
@@ -525,7 +475,7 @@ public class DataType implements StyledShowable
         }
     }
 
-    public static class TagType<T extends DataType>
+    public static class TagType<T>
     {
         private final String name;
         private final @Nullable T inner;
@@ -574,9 +524,16 @@ public class DataType implements StyledShowable
             return name + (inner == null ? "" : (":" + inner.toString()));
         }
 
+        /*
         public TagType<DataType> upcast()
         {
             return new TagType<>(name, inner);
+        }
+        */
+        
+        public <U> TagType<U> map(Function<T, U> changeInner)
+        {
+            return new TagType<>(name, inner == null ? null : changeInner.apply(inner));
         }
     }
 
@@ -703,12 +660,6 @@ public class DataType implements StyledShowable
             {
                 return argType.toDisplay(drillIntoTagged) + " -> " + resultType.toDisplay(drillIntoTagged);
             }
-
-            @Override
-            public String typeVariable(String typeVariableName) throws InternalException, UserException
-            {
-                return typeVariableName;
-            }
         });
     }
 
@@ -743,13 +694,13 @@ public class DataType implements StyledShowable
     // package-visible
     static DataType tagged(TypeId name, ImmutableList<Either<Unit, DataType>> typeVariableSubstitutes, ImmutableList<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, null, new TagTypeDetails(name, typeVariableSubstitutes, tagTypes), null, null);
+        return new DataType(Kind.TAGGED, null, null, new TagTypeDetails(name, typeVariableSubstitutes, tagTypes), null);
     }
 
 
     public static DataType number(NumberInfo numberInfo)
     {
-        return new DataType(Kind.NUMBER, numberInfo, null, null, null, null);
+        return new DataType(Kind.NUMBER, numberInfo, null, null, null);
     }
 
     public static <T extends DataType> boolean canFitInOneNumeric(List<? extends TagType<T>> tags) throws InternalException, UserException
@@ -880,7 +831,6 @@ public class DataType implements StyledShowable
         if (memberType != null ? !memberType.equals(dataType.memberType) : dataType.memberType != null) return false;
         if (taggedTypeName != null ? !taggedTypeName.equals(dataType.taggedTypeName) : dataType.taggedTypeName != null) return false;
         if (!Objects.equals(tagTypeVariableSubstitutions, ((DataType) o).tagTypeVariableSubstitutions)) return false;
-        if (!Objects.equals(typeVariableName, dataType.typeVariableName)) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -894,7 +844,6 @@ public class DataType implements StyledShowable
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
         result = 31 * result + (memberType != null ? memberType.hashCode() : 0);
         result = 31 * result + (taggedTypeName != null ? taggedTypeName.hashCode() : 0);
-        result = 31 * result + (typeVariableName != null ? typeVariableName.hashCode() : 0);
         return result;
     }
 
@@ -1603,14 +1552,6 @@ public class DataType implements StyledShowable
                 if (inner != null)
                     inner.save(b);
                 b.t(FormatLexer.CLOSE_SQUARE, FormatLexer.VOCABULARY);
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType typeVariable(String typeVariableName) throws InternalException, InternalException
-            {
-                b.t(FormatLexer.TYPEVAR, FormatLexer.VOCABULARY);
-                b.raw(typeVariableName);
                 return UnitType.UNIT;
             }
         });

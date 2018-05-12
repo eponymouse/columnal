@@ -1,7 +1,7 @@
 package records.data.datatype;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
@@ -10,14 +10,13 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
+import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 
 public class TaggedTypeDefinition
@@ -29,9 +28,9 @@ public class TaggedTypeDefinition
     private final ImmutableList<Pair<TypeVariableKind, String>> typeVariables;
     // Version with the type variables unsubstituted:
     // The only free variables should be the ones in the typeVariables list:
-    private final ImmutableList<TagType<DataType>> tags;
+    private final ImmutableList<TagType<JellyType>> tags;
     
-    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<DataType>> tags) throws InternalException
+    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tags) throws InternalException
     {
         this.name = name;
         this.typeVariables = typeVariables;
@@ -46,7 +45,7 @@ public class TaggedTypeDefinition
             }
         }
         HashSet<String> uniqueTagNames = new HashSet<>();
-        for (TagType<DataType> tag : tags)
+        for (TagType<?> tag : tags)
         {
             if (!uniqueTagNames.add(tag.getName()))
             {
@@ -55,17 +54,18 @@ public class TaggedTypeDefinition
         }
     }
 
-    public ImmutableList<TagType<DataType>> getTags()
+    public ImmutableList<TagType<JellyType>> getTags()
     {
         return tags;
     }
 
+    // Instantiates to concrete type.
     public DataType instantiate(ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws UserException, InternalException
     {
         if (typeVariableSubs.size() != typeVariables.size())
             throw new UserException("Attempting to use type with " + typeVariables.size() + " variables but trying to substitute " + typeVariableSubs.size());
         
-        Map<String, Either<Unit, DataType>> substitutions = new HashMap<>();
+        ImmutableMap.Builder<String, Either<Unit, DataType>> substitutionsBuilder = ImmutableMap.builder();
 
         for (int i = 0; i < typeVariables.size(); i++)
         {
@@ -74,14 +74,15 @@ public class TaggedTypeDefinition
             if ((typeVariables.get(i).getFirst() == TypeVariableKind.UNIT) && typeVariableSubs.get(i).isRight())
                 throw new UserException("Expected unit variable but found type variable for variable #" + (i + 1));
             
-            substitutions.put(typeVariables.get(i).getSecond(), typeVariableSubs.get(i));
+            substitutionsBuilder.put(typeVariables.get(i).getSecond(), typeVariableSubs.get(i));
         }
+        ImmutableMap<String, Either<Unit, DataType>> substitutions = substitutionsBuilder.build();
 
         ImmutableList<TagType<DataType>> substitutedTags = Utility.mapListExI(tags, tag -> {
             if (tag.getInner() == null)
-                return tag;
-            @NonNull DataType inner = tag.getInner();
-            return new TagType<>(tag.getName(), inner.substitute(substitutions));
+                return new TagType<>(tag.getName(), null);
+            @NonNull DataType inner = tag.getInner().makeDataType(substitutions);
+            return new TagType<>(tag.getName(), inner);
         });
         
         return DataType.tagged(name, typeVariableSubs, substitutedTags);
@@ -102,12 +103,12 @@ public class TaggedTypeDefinition
         }
         b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
         boolean first = true;
-        for (TagType<DataType> tag : tags)
+        for (TagType<JellyType> tag : tags)
         {
             if (!first)
                 b.t(FormatLexer.TAGOR, FormatLexer.VOCABULARY);
             b.kw(b.quotedIfNecessary(tag.getName()));
-            @Nullable DataType inner = tag.getInner();
+            @Nullable JellyType inner = tag.getInner();
             if (inner != null)
             {
                 b.raw("(");

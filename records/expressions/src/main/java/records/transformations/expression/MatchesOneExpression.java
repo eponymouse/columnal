@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;

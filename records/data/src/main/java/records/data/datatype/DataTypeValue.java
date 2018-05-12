@@ -41,7 +41,7 @@ public class DataTypeValue extends DataType
     @SuppressWarnings("unchecked")
     DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
     {
-        super(kind, numberInfo, dateTimeInfo, tagTypes, memberTypes, null);
+        super(kind, numberInfo, dateTimeInfo, tagTypes, memberTypes);
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -57,7 +57,7 @@ public class DataTypeValue extends DataType
 
     public static DataTypeValue tagged(TypeId name, ImmutableList<Either<Unit, DataType>> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.upcast()).collect(ImmutableList.toImmutableList())), null, null, null, null, null, getTag, null);
+        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.<DataType>map(x -> x)).collect(ImmutableList.toImmutableList())), null, null, null, null, null, getTag, null);
     }
 
     public static DataTypeValue text(GetValue<@Value String> getText)
@@ -418,7 +418,7 @@ public class DataTypeValue extends DataType
             ImmutableList.Builder<TagType<DataType>> tagTypes = ImmutableList.builder();
             for (int tagIndex = 0; tagIndex < original.tagTypes.size(); tagIndex++)
             {
-                TagType t = original.tagTypes.get(tagIndex);
+                TagType<DataType> t = original.tagTypes.get(tagIndex);
                 int tagIndexFinal = tagIndex;
                 DataType inner = t.getInner();
                 if (inner == null)

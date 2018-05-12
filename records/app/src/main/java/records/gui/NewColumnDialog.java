@@ -2,6 +2,7 @@ package records.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -26,6 +27,7 @@ import records.gui.stf.Component;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
+import records.jellytype.JellyType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -88,10 +90,10 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         FXUtility.addChangeListenerPlatform(typeSelectionPane.selectedType(), optDataType -> {
             if (optDataType != null && optDataType.isPresent())
             {
-                @NonNull DataType dataType = optDataType.get();
+                @NonNull JellyType dataType = optDataType.get();
                 FXUtility.alertOnErrorFX_(() ->
                 {
-                    defaultValueEditor.resetContent(makeEditorKit(dataType));
+                    defaultValueEditor.resetContent(makeEditorKit(dataType.makeDataType(ImmutableMap.of())));
                     defaultValueEditor.getStyleClass().add("new-column-value");
                     defaultValueEditorWrapper.setCenter(defaultValueEditor);
                     getDialogPane().layout();
@@ -114,7 +116,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     @RequiresNonNull({"typeSelectionPane"})
     private @Nullable DataType getSelectedType(@UnknownInitialization(Object.class) NewColumnDialog this)
     {
-        @Nullable Optional<DataType> maybeType = typeSelectionPane.selectedType().get();
+        @Nullable Optional<JellyType> maybeType = typeSelectionPane.selectedType().get();
         return maybeType == null ? null : maybeType.orElse(null);
     }
 

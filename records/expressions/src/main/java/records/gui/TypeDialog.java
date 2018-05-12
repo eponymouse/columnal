@@ -7,6 +7,7 @@ import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.jellytype.JellyType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -16,7 +17,7 @@ import java.util.Optional;
  * Type dialog.
  */
 @OnThread(Tag.FXPlatform)
-public class TypeDialog extends Dialog<Optional<DataType>>
+public class TypeDialog extends Dialog<Optional<JellyType>>
 {
     private final TypeSelectionPane typeSelectionPane;
 

@@ -2,10 +2,9 @@ package records.transformations.expression;
 
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.ExConsumer;

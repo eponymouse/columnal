@@ -2,7 +2,6 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,15 +14,14 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
-import records.types.TypeConcretisationError;
-import records.types.TypeExp;
+import records.typeExp.TypeConcretisationError;
+import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;

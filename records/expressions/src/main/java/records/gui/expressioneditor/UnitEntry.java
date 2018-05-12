@@ -8,7 +8,7 @@ import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
-import records.data.unit.SpecificSingleUnit;
+import records.data.unit.SingleUnit;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
@@ -65,7 +65,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         List<Completion> r = new ArrayList<>();
         r.add(bracketedCompletion);
         r.add(new NumericLiteralCompletion());
-        for (SpecificSingleUnit unit : parent.getThisAsSemanticParent().getUnitManager().getAllDeclared())
+        for (SingleUnit unit : parent.getThisAsSemanticParent().getUnitManager().getAllDeclared())
         {
             r.add(new KnownUnitCompletion(unit.getName()));
         }

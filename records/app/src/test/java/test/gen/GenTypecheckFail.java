@@ -16,10 +16,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.SingleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.Expression._test_TypeVary;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenTypecheckFail.TypecheckInfo;
@@ -249,7 +248,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         {
             picked = pickType(r);
         }
-        while (type != null && TypeExp.unifyTypes(type, TypeExp.fromConcrete(null, picked)).isRight());
+        while (type != null && TypeExp.unifyTypes(type, TypeExp.fromDataType(null, picked)).isRight());
         return picked;
     }
 

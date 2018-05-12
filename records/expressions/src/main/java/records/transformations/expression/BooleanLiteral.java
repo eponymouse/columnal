@@ -8,7 +8,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 
 /**

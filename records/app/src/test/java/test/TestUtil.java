@@ -27,7 +27,6 @@ import records.data.*;
 import records.data.Table.FullSaver;
 import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
@@ -41,10 +40,10 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionDefinition;
-import records.types.MutVar;
-import records.types.TypeCons;
-import records.types.TypeExp;
-import records.types.units.MutUnitVar;
+import records.typeExp.MutVar;
+import records.typeExp.TypeCons;
+import records.typeExp.TypeExp;
+import records.typeExp.units.MutUnitVar;
 import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.GenString;
@@ -990,7 +989,7 @@ public class TestUtil
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
-        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, paramType), returnTypeVar), functionType.getFirst()));
+        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromDataType(null, paramType), returnTypeVar), functionType.getFirst()));
         if (paramTypeExp == null)
             return null;
         
@@ -1017,11 +1016,11 @@ public class TestUtil
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
-        @Nullable TypeExp unifiedReturn = onError.recordError(null, TypeExp.unifyTypes(returnTypeVar, TypeExp.fromConcrete(null, expectedReturnType)));
+        @Nullable TypeExp unifiedReturn = onError.recordError(null, TypeExp.unifyTypes(returnTypeVar, TypeExp.fromDataType(null, expectedReturnType)));
         if (null == unifiedReturn)
             return null;
         @SuppressWarnings("nullness") // For null src
-        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromConcrete(null, paramType), returnTypeVar), functionType.getFirst()));
+        TypeExp funcTypeExp = onError.recordError(null, TypeExp.unifyTypes(TypeCons.function(null, TypeExp.fromDataType(null, paramType), returnTypeVar), functionType.getFirst()));
         if (funcTypeExp == null)
             return null;
             
@@ -1030,72 +1029,6 @@ public class TestUtil
         if (returnType != null)
             return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
-    }
-
-    public static void assertNoTypeVariables(DataType dataType) throws InternalException
-    {
-        dataType.apply(new DataTypeVisitorEx<UnitType,InternalException>()
-        {
-            @Override
-            public UnitType number(NumberInfo numberInfo) throws InternalException, InternalException
-            {
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType text() throws InternalException, InternalException
-            {
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
-            {
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType bool() throws InternalException, InternalException
-            {
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
-            {
-                for (TagType<DataType> tag : tags)
-                {
-                    if (tag.getInner() != null)
-                        tag.getInner().apply(this);
-                }
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
-            {
-                for (DataType t : inner)
-                {
-                    t.apply(this);
-                }
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType array(@Nullable DataType inner) throws InternalException, InternalException
-            {
-                if (inner != null)
-                    inner.apply(this);
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType typeVariable(String typeVariableName) throws InternalException, InternalException
-            {
-                fail("Found type variable in type: " + dataType);
-                return UnitType.UNIT;
-            }
-        });
     }
 
     // If null, assertion failure.  Otherwise returns as non-null.

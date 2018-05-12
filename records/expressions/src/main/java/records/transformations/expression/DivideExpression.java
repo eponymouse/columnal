@@ -10,9 +10,9 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.NumTypeExp;
-import records.types.TypeExp;
-import records.types.units.UnitExp;
+import records.typeExp.NumTypeExp;
+import records.typeExp.TypeExp;
+import records.typeExp.units.UnitExp;
 import utility.Utility;
 
 import java.util.Optional;

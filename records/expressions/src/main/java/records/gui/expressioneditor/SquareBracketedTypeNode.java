@@ -1,23 +1,12 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
-import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.Label;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.Expression;
-import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
-import records.types.TypeExp;
-import utility.Pair;
-import utility.Utility;
-
-import java.util.List;
 
 public class SquareBracketedTypeNode extends Consecutive<TypeExpression, TypeParent> implements TypeParent, OperandNode<TypeExpression, TypeParent>
 {

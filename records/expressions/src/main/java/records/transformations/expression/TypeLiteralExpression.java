@@ -13,10 +13,11 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeLiteralNode;
+import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
@@ -41,9 +42,9 @@ public class TypeLiteralExpression extends NonOperatorExpression
         this.type = type;
     }
 
-    public static Expression fixType(UnitManager unitManager, DataType fix, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(UnitManager unitManager, JellyType fix, @Recorded Expression expression) throws InternalException
     {
-        TypeExpression typeExpression = TypeExpression.fromDataType(fix);
+        TypeExpression typeExpression = TypeExpression.fromJellyType(fix);
         FunctionDefinition asType = FunctionList.lookup(unitManager, "asType");
         if (asType == null)
             throw new InternalException("Missing asType function");

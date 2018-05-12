@@ -9,10 +9,10 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.NumTypeExp;
-import records.types.TypeExp;
-import records.types.units.MutUnitVar;
-import records.types.units.UnitExp;
+import records.typeExp.NumTypeExp;
+import records.typeExp.TypeExp;
+import records.typeExp.units.MutUnitVar;
+import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Utility;
 

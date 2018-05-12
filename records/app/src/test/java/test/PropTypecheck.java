@@ -30,7 +30,7 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import test.gen.ExpressionValue;
@@ -143,7 +143,7 @@ public class PropTypecheck
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
         @Nullable TypeExp checked = src.expression.check(src, TestUtil.typeState(), storer);
-        TypeExp srcTypeExp = TypeExp.fromConcrete(null, src.type);
+        TypeExp srcTypeExp = TypeExp.fromDataType(null, src.type);
         assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().map(StyledString::toPlain).collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try
             {
@@ -245,11 +245,11 @@ public class PropTypecheck
         int amount = r.nextInt(8);
         for (int i = 0; i < amount; i++)
         {
-            types.add(TypeExp.fromConcrete(null, blankArray(original.dataType, r)));
+            types.add(TypeExp.fromDataType(null, blankArray(original.dataType, r)));
         }
 
         // Now add original at random place:
-        types.add(r.nextInt(types.size() + 1), TypeExp.fromConcrete(null, original.dataType));
+        types.add(r.nextInt(types.size() + 1), TypeExp.fromDataType(null, original.dataType));
         assertEquals(Either.right(original.dataType), TypeExp.unifyTypes(types).eitherEx(err -> Either.left(err), t -> t.toConcreteType(original.typeManager)));
     }
 
@@ -376,11 +376,11 @@ public class PropTypecheck
         assertEquals(typeB, typeB);
         assertEquals(typeB, typeBV);
         assertEquals(typeBV, typeBV);
-        
-        assertEquals(Either.right(typeA), TypeExp.fromConcrete(null, typeA).toConcreteType(typeManager));
-        assertEquals(Either.right(typeAV), TypeExp.fromConcrete(null, typeAV).toConcreteType(typeManager));
-        assertEquals(Either.right(typeB), TypeExp.fromConcrete(null, typeB).toConcreteType(typeManager));
-        assertEquals(Either.right(typeBV), TypeExp.fromConcrete(null, typeBV).toConcreteType(typeManager));
+
+        assertEquals(Either.right(typeA), TypeExp.fromDataType(null, typeA).toConcreteType(typeManager));
+        assertEquals(Either.right(typeAV), TypeExp.fromDataType(null, typeAV).toConcreteType(typeManager));
+        assertEquals(Either.right(typeB), TypeExp.fromDataType(null, typeB).toConcreteType(typeManager));
+        assertEquals(Either.right(typeBV), TypeExp.fromDataType(null, typeBV).toConcreteType(typeManager));
         
 
         assertEquals(typeA, DataType.checkSame(typeA, typeA, s -> {}));
@@ -422,7 +422,7 @@ public class PropTypecheck
 
     private @Nullable DataType unifyList(TypeManager typeManager, DataType... types) throws InternalException, UserException
     {
-        return TypeExp.unifyTypes(Utility.mapListInt(Arrays.asList(types), t -> TypeExp.fromConcrete(null, t))).<@Nullable DataType>eitherEx(e -> null, t -> t.toConcreteType(typeManager).<@Nullable DataType>either(e -> null, x -> x));
+        return TypeExp.unifyTypes(Utility.mapListInt(Arrays.asList(types), t -> TypeExp.fromDataType(null, t))).<@Nullable DataType>eitherEx(e -> null, t -> t.toConcreteType(typeManager).<@Nullable DataType>either(e -> null, x -> x));
     }
 
     public static class DataTypeListGenerator extends Generator<List>

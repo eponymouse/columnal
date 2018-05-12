@@ -20,6 +20,7 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.jellytype.JellyType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -94,10 +95,10 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
             return Either.left(TranslationUtility.getString("taggedtype.error.empty"));
         }
 
-        ImmutableList.Builder<TagType<DataType>> tagTypes = ImmutableList.builder();
+        ImmutableList.Builder<TagType<JellyType>> tagTypes = ImmutableList.builder();
         for (TagInfo info : tagInfo)
         {
-            Either<@Localized String, TagType<DataType>> r = info.calculateResult();
+            Either<@Localized String, TagType<JellyType>> r = info.calculateResult();
             @Nullable @Localized String err = r.<@Nullable @Localized String>either(e -> e, t -> {
                 tagTypes.add(t);
                 return null;
@@ -135,7 +136,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
     {
         private final ErrorableTextField<String> tagName;
         private final Button setSubType;
-        private ObservableObjectValue<@Nullable Optional<DataType>> subType;
+        private ObservableObjectValue<@Nullable Optional<JellyType>> subType;
 
         public TagInfo(int index)
         {
@@ -147,7 +148,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
                     return ConversionResult.success(name.trim());
             });
             tagName.getNode().getStyleClass().add("taggedtype-tag-name-" + index);
-            Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> subTypeBits = TypeSelectionPane.makeTypeButton(typeManager, true);
+            Pair<Button, ObservableObjectValue<@Nullable Optional<JellyType>>> subTypeBits = TypeSelectionPane.makeTypeButton(typeManager, true);
             setSubType = subTypeBits.getFirst();
             setSubType.getStyleClass().add("taggedtype-tag-set-subType-" + index);
             subType = subTypeBits.getSecond();
@@ -163,14 +164,14 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
 
         }
 
-        public Either<@Localized String, TagType<DataType>> calculateResult()
+        public Either<@Localized String, TagType<JellyType>> calculateResult()
         {
             @Nullable String name = tagName.valueProperty().getValue();
             if (name == null)
             {
                 return Either.left(TranslationUtility.getString("taggedtype.error.tagName.invalid"));
             }
-            @Nullable Optional<DataType> innerType = subType.get();
+            @Nullable Optional<JellyType> innerType = subType.get();
             // Not actually sure this can ever occur, but no harm in handling it:
             if (innerType == null)
             {

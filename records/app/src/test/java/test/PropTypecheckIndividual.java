@@ -28,9 +28,9 @@ import records.transformations.expression.*;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.types.NumTypeExp;
-import records.types.TypeExp;
-import records.types.units.UnitExp;
+import records.typeExp.NumTypeExp;
+import records.typeExp.TypeExp;
+import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
@@ -69,7 +69,7 @@ public class PropTypecheckIndividual
         @Override
         public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
-            return onError.recordType(this, TypeExp.fromConcrete(this, type));
+            return onError.recordType(this, TypeExp.fromDataType(this, type));
         }
 
         @Override
@@ -385,7 +385,7 @@ public class PropTypecheckIndividual
         @Override
         public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
-            return new Pair<>(onError.recordTypeNN(this, TypeExp.fromConcrete(this, expected)), state);
+            return new Pair<>(onError.recordTypeNN(this, TypeExp.fromDataType(this, expected)), state);
         }
 
         @Override

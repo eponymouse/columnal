@@ -1,26 +1,19 @@
 package records.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
-import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.ExpressionBase;
-import records.types.MutVar;
-import records.types.TypeClassRequirements;
-import records.types.TypeCons;
-import records.types.TypeExp;
-import records.types.units.MutUnitVar;
+import records.typeExp.MutVar;
+import records.typeExp.TypeClassRequirements;
+import records.typeExp.TypeExp;
+import records.typeExp.units.MutUnitVar;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -30,15 +23,12 @@ import utility.SimulationFunction;
 import utility.ValueFunction;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * This class is one function, it will have a unique name, a single type and a single implementation
@@ -133,7 +123,7 @@ public abstract class FunctionDefinition
         return typeManager -> {
             try
             {
-                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType), typeVars::get), typeVars);
+                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType)), typeVars);
             }
             catch (UserException | InternalException e)
             {

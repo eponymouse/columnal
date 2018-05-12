@@ -11,6 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="types" />
     <orderEntry type="module" module-name="utility" />
     <orderEntry type="module" module-name="parsers" />
     <orderEntry type="module" module-name="anns" />
@@ -31,7 +32,7 @@
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
     <orderEntry type="module" module-name="gui-utility" />
     <orderEntry type="module" module-name="data" />
-    <orderEntry type="module" module-name="types" />
+    <orderEntry type="library" name="Maven: groupId:types:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="functions" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.5.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.5.1" level="project" />

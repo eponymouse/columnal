@@ -21,7 +21,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -77,9 +77,9 @@ public class ColumnReference extends NonOperatorExpression
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return onError.recordType(this, TypeExp.fromConcrete(this, column.getType()));
+                return onError.recordType(this, TypeExp.fromDataType(this, column.getType()));
             case WHOLE_COLUMN:
-                return onError.recordType(this, TypeExp.fromConcrete(this, DataType.array(column.getType())));
+                return onError.recordType(this, TypeExp.fromDataType(this, DataType.array(column.getType())));
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

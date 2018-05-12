@@ -105,7 +105,7 @@ public class UnitManager
             }
             equiv = new Pair<>(scale, loadUnit(decl.unit()));
         }
-        return new UnitDeclaration(new SpecificSingleUnit(defined, description, prefix, suffix), equiv);
+        return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
     }
 
     // Like loadUse, but any UserException is treated as an InternalException
@@ -163,7 +163,7 @@ public class UnitManager
         {
             if (singleOrScaleContext.singleUnit().UNITVAR() != null)
             {
-                base = new Unit(new SingleUnitVar(singleOrScaleContext.singleUnit().IDENT().getText()));
+                throw new UserException("Unit variables not allowed here");
             }
             else
             {
@@ -208,7 +208,7 @@ public class UnitManager
             return possUnit.getUnit();
     }
 
-    private Pair<Rational, Unit> canonicalise(SpecificSingleUnit original) throws UserException
+    private Pair<Rational, Unit> canonicalise(SingleUnit original) throws UserException
     {
         UnitDeclaration decl = knownUnits.get(original.getName());
         if (decl == null)
@@ -232,8 +232,8 @@ public class UnitManager
         Map<SingleUnit, Integer> details = original.getSecond().getDetails();
         for (Entry<@KeyFor("details") SingleUnit, Integer> entry : details.entrySet())
         {
-            Pair<Rational, Unit> canonicalised = entry.getKey() instanceof SpecificSingleUnit ?
-                canonicalise((SpecificSingleUnit)entry.getKey()) : new Pair<>(Rational.ONE, new Unit(entry.getKey()));
+            Pair<Rational, Unit> canonicalised = entry.getKey() instanceof SingleUnit ?
+                canonicalise((SingleUnit)entry.getKey()) : new Pair<>(Rational.ONE, new Unit(entry.getKey()));
             accumScale = accumScale.times(Utility.rationalToPower(canonicalised.getFirst(), entry.getValue()));
             accumUnit = accumUnit.times(canonicalised.getSecond().raisedTo(entry.getValue()));
         }
@@ -248,9 +248,9 @@ public class UnitManager
         return unitDeclaration.getDefined();
     }
 
-    public List<SpecificSingleUnit> getAllDeclared()
+    public List<SingleUnit> getAllDeclared()
     {
-        return knownUnits.values().stream().map(d -> d.getDefined()).collect(Collectors.<@NonNull SpecificSingleUnit>toList());
+        return knownUnits.values().stream().map(d -> d.getDefined()).collect(Collectors.<@NonNull SingleUnit>toList());
     }
 
     public boolean isUnit(String unitName)

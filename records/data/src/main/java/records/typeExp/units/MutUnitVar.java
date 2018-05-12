@@ -1,12 +1,10 @@
-package records.types.units;
+package records.typeExp.units;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.unit.SingleUnit;
 import styled.CommonStyles;
 import styled.StyledShowable;
 import styled.StyledString;
-import styled.StyledString.Style;
 
 public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
 {

@@ -13,7 +13,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
-import records.types.TypeExp;
+import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 

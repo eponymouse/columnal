@@ -1,20 +1,15 @@
-package records.types;
+package records.typeExp;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ArrayColumnStorage;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import styled.StyledString;
 import utility.Either;
-import utility.Utility;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class TupleTypeExp extends TypeExp
 {

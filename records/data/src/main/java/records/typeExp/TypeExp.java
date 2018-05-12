@@ -1,6 +1,7 @@
-package records.types;
+package records.typeExp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -16,21 +17,19 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.types.units.MutUnitVar;
-import records.types.units.UnitExp;
+import records.jellytype.JellyType;
+import records.typeExp.units.MutUnitVar;
+import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -159,7 +158,7 @@ public abstract class TypeExp implements StyledShowable
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
     public static TypeExp dataTypeToTypeGADT(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
-        return typeExpToTypeGADT(src, fromDataType(src, dataType, s -> null));
+        return typeExpToTypeGADT(src, fromDataType(src, dataType));
     }
 
     // This is like a function: type -> Type type, except that the parameter is not a value of that type, it's the type itself.
@@ -231,7 +230,7 @@ public abstract class TypeExp implements StyledShowable
         TypeCons overallType = new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), typeVarsInOrder.build(), ALL_TYPE_CLASSES);
         ImmutableList.Builder<TypeExp> tagTypes = ImmutableList.builder();
 
-        for (TagType<DataType> tagType : taggedTypeDefinition.getTags())
+        for (TagType<JellyType> tagType : taggedTypeDefinition.getTags())
         {
             if (tagType.getInner() == null)
             {
@@ -239,7 +238,7 @@ public abstract class TypeExp implements StyledShowable
             }
             else
             {
-                TypeExp innerTypeExp = fromDataType(src, tagType.getInner(), typeVarsByName::get);
+                TypeExp innerTypeExp = tagType.getInner().makeTypeExp(ImmutableMap.copyOf(typeVarsByName));
                 tagTypes.add(TypeCons.function(src, innerTypeExp, overallType));
             }
         }
@@ -273,20 +272,15 @@ public abstract class TypeExp implements StyledShowable
     {
         return new TypeCons(src, TypeExp.CONS_FUNCTION, ImmutableList.of(Either.right(paramType), Either.right(returnType)), ImmutableSet.of());
     }
-    
-    public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
-    {
-        return fromDataType(src, dataType, t -> null);
-    }
 
-    public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType, Function<String, @Nullable Either<MutUnitVar, MutVar>> typeVarLookup) throws InternalException
+    public static TypeExp fromDataType(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
         {
             @Override
             public TypeExp number(NumberInfo numberInfo) throws InternalException, InternalException
             {
-                return new NumTypeExp(src, UnitExp.fromConcrete(numberInfo.getUnit(), typeVarLookup));
+                return new NumTypeExp(src, UnitExp.fromConcrete(numberInfo.getUnit()));
             }
 
             @Override
@@ -310,36 +304,25 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, e -> e.mapBothInt(u -> UnitExp.fromConcrete(u, typeVarLookup), v -> fromDataType(src, v, typeVarLookup))), ALL_TYPE_CLASSES);
+                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, e -> e.mapBothInt(u -> UnitExp.fromConcrete(u), v -> fromDataType(src, v))), ALL_TYPE_CLASSES);
             }
 
             @Override
             public TypeExp tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
             {
-                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromDataType(src, t, typeVarLookup)), true);
+                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromDataType(src, t)), true);
             }
 
             @Override
             public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_LIST, ImmutableList.of(Either.right(inner == null ? new MutVar(src) : fromDataType(src, inner, typeVarLookup))), ALL_TYPE_CLASSES);
+                return new TypeCons(src, CONS_LIST, ImmutableList.of(Either.right(inner == null ? new MutVar(src) : fromDataType(src, inner))), ALL_TYPE_CLASSES);
             }
 
             @Override
             public TypeExp function(DataType argType, DataType resultType) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(Either.right(fromDataType(null, argType, typeVarLookup)), Either.right(fromDataType(null, resultType, typeVarLookup))), ImmutableSet.of());
-            }
-
-            @Override
-            public TypeExp typeVariable(String typeVariableName) throws InternalException, InternalException
-            {
-                @Nullable Either<MutUnitVar, MutVar> lookedUp = typeVarLookup.apply(typeVariableName);
-                if (lookedUp == null)
-                    throw new InternalException("Cannot find type variable: " + typeVariableName);
-                if (lookedUp.isLeft())
-                    throw new InternalException("Looked for type variable " + typeVariableName + " but found unit variable");
-                return lookedUp.getRight();
+                return new TypeCons(src, CONS_FUNCTION, ImmutableList.of(Either.right(fromDataType(null, argType)), Either.right(fromDataType(null, resultType))), ImmutableSet.of());
             }
         });
     }
