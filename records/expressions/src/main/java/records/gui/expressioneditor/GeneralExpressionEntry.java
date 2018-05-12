@@ -526,7 +526,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(prefix + text, TranslationUtility.getString(descriptionKey));
+            return new CompletionContent(prefix + text, descriptionKey == null ? null : TranslationUtility.getString(descriptionKey));
         }
 
         @Override
@@ -776,7 +776,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(keyword, TranslationUtility.getString(descriptionKey));
+            return new CompletionContent(keyword, descriptionKey == null ? null : TranslationUtility.getString(descriptionKey));
         }
 
         @Override

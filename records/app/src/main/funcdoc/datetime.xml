@@ -137,6 +137,10 @@
         <description>
             <p>Creates a DateTime from the given Date and Time.</p>
         </description>
+        <example>
+            <inputArg>(@call @function from text("2001-02-03"), @call @function from text("04:56"))</inputArg>
+            <output>@call @function from text("2001-02-03 04:56")</output>
+        </example>
     </function>
     
     <function name="datetimezoned">
@@ -145,6 +149,10 @@
         <description>
             <p>Creates a datetime with a time zone from the given Date, Time and time zone.</p>
         </description>
+        <example>
+            <inputArg>(@call @function from text("2001-02-03"), @call @function from text("04:56"), "PDT")</inputArg>
+            <output>@call @function from text("2001-02-03 04:56 Pacific Daylight Time")</output>
+        </example>
     </function>
     
     
