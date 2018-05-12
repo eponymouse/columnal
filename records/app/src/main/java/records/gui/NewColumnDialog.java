@@ -12,6 +12,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -117,7 +118,17 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     private @Nullable DataType getSelectedType(@UnknownInitialization(Object.class) NewColumnDialog this)
     {
         @Nullable Optional<JellyType> maybeType = typeSelectionPane.selectedType().get();
-        return maybeType == null ? null : maybeType.orElse(null);
+        return maybeType == null ? null : maybeType.flatMap(j -> {
+            try
+            {
+                return Optional.of(j.makeDataType(ImmutableMap.of()));
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+                return Optional.empty();
+            }
+        }).orElse(null);
     }
 
     protected Either<@Localized String, NewColumnDetails> calculateResult()

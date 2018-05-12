@@ -66,7 +66,6 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type) throws InternalException
     {
-        TestUtil.assertNoTypeVariables(type);
         return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<@Value Object>makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
     }
 }

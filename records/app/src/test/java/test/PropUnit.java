@@ -126,7 +126,7 @@ public class PropUnit
 
     private UnitExp unitExp(String unit) throws InternalException, UserException
     {
-        return UnitExp.fromConcrete(unit(unit), u -> null);
+        return UnitExp.fromConcrete(unit(unit));
     }
 
     private Unit unit(String unit) throws UserException, InternalException

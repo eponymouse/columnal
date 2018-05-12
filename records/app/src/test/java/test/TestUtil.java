@@ -34,6 +34,7 @@ import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
+import records.jellytype.JellyType;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -411,10 +412,10 @@ public class TestUtil
         try
         {
             // TODO add more higher-order types
-            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
-            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER))).instantiate(ImmutableList.of());
-            DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
-            DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("A", a), new TagType<DataType>("C", c))).instantiate(ImmutableList.of());
+            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of());
+            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Number", JellyType.fromPrimitive(DataType.NUMBER)))).instantiate(ImmutableList.of());
+            DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of());
+            DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("A", JellyType.tagged("A", ImmutableList.of())), new TagType<JellyType>("C", JellyType.tagged("C", ImmutableList.of())))).instantiate(ImmutableList.of());
             DataType maybeMaybe = DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(
                 DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)))
             )));

@@ -20,6 +20,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType;
 import test.TestUtil;
 import test.gen.GenDataType.DataTypeAndManager;
 import utility.Either;
@@ -60,7 +61,6 @@ public class GenDataType extends Generator<DataTypeAndManager>
         {
             this.typeManager = typeManager;
             this.dataType = dataType;
-            TestUtil.assertNoTypeVariables(dataType);
         }
     }
 
@@ -75,7 +75,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         // Use depth system to prevent infinite generation:
         try
         {
-            return new DataTypeAndManager(typeManager, genDepth(r, 3, generationStatus, ImmutableList.of()));
+            return new DataTypeAndManager(typeManager, genDepth(r, 3, generationStatus));
         }
         catch (InternalException | UserException e)
         {
@@ -83,7 +83,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         }
     }
 
-    private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableList<Pair<TypeVariableKind, String>> availableTypeVariables) throws UserException, InternalException
+    private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
     {
         List<ExSupplier<DataType>> options = new ArrayList<>(Arrays.asList(
             () -> DataType.BOOLEAN,
@@ -91,16 +91,12 @@ public class GenDataType extends Generator<DataTypeAndManager>
             () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs))),
             () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
         ));
-        if (!availableTypeVariables.isEmpty())
-        {
-            options.add(() -> DataType.typeVariable(r.choose(availableTypeVariables.stream().filter(p -> p.getFirst() == TypeVariableKind.TYPE).map(p -> p.getSecond()).collect(Collectors.toList()))));
-        }
         if (maxDepth > 1)
         {
             options.addAll(Arrays.asList(
-                () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs, availableTypeVariables))),
-                () -> DataType.array(genDepth(r, maxDepth - 1, gs, availableTypeVariables)),
-                () -> genTagged(r, maxDepth, gs, availableTypeVariables)
+                () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs))),
+                () -> DataType.array(genDepth(r, maxDepth - 1, gs)),
+                () -> genTagged(r, maxDepth, gs)
             ));
         }
         return r.<ExSupplier<DataType>>choose(options).get();
@@ -117,7 +113,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         {
             try
             {
-                return new DataTypeAndManager(typeManager, genTagged(sourceOfRandomness, 3, generationStatus, ImmutableList.of()));
+                return new DataTypeAndManager(typeManager, genTagged(sourceOfRandomness, 3, generationStatus));
             }
             catch (InternalException | UserException e)
             {
@@ -126,7 +122,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         }
     }
 
-    protected DataType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs, ImmutableList<Pair<TypeVariableKind, String>> originalTypeVars) throws InternalException, UserException
+    protected DataType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition;
 
@@ -147,13 +143,13 @@ public class GenDataType extends Generator<DataTypeAndManager>
                 typeVars = ImmutableList.of();
             }
             // Outside type variables are not visible in a new tagged type:
-            ArrayList<@Nullable DataType> types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs, typeVars)));
+            ArrayList<@Nullable DataType> types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
             int extraNulls = r.nextInt(5);
             for (int i = 0; i < extraNulls; i++)
             {
                 types.add(r.nextInt(types.size() + 1), null);
             }
-            typeDefinition = typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
+            typeDefinition = typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t == null ? null : JellyType.fromPrimitive(t))));
         }
         else
         {
@@ -161,7 +157,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
         }
         return typeDefinition.instantiate(Utility.mapListExI(typeDefinition.getTypeArguments(), arg -> {
             if (arg.getFirst() == TypeVariableKind.TYPE)
-                return Either.right(genDepth(r, maxDepth - 1, gs, originalTypeVars));
+                return Either.right(genDepth(r, maxDepth - 1, gs));
             else
                 return Either.left(new GenUnit().generate(r, gs));
         }));

@@ -66,7 +66,7 @@ public class PropTypecheck
     @Test
     public void testTypeComparison() throws InternalException, UserException
     {
-        List<DataType> types = Utility.prependToList(DataType.typeVariable("a"), Utility.prependToList(DataType.typeVariable("b"), TestUtil.distinctTypes));
+        List<DataType> types = TestUtil.distinctTypes;
         for (DataType a : types)
         {
             for (DataType b : types)

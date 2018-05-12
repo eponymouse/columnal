@@ -99,7 +99,7 @@ public class TestFromDoc
                         if (line.startsWith("== "))
                         {
                             String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
-                            variables.put(nameType[0], TypeExp.fromDataType(null, typeManager.loadTypeUse(nameType[1]), typeVariables::get));
+                            variables.put(nameType[0], TypeExp.fromDataType(null, typeManager.loadTypeUse(nameType[1])));
                             i += 1;
                         }
                         else if (line.startsWith("==* "))

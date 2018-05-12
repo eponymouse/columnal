@@ -75,6 +75,11 @@ public abstract class JellyType
         return new JellyTypeTuple(members);
     }
 
+    public static JellyType tagged(String name, ImmutableList<JellyType> params)
+    {
+        return new JellyTypeTagged(name, Utility.mapListI(params, p -> Either.right(p)));
+    }
+    
     public static JellyType list(JellyType inner)
     {
         return new JellyTypeArray(inner);
