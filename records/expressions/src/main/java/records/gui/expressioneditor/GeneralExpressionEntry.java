@@ -43,6 +43,7 @@ import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -525,7 +526,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(prefix + text, descriptionKey);
+            return new CompletionContent(prefix + text, TranslationUtility.getString(descriptionKey));
         }
 
         @Override
@@ -775,7 +776,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(keyword, descriptionKey);
+            return new CompletionContent(keyword, TranslationUtility.getString(descriptionKey));
         }
 
         @Override
@@ -1031,7 +1032,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent("{", "expression.autocomplete.units");
+            return new CompletionContent("{", TranslationUtility.getString("expression.autocomplete.units"));
         }
 
         @Override
@@ -1070,7 +1071,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(currentText, "expression.autocomplete.variable");
+            return new CompletionContent(currentText, TranslationUtility.getString("expression.autocomplete.variable"));
         }
 
         @Override
@@ -1109,7 +1110,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(name, "expression.autocomplete.variable");
+            return new CompletionContent(name, TranslationUtility.getString("expression.autocomplete.variable"));
         }
 
         @Override

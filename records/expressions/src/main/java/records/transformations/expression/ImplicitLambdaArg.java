@@ -5,6 +5,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -158,7 +159,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         else if (lambdaArgs.size() == 1)
         {
             // Takes non-tuple parameter:
-            return new ValueFunction()
+            return DataTypeUtility.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
@@ -166,12 +167,12 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                     EvaluateState argState = state.add(lambdaArgs.get(0).getVarName(), arg);
                     return body.apply(argState);
                 }
-            };
+            });
         }
         else
         {
             // Takes tuple parameter:
-            return new ValueFunction()
+            return DataTypeUtility.value(new ValueFunction()
             {
                 @Override
                 public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
@@ -184,7 +185,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                     }
                     return body.apply(argState);
                 }
-            };
+            });
         }
     }
 
