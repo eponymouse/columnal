@@ -157,7 +157,7 @@ public class StringConcatExpression extends NaryOpExpression
                     int nextPos = s.indexOf(subValue, curOffset);
                     if (nextPos == -1)
                         return null;
-                    EvaluateState newState = pendingMatch.matchAsPattern(s.substring(curOffset, nextPos), state);
+                    EvaluateState newState = pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset, nextPos)), state);
                     if (newState == null)
                         return null;
                     state = newState;
@@ -168,7 +168,7 @@ public class StringConcatExpression extends NaryOpExpression
         }
         if (pendingMatch != null)
         {
-            return pendingMatch.matchAsPattern(s.substring(curOffset), state);
+            return pendingMatch.matchAsPattern(DataTypeUtility.value(s.substring(curOffset)), state);
         }
         else
             return state;
