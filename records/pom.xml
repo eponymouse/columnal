@@ -19,9 +19,8 @@
         <module>stf</module>
         <module>expressions</module>
         <module>functions</module>
-        <module>types</module>
     </modules>
-
+    
     <dependencies>
         <dependency>
             <groupId>org.checkerframework</groupId>
