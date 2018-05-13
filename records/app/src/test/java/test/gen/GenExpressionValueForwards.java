@@ -643,9 +643,9 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
         });
     }
 
-    private Pair<List<@Value Object>, Expression> num(List<Number> values, Expression expression)
+    private Pair<List<@Value Object>, Expression> num(List<@Value Number> values, Expression expression)
     {
-        return new Pair<>(Utility.<Number, @Value Object>mapList(values, n -> DataTypeUtility.value(n)), expression);
+        return new Pair<>(Utility.<Number, @Value Object>mapList(values, n -> n), expression);
     }
 
     private Number safeAbs(Long l)

@@ -57,13 +57,13 @@ public class PropNumericFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propAbs(@From(GenNumber.class) Number src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propAbs(@From(GenNumber.class) @Value Number src, @From(GenUnit.class) Unit u) throws Throwable
     {
         BigDecimal absed = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Absolute()));
         // Change *after* call; important so that we test diff classes above, but need BigDecimal for comparisons:
         src = Utility.toBigDecimal(src);
         assertThat(absed, Matchers.greaterThanOrEqualTo(BigDecimal.ZERO));
-        assertThat(absed, Matchers.anyOf(Matchers.equalTo(src), Matchers.equalTo(Utility.addSubtractNumbers(0, src, false))));
+        assertThat(absed, Matchers.anyOf(Matchers.equalTo(src), Matchers.equalTo(Utility.addSubtractNumbers(DataTypeUtility.value(0), src, false))));
     }
 
     @Property
@@ -121,7 +121,7 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericFunction(String expectedUnit, @Value Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private @Value Number runNumericFunction(String expectedUnit, @Value Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
@@ -133,8 +133,8 @@ public class PropNumericFunctions
             if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().call(DataTypeUtility.value(src));
-            return (Number)num;
+            @Value Object num = instance.getFirst().call(DataTypeUtility.value(src));
+            return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)
         {
@@ -147,7 +147,7 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private @Value Number runNumericSummaryFunction(String expectedUnit, List<@Value Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
@@ -159,8 +159,8 @@ public class PropNumericFunctions
             if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().call(DataTypeUtility.value(src));
-            return (Number)num;
+            @Value Object num = instance.getFirst().call(DataTypeUtility.value(src));
+            return Utility.cast(num, Number.class);
         }
         catch (RuntimeException e)
         {

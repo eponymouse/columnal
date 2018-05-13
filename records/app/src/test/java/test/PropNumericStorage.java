@@ -17,6 +17,7 @@ import threadchecker.Tag;
 import utility.Utility;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
@@ -47,7 +48,7 @@ public class PropNumericStorage
 
     @Property
     @OnThread(Tag.Simulation)
-    public void testNumbers(@From(GenNumbers.class) List<Number> input) throws IOException, InternalException, UserException
+    public void testNumbers(@From(GenNumbers.class) List<@Value Number> input) throws IOException, InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
         for (Number n : input)
@@ -58,7 +59,7 @@ public class PropNumericStorage
         List<Number> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
             out.add(Utility.toBigDecimal(Utility.cast(storage.getType().getCollapsed(i), Number.class)));
-        TestUtil.assertEqualList(Utility.mapList(input, Utility::toBigDecimal), out);
+        TestUtil.assertEqualList(Utility.<@Value Number, @Value BigDecimal>mapList(input, Utility::toBigDecimal), out);
     }
 
     @Property(trials = 1000)
@@ -83,7 +84,7 @@ public class PropNumericStorage
 
         storage.set(OptionalInt.of(index), n);
 
-        List<Number> expected = new ArrayList<>(input);
+        List<@Value Number> expected = new ArrayList<>(input);
         expected.set(index, n);
 
         assertEquals(expected.size(), storage.filled());
@@ -96,7 +97,7 @@ public class PropNumericStorage
 
     @Property(trials = 1000)
     @OnThread(Tag.Simulation)
-    public void testNumbersSet(@From(GenNumbers.class) List<Number> input, int index, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
+    public void testNumbersSet(@From(GenNumbers.class) List<@Value Number> input, int index, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
     {
         // These numbers come from a fixed bit size, so may lack
         // a high number
