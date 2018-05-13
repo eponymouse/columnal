@@ -78,10 +78,10 @@ public class TimesExpression extends NaryOpExpression
     @Override
     public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        Number n = (Number) expressions.get(0).getValue(state);
+        @Value Number n = Utility.cast(expressions.get(0).getValue(state), Number.class);
         for (int i = 1; i < expressions.size(); i++)
-            n = Utility.multiplyNumbers(n, (Number) expressions.get(i).getValue(state));
-        return DataTypeUtility.value(n);
+            n = Utility.multiplyNumbers(n, Utility.cast(expressions.get(i).getValue(state), Number.class));
+        return n;
     }
 
     @SuppressWarnings("recorded")
