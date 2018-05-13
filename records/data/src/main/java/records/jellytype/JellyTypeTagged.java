@@ -24,6 +24,8 @@ import utility.Utility;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import static records.typeExp.TypeExp.ALL_TYPE_CLASSES;
+
 public class JellyTypeTagged extends JellyType
 {
     private final String typeName;
@@ -40,7 +42,7 @@ public class JellyTypeTagged extends JellyType
     {
         return new TypeCons(null, typeName, Utility.mapListInt(typeParams, p ->
             p.mapBothInt(u -> u.makeUnitExp(typeVariables), t -> t.makeTypeExp(typeVariables))
-        ), ImmutableSet.of());
+        ), ALL_TYPE_CLASSES);
     }
 
     @Override

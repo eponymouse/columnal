@@ -30,6 +30,7 @@ public class TypeCons extends TypeExp
     // satisfy them (bit of a hack, but it will do for now)
     private final ImmutableSet<String> typeClasses;
 
+    // For primitive types
     public TypeCons(@Nullable ExpressionBase src, String name, ImmutableSet<String> typeClasses)
     {
         super(src);
@@ -38,6 +39,7 @@ public class TypeCons extends TypeExp
         this.typeClasses = typeClasses;
     }
     
+    // For tagged types
     public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<Either<UnitExp, TypeExp>> operands, ImmutableSet<String> derivableTypeClasses)
     {
         super(src);
