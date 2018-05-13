@@ -234,6 +234,12 @@ class Blend
     public Blend(BlendMode b, @Nullable Effect a, @Nullable Effect b);
 }
 
+package javafx.scene.input;
+class Clipboard
+{
+    @Nullable Object getContent(DataFormat dataFormat);
+}
+
 package javafx.scene.layout;
 class BorderPane
 {

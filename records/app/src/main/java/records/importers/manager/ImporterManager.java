@@ -7,11 +7,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -19,6 +22,7 @@ import records.data.DataSource;
 import records.data.TableManager;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.importers.ClipboardUtils;
 import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -155,10 +159,27 @@ public class ImporterManager
         {
             linkField = new ErrorableTextField<>(ImporterManager::checkURL);
             Node linkPane = GUI.labelled("importer.link", linkField.getNode());
-            pickImporterPane = new PickImporterPane();
+            pickImporterPane = new PickImporterPane("html");
             getDialogPane().setContent(new VBox(linkPane, pickImporterPane, getErrorLabel()));
             setResizable(true);
             getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
+            
+            setOnShowing(e -> {
+                Object content = Clipboard.getSystemClipboard().getContent(DataFormat.PLAIN_TEXT);
+                if (content != null && content instanceof String)
+                {
+                    try
+                    {
+                        URL url = new URL((String)content);
+                        // If parses, use that as content:
+                        linkField.setText(url.toExternalForm());
+                    }
+                    catch (MalformedURLException ex)
+                    {
+                        // Not a URL; never mind.
+                    }
+                }
+            });
         }
 
         @Override
@@ -232,7 +253,7 @@ public class ImporterManager
     {
         private final ListView<Importer> importerList;
 
-        public PickImporterPane()
+        public PickImporterPane(@Nullable String fileExtensionWithoutDot)
         {
             this.importerList = new ListView<>(FXCollections.observableArrayList(registeredImporters));
             importerList.setCellFactory(lv -> {
@@ -250,6 +271,12 @@ public class ImporterManager
             });
             importerList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
             importerList.getSelectionModel().selectFirst();
+            if (fileExtensionWithoutDot != null)
+            {
+                Importer importer = registeredImporters.stream().filter(imp -> imp.getSupportedFileTypes().stream().anyMatch(p -> p.getSecond().contains(("*." + fileExtensionWithoutDot).toLowerCase()))).findFirst().orElse(null);
+                if (importer != null)
+                    importerList.getSelectionModel().select(importer);
+            }
             setCenter(importerList);
         }
 
@@ -266,7 +293,7 @@ public class ImporterManager
 
         public PickImporterDialog(File src)
         {
-            pickImporterPane = new PickImporterPane();
+            pickImporterPane = new PickImporterPane(FilenameUtils.getExtension(src.getName()));
             getDialogPane().setContent(new VBox(new Label("Pick importer for " + src.getName()), pickImporterPane, getErrorLabel()));
 
         }
