@@ -21,6 +21,7 @@ import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.jellytype.JellyType;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -673,7 +674,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     private ExpressionMaker fixType(int maxLevels, DataType type, @Value Object value)
     {
         UnitManager m = DummyManager.INSTANCE.getUnitManager();
-        return () -> TypeLiteralExpression.fixType(m, type, make(type, value, maxLevels - 1));
+        return () -> TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), make(type, value, maxLevels - 1));
     }
 
     private Expression columnRef(DataType type, @Value Object value)

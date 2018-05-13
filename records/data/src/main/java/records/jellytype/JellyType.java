@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -60,9 +59,9 @@ public abstract class JellyType
     // For every tagged type use anywhere within this type, call back the given function with the name.
     public abstract void forNestedTagged(Consumer<TypeId> nestedTagged);
 
-    public static JellyType fromPrimitive(DataType t)
+    public static JellyType fromConcrete(DataType t)
     {
-        return new JellyTypePrimitive(t);
+        return new JellyTypeConcrete(t);
     }
     
     public static JellyType typeVariable(String name)
@@ -109,11 +108,11 @@ public abstract class JellyType
     private static JellyType load(UnbracketedTypeContext ctx, TypeManager mgr) throws InternalException, UserException
     {
         if (ctx.BOOLEAN() != null)
-            return new JellyTypePrimitive(DataType.BOOLEAN);
+            return new JellyTypeConcrete(DataType.BOOLEAN);
         else if (ctx.number() != null)
             return load(ctx.number(), mgr);
         else if (ctx.TEXT() != null)
-            return new JellyTypePrimitive(DataType.TEXT);
+            return new JellyTypeConcrete(DataType.TEXT);
         else if (ctx.date() != null)
         {
             
@@ -147,7 +146,7 @@ public abstract class JellyType
     private static JellyType load(NumberContext number, TypeManager mgr) throws InternalException, UserException
     {
         if (number.UNIT() == null)
-            return new JellyTypePrimitive(DataType.NUMBER);
+            return new JellyTypeConcrete(DataType.NUMBER);
         else
             return new JellyTypeNumberWithUnit(JellyUnit.load(number.UNIT().getText(), mgr.getUnitManager()));
     }

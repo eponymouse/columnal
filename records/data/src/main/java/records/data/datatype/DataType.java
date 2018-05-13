@@ -382,8 +382,7 @@ public class DataType implements StyledShowable
 
         R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
         R tuple(ImmutableList<DataType> inner) throws InternalException, E;
-        // If null, array is empty and thus of unknown type
-        R array(@Nullable DataType inner) throws InternalException, E;
+        R array(DataType inner) throws InternalException, E;
         
         default R function(DataType argType, DataType resultType) throws InternalException, E
         {

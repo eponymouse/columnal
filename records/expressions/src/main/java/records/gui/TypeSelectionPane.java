@@ -25,11 +25,9 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
-import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.KeyFor;
-import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -41,8 +39,6 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.error.InternalException;
-import records.error.UserException;
 import records.jellytype.JellyType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -67,7 +63,7 @@ public class TypeSelectionPane
 {
     private final ToggleGroup typeGroup;
     private final VBox contents;
-    private final SimpleObjectProperty<@Nullable Optional<JellyType>> selectedType = new SimpleObjectProperty<>(Optional.of(JellyType.fromPrimitive(DataType.NUMBER)));
+    private final SimpleObjectProperty<@Nullable Optional<JellyType>> selectedType = new SimpleObjectProperty<>(Optional.of(JellyType.fromConcrete(DataType.NUMBER)));
     // Stored as fields to prevent GC.  We store not because we bind disable to it:
     private final BooleanBinding numberNotSelected, dateNotSelected, taggedNotSelected, tupleNotSelected, listNotSelected;
     private final IdentityHashMap<Toggle, ObservableValue<@Nullable Optional<JellyType>>> types = new IdentityHashMap<>();
@@ -94,15 +90,15 @@ public class TypeSelectionPane
         numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), ImmutableList.of(new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode()));
         units.getNode().getStyleClass().add("type-number-units");
         units.disableProperty().bind(numberNotSelected);
-        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(JellyType.fromPrimitive(DataType.TEXT))), ImmutableList.of());
-        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(JellyType.fromPrimitive(DataType.BOOLEAN))), ImmutableList.of());
+        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(JellyType.fromConcrete(DataType.TEXT))), ImmutableList.of());
+        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(JellyType.fromConcrete(DataType.BOOLEAN))), ImmutableList.of());
         ComboBox<JellyType> dateTimeComboBox = new ComboBox<>();
-        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
-        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH))));
-        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))));
-        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromConcrete(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromConcrete(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromConcrete(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromConcrete(DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         //dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)));
-        dateTimeComboBox.getItems().addAll(JellyType.fromPrimitive(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        dateTimeComboBox.getItems().addAll(JellyType.fromConcrete(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         dateTimeComboBox.getSelectionModel().selectFirst();
         dateTimeComboBox.getStyleClass().add("type-datetime-combo");
         dateNotSelected = addType("type.datetime", FXUtility.<@Nullable JellyType, @Nullable Optional<JellyType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), ImmutableList.of(dateTimeComboBox));
@@ -312,7 +308,7 @@ public class TypeSelectionPane
             Unit u = units.get();
             if (u == null)
                 return null;
-            return Optional.of(JellyType.fromPrimitive(DataType.number(new NumberInfo(u))));
+            return Optional.of(JellyType.fromConcrete(DataType.number(new NumberInfo(u))));
         }
     }
 }

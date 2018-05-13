@@ -200,7 +200,7 @@ public class ExpressionEditorUtil
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(unitManager, JellyType.fromPrimitive(fixFinal), src))));
+            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(unitManager, JellyType.fromConcrete(fixFinal), src))));
         }
         return quickFixes;
     }

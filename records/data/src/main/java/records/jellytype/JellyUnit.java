@@ -29,6 +29,7 @@ import utility.Utility;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class JellyUnit
 {
@@ -38,6 +39,16 @@ public class JellyUnit
     // package-visible
     private JellyUnit()
     {
+    }
+
+    public static JellyUnit fromConcrete(Unit unit)
+    {
+        JellyUnit u = new JellyUnit();
+        u.units.putAll(unit.getDetails().entrySet().stream().collect(Collectors.<Entry<SingleUnit, Integer>, ComparableEither<String, SingleUnit>, Integer>toMap(
+            (Entry<SingleUnit, Integer> e) -> ComparableEither.right(e.getKey()),
+            e -> e.getValue()    
+        )));
+        return u;
     }
 
     public UnitExp makeUnitExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException

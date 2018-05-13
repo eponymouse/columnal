@@ -14,6 +14,7 @@ import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.jellytype.JellyType;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
@@ -62,7 +63,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -703,7 +703,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
         UnitManager m = DummyManager.INSTANCE.getUnitManager();
         return () -> {
             Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
-            return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, type, inner.getSecond()));
+            return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), inner.getSecond()));
         };
     }
 

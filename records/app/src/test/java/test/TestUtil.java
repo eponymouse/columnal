@@ -413,7 +413,7 @@ public class TestUtil
         {
             // TODO add more higher-order types
             DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of());
-            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Number", JellyType.fromPrimitive(DataType.NUMBER)))).instantiate(ImmutableList.of());
+            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Number", JellyType.fromConcrete(DataType.NUMBER)))).instantiate(ImmutableList.of());
             DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of());
             DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("A", JellyType.tagged("A", ImmutableList.of())), new TagType<JellyType>("C", JellyType.tagged("C", ImmutableList.of())))).instantiate(ImmutableList.of());
             DataType maybeMaybe = DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(
@@ -469,7 +469,7 @@ public class TestUtil
             List<DataType> taggedTypes = distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.toList());
             for (DataType t : taggedTypes)
             {
-                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), t.getTagTypes());
+                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.map(JellyType::fromConcrete)));
             }
             return new TypeState(unitManager, typeManager);
         }
@@ -721,7 +721,7 @@ public class TestUtil
             @Override
             public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), tags);
+                typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), Utility.mapListInt(tags, t -> t.map(JellyType::fromConcrete)));
                 for (TagType<DataType> tag : tags)
                 {
                     if (tag.getInner() != null)
@@ -1088,7 +1088,7 @@ public class TestUtil
             for (DataType type : distinctTypes)
             {
                 if (type.isTagged())
-                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  type.getTagTypes());
+                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  Utility.mapListInt(type.getTagTypes(), t -> t.map(JellyType::fromConcrete)));
             }
         }
         catch (InternalException | UserException e)
