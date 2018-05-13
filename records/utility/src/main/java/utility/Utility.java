@@ -391,7 +391,8 @@ public class Utility
             return number;
     }
 
-    public static BigDecimal toBigDecimal(@Value Number n)
+    @SuppressWarnings("value")
+    public static @Value BigDecimal toBigDecimal(@Value Number n)
     {
         if (n instanceof BigDecimal)
             return (BigDecimal) n;
@@ -516,7 +517,8 @@ public class Utility
     }
 
     // If !add, subtract
-    public static Number addSubtractNumbers(Number lhs, Number rhs, boolean add)
+    @SuppressWarnings("value")
+    public static @Value Number addSubtractNumbers(@Value Number lhs, @Value Number rhs, boolean add)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
@@ -541,7 +543,8 @@ public class Utility
         }
     }
 
-    public static Number multiplyNumbers(@Value Number lhs, @Value Number rhs)
+    @SuppressWarnings("value")
+    public static @Value Number multiplyNumbers(@Value Number lhs, @Value Number rhs)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
@@ -560,7 +563,8 @@ public class Utility
         }
     }
 
-    public static Number divideNumbers(@Value Number lhs, @Value Number rhs)
+    @SuppressWarnings("value")
+    public static @Value Number divideNumbers(@Value Number lhs, @Value Number rhs)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
@@ -578,7 +582,8 @@ public class Utility
         }
     }
 
-    public static Number raiseNumber(Number lhs, Number rhs) throws UserException
+    @SuppressWarnings("value")
+    public static @Value Number raiseNumber(@Value Number lhs, @Value Number rhs) throws UserException
     {
         // It must fit in an int and not be massive/tiny:
         if (((rhs instanceof BigDecimal && !rhs.equals(BigDecimal.valueOf(((BigDecimal)rhs).intValue())))
