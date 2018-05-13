@@ -41,7 +41,7 @@ public class Mean extends SingleNumericSummaryFunction
                 for (int i = 0; i < size; i++)
                 {
                     // From http://stackoverflow.com/questions/1346824/is-there-any-way-to-find-arithmetic-mean-better-than-sum-n
-                    average = Utility.addSubtractNumbers(average, Utility.divideNumbers(Utility.addSubtractNumbers(Utility.valueNumber(list.get(i)), average, false), i+1), true);
+                    average = Utility.addSubtractNumbers(average, Utility.divideNumbers(Utility.addSubtractNumbers(Utility.valueNumber(list.get(i)), average, false), DataTypeUtility.value(i+1)), true);
                 }
                 return average;
             }
