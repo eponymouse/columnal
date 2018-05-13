@@ -38,14 +38,14 @@ public class Sum extends SingleNumericSummaryFunction
         {
             // If there are non-integers this will get widened.  And if not, it will stay Integer
             // which will be faster:
-            Number total = Integer.valueOf(0);
+            @Value Number total = DataTypeUtility.value(Integer.valueOf(0));
             ListEx list = Utility.valueList(param);
             int size = list.size();
             for (int i = 0; i < size; i++)
             {
                 total = Utility.addSubtractNumbers(total, Utility.valueNumber(list.get(i)), true);
             }
-            return DataTypeUtility.value(total);
+            return total;
         }
     }
 }

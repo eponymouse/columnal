@@ -37,13 +37,13 @@ public class Mean extends SingleNumericSummaryFunction
                 int size = list.size();
                 if (size == 0)
                     throw new UserException("Cannot calculate average of empty list");
-                Number average = 0L;
+                @Value Number average = DataTypeUtility.value(0L);
                 for (int i = 0; i < size; i++)
                 {
                     // From http://stackoverflow.com/questions/1346824/is-there-any-way-to-find-arithmetic-mean-better-than-sum-n
                     average = Utility.addSubtractNumbers(average, Utility.divideNumbers(Utility.addSubtractNumbers(Utility.valueNumber(list.get(i)), average, false), i+1), true);
                 }
-                return DataTypeUtility.value(average);
+                return average;
             }
         };
     }
