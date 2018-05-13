@@ -51,6 +51,7 @@ import utility.BiFunctionInt;
 import utility.Either;
 import utility.ExBiConsumer;
 import utility.ExFunction;
+import utility.FunctionInt;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -531,6 +532,11 @@ public class DataType implements StyledShowable
         */
         
         public <U> TagType<U> map(Function<T, U> changeInner)
+        {
+            return new TagType<>(name, inner == null ? null : changeInner.apply(inner));
+        }
+
+        public <U> TagType<U> mapInt(FunctionInt<T, U> changeInner) throws InternalException
         {
             return new TagType<>(name, inner == null ? null : changeInner.apply(inner));
         }

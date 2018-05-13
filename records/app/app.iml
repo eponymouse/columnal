@@ -28,7 +28,6 @@
     <orderEntry type="module" module-name="data" />
     <orderEntry type="module" module-name="stf" />
     <orderEntry type="module" module-name="expressions" />
-    <orderEntry type="library" name="Maven: groupId:types:1.0-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="functions" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:24.0-jre" level="project" />
     <orderEntry type="library" name="Maven: org.checkerframework:checker-compat-qual:2.0.0" level="project" />

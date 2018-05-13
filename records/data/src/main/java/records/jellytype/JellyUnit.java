@@ -107,6 +107,12 @@ public class JellyUnit
     
     public void save(OutputBuilder output) throws InternalException
     {
+        if (units.isEmpty())
+        {
+            output.raw("1");
+            return;
+        }
+        
         boolean first = true;
         for (Entry<@KeyFor("units") ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
         {
@@ -221,5 +227,10 @@ public class JellyUnit
     public TreeMap<ComparableEither<String, SingleUnit>, Integer> getDetails()
     {
         return units;
+    }
+
+    public boolean isScalar()
+    {
+        return units.isEmpty();
     }
 }

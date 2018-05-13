@@ -470,7 +470,7 @@ public class TestUtil
             List<DataType> taggedTypes = distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.toList());
             for (DataType t : taggedTypes)
             {
-                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.map(JellyType::fromConcrete)));
+                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), Utility.mapListInt(t.getTagTypes(), t2 -> t2.mapInt(JellyType::fromConcrete)));
             }
             return new TypeState(unitManager, typeManager);
         }
@@ -722,7 +722,7 @@ public class TestUtil
             @Override
             public @Nullable Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), Utility.mapListInt(tags, t -> t.map(JellyType::fromConcrete)));
+                typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), Utility.mapListInt(tags, t -> t.mapInt(JellyType::fromConcrete)));
                 for (TagType<DataType> tag : tags)
                 {
                     if (tag.getInner() != null)
@@ -1096,7 +1096,7 @@ public class TestUtil
             for (DataType type : distinctTypes)
             {
                 if (type.isTagged())
-                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  Utility.mapListInt(type.getTagTypes(), t -> t.map(JellyType::fromConcrete)));
+                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  Utility.mapListInt(type.getTagTypes(), t -> t.mapInt(JellyType::fromConcrete)));
             }
         }
         catch (InternalException | UserException e)

@@ -4,8 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -49,6 +52,11 @@ public abstract class JellyType
     {
     }
 
+    public static JellyType text()
+    {
+        return JellyTypePrimitive.text();
+    }
+
     public abstract TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException;
 
     public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException;
@@ -61,11 +69,6 @@ public abstract class JellyType
 
     // For every tagged type use anywhere within this type, call back the given function with the name.
     public abstract void forNestedTagged(Consumer<TypeId> nestedTagged);
-
-    public static JellyType fromConcrete(DataType t)
-    {
-        return new JellyTypeConcrete(t);
-    }
     
     public static JellyType typeVariable(String name)
     {
@@ -111,23 +114,23 @@ public abstract class JellyType
     private static JellyType load(UnbracketedTypeContext ctx, TypeManager mgr) throws InternalException, UserException
     {
         if (ctx.BOOLEAN() != null)
-            return new JellyTypeConcrete(DataType.BOOLEAN);
+            return JellyTypePrimitive.bool();
         else if (ctx.number() != null)
             return load(ctx.number(), mgr);
         else if (ctx.TEXT() != null)
-            return new JellyTypeConcrete(DataType.TEXT);
+            return JellyTypePrimitive.text();
         else if (ctx.date() != null)
         {
             if (ctx.date().DATETIME() != null)
-                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)));
+                return JellyTypePrimitive.date(new DateTimeInfo(DateTimeType.DATETIME));
             else if (ctx.date().YEARMONTHDAY() != null)
-                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
+                return JellyTypePrimitive.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
             else if (ctx.date().TIMEOFDAY() != null)
-                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)));
+                return JellyTypePrimitive.date(new DateTimeInfo(DateTimeType.TIMEOFDAY));
             if (ctx.date().YEARMONTH() != null)
-                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
+                return JellyTypePrimitive.date(new DateTimeInfo(DateTimeType.YEARMONTH));
             if (ctx.date().DATETIMEZONED() != null)
-                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
+                return JellyTypePrimitive.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
         }
         else if (ctx.tagRef() != null)
         {
@@ -158,7 +161,7 @@ public abstract class JellyType
     private static JellyType load(NumberContext number, TypeManager mgr) throws InternalException, UserException
     {
         if (number.UNIT() == null)
-            return new JellyTypeConcrete(DataType.NUMBER);
+            return new JellyTypeNumberWithUnit(JellyUnit.fromConcrete(Unit.SCALAR));
         else
         {
             String withCurly = number.UNIT().getText();
@@ -194,4 +197,61 @@ public abstract class JellyType
     }
 
     public abstract <R, E extends Throwable> R apply(JellyTypeVisitorEx<R, E> visitor) throws InternalException, E;
+
+
+    public static JellyType fromConcrete(DataType t) throws InternalException
+    {
+        return t.apply(new DataTypeVisitorEx<JellyType, InternalException>()
+        {
+            @Override
+            public JellyType number(NumberInfo numberInfo) throws InternalException, InternalException
+            {
+                return new JellyTypeNumberWithUnit(JellyUnit.fromConcrete(numberInfo.getUnit()));
+            }
+
+            @Override
+            public JellyType text() throws InternalException, InternalException
+            {
+                return JellyTypePrimitive.text();
+            }
+
+            @Override
+            public JellyType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            {
+                return JellyTypePrimitive.date(dateTimeInfo);
+            }
+
+            @Override
+            public JellyType bool() throws InternalException, InternalException
+            {
+                return JellyTypePrimitive.bool();
+            }
+
+            @Override
+            public JellyType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            {
+                return new JellyTypeTagged(typeName.getRaw(), Utility.mapListInt(typeVars, e -> 
+                    e.mapBothInt(u -> JellyUnit.fromConcrete(u), t -> fromConcrete(t))
+                ));
+            }
+
+            @Override
+            public JellyType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            {
+                return new JellyTypeTuple(Utility.mapListInt(inner, JellyType::fromConcrete));
+            }
+
+            @Override
+            public JellyType array(DataType inner) throws InternalException, InternalException
+            {
+                return new JellyTypeArray(fromConcrete(inner));
+            }
+
+            @Override
+            public JellyType function(DataType argType, DataType resultType) throws InternalException, InternalException
+            {
+                return new JellyTypeFunction(fromConcrete(argType), fromConcrete(resultType));
+            }
+        });
+    }
 }

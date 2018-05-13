@@ -22,13 +22,28 @@ import utility.Utility;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-class JellyTypeConcrete extends JellyType
+class JellyTypePrimitive extends JellyType
 {
     private final DataType dataType;
 
-    JellyTypeConcrete(DataType dataType)
+    private JellyTypePrimitive(DataType dataType)
     {
         this.dataType = dataType;
+    }
+    
+    public static JellyTypePrimitive bool()
+    {
+        return new JellyTypePrimitive(DataType.BOOLEAN);
+    }
+
+    public static JellyTypePrimitive text()
+    {
+        return new JellyTypePrimitive(DataType.TEXT);
+    }
+
+    public static JellyTypePrimitive date(DateTimeInfo dateTimeInfo)
+    {
+        return new JellyTypePrimitive(DataType.date(dateTimeInfo));
     }
 
     @Override
@@ -54,7 +69,7 @@ class JellyTypeConcrete extends JellyType
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        JellyTypeConcrete that = (JellyTypeConcrete) o;
+        JellyTypePrimitive that = (JellyTypePrimitive) o;
         return Objects.equals(dataType, that.dataType);
     }
 
@@ -76,12 +91,6 @@ class JellyTypeConcrete extends JellyType
         return dataType.apply(new DataTypeVisitorEx<R, E>()
         {
             @Override
-            public R number(NumberInfo numberInfo) throws InternalException, E
-            {
-                return visitor.number(JellyUnit.fromConcrete(numberInfo.getUnit()));
-            }
-
-            @Override
             public R text() throws InternalException, E
             {
                 return visitor.text();
@@ -100,27 +109,38 @@ class JellyTypeConcrete extends JellyType
             }
 
             @Override
+            public R number(NumberInfo numberInfo) throws InternalException, E
+            {
+                return _throw();
+            }
+
+            @Override
             public R tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E
             {
-                return visitor.tagged(typeName, Utility.mapListInt(typeVars, e -> e.mapBothInt(JellyUnit::fromConcrete, JellyTypeConcrete::new)));
+                return _throw();
             }
 
             @Override
             public R tuple(ImmutableList<DataType> inner) throws InternalException, E
             {
-                return visitor.tuple(Utility.mapListInt(inner, JellyTypeConcrete::new));
+                return _throw();
             }
 
             @Override
             public R array(DataType inner) throws InternalException, E
             {
-                return visitor.array(new JellyTypeConcrete(inner));
+                return _throw();
             }
 
             @Override
             public R function(DataType argType, DataType resultType) throws InternalException, E
             {
-                return visitor.function(new JellyTypeConcrete(argType), new JellyTypeConcrete(resultType));
+                return _throw();
+            }
+
+            private R _throw() throws InternalException
+            {
+                throw new InternalException("Impossible type " + dataType + " found in JellyTypePrimitive");
             }
         });
     }
