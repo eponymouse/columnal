@@ -171,7 +171,7 @@ public class HideColumns extends Transformation
     {
         public Info()
         {
-            super(NAME, "Drop columns", "preview-hide.png", "hide.explanation.short", Arrays.asList("collapse"));
+            super(NAME, "transform.hideColumns", "preview-hide.png", "hide.explanation.short", Arrays.asList("collapse"));
         }
 
         @Override

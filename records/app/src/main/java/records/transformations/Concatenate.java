@@ -285,7 +285,7 @@ public class Concatenate extends Transformation
     {
         public Info()
         {
-            super("concatenate", "Concatenate", "preview-concatenate.png", "concatenate.explanation.short",Arrays.asList("append", "join"));
+            super("concatenate", "transform.concatenate", "preview-concatenate.png", "concatenate.explanation.short",Arrays.asList("append", "join"));
         }
 
         @Override

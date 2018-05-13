@@ -164,7 +164,7 @@ public class Check extends Transformation
     {
         public Info()
         {
-            super(NAME, "Check", "preview-check.png", "check.explanation.short", ImmutableList.of("remove", "delete"));
+            super(NAME, "transform.check", "preview-check.png", "check.explanation.short", ImmutableList.of("remove", "delete"));
         }
         
         @Override

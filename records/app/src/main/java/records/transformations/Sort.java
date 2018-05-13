@@ -331,7 +331,7 @@ public class Sort extends Transformation
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, "Sort rows", "preview-sort.png", "sort.explanation.short",Collections.emptyList());
+            super(NAME, "transform.sort", "preview-sort.png", "sort.explanation.short",Collections.emptyList());
         }
 
         @Override

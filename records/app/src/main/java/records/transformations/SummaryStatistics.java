@@ -307,7 +307,7 @@ public class SummaryStatistics extends Transformation
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, "Aggregate", "preview-aggregate.png", "aggregate.explanation.short",Arrays.asList("min", "max"));
+            super(NAME, "transform.aggregate", "preview-aggregate.png", "aggregate.explanation.short",Arrays.asList("min", "max"));
         }
 
         @Override
