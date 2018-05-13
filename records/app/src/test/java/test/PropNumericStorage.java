@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -56,7 +57,7 @@ public class PropNumericStorage
 
         List<Number> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
-            out.add(Utility.toBigDecimal((Number) storage.getType().getCollapsed(i)));
+            out.add(Utility.toBigDecimal(Utility.cast(storage.getType().getCollapsed(i), Number.class)));
         TestUtil.assertEqualList(Utility.mapList(input, Utility::toBigDecimal), out);
     }
 
@@ -74,7 +75,7 @@ public class PropNumericStorage
     }
 
     @OnThread(Tag.Simulation)
-    private void testSet(List<Number> input, int index, Number n) throws InternalException, UserException
+    private void testSet(List<@Value Number> input, int index, Number n) throws InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
         for (Number orig : input)
@@ -89,7 +90,7 @@ public class PropNumericStorage
 
         List<Number> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
-            out.add(Utility.toBigDecimal((Number) storage.getType().getCollapsed(i)));
+            out.add(Utility.toBigDecimal(Utility.cast(storage.getType().getCollapsed(i), Number.class)));
         TestUtil.assertEqualList(Utility.mapList(expected, Utility::toBigDecimal), out);
     }
 

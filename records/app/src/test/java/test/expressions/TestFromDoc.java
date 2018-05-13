@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.antlr.v4.runtime.Parser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -154,8 +155,8 @@ public class TestFromDoc
                     for (int c = 0; c < columnNames.length; c++)
                     {
                         DataType dataType = typeManager.loadTypeUse(columnTypes[c]);
-                        List<@Value Object> loadedValues = Utility.mapListEx(columnValues.get(c), unparsed -> {
-                            return Utility.parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
+                        List<@Value Object> loadedValues = Utility.<String, @Value Object>mapListEx(columnValues.get(c), unparsed -> {
+                            return Utility.<@Value Object, DataParser>parseAsOne(unparsed, DataLexer::new, DataParser::new, p -> 
                                 DataType.loadSingleItem(dataType, p, false));
                         });
                         if (length == -1)

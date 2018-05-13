@@ -181,7 +181,7 @@ public class TestUnit
                 )
             );
             assertNotNull(instance);
-            Object num = instance.getFirst().call(new Object[]{null, d(src)});
+            Object num = instance.getFirst().call(DataTypeUtility.value(new @Value Object[]{null, d(src)}));
             assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)
@@ -193,6 +193,7 @@ public class TestUnit
         }
     }
 
+    @SuppressWarnings("value")
     private Matcher<Object> numberMatch(BigDecimal n)
     {
         return new CustomMatcher<Object>(n.toPlainString()) {
@@ -200,7 +201,6 @@ public class TestUnit
             @Override
             public boolean matches(Object o)
             {
-
                 int cmp = Utility.compareNumbers(o, n);
                 return cmp == 0 || Utility.compareNumbers(cmp < 0 ? Utility.addSubtractNumbers(n, (Number) o, false) : Utility.addSubtractNumbers((Number) o, n, false), d("0.0001")) < 0;
             }

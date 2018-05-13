@@ -1,5 +1,6 @@
 package test.functions;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -67,10 +68,10 @@ public class PropNumericFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propRound(@From(GenNumber.class) Number src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propRound(@From(GenNumber.class) @Value Number src, @From(GenUnit.class) Unit u) throws Throwable
     {
-        BigDecimal rounded = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Round()));
-        BigDecimal orig = Utility.toBigDecimal(src);
+        @Value BigDecimal rounded = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Round()));
+        @Value BigDecimal orig = Utility.toBigDecimal(src);
         // Check that it is round by doing this; will throw if not:
         try
         {
@@ -86,7 +87,7 @@ public class PropNumericFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propSum(@From(GenNumbers.class) List<Number> src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propSum(@From(GenNumbers.class) List<@Value Number> src, @From(GenUnit.class) Unit u) throws Throwable
     {
         @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
         assertEquals(total == null ? BigDecimal.ZERO : Utility.toBigDecimal(total), Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Sum())));
@@ -94,7 +95,7 @@ public class PropNumericFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propAverage(@From(GenNumbers.class) List<Number> src, @From(GenUnit.class) Unit u) throws Throwable
+    public void propAverage(@From(GenNumbers.class) List<@Value Number> src, @From(GenUnit.class) Unit u) throws Throwable
     {
         @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
         if (total == null)
@@ -120,7 +121,7 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Number runNumericFunction(String expectedUnit, @Value Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();

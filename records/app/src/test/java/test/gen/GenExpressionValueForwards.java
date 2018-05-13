@@ -160,14 +160,14 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<Op> ops = new ArrayList<>();
-                    List<Number> curTotals = replicate(0);
+                    List<@Value Number> curTotals = replicate(DataTypeUtility.value(0));
                     for (int i = 0; i < numArgs; i++)
                     {
                         Pair<List<@Value Object>, Expression> pair = make(type, maxLevels - 1);
                         expressions.add(pair.getSecond());
                         // First one we count as add, because we're adding to the zero running total:
                         boolean opIsAdd = i == 0 || r.nextBoolean();
-                        eachI(curTotals, (row, curTotal) -> Utility.addSubtractNumbers(curTotal, (Number) pair.getFirst().get(row), opIsAdd));
+                        eachI(curTotals, (row, curTotal) -> Utility.addSubtractNumbers(curTotal, Utility.cast(pair.getFirst().get(row), Number.class), opIsAdd));
                         if (i > 0)
                             ops.add(opIsAdd ? Op.ADD : Op.SUBTRACT);
                     }
@@ -268,7 +268,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     }
                 }, */
                 () -> {
-                    List<Number> runningTotals = replicate(1);
+                    List<@Value Number> runningTotals = replicate(DataTypeUtility.value(1));
                     Unit runningUnit = Unit.SCALAR;
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
@@ -277,7 +277,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         Unit unit = i == numArgs - 1 ? calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit()) : makeUnit();
                         runningUnit = runningUnit.times(unit);
                         Pair<List<@Value Object>, Expression> pair = make(DataType.number(new NumberInfo(unit)), maxLevels - 1);
-                        eachI(runningTotals, (row, runningTotal) -> Utility.multiplyNumbers(runningTotal, (Number)pair.getFirst().get(row)));
+                        eachI(runningTotals, (row, runningTotal) -> Utility.multiplyNumbers(runningTotal, Utility.cast(pair.getFirst().get(row), Number.class)));
                         expressions.add(pair.getSecond());
                     }
                     return num(runningTotals, new TimesExpression(expressions));

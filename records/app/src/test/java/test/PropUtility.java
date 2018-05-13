@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 public class PropUtility
 {
     @Property(trials = 2000)
-    public void testNumberFracUtilities(@From(GenNumber.class) Number n) throws UserException
+    public void testNumberFracUtilities(@From(GenNumber.class) @Value Number n) throws UserException
     {
         /* Too hard to test
         assertEquals(Utility.toBigDecimal(n),
