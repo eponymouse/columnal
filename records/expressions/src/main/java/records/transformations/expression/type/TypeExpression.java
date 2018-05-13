@@ -114,8 +114,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression number(JellyUnit unit) throws InternalException, InternalException
             {
-                throw new UnimplementedException();
-                //return new NumberTypeExpression(UnitExpression.load(numberInfo.getUnit()));
+                return new NumberTypeExpression(UnitExpression.load(unit));
             }
 
             @Override

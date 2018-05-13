@@ -43,6 +43,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ public class TypeManager
     private final TaggedValue maybeMissing;
     
     private final TaggedTypeDefinition typeGADT;
+    private final TaggedTypeDefinition unitGADT;
 
     public TypeManager(UnitManager unitManager) throws InternalException
     {
@@ -79,7 +81,8 @@ public class TypeManager
         typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
         knownTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
-        knownTypes.put(new TypeId("Unit"), new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null))));
+        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
+        knownTypes.put(new TypeId("Unit"), unitGADT);
     }
     
     public TaggedValue maybeMissing()
@@ -326,7 +329,11 @@ public class TypeManager
             }
         }
 
-        List<TaggedTypeDefinition> orderedDataTypes = GraphUtility.<TaggedTypeDefinition>lineariseDAG(knownTypes.values(), incomingRefs, Collections.emptyList());
+        List<TaggedTypeDefinition> typeDefinitions = new ArrayList<>(knownTypes.values());
+        // Sort by name by default:
+        Collections.sort(typeDefinitions, Comparator.comparing(t -> t.getTaggedTypeName().getRaw()));
+        
+        List<TaggedTypeDefinition> orderedDataTypes = GraphUtility.<TaggedTypeDefinition>lineariseDAG(typeDefinitions, incomingRefs, Collections.emptyList());
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(orderedDataTypes);
@@ -382,6 +389,12 @@ public class TypeManager
     public DataType typeGADTFor(DataType type) throws InternalException, UserException
     {
         return typeGADT.instantiate(ImmutableList.of(Either.right(type)), this);
+    }
+
+    // Basically, u -> Unit u
+    public DataType unitGADTFor(Unit unit) throws InternalException, UserException
+    {
+        return unitGADT.instantiate(ImmutableList.of(Either.left(unit)), this);
     }
 
     public static class TagInfo

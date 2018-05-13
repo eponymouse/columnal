@@ -1,6 +1,7 @@
 package records.jellytype;
 
 import com.google.common.collect.ImmutableMap;
+import com.sun.xml.internal.bind.v2.util.QNameMap;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -217,4 +218,8 @@ public class JellyUnit
         return u;
     }
 
+    public TreeMap<ComparableEither<String, SingleUnit>, Integer> getDetails()
+    {
+        return units;
+    }
 }

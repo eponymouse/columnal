@@ -17,9 +17,11 @@ import records.grammar.UnitParser.UnitContext;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
+import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.ComparableEither;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -36,8 +38,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
             .filter((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> p.getValue() > 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") SingleUnit, Integer> p) -> {
-                // TODO support loading type vars
-                SingleUnitExpression single = new SingleUnitExpression(p.getKey().toString());
+                SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
         
@@ -46,11 +47,36 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
             .filter((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> p.getValue() < 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")SingleUnit, Integer> p) -> {
-                // TODO support loading type vars
-                SingleUnitExpression single = new SingleUnitExpression(p.getKey().toString());
+                SingleUnitExpression single = new SingleUnitExpression(p.getKey().getName());
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
         
+        if (bottom.isEmpty())
+            return r;
+        else if (bottom.size() == 1)
+            return new UnitDivideExpression(r, bottom.get(0));
+        else
+            return new UnitDivideExpression(r, new UnitTimesExpression(bottom));
+    }
+
+    public static @Recorded UnitExpression load(JellyUnit unit)
+    {
+        ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
+            .filter((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() > 0)
+            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> {
+                SingleUnitExpression single = new SingleUnitExpression(p.getKey().either(n -> n, SingleUnit::getName));
+                return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
+            }).collect(ImmutableList.toImmutableList());
+
+        UnitExpression r = top.isEmpty() ? new UnitExpressionIntLiteral(1) : (top.size() == 1 ? top.get(0) : new UnitTimesExpression(top));
+
+        ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
+            .filter((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() < 0)
+            .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> {
+                SingleUnitExpression single = new SingleUnitExpression(p.getKey().either(n -> n, SingleUnit::getName));
+                return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
+            }).collect(ImmutableList.toImmutableList());
+
         if (bottom.isEmpty())
             return r;
         else if (bottom.size() == 1)

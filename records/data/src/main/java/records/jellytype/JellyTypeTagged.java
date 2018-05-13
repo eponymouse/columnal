@@ -61,7 +61,9 @@ public class JellyTypeTagged extends JellyType
         output.quote(new TypeId(typeName));
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
+            output.raw("(");
             typeParam.eitherInt(u -> {u.save(output); return UnitType.UNIT;},t -> {t.save(output); return UnitType.UNIT;});
+            output.raw(")");
         }
     }
 

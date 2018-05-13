@@ -998,16 +998,23 @@ public class TestUtil
         @SuppressWarnings("nullness") // For null src
         @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(function.getInstance(typeManager, s -> Either.right(getConcrete(s, functionType.getSecond(), typeManager))), returnType);
+            return new Pair<>(function.getInstance(typeManager, s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
     }
 
-    private static DataType getConcrete(String s, Map<String, Either<MutUnitVar, MutVar>> vars, TypeManager typeManager) throws InternalException, UserException
+    private static Either<Unit, DataType> getConcrete(String s, Map<String, Either<MutUnitVar, MutVar>> vars, TypeManager typeManager) throws InternalException, UserException
     {
         Either<MutUnitVar, MutVar> var = vars.get(s);
         if (var == null)
             throw new InternalException("Var " + s + " not found");
-        return var.eitherEx(u -> {throw new InternalException("Var " + s + " is a unit");}, v -> v.toConcreteType(typeManager).getRight(""));
+        return var.mapBothEx(
+            u -> {
+                @Nullable Unit concrete = u.toConcreteUnit();
+                if (concrete == null)
+                    throw new InternalException("Could not concrete unit: " + u);
+                return concrete;
+            },
+            v -> v.toConcreteType(typeManager).getRight(""));
     }
 
     @OnThread(Tag.Simulation)
@@ -1029,7 +1036,7 @@ public class TestUtil
         @SuppressWarnings("nullness") // For null src
         @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(function.getInstance(typeManager, s -> Either.right(getConcrete(s, functionType.getSecond(), typeManager))), returnType);
+            return new Pair<>(function.getInstance(typeManager, s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
     }
 

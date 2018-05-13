@@ -16,10 +16,12 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.function.core.AsUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.ValueFunction;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -170,16 +172,16 @@ public class TestUnit
     @OnThread(Tag.Simulation)
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {
-        throw new RuntimeException("TODO get AsUnit working again");
-        /*
         try
         {
-            @Nullable Pair<ValueFunction, DataType> instance = new AsUnit().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)), s ->
-            {
-                throw new RuntimeException(new UserException(s));
-            }, mgr);
+            @Nullable Pair<ValueFunction, DataType> instance = TestUtil.typeCheckFunction(new AsUnit(),
+                DataType.tuple(
+                    DummyManager.INSTANCE.getTypeManager().unitGADTFor(mgr.loadUse(destUnit)),
+                    DataType.number(new NumberInfo(mgr.loadUse(srcUnit)))
+                )
+            );
             assertNotNull(instance);
-            Object num = instance.getFirst().getValue(0, d(src));
+            Object num = instance.getFirst().call(new Object[]{null, d(src)});
             assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)
@@ -188,7 +190,7 @@ public class TestUnit
                 throw e.getCause();
             else
                 throw e;
-        }*/
+        }
     }
 
     private Matcher<Object> numberMatch(BigDecimal n)
