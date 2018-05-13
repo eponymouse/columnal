@@ -74,8 +74,10 @@ import java.util.stream.Collectors;
  */
 public class HTMLImporter implements Importer
 {
+    // Gives back an HTML document to display, and a function which takes a table index then imports that.
     @OnThread(Tag.Simulation)
-    private static void importHTMLFileThen(Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
+    public static Pair<Document, FXPlatformConsumer<Integer>> importHTMLFile(
+        TableManager mgr, File htmlFile, URL source, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException
     {
         ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results = new ArrayList<>();
         Document doc = parse(htmlFile);
@@ -103,136 +105,150 @@ public class HTMLImporter implements Importer
         }
         
         FXPlatformConsumer<Integer> importTable = tableIndex -> {
-            Element table = tables.get(tableIndex);
-            // vals is a list of rows:
-            final List<ArrayList<String>> vals = new ArrayList<>();
-            
-            // Maps position to pending item.  Abusing GridAreaCellPosition a little: it means table position here
-            final Map<GridAreaCellPosition, String> pendingSpanItems = new HashMap<>();
-            
-            @SuppressWarnings("units")
-            final @GridAreaRowIndex int ROW = 1;
-            @SuppressWarnings("units")
-            final @GridAreaColIndex int COL = 1;
-            
-            for (Element tableBit : table.children())
-            {
-                if (!tableBit.tagName().equals("tbody"))
-                    continue;
+            importTable(mgr, htmlFile, destination, withDataSources, results, tables, tableIndex);
+        };
+        
+        return new Pair<>(doc, importTable);
+    }
 
-                Elements tableChildren = tableBit.children();
+    @OnThread(Tag.FXPlatform)
+    protected static void importTable(TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex)
+    {
+        Element table = tables.get(tableIndex);
+        // vals is a list of rows:
+        final List<ArrayList<String>> vals = new ArrayList<>();
+
+        // Maps position to pending item.  Abusing GridAreaCellPosition a little: it means table position here
+        final Map<GridAreaCellPosition, String> pendingSpanItems = new HashMap<>();
+
+        @SuppressWarnings("units")
+        final @GridAreaRowIndex int ROW = 1;
+        @SuppressWarnings("units")
+        final @GridAreaColIndex int COL = 1;
+
+        for (Element tableBit : table.children())
+        {
+            if (!tableBit.tagName().equals("tbody"))
+                continue;
+
+            Elements tableChildren = tableBit.children();
+            @SuppressWarnings("units")
+            @GridAreaRowIndex int rowIndex = 0;
+            for (Element row : tableChildren)
+            {
+                if (!row.tagName().equals("tr"))
+                    continue;
+                ArrayList<String> rowVals = new ArrayList<>();
+                vals.add(rowVals);
+                Elements children = row.children();
                 @SuppressWarnings("units")
-                @GridAreaRowIndex int rowIndex = 0;
-                for (Element row : tableChildren)
+                @GridAreaColIndex int columnIndex = 0;
+                GridAreaCellPosition nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                while (pendingSpanItems.containsKey(nextPos))
                 {
-                    if (!row.tagName().equals("tr"))
+                    rowVals.add(pendingSpanItems.get(nextPos));
+                    columnIndex += 1 * COL;
+                    nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                }
+
+                for (Element cell : children)
+                {
+                    if (!cell.tagName().equals("td") && !cell.tagName().equals("th"))
                         continue;
-                    ArrayList<String> rowVals = new ArrayList<>();
-                    vals.add(rowVals);
-                    Elements children = row.children();
-                    @SuppressWarnings("units")
-                    @GridAreaColIndex int columnIndex = 0;
-                    GridAreaCellPosition nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
+                    rowVals.add(cell.text());
+                    int rowSpan = 1;
+                    int colSpan = 1;
+                    if (cell.hasAttr("colspan"))
+                    {
+                        try
+                        {
+                            colSpan = Integer.valueOf(cell.attr("colspan"));
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            Log.log(e);
+                            // Leave it at 1
+                        }
+                    }
+                    if (cell.hasAttr("rowspan"))
+                    {
+                        try
+                        {
+                            rowSpan = Integer.valueOf(cell.attr("rowspan"));
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            Log.log(e);
+                            // Leave it at 1
+                        }
+                    }
+                    // add to current row (though it will just be removed by while loop beneath):
+                    if (colSpan > 1)
+                    {
+                        for (@GridAreaColIndex int extraCol = 1 * COL; extraCol < colSpan; extraCol += 1 * COL)
+                        {
+                            pendingSpanItems.put(new GridAreaCellPosition(rowIndex, columnIndex + extraCol), cell.text());
+                        }
+                    }
+                    // Add to future rows:
+                    if (rowSpan > 1)
+                    {
+                        for (@GridAreaRowIndex int extraRow = 1 * ROW; extraRow < rowSpan; extraRow += 1 * ROW)
+                        {
+                            for (@GridAreaColIndex int extraCol = 0 * COL; extraCol < colSpan; extraCol += 1 * COL)
+                            {
+                                pendingSpanItems.put(new GridAreaCellPosition(rowIndex + extraRow, columnIndex + extraCol), cell.text());
+                            }
+                        }
+                    }
+
+                    nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
                     while (pendingSpanItems.containsKey(nextPos))
                     {
                         rowVals.add(pendingSpanItems.get(nextPos));
                         columnIndex += 1 * COL;
                         nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
                     }
-                    
-                    for (Element cell : children)
-                    {
-                        if (!cell.tagName().equals("td") && !cell.tagName().equals("th"))
-                            continue;
-                        rowVals.add(cell.text());
-                        int rowSpan = 1;
-                        int colSpan = 1;
-                        if (cell.hasAttr("colspan"))
-                        {
-                            try
-                            {
-                                colSpan = Integer.valueOf(cell.attr("colspan"));
-                            }
-                            catch (NumberFormatException e)
-                            {
-                                Log.log(e);
-                                // Leave it at 1
-                            }
-                        }
-                        if (cell.hasAttr("rowspan"))
-                        {
-                            try
-                            {
-                                rowSpan = Integer.valueOf(cell.attr("rowspan"));
-                            }
-                                catch (NumberFormatException e)
-                            {
-                                Log.log(e);
-                                // Leave it at 1
-                            }
-                        }
-                        // add to current row (though it will just be removed by while loop beneath):
-                        if (colSpan > 1)
-                        {
-                            for (@GridAreaColIndex int extraCol = 1 * COL; extraCol < colSpan; extraCol += 1 * COL)
-                            {
-                                pendingSpanItems.put(new GridAreaCellPosition(rowIndex, columnIndex + extraCol), cell.text());
-                            }
-                        }
-                        // Add to future rows:
-                        if (rowSpan > 1)
-                        {
-                            for (@GridAreaRowIndex int extraRow = 1 * ROW; extraRow < rowSpan; extraRow += 1 * ROW)
-                            {
-                                for (@GridAreaColIndex int extraCol = 0 * COL; extraCol < colSpan; extraCol += 1 * COL)
-                                {
-                                    pendingSpanItems.put(new GridAreaCellPosition(rowIndex + extraRow, columnIndex + extraCol), cell.text());
-                                }
-                            }
-                        }
-
-                        nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
-                        while (pendingSpanItems.containsKey(nextPos))
-                        {
-                            rowVals.add(pendingSpanItems.get(nextPos));
-                            columnIndex += 1 * COL;
-                            nextPos = new GridAreaCellPosition(rowIndex, columnIndex);
-                        }
-                    }
-
-                    rowIndex += 1 * ROW;
                 }
+
+                rowIndex += 1 * ROW;
             }
+        }
 
-            ImporterUtility.rectangularise(vals);
-            
-            Import<UnitType, ImmutableList<ColumnInfo>> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
+        ImporterUtility.rectangularise(vals);
+
+        Import<UnitType, ImmutableList<ColumnInfo>> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
+        {
+            @Override
+            public ColumnId srcColumnName(int index)
             {
-                @Override
-                public ColumnId srcColumnName(int index)
-                {
-                    return new ColumnId("C" + (index + 1));
-                }
-            };
-            
-            results.add(() -> {
-                @Nullable ImportInfo<ImmutableList<ColumnInfo>> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), imp).showAndWait().orElse(null);
-
-                if (outcome != null)
-                {
-                    @Nullable ImportInfo<ImmutableList<ColumnInfo>> outcomeNonNull = outcome;
-                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, outcomeNonNull.getFormat()));
-                    return makeDataSource;
-                } else
-                    return null;
-            });
-            
-            List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.toList());
-            Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> withDataSources.consume(Utility.mapListExI(sources, s -> s.get()))));
+                return new ColumnId("C" + (index + 1));
+            }
         };
 
+        results.add(() -> {
+            GuessFormat.@Nullable ImportInfo<ImmutableList<ColumnInfo>> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), imp).showAndWait().orElse(null);
+
+            if (outcome != null)
+            {
+                GuessFormat.@Nullable ImportInfo<ImmutableList<ColumnInfo>> outcomeNonNull = outcome;
+                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, outcomeNonNull.getFormat()));
+                return makeDataSource;
+            } else
+                return null;
+        });
+
+        List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.toList());
+        Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> withDataSources.consume(Utility.mapListExI(sources, s -> s.get()))));
+    }
+
+    @OnThread(Tag.Simulation)
+    private static void importHTMLFileThen(Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
+    {
+        Pair<Document, FXPlatformConsumer<Integer>> p = importHTMLFile(mgr, htmlFile, source, destination, withDataSources);
+
         Platform.runLater(() -> {
-            new PickHTMLTableDialog(parentWindow, doc).showAndWait().ifPresent(n -> importTable.consume(n));
+            new PickHTMLTableDialog(parentWindow, p.getFirst()).showAndWait().ifPresent(n -> p.getSecond().consume(n));
         });
     }
     

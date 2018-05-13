@@ -1,14 +1,14 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.embed.swing.JFXPanel;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
@@ -18,16 +18,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
-import org.testfx.robot.Motion;
 import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DataDisplay;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
@@ -36,6 +33,7 @@ import records.importers.GuessFormat.FinalTextFormat;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.InitialTextFormat;
 import records.importers.GuessFormat.TrimChoice;
+import records.importers.HTMLImporter;
 import records.importers.TextImporter;
 import records.importers.gui.ImportChoicesDialog;
 import records.importers.gui.ImportChoicesDialog.RecordSetDataDisplay;
@@ -44,16 +42,17 @@ import records.importers.gui.ImporterGUI.PickOrOther;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenFormattedData;
-import test.gui.ComboUtilTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.SimulationConsumer;
 import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -74,15 +73,30 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
-        String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
-        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
+        String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
+        Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
         @OnThread(Tag.Simulation) FinalTextFormat ftf = format._test_getResultNoGUI();
         assertEquals("Failure with content: " + content, formatAndData.format, ftf);
         checkDataValues(formatAndData, TextImporter.makeRecordSet(DummyManager.INSTANCE.getTypeManager(), writeDataToFile(formatAndData), ftf));
+        
+        List<DataSource> loaded = new ArrayList<>();
+        File htmlFile = File.createTempFile("data", "html");
+        FileUtils.writeStringToFile(htmlFile, formatAndData.htmlContent, StandardCharsets.UTF_8);
+        SimulationConsumer<ImmutableList<DataSource>> addToLoaded = loaded::addAll;
+        FXPlatformConsumer<Integer> loadTable = HTMLImporter.importHTMLFile(DummyManager.INSTANCE, htmlFile, htmlFile.toURI().toURL(), CellPosition.ORIGIN, addToLoaded).getSecond();
+        CompletableFuture<Boolean> f = new CompletableFuture<>();
+        Platform.runLater(() -> {
+            loadTable.consume(0);
+            f.complete(true);
+        });
+        TestUtil.sleep(5000);
+        clickOn(".ok-button");
+        f.get();
+        checkDataValues(formatAndData, loaded.get(0).getData());
     }
-
+    
     @Property(trials=10)
     @OnThread(Tag.Simulation)
     public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
@@ -192,7 +206,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
 
     private File writeDataToFile(GenFormattedData.FormatAndData formatAndData) throws IOException
     {
-        String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
+        String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
         FileUtils.writeStringToFile(tempFile, content, formatAndData.format.initialTextFormat.charset);
@@ -202,16 +216,16 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
     @OnThread(Tag.Simulation)
     private void checkDataValues(GenFormattedData.FormatAndData formatAndData, RecordSet rs) throws UserException, InternalException
     {
-        assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.content.size(), formatAndData.loadedContent.size(), rs.getLength());
+        assertEquals("Column length, given intended trim " + formatAndData.format.trimChoice + " and source length " + formatAndData.textContent.size(), formatAndData.loadedContent.size(), rs.getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
-            assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.content.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
+            assertEquals("Right row length for row " + i + " (+" + formatAndData.format.trimChoice.trimFromTop + "):\n" + formatAndData.textContent.get(i + formatAndData.format.trimChoice.trimFromTop) + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", 
                 formatAndData.loadedContent.get(i).size(), rs.getColumns().size());
             for (int c = 0; c < rs.getColumns().size(); c++)
             {
                 @Value Object expected = formatAndData.loadedContent.get(i).get(c);
                 @Value Object loaded = rs.getColumns().get(c).getType().getCollapsed(i);
-                assertEquals("Column " + c + " expected: {{{" + expected + "}}} was {{{" + loaded + "}}} from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
+                assertEquals("Column " + c + " expected: {{{" + expected + "}}} was {{{" + loaded + "}}} from row " + formatAndData.textContent.get(i + 1), 0, Utility.compareValues(expected, loaded));
             }
         }
     }
