@@ -55,7 +55,12 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
             us.setResult(new Pair<>(p, DataOrTransform.IMPORT_FILE));
             close();
         });
-        BorderPane content = new BorderPane(null, null, GUI.vbox("new-button-list", transformButton, checkButton), null, GUI.vbox("new-button-list", immediateDataButton, importFromFile));
+        Button importFromLink = new ExplainedButton("import.url", "import.url.explanation", DataOrTransformChoice.WIDTH * 0.45, p -> {
+            us.setResult(new Pair<>(p, DataOrTransform.IMPORT_URL));
+            close();
+        });
+        
+        BorderPane content = new BorderPane(null, null, GUI.vbox("new-button-list", transformButton, checkButton), null, GUI.vbox("new-button-list", immediateDataButton, importFromFile, importFromLink));
         FXUtility.forcePrefSize(content);
         content.setPrefWidth(WIDTH);
         content.setPrefHeight(HEIGHT);
@@ -71,6 +76,6 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
         return super.showAndWaitCentredOn(mouseScreenPos, WIDTH, HEIGHT);
     }
 
-    public static enum DataOrTransform {DATA, IMPORT_FILE, TRANSFORM, CHECK };
+    public static enum DataOrTransform {DATA, IMPORT_FILE, IMPORT_URL, TRANSFORM, CHECK };
 
 }

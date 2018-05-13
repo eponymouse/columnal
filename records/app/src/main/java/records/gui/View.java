@@ -36,7 +36,6 @@ import records.data.Table.FullSaver;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableManager.TableManagerListener;
-import records.data.TableOperations;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -577,6 +576,9 @@ public class View extends StackPane
                             break;
                         case IMPORT_FILE:
                             ImporterManager.getInstance().chooseAndImportFile(thisView.getWindow(), tableManager, cellPosition, tableManager::record);
+                            break;
+                        case IMPORT_URL:
+                            ImporterManager.getInstance().chooseAndImportURL(thisView.getWindow(), tableManager, cellPosition, tableManager::record);
                             break;
                         case TRANSFORM:
                             new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
