@@ -64,7 +64,7 @@ public class PropNumericStorage
 
     @Property(trials = 1000)
     @OnThread(Tag.Simulation)
-    public void testNumbersAdd(@From(GenNumbers.class) List<Number> input, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
+    public void testNumbersAdd(@From(GenNumbers.class) List<@Value Number> input, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
     {
         // These numbers come from a fixed bit size, so may lack
         // a high number
@@ -76,7 +76,7 @@ public class PropNumericStorage
     }
 
     @OnThread(Tag.Simulation)
-    private void testSet(List<@Value Number> input, int index, Number n) throws InternalException, UserException
+    private void testSet(List<@Value Number> input, int index, @Value Number n) throws InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
         for (Number orig : input)

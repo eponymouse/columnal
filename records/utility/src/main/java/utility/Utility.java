@@ -450,7 +450,8 @@ public class Utility
         Log.log(e); // TODO log and send back
     }
 
-    public static Number parseNumber(String number) throws UserException
+    @SuppressWarnings("value")
+    public static @Value Number parseNumber(String number) throws UserException
     {
         // First try as a long:
         try

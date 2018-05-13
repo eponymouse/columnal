@@ -89,7 +89,7 @@ public class PropNumericFunctions
     @OnThread(Tag.Simulation)
     public void propSum(@From(GenNumbers.class) List<@Value Number> src, @From(GenUnit.class) Unit u) throws Throwable
     {
-        @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
+        @Nullable @Value Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
         assertEquals(total == null ? BigDecimal.ZERO : Utility.toBigDecimal(total), Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Sum())));
     }
 
@@ -113,8 +113,8 @@ public class PropNumericFunctions
         }
         else
         {
-            BigDecimal expected = Utility.toBigDecimal(Utility.divideNumbers(total, src.size()));
-            BigDecimal actual = Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Mean()));
+            @Value BigDecimal expected = Utility.toBigDecimal(Utility.divideNumbers(total, DataTypeUtility.value(src.size())));
+            @Value BigDecimal actual = Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Mean()));
             assertThat("Expected " + expected + " actual" + actual, Utility.toBigDecimal(Utility.addSubtractNumbers(actual, expected, false)).abs(), Matchers.lessThanOrEqualTo(new BigDecimal("0.000001")));
         }
     }
