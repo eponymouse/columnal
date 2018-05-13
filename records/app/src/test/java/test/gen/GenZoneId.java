@@ -27,7 +27,7 @@ public class GenZoneId extends Generator<ZoneId>
         {
             zone = genZoneId.generate(sourceOfRandomness, generationStatus);
         }
-        while (zone.toString().contains("SystemV") || zone.toString().contains("GMT0"));
+        while (zone.toString().contains("SystemV") || zone.toString().contains("GMT0") || (zone.toString().length() == 3 && zone.toString().endsWith("T")));
         return zone;
     }
 }
