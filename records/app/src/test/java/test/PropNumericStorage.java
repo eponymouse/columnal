@@ -64,7 +64,7 @@ public class PropNumericStorage
 
     @Property(trials = 1000)
     @OnThread(Tag.Simulation)
-    public void testNumbersAdd(@From(GenNumbers.class) List<@Value Number> input, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
+    public void testNumbersAdd(@From(GenNumbers.class) List<@Value Number> input, @From(GenNumber.class) @Value Number n) throws IOException, InternalException, UserException
     {
         // These numbers come from a fixed bit size, so may lack
         // a high number
@@ -97,7 +97,7 @@ public class PropNumericStorage
 
     @Property(trials = 1000)
     @OnThread(Tag.Simulation)
-    public void testNumbersSet(@From(GenNumbers.class) List<@Value Number> input, int index, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
+    public void testNumbersSet(@From(GenNumbers.class) List<@Value Number> input, int index, @From(GenNumber.class) @Value Number n) throws IOException, InternalException, UserException
     {
         // These numbers come from a fixed bit size, so may lack
         // a high number

@@ -97,7 +97,7 @@ public class PropNumericFunctions
     @OnThread(Tag.Simulation)
     public void propAverage(@From(GenNumbers.class) List<@Value Number> src, @From(GenUnit.class) Unit u) throws Throwable
     {
-        @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
+        @Nullable @Value Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
         if (total == null)
         {
             // List must be empty:

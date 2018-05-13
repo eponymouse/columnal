@@ -201,7 +201,7 @@ public class PropDateFunctions
         if (fromText == null)
             throw new RuntimeException("Cannot find typed from text function");
         // First param should be Type Date, but it shouldn't be used....
-        @Value Object[] args = new @Value Object[] {v(""), src};
+        @Value Object[] args = new @Value Object[] {v(""), v(src)};
         return runFunction1(DataTypeUtility.value(args), DataType.tuple(DummyManager.INSTANCE.getTypeManager().typeGADTFor(DataType.date(new DateTimeInfo(dateTimeType))), DataType.TEXT), fromText);
     }
 
