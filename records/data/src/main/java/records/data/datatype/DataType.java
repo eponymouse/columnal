@@ -914,11 +914,11 @@ public class DataType implements StyledShowable
             return null;
         else if (a.isRight() && b.isRight())
         {
-            DataType t = checkSame(a.getRight(), b.getRight(), TypeRelation.SYMMETRIC, onError);
+            DataType t = checkSame(a.getRight("Impossible"), b.getRight("Impossible"), TypeRelation.SYMMETRIC, onError);
             return t == null ? null : Either.right(t);
         }
         else if (a.isLeft() && b.isLeft())
-            return a.getLeft().equals(b.getLeft()) ? a : null;
+            return a.getLeft("Impossible").equals(b.getLeft("Impossible")) ? a : null;
         else
             return null;
     }

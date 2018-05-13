@@ -10,6 +10,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -33,9 +34,9 @@ public class ToString extends FunctionDefinition
 
     @Override
     @OnThread(Tag.Simulation)
-    public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+    public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
     {
-        DataType type = paramTypes.apply("t");
+        DataType type = paramTypes.apply("t").getRight("Variable t should be type but was unit");
         if (type == null)
             throw new InternalException("");
         return new Instance(type);

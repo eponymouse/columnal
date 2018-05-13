@@ -998,7 +998,7 @@ public class TestUtil
         @SuppressWarnings("nullness") // For null src
         @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
+            return new Pair<>(function.getInstance(typeManager, s -> Either.right(getConcrete(s, functionType.getSecond(), typeManager))), returnType);
         return null;
     }
 
@@ -1007,7 +1007,7 @@ public class TestUtil
         Either<MutUnitVar, MutVar> var = vars.get(s);
         if (var == null)
             throw new InternalException("Var " + s + " not found");
-        return var.eitherEx(u -> {throw new InternalException("Var " + s + " is a unit");}, v -> v.toConcreteType(typeManager).getRight());
+        return var.eitherEx(u -> {throw new InternalException("Var " + s + " is a unit");}, v -> v.toConcreteType(typeManager).getRight(""));
     }
 
     @OnThread(Tag.Simulation)
@@ -1029,7 +1029,7 @@ public class TestUtil
         @SuppressWarnings("nullness") // For null src
         @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
-            return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
+            return new Pair<>(function.getInstance(typeManager, s -> Either.right(getConcrete(s, functionType.getSecond(), typeManager))), returnType);
         return null;
     }
 

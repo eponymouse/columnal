@@ -103,7 +103,7 @@ public class TupleTypeExp extends TypeExp
                 Either<StyledString, TypeExp> result = knownMembers.get(i).unifyWith(bt.knownMembers.get(i));
                 if (result.isLeft())
                     return result;
-                unified.add(result.getRight());
+                unified.add(result.getRight("Impossible"));
             }
             else if (i < knownMembers.size())
             {

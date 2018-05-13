@@ -6,11 +6,14 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -43,7 +46,7 @@ public abstract class ToTemporalFunction
     {
         return new FunctionDefinition(name) {
             @Override
-            public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException
+            public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException
             {
                 return new FromStringInstance(name);
             }
@@ -142,7 +145,7 @@ public abstract class ToTemporalFunction
         }
 
         @Override
-        public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
         {
             return new ValueFunction()
             {

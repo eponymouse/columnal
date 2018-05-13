@@ -4,9 +4,12 @@ import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -54,7 +57,7 @@ public abstract class AnyAllNone
         }
 
         @Override
-        public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+        public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes)
         {
             return new Processor(true, null, false);
         }
@@ -68,7 +71,7 @@ public abstract class AnyAllNone
         }
 
         @Override
-        public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+        public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes)
         {
             return new Processor(null, false, true);
         }
@@ -82,7 +85,7 @@ public abstract class AnyAllNone
         }
 
         @Override
-        public ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes)
+        public ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes)
         {
             return new Processor(false, null, true);
         }

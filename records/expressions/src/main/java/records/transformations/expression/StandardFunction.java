@@ -6,7 +6,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -54,16 +56,19 @@ public class StandardFunction extends NonOperatorExpression
             throw new InternalException("Attempting to fetch function despite failing type check");
 
         @NonNull Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> typeFinal = type;
-        return DataTypeUtility.value(functionDefinition.getInstance(s -> {
+        return DataTypeUtility.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
             Either<MutUnitVar, MutVar> typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)
                 throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
-            if (typeExp.isLeft())
-                throw new InternalException("Variable " + s + " should be a type, but is a unit");
-            return typeExp.getRight().toConcreteType(state.getTypeManager()).eitherEx(
+            return typeExp.<Unit, DataType>mapBothEx(u -> {
+                Unit concrete = u.toConcreteUnit();
+                if (concrete == null)
+                    throw new UserException("Could not resolve unit " + s + " to a concrete unit from " + u);
+                return concrete;
+            }, t -> t.toConcreteType(state.getTypeManager()).eitherEx(
                 l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
-                t -> t
-            );
+                t2 -> t2
+            ));
         }));
     }
 

@@ -41,7 +41,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             TypeApplyExpression appl = (TypeApplyExpression) typeExpression;
             for (int i = 0; i < appl._test_getOperands().size(); i++)
             {
-                TypeExpression item = appl._test_getOperands().get(i).getRight();
+                TypeExpression item = appl._test_getOperands().get(i).getRight("");
                 enterType(item, r);
                 if (i < appl._test_getOperands().size() - 1)
                     write(r.nextBoolean() ? "-" : " - ", DELAY);

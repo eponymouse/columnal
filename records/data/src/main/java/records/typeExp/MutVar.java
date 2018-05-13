@@ -55,7 +55,7 @@ public class MutVar extends TypeExp
         }
         else if (b instanceof MutVar)
         {
-            @Nullable StyledString maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft());
+            @Nullable StyledString maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
             if (maybeError != null)
                 return Either.left(maybeError);
             typeClassesOrPointer = Either.right(b);
@@ -73,7 +73,7 @@ public class MutVar extends TypeExp
             else
             {
                 // Check that the item we are pointing to is a member of the needed type-classes:
-                @Nullable StyledString maybeError = without.requireTypeClasses(typeClassesOrPointer.getLeft());
+                @Nullable StyledString maybeError = without.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
                 if (maybeError != null)
                     return Either.left(maybeError);
                 typeClassesOrPointer = Either.right(without);

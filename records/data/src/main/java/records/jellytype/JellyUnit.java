@@ -56,7 +56,7 @@ public class JellyUnit
         UnitExp u = UnitExp.SCALAR;
         for (Entry<@KeyFor("units") ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
         {
-            u = u.times(e.getKey().eitherInt(name -> new UnitExp(typeVariables.get(name).getLeft()),
+            u = u.times(e.getKey().eitherInt(name -> new UnitExp(typeVariables.get(name).getLeft("Variable " + name + " should be type variable but was unit variable")),
                 (SingleUnit single) -> new UnitExp(single).raisedTo(e.getValue())));
         }
         return u;

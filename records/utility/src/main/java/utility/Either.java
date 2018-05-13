@@ -177,21 +177,21 @@ public class Either<A, B>
     
 
     //Use either/either_ instead if at all possible
-    public A getLeft() throws InternalException
+    public A getLeft(String error) throws InternalException
     {
         if (a != null)
             return a;
         else
-            throw new InternalException("Getting left out of right");
+            throw new InternalException(error);
     }
 
     //Use either/either_ instead if at all possible
-    public B getRight() throws InternalException
+    public B getRight(String error) throws InternalException
     {
         if (b != null)
             return b;
         else
-            throw new InternalException("Getting right out of left");
+            throw new InternalException(error);
     }
 
     //Use either/either_ instead if at all possible

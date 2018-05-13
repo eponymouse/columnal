@@ -9,6 +9,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
@@ -146,9 +147,15 @@ public abstract class FunctionDefinition
     {
         return typeMatcher.makeParamAndReturnType(typeManager);
     }
-    
+
+    /**
+     * Gets the instance of this function
+     * @param typeManager The TypeManager to use
+     * @param paramTypes A map from the declared typevar/unitvar items in the function XML description, to the concrete Unit or DataType
+     * @return The function instance to use during execution.
+     */
     @OnThread(Tag.Simulation)
-    public abstract ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException;
+    public abstract ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException;
     
     /**
      * For autocompleting parameters: what are likely types to this function?

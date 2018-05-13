@@ -10,6 +10,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -43,9 +44,9 @@ public class FromString
             new FunctionDefinition("conversion:from text")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
-                    DataType type = paramTypes.apply("t");
+                    DataType type = paramTypes.apply("t").getRight("Variable t should be type but was unit");
                     if (type == null)
                         throw new InternalException("Type t not found for from text");
                     return new ValueFunction()
@@ -61,9 +62,9 @@ public class FromString
             new FunctionDefinition("conversion:typed from text")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
-                    DataType type = paramTypes.apply("t");
+                    DataType type = paramTypes.apply("t").getRight("Variable t should be type but was unit");
                     if (type == null)
                         throw new InternalException("Type t not found for from text");
                     return new ValueFunction()

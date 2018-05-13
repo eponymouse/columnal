@@ -69,17 +69,17 @@ public class TypeCons extends TypeExp
             
             if (us.isLeft() && them.isLeft())
             {
-                @Nullable UnitExp unified = us.getLeft().unifyWith(them.getLeft());
+                @Nullable UnitExp unified = us.getLeft("Impossible").unifyWith(them.getLeft("Impossible"));
                 if (unified == null)
-                    return Either.left(StyledString.s("Cannot match units " + us.getLeft() + " with " + them.getLeft()));
+                    return Either.left(StyledString.s("Cannot match units " + us.getLeft("Impossible") + " with " + them.getLeft("Impossible")));
                 unifiedOperands.add(Either.left(unified));
             }
             else if (us.isRight() && them.isRight())
             {
-                Either<StyledString, TypeExp> sub = us.getRight().unifyWith(them.getRight());
+                Either<StyledString, TypeExp> sub = us.getRight("Impossible").unifyWith(them.getRight("Impossible"));
                 if (sub.isLeft())
                     return sub;
-                unifiedOperands.add(Either.right(sub.getRight()));
+                unifiedOperands.add(Either.right(sub.getRight("Impossible")));
             }
             else
             {
@@ -119,17 +119,17 @@ public class TypeCons extends TypeExp
                 if (operands.get(0).isLeft())
                     throw new UserException("List must be of a type, not a unit");
                 else
-                    return operands.get(0).getRight().toConcreteType(typeManager).map(t -> DataType.array(t));
+                    return operands.get(0).getRight("Impossible").toConcreteType(typeManager).map(t -> DataType.array(t));
             case CONS_FUNCTION:
                 if (operands.get(0).isLeft() || operands.get(1).isLeft())
                     throw new UserException("Function cannot take or return a unit");
-                Either<TypeConcretisationError, DataType> arg = operands.get(0).getRight().toConcreteType(typeManager);
+                Either<TypeConcretisationError, DataType> arg = operands.get(0).getRight("Impossible").toConcreteType(typeManager);
                 if (arg.isLeft())
                     return arg;
-                Either<TypeConcretisationError, DataType> ret = operands.get(1).getRight().toConcreteType(typeManager);
+                Either<TypeConcretisationError, DataType> ret = operands.get(1).getRight("Impossible").toConcreteType(typeManager);
                 if (ret.isLeft())
                     return ret;
-                return Either.right(DataType.function(arg.getRight(), ret.getRight()));
+                return Either.right(DataType.function(arg.getRight("Impossible"), ret.getRight("Impossible")));
             default:
                 try
                 {

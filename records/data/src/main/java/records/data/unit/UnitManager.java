@@ -220,6 +220,9 @@ public class UnitManager
             return canonicalise(equiv);
     }
 
+    /**
+     * Takes a unit U, and gets the canonical unit C, and what number you have to multiply U by to get C.
+     */
     public Pair<Rational, Unit> canonicalise(Unit original) throws UserException
     {
         return canonicalise(new Pair<>(Rational.ONE, original));

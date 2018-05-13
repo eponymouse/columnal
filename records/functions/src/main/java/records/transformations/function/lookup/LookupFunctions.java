@@ -4,11 +4,14 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -30,7 +33,7 @@ public class LookupFunctions
             new FunctionDefinition("lookup:lookup")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
                     return DataTypeUtility.value(new ValueFunction()
                     {
@@ -44,7 +47,7 @@ public class LookupFunctions
                             if (listA.size() != listB.size())
                                 throw new UserException("Lists passed to lookup function must be the same size, but first list was size: " + listA.size() + " and second list was size: " + listB.size());
                             
-                            int index = getSingleItem(lookupIndexes(listA, args[1]), paramTypes.apply("a"), args[1]);
+                            int index = getSingleItem(lookupIndexes(listA, args[1]), paramTypes.apply("a").getRight("Variable a should be type but was unit"), args[1]);
                             return listB.get(index);
                         }
                     });
@@ -53,7 +56,7 @@ public class LookupFunctions
             new FunctionDefinition("lookup:lookup all")
             {
                 @Override
-                public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
                 {
                     return DataTypeUtility.value(new ValueFunction()
                     {

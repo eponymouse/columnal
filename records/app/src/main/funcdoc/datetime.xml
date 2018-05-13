@@ -148,10 +148,11 @@
         <returnType>DateTimeZoned</returnType>
         <description>
             <p>Creates a datetime with a time zone from the given Date, Time and time zone.</p>
+            <p>Note that because many of the three-letter abbreviations for time zones overlap, they are not supported here, and you must spell out the full name.</p>
         </description>
         <example>
-            <inputArg>(@call @function from text("2001-02-03"), @call @function from text("04:56"), "PDT")</inputArg>
-            <output>@call @function from text("2001-02-03 04:56 Pacific Daylight Time")</output>
+            <inputArg>(@call @function from text("2001-02-03"), @call @function from text("04:56"), "America/Vancouver")</inputArg>
+            <output>@call @function from text("2001-02-03 04:56 America/Vancouver")</output>
         </example>
     </function>
     

@@ -29,7 +29,7 @@ class JellyTypeVariable extends JellyType
     @Override
     public TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException
     {
-        return typeVariables.get(name).getRight();
+        return typeVariables.get(name).getRight("Variable " + name + " should be type variable but was unit variable");
     }
 
     @Override
@@ -38,9 +38,7 @@ class JellyTypeVariable extends JellyType
         Either<Unit, DataType> var = typeVariables.get(name);
         if (var == null)
             throw new InternalException("No such type variable: " + name);
-        if (var.isLeft())
-            throw new InternalException("Cannot make a data type from a unit variable");
-        return var.getRight();
+        return var.getRight("Variable " + name + " should be type variable but was unit variable");
     }
 
     @Override

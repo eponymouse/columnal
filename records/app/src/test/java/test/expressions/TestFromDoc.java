@@ -212,8 +212,8 @@ public class TestFromDoc
                 {
                     Either<TypeConcretisationError, DataType> errorOrType = e.getValue().toConcreteType(typeManager);
                     if (errorOrType.isLeft())
-                        fail(errorOrType.getLeft().toString());
-                    DataType concreteVarType = errorOrType.getRight();
+                        fail(errorOrType.getLeft("").toString());
+                    DataType concreteVarType = errorOrType.getRight("");
                     @Value Object value = valueGen.makeValue(concreteVarType);
                     evaluateState = evaluateState.add(e.getKey(), value);
                     varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(concreteVarType, value, null)));

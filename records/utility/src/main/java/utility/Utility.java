@@ -391,7 +391,7 @@ public class Utility
             return number;
     }
 
-    public static BigDecimal toBigDecimal(Number n)
+    public static BigDecimal toBigDecimal(@Value Number n)
     {
         if (n instanceof BigDecimal)
             return (BigDecimal) n;
@@ -541,7 +541,7 @@ public class Utility
         }
     }
 
-    public static Number multiplyNumbers(Number lhs, Number rhs)
+    public static Number multiplyNumbers(@Value Number lhs, @Value Number rhs)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
@@ -560,7 +560,7 @@ public class Utility
         }
     }
 
-    public static Number divideNumbers(Number lhs, Number rhs)
+    public static Number divideNumbers(@Value Number lhs, @Value Number rhs)
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {

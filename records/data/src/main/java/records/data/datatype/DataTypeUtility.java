@@ -573,8 +573,8 @@ public class DataTypeUtility
             throw new InternalException("Error fetching list", e);
         }
         if (either.isLeft())
-            throw new InternalException("Error fetching list", either.getLeft());
+            throw new InternalException("Error fetching list", either.getLeft("Impossible"));
         else
-            return either.getRight();
+            return either.getRight("Error fetching list");
     }
 }

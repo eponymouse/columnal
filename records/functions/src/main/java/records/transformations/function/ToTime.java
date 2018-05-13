@@ -8,11 +8,14 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.ValueFunction;
@@ -39,7 +42,7 @@ public class ToTime extends ToTemporalFunction
         r.add(new FromTemporal("datetime:time from datetimezoned"));
         r.add(new FunctionDefinition("datetime:time") {
             @Override
-            public @OnThread(Tag.Simulation) ValueFunction getInstance(SimulationFunction<String, DataType> paramTypes) throws InternalException, UserException
+            public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
             {
                 return new FromNumbers();
             }});

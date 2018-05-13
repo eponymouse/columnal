@@ -148,7 +148,7 @@ public abstract class TypeExp implements StyledShowable
                 if (r.isLeft())
                     return r;
                 TypeExp next = types.get(i);
-                r = r.getRight().unifyWith(next);
+                r = r.getRight("Impossible").unifyWith(next);
             }
             return r;
         }
