@@ -142,7 +142,7 @@ public class Filter extends Transformation
                 @Nullable TypeExp checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
-                    typeFinal = errors.recordLeftError(getManager().getUnitManager(), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
+                    typeFinal = errors.recordLeftError(getManager().getTypeManager(), filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
                     throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(filterExpression, srcTableId, true, DataType.BOOLEAN)

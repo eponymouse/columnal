@@ -285,18 +285,13 @@ public class TypeManager
         return str.substring(0, i) + num.add(BigInteger.ONE).toString();
     }
 
-    public @Nullable DataType lookupType(String typeName, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws UserException, InternalException
-    {
-        return lookupType(new TypeId(typeName), typeVariableSubs);
-    }
-
     public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, UserException
     {
         TaggedTypeDefinition taggedTypeDefinition = knownTypes.get(typeId);
         if (taggedTypeDefinition == null)
             return null;
         else
-            return taggedTypeDefinition.instantiate(typeVariableSubs);
+            return taggedTypeDefinition.instantiate(typeVariableSubs, this);
     }
     
     public @Nullable TaggedTypeDefinition lookupDefinition(TypeId typeId)
@@ -386,7 +381,7 @@ public class TypeManager
     // Basically, t -> Type t
     public DataType typeGADTFor(DataType type) throws InternalException, UserException
     {
-        return typeGADT.instantiate(ImmutableList.of(Either.right(type)));
+        return typeGADT.instantiate(ImmutableList.of(Either.right(type)), this);
     }
 
     public static class TagInfo

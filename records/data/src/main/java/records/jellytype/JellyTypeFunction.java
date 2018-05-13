@@ -4,8 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
@@ -33,9 +35,9 @@ class JellyTypeFunction extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables) throws InternalException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
     {
-        return DataType.function(param.makeDataType(typeVariables), param.makeDataType(typeVariables));
+        return DataType.function(param.makeDataType(typeVariables, mgr), param.makeDataType(typeVariables, mgr));
     }
 
     @Override

@@ -273,7 +273,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
                 {
                     TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
                     @Nullable TypeExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
-                    latestType.set(dataType == null ? null : recorder.recordLeftError(tableManager.getUnitManager(), expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    latestType.set(dataType == null ? null : recorder.recordLeftError(tableManager.getTypeManager(), expression, dataType.toConcreteType(tableManager.getTypeManager())));
                     //Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }

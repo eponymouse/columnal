@@ -153,6 +153,6 @@ public class GenDataType extends Generator<DataTypeAndManager>
                 return Either.right(genDepth(r, maxDepth - 1, gs));
             else
                 return Either.left(new GenUnit().generate(r, gs));
-        }));
+        }), typeManager);
     }
 }

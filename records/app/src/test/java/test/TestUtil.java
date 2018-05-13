@@ -412,13 +412,14 @@ public class TestUtil
         try
         {
             // TODO add more higher-order types
-            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of());
-            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Number", JellyType.fromConcrete(DataType.NUMBER)))).instantiate(ImmutableList.of());
-            DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of());
-            DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("A", JellyType.tagged("A", ImmutableList.of())), new TagType<JellyType>("C", JellyType.tagged("C", ImmutableList.of())))).instantiate(ImmutableList.of());
-            DataType maybeMaybe = DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(
-                DummyManager.INSTANCE.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)))
-            )));
+            TypeManager typeManager = DummyManager.INSTANCE.getTypeManager();
+            DataType a = typeManager.registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
+            DataType c = typeManager.registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Number", JellyType.fromConcrete(DataType.NUMBER)))).instantiate(ImmutableList.of(), typeManager);
+            DataType b = typeManager.registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
+            DataType nested = typeManager.registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("A", JellyType.tagged("A", ImmutableList.of())), new TagType<JellyType>("C", JellyType.tagged("C", ImmutableList.of())))).instantiate(ImmutableList.of(), typeManager);
+            DataType maybeMaybe = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(
+                typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), typeManager)
+            )), typeManager);
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -995,7 +996,7 @@ public class TestUtil
             return null;
         
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, returnTypeVar.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
             return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;
@@ -1026,7 +1027,7 @@ public class TestUtil
             return null;
             
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(typeManager.getUnitManager(), null, returnTypeVar.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(typeManager, null, returnTypeVar.toConcreteType(typeManager));
         if (returnType != null)
             return new Pair<>(function.getInstance(s -> getConcrete(s, functionType.getSecond(), typeManager)), returnType);
         return null;

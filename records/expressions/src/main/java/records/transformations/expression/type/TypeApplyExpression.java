@@ -84,7 +84,7 @@ public class TypeApplyExpression extends TypeExpression
             }
             try
             {
-                return def.instantiate(ImmutableList.copyOf(typeArgs));
+                return def.instantiate(ImmutableList.copyOf(typeArgs), typeManager);
             }
             catch (UserException | InternalException e)
             {

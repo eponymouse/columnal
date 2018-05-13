@@ -260,6 +260,11 @@ public class Either<A, B>
     {
         return eitherInt(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
     }
+    
+    public <C, D> Either<C, D> mapBothEx(ExFunction<A, C> withLeft, ExFunction<B, D> withRight) throws InternalException, UserException
+    {
+        return eitherEx(a -> Either.left(withLeft.apply(a)), b -> Either.right(withRight.apply(b)));
+    }
 
     // If the value in the either is null, return null, else return a new either without the nullable qualifier
     public static <A, B> @Nullable Either<@NonNull A, @NonNull B> surfaceNull(Either<@Nullable A, @Nullable B> e)

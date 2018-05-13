@@ -104,7 +104,7 @@ public class ImporterUtility
                 NumericColumnType inner = (NumericColumnType) or.getInner();
                 DataType numberType = DataType.number(new NumberInfo(inner.unit));
                 @Nullable DataType type = mgr.getMaybeType().instantiate(
-                    ImmutableList.of(Either.right(numberType))
+                    ImmutableList.of(Either.right(numberType)), mgr
                 );
                 @NonNull DataType typeFinal = type;
                 columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {

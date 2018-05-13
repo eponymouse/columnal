@@ -44,7 +44,7 @@
         </description>
         <example>
             <inputArg>({mile/hour}, (100{m} / 9.58{s}))</inputArg>
-            <outputPattern>23.350 &#x00B1; 0.001</outputPattern>
+            <outputPattern>23.350{mile/hour} &#x00B1; 0.001{mile/hour}</outputPattern>
         </example>
         <example>
             <inputArg>({m^2}, 10{m})</inputArg>

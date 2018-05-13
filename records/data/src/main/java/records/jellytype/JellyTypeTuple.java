@@ -5,9 +5,10 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
-import records.grammar.FormatParser.TypeContext;
+import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TupleTypeExp;
@@ -16,7 +17,6 @@ import records.typeExp.units.MutUnitVar;
 import utility.Either;
 import utility.Utility;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -36,9 +36,9 @@ public class JellyTypeTuple extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables) throws InternalException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
     {
-        return DataType.tuple(Utility.mapListInt(types, t -> t.makeDataType(typeVariables)));
+        return DataType.tuple(Utility.mapListExI(types, t -> t.makeDataType(typeVariables, mgr)));
     }
 
     @Override

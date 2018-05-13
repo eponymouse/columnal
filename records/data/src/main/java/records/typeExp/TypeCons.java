@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -143,7 +144,7 @@ public class TypeCons extends TypeExp
                     return o.eitherEx(u -> Either.right(Either.left(u.toConcreteUnit())), t -> t.toConcreteType(typeManager).map(Either::right));
                 });
                 return errOrOperandsAsTypes.eitherEx(err -> Either.left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
-                    @Nullable DataType tagged = typeManager.lookupType(name, ImmutableList.copyOf(operandsAsTypes));
+                    @Nullable DataType tagged = typeManager.lookupType(new TypeId(name), ImmutableList.copyOf(operandsAsTypes));
                     if (tagged != null)
                     {
                         return Either.right(tagged);

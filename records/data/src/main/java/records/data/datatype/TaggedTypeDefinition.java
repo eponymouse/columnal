@@ -60,7 +60,7 @@ public class TaggedTypeDefinition
     }
 
     // Instantiates to concrete type.
-    public DataType instantiate(ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws UserException, InternalException
+    public DataType instantiate(ImmutableList<Either<Unit, DataType>> typeVariableSubs, TypeManager mgr) throws UserException, InternalException
     {
         if (typeVariableSubs.size() != typeVariables.size())
             throw new UserException("Attempting to use type with " + typeVariables.size() + " variables but trying to substitute " + typeVariableSubs.size());
@@ -81,7 +81,7 @@ public class TaggedTypeDefinition
         ImmutableList<TagType<DataType>> substitutedTags = Utility.mapListExI(tags, tag -> {
             if (tag.getInner() == null)
                 return new TagType<>(tag.getName(), null);
-            @NonNull DataType inner = tag.getInner().makeDataType(substitutions);
+            @NonNull DataType inner = tag.getInner().makeDataType(substitutions, mgr);
             return new TagType<>(tag.getName(), inner);
         });
         

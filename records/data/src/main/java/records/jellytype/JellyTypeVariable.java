@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.loadsave.OutputBuilder;
@@ -32,9 +33,14 @@ class JellyTypeVariable extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables) throws InternalException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException
     {
-        throw new InternalException("Cannot make a data type from a type variable");
+        Either<Unit, DataType> var = typeVariables.get(name);
+        if (var == null)
+            throw new InternalException("No such type variable: " + name);
+        if (var.isLeft())
+            throw new InternalException("Cannot make a data type from a unit variable");
+        return var.getRight();
     }
 
     @Override

@@ -3,14 +3,15 @@ package records.jellytype;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.FormatParser;
-import records.grammar.FormatParser.IdentContext;
-import records.grammar.FormatParser.TagRefParamContext;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeCons;
@@ -20,7 +21,6 @@ import utility.Either;
 import utility.UnitType;
 import utility.Utility;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -44,9 +44,14 @@ public class JellyTypeTagged extends JellyType
     }
 
     @Override
-    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables) throws InternalException
+    public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
     {
-        throw new InternalException("Cannot directly instantiate tagged data type"); // TODO
+        ImmutableList<Either<Unit, DataType>> typeParamConcrete = Utility.mapListExI(typeParams, p -> p.mapBothEx(u -> u.makeUnit(typeVariables), t -> t.makeDataType(typeVariables, mgr)));
+        
+        DataType dataType = mgr.lookupType(new TypeId(typeName), typeParamConcrete);
+        if (dataType != null)
+            return dataType;
+        throw new UserException("Could not find data type: " + typeName);
     }
 
     @Override

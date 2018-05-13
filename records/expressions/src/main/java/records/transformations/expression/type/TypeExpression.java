@@ -2,12 +2,8 @@ package records.transformations.expression.type;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -34,13 +30,11 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
-import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
 import utility.Either;
 import utility.Pair;
-import utility.UnitType;
 import utility.Utility;
 
 import java.util.Collections;
@@ -113,9 +107,9 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
         });
     }
 
-    public static TypeExpression fromJellyType(JellyType original) throws InternalException
+    public static TypeExpression fromJellyType(JellyType original, TypeManager mgr) throws InternalException, UserException
     {
-        return original.apply(new JellyTypeVisitorEx<TypeExpression, InternalException>()
+        return original.apply(new JellyTypeVisitorEx<TypeExpression, UserException>()
         {
             @Override
             public TypeExpression number(JellyUnit unit) throws InternalException, InternalException
@@ -125,25 +119,25 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             }
 
             @Override
-            public TypeExpression text() throws InternalException, InternalException
+            public TypeExpression text() throws InternalException, UserException
             {
-                return new TypePrimitiveLiteral(original.makeDataType(ImmutableMap.of()));
+                return new TypePrimitiveLiteral(original.makeDataType(ImmutableMap.of(), mgr));
             }
 
             @Override
-            public TypeExpression date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            public TypeExpression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new TypePrimitiveLiteral(original.makeDataType(ImmutableMap.of()));
+                return new TypePrimitiveLiteral(original.makeDataType(ImmutableMap.of(), mgr));
             }
 
             @Override
-            public TypeExpression bool() throws InternalException, InternalException
+            public TypeExpression bool() throws InternalException, UserException
             {
-                return new TypePrimitiveLiteral(original.makeDataType(ImmutableMap.of()));
+                return new TypePrimitiveLiteral(original.makeDataType(ImmutableMap.of(), mgr));
             }
 
             @Override
-            public TypeExpression tagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeVars) throws InternalException, InternalException
+            public TypeExpression tagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeVars) throws InternalException, UserException
             {
                 TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(typeName);
                 if (typeVars.isEmpty())
@@ -154,26 +148,26 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 args.add(Either.right(taggedTypeNameExpression));
                 for (Either<JellyUnit, JellyType> typeVar : typeVars)
                 {
-                    args.add(typeVar.<UnitExpression, TypeExpression>mapBothInt(u -> {throw new UnimplementedException();}, t -> fromJellyType(t)));
+                    args.add(typeVar.<UnitExpression, TypeExpression>mapBothEx(u -> {throw new UnimplementedException();}, t -> fromJellyType(t, mgr)));
                 }
                 return new TypeApplyExpression(args.build());
             }
 
             @Override
-            public TypeExpression tuple(ImmutableList<JellyType> inner) throws InternalException, InternalException
+            public TypeExpression tuple(ImmutableList<JellyType> inner) throws InternalException, UserException
             {
                 ImmutableList.Builder<TypeExpression> members = ImmutableList.builder();
                 for (JellyType type : inner)
                 {
-                    members.add(fromJellyType(type));
+                    members.add(fromJellyType(type, mgr));
                 }
                 return new TupleTypeExpression(members.build());
             }
 
             @Override
-            public TypeExpression array(JellyType inner) throws InternalException, InternalException
+            public TypeExpression array(JellyType inner) throws InternalException, UserException
             {
-                return new ListTypeExpression(fromJellyType(inner));
+                return new ListTypeExpression(fromJellyType(inner, mgr));
             }
 
             @Override

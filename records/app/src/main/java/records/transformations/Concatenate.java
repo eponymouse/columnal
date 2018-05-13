@@ -133,7 +133,7 @@ public class Concatenate extends Transformation
                             break;
                         case WRAPMAYBE:
                             
-                            DataType wrappedInMaybe = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(origType)));
+                            DataType wrappedInMaybe = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(Either.right(origType)), mgr.getTypeManager());
                             ourColumns.put(entry.getKey(), new ColumnDetails(wrappedInMaybe, mgr.getTypeManager().maybeMissing(), orig -> {
                                 return mgr.getTypeManager().maybePresent(orig);
                             }));

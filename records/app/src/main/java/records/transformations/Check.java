@@ -81,7 +81,7 @@ public class Check extends Transformation
             @Nullable TypeExp checked = checkExpression.check(new MultipleTableLookup(getManager(), getManager().getSingleTableOrNull(srcTableId)), new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
-                typeFinal = errors.recordLeftError(getManager().getUnitManager(), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
+                typeFinal = errors.recordLeftError(getManager().getTypeManager(), checkExpression, checked.toConcreteType(getManager().getTypeManager()));
 
             if (typeFinal == null)
                 throw new ExpressionErrorException(errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")), new EditableExpression(checkExpression, null, true, DataType.BOOLEAN)

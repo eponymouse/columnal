@@ -5,11 +5,14 @@ import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.FormatLexer;
+import records.grammar.FormatParser;
 import records.grammar.FormatParser.BracketedTypeContext;
 import records.grammar.FormatParser.NumberContext;
 import records.grammar.FormatParser.TagRefParamContext;
@@ -48,7 +51,7 @@ public abstract class JellyType
 
     public abstract TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException;
 
-    public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables) throws InternalException;
+    public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException;
 
     public abstract void save(OutputBuilder output) throws InternalException;
 
@@ -115,7 +118,16 @@ public abstract class JellyType
             return new JellyTypeConcrete(DataType.TEXT);
         else if (ctx.date() != null)
         {
-            
+            if (ctx.date().DATETIME() != null)
+                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)));
+            else if (ctx.date().YEARMONTHDAY() != null)
+                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
+            else if (ctx.date().TIMEOFDAY() != null)
+                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)));
+            if (ctx.date().YEARMONTH() != null)
+                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
+            if (ctx.date().DATETIMEZONED() != null)
+                return new JellyTypeConcrete(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
         }
         else if (ctx.tagRef() != null)
         {
@@ -129,7 +141,7 @@ public abstract class JellyType
         {
             return new JellyTypeVariable(ctx.typeVar().ident().getText());
         }
-        throw new InternalException("Unrecognised case: " + ctx);
+        throw new InternalException("Unrecognised case: " + ctx.getText());
     }
 
     private static Either<JellyUnit, JellyType> load(TagRefParamContext param, TypeManager mgr) throws InternalException, UserException
@@ -148,7 +160,15 @@ public abstract class JellyType
         if (number.UNIT() == null)
             return new JellyTypeConcrete(DataType.NUMBER);
         else
-            return new JellyTypeNumberWithUnit(JellyUnit.load(number.UNIT().getText(), mgr.getUnitManager()));
+        {
+            String withCurly = number.UNIT().getText();
+            return new JellyTypeNumberWithUnit(JellyUnit.load(withCurly.substring(1, withCurly.length() - 1), mgr.getUnitManager()));
+        }
+    }
+
+    public static JellyType parse(String functionType, TypeManager mgr) throws UserException, InternalException
+    {
+        return load(Utility.<TypeContext, FormatParser>parseAsOne(functionType, FormatLexer::new, FormatParser::new, p -> p.completeType().type()), mgr);
     }
 
     public static interface JellyTypeVisitorEx<R, E extends Throwable>

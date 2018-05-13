@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
@@ -56,12 +57,12 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an error source and error message
      */
-    public default <T> @Nullable T recordLeftError(UnitManager unitManager, Expression src, Either<TypeConcretisationError, T> errorOrVal)
+    public default <T> @Nullable T recordLeftError(TypeManager typeManager, Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
         return errorOrVal.<@Nullable T>either(err -> {
             @Nullable DataType fix = err.getSuggestedTypeFix();
             recordError(src, err.getErrorText());
-            recordQuickFixes(src, ExpressionEditorUtil.quickFixesForTypeError(unitManager, src, fix));
+            recordQuickFixes(src, ExpressionEditorUtil.quickFixesForTypeError(typeManager, src, fix));
             return null;
         }, val -> val);
     }

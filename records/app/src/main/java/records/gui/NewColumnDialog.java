@@ -22,7 +22,9 @@ import records.data.ColumnId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.NewColumnDialog.NewColumnDetails;
 import records.gui.stf.Component;
 import records.gui.stf.StructuredTextField;
@@ -49,12 +51,14 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     private final VBox contents;
     private final TypeSelectionPane typeSelectionPane;
     private final StructuredTextField defaultValueEditor;
+    private final TypeManager typeManager;
     private @Value Object defaultValue;
 
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager) throws InternalException
     {
         setTitle(TranslationUtility.getString("newcolumn.title"));
+        this.typeManager = tableManager.getTypeManager();
         contents = new VBox();
         contents.getStyleClass().add("new-column-content");
         name = new TextField();
@@ -94,7 +98,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
                 @NonNull JellyType dataType = optDataType.get();
                 FXUtility.alertOnErrorFX_(() ->
                 {
-                    defaultValueEditor.resetContent(makeEditorKit(dataType.makeDataType(ImmutableMap.of())));
+                    defaultValueEditor.resetContent(makeEditorKit(dataType.makeDataType(ImmutableMap.of(), tableManager.getTypeManager())));
                     defaultValueEditor.getStyleClass().add("new-column-value");
                     defaultValueEditorWrapper.setCenter(defaultValueEditor);
                     getDialogPane().layout();
@@ -114,16 +118,16 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
     }
 
-    @RequiresNonNull({"typeSelectionPane"})
+    @RequiresNonNull({"typeSelectionPane", "typeManager"})
     private @Nullable DataType getSelectedType(@UnknownInitialization(Object.class) NewColumnDialog this)
     {
         @Nullable Optional<JellyType> maybeType = typeSelectionPane.selectedType().get();
         return maybeType == null ? null : maybeType.flatMap(j -> {
             try
             {
-                return Optional.of(j.makeDataType(ImmutableMap.of()));
+                return Optional.of(j.makeDataType(ImmutableMap.of(), typeManager));
             }
-            catch (InternalException e)
+            catch (InternalException | UserException e)
             {
                 Log.log(e);
                 return Optional.empty();

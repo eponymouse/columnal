@@ -133,7 +133,7 @@ public class Calculate extends Transformation
                 };
                 @Nullable TypeExp type = newCol.getSecond().check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
                 
-                DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getUnitManager(), newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
+                DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
                 @NonNull DataType typeFinal = concrete;

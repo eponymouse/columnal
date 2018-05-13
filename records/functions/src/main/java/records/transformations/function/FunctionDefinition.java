@@ -2,6 +2,7 @@ package records.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -10,6 +11,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.jellytype.JellyType;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
@@ -123,7 +125,7 @@ public abstract class FunctionDefinition
         return typeManager -> {
             try
             {
-                return new Pair<>(TypeExp.fromDataType(null, typeManager.loadTypeUse(functionType)), typeVars);
+                return new Pair<>(JellyType.parse(functionType, typeManager).makeTypeExp(ImmutableMap.copyOf(typeVars)), typeVars);
             }
             catch (UserException | InternalException e)
             {

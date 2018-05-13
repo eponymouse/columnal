@@ -1,6 +1,7 @@
 package test.expressions;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -21,6 +22,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
+import records.jellytype.JellyType;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -99,7 +101,7 @@ public class TestFromDoc
                         if (line.startsWith("== "))
                         {
                             String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
-                            variables.put(nameType[0], TypeExp.fromDataType(null, typeManager.loadTypeUse(nameType[1])));
+                            variables.put(nameType[0], JellyType.parse(nameType[1], typeManager).makeTypeExp(ImmutableMap.copyOf(typeVariables)));
                             i += 1;
                         }
                         else if (line.startsWith("==* "))

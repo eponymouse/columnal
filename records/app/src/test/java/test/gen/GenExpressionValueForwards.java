@@ -13,6 +13,7 @@ import records.data.RecordSet;
 import records.data.datatype.DataType.ConcreteDataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.jellytype.JellyType;
 import records.transformations.expression.StringConcatExpression;
@@ -700,7 +701,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     
     private ExpressionMaker fix(int maxLevels, DataType type)
     {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        TypeManager m = DummyManager.INSTANCE.getTypeManager();
         return () -> {
             Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
             return new Pair<>(inner.getFirst(), TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), inner.getSecond()));

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -42,25 +43,34 @@ public class TypeLiteralExpression extends NonOperatorExpression
         this.type = type;
     }
 
-    public static Expression fixType(UnitManager unitManager, JellyType fix, @Recorded Expression expression) throws InternalException
+    public static Expression fixType(TypeManager typeManager, JellyType fix, @Recorded Expression expression) throws InternalException
     {
-        TypeExpression typeExpression = TypeExpression.fromJellyType(fix);
-        FunctionDefinition asType = FunctionList.lookup(unitManager, "asType");
-        if (asType == null)
-            throw new InternalException("Missing asType function");
-        if (expression instanceof CallExpression
-            && ((CallExpression)expression).getFunction().equals(new StandardFunction(asType))
-            && ((CallExpression)expression).getParam() instanceof TupleExpression)
+        try
         {
-            expression = ((TupleExpression)((CallExpression)expression).getParam()).getMembers().get(1);
-        }
-        
-        return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(
-            new TypeLiteralExpression(typeExpression),
-            expression
-        )));
-    }
+            TypeExpression typeExpression = TypeExpression.fromJellyType(fix, typeManager);
+            FunctionDefinition asType = FunctionList.lookup(typeManager.getUnitManager(), "asType");
+            if (asType == null)
+                throw new InternalException("Missing asType function");
+            if (expression instanceof CallExpression
+                && ((CallExpression) expression).getFunction().equals(new StandardFunction(asType))
+                && ((CallExpression) expression).getParam() instanceof TupleExpression)
+            {
+                expression = ((TupleExpression) ((CallExpression) expression).getParam()).getMembers().get(1);
+            }
 
+            return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(
+                new TypeLiteralExpression(typeExpression),
+                expression
+            )));
+        }
+        catch (UserException e)
+        {
+            // If we have a user exception, we are trying to fix to a non-existent type, which means
+            // we fucked up, not the user:
+            throw new InternalException("Problem locating type for suggested fix", e);
+        }
+    }
+        
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {

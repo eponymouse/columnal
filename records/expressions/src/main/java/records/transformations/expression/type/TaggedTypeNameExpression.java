@@ -55,7 +55,7 @@ public class TaggedTypeNameExpression extends TypeExpression
         {
             try
             {
-                return def.instantiate(ImmutableList.of());
+                return def.instantiate(ImmutableList.of(), typeManager);
             }
             catch (InternalException | UserException e)
             {

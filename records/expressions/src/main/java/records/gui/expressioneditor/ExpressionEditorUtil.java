@@ -14,8 +14,11 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.TypeDialog;
 import records.jellytype.JellyType;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
@@ -182,7 +185,7 @@ public class ExpressionEditorUtil
 
     @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionNodeParent>> quickFixesForTypeError(UnitManager unitManager, Expression src, @Nullable DataType fix)
+    public static List<QuickFix<Expression,ExpressionNodeParent>> quickFixesForTypeError(TypeManager typeManager, Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression,ExpressionNodeParent>> quickFixes = new ArrayList<>();
         FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionNodeParent>>> makeTypeFix = params -> {
@@ -190,8 +193,9 @@ public class ExpressionEditorUtil
             @Nullable JellyType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
             {
-                return new Pair<>(CURRENT, TypeLiteralExpression.fixType(unitManager, dataType, src));
-            } else
+                return new Pair<>(CURRENT, TypeLiteralExpression.fixType(typeManager, dataType, src));
+            }
+            else
             {
                 return new Pair<>(CURRENT, src);
             }
@@ -200,7 +204,7 @@ public class ExpressionEditorUtil
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(unitManager, JellyType.fromConcrete(fixFinal), src))));
+            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(typeManager, JellyType.fromConcrete(fixFinal), src))));
         }
         return quickFixes;
     }
