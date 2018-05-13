@@ -169,7 +169,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     {
         return r.choose(Arrays.<Supplier<Expression>>asList(
             () -> genDepth(false, r, depth, gs),
-            () -> new VarDeclExpression(TestUtil.makeUnquotedIdent(r, gs)),
+            () -> new VarDeclExpression(TestUtil.makeUnquotedIdent(r, gs).trim()),
             () ->
             {
                 String constructorName = TestUtil.makeNonEmptyString(r, gs).trim();
