@@ -139,7 +139,7 @@ public class PropTypecheck
 
     @Property(trials = 1000)
     // @SuppressWarnings("nullness")
-    public void propTypeCheckSucceed(@When(seed=-396984568584122031L) @From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
+    public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
         @Nullable TypeExp checked = src.expression.check(src, TestUtil.typeState(), storer);

@@ -251,7 +251,7 @@ public class PropStringFunctions
 
     @Property(trials = 200)
     @OnThread(Tag.Simulation)
-    public void propShow(@When(seed=6768073241854344243L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         FunctionDefinition toString = new ToString();
         @SuppressWarnings("nullness") // Will throw if null
