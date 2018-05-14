@@ -23,6 +23,7 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.jellytype.JellyType;
+import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -380,7 +381,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
                     return call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", new StringLiteral(targetValue.toString())));
-                }, () -> columnRef(type, targetValue)), deep);
+                }, (ExpressionMaker)() -> {
+                    return new TemporalLiteral(dateTimeInfo.getType(), targetValue.toString());
+                },() -> columnRef(type, targetValue)), deep);
             }
 
             @Override

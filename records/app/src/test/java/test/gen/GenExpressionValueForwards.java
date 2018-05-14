@@ -17,6 +17,7 @@ import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.jellytype.JellyType;
 import records.transformations.expression.StringConcatExpression;
+import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import utility.Either;
@@ -407,32 +408,13 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> shallow = new ArrayList<>();
                 shallow.add((ExpressionMaker)() ->
                 {
-                    @Value TemporalAccessor value;
-                    switch (dateTimeInfo.getType())
-                    {
-                        case YEARMONTHDAY:
-                            value = TestUtil.generateDate(r, gs);
-                            break;
-                        case YEARMONTH:
-                            value = YearMonth.from(TestUtil.generateDate(r, gs));
-                            break;
-                        case TIMEOFDAY:
-                            value = TestUtil.generateTime(r, gs);
-                            break;
-                        //case TIMEOFDAYZONED:
-                            //@Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
-                            //return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
-                        case DATETIME:
-                            value = TestUtil.generateDateTime(r, gs);
-                            break;
-                        case DATETIMEZONED:
-                            value = TestUtil.generateDateTimeZoned(r, gs);
-                            break;
-                        default:
-                            throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
-                    }
+                    @Value TemporalAccessor value = makeTemporalValue(dateTimeInfo);
                     return literal(value, call("typed from text", new TupleExpression(ImmutableList.of(new TypeLiteralExpression(new TypePrimitiveLiteral(DataType.date(dateTimeInfo))), new StringLiteral(value.toString())))));
-                    
+                });
+                shallow.add((ExpressionMaker)() ->
+                {
+                    @Value TemporalAccessor value = makeTemporalValue(dateTimeInfo);
+                    return literal(value, new TemporalLiteral(dateTimeInfo.getType(), value.toString()));
                 });
 
                 switch (dateTimeInfo.getType())
@@ -641,6 +623,36 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 }));
             }
         });
+    }
+
+    @Value
+    protected TemporalAccessor makeTemporalValue(DateTimeInfo dateTimeInfo)
+    {
+        @Value TemporalAccessor value;
+        switch (dateTimeInfo.getType())
+        {
+            case YEARMONTHDAY:
+                value = TestUtil.generateDate(r, gs);
+                break;
+            case YEARMONTH:
+                value = YearMonth.from(TestUtil.generateDate(r, gs));
+                break;
+            case TIMEOFDAY:
+                value = TestUtil.generateTime(r, gs);
+                break;
+            //case TIMEOFDAYZONED:
+                //@Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
+                //return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
+            case DATETIME:
+                value = TestUtil.generateDateTime(r, gs);
+                break;
+            case DATETIMEZONED:
+                value = TestUtil.generateDateTimeZoned(r, gs);
+                break;
+            default:
+                throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
+        }
+        return value;
     }
 
     private Pair<List<@Value Object>, Expression> num(List<@Value Number> values, Expression expression)
