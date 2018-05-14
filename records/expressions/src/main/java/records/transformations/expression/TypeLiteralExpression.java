@@ -99,7 +99,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "`" + type.save(renames) + "`";
+        return "type{" + type.save(renames) + "}";
     }
 
     @Override
