@@ -70,7 +70,7 @@ public class TemporalLiteral extends Literal
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
-        return value.eitherInt(err -> {
+        return value.<@Value Object>eitherInt(err -> {
             throw new InternalException("Executing with unrecognised date/time literal: " + content + " " + err);
         }, v -> v);
     }
