@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.scene.text.Text;
 import log.Log;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -19,6 +20,7 @@ import records.data.Table;
 import records.data.TableAndColumnRenames;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -44,12 +46,14 @@ import records.typeExp.ExpressionBase;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
+import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -314,7 +318,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitCustomLiteralExpression(CustomLiteralExpressionContext ctx)
         {
-            String s = StringUtils.removeEnd(ctx.CUSTOM_LITERAL().getText(), "}");
+            String literalContent = StringUtils.removeEnd(ctx.CUSTOM_LITERAL().getText(), "}");
             class Lit<A>
             {
                 final String prefix;
@@ -352,12 +356,17 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             ImmutableList<Lit<?>> loaders = ImmutableList.of(
                 new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, UnfinishedUnitExpression::new),
-                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), UnfinishedTypeExpression::new)
+                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), UnfinishedTypeExpression::new),
+                new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
+                new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),
+                new Lit<String>("time{", s -> new TemporalLiteral(DateTimeType.TIMEOFDAY, s), s -> s, s -> s),
+                new Lit<String>("datetime{", s -> new TemporalLiteral(DateTimeType.DATETIME, s), s -> s, s -> s),
+                new Lit<String>("datetimezoned{", s -> new TemporalLiteral(DateTimeType.DATETIMEZONED, s), s -> s, s -> s)
             );
             
-            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(s).map(Stream::of).orElse(Stream.empty())).findFirst();
+            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(Stream::of).orElse(Stream.empty())).findFirst();
             
-            return loaded.orElseGet(() -> new UnfinishedExpression(s.replace('{','_').replace('}', '_')));
+            return loaded.orElseGet(() -> new UnfinishedExpression(literalContent.replace('{','_').replace('}', '_')));
         }
 
         @Override
@@ -625,6 +634,38 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 Log.log(e);
             }
             return null;
+        }
+    }
+    
+    // Styles the string to look like a user-typed part of the expression
+    protected static StyledString styledExpressionInput(String s)
+    {
+        return StyledString.styled(s, new ExpressionInputStyle());
+    }
+
+    private static class ExpressionInputStyle extends Style<ExpressionInputStyle>
+    {
+        protected ExpressionInputStyle()
+        {
+            super(ExpressionInputStyle.class);
+        }
+
+        @Override
+        protected @OnThread(Tag.FXPlatform) void style(Text t)
+        {
+            t.getStyleClass().add("expression-input");
+        }
+
+        @Override
+        protected ExpressionInputStyle combine(ExpressionInputStyle with)
+        {
+            return this;
+        }
+
+        @Override
+        protected boolean equalsStyle(ExpressionInputStyle item)
+        {
+            return true;
         }
     }
 }

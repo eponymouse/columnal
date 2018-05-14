@@ -33,21 +33,26 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.Utility.WrappedCharSequence;
 import utility.ValueFunction;
 import utility.Workers;
 import utility.Workers.Priority;
 
 import java.math.BigDecimal;
+import java.text.ParsePosition;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
@@ -576,5 +581,153 @@ public class DataTypeUtility
             throw new InternalException("Error fetching list", either.getLeft("Impossible"));
         else
             return either.getRight("Error fetching list");
+    }
+
+    @OnThread(Tag.Any)
+    public static @Value TemporalAccessor parseTemporalFlexible(DateTimeInfo dateTimeInfo, StringView src) throws UserException
+    {
+        src.skipSpaces();
+        ImmutableList<DateTimeFormatter> formatters = dateTimeInfo.getFlexibleFormatters().stream().flatMap(ImmutableList::stream).collect(ImmutableList.toImmutableList());
+        // Updated char position and return value:
+        ArrayList<Pair<Integer, @Value TemporalAccessor>> possibles = new ArrayList<>();
+        WrappedCharSequence wrapped = Utility.wrapPreprocessDate(src.original, src.charStart);
+        ArrayList<DateTimeFormatter> possibleFormatters = new ArrayList<>();
+        for (DateTimeFormatter formatter : formatters)
+        {
+            try
+            {
+                ParsePosition position = new ParsePosition(src.charStart);
+                TemporalAccessor temporalAccessor = formatter.parse(wrapped, position);
+                possibles.add(new Pair<>(wrapped.translateWrappedToOriginalPos(position.getIndex()), value(dateTimeInfo, temporalAccessor)));
+                possibleFormatters.add(formatter);
+            }
+            catch (DateTimeParseException e)
+            {
+                // Try next one
+            }
+        }
+        if (possibles.size() == 1)
+        {
+            src.charStart = possibles.get(0).getFirst();
+            return value(dateTimeInfo, possibles.get(0).getSecond());
+        }
+        else if (possibles.size() > 1)
+        {
+            ArrayList<Pair<Integer, TemporalAccessor>> possiblesByLength = new ArrayList<>(possibles);
+            Collections.sort(possiblesByLength, Pair.comparatorFirst());
+            // Choose the longest one, if it's strictly longer than the others:
+            int longest = possiblesByLength.get(possiblesByLength.size() - 1).getFirst();
+            if (longest > possiblesByLength.get(possiblesByLength.size() - 2).getFirst())
+            {
+                Pair<Integer, TemporalAccessor> chosen = possiblesByLength.get(possiblesByLength.size() - 1);
+                src.charStart = chosen.getFirst();
+                return value(dateTimeInfo, chosen.getSecond());
+            }
+            // If all the values of longest length are the same, that's fine:
+            HashSet<Pair<Integer, TemporalAccessor>> distinctValues = new HashSet<>(
+                possibles.stream().filter(p -> p.getFirst() == longest).collect(Collectors.toList())
+            );
+            if (distinctValues.size() == 1)
+            {
+                Pair<Integer, TemporalAccessor> chosen = distinctValues.iterator().next();
+                src.charStart = chosen.getFirst();
+                return value(dateTimeInfo, chosen.getSecond());
+            }
+            
+            // Otherwise, throw because it's too ambiguous:
+            throw new UserException(Integer.toString(distinctValues.size()) + " ways to interpret " + dateTimeInfo + " value "
+                + src.snippet() + ": "
+                + Utility.listToString(Utility.mapList(possibles, p -> p.getSecond()))
+                + " using formatters "
+                + Utility.listToString(possibleFormatters));
+        }
+
+        //Log.debug("Wrapped: " + wrapped.toString() + " matches: " + possibles.size());
+        throw new UserException("Expected " + dateTimeInfo + " value but found: " + src.snippet());
+    }
+
+    // Keeps track of a trailing substring of a string.  Saves memory compared to copying
+    // the substrings over and over.  The data is immutable, the position is mutable.
+    public static class StringView
+    {
+        public final String original;
+        public int charStart;
+        
+        public StringView(String s)
+        {
+            this.original = s;
+            this.charStart = 0;
+        }
+        
+        public StringView(StringView stringView)
+        {
+            this.original = stringView.original;
+            this.charStart = stringView.charStart;
+        }
+        
+        // Tries to read the given literal, having skipped any spaces at current position.
+        // If found, the string is consumed and true is returned. If not found, the spaces
+        // are still consumed, and false is returned.
+        public boolean tryRead(String literal)
+        {
+            skipSpaces();
+            if (original.regionMatches(charStart, literal, 0, literal.length()))
+            {
+                charStart += literal.length();
+                return true;
+            }
+            return false;
+        }
+
+        public boolean tryReadIgnoreCase(String literal)
+        {
+            skipSpaces();
+            if (original.regionMatches(true, charStart, literal, 0, literal.length()))
+            {
+                charStart += literal.length();
+                return true;
+            }
+            return false;
+        }
+
+        public void skipSpaces()
+        {
+            // Don't try and get clever recurse to call tryRead, because it calls us!
+            while (charStart < original.length() && original.charAt(charStart) == ' ')
+                charStart += 1;
+        }
+
+        // TODO use styledstring here
+        public String snippet()
+        {
+            StringBuilder s = new StringBuilder();
+            // Add prefix:
+            s.append("\"" + original.substring(Math.max(0, charStart - 20), charStart) + ">>>");
+            return s.append(original.substring(charStart, Math.min(charStart + 40, original.length())) + "\"").toString();
+        }
+
+        // Reads up until that character, and also consumes that character
+        // Returns null if end of string is found first
+        public @Nullable String readUntil(char c)
+        {
+            int start = charStart;
+            while (charStart < original.length() && original.charAt(charStart) != c)
+            {
+                charStart += 1;
+            }
+            if (charStart >= original.length())
+                return null;
+            // End is exclusive, but then add one to consume it:
+            return original.substring(start, charStart++);
+        }
+
+        // Doesn't skip spaces!
+        public String consumeNumbers()
+        {
+            int start = charStart;
+            while (charStart < original.length() && Character.isDigit(original.charAt(charStart)))
+                charStart += 1;
+            return original.substring(start, charStart);
+        }
     }
 }
