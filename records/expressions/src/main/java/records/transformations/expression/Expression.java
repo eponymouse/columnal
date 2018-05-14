@@ -7,6 +7,7 @@ import log.Log;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -45,6 +46,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -186,11 +188,22 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         {
             try
             {
-                return new NumericLiteral(Utility.parseNumber((ctx.ADD_OR_SUBTRACT() == null ? "" : ctx.ADD_OR_SUBTRACT().getText()) + ctx.NUMBER().getText()), ctx.UNIT() == null ? null : UnitExpression.load(ctx.UNIT().getText()));
+                @Nullable @Recorded UnitExpression unitExpression;
+                if (ctx.CURLIED() == null)
+                {
+                    unitExpression = null;
+                }
+                else
+                {
+                    String unitText = ctx.CURLIED().getText();
+                    unitText = StringUtils.removeStart(StringUtils.removeEnd(unitText, "}"), "{");
+                    unitExpression = UnitExpression.load(unitText);
+                }
+                return new NumericLiteral(Utility.parseNumber((ctx.ADD_OR_SUBTRACT() == null ? "" : ctx.ADD_OR_SUBTRACT().getText()) + ctx.NUMBER().getText()), unitExpression);
             }
             catch (InternalException | UserException e)
             {
-                throw new RuntimeException("Error parsing unit: \"" + ctx.UNIT().getText() + "\"", e);
+                throw new RuntimeException("Error parsing unit: \"" + ctx.CURLIED().getText() + "\"", e);
             }
         }
 
@@ -299,33 +312,52 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
-        public Expression visitTypeExpression(TypeExpressionContext ctx)
+        public Expression visitCustomLiteralExpression(CustomLiteralExpressionContext ctx)
         {
-            String typeSrc = ctx.TYPE().getText();
-            try
+            String s = StringUtils.removeEnd(ctx.CUSTOM_LITERAL().getText(), "}");
+            class Lit<A>
             {
-                return new TypeLiteralExpression(TypeExpression.parseTypeExpression(typeManager, typeSrc));
-            }
-            catch (InternalException | UserException e)
-            {
-                Log.log(e);
-                return new TypeLiteralExpression(new UnfinishedTypeExpression(typeSrc));
-            }
-        }
+                final String prefix;
+                final Function<A, Expression> makeExpression;
+                final ExFunction<String, A> normalLoad;
+                final Function<String, A> errorLoad;
 
-        @Override
-        public Expression visitUnitExpression(UnitExpressionContext ctx)
-        {
-            String unitSrc = ctx.UNIT().getText();
-            try
-            {
-                return new UnitLiteralExpression(UnitExpression.load(unitSrc));
+                Lit(String prefix, Function<A, Expression> makeExpression, ExFunction<String, A> normalLoad, Function<String, A> errorLoad)
+                {
+                    this.prefix = prefix;
+                    this.makeExpression = makeExpression;
+                    this.normalLoad = normalLoad;
+                    this.errorLoad = errorLoad;
+                }
+                
+                public Optional<Expression> load(String src)
+                {
+                    if (src.startsWith(prefix))
+                    {
+                        src = StringUtils.removeStart(src, prefix);
+                        A value;
+                        try
+                        {
+                            value = normalLoad.apply(src);
+                        }
+                        catch (InternalException | UserException e)
+                        {
+                            Log.log(e);
+                            value = errorLoad.apply(src);
+                        }
+                        return Optional.of(makeExpression.apply(value));
+                    }
+                    return Optional.empty();
+                }
             }
-            catch (InternalException | UserException e)
-            {
-                Log.log(e);
-                return new UnitLiteralExpression(new UnfinishedUnitExpression(unitSrc));
-            }
+            ImmutableList<Lit<?>> loaders = ImmutableList.of(
+                new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, UnfinishedUnitExpression::new),
+                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), UnfinishedTypeExpression::new)
+            );
+            
+            Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(s).map(Stream::of).orElse(Stream.empty())).findFirst();
+            
+            return loaded.orElseGet(() -> new UnfinishedExpression(s.replace('{','_').replace('}', '_')));
         }
 
         @Override

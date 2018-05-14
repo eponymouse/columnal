@@ -11,11 +11,11 @@
             <p>No processing is done on the value; this function is only for specifying a type when it is ambiguous.  For conversions, see functions like from string.</p>
         </description>
         <example>
-            <input>@call @function asType(`Boolean`, @call @function from text("True"))</input>
+            <inputArg>(type{Boolean}, @call @function from text("True"))</inputArg>
             <output>true</output>
         </example>
         <example>
-            <inputArg>(`[Date]`, [])</inputArg>
+            <inputArg>(type{[Date]}, [])</inputArg>
             <output>[]</output>
         </example>
     </function>
@@ -43,11 +43,11 @@
             <p>Attempting to convert between unrelated units (e.g. metres to seconds) will result in an error.</p>
         </description>
         <example>
-            <inputArg>({mile/hour}, (100{m} / 9.58{s}))</inputArg>
+            <inputArg>(unit{mile/hour}, (100{m} / 9.58{s}))</inputArg>
             <outputPattern>23.350{mile/hour} &#x00B1; 0.001{mile/hour}</outputPattern>
         </example>
         <example>
-            <inputArg>({m^2}, 10{m})</inputArg>
+            <inputArg>(unit{m^2}, 10{m})</inputArg>
             <output>error</output>
         </example>
     </function>

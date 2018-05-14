@@ -9,7 +9,7 @@ columnId : ident;
 columnRefType : COLUMN | WHOLECOLUMN;
 columnRef : columnRefType (tableId COLON)? columnId;
 
-numericLiteral : ADD_OR_SUBTRACT? NUMBER UNIT?;
+numericLiteral : ADD_OR_SUBTRACT? NUMBER CURLIED?;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
 unfinished : UNFINISHED STRING;
@@ -19,13 +19,12 @@ varRef  : ident;
 any : ANY;
 
 implicitLambdaParam : IMPLICIT_LAMBDA_PARAM;
-typeExpression : TYPE;
-unitExpression : UNIT;
+customLiteralExpression : CUSTOM_LITERAL;
 
 
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
 // Similar,y constructor may need an argument, but that's sorted out in type checking.
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | constructor | standardFunction | typeExpression | unitExpression | unfinished;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | implicitLambdaParam | constructor | standardFunction | customLiteralExpression | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;

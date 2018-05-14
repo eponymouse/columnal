@@ -8,10 +8,9 @@ CLOSE_BRACKET : ')';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 
-UNIT : '{' ~[}]* '}'
-  { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
-TYPE : '`' ~[`]* '`'
-    { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
+// From https://stackoverflow.com/a/29247186
+CUSTOM_LITERAL : [a-zA-Z]+ CURLIED;
+CURLIED : '{' (CURLIED|.)*? '}';
 
 PLUS_MINUS: '\u00B1';
 ADD_OR_SUBTRACT: [+\-];
