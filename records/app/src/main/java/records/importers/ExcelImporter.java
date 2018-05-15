@@ -21,6 +21,7 @@ import records.data.ImmediateDataSource;
 import records.data.TableManager;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.ImportPlainTable.PlainImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import threadchecker.OnThread;
@@ -97,7 +98,7 @@ public class ExcelImporter implements Importer
             ImporterUtility.rectangularise(vals);
             int numSrcColumns = vals.isEmpty() ? 0 : vals.get(0).size();
 
-            Import<UnitType, ImmutableList<ColumnInfo>> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
+            Import<UnitType, PlainImportInfo> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
                 @Override
                 public ColumnId srcColumnName(int index)
                 {
@@ -105,12 +106,12 @@ public class ExcelImporter implements Importer
                 }
             };
             
-            @Nullable ImportInfo<ImmutableList<ColumnInfo>> outcome = new ImportChoicesDialog<>(mgr, src.getName(), importInfo).showAndWait().orElse(null);
+            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(mgr, src.getName(), importInfo).showAndWait().orElse(null);
 
             if (outcome != null)
             {
-                @NonNull ImportInfo<ImmutableList<ColumnInfo>> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, outcomeNonNull.getFormat()));
+                @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
+                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), outcomeNonNull.getFormat().trim.trim(vals), outcomeNonNull.getFormat().columnInfo));
                 Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> {
                     DataSource dataSource = makeDataSource.get();
                     Platform.runLater(() -> onLoad.consume(dataSource));

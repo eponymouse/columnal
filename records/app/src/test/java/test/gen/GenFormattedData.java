@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.apache.commons.lang3.StringEscapeUtils;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -141,11 +142,12 @@ public class GenFormattedData extends Generator<FormatAndData>
                 }
                 else
                     throw new UnsupportedOperationException("Missing case for column columntype? " + c.type.getClass());
-                if (i < columnTypes.size() - 1)
-                    entry.append(format.initialTextFormat.separator);
-                
                 line.append(entry.toString());
-                htmlContent.append("<td>").append(entry.toString()).append("</td>");
+                if (i < columnTypes.size() - 1)
+                    line.append(format.initialTextFormat.separator);
+                                
+                // <pre> to preserve whitespace and deal with awkward characters:
+                htmlContent.append("<td><pre>").append(StringEscapeUtils.escapeHtml4(entry.toString())).append("</pre></td>");
             }
 
             htmlContent.append("</tr>\n");

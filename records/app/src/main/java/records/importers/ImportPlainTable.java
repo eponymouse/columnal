@@ -14,13 +14,14 @@ import records.error.UserException;
 import records.importers.GuessFormat.GuessException;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.TrimChoice;
+import records.importers.ImportPlainTable.PlainImportInfo;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.UnitType;
 
 import java.util.List;
 
-abstract class ImportPlainTable implements Import<UnitType, ImmutableList<ColumnInfo>>
+abstract class ImportPlainTable implements Import<UnitType, PlainImportInfo>
 {
     private final int numSrcColumns;
     private final TableManager mgr;
@@ -55,9 +56,21 @@ abstract class ImportPlainTable implements Import<UnitType, ImmutableList<Column
     public abstract ColumnId srcColumnName(int index);
 
     @Override
-    public Pair<ImmutableList<ColumnInfo>, RecordSet> loadDest(UnitType u, TrimChoice trimChoice) throws UserException, InternalException
+    public Pair<PlainImportInfo, RecordSet> loadDest(UnitType u, TrimChoice trimChoice) throws UserException, InternalException
     {
         ImmutableList<ColumnInfo> columns = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals, trimChoice);
-        return new Pair<>(columns, ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), trimChoice.trim(vals), columns));
+        return new Pair<>(new PlainImportInfo(columns, trimChoice), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), trimChoice.trim(vals), columns));
+    }
+    
+    public static class PlainImportInfo
+    {
+        public final ImmutableList<ColumnInfo> columnInfo;
+        public final TrimChoice trim;
+
+        public PlainImportInfo(ImmutableList<ColumnInfo> columnInfo, TrimChoice trim)
+        {
+            this.columnInfo = columnInfo;
+            this.trim = trim;
+        }
     }
 }

@@ -83,7 +83,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
         // Trim blanks from end:
         ConsecutiveBase.removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
 
-        System.err.println("  Trimmed: " + Utility.listToString(ops) + " " + ops.size());
+        //System.err.println("  Trimmed: " + Utility.listToString(ops) + " " + ops.size());
 
         // Go through and sort out any raise expressions:
         int i = 0;
@@ -105,7 +105,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
             }
         }
 
-        System.err.println("  Raised: " + Utility.listToString(ops) + " " + ops.size());
+        //System.err.println("  Raised: " + Utility.listToString(ops) + " " + ops.size());
 
         if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
         {

@@ -40,6 +40,7 @@ import records.gui.grid.GridAreaCellPosition;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
+import records.importers.ImportPlainTable.PlainImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
 import utility.FXPlatformConsumer;
@@ -155,7 +156,7 @@ public class HTMLImporter implements Importer
                 {
                     if (!cell.tagName().equals("td") && !cell.tagName().equals("th"))
                         continue;
-                    rowVals.add(cell.text());
+                    rowVals.add(cell.wholeText());
                     int rowSpan = 1;
                     int colSpan = 1;
                     if (cell.hasAttr("colspan"))
@@ -217,7 +218,7 @@ public class HTMLImporter implements Importer
 
         ImporterUtility.rectangularise(vals);
 
-        Import<UnitType, ImmutableList<ColumnInfo>> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
+        Import<UnitType, PlainImportInfo> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
         {
             @Override
             public ColumnId srcColumnName(int index)
@@ -227,12 +228,12 @@ public class HTMLImporter implements Importer
         };
 
         results.add(() -> {
-            GuessFormat.@Nullable ImportInfo<ImmutableList<ColumnInfo>> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), imp).showAndWait().orElse(null);
+            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), imp).showAndWait().orElse(null);
 
             if (outcome != null)
             {
-                GuessFormat.@Nullable ImportInfo<ImmutableList<ColumnInfo>> outcomeNonNull = outcome;
-                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), vals, outcomeNonNull.getFormat()));
+                @NonNull ImportInfo<PlainImportInfo> outcomeNonNull = outcome;
+                SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, outcomeNonNull.getInitialLoadDetails(destination), ImporterUtility.makeEditableRecordSet(mgr.getTypeManager(), outcomeNonNull.getFormat().trim.trim(vals), outcomeNonNull.getFormat().columnInfo));
                 return makeDataSource;
             } else
                 return null;
