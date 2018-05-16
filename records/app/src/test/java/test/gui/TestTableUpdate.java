@@ -2,6 +2,7 @@ package test.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -179,7 +180,7 @@ public class TestTableUpdate extends ApplicationTest implements ScrollToTrait
                 mgr.record(new Sort(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), ImmutableList.of()));
                 break;
             case 1:
-                mgr.record(new Calculate(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), ImmutableList.of()));
+                mgr.record(new Calculate(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), ImmutableMap.of()));
                 break;
             case 2:
                 mgr.record(new Filter(mgr, new InitialLoadDetails(new TableId(destTable), position, null), new TableId(srcTable), new BooleanLiteral(true)));

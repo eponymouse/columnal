@@ -1,6 +1,7 @@
 package test.gen;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -43,14 +44,14 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
 
-            List<Pair<ColumnId, Expression>> columns = new ArrayList<>();
+            ImmutableMap.Builder<ColumnId, Expression> columns = ImmutableMap.builder();
             int numColumns = sourceOfRandomness.nextInt(0, 5);
             for (int i = 0; i < numColumns; i++)
             {
                 Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-                columns.add(new Pair<>(TestUtil.generateColumnId(sourceOfRandomness), nonsenseExpression));
+                columns.put(TestUtil.generateColumnId(sourceOfRandomness), nonsenseExpression);
             }
-            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableList.copyOf(columns)));
+            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), columns.build()));
         }
         catch (InternalException | UserException e)
         {

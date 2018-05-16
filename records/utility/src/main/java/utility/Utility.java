@@ -14,6 +14,7 @@ import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -29,6 +30,7 @@ import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
@@ -443,6 +445,23 @@ public class Utility
         r.addAll(data);
         r.add(last);
         return r.build();
+    }
+
+    /**
+     * Creates a new map containing the given map, plus the new entry.
+     * The insertion order of the original map will be respected, and the new item will be placed at the end.
+     * If the key was already in the map, it will be replaced, and the new value will still appear at the end.
+     */
+    public static <K, V> ImmutableMap<K, V> appendToMap(Map<K, V> data, K key, V value)
+    {
+        ImmutableMap.Builder<K, V> builder = ImmutableMap.builderWithExpectedSize(data.size() + 1);
+        for (Entry<K, V> entry : data.entrySet())
+        {
+            if (!Objects.equals(entry.getKey(), key))
+                builder.put(entry);
+        }
+        builder.put(key, value);
+        return builder.build();
     }
 
     public static void report(InternalException e)
@@ -1154,7 +1173,20 @@ public class Utility
         }
         return reAssembled.toString();
     }
-    
+
+    /**
+     * Turns a list of pairs into an immutablemap, with insertion order matching the given list.
+     */
+    public static <K, V> ImmutableMap<K, V> pairListToMap(ImmutableList<Pair<K, V>> list)
+    {
+        ImmutableMap.Builder<K, V> builder = ImmutableMap.builderWithExpectedSize(list.size());
+        for (Pair<K, V> pair : list)
+        {
+            builder.put(pair.getFirst(), pair.getSecond());
+        }
+        return builder.build();
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);

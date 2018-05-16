@@ -3,6 +3,8 @@ package records.transformations;
 import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -45,6 +47,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,15 +60,19 @@ import java.util.stream.Stream;
 @OnThread(Tag.Simulation)
 public class Calculate extends Transformation
 {
+    // If any columns overlap the source table's columns, they are shown in that position.
+    // If they are new, they are shown at the end, in the order provided by this list
+    // (Note that Guava's ImmutableMap respects insertion order for iteration, which
+    // we rely on here).
     @OnThread(Tag.Any)
-    private final ImmutableList<Pair<ColumnId, Expression>> newColumns;
+    private final ImmutableMap<ColumnId, Expression> newColumns;
     private final TableId srcTableId;
     private final @Nullable Table src;
     private final @Nullable RecordSet recordSet;
     @OnThread(Tag.Any)
     private StyledString error = StyledString.s("");
 
-    public Calculate(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
+    public Calculate(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, ImmutableMap<ColumnId, Expression> toCalculate) throws InternalException
     {
         super(mgr, initialLoadDetails);
         this.srcTableId = srcTableId;
@@ -89,7 +96,9 @@ public class Calculate extends Transformation
             for (Column c : srcRecordSet.getColumns())
             {
                 // If the old column is not overwritten by one of the same name, include it:
-                if (!newColumns.stream().anyMatch(n -> n.getFirst().equals(c.getName())))
+                Expression overwrite = newColumns.get(c.getName());
+                
+                if (overwrite == null)
                 {
                     columns.add(rs -> new Column(rs, c.getName())
                     {
@@ -106,38 +115,15 @@ public class Calculate extends Transformation
                         }
                     });
                 }
+                else
+                {
+                    columns.add(makeCalcColumn(mgr, tableLookup, c.getName(), overwrite));
+                }
             }
 
-            for (Pair<ColumnId, Expression> newCol : toCalculate)
+            for (Entry<ColumnId, Expression> newCol : toCalculate.entrySet())
             {
-                ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
-                {
-                    @Override
-                    public <E> void recordError(E src, StyledString s)
-                    {
-                        error = s;
-                    }
-
-                    @Override
-                    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
-                    {
-                        
-                    }
-
-                    @SuppressWarnings("recorded")
-                    @Override
-                    public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-                    {
-                        return typeExp;
-                    }
-                };
-                @Nullable TypeExp type = newCol.getSecond().check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
-                
-                DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
-                if (type == null || concrete == null)
-                    throw new UserException(error); // A bit redundant, but control flow will pan out right
-                @NonNull DataType typeFinal = concrete;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index)))));
+                columns.add(makeCalcColumn(mgr, tableLookup, newCol.getKey(), newCol.getValue()));
             }
 
             theResult = new RecordSet(columns)
@@ -162,7 +148,40 @@ public class Calculate extends Transformation
 
         recordSet = theResult;
     }
-    
+
+    private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Object.class) Calculate this,
+        TableManager mgr, TableLookup tableLookup, ColumnId columnId, Expression expression) throws UserException, InternalException
+    {
+        ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
+        {
+            @Override
+            public <E> void recordError(E src, StyledString s)
+            {
+                error = s;
+            }
+
+            @Override
+            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+            {
+                
+            }
+
+            @SuppressWarnings("recorded")
+            @Override
+            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            {
+                return typeExp;
+            }
+        };
+        @Nullable TypeExp type = expression.check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+
+        DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
+        if (type == null || concrete == null)
+            throw new UserException(error == null ? StyledString.s("") : error); // A bit redundant, but control flow will pan out right
+        @NonNull DataType typeFinal = concrete;
+        return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))));
+    }
+
     @Override
     @OnThread(Tag.Any)
     public Stream<TableId> getPrimarySources()
@@ -174,7 +193,7 @@ public class Calculate extends Transformation
     @OnThread(Tag.Any)
     public Stream<TableId> getSourcesFromExpressions()
     {
-        return TransformationUtil.tablesFromExpressions(newColumns.stream().map(p -> p.getSecond()));
+        return TransformationUtil.tablesFromExpressions(newColumns.values().stream());
     }
 
     @Override
@@ -186,11 +205,11 @@ public class Calculate extends Transformation
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return newColumns.stream().map(entry -> {
+        return newColumns.entrySet().stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
-            b.kw("CALCULATE").id(renames.columnId(getId(), entry.getFirst()));
+            b.kw("CALCULATE").id(renames.columnId(getId(), entry.getKey()));
             b.kw("@EXPRESSION");
-            b.raw(entry.getSecond().save(BracketedStatus.MISC, renames.withDefaultTableId(srcTableId)));
+            b.raw(entry.getValue().save(BracketedStatus.MISC, renames.withDefaultTableId(srcTableId)));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }
@@ -209,7 +228,7 @@ public class Calculate extends Transformation
         // Renames and deletes are valid, if they refer to
         // columns derived from us.
         // TODO allow renames backwards through dependencies
-        return new TableOperations(getManager().getRenameTableOperation(this), deleteId -> newColumns.stream().anyMatch(p -> p.getFirst().equals(deleteId)) ? this::deleteColumn : null, null, null, null);
+        return new TableOperations(getManager().getRenameTableOperation(this), deleteId -> newColumns.containsKey(deleteId) ? this::deleteColumn : null, null, null, null);
     }
 
     @OnThread(Tag.Any)
@@ -241,7 +260,7 @@ public class Calculate extends Transformation
     }
 
     @OnThread(Tag.Any)
-    public List<Pair<ColumnId, Expression>> getCalculatedColumns()
+    public ImmutableMap<ColumnId, Expression> getCalculatedColumns()
     {
         return newColumns;
     }
@@ -256,12 +275,12 @@ public class Calculate extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, InitialLoadDetails initialLoadDetails, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            ImmutableList.Builder<Pair<ColumnId, Expression>> columns = ImmutableList.builder();
+            ImmutableMap.Builder<ColumnId, Expression> columns = ImmutableMap.builder();
 
             TransformContext transform = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.transform());
             for (TransformItemContext transformItemContext : transform.transformItem())
             {
-                columns.add(new Pair<>(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager())));
+                columns.put(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager()));
             }
 
             return new Calculate(mgr, initialLoadDetails, srcTableId, columns.build());
@@ -270,7 +289,7 @@ public class Calculate extends Transformation
         @Override
         protected @OnThread(Tag.Simulation) Transformation makeWithSource(View view, TableManager mgr, CellPosition destination, Table srcTable) throws InternalException
         {
-            return new Calculate(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableList.of());
+            return new Calculate(view.getManager(), new InitialLoadDetails(null, destination, null), srcTable.getId(), ImmutableMap.of());
         }
     }
 }

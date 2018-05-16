@@ -4,6 +4,7 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -728,14 +729,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 if (table instanceof Calculate)
                 {
                     Calculate calc = (Calculate) table;
-                    Optional<Pair<ColumnId, Expression>> existing = calc.getCalculatedColumns().stream().filter(p -> p.getFirst().equals(c)).findFirst();
-                    if (existing.isPresent())
-                    {
-                        // Allow editing:
-                        return () -> {
-                            FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, existing.get());
-                        };
-                    }
+                    // Allow editing of any column:
+                    return () -> FXUtility.alertOnErrorFX_(() -> {
+                        FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, c);
+                    });
                 }
                 
                 return null;
@@ -744,10 +741,16 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @OnThread(Tag.FXPlatform)
-    public void editColumn_Calc(Calculate calc, Pair<ColumnId, Expression> existing)
+    public void editColumn_Calc(Calculate calc, ColumnId columnId) throws InternalException, UserException
     {
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), existing.getFirst(), existing.getSecond(), true, null).showAndWait().ifPresent(newDetails -> {
-            ImmutableList<Pair<ColumnId, Expression>> newColumns = Utility.mapListI(calc.getCalculatedColumns(), old -> old.getFirst().equals(existing.getFirst()) ? newDetails : old);
+        // Start with the existing value.
+        Expression expression = calc.getCalculatedColumns().get(columnId);
+        // If that doesn't exist, copy the name of the column if appropriate:
+        if (expression == null && calc.getData().getColumns().stream().anyMatch(c -> c.getName().equals(columnId)))
+            expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
+        
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, true, null).showAndWait().ifPresent(newDetails -> {
+            ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
             Workers.onWorkerThread("Editing column", Priority.SAVE_ENTRY, () -> {
                 FXUtility.alertOnError_(() ->
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSource(), newColumns), null)
@@ -788,7 +791,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
                 FXUtility.alertOnError_(() -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
-                        calc.getSource(), Utility.appendToList(calc.getCalculatedColumns(), p)), null);
+                        calc.getSource(), Utility.appendToMap(calc.getCalculatedColumns(), p.getFirst(), p.getSecond())), null);
                 })
             );
         });

@@ -126,7 +126,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
             // Check expressions match:
-            Expression expression = calculate.getCalculatedColumns().get(0).getSecond();
+            Expression expression = calculate.getCalculatedColumns().values().iterator().next();
             assertEquals(expressionValue.expression, expression);
             // Just in case equals is wrong, check String comparison:
             assertEquals(expressionValue.expression.toString(), expression.toString());

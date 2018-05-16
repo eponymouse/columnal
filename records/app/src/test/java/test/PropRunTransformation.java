@@ -3,6 +3,7 @@ package test;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -364,7 +365,7 @@ public class PropRunTransformation
     {
         // Pick a few new destination columns:
         int numNew = r.nextInt(5);
-        ImmutableList.Builder<Pair<ColumnId, Expression>> newCols = ImmutableList.builder();
+        ImmutableMap.Builder<ColumnId, Expression> newCols = ImmutableMap.builder();
         List<Column> oldColumns = original.data().getData().getColumns();
         Map<ColumnId, ColumnId> columnMapping = new HashMap<>();
 
@@ -376,7 +377,7 @@ public class PropRunTransformation
         {
             ColumnId old = oldColumns.get(r.nextInt(oldColumns.size())).getName();
             ColumnId newId = new ColumnId("Trans" + i);
-            newCols.add(new Pair<>(newId, new ColumnReference(old, ColumnReferenceType.CORRESPONDING_ROW)));
+            newCols.put(newId, new ColumnReference(old, ColumnReferenceType.CORRESPONDING_ROW));
             columnMapping.put(newId, old);
         }
 

@@ -325,7 +325,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             if (calculate == null)
                 return;
             assertEquals(1, calculate.getCalculatedColumns().size());
-            assertEquals(result, calculate.getCalculatedColumns().get(0).getSecond().toString());
+            assertEquals(result, calculate.getCalculatedColumns().values().iterator().next().toString());
         }
         catch (Exception e)
         {

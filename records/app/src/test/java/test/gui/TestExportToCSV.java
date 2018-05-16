@@ -1,6 +1,7 @@
 package test.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -61,7 +62,7 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         Table srcData = new ImmediateDataSource(manager, TestUtil.ILD, new EditableRecordSet(expressionValue.recordSet));
         manager.record(srcData);
 
-        Table calculated = new Calculate(manager, TestUtil.ILD, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
+        Table calculated = new Calculate(manager, TestUtil.ILD, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
         manager.record(calculated);
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();

@@ -3,6 +3,7 @@ package test.gui;
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -109,7 +110,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
         manager.record(srcData);
 
         InitialLoadDetails ild = new InitialLoadDetails(null, new CellPosition(CellPosition.row(1), CellPosition.col(2 + expressionValue.recordSet.getColumns().size())), null);
-        Table calculated = new Calculate(manager, ild, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
+        Table calculated = new Calculate(manager, ild, srcData.getId(), ImmutableMap.of(new ColumnId("Result"), expressionValue.expression));
         manager.record(calculated);
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, manager).get();
