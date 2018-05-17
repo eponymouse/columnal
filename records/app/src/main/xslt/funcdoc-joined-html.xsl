@@ -13,6 +13,25 @@
                 <link rel="stylesheet" href="web.css"/>
             </head>
             <body>
+                <div class="index">
+                <xsl:for-each select=".//functionDocumentation">
+                    <xsl:variable name="namespace" select="@namespace"/>
+                    <div class="index-namespace">
+                        <xsl:for-each select="functionGroup">
+                            <xsl:variable name="groupName" select="@id"/>
+                            <xsl:for-each select="function">
+                                <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
+                            </xsl:for-each>
+                        </xsl:for-each>
+
+                        <!-- Functions without groups -->
+                        <xsl:for-each select="function">
+                            <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
+                        </xsl:for-each>
+                    </div>
+                </xsl:for-each>
+                </div>
+                
                 <xsl:for-each select=".//functionDocumentation">
                     <xsl:variable name="namespace" select="@namespace"/>
                     <div class="namespace">

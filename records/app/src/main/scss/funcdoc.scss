@@ -5,8 +5,19 @@ html {
     font-size: 13pt;
 }
 
+.index-entry {
+    display: block;
+}
+
 .function-group-item {
     display: none;
+}
+
+.function-item {
+    padding: 25pt;
+    border-width: 0 0 1px 0;
+    border-color: lightgray;
+    border-style: solid;
 }
 
 .function-name-header {

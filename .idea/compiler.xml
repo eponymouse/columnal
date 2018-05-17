@@ -106,18 +106,6 @@
         <processor name="org.checkerframework.checker.units.UnitsChecker" />
         <module name="expressions" />
       </profile>
-      <profile name="Annotation profile for types" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
-        <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/types/../stubs" />
-        <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
-        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
-        <processor name="org.checkerframework.checker.units.UnitsChecker" />
-        <module name="types" />
-      </profile>
       <profile name="Annotation profile for records" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
