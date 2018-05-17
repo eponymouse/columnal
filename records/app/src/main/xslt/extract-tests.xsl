@@ -81,17 +81,7 @@
     
     <xsl:template match="/functionDocumentation">
         <xsl:variable name="namespace" select="@namespace"/>
-    
-        <xsl:for-each select="functionGroup">
-            <xsl:variable name="groupName" select="@id"/>
-            <xsl:for-each select="function">
-                <xsl:call-template name="processFunction">
-                    <xsl:with-param name="function" select="."/>
-                </xsl:call-template>
-            </xsl:for-each>
-        </xsl:for-each>
-
-        <!-- Functions without groups -->
+        
         <xsl:for-each select="function">
             <xsl:call-template name="processFunction">
                 <xsl:with-param name="function" select="."/>

@@ -17,14 +17,6 @@
                 <xsl:for-each select=".//functionDocumentation">
                     <xsl:variable name="namespace" select="@namespace"/>
                     <div class="index-namespace">
-                        <xsl:for-each select="functionGroup">
-                            <xsl:variable name="groupName" select="@id"/>
-                            <xsl:for-each select="function">
-                                <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
-                            </xsl:for-each>
-                        </xsl:for-each>
-
-                        <!-- Functions without groups -->
                         <xsl:for-each select="function">
                             <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
                         </xsl:for-each>
@@ -35,21 +27,6 @@
                 <xsl:for-each select=".//functionDocumentation">
                     <xsl:variable name="namespace" select="@namespace"/>
                     <div class="namespace">
-                        <xsl:for-each select="functionGroup">
-                            <xsl:variable name="groupName" select="@id"/>
-                            <xsl:for-each select="function">
-                                <div class="function-group-item">
-                                    <span class="function-group-title"><xsl:value-of select="@title"/></span>
-                                    <div class="description"><xsl:value-of select="description"/></div>
-                                </div>
-                                
-                                <xsl:call-template name="processFunction">
-                                    <xsl:with-param name="function" select="."/>
-                                </xsl:call-template>
-                            </xsl:for-each>
-                        </xsl:for-each>
-                
-                        <!-- Functions without groups -->
                         <xsl:for-each select="function">
                             <xsl:call-template name="processFunction">
                                 <xsl:with-param name="function" select="."/>

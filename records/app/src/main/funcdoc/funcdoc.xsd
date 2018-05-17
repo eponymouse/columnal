@@ -120,16 +120,6 @@
     <xs:element name="functionDocumentation">
         <xs:complexType>
             <xs:choice  minOccurs="1" maxOccurs="unbounded">
-                <xs:element name="functionGroup">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element ref="description"/>
-                            <xs:element ref="function" maxOccurs="unbounded"/>
-                        </xs:sequence>
-                        <xs:attribute name="id" type="xs:string" use="required"/>
-                        <xs:attribute name="title" type="xs:string" use="required"/>
-                    </xs:complexType>
-                </xs:element>
                 <xs:element ref="naryOperatorGroup"/>
                 <xs:element ref="binaryOperator"/>
                 <xs:element ref="function"/>

@@ -2,132 +2,118 @@
 <functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="number">
-    <functionGroup id="rounding" title="Functions for rounding">
+    <function name="round">
+        <unitArg>u</unitArg>
+        <argType>Number{@unitvar u}</argType>
+        <returnType>Number{@unitvar u}</returnType>
         <description>
-            <p>A set of functions for rounding.</p>
+            <p>Rounds the given number to the nearest whole number (integer).</p>
+            <p>Numbers that end in .5 (which are halfway between two whole numbers) are rounded towards the nearest even number, sometimes known as <a href="https://en.wikipedia.org/wiki/Rounding#Round_half_to_even">banker's rounding</a>.</p>
         </description>
-        <function name="round">
-            <unitArg>u</unitArg>
-            <argType>Number{@unitvar u}</argType>
-            <returnType>Number{@unitvar u}</returnType>
-            <description>
-                <p>Rounds the given number to the nearest whole number (integer).</p>
-                <p>Numbers that end in .5 (which are halfway between two whole numbers) are rounded towards the nearest even number, sometimes known as <a href="https://en.wikipedia.org/wiki/Rounding#Round_half_to_even">banker's rounding</a>.</p>
-            </description>
-            <example>
-                <inputArg>0.333</inputArg>
-                <output>0</output>
-            </example>
-            <example>
-                <inputArg>2</inputArg>
-                <output>2</output>
-            </example>
-            <example>
-                <inputArg>0.5</inputArg>
-                <output>1</output>
-            </example>
-            <example>
-                <inputArg>1.5</inputArg>
-                <output>2</output>
-            </example>
-        </function>
-        <function name="round decimal">
-            <unitArg>u</unitArg>
-            <argType>(Number{@unitvar u}, Number)</argType>
-            <returnType>Number{@unitvar u}</returnType>
-            <description>
-                <p>Rounds the number to the given number of decimal places (digits after the decimal point).</p>
-                <p></p>
-            </description>
-            <example>
-                <inputArg>(3.1415927, 2)</inputArg>
-                <output>3.14</output>
-            </example>
-        </function>
-        <function name="round significant">
-            <unitArg>u</unitArg>
-            <argType>(Number{@unitvar u}, Number)</argType>
-            <returnType>Number{@unitvar u}</returnType>
-            <description>
-                <p>Rounds the number to the given number of significant figures (digits at the beginning of the number).</p>
-            </description>
-            <example>
-                <inputArg>(3.1415927, 2)</inputArg>
-                <output>3.1</output>
-            </example>
-            <example>
-                <inputArg>(1234567, 4)</inputArg>
-                <output>1235000</output>
-            </example>
-        </function>
-    </functionGroup>
-    <functionGroup id="sign" title="Functions for manipulating sign">
+        <example>
+            <inputArg>0.333</inputArg>
+            <output>0</output>
+        </example>
+        <example>
+            <inputArg>2</inputArg>
+            <output>2</output>
+        </example>
+        <example>
+            <inputArg>0.5</inputArg>
+            <output>1</output>
+        </example>
+        <example>
+            <inputArg>1.5</inputArg>
+            <output>2</output>
+        </example>
+    </function>
+    <function name="round decimal">
+        <unitArg>u</unitArg>
+        <argType>(Number{@unitvar u}, Number)</argType>
+        <returnType>Number{@unitvar u}</returnType>
         <description>
-            <p>Functions for manipulating sign of numbers.</p>
+            <p>Rounds the number to the given number of decimal places (digits after the decimal point).</p>
+            <p></p>
         </description>
-        <function name="abs">
-            <unitArg>u</unitArg>
-            <argType>Number{@unitvar u}</argType>
-            <returnType>Number{@unitvar u}</returnType>
-            <description>
-                <p>Makes a number positive by discarding the minus sign.</p>
-            </description>
-            <example>
-                <inputArg>-3.6</inputArg>
-                <output>3.6</output>
-            </example>
-            <example>
-                <inputArg>5</inputArg>
-                <output>5</output>
-            </example>
-            <example>
-                <inputArg>0</inputArg>
-                <output>0</output>
-            </example>
-        </function>
-    </functionGroup>
-
-    <functionGroup id="list" title="Functions for dealing with lists of numbers">
-        <description><p>Functions for dealing with lists of numbers.</p></description>
-        <function name="average">
-            <unitArg>u</unitArg>
-            <argType>[Number{@unitvar u}]</argType>
-            <returnType>Number{@unitvar u}</returnType>
-            <description>
-                <p>Calculates the average of a list of numbers.</p>
-            </description>
-            <example>
-                <inputArg>[1, 1.5, 5]</inputArg>
-                <output>2.5</output>
-            </example>
-            <example>
-                <inputArg>[33.4]</inputArg>
-                <output>33.4</output>
-            </example>
-            <example>
-                <inputArg>[]</inputArg>
-                <output>error</output>
-            </example>
-        </function>
-        <function name="sum">
-            <unitArg>u</unitArg>
-            <argType>[Number{@unitvar u}]</argType>
-            <returnType>Number{@unitvar u}</returnType>
-            <description>
-                <p>Calculates the sum (total) of a list of numbers.</p>
-            </description>
-            <example>
-                <inputArg>[1, 1.5, 5]</inputArg>
-                <output>7.5</output>
-            </example>
-            <example>
-                <inputArg>[33.4]</inputArg>
-                <output>33.4</output>
-            </example>
-            <example>
-                <inputArg>[]</inputArg>
-                <output>0</output>
-            </example>
-        </function>
-    </functionGroup>
+        <example>
+            <inputArg>(3.1415927, 2)</inputArg>
+            <output>3.14</output>
+        </example>
+    </function>
+    <function name="round significant">
+        <unitArg>u</unitArg>
+        <argType>(Number{@unitvar u}, Number)</argType>
+        <returnType>Number{@unitvar u}</returnType>
+        <description>
+            <p>Rounds the number to the given number of significant figures (digits at the beginning of the number).</p>
+        </description>
+        <example>
+            <inputArg>(3.1415927, 2)</inputArg>
+            <output>3.1</output>
+        </example>
+        <example>
+            <inputArg>(1234567, 4)</inputArg>
+            <output>1235000</output>
+        </example>
+    </function>
+    <function name="abs">
+        <unitArg>u</unitArg>
+        <argType>Number{@unitvar u}</argType>
+        <returnType>Number{@unitvar u}</returnType>
+        <description>
+            <p>Makes a number positive by discarding the minus sign.</p>
+        </description>
+        <example>
+            <inputArg>-3.6</inputArg>
+            <output>3.6</output>
+        </example>
+        <example>
+            <inputArg>5</inputArg>
+            <output>5</output>
+        </example>
+        <example>
+            <inputArg>0</inputArg>
+            <output>0</output>
+        </example>
+    </function>
+    <function name="average">
+        <unitArg>u</unitArg>
+        <argType>[Number{@unitvar u}]</argType>
+        <returnType>Number{@unitvar u}</returnType>
+        <description>
+            <p>Calculates the average of a list of numbers.</p>
+        </description>
+        <example>
+            <inputArg>[1, 1.5, 5]</inputArg>
+            <output>2.5</output>
+        </example>
+        <example>
+            <inputArg>[33.4]</inputArg>
+            <output>33.4</output>
+        </example>
+        <example>
+            <inputArg>[]</inputArg>
+            <output>error</output>
+        </example>
+    </function>
+    <function name="sum">
+        <unitArg>u</unitArg>
+        <argType>[Number{@unitvar u}]</argType>
+        <returnType>Number{@unitvar u}</returnType>
+        <description>
+            <p>Calculates the sum (total) of a list of numbers.</p>
+        </description>
+        <example>
+            <inputArg>[1, 1.5, 5]</inputArg>
+            <output>7.5</output>
+        </example>
+        <example>
+            <inputArg>[33.4]</inputArg>
+            <output>33.4</output>
+        </example>
+        <example>
+            <inputArg>[]</inputArg>
+            <output>0</output>
+        </example>
+    </function>
 </functionDocumentation>

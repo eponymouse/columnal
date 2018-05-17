@@ -2,72 +2,69 @@
 <functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                        xsi:noNamespaceSchemaLocation="funcdoc.xsd"
                        namespace="listprocess">
-    <functionGroup id="anyAllNone" title="Any, All, None">
-        <description><p>Functions to check if a property holds for any/all/no list element(s).</p></description>
-        <function name="any">
-            <typeArg>t</typeArg>
-            <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
-            <returnType>Boolean</returnType>
-            <description>
-                <p>Returns true if the given function returns true for any item in the list.</p>
-                <p>If the list is empty, returns false.</p>
-            </description>
-            <example>
-                <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
-                <output>true</output>
-            </example>
-            <example>
-                <inputArg>([0, 1, 2, 3], (? &gt; 5))</inputArg>
-                <output>false</output>
-            </example>
-            <example>
-                <inputArg>([], (? = 0))</inputArg>
-                <output>false</output>
-            </example>
-        </function>
-        <function name="all">
-            <typeArg>t</typeArg>
-            <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
-            <returnType>Boolean</returnType>
-            <description>
-                <p>Returns true if the given function returns true for all items in the list.</p>
-                <p>If the list is empty, returns true.</p>
-            </description>
-            <example>
-                <inputArg>([0, 1, 2, 3], (? &lt; 5))</inputArg>
-                <output>true</output>
-            </example>
-            <example>
-                <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
-                <output>false</output>
-            </example>
-            <example>
-                <inputArg>([], (? = 0))</inputArg>
-                <output>true</output>
-            </example>
-        </function>
-        <function name="none">
-            <typeArg>t</typeArg>
-            <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
-            <returnType>Boolean</returnType>
-            <description>
-                <p>Returns true if the given function returns true for no items in the list.</p>
-                <p>If the list is empty, returns true.</p>
-            </description>
-            <example>
-                <inputArg>([0, 1, 2, 3], (? &gt; 5))</inputArg>
-                <output>true</output>
-            </example>
-            <example>
-                <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
-                <output>false</output>
-            </example>
-            <example>
-                <inputArg>([], (? = 0))</inputArg>
-                <output>true</output>
-            </example>
-        </function>
-    </functionGroup>
+    <function name="any">
+        <typeArg>t</typeArg>
+        <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
+        <returnType>Boolean</returnType>
+        <description>
+            <p>Returns true if the given function returns true for any item in the list.</p>
+            <p>If the list is empty, returns false.</p>
+        </description>
+        <example>
+            <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
+            <output>true</output>
+        </example>
+        <example>
+            <inputArg>([0, 1, 2, 3], (? &gt; 5))</inputArg>
+            <output>false</output>
+        </example>
+        <example>
+            <inputArg>([], (? = 0))</inputArg>
+            <output>false</output>
+        </example>
+    </function>
+    <function name="all">
+        <typeArg>t</typeArg>
+        <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
+        <returnType>Boolean</returnType>
+        <description>
+            <p>Returns true if the given function returns true for all items in the list.</p>
+            <p>If the list is empty, returns true.</p>
+        </description>
+        <example>
+            <inputArg>([0, 1, 2, 3], (? &lt; 5))</inputArg>
+            <output>true</output>
+        </example>
+        <example>
+            <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
+            <output>false</output>
+        </example>
+        <example>
+            <inputArg>([], (? = 0))</inputArg>
+            <output>true</output>
+        </example>
+    </function>
+    <function name="none">
+        <typeArg>t</typeArg>
+        <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
+        <returnType>Boolean</returnType>
+        <description>
+            <p>Returns true if the given function returns true for no items in the list.</p>
+            <p>If the list is empty, returns true.</p>
+        </description>
+        <example>
+            <inputArg>([0, 1, 2, 3], (? &gt; 5))</inputArg>
+            <output>true</output>
+        </example>
+        <example>
+            <inputArg>(["a", "b", "c"], (? = "b"))</inputArg>
+            <output>false</output>
+        </example>
+        <example>
+            <inputArg>([], (? = 0))</inputArg>
+            <output>true</output>
+        </example>
+    </function>
     
     <function name="combine">
         <typeArg>t</typeArg>

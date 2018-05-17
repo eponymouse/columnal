@@ -1,6 +1,5 @@
 package annotation.funcdoc;
 
-import annotation.funcdoc.qual.FuncDocGroupKey;
 import annotation.funcdoc.qual.FuncDocKey;
 import annotation.funcdoc.qual.FuncDocKeyBottom;
 import annotation.funcdoc.qual.UnknownIfFuncDoc;
@@ -34,8 +33,7 @@ import java.util.Set;
 /**
  * We have two keys;
  * @FuncDocKey, which checks that a given item is a namespace/function-name key,
- *   and that the key is present in exactly one function group.
- * @FuncDocGroupKey, which checks that a given item is a namespace/function-group key.
+ *   and that the key only occurs once in the xml files.
  */
 @SupportedOptions({"funcdocfiles"})
 public class FuncDocChecker extends BaseTypeChecker
@@ -52,8 +50,6 @@ public class FuncDocChecker extends BaseTypeChecker
                 // first and check against that, rather than reload files every time:
 
                 return new BaseAnnotatedTypeFactory(FuncDocChecker.this, false) {
-                    // Namespace, function group
-                    private final Set<List<String>> functionGroupKeys = new HashSet<>();
                     // Namespace, function name
                     private final Set<List<String>> individualFunctionKeys = new HashSet<>();
                     private final List<String> errors = new ArrayList<>();
@@ -80,20 +76,7 @@ public class FuncDocChecker extends BaseTypeChecker
                                         errors.add("Missing namespace for " + file);
                                         continue;
                                     }
-                                    nu.xom.Elements groups = root.getChildElements("functionGroup");
-                                    for (int groupIndex = 0; groupIndex < groups.size(); groupIndex++)
-                                    {
-                                        Element group = groups.get(groupIndex);
-                                        String groupId = group.getAttributeValue("id");
-                                        if (groupId == null)
-                                        {
-                                            errors.add("Missing group id for group " + groupIndex + " in " + file);
-                                            continue;
-                                        }
-                                        functionGroupKeys.add(Arrays.asList(namespace, groupId));
-                                        nu.xom.Elements functions = group.getChildElements("function");
-                                        processFunctions(fileName, namespace, functions);
-                                    }
+                                    
                                     nu.xom.Elements functions = root.getChildElements("function");
                                     processFunctions(fileName, namespace, functions);
                                 }
@@ -133,13 +116,11 @@ public class FuncDocChecker extends BaseTypeChecker
 
                     class ValueTypeTreeAnnotator extends TreeAnnotator {
                         private final AnnotationMirror FUNCDOC_KEY;
-                        private final AnnotationMirror FUNCDOCGROUP_KEY;
 
                         public ValueTypeTreeAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
                         {
                             super(atypeFactory);
                             this.FUNCDOC_KEY = AnnotationBuilder.fromClass(elements, FuncDocKey.class);
-                            this.FUNCDOCGROUP_KEY = AnnotationBuilder.fromClass(elements, FuncDocGroupKey.class);
                         }
 
                         public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)
@@ -163,15 +144,6 @@ public class FuncDocChecker extends BaseTypeChecker
                                         type.addAnnotation(this.FUNCDOC_KEY);
                                 }
                             }
-                            if (!type.isAnnotatedInHierarchy(this.FUNCDOCGROUP_KEY))
-                            {
-                                if (tree.getKind() == Kind.STRING_LITERAL)
-                                {
-                                    String value = tree.getValue().toString();
-                                    if (functionGroupKeys.contains(Arrays.asList(value.split(":"))))
-                                        type.addAnnotation(this.FUNCDOCGROUP_KEY);
-                                }
-                            }
 
                             return (Void)super.visitLiteral(tree, type);
                         }
@@ -190,7 +162,6 @@ public class FuncDocChecker extends BaseTypeChecker
                         return new HashSet<>(Arrays.asList(
                             UnknownIfFuncDoc.class,
                             FuncDocKey.class,
-                            FuncDocGroupKey.class,
                             FuncDocKeyBottom.class
                         ));
                     }
