@@ -39,6 +39,9 @@ html {
     }
     .type-var {
         font-style: italic;
+        display: inline-block;
+        margin-left: -2px;
+        margin-right: 2px;
     }
 }
 .function-arrow::before {
@@ -51,6 +54,9 @@ html {
 .function-type {
     font-family: 'Droid Sans Mono';
     color: #333;
+}
+.expression-bracket {
+    font-family: 'Droid Sans Mono';
 }
 
 .examples {

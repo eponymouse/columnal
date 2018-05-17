@@ -2,15 +2,15 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
     <xsl:template name="processType">
         <xsl:param name="type" select="."/>
-        <xsl:analyze-string select="$type" regex="\{{\*\}}">
+        <xsl:analyze-string select="replace($type, '@tagged\s+', '')" regex="\{{\*\}}">
             <xsl:matching-substring>
                 <span class="wild-unit"><xsl:copy-of select="."/></span>
             </xsl:matching-substring>
             <!-- All words beginning with lower-case are assumed to be vars: -->
             <xsl:non-matching-substring>
-                <xsl:analyze-string select="." regex="@typevar\s+([a-z]+)">
+                <xsl:analyze-string select="." regex="@(type|unit)var\s+([a-z]+)">
                     <xsl:matching-substring>
-                        <span class="type-var"><xsl:copy-of select="regex-group(1)"/></span>
+                        <span class="type-var"><xsl:copy-of select="regex-group(2)"/></span>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
                         <xsl:copy-of select="."/>
@@ -22,7 +22,10 @@
     
     <xsl:template name="processExpression">
         <xsl:param name="expression" select="."/>
-        <xsl:value-of select="replace($expression,'@call\s+|@function\s+|@tagged\s+', '')"/>
+        <xsl:analyze-string select="replace($expression,'@call\s+|@function\s+|@tagged\s+', '')" regex="[\(\)\[\]{}]+">
+            <xsl:matching-substring><span class="expression-bracket"><xsl:copy-of select="."/></span></xsl:matching-substring>
+            <xsl:non-matching-substring><xsl:copy-of select="."/></xsl:non-matching-substring>
+        </xsl:analyze-string>
     </xsl:template>
 
     <xsl:template name="bracketed">
@@ -47,9 +50,10 @@
             <div class="examples">
                 <span class="examples-header">Examples</span>
                 <xsl:for-each select="example">
-                    <div class="example"><span class="example-call"><xsl:value-of select="$functionName"/><xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:call-template
-                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
+                <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
+                        name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:value-of select="$functionName"/><xsl:call-template
+                        name="processExpression"><xsl:with-param name="expression"><xsl:call-template
+                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="function-arrow"/> <xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>

@@ -29,6 +29,8 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
+import records.transformations.function.FromString;
+import records.transformations.function.FunctionList;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeConcretisationError;
@@ -85,6 +87,7 @@ public class TestFromDoc
 
                 Map<String, Either<MutUnitVar, MutVar>> typeVariables = new HashMap<>();
                 Map<String, TypeExp> variables = new HashMap<>();
+                Map<String, Pair<String, String>> minMax = new HashMap<>();
                 boolean errorLine = false;
                 boolean typeError = false;
 
@@ -103,6 +106,9 @@ public class TestFromDoc
                         {
                             String nameType[] = StringUtils.removeStart(line, "== ").trim().split("//");
                             variables.put(nameType[0], JellyType.parse(nameType[1], typeManager).makeTypeExp(ImmutableMap.copyOf(typeVariables)));
+                            if (nameType.length >= 4)
+                                minMax.put(nameType[0], new Pair<>(nameType[2], nameType[3]));
+                            
                             i += 1;
                         }
                         else if (line.startsWith("==* "))
@@ -215,7 +221,22 @@ public class TestFromDoc
                     if (errorOrType.isLeft())
                         fail(errorOrType.getLeft("").toString());
                     DataType concreteVarType = errorOrType.getRight("");
-                    @Value Object value = valueGen.makeValue(concreteVarType);
+                    @Nullable Pair<@Value Object, @Value Object> parsedMinMax = null;
+                    if (minMax.containsKey(e.getKey()))
+                    {
+                        Pair<String, String> unparsed = minMax.get(e.getKey());
+                        parsedMinMax = new Pair<>(
+                            FromString._test_fromString(unparsed.getFirst(), concreteVarType),
+                            FromString._test_fromString(unparsed.getSecond(), concreteVarType)
+                        );
+                    }
+
+                    @Value Object value;
+                    do
+                    {
+                        value = valueGen.makeValue(concreteVarType);
+                    }
+                    while (parsedMinMax != null && (Utility.compareValues(parsedMinMax.getFirst(), value) > 0 || Utility.compareValues(parsedMinMax.getSecond(), value) < 0));
                     evaluateState = evaluateState.add(e.getKey(), value);
                     varValues.add(new Pair<>(e.getKey(), DataTypeUtility.valueToString(concreteVarType, value, null)));
                 }

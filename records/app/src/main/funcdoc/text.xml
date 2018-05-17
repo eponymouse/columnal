@@ -113,6 +113,7 @@
             <output>""</output>
         </example>
     </function>
+    
     <function name="trim">
         <argType>Text</argType>
         <returnType>Text</returnType>

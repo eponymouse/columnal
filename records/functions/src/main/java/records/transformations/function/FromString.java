@@ -74,6 +74,12 @@ public class FromString
             }
         );
     }
+    
+    @OnThread(Tag.Simulation)
+    public static @Value Object _test_fromString(String s, DataType type) throws UserException, InternalException
+    {
+        return convertEntireString(DataTypeUtility.value(s), type);
+    }
 
     @OnThread(Tag.Simulation)
     @Value

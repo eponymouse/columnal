@@ -53,7 +53,7 @@
 ==* <xsl:value-of select="@name"/>//<xsl:value-of select="typeConstraint" separator="//"/>
         </xsl:for-each>
         <xsl:for-each select="forany">
-== <xsl:value-of select="@name"/>//<xsl:value-of select="."/>
+== <xsl:value-of select="@name"/>//<xsl:value-of select="."/><xsl:if test="@min">//<xsl:value-of select="@min"/>//<xsl:value-of select="@max"/></xsl:if>
         </xsl:for-each>
 ==== <xsl:value-of select="lhs"/>
 ==== <xsl:value-of select="rhs"/>

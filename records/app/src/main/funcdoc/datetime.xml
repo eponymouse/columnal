@@ -156,7 +156,6 @@
         </example>
     </function>
     
-    <!--
     <function name="days between">
         <argType>(Date, Date)</argType>
         <returnType>Number{day}</returnType>
@@ -165,6 +164,8 @@
             <p>If the first date is before the second date, the returned number is positive.  If the first date is after the second date, the returned number will be negative.</p>
         </description>
         <equivalence>
+            <forany name="a">Date</forany>
+            <forany name="b">Date</forany>
             <lhs>@call @function days between(a, b)</lhs>
             <rhs>-1 * @call @function days between(b, a)</rhs>
         </equivalence>
@@ -176,17 +177,23 @@
     
     <function name="add days">
         <argType>(Date, Number{day})</argType>
-        <returnType></returnType>
+        <returnType>Date</returnType>
         <description>
             <p>Adds the given number of the days to the date.</p>
         </description>
         <equivalence>
-            <lhs>@call @function days between(date, @call @function add days(date, days))</lhs>
-            <rhs>days</rhs>
+            <forany name="date">Date</forany>
+            <forany name="days" min="-999999" max="999999">Number{day}</forany>
+            <lhs>@call @function days between(date, @call @function add days(date, @call @function round(days)))</lhs>
+            <rhs>@call @function round(days)</rhs>
         </equivalence>
         <example>
             <inputArg>(date{2002-11-01}, 28{day})</inputArg>
             <output>date{2002-11-29}</output>
+        </example>
+        <example>
+            <inputArg>(date{2000-01-01}, 0.5{day})</inputArg>
+            <output>error</output>
         </example>
     </function>
     
@@ -203,6 +210,5 @@
             <output>21{s}</output>
         </example>
     </function>
-    -->
     
 </functionDocumentation>

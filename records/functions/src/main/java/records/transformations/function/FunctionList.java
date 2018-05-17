@@ -8,6 +8,9 @@ import records.error.InternalException;
 import records.transformations.function.core.AsType;
 import records.transformations.function.core.AsUnit;
 import records.transformations.function.core.TypeOf;
+import records.transformations.function.datetime.AddDays;
+import records.transformations.function.datetime.DaysBetween;
+import records.transformations.function.datetime.SecondsBetween;
 import records.transformations.function.list.AnyAllNone;
 import records.transformations.function.list.Combine;
 import records.transformations.function.list.Count;
@@ -35,6 +38,7 @@ public class FunctionList
     {
         return Utility.concatStreams(Arrays.<FunctionDefinition>asList(
             new Absolute(),
+            new AddDays(),
             new AnyAllNone.Any(),
             new AnyAllNone.All(),
             new AnyAllNone.None(),
@@ -42,6 +46,7 @@ public class FunctionList
             new AsUnit(),
             new Combine(),
             new Count(),
+            new DaysBetween(),
             new GetElement(),
             new InList(),
             new JoinLists(),
@@ -52,6 +57,7 @@ public class FunctionList
             new Round(),
             new RoundDP(),
             new RoundSF(),
+            new SecondsBetween(),
             new Single(),
             new StringJoin(),
             new StringJoinWith(),
