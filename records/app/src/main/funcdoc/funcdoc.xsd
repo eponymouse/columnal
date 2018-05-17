@@ -72,7 +72,7 @@
                 <!-- A type variable -->
                 <xs:element name="foranytype" minOccurs="0" maxOccurs="unbounded">
                     <xs:complexType>
-                        <xs:sequence minOccurs="1" maxOccurs="unbounded">
+                        <xs:sequence minOccurs="0" maxOccurs="unbounded">
                             <xs:element name="typeConstraint" type="xs:string"/>
                         </xs:sequence>
                         <xs:attribute name="name" type="xs:string"/>

@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.antlr.v4.runtime.Parser;
 import org.apache.commons.io.FileUtils;
@@ -68,8 +69,8 @@ public class TestFromDoc
     @Property(trials=100)
     @OnThread(Tag.Simulation)
     public void testFromDoc(
-        @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
-        @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
+        @When(seed=20163851329122921L) @From(GenValueSpecifiedType.class) ValueGenerator valueGen,
+        @When(seed=5513959534313152167L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws IOException, InternalException, UserException
     {
         TypeManager typeManager = typeAndValueGen.getTypeManager();
         for (File file : FileUtils.listFiles(new File("target/classes"), new String[]{"test"}, false))
@@ -115,7 +116,7 @@ public class TestFromDoc
                         {
                             String nameType[] = StringUtils.removeStart(line, "==* ").trim().split("//");
                             TypeExp picked = TypeExp.fromDataType(null, typeAndValueGen.getType());
-                            MutVar mutVar = new MutVar(null, TypeClassRequirements.require(StringUtils.removeEnd(nameType[1], " " + nameType[0]), ""));
+                            MutVar mutVar = nameType.length == 1 ? new MutVar(null) : new MutVar(null, TypeClassRequirements.require(StringUtils.removeEnd(nameType[1], " " + nameType[0]), ""));
                             typeError = TypeExp.unifyTypes(picked, mutVar).isLeft();
                             typeVariables.put(nameType[0], Either.right(mutVar));
                             i += 1;

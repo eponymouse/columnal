@@ -17,6 +17,8 @@ import records.transformations.function.list.Count;
 import records.transformations.function.list.GetElement;
 import records.transformations.function.list.InList;
 import records.transformations.function.list.JoinLists;
+import records.transformations.function.list.KeepFunction;
+import records.transformations.function.list.MapFunction;
 import records.transformations.function.list.Single;
 import records.transformations.function.lookup.LookupFunctions;
 import records.transformations.function.number.Round;
@@ -50,6 +52,8 @@ public class FunctionList
             new GetElement(),
             new InList(),
             new JoinLists(),
+            new KeepFunction(),
+            new MapFunction(),
             new Max(),
             new Mean(),
             new Min(),

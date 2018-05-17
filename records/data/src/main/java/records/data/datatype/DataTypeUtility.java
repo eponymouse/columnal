@@ -403,6 +403,12 @@ public class DataTypeUtility
                 }
                 return s.append("]").toString();
             }
+
+            @Override
+            public String function(DataType argType, DataType resultType) throws InternalException, UserException
+            {
+                return "<function>";
+            }
         });
     }
 

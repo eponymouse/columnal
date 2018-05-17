@@ -91,4 +91,47 @@
             <output>error</output>
         </example>
     </function>
+    
+    <function name="keep">
+        <typeArg>t</typeArg>
+        <argType>([@typevar t], (@typevar t -&gt; Boolean))</argType>
+        <returnType>[@typevar t]</returnType>
+        <description>
+            <p>Returns a new list containing all the items in the list for which the function returns true.</p>
+        </description>
+        <equivalence display="false">
+            <foranytype name="t"/>
+            <forany name="xs">[@typevar t]</forany>
+            <forany name="f">(@typevar t -&gt; Boolean)</forany>
+            <lhs>@call @function all(@call @function keep(xs, f), f)</lhs>
+            <rhs>true</rhs>
+        </equivalence>
+        <example>
+            <inputArg>([3, 8, 4, 6, 2], (? &gt;= 5))</inputArg>
+            <output>[8, 6]</output>
+        </example>
+        <example>
+            <inputArg>([], (? = 0))</inputArg>
+            <output>[]</output>
+        </example>
+    </function>
+    
+    <function name="apply each">
+        <typeArg>before</typeArg>
+        <typeArg>after</typeArg>
+        <argType>([@typevar before], (@typevar before -&gt; @typevar after))</argType>
+        <returnType>[@typevar after]</returnType>
+        <description>
+            <p>Applies the function to each item in the list, and returns the resulting items.</p>
+            <p>The order of the items in the new list will correspond to the original order.</p>
+        </description>
+        <example>
+            <inputArg>([3, 6, 9], (? + 1))</inputArg>
+            <output>[4, 7, 10]</output>
+        </example>
+        <example>
+            <inputArg>([-3, 4, -7], @function abs)</inputArg>
+            <output>[3, 4, 7]</output>
+        </example>
+    </function>
 </functionDocumentation>

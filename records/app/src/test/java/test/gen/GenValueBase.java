@@ -21,8 +21,13 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
+import utility.ExFunction;
+import utility.FunctionInt;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -34,6 +39,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import test.TestUtil;
 import utility.Utility;
+import utility.Utility.ListEx;
+import utility.ValueFunction;
 
 import java.math.BigDecimal;
 import java.time.OffsetTime;
@@ -41,11 +48,13 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static test.TestUtil.distinctTypes;
@@ -146,6 +155,81 @@ public abstract class GenValueBase<T> extends Generator<T>
                     return DataTypeUtility.value(Collections.emptyList());
                 @NonNull DataType innerFinal = inner;
                 return DataTypeUtility.value(TestUtil.<@Value Object>makeList(r, 1, 12, () -> makeValue(innerFinal)));
+            }
+
+            @Override
+            public @Value Object function(DataType argType, DataType resultType) throws InternalException, UserException
+            {
+                if (resultType.equals(DataType.BOOLEAN))
+                {
+                    return argType.apply(new DataTypeVisitor<ValueFunction>()
+                    {
+                        private <T> ValueFunction f(Class<T> type, SimulationFunction<T, Boolean> predicate)
+                        {
+                            return new ValueFunction()
+                            {
+                                @Override
+                                public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
+                                {
+                                    return predicate.apply(Utility.cast(arg, type));
+                                }
+                            };
+                        }
+                        
+                        @Override
+                        public ValueFunction number(NumberInfo numberInfo) throws InternalException, UserException
+                        {
+                            return r.choose(ImmutableList.of(
+                                f(Number.class, n -> n.doubleValue() > 0),
+                                f(Number.class, n -> n.longValue() <= 0),
+                                f(Number.class, Utility::isIntegral)
+                            ));
+                        }
+
+                        @Override
+                        public ValueFunction text() throws InternalException, UserException
+                        {
+                            return r.choose(ImmutableList.of(
+                                f(String.class, String::isEmpty),
+                                f(String.class, s -> s.contains("a"))
+                            ));
+                        }
+
+                        @Override
+                        public ValueFunction date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                        {
+                            return f(TemporalAccessor.class, t -> true);
+                        }
+
+                        @Override
+                        public ValueFunction bool() throws InternalException, UserException
+                        {
+                            return r.choose(ImmutableList.of(
+                                f(Boolean.class, b -> b),
+                                f(Boolean.class, b -> !b)
+                            ));
+                        }
+
+                        @Override
+                        public ValueFunction tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                        {
+                            return f(TaggedValue.class, t -> t.getTagIndex() == 0);
+                        }
+
+                        @Override
+                        public ValueFunction tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                        {
+                            return f(Object[].class, o -> Utility.cast(inner.get(0).apply(this).call(o[0]), Boolean.class));
+                        }
+
+                        @Override
+                        public ValueFunction array(DataType inner) throws InternalException, UserException
+                        {
+                            return f(ListEx.class, l -> l.size() == 0);
+                        }
+                    });
+                }
+                throw new InternalException("We only support functions with Boolean return type for testing");
             }
         });
     }
