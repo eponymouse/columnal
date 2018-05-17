@@ -219,7 +219,9 @@ public abstract class GenValueBase<T> extends Generator<T>
                         @Override
                         public ValueFunction tuple(ImmutableList<DataType> inner) throws InternalException, UserException
                         {
-                            return f(Object[].class, o -> Utility.cast(inner.get(0).apply(this).call(o[0]), Boolean.class));
+                            // Choose once outside function invocation:
+                            ValueFunction innerFunc = inner.get(0).apply(this);
+                            return f(Object[].class, o -> Utility.cast(innerFunc.call(o[0]), Boolean.class));
                         }
 
                         @Override
