@@ -129,7 +129,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
             {
                 @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
                 if (newContent != null)
-                    textField.setText(newContent);
+                    FXUtility.mouse(this).setContentDirect(newContent);
             }
         });
 
@@ -181,7 +181,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                         //#error TODO I think setting the text isn't enough to clear the error state, we also need to set the status or something?
                         @Nullable String newContent = onSelect.focusLeaving(textField.getText(), completion);
                         if (newContent != null)
-                            textField.setText(newContent);
+                            FXUtility.keyboard(this).setContentDirect(newContent);
                     }
                     hide();
                     instruction.hide();
@@ -404,7 +404,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     e.consume();
                     @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);
                     if (newContent != null)
-                        textField.setText(newContent);
+                        FXUtility.keyboard(this).setContentDirect(newContent);
                     hide();
                     instruction.hide();
                 }

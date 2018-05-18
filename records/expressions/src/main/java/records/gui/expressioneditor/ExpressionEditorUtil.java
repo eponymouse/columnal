@@ -98,6 +98,14 @@ public class ExpressionEditorUtil
             });
             setError(hasError);
         }
+
+        // For debugging purposes:
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public String toString()
+        {
+            return "ErrorTop " + topLabel.getText() + ": " + (getChildren().size() > 1 ? getChildren().get(1) : "<empty>");
+        }
     }
     
     /**
