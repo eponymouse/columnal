@@ -383,7 +383,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(typeLiteralCompletion);
         
         addAllFunctions(r);
-        r.add(new SimpleCompletion("", "anything", "autocomplete.match.anything", new MatchAnything()));
+        r.add(new SimpleCompletion("", "@anything", "autocomplete.match.anything", new MatchAnything()));
         r.add(new SimpleCompletion("", "true", null, new Lit(new BooleanLiteral(true))));
         r.add(new SimpleCompletion("", "false", null, new Lit(new BooleanLiteral(false))));
         for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))

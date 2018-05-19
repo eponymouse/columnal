@@ -32,7 +32,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.recordError(this, StyledString.s("Any cannot be declared outside pattern match"));
+        onError.recordError(this, StyledString.s("@anything cannot be declared outside pattern match"));
         return null;
     }
 
@@ -45,7 +45,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     @Override
     public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Calling getValue on \"any\" pattern (should only call matchAsPattern)");
+        throw new InternalException("Calling getValue on \"@anything\" pattern (should only call matchAsPattern)");
     }
 
     @Override
@@ -64,13 +64,13 @@ public class MatchAnythingExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@any";
+        return "@anything";
     }
 
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.s("any");
+        return StyledString.s("@anything");
     }
 
     @Override
