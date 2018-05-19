@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression, ExpressionNodeParent>, ExpressionNodeParent
 {
     private final Pair<ErrorTop, ErrorDisplayer<Expression, ExpressionNodeParent>> matchLabel;
+    private final Pair<ErrorTop, ErrorDisplayer<Expression, ExpressionNodeParent>> endLabel;
     private final ConsecutiveBase<Expression, ExpressionNodeParent> source;
     private final ObservableList<ClauseNode> clauses;
     private ConsecutiveBase<Expression, ExpressionNodeParent> parent;
@@ -50,7 +51,9 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     public PatternMatchNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Pair<Expression, List<MatchClause>> sourceAndClauses)
     {
         this.parent = parent;
-        this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles());
+        this.matchLabel = ExpressionEditorUtil.keyword("@match", "match", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles());
+        this.endLabel = ExpressionEditorUtil.keyword("@endmatch", "match", this, parent.getEditor(), e -> parent.replaceLoad(this, e), getParentStyles());
+        
         this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel.getFirst(), null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(false), this), ')') {
             @Override
             public boolean isFocused()
@@ -100,7 +103,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     @Override
     protected Stream<Node> calculateNodes()
     {
-        return Stream.<Node>concat(source.nodes().stream(), clauses.stream().flatMap(c -> c.nodes().stream()));
+        return Utility.concatStreams(source.nodes().stream(), clauses.stream().flatMap(c -> c.nodes().stream()), Stream.of(endLabel.getFirst()));
     }
 
     @Override
@@ -252,6 +255,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     public void cleanup()
     {
         matchLabel.getSecond().cleanup();
+        endLabel.getSecond().cleanup();
         source.cleanup();
         clauses.forEach(ClauseNode::cleanup);
     }
@@ -327,6 +331,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     public void clearAllErrors()
     {
         matchLabel.getSecond().clearAllErrors();
+        endLabel.getSecond().clearAllErrors();
         source.clearAllErrors();
         clauses.forEach(ClauseNode::clearAllErrors);
     }
