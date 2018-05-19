@@ -27,7 +27,7 @@ import java.util.function.Function;
  * The data-type of a homogeneously-typed list of values,
  * including a facility to get the item at a particular index.
  */
-public class DataTypeValue extends DataType
+public final class DataTypeValue extends DataType
 {
     private final @Nullable GetValue<@Value Number> getNumber;
     private final @Nullable GetValue<@Value String> getText;

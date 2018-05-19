@@ -61,6 +61,7 @@ public class TypeManager
 {
     private final UnitManager unitManager;
     private final HashMap<TypeId, TaggedTypeDefinition> knownTypes = new HashMap<>();
+    private final TaggedTypeDefinition voidType;
     private final TaggedTypeDefinition maybeType;
     // Only need one value for Missing:
     private final TaggedValue maybeMissing;
@@ -77,6 +78,7 @@ public class TypeManager
         ));
         maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
+        voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
         // TODO make this into a GADT:
         typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
         knownTypes.put(new TypeId("Type"), typeGADT);
@@ -383,6 +385,11 @@ public class TypeManager
     public TaggedTypeDefinition getMaybeType()
     {
         return maybeType;
+    }
+    
+    public TaggedTypeDefinition getVoidType()
+    {
+        return voidType;
     }
 
     // Basically, t -> Type t

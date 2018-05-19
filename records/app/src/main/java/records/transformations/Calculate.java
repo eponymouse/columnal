@@ -2,21 +2,11 @@ package records.transformations;
 
 import annotation.recorded.qual.Recorded;
 import annotation.units.TableDataRowIndex;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.Table;
-import records.data.TableAndColumnRenames;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.TableOperations;
-import records.data.Transformation;
+import records.data.*;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -39,13 +29,13 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
@@ -93,10 +83,11 @@ public class Calculate extends Transformation
             RecordSet srcRecordSet = this.src.getData();
             TableLookup tableLookup = new MultipleTableLookup(mgr, src);
             List<SimulationFunction<RecordSet, Column>> columns = new ArrayList<>();
+            HashMap<ColumnId, Expression> stillToAdd = new HashMap<>(newColumns);
             for (Column c : srcRecordSet.getColumns())
             {
                 // If the old column is not overwritten by one of the same name, include it:
-                Expression overwrite = newColumns.get(c.getName());
+                Expression overwrite = stillToAdd.remove(c.getName());
                 
                 if (overwrite == null)
                 {
@@ -121,7 +112,7 @@ public class Calculate extends Transformation
                 }
             }
 
-            for (Entry<ColumnId, Expression> newCol : toCalculate.entrySet())
+            for (Entry<ColumnId, Expression> newCol : stillToAdd.entrySet())
             {
                 columns.add(makeCalcColumn(mgr, tableLookup, newCol.getKey(), newCol.getValue()));
             }
@@ -150,36 +141,43 @@ public class Calculate extends Transformation
     }
 
     private SimulationFunction<RecordSet, Column> makeCalcColumn(@UnknownInitialization(Object.class) Calculate this,
-        TableManager mgr, TableLookup tableLookup, ColumnId columnId, Expression expression) throws UserException, InternalException
+        TableManager mgr, TableLookup tableLookup, ColumnId columnId, Expression expression) throws InternalException
     {
-        ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
+        try
         {
-            @Override
-            public <E> void recordError(E src, StyledString s)
+            ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
             {
-                error = s;
-            }
+                @Override
+                public <E> void recordError(E src, StyledString s)
+                {
+                    error = s;
+                }
 
-            @Override
-            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
-            {
-                
-            }
+                @Override
+                public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+                {
 
-            @SuppressWarnings("recorded")
-            @Override
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-            {
-                return typeExp;
-            }
-        };
-        @Nullable TypeExp type = expression.check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+                }
 
-        DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
-        if (type == null || concrete == null)
-            throw new UserException(error == null ? StyledString.s("") : error); // A bit redundant, but control flow will pan out right
-        @NonNull DataType typeFinal = concrete;
-        return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))));
+                @SuppressWarnings("recorded")
+                @Override
+                public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+                {
+                    return typeExp;
+                }
+            };
+            @Nullable TypeExp type = expression.check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+
+            DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
+            if (type == null || concrete == null)
+                throw new UserException(error == null ? StyledString.s("") : error); // A bit redundant, but control flow will pan out right
+            @NonNull DataType typeFinal = concrete;
+            return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))));
+        }
+        catch (UserException e)
+        {
+            return rs -> new ErrorColumn(rs, mgr.getTypeManager(), columnId, e.getStyledMessage());
+        }
     }
 
     @Override

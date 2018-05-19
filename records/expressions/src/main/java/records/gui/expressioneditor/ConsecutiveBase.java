@@ -771,10 +771,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      */
     public abstract ImmutableSet<Character> terminatedByChars();
 
-    @SuppressWarnings("nullness") // TEMP
     public void focusChanged()
     {
-        Log.debug("Removing blanks, focus owner: " + nodes().get(0).getScene().getFocusOwner() + " items: " + nodes().stream().map(Object::toString).collect(Collectors.joining(", ")));
+        //Log.debug("Removing blanks, focus owner: " + nodes().get(0).getScene().getFocusOwner() + " items: " + nodes().stream().map(Object::toString).collect(Collectors.joining(", ")));
         removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
