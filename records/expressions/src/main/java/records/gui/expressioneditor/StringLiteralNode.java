@@ -75,6 +75,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             }
         }, WhitespacePolicy.ALLOW_ANYWHERE, c -> false);
 
+        FXUtility.sizeToFit(textField, 10.0, 10.0);
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);
 
