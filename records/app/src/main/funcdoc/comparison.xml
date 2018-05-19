@@ -10,6 +10,10 @@
         <description>
             <p>Gets the lowest item in the list.</p>
         </description>
+        <seeAlso>
+            <link function="maximum"/>
+            <link operator="&lt;"/>
+        </seeAlso>
         <equivalence display="false">
             <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
             <forany name="x">[@typevar t]</forany>
@@ -43,6 +47,10 @@
         <description>
             <p>Gets the highest item in the list.</p>
         </description>
+        <seeAlso>
+            <link function="minimum"/>
+            <link operator="&lt;"/>
+        </seeAlso>
         <equivalence display="false">
             <foranytype name="t"><typeConstraint>Comparable t</typeConstraint></foranytype>
             <forany name="x">[@typevar t]</forany>

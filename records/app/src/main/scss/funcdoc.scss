@@ -26,7 +26,7 @@ html {
 .function-name-type {
     font-weight: bold;
 }
-.function-name-type, .function-type {   
+.function-name-type, .function-type, .operator-type {   
     font-size: 18pt;
     
     .wild-unit {
@@ -54,15 +54,16 @@ html {
         margin-left: -2px;
         margin-right: 2px;
     }
+    
+    .function-arrow {
+        padding-left: 8pt;
+        padding-right: 12pt;
+    }
 }
 .function-arrow::before {
     content: "\27F6";
-}
-.function-type .function-arrow {
-    padding-left: 8pt;
-    padding-right: 12pt;
-}
-.function-type {
+} 
+.function-type, .operator-type {
     font-family: 'Droid Sans Mono';
     color: #333;
 }
@@ -72,7 +73,7 @@ html {
 
 .examples {
     .examples-header {
-        font-weight: 14pt;
+        font-size: 14pt;
         font-weight: bold;
     }
     .example .example-call {
@@ -81,5 +82,19 @@ html {
     & .function-arrow {
         padding-left: 4pt;
         padding-right: 8pt;
+    }
+}
+
+.seeAlso {
+    .seeAlsoHeader {
+        display: block;
+        font-weight: bold;
+        font-size: 14pt;
+    }
+    a {
+        margin-left: 30pt;
+        &, &:visited, &:hover {
+            color: black;
+        }
     }
 }

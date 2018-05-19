@@ -13,17 +13,19 @@
                 <link rel="stylesheet" href="web.css"/>
             </head>
             <body>
+                <!-- Index -->
                 <div class="index">
-                <xsl:for-each select=".//functionDocumentation">
-                    <xsl:variable name="namespace" select="@namespace"/>
-                    <div class="index-namespace">
-                        <xsl:for-each select="function">
-                            <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
-                        </xsl:for-each>
-                    </div>
-                </xsl:for-each>
+                    <xsl:for-each select=".//functionDocumentation">
+                        <xsl:variable name="namespace" select="@namespace"/>
+                        <div class="index-namespace">
+                            <xsl:for-each select="function">
+                                <a class="index-entry" href="#function-{@name}"><xsl:value-of select="@name"/></a>
+                            </xsl:for-each>
+                        </div>
+                    </xsl:for-each>
                 </div>
                 
+                <!-- Body -->
                 <xsl:for-each select=".//functionDocumentation">
                     <xsl:variable name="namespace" select="@namespace"/>
                     <div class="namespace">
@@ -33,9 +35,21 @@
                             </xsl:call-template>
                         </xsl:for-each>
                     </div>
-                    
+                </xsl:for-each>
+                
+                <xsl:for-each select=".//binaryOperator">
+                    <xsl:call-template name="processOperator">
+                        <xsl:with-param name="operator" select="."/>
+                    </xsl:call-template>
                 </xsl:for-each>
             </body>
         </html>
+    </xsl:template>
+    
+    <xsl:template match="link">
+        <xsl:choose>
+            <xsl:when test="@function"><a class="internal-link" href="#function-{@function}"><xsl:value-of select="@function"/>(..)</a></xsl:when>
+            <xsl:when test="@operator"><a class="internal-link" href="#operator-{string-join(string-to-codepoints(@operator), '-')}">operator <xsl:value-of select="@operator"/></a></xsl:when>
+        </xsl:choose>
     </xsl:template>
 </xsl:stylesheet>

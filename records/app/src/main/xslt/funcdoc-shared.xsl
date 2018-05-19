@@ -35,6 +35,8 @@
             <xsl:non-matching-substring>(<xsl:value-of select="."/>)</xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:template>
+    
+    
     <xsl:template name="processFunction">
         <xsl:param name="function" select="."/>
 
@@ -57,7 +59,44 @@
                             name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>
+            <xsl:for-each select="seeAlso">
+                <div class="seeAlso">
+                    <span class="seeAlsoHeader">See Also</span>
+                    <xsl:apply-templates select="child::node()"/>
+                </div>
+            </xsl:for-each>
         </div>
     </xsl:template>
 
+    
+    <xsl:template name="processOperator">
+        <xsl:param name="operator" select="."/>
+
+        <div class="operator-item">
+            <xsl:for-each select="operator">
+                <span class="operator-name-header" id="operator-{string-join(string-to-codepoints(.), '-')}">operator <xsl:copy-of select="."/></span>
+            </xsl:for-each>
+            <span class="operator-type"><!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
+                    name="processType"><xsl:with-param name="type"><xsl:call-template name="bracketed"><xsl:with-param name="expression"><xsl:value-of select="argTypeLeft"/><xsl:value-of select="argTypeRight"/> </xsl:with-param></xsl:call-template></xsl:with-param></xsl:call-template> <span class="function-arrow"/> <xsl:call-template
+                    name="processType"><xsl:with-param name="type" select="resultType"/></xsl:call-template>
+            </span>
+            <div class="description"><xsl:copy-of select="description"/></div>
+            <div class="examples">
+                <span class="examples-header">Examples</span>
+                <xsl:for-each select="example">
+                    <div class="example"><span class="example-call"><xsl:if test="input"><xsl:call-template
+                            name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:call-template
+                            name="processExpression"><xsl:with-param name="expression"><xsl:call-template
+                            name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="function-arrow"/> <xsl:call-template
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span></div>
+                </xsl:for-each>
+            </div>
+            <xsl:for-each select="seeAlso">
+                <div class="seeAlso">
+                    <span class="seeAlsoHeader">See Also</span>
+                    <xsl:apply-templates select="child::node()"/>
+                </div>
+            </xsl:for-each>
+        </div>
+    </xsl:template>
 </xsl:stylesheet>

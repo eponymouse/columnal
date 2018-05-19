@@ -107,6 +107,7 @@
                 <xs:element name="returnType" type="xs:string"/>
                 <!-- TODO add mini as mandatory here -->
                 <xs:element ref="description"/>
+                <xs:element ref="seeAlso" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element ref="equivalence" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:choice minOccurs="1" maxOccurs="unbounded">
                     <xs:element ref="example"/>
@@ -220,6 +221,14 @@
                     </xs:complexType>
                 </xs:element>
             </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="seeAlso">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
         </xs:complexType>
     </xs:element>
 
