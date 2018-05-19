@@ -74,6 +74,11 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
         -fx-background-color: rgba(128,128,128,0.1);
     }
 }
+.labelled-top {
+    -fx-min-width: 3;
+    -fx-pref-width: 3;
+}
+
 .entry, .labelled {
     -fx-background-insets: 0;
     -fx-alignment: top-center;
