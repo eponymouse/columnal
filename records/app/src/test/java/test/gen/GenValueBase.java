@@ -162,16 +162,16 @@ public abstract class GenValueBase<T> extends Generator<T>
             {
                 if (resultType.equals(DataType.BOOLEAN))
                 {
-                    return argType.apply(new DataTypeVisitor<ValueFunction>()
+                    return DataTypeUtility.value(argType.apply(new DataTypeVisitor<ValueFunction>()
                     {
-                        private <T> ValueFunction f(Class<T> type, SimulationFunction<T, Boolean> predicate)
+                        private <T> ValueFunction f(Class<T> type, SimulationFunction<@Value T, Boolean> predicate)
                         {
                             return new ValueFunction()
                             {
                                 @Override
                                 public @OnThread(Tag.Simulation) @Value Object call(@Value Object arg) throws InternalException, UserException
                                 {
-                                    return predicate.apply(Utility.cast(arg, type));
+                                    return DataTypeUtility.value(predicate.apply(Utility.cast(arg, type)));
                                 }
                             };
                         }
@@ -229,7 +229,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                         {
                             return f(ListEx.class, l -> l.size() == 0);
                         }
-                    });
+                    }));
                 }
                 throw new InternalException("We only support functions with Boolean return type for testing");
             }
