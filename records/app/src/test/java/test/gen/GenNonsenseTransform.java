@@ -20,6 +20,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -44,14 +45,17 @@ public class GenNonsenseTransform extends Generator<Transformation_Mgr>
             GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
             genNonsenseExpression.setTableManager(mgr);
 
-            ImmutableMap.Builder<ColumnId, Expression> columns = ImmutableMap.builder();
+            HashMap<ColumnId, Expression> columns = new HashMap<>();
             int numColumns = sourceOfRandomness.nextInt(0, 5);
             for (int i = 0; i < numColumns; i++)
             {
                 Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-                columns.put(TestUtil.generateColumnId(sourceOfRandomness), nonsenseExpression);
+                ColumnId columnId = TestUtil.generateColumnId(sourceOfRandomness);
+                while (columns.containsKey(columnId))
+                    columnId = TestUtil.generateColumnId(sourceOfRandomness);
+                columns.put(columnId, nonsenseExpression);
             }
-            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), columns.build()));
+            return new Transformation_Mgr(mgr, new Calculate(mgr, new InitialLoadDetails(ids.getFirst(), null, null), ids.getSecond(), ImmutableMap.copyOf(columns)));
         }
         catch (InternalException | UserException e)
         {
