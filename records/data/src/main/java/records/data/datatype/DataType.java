@@ -1885,6 +1885,24 @@ public class DataType implements StyledShowable
                 }
             }
 
+            public String literalPrefix()
+            {
+                switch (this)
+                {
+                    case YEARMONTHDAY:
+                        return "date";
+                    case YEARMONTH:
+                        return "dateym";
+                    case TIMEOFDAY:
+                        return "time";
+                    case DATETIME:
+                        return "datetime";
+                    case DATETIMEZONED:
+                        return "datetimezoned";
+                }
+                // Should never happen:
+                return "";
+            }
 
             public boolean hasZoneOffset()
             {

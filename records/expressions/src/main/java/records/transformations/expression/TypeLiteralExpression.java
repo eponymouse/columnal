@@ -105,7 +105,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @Override
     public StyledString toDisplay(BracketedStatus surround)
     {
-        return StyledString.concat(StyledString.s("`"), type.toStyledString(), StyledString.s("`"));
+        return StyledString.concat(StyledString.s("type{"), type.toStyledString(), StyledString.s("}"));
     }
 
     @Override

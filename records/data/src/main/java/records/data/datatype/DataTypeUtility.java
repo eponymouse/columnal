@@ -334,7 +334,7 @@ public class DataTypeUtility
             {
                 String s = dateTimeInfo.getStrictFormatter().format((TemporalAccessor) item);
                 if (asExpression)
-                    return "@call @function asType(`" + dataType.save(new OutputBuilder()).toString() + "`, @call @function from text(\"" + GrammarUtility.escapeChars(s) + "\"))";
+                    return dateTimeInfo.getType().literalPrefix() + "{" + s + "}";
                 else
                     return s;
             }
