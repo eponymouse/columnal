@@ -346,6 +346,7 @@
                             <otherDepends>list.xml</otherDepends>
                             <otherDepends>listprocess.xml</otherDepends>
                             <otherDepends>lookup.xml</otherDepends>
+                            <otherDepends>math.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>
                             <otherDepends>operators.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
@@ -388,6 +389,7 @@
                             <otherDepends>list.xml</otherDepends>
                             <otherDepends>listprocess.xml</otherDepends>
                             <otherDepends>lookup.xml</otherDepends>
+                            <otherDepends>math.xml</otherDepends>
                             <otherDepends>number.xml</otherDepends>
                             <otherDepends>operators.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>

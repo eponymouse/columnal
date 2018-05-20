@@ -21,6 +21,8 @@ import records.transformations.function.list.KeepFunction;
 import records.transformations.function.list.MapFunction;
 import records.transformations.function.list.Single;
 import records.transformations.function.lookup.LookupFunctions;
+import records.transformations.function.math.Logarithm;
+import records.transformations.function.math.LogarithmNatural;
 import records.transformations.function.number.Round;
 import records.transformations.function.number.RoundDP;
 import records.transformations.function.number.RoundSF;
@@ -53,6 +55,8 @@ public class FunctionList
             new InList(),
             new JoinLists(),
             new KeepFunction(),
+            new Logarithm(),
+            new LogarithmNatural(),
             new MapFunction(),
             new Max(),
             new Mean(),

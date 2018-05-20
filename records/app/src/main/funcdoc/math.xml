@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="math">
+    <function name="log">
+        <unitArg>u</unitArg>
+        <argType>(Number{@unitvar u}, Number)</argType>
+        <returnType>Number</returnType>
+        <description>
+            <p>Takes the logarithm of the first number, using the second number as the base.</p>
+        </description>
+        <example>
+            <inputArg>(100, 10)</inputArg>
+            <output>2</output>
+        </example>
+        <example>
+            <inputArg>(256, 2)</inputArg>
+            <output>8</output>
+        </example>
+        <example>
+            <inputArg>(53252, 10)</inputArg>
+            <outputPattern>4.726 &#x00B1; 0.001</outputPattern>
+        </example>
+    </function>
+    <function name="log natural">
+        <unitArg>u</unitArg>
+        <argType>Number{@unitvar u}</argType>
+        <returnType>Number</returnType>
+        <description>
+            <p>Takes the natural logarithm (i.e. the logarithm with base e).</p>
+        </description>
+        <example>
+            <inputArg>53252</inputArg>
+            <outputPattern>10.883 &#x00B1; 0.001</outputPattern>
+        </example>
+        <example>
+            <inputArg>1</inputArg>
+            <output>0</output>
+        </example>
+        <example>
+            <inputArg>0</inputArg>
+            <output>error</output>
+        </example>
+    </function>
+</functionDocumentation>

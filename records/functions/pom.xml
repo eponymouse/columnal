@@ -73,6 +73,12 @@
             <version>0.7-M5</version>
         </dependency>
 
+        <dependency>
+            <groupId>ch.obermuhlner</groupId>
+            <artifactId>big-math</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        
         <!-- XOM for parsing XML help files: -->
         <dependency>
             <groupId>com.io7m.xom</groupId>
@@ -87,7 +93,7 @@
             <scope>system</scope>
             <systemPath>${basedir}/../lib/threadchecker.jar</systemPath>
         </dependency>
-
+        
         <dependency>
             <groupId>com.fxexperience</groupId>
             <artifactId>scenic-view</artifactId>
