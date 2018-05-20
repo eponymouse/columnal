@@ -221,7 +221,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                         {
                             // Choose once outside function invocation:
                             ValueFunction innerFunc = inner.get(0).apply(this);
-                            return f(Object[].class, o -> Utility.cast(innerFunc.call(o[0]), Boolean.class));
+                            return f(Object[].class, o -> Utility.cast(innerFunc.call(Utility.cast(o[0], Object.class)), Boolean.class));
                         }
 
                         @Override
