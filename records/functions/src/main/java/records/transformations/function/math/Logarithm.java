@@ -3,6 +3,7 @@ package records.transformations.function.math;
 import annotation.qual.Value;
 import ch.obermuhlner.math.big.BigDecimalMath;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -37,12 +38,14 @@ public class Logarithm extends FunctionDefinition
                 try
                 {
                     @Value BigDecimal bd = Utility.toBigDecimal(x);
+                    final BigDecimal r;
                     if (Utility.compareNumbers(base, 10) == 0)
-                        return BigDecimalMath.log10(bd, MathContext.DECIMAL128);
+                        r = BigDecimalMath.log10(bd, MathContext.DECIMAL128);
                     else if (Utility.compareNumbers(base, 2) == 0)
-                        return BigDecimalMath.log2(bd, MathContext.DECIMAL128);
+                        r = BigDecimalMath.log2(bd, MathContext.DECIMAL128);
                     else
-                        return BigDecimalMath.log(bd, MathContext.DECIMAL128).divide(BigDecimalMath.log(Utility.toBigDecimal(base), MathContext.DECIMAL128), MathContext.DECIMAL128);
+                        r = BigDecimalMath.log(bd, MathContext.DECIMAL128).divide(BigDecimalMath.log(Utility.toBigDecimal(base), MathContext.DECIMAL128), MathContext.DECIMAL128);
+                    return DataTypeUtility.value(r);
                 }
                 catch (ArithmeticException e)
                 {

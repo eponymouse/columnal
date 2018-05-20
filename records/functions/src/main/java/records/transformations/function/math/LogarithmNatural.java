@@ -3,6 +3,7 @@ package records.transformations.function.math;
 import annotation.qual.Value;
 import ch.obermuhlner.math.big.BigDecimalMath;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -38,7 +39,7 @@ public class LogarithmNatural extends FunctionDefinition
                 try
                 {
                     @Value BigDecimal bd = Utility.toBigDecimal(x);
-                    return BigDecimalMath.log(bd, MathContext.DECIMAL128);
+                    return DataTypeUtility.value(BigDecimalMath.log(bd, MathContext.DECIMAL128));
                 }
                 catch (ArithmeticException e)
                 {
