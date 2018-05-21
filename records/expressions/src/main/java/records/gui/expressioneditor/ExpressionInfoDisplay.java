@@ -204,7 +204,7 @@ public class ExpressionInfoDisplay
         if (immediately)
         {
             //Log.debug("#####\n# Hiding " + popupFinal + "\n#####");
-            popupFinal.hide();
+            popupFinal.hide(Duration.ZERO);
             popup = null;
         }
         else

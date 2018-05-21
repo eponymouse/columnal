@@ -163,7 +163,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
                 if (!isShowing() && pos != null)
                 {
                     Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
-                    instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
+                    // TODO see if we can find a useful place to show this:
+                    //instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
                     show(textField, pos.getFirst(), pos.getSecond());
                 }
             }

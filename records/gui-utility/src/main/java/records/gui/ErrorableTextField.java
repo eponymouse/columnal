@@ -11,6 +11,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -99,7 +100,7 @@ public class ErrorableTextField<T>
         }
         else if (!shouldShow && popOver.isShowing())
         {
-            popOver.hide();
+            popOver.hide(Duration.ZERO);
         }
 
     }

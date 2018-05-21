@@ -19,6 +19,7 @@ import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
+import utility.ExBiFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -45,8 +46,9 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             textField.setText(initialContent); // Do before auto complete is on the field
             initialContentEntered.set(true);
         }
-        @SuppressWarnings("initialization") // Dummy variable to allow suppressing warning about the self method reference:
-        AutoComplete dummy = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
+        ExBiFunction<String, CompletionQuery, List<Completion>> getSuggestions = this::getSuggestions;
+        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
         updateNodes();
 
         if (userEntered)

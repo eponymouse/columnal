@@ -183,6 +183,8 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
     public void cleanup()
     {
         container.getSecond().cleanup();
+        if (autoComplete != null)
+            autoComplete.hide();
     }
 
     private static class SimpleCompletion extends Completion

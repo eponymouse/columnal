@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
@@ -44,6 +45,8 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     protected final ErrorTop container;
 
     private final ExpressionInfoDisplay expressionInfoDisplay;
+    
+    protected @MonotonicNonNull AutoComplete<?> autoComplete;
 
     protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
@@ -115,6 +118,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     @Override
     public void cleanup()
     {
+        if (autoComplete != null)
+        {
+            autoComplete.hide();
+        }
         expressionInfoDisplay.hideImmediately();
     }
 

@@ -290,11 +290,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private final ObjectProperty<GeneralValue> currentValue;
 
     /**
-     * The auto-complete which will show when the user is entering input.
-     */
-    private final AutoComplete autoComplete;
-
-    /**
      * The semantic parent which can be asked about available variables, etc
      */
     private final ExpressionNodeParent semanticParent;

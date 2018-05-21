@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -251,7 +252,7 @@ public class StructuredTextField extends StyleClassedTextArea
     {
         if (fixPopup != null)
         {
-            fixPopup.hide();
+            fixPopup.hide(Duration.ZERO);
             fixPopup = null;
         }
     }
