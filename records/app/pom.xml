@@ -350,6 +350,9 @@
                             <otherDepends>number.xml</otherDepends>
                             <otherDepends>operators.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
+                            <otherDepends>tuple.xml</otherDepends>
+                            <otherDepends>types.xml</otherDepends>
+                            
                             <otherDepends>../xslt/funcdoc-shared.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-indiv-html.xsl</stylesheet>
                             <!-- When generating multiple files, outputDir is not respected.
@@ -393,6 +396,8 @@
                             <otherDepends>number.xml</otherDepends>
                             <otherDepends>operators.xml</otherDepends>
                             <otherDepends>text.xml</otherDepends>
+                            <otherDepends>tuple.xml</otherDepends>
+                            <otherDepends>types.xml</otherDepends>
                             <stylesheet>src/main/xslt/funcdoc-types-and-mini.xsl</stylesheet>
                             <outputDir>${project.build.directory}/classes</outputDir>
                             <!-- When generating multiple files, outputDir is not respected.

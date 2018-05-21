@@ -5,7 +5,7 @@ options { tokenVocab = FormatLexer; }
 decimalPlaces : DIGITS (DASH DIGITS)? (SPACE_KWD | ZERO_KWD);
 number : NUMBER decimalPlaces? UNIT?;
 date : YEARMONTHDAY | YEARMONTH | TIMEOFDAY | TIMEOFDAYZONED | DATETIME | DATETIMEZONED;
-tuple : OPEN_BRACKET type (COMMA type)+ CLOSE_BRACKET;
+tuple : OPEN_BRACKET type (COMMA type)+ (COMMA TUPLE_MORE)? CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
 functionType : OPEN_BRACKET type ARROW type CLOSE_BRACKET;
 type : unbracketedType | bracketedType;

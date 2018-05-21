@@ -12,4 +12,6 @@
     <xi:include href="number.xml"/>
     <xi:include href="operators.xml"/>
     <xi:include href="text.xml"/>
+    <xi:include href="tuple.xml"/>
+    <xi:include href="types.xml"/>
 </all>

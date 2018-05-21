@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="">
+    <type name="Boolean">
+        <description>
+            <p>A Boolean value is one that is either true, or false.</p>
+            <p>This is a useful concept that crops up in many places.  If you want to say "if A then B else C", then A must be a Boolean: true or false.</p>
+        </description>
+        <seeAlso>
+            <link operator="&amp;"/>
+            <link operator="|"/>
+            <link operator="="/>
+            <link operator="&lt;&gt;"/>
+            <link namespace="boolean"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Text">
+        <description>
+            <p>A Text value (often also known as a string).</p>
+            <p>This holds a Unicode text value (the encoding is an internal detail).</p>
+        </description>
+        <seeAlso>
+            <link operator=";"/>
+            <link namespace="text"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Number">
+        <description>
+            <p>A number (either whole number or not), for example 6 or -7.2</p>
+            <p>A number may have an attached unit (such as years, or metres per second), written in curly brackets afterwards.  To add or subtract two numbers, they must have the same units.  Units are tracked through multiplication and division.</p>
+            <p>Numbers are stored as decimals and addition and subtraction will use decimal (not binary) arithmetic.  No guarantees on precision are given on the type or on other operations.</p>
+        </description>
+        <seeAlso>
+            <link type="Unit"/>
+            <link operator="+"/>
+            <link operator="*"/>
+            <link operator="/"/>
+            <link operator="^"/>
+            <link namespace="number"/>
+            <link namespace="math"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Date">
+        <description>
+            <p>A date, for example 29 August 2008.  Only valid dates are allowed (e.g. 30 February 2000 is not allowed).</p>
+            <p>To avoid confusion over whether the day or month comes first, this type converts to text using the ISO 8601 standard of YYYY-MM-DD, so 29 August 2008 is written 2008-08-29.</p>
+            <p>This type has no time or timezone attached.</p>
+        </description>
+        <seeAlso>
+            <link type="DateTime"/>
+            <link namespace="datetime"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Time">
+        <description>
+            <p>A time of day, for example 10:08.  Only valid times are allowed (e.g. 24:02 is not allowed).</p>
+            <p>The time can feature seconds, including fractional seconds.</p>
+            <p>This type converts to text using the 24-hour clock.</p>
+            <p>This type has no date or timezone attached.</p>
+        </description>
+        <seeAlso>
+            <link type="Date"/>
+            <link type="DateTime"/>
+            <link namespace="datetime"/>
+        </seeAlso>
+    </type>
+    
+    <type name="DateTime">
+        <description>
+            <p>A date and time of day, for example 2000-01-01 12:34:56.7890</p>
+            <p>This type has no timezone attached.</p>
+        </description>
+        <seeAlso>
+            <link type="DateTimeZoned"/>
+            <link namespace="datetime"/>
+        </seeAlso>
+    </type>
+    
+    <type name="DateTimeZoned">
+        <description>
+            <p>A date and time of day, with an attached time zone.</p>
+            <p>Three letter time zones (e.g. EDT) are avoided for two reasons.  Firstly, some of the abbreviations overlap.  Secondly, most of these time zones only exist part of the year, meaning that times like 2000-01-01 00:00 BST (British Summer Time) are nonsense, as BST does not exist in January.</p>
+            <p>Instead, time zones are specified either using continent/major_city notation for geography-based times, or (best of all) an offset from UTC.</p>
+        </description>
+        <seeAlso>
+            <link type="DateTime"/>
+            <link namespace="datetime"/>
+        </seeAlso>
+    </type>
+    
+    <type name="List">
+        <description>
+            <p>A list of items of the same type, written as square brackets around the type, for example [Text] is a list of text values.</p>
+            <p>If you want a list with items of multiple types, use a tagged type.</p>
+        </description>
+        <seeAlso>
+            <link namespace="list"/>
+            <link namespace="listprocess"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Tuple">
+        <description>
+            <p>A collection of a fixed set of values, written in round brackets, separated by commas, e.g. (Text, Number, Boolean) is a text, number and boolean value.</p>
+            <p>A collection of two values is often called a pair, three is a triple, five is a quintuple and thus the name tuple is used to refer to the general concept.</p>
+            <p>There is no single right way to pronounce tuple.  Some say tupple (like supple), some say too-pull, some say chew-pull (depending on how you pronounce words like tulip).</p>
+        </description>
+        <seeAlso>
+            <link namespace="tuple"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Tagged">
+        <description>
+            <p>A tagged type has one or more tags, each with an optional inner type.  A value is one of these tags, with a value if needed.</p>
+            <p>For example, to represent pricing at a theme park, you might have a tagged type with tags Child, Adult, Senior.</p>
+            <p>Some tagged types may be flexible in their inner types, in which case they are represented using a type variable.  For example, the concept of an optional value occurs often: a value may be missing because a survey respondent didn't fill it in, because some sensor data is missing, because a price is unknown, or because the value is not applicable.</p>
+            <p>Rather than have a separate tagged type for each inner type, e.g. MaybeBoolean, MaybeText, and so on, we have one Maybe type that takes a type variable, so we can have Maybe(Boolean) or Maybe(Text), and so on.</p>
+        </description>
+        <seeAlso>
+            <link namespace="maybe"/>
+        </seeAlso>
+    </type>
+    
+    <type name="Unit">
+        <description>
+            <p>Units of measurement include things like seconds, kilometres, dollars, users, and so on.</p>
+            <p>Units are optional -- you can choose to use them or not.  They can be useful for two main reasons.  First, they provide a reminder of how something is measured -- if you have a column called distance, it is useful to specify whether than is in miles or kilometres.  Second, the units are tracked to make sure you do not add two mismatching units (e.g. adding a number in metres per second to a number in miles per hour) and allow you to convert between related units (e.g. inches to metres).</p>
+        </description>
+        <seeAlso>
+            <link function="asUnit"/>
+        </seeAlso>
+    </type>
+</functionDocumentation>

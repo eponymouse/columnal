@@ -5,7 +5,7 @@
     
     <xsl:include href="funcdoc-shared.xsl"/>
     
-    <xsl:template match="/">
+    <xsl:template match="/all">
         <html>
             <head>
                 <title>Function Documentation</title>
@@ -38,6 +38,11 @@
                 </xsl:for-each>
                 
                 <xsl:for-each select=".//binaryOperator">
+                    <xsl:call-template name="processOperator">
+                        <xsl:with-param name="operator" select="."/>
+                    </xsl:call-template>
+                </xsl:for-each>
+                <xsl:for-each select=".//naryOperatorGroup">
                     <xsl:call-template name="processOperator">
                         <xsl:with-param name="operator" select="."/>
                     </xsl:call-template>

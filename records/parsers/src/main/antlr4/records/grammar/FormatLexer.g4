@@ -27,6 +27,7 @@ WS : ( ' ' | '\t' )+ -> skip;
 
 COLUMN : 'COLUMN';
 
+TUPLE_MORE : '_';
 CONS: ':';
 UNQUOTED_NAME : ~[ \t\r\n:(),[\]|"\-{}@]+;
 OPEN_BRACKET : '(';
@@ -37,6 +38,7 @@ CLOSE_SQUARE : ']';
 DASH: '-';
 ARROW: '->';
 TAGOR: '|';
+
 
 INCOMPLETE : '@INCOMPLETE';
 INVALIDOPS : '@INVALIDOPS';

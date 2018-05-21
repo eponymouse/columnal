@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:ext="http://exslt.org/common" exclude-result-prefixes="ext"
+                version="2.0">
     <xsl:template name="processType">
         <xsl:param name="type" select="."/>
-        <xsl:analyze-string select="replace($type, '@tagged\s+', '')" regex="\{{\*\}}">
+        <xsl:analyze-string select="replace($type, '@tagged\s+', '')" regex="Number|Text|Boolean|Date">
             <xsl:matching-substring>
-                <span class="wild-unit"><xsl:copy-of select="."/></span>
+                <xsl:variable name="newLink">
+                    <link type="{.}"/>
+                </xsl:variable>
+                <xsl:apply-templates select="ext:node-set($newLink)/*"/>
             </xsl:matching-substring>
             <!-- All words beginning with lower-case are assumed to be vars: -->
             <xsl:non-matching-substring>

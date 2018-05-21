@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+<functionDocumentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:noNamespaceSchemaLocation="funcdoc.xsd"
+                       namespace="tuple">
+    <function name="first">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <argType>(@typevar a, @typevar b, _)</argType>
+        <returnType>@typevar a</returnType>
+        <description>
+            <p>Gets the first item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>(1, 2)</inputArg>
+            <output>1</output>
+        </example>
+        <example>
+            <inputArg>("a", "b", "c", "d")</inputArg>
+            <output>"a"</output>
+        </example>
+        <example>
+            <inputArg>(true, 3, 7)</inputArg>
+            <output>true</output>
+        </example>
+    </function>
+
+    <function name="second">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <argType>(@typevar a, @typevar b, _)</argType>
+        <returnType>@typevar b</returnType>
+        <description>
+            <p>Gets the second item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>(1, 2)</inputArg>
+            <output>2</output>
+        </example>
+        <example>
+            <inputArg>("a", "b", "c", "d")</inputArg>
+            <output>"b"</output>
+        </example>
+        <example>
+            <inputArg>(true, 3, 7)</inputArg>
+            <output>3</output>
+        </example>
+    </function>
+
+    <function name="third">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, _)</argType>
+        <returnType>@typevar c</returnType>
+        <description>
+            <p>Gets the third item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"c"</output>
+        </example>
+    </function>
+
+    <function name="fourth">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, _)</argType>
+        <returnType>@typevar d</returnType>
+        <description>
+            <p>Gets the fourth item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"d"</output>
+        </example>
+    </function>
+
+    <function name="fifth">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <typeArg>e</typeArg>
+        <typeArg>f</typeArg>
+        <typeArg>g</typeArg>
+        <typeArg>h</typeArg>
+        <typeArg>i</typeArg>
+        <typeArg>j</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, _)</argType>
+        <returnType>@typevar e</returnType>
+        <description>
+            <p>Gets the fifth item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"e"</output>
+        </example>
+    </function>
+
+    <function name="sixth">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <typeArg>e</typeArg>
+        <typeArg>f</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, _)</argType>
+        <returnType>@typevar f</returnType>
+        <description>
+            <p>Gets the sixth item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"f"</output>
+        </example>
+    </function>
+
+    <function name="seventh">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <typeArg>e</typeArg>
+        <typeArg>f</typeArg>
+        <typeArg>g</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, _)</argType>
+        <returnType>@typevar g</returnType>
+        <description>
+            <p>Gets the seventh item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"g"</output>
+        </example>
+    </function>
+
+    <function name="eighth">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <typeArg>e</typeArg>
+        <typeArg>f</typeArg>
+        <typeArg>g</typeArg>
+        <typeArg>h</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, _)</argType>
+        <returnType>@typevar h</returnType>
+        <description>
+            <p>Gets the eighth item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"h"</output>
+        </example>
+    </function>
+
+    <function name="ninth">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <typeArg>e</typeArg>
+        <typeArg>f</typeArg>
+        <typeArg>g</typeArg>
+        <typeArg>h</typeArg>
+        <typeArg>i</typeArg>
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, _)</argType>
+        <returnType>@typevar j</returnType>
+        <description>
+            <p>Gets the ninth item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"i"</output>
+        </example>
+    </function>
+
+    <function name="tenth">
+        <typeArg>a</typeArg>
+        <typeArg>b</typeArg>
+        <typeArg>c</typeArg>
+        <typeArg>d</typeArg>
+        <typeArg>e</typeArg>
+        <typeArg>f</typeArg>
+        <typeArg>g</typeArg>
+        <typeArg>h</typeArg>
+        <typeArg>i</typeArg>
+        <typeArg>j</typeArg>        
+        <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, @typevar j, _)</argType>
+        <returnType>@typevar j</returnType>
+        <description>
+            <p>Gets the tenth item from the tuple.</p>
+        </description>
+        <example>
+            <inputArg>("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")</inputArg>
+            <output>"j"</output>
+        </example>
+    </function>
+
+
+</functionDocumentation>

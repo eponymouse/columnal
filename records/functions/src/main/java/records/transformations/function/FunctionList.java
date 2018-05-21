@@ -28,6 +28,7 @@ import records.transformations.function.number.RoundDP;
 import records.transformations.function.number.RoundSF;
 import records.transformations.function.text.StringJoin;
 import records.transformations.function.text.StringJoinWith;
+import records.transformations.function.tuple.TupleAccessors;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -85,6 +86,7 @@ public class FunctionList
         ).stream(),
             FromString.getFunctions().stream(),
             LookupFunctions.getLookupFunctions().stream(),
+            TupleAccessors.getFunctions().stream(),
             Stream.<ToTemporalFunction>of(
                 // TODO document and put back all these date conversion functions:
                 new ToDate(),
