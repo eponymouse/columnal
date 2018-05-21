@@ -79,7 +79,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         });
 
         // If they click the background, focus the end:
-        container.setOnMouseClicked(e -> {
+        container.setOnMousePressed(e -> {
             if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY)
             {
                 FXUtility.mouse(this).focus(Focus.RIGHT);
