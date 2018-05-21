@@ -17,6 +17,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Function;
@@ -38,15 +39,20 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // TODO attempt to resolve against variables in scope.
-        onError.recordError(this, StyledString.s("Incomplete expression or unknown function: \"" + text + "\""));
-        return null; // Unfinished expressions can't type check
+        List<TypeExp> varType = state.findVarType(text);
+        if (varType == null)
+        {
+            onError.recordError(this, StyledString.s("Incomplete expression or unknown function or variable: \"" + text + "\""));
+            return null;
+        }
+        // If they're trying to use it, it justifies us trying to unify all the types:
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType));
     }
 
     @Override
     public @Value Object getValue(EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Cannot get value for unfinished expression");
+        return state.get(text);
     }
 
     @Override
