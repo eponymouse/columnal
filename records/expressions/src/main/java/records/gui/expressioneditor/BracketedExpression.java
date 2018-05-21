@@ -97,12 +97,6 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
-    {
-        return consecParent.getThisAsSemanticParent().getAvailableVariables(this);
-    }
-
-    @Override
     public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode child)
     {
         // So technically you can only declare a var if this is a tuple or array.  But

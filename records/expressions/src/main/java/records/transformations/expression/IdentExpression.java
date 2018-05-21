@@ -23,13 +23,14 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Created by neil on 18/02/2017.
+ * A plain identifier.  If it resolves to a variable, it's a variable-use.  If not, it's an unfinished expression.
  */
-public class UnfinishedExpression extends NonOperatorExpression
+public class IdentExpression extends NonOperatorExpression
 {
+    // TODO add resolver listener
     private final String text;
 
-    public UnfinishedExpression(String text)
+    public IdentExpression(String text)
     {
         this.text = text;
     }
@@ -37,6 +38,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        // TODO attempt to resolve against variables in scope.
         onError.recordError(this, StyledString.s("Incomplete expression or unknown function: \"" + text + "\""));
         return null; // Unfinished expressions can't type check
     }
@@ -89,7 +91,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return o instanceof UnfinishedExpression && text.equals(((UnfinishedExpression)o).text);
+        return o instanceof IdentExpression && text.equals(((IdentExpression)o).text);
     }
 
     @Override

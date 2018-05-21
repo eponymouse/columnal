@@ -71,7 +71,7 @@ public class CallExpression extends Expression
         {
             Log.log(e);
         }
-        return new UnfinishedExpression(functionName);
+        return new IdentExpression(functionName);
     }
 
     @Override

@@ -406,22 +406,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     protected abstract void parentFocusLeftOfThis();
 
-    public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
-    {
-        if (isValidAsMatchVariable(operands.get(0)))
-        {
-            return operands.get(0).getDeclaredVariables();
-        }
-        return Collections.emptyList();
-    }
-
-    private boolean isValidAsMatchVariable(OperandNode expressionNode)
-    {
-        return expressionNode == operands.get(0) && operands.size() <= 2 && isMatchNode();
-    }
-
-    protected abstract boolean isMatchNode();
-
     public void focusWhenShown()
     {
         operands.get(0).focusWhenShown();

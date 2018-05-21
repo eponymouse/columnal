@@ -50,7 +50,7 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.TransformationManager;
-import records.transformations.expression.UnfinishedExpression;
+import records.transformations.expression.IdentExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -603,7 +603,7 @@ public class View extends StackPane
                             break;
                         case CHECK:
                             new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                                new EditExpressionDialog(thisView, srcTable, new UnfinishedExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                                new EditExpressionDialog(thisView, srcTable, new IdentExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                                     Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                                         Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                         tableManager.record(check);

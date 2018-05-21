@@ -53,7 +53,6 @@ import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -366,13 +365,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             
             Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(Stream::of).orElse(Stream.empty())).findFirst();
             
-            return loaded.orElseGet(() -> new UnfinishedExpression(literalContent.replace('{','_').replace('}', '_')));
-        }
-
-        @Override
-        public Expression visitVarRef(VarRefContext ctx)
-        {
-            return new VarUseExpression(ctx.getText());
+            return loaded.orElseGet(() -> new IdentExpression(literalContent.replace('{','_').replace('}', '_')));
         }
 
         @Override
@@ -405,7 +398,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             if (functionDefinition == null)
             {
-                return new UnfinishedExpression(functionName);
+                return new IdentExpression(functionName);
             }
             else
             {
@@ -468,7 +461,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
-            return new UnfinishedExpression(ctx.STRING().getText());
+            return new IdentExpression(ctx.STRING().getText());
         }
 
         @Override

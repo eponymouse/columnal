@@ -65,13 +65,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
     {
 
     }
-
-    @Override
-    protected boolean isMatchNode()
-    {
-        return false;
-    }
-
+    
     @Override
     public ImmutableSet<Character> terminatedByChars()
     {

@@ -65,12 +65,6 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     }
 
     @Override
-    protected boolean isMatchNode()
-    {
-        return parent instanceof ClauseNode && ((ClauseNode)parent).isMatchNode(this);
-    }
-
-    @Override
     public Stream<String> getParentStyles()
     {
         return Stream.<String>concat(parent.getParentStyles(), Stream.<String>of(style));

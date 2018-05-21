@@ -12,6 +12,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.Literal;
@@ -23,7 +24,6 @@ import records.transformations.expression.StandardFunction;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.VarDeclExpression;
-import records.transformations.expression.VarUseExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -201,9 +201,9 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
             // Have to manually move on because it won't auto-complete:
             push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
-        else if (c == VarUseExpression.class)
+        else if (c == IdentExpression.class)
         {
-            write(((VarUseExpression)expression).getName(), DELAY);
+            write(((IdentExpression)expression).getText(), DELAY);
             push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else if (c == TypeLiteralExpression.class)

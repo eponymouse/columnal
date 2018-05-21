@@ -23,6 +23,7 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.jellytype.JellyType;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
@@ -62,7 +63,6 @@ import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.VarDeclExpression;
-import records.transformations.expression.VarUseExpression;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -844,7 +844,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             else if (r.nextBoolean()) // Do equals but using variable + guard
             {
                 String varName = "var" + nextVar++;
-                return new Pair<>(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new VarUseExpression(varName), make(t, actual, maxLevels))));
+                return new Pair<>(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), make(t, actual, maxLevels))));
             }
             Expression expression = make(t, actual, maxLevels);
             return new Pair<Expression, @Nullable Expression>(expression, null);

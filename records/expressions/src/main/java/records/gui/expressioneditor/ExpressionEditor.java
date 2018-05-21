@@ -206,13 +206,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
-    {
-        // No variables from outside the expression:
-        return Collections.emptyList();
-    }
-
-    @Override
     public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
     {
         return false;
@@ -228,12 +221,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     protected void parentFocusLeftOfThis()
     {
 
-    }
-
-    @Override
-    protected boolean isMatchNode()
-    {
-        return false;
     }
 
     @Override

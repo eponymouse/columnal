@@ -23,14 +23,6 @@ import java.util.List;
 public @Interned interface OperandNode<@NonNull EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
-     * Gets the variables declared in this node.
-     */
-    public default List<Pair<String, @Nullable DataType>> getDeclaredVariables()
-    {
-        return Collections.emptyList();
-    }
-
-    /**
      * Sets the prompt text for this node
      */
     public abstract void prompt(String prompt);

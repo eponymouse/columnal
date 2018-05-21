@@ -97,7 +97,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
-import records.transformations.expression.UnfinishedExpression;
+import records.transformations.expression.IdentExpression;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledString;
@@ -106,7 +106,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 import utility.Workers.Priority;
-import utility.Workers.Worker;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.ResizableRectangle;
@@ -787,7 +786,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     
     private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn)
     {
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), new UnfinishedExpression(""), true, null).showAndWait().ifPresent(p -> {
+        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), new IdentExpression(""), true, null).showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
                 FXUtility.alertOnError_(() -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),

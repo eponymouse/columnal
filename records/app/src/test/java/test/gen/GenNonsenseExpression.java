@@ -120,7 +120,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             ArrayList<Expression> items = new ArrayList<>(Arrays.asList(
                 new ConstructorExpression(genTag(r)),
                 new StandardFunction(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager()))),
-                new VarUseExpression(TestUtil.generateVarName(r))
+                new IdentExpression(TestUtil.generateVarName(r))
             ));
             // Although unfinished is a valid call target, it doesn't survive a
             // round trip, so we put it below:
@@ -128,7 +128,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             if (!onlyCallTargets)
             {
                 items.addAll(Arrays.asList(
-                    new UnfinishedExpression(TestUtil.makeUnfinished(r)),
+                    new IdentExpression(TestUtil.makeUnfinished(r)),
                     new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
                     new BooleanLiteral(r.nextBoolean()),
                     new StringLiteral(TestUtil.makeStringV(r, gs)),

@@ -13,7 +13,6 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.type.TaggedTypeNameExpression;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -205,7 +204,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     @Override
     public Expression makeUnfinished(String s)
     {
-        return new UnfinishedExpression(s);
+        return new IdentExpression(s);
     }
 
     @Override
@@ -216,7 +215,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         ops = new ArrayList<>(ops);
 
         // Trim blanks from end:
-        ConsecutiveBase.removeBlanks(expressionExps, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedExpression && ((UnfinishedExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
+        ConsecutiveBase.removeBlanks(expressionExps, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof IdentExpression && ((IdentExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
 
         @Nullable Expression expression = null;
         if (ops.isEmpty())
@@ -337,7 +336,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     private static boolean isCallTarget(Expression expression)
     {
         // callTarget : varRef | standardFunction | constructor | unfinished;
-        return expression instanceof VarUseExpression
+        return expression instanceof IdentExpression
                 || expression instanceof StandardFunction
                 || expression instanceof ConstructorExpression;
     }

@@ -4,23 +4,19 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
-import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.UnfinishedExpression;
 import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.NumberTypeExpression;
@@ -33,7 +29,6 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.List;
-import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> implements EEDisplayNodeParent, UnitNodeParent

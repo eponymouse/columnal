@@ -28,12 +28,6 @@ public interface ExpressionNodeParent
     List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException;
 
     /**
-     * Gets all the declared variables in scope at the given child
-     * (from parent/grandparent/aunt nodes, not from the node itself).
-     */
-    List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child);
-
-    /**
      * Gets all special keywords available in child operators,
      * e.g. "then", paired with their description.
      */

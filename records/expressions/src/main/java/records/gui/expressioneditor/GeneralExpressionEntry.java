@@ -2,7 +2,6 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
-import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -89,8 +88,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         public String getContent();
 
-        default public ImmutableList<Pair<String, @Nullable DataType>> getDeclaredVariables() { return ImmutableList.of(); }
-
         @Nullable GeneralPseudoclass getPseudoclass();
 
         String getTypeLabel(boolean focused);
@@ -129,9 +126,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
-            UnfinishedExpression unfinishedExpression = new UnfinishedExpression(value.trim());
-            onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
-            return unfinishedExpression;
+            IdentExpression identExpression = new IdentExpression(value.trim());
+            onError.recordError(identExpression, StyledString.concat(StyledString.s("Invalid expression: "), identExpression.toStyledString()));
+            return identExpression;
         }
     }
 
@@ -201,40 +198,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
             return new ConstructorExpression(Either.right(tagInfo));
-        }
-    }
-    
-    public static class VarUse implements GeneralValue
-    {
-        private final String varName;
-
-        public VarUse(String varName)
-        {
-            this.varName = varName;
-        }
-
-        @Override
-        public String getContent()
-        {
-            return varName;
-        }
-
-        @Override
-        public @Nullable GeneralPseudoclass getPseudoclass()
-        {
-            return GeneralPseudoclass.VARIABLE_USE;
-        }
-
-        @Override
-        public String getTypeLabel(boolean focused)
-        {
-            return "variable";
-        }
-
-        @Override
-        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
-        {
-            return new VarUseExpression(varName);
         }
     }
 
@@ -407,11 +370,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 Log.log(e);
                 // Forget that type, then...
             }
-        }
-
-        for (Pair<String, @Nullable DataType> variable : parent.getThisAsSemanticParent().getAvailableVariables(this))
-        {
-            r.add(new VarUseCompletion(variable.getFirst()));
         }
 
         // Must be last as it should be lowest priority:
@@ -942,15 +900,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                     parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 return currentText;
             }
-            else if (c instanceof VarUseCompletion)
-            {
-                completing = true;
-                currentValue.setValue(new VarUse(((VarUseCompletion)c).name));
-                parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
-                if (moveFocus)
-                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
-                return currentText;
-            }
             else if (c == null || c instanceof GeneralCompletion)
             {
                 @Nullable GeneralCompletion gc = (GeneralCompletion) c;
@@ -1008,12 +957,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public boolean isOrContains(EEDisplayNode child)
     {
         return this == child;
-    }
-
-    @Override
-    public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
-    {
-        return currentValue.get().getDeclaredVariables();
     }
 
     @Override
@@ -1091,40 +1034,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public String getVarName(String currentText)
         {
             return StringUtils.removeStart(currentText, VarDecl.PREFIX);
-        }
-    }
-
-    private class VarUseCompletion extends Completion
-    {
-        private final String name;
-
-        private VarUseCompletion(String name)
-        {
-            this.name = name;
-        }
-
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent(name, TranslationUtility.getString("expression.autocomplete.variable"));
-        }
-
-        @Override
-        public boolean shouldShow(String input)
-        {
-            return name.startsWith(input);
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            return name.toLowerCase().startsWith(input.toLowerCase()) ? CompletionAction.SELECT : CompletionAction.NONE;
-        }
-
-        @Override
-        public boolean features(String curInput, char character)
-        {
-            return name.contains("" + character);
         }
     }
 

@@ -237,12 +237,6 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
-    {
-        return semanticParent.getAvailableVariables(this);
-    }
-
-    @Override
     public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
     {
         return false;

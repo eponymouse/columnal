@@ -132,15 +132,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
         // TODO
         return Collections.emptyList();
     }
-
-    @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
-    {
-        // They are only asking for parent vars, and we don't affect those
-        // ClauseNode takes care of the variables it introduces
-        return parent.getThisAsSemanticParent().getAvailableVariables(this);
-    }
-
+    
     @Override
     public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
     {

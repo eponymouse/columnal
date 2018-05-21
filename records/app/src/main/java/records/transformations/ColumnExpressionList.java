@@ -26,7 +26,7 @@ import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
-import records.transformations.expression.UnfinishedExpression;
+import records.transformations.expression.IdentExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -135,7 +135,7 @@ public class ColumnExpressionList
 
     private static Pair<ColumnId, Expression> makeNewColumnDetails()
     {
-        return new Pair<>(new ColumnId(""), new UnfinishedExpression(""));
+        return new Pair<>(new ColumnId(""), new IdentExpression(""));
     }
 
 
