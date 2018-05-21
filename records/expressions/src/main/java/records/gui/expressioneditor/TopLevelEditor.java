@@ -86,6 +86,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             }
         });
 
+        //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+
         /*
         FXUtility.enableDragTo(container, Collections.singletonMap(FXUtility.getTextDataFormat("Expression"), new DragHandler()
         {

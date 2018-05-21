@@ -115,8 +115,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
         */
 
         loadContent(startingValue);
-
-        //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
     private @Nullable ConsecutiveChild<? extends StyledShowable, ?> findSmallestContainer(Point2D pointInScene)
