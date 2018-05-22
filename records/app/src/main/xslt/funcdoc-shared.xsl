@@ -125,9 +125,7 @@
         <xsl:param name="type" select="."/>
 
         <div class="type-item">
-            <xsl:for-each select="type">
-                <span class="type-name-header" id="type-{@name}"><xsl:copy-of select="@name"/></span>
-            </xsl:for-each>
+            <span class="type-name-header" id="type-{@name}"><xsl:value-of select="@name"/></span>
             <div class="description"><xsl:copy-of select="description"/></div>
             <xsl:for-each select="seeAlso">
                 <div class="seeAlso">

@@ -28,7 +28,7 @@
                 <!-- Body -->
                 <xsl:for-each select=".//functionDocumentation">
                     <xsl:variable name="namespace" select="@namespace"/>
-                    <div class="namespace">
+                    <div class="namespace" id="namespace-{@namespace}">
                         <xsl:for-each select="function">
                             <xsl:call-template name="processFunction">
                                 <xsl:with-param name="function" select="."/>
@@ -60,6 +60,7 @@
     <xsl:template match="link">
         <xsl:choose>
             <xsl:when test="@function"><a class="internal-link" href="#function-{@function}"><xsl:value-of select="@function"/>(..)</a></xsl:when>
+            <xsl:when test="@namespace"><a class="internal-link" href="#namespace-{@namespace}"><xsl:value-of select="@namespace"/></a></xsl:when>
             <xsl:when test="@type='typevar' or @type='List' or @type='unitvar'"><a class="internal-link" href="#type-{@type}"><xsl:copy-of select="child::node()"/></a></xsl:when>
             <xsl:when test="@type"><a class="internal-link" alt="Type {@type}" href="#type-{@type}"><xsl:value-of select="@type"/></a></xsl:when>
             <xsl:when test="@operator"><a class="internal-link" href="#operator-{string-join(string-to-codepoints(@operator), '-')}">operator <xsl:value-of select="@operator"/></a></xsl:when>

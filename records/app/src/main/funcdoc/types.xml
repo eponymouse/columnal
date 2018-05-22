@@ -18,8 +18,8 @@
     
     <type name="Text">
         <description>
-            <p>A Text value (often also known as a string).</p>
-            <p>This holds a Unicode text value (the encoding is an internal detail).</p>
+            <p>A Text value (often also known as a string).  Text values are enclosing in double quotes: "like this".</p>
+            <p>Text values are represented using Unicode.</p>
         </description>
         <seeAlso>
             <link operator=";"/>
@@ -46,7 +46,8 @@
     
     <type name="Date">
         <description>
-            <p>A date, for example 29 August 2008.  Only valid dates are allowed (e.g. 30 February 2000 is not allowed).</p>
+            <p>A date, for example 29 August 2008.  Only valid dates are allowed (for example, 30 February 2000 is not allowed).</p>
+            <p>Dates can be entered in expressions using the date{} syntax, for example: date{29 August 2008}.</p>
             <p>To avoid confusion over whether the day or month comes first, this type converts to text using the ISO 8601 standard of YYYY-MM-DD, so 29 August 2008 is written 2008-08-29.</p>
             <p>This type has no time or timezone attached.</p>
         </description>
@@ -142,6 +143,5 @@
             <p>Some functions can take a variety of types.  For example, the sort function can take a list of any sortable type: a list of numbers, a list of text values, a list of pairs of dates and numbers, and so on.  To denote this, we give the type a generic name, usually t, or a, b, c, which is shown in italics in this interface.  You can read this as "any type, which we name t".</p>
             <p>Sometimes a type may have constraints on it.  These constraints are written above the function's type.</p>
         </description>
-        <seeAlso/>
     </type>
 </functionDocumentation>

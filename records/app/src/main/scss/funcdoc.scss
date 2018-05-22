@@ -13,7 +13,7 @@ html {
     display: none;
 }
 
-.function-item {
+.function-item, .operator-item, .type-item {
     padding: 25pt;
     border-width: 0 0 1px 0;
     border-color: lightgray;
@@ -28,6 +28,10 @@ html {
 }
 .function-type-args {
     display:block;
+}
+.type-name-header {
+    font-size: 18pt;
+    font-weight: bold;
 }
 .function-name-type, .function-type, .operator-type {   
     font-size: 18pt;

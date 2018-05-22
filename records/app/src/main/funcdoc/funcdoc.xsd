@@ -177,7 +177,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="description"/>
-                <xs:element ref="seeAlso"/>
+                <xs:element ref="seeAlso" minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required"/>
         </xs:complexType>
