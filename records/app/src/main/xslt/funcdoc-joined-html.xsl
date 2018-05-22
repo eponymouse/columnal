@@ -47,6 +47,12 @@
                         <xsl:with-param name="operator" select="."/>
                     </xsl:call-template>
                 </xsl:for-each>
+
+                <xsl:for-each select=".//type">
+                    <xsl:call-template name="processTypeDef">
+                        <xsl:with-param name="type" select="."/>
+                    </xsl:call-template>
+                </xsl:for-each>
             </body>
         </html>
     </xsl:template>
@@ -54,6 +60,8 @@
     <xsl:template match="link">
         <xsl:choose>
             <xsl:when test="@function"><a class="internal-link" href="#function-{@function}"><xsl:value-of select="@function"/>(..)</a></xsl:when>
+            <xsl:when test="@type='typevar' or @type='List' or @type='unitvar'"><a class="internal-link" href="#type-{@type}"><xsl:copy-of select="child::node()"/></a></xsl:when>
+            <xsl:when test="@type"><a class="internal-link" alt="Type {@type}" href="#type-{@type}"><xsl:value-of select="@type"/></a></xsl:when>
             <xsl:when test="@operator"><a class="internal-link" href="#operator-{string-join(string-to-codepoints(@operator), '-')}">operator <xsl:value-of select="@operator"/></a></xsl:when>
         </xsl:choose>
     </xsl:template>

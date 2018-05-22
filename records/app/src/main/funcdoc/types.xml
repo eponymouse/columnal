@@ -136,4 +136,12 @@
             <link function="asUnit"/>
         </seeAlso>
     </type>
+    
+    <type name="typevar">
+        <description>
+            <p>Some functions can take a variety of types.  For example, the sort function can take a list of any sortable type: a list of numbers, a list of text values, a list of pairs of dates and numbers, and so on.  To denote this, we give the type a generic name, usually t, or a, b, c, which is shown in italics in this interface.  You can read this as "any type, which we name t".</p>
+            <p>Sometimes a type may have constraints on it.  These constraints are written above the function's type.</p>
+        </description>
+        <seeAlso/>
+    </type>
 </functionDocumentation>

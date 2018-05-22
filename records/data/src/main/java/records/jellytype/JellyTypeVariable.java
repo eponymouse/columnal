@@ -25,11 +25,14 @@ class JellyTypeVariable extends JellyType
     {
         this.name = name;
     }
-
+    
     @Override
     public TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException
     {
-        return typeVariables.get(name).getRight("Variable " + name + " should be type variable but was unit variable");
+        Either<MutUnitVar, MutVar> var = typeVariables.get(name);
+        if (var == null)
+            throw new InternalException("No such type variable: " + name);
+        return var.getRight("Variable " + name + " should be type variable but was unit variable");
     }
 
     @Override

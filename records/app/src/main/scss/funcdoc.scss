@@ -26,6 +26,9 @@ html {
 .function-name-type {
     font-weight: bold;
 }
+.function-type-args {
+    display:block;
+}
 .function-name-type, .function-type, .operator-type {   
     font-size: 18pt;
     
@@ -91,10 +94,20 @@ html {
         font-weight: bold;
         font-size: 14pt;
     }
-    a {
-        margin-left: 30pt;
-        &, &:visited, &:hover {
-            color: black;
-        }
+}
+.seeAlso a, .index a {
+    margin-left: 30pt;
+    &, &:visited, &:hover {
+        color: black;
+    }
+}
+.function-type a {
+    &, &:visited, &:hover {
+        color: black;
+        text-decoration: none;
+    }
+    &:hover {
+        background-color: #eee;
+        text-decoration: underline;
     }
 }

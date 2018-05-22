@@ -4,21 +4,34 @@
                 version="2.0">
     <xsl:template name="processType">
         <xsl:param name="type" select="."/>
-        <xsl:analyze-string select="replace($type, '@tagged\s+', '')" regex="Number|Text|Boolean|Date">
+        <xsl:analyze-string select="replace($type, '@tagged\s+', '')" regex="Number|Text|Boolean|DateTimeZoned|DateTime|DateYM|Date|Time">
             <xsl:matching-substring>
                 <xsl:variable name="newLink">
                     <link type="{.}"/>
                 </xsl:variable>
-                <xsl:apply-templates select="ext:node-set($newLink)/*"/>
+                <xsl:apply-templates select="ext:node-set($newLink)"/>
             </xsl:matching-substring>
             <!-- All words beginning with lower-case are assumed to be vars: -->
             <xsl:non-matching-substring>
                 <xsl:analyze-string select="." regex="@(type|unit)var\s+([a-z]+)">
                     <xsl:matching-substring>
-                        <span class="type-var"><xsl:copy-of select="regex-group(2)"/></span>
+                        <xsl:variable name="typevar">
+                            <link type="{regex-group(1)}var"><xsl:copy-of select="regex-group(2)"/></link>
+                        </xsl:variable>
+                    <span class="type-var"><xsl:apply-templates select="ext:node-set($typevar)"/></span>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
-                        <xsl:copy-of select="."/>
+                        <xsl:analyze-string select="." regex="\[">
+                            <xsl:matching-substring>
+                                <xsl:variable name="newLink">
+                                    <link type="List">[</link>
+                                </xsl:variable>
+                                <xsl:apply-templates select="ext:node-set($newLink)"/>
+                            </xsl:matching-substring>
+                            <xsl:non-matching-substring>
+                                <xsl:copy-of select="."/>
+                            </xsl:non-matching-substring>
+                        </xsl:analyze-string>
                     </xsl:non-matching-substring>
                 </xsl:analyze-string>
             </xsl:non-matching-substring>
@@ -47,6 +60,9 @@
 
         <xsl:variable name="functionName" select="@name"/>
         <div class="function-item" id="function-{@name}">
+            <xsl:if test="typeArg">
+                <span class="function-type-args">For any types <xsl:value-of select="string-join(typeArg, ', ')"/><xsl:if test="typeConstraint"> where <xsl:value-of select="string-join(typeConstraint, ', ')"/></xsl:if></span>
+            </xsl:if>
             <span class="function-name-header"><xsl:value-of select="@name"/></span>
             <span class="function-name-type"><xsl:value-of select="@name"/></span>
             <span class="function-type"><!-- @any <xsl:value-of select="scope"/> --><xsl:call-template
@@ -104,4 +120,22 @@
             </xsl:for-each>
         </div>
     </xsl:template>
+
+    <xsl:template name="processTypeDef">
+        <xsl:param name="type" select="."/>
+
+        <div class="type-item">
+            <xsl:for-each select="type">
+                <span class="type-name-header" id="type-{@name}"><xsl:copy-of select="@name"/></span>
+            </xsl:for-each>
+            <div class="description"><xsl:copy-of select="description"/></div>
+            <xsl:for-each select="seeAlso">
+                <div class="seeAlso">
+                    <span class="seeAlsoHeader">See Also</span>
+                    <xsl:apply-templates select="child::node()"/>
+                </div>
+            </xsl:for-each>
+        </div>
+    </xsl:template>
+
 </xsl:stylesheet>

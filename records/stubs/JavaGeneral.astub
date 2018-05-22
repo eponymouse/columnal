@@ -31,3 +31,10 @@ class PrintStream
 {
     static void println(@UnknownLocalized @NonNull String s);
 }
+
+// Backup for when issues with checker annotated version
+package com.google.common.collect;
+class ImmutableMap<K, V>
+{
+    @Nullable V get(Object o);
+}

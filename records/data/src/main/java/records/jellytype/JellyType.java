@@ -77,7 +77,7 @@ public abstract class JellyType
     
     public static JellyType tuple(ImmutableList<JellyType> members)
     {
-        return new JellyTypeTuple(members);
+        return new JellyTypeTuple(members, true);
     }
 
     public static JellyType tagged(String name, ImmutableList<JellyType> params)
@@ -105,7 +105,7 @@ public abstract class JellyType
         if (ctx.type() != null)
             return load(ctx.type(), mgr);
         else if (ctx.tuple() != null)
-            return new JellyTypeTuple(Utility.mapListExI(ctx.tuple().type(), t -> load(t, mgr)));
+            return new JellyTypeTuple(Utility.mapListExI(ctx.tuple().type(), t -> load(t, mgr)), ctx.tuple().TUPLE_MORE() == null);
         else if (ctx.functionType() != null)
             return new JellyTypeFunction(load(ctx.functionType().type(0), mgr), load(ctx.functionType().type(1), mgr));
         throw new InternalException("Unrecognised case: " + ctx);
@@ -238,7 +238,7 @@ public abstract class JellyType
             @Override
             public JellyType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
             {
-                return new JellyTypeTuple(Utility.mapListInt(inner, JellyType::fromConcrete));
+                return new JellyTypeTuple(Utility.mapListInt(inner, JellyType::fromConcrete), true);
             }
 
             @Override

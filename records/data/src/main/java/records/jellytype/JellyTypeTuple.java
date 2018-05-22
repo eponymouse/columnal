@@ -23,21 +23,26 @@ import java.util.function.Consumer;
 public class JellyTypeTuple extends JellyType
 {
     private final ImmutableList<JellyType> types;
-    
-    public JellyTypeTuple(ImmutableList<JellyType> types)
+    private final boolean complete;
+
+    public JellyTypeTuple(ImmutableList<JellyType> types, boolean complete)
     {
         this.types = types;
+        this.complete = complete;
     }
 
     @Override
     public TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException
     {
-        return new TupleTypeExp(null, Utility.mapListInt(types, t -> t.makeTypeExp(typeVariables)), true);
+        return new TupleTypeExp(null, Utility.mapListInt(types, t -> t.makeTypeExp(typeVariables)), complete);
     }
 
     @Override
     public DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException
     {
+        if (!complete)
+            throw new UserException("Cannot turn tuple of unknown size into concrete type");
+        
         return DataType.tuple(Utility.mapListExI(types, t -> t.makeDataType(typeVariables, mgr)));
     }
 

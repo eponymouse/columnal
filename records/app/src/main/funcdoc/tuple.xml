@@ -167,7 +167,7 @@
         <typeArg>h</typeArg>
         <typeArg>i</typeArg>
         <argType>(@typevar a, @typevar b, @typevar c, @typevar d, @typevar e, @typevar f, @typevar g, @typevar h, @typevar i, _)</argType>
-        <returnType>@typevar j</returnType>
+        <returnType>@typevar i</returnType>
         <description>
             <p>Gets the ninth item from the tuple.</p>
         </description>

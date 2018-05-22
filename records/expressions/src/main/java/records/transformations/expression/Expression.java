@@ -459,6 +459,12 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
+        public Expression visitVarRef(VarRefContext ctx)
+        {
+            return new IdentExpression(ctx.getText());
+        }
+
+        @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
             return new IdentExpression(ctx.STRING().getText());
