@@ -20,7 +20,7 @@ public class TupleAccessors
 {
     public static ImmutableList<FunctionDefinition> getFunctions() throws InternalException
     {
-        ImmutableList<@FuncDocKey String> names = ImmutableList.of("tuple:first", "tuple:second", "tuple:third", "tuple:fourth", "tuple:fifth", "tuple:sixth", "tuple:seventh", "tuple:eighth", "tuple:ninth", "tuple:tenth");
+        ImmutableList<@FuncDocKey String> names = ImmutableList.<@FuncDocKey String>of("tuple:first", "tuple:second", "tuple:third", "tuple:fourth", "tuple:fifth", "tuple:sixth", "tuple:seventh", "tuple:eighth", "tuple:ninth", "tuple:tenth");
         
         ImmutableList.Builder<FunctionDefinition> functions = ImmutableList.builder();
         for (int i = 0; i < names.size(); i++)
