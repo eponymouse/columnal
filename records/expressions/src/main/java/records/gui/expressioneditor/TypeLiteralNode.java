@@ -1,13 +1,10 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import javafx.beans.value.ObservableObjectValue;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -16,7 +13,6 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.List;
 import java.util.stream.Stream;

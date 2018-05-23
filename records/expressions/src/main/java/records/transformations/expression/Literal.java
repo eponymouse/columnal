@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.unit.UnitManager;
@@ -9,6 +10,9 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Lit;
 import records.gui.expressioneditor.OperandNode;
+import records.typeExp.TypeExp;
+import styled.StyledString;
+import utility.Either;
 import utility.Pair;
 
 import java.util.Random;
@@ -20,6 +24,14 @@ import java.util.stream.Stream;
  */
 public abstract class Literal extends NonOperatorExpression
 {
+    @Override
+    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    {
+        return onError.recordTypeAndError(this, checkType(typeState), ExpressionKind.EXPRESSION, typeState);
+    }
+
+    protected abstract Either<StyledString, TypeExp> checkType(TypeState typeState) throws InternalException;
+
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {

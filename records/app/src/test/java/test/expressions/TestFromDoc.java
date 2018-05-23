@@ -190,7 +190,7 @@ public class TestFromDoc
                     if (typeState == null) // Won't happen
                         return;
                 }
-                TypeExp typeExp = expression.check(new TableLookup()
+                TypeExp typeExp = expression.checkExpression(new TableLookup()
                 {
                     @Override
                     public @Nullable RecordSet getTable(@Nullable TableId tableId)

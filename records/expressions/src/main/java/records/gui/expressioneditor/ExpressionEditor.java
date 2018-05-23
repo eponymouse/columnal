@@ -25,6 +25,8 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.CheckedExp;
+import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
@@ -257,8 +259,12 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
                 if (tableManager != null)
                 {
                     TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
-                    @Nullable TypeExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
-                    latestType.set(dataType == null ? null : recorder.recordLeftError(tableManager.getTypeManager(), expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    @Nullable CheckedExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), recorder);
+                    if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
+                    {
+                        recorder.recordError(expression, StyledString.s("Expression cannot be a pattern"));
+                    }
+                    latestType.set(dataType == null ? null : recorder.recordLeftError(tableManager.getTypeManager(), expression, dataType.typeExp.toConcreteType(tableManager.getTypeManager())));
                     //Log.debug("Latest type: " + dataType);
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }

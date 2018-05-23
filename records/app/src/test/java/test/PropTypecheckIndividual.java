@@ -34,6 +34,7 @@ import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -67,9 +68,9 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
-            return onError.recordType(this, TypeExp.fromDataType(this, type));
+            return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.fromDataType(this, type));
         }
 
         @Override
@@ -342,7 +343,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
     {
-        return e.check(id -> null, TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
+        return e.checkExpression(id -> null, TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
     }
 
     private static @Nullable DataType checkConcrete(Expression e) throws UserException, InternalException
@@ -352,7 +353,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable DataType checkConcrete(TypeManager typeManager, Expression e) throws UserException, InternalException
     {
-        TypeExp typeExp = e.check(id -> null, TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
+        TypeExp typeExp = e.checkExpression(id -> null, TestUtil.typeState(), new ErrorAndTypeRecorderStorer());
         if (typeExp == null)
             return null;
         else
@@ -377,15 +378,9 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
-            throw new InternalException("Should not be called");
-        }
-
-        @Override
-        public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-        {
-            return new Pair<>(onError.recordTypeNN(this, TypeExp.fromDataType(this, expected)), state);
+            return onError.recordTypeAndError(this, Either.right(TypeExp.fromDataType(this, expected)), ExpressionKind.PATTERN, state);
         }
 
         @Override

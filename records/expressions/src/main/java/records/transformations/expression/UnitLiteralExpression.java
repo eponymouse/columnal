@@ -34,13 +34,13 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
         Either<Pair<StyledString, List<UnitExpression>>, UnitExp> saved = unitExpression.asUnit(typeState.getUnitManager());
-        return saved.<@Nullable TypeExp>eitherInt(error -> {onError.recordError(this, error.getFirst()); return null;}, unit -> 
-            onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit))));
+        return saved.<@Nullable CheckedExp>eitherInt(error -> {onError.recordError(this, error.getFirst()); return null;}, unit -> 
+            onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit)), ExpressionKind.EXPRESSION, typeState));
     }
 
     @Override

@@ -9,7 +9,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -68,7 +68,7 @@ public class ErrorDisplayerRecord
         return e;
     }
 
-    private void showError(Expression e, @Nullable StyledString s, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
+    private void showError(Expression e, @Nullable StyledString s, List<QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
         @Nullable ErrorDisplayer<Expression, ExpressionNodeParent> d = expressionDisplayers.get(e);
         if (d != null)

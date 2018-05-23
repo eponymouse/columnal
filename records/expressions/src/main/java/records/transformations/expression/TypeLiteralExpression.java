@@ -72,7 +72,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
         
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
         if (dataType == null)
@@ -80,7 +80,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
             // Should already be an error in the type itself
             return null;
         }
-        return onError.recordTypeAndError(this, Either.right(TypeExp.dataTypeToTypeGADT(this, dataType)));
+        return onError.recordTypeAndError(this, Either.right(TypeExp.dataTypeToTypeGADT(this, dataType)), ExpressionKind.EXPRESSION, typeState);
     }
 
     @Override

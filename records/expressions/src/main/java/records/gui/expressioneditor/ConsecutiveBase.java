@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -15,14 +14,13 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.*;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
@@ -35,12 +33,10 @@ import utility.gui.FXUtility;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -842,7 +838,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         //Log.logStackTrace("\n\n\n" + this + " showing " + error.toPlain() + " " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
         if (operators.isEmpty())

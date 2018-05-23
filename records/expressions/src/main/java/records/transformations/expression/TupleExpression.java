@@ -44,38 +44,25 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
+        ExpressionKind kind = ExpressionKind.EXPRESSION;
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable TypeExp t = members.get(i).check(dataLookup, state, onError);
-            if (t == null)
+            @Nullable CheckedExp c = members.get(i).check(dataLookup, state, onError);
+            if (c == null)
                 return null;
-            typeArray[i] = t;
+            typeArray[i] = c.typeExp;
+            state = c.typeState;
+            kind = kind.or(c.expressionKind);
+            
         }
         memberTypes = ImmutableList.copyOf(typeArray);
         tupleType = new TupleTypeExp(this, memberTypes, true);
-        return onError.recordType(this, tupleType);
+        return onError.recordType(this, kind, state, tupleType);
     }
-
-    @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
-        for (int i = 0; i < typeArray.length; i++)
-        {
-            @Nullable Pair<@Recorded TypeExp, TypeState> t = members.get(i).checkAsPattern(data, state, onError);
-            if (t == null)
-                return null;
-            typeArray[i] = t.getFirst();
-            state = t.getSecond();
-        }
-        memberTypes = ImmutableList.copyOf(typeArray);
-        tupleType = new TupleTypeExp(this, memberTypes, true);
-        return new Pair<>(onError.recordTypeNN(this, tupleType), state);
-    }
-
+    
     @Override
     public @Nullable EvaluateState matchAsPattern(@Value Object value, final EvaluateState state) throws InternalException, UserException
     {

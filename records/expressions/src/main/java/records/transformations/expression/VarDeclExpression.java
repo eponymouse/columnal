@@ -33,23 +33,14 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        // If normal check is called, something has gone wrong because we are only
-        // valid in a pattern
-        onError.recordError(this, StyledString.s("Variable cannot be declared outside pattern match"));
-        return null;
-    }
-
-    @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         MutVar type = new MutVar(this);
         @Nullable TypeState newState = typeState.add(varName, type, onError.recordErrorCurried(this));
         if (newState == null)
             return null;
         else
-            return new Pair<>(onError.recordTypeNN(this, type), newState);
+            return new CheckedExp(onError.recordTypeNN(this, type), newState, ExpressionKind.PATTERN);
     }
 
     @Override

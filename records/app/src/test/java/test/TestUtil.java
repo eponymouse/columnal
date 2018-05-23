@@ -39,6 +39,7 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ConstructorExpression;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
 import records.transformations.function.FunctionDefinition;
 import records.typeExp.MutVar;

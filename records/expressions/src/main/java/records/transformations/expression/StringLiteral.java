@@ -15,6 +15,7 @@ import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.CommonStyles;
 import styled.StyledString;
+import utility.Either;
 
 /**
  * Created by neil on 25/11/2016.
@@ -29,9 +30,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+    protected Either<StyledString, TypeExp> checkType(TypeState typeState)
     {
-        return onError.recordTypeNN(this, TypeExp.text(this));
+        return Either.right(TypeExp.text(this));
     }
 
     @Override

@@ -6,7 +6,6 @@ import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
@@ -14,9 +13,8 @@ import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
-import records.transformations.expression.StringLiteral;
+import records.transformations.expression.QuickFix;
 import styled.StyledString;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -110,7 +108,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e));
     }

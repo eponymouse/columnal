@@ -22,7 +22,6 @@ EQUALITY : '=';
 NON_EQUALITY : '<>';
 LESS_THAN: '<=' | '<';
 GREATER_THAN: '>=' | '>';
-MATCHES: '~';
 COLUMN : '@column';
 WHOLECOLUMN: '@entirecolumn';
 MATCH : '@match';

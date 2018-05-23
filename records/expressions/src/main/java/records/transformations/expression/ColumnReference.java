@@ -65,7 +65,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable RecordSet recordSet = dataLookup.getTable(tableName);
         if (recordSet == null)
@@ -77,9 +77,9 @@ public class ColumnReference extends NonOperatorExpression
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return onError.recordType(this, TypeExp.fromDataType(this, column.getType()));
+                return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, column.getType()));
             case WHOLE_COLUMN:
-                return onError.recordType(this, TypeExp.fromDataType(this, DataType.array(column.getType())));
+                return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.fromDataType(this, DataType.array(column.getType())));
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

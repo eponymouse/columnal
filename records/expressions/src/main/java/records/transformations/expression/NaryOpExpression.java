@@ -14,7 +14,6 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -48,14 +47,15 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public final @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState);
+        Pair<@Nullable UnaryOperator<TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState);
         typeState = lambda.getSecond();
-        return onError.recordType(this, lambda.getFirst().apply(checkNaryOp(dataLookup, typeState, onError)));
+        @Nullable CheckedExp checked = checkNaryOp(dataLookup, typeState, onError);
+        return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
-    public abstract @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @Override
     public final @Value Object getValue(EvaluateState state) throws UserException, InternalException
@@ -240,13 +240,14 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameType(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionNodeParent>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionNodeParent>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
         for (Expression expression : expressions)
         {
-            @Nullable TypeExp type = expression.check(data, state, onError);
+            @Nullable CheckedExp type = expression.check(data, state, onError);
+            
             // Make sure to execute always (don't use short-circuit and with allValid):
             if (type == null)
             {
@@ -255,9 +256,15 @@ public abstract class NaryOpExpression extends Expression
             }
             else
             {
-                Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(target, type);
+                if (type.expressionKind == ExpressionKind.PATTERN)
+                {
+                    onError.recordError(expression, StyledString.s("Pattern not allowed here"));
+                    return null;
+                }
+                
+                Either<StyledString, TypeExp> unified = TypeExp.unifyTypes(target, type.typeExp);
                 // We have to recreate either to add nullable constraint:
-                unificationOutcomes.add(new Pair<>(unified.<@Nullable StyledString>either(err -> err, u -> null), type));
+                unificationOutcomes.add(new Pair<>(unified.<@Nullable StyledString>either(err -> err, u -> null), type.typeExp));
                 if (unified.isLeft())
                     allValid = false;
             }

@@ -78,7 +78,7 @@ public class Check extends Transformation
         if (type == null)
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            @Nullable TypeExp checked = checkExpression.check(new MultipleTableLookup(getManager(), getManager().getSingleTableOrNull(srcTableId)), new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+            @Nullable TypeExp checked = checkExpression.checkExpression(new MultipleTableLookup(getManager(), getManager().getSingleTableOrNull(srcTableId)), new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
             @Nullable DataType typeFinal = null;
             if (checked != null)
                 typeFinal = errors.recordLeftError(getManager().getTypeManager(), checkExpression, checked.toConcreteType(getManager().getTypeManager()));

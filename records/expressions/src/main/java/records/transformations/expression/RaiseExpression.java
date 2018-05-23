@@ -43,10 +43,10 @@ public class RaiseExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        final @NonNull TypeExp lhsTypeFinal = lhsType;
-        final @NonNull TypeExp rhsTypeFinal = rhsType;
+        final @NonNull TypeExp lhsTypeFinal = lhsType.typeExp;
+        final @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;
         
         // Raise expression is sort of an overloaded operator.  If the right-hand side is an integer
         // constant, it adjusts the units on the left-hand side.  Otherwise, it requires unit-less
@@ -62,10 +62,11 @@ public class RaiseExpression extends BinaryOpExpression
             if (numeratorOne && denominatorOne)
             {
                 // Raising to power 1, just leave type as-is:
-                return lhsType;
+                return new CheckedExp(lhsTypeFinal, typeState, ExpressionKind.EXPRESSION);
             }
             else if (numeratorOne || denominatorOne)
             {
+                final TypeExp ourType;
                 // Either raising to an integer power, or rooting:
                 try
                 {
@@ -77,7 +78,7 @@ public class RaiseExpression extends BinaryOpExpression
                         MutUnitVar lhsUnit = new MutUnitVar();
                         if (onError.recordError(this, TypeExp.unifyTypes(lhsTypeFinal, new NumTypeExp(this, new UnitExp(lhsUnit).raisedTo(r.getDen().intValueExact())))) == null)
                             return null;
-                        return new NumTypeExp(this, new UnitExp(lhsUnit));
+                        ourType = new NumTypeExp(this, new UnitExp(lhsUnit));
                     }
                     else
                     {
@@ -85,7 +86,7 @@ public class RaiseExpression extends BinaryOpExpression
                         MutUnitVar lhsUnit = new MutUnitVar();
                         if (onError.recordError(this, TypeExp.unifyTypes(lhsTypeFinal, new NumTypeExp(this, new UnitExp(lhsUnit)))) == null)
                             return null;
-                        return new NumTypeExp(this, new UnitExp(lhsUnit).raisedTo(r.getNum().intValueExact()));
+                        ourType = new NumTypeExp(this, new UnitExp(lhsUnit).raisedTo(r.getNum().intValueExact()));
                     }
                 }
                 catch (ArithmeticException e)
@@ -94,14 +95,15 @@ public class RaiseExpression extends BinaryOpExpression
                     return null;
                 }
             }
-            // If power is not 1, integer, or 1/integer, fall through...
+            
+            // If power is not 1, integer, or 1/integer, fall through:
         }
         
         if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.plainNumber(this), lhsTypeFinal)) == null)
             return null;
         if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.plainNumber(this), rhsTypeFinal)) == null)
             return null;
-        return TypeExp.plainNumber(this);
+        return new CheckedExp(TypeExp.plainNumber(this), typeState, ExpressionKind.EXPRESSION);
     }
 
     @Override

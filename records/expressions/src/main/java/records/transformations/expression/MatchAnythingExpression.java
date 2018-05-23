@@ -28,18 +28,9 @@ import java.util.stream.Stream;
 public class MatchAnythingExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // If normal check is called, something has gone wrong because we are only
-        // valid in a pattern
-        onError.recordError(this, StyledString.s("@anything cannot be declared outside pattern match"));
-        return null;
-    }
-
-    @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        return new Pair<>(onError.recordTypeNN(this, new MutVar(this)), typeState);
+        return new CheckedExp(onError.recordTypeNN(this, new MutVar(this)), state, ExpressionKind.PATTERN);
     }
 
     @Override

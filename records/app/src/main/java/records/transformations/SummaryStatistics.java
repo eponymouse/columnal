@@ -174,7 +174,7 @@ public class SummaryStatistics extends Transformation
             {
                 Expression expression = e.getSecond();
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                @Nullable TypeExp type = expression.check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
+                @Nullable TypeExp type = expression.checkExpression(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 @Nullable DataType concrete = type == null ? null : errors.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));

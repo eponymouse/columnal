@@ -4,7 +4,6 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.Ctor;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -30,6 +29,7 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
+import records.transformations.expression.QuickFix;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -142,7 +142,7 @@ public class PropTypecheck
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
-        @Nullable TypeExp checked = src.expression.check(src, TestUtil.typeState(), storer);
+        @Nullable TypeExp checked = src.expression.checkExpression(src, TestUtil.typeState(), storer);
         TypeExp srcTypeExp = TypeExp.fromDataType(null, src.type);
         assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().map(StyledString::toPlain).collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try

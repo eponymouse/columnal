@@ -84,10 +84,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             new OperatorExpressionInfo<>(ImmutableList.of(
                 opD(">", "op.greaterThan"),
                 opD(">=", "op.greaterThanOrEqual")
-            ), ExpressionOps::makeComparisonGreater),
-            new OperatorExpressionInfo<>(
-                opD("~", "op.matches")
-            , (lhs, rhs, _b) -> new MatchesOneExpression(lhs, rhs))
+            ), ExpressionOps::makeComparisonGreater)
         ),
         
         // Boolean and, or expressions come near-last.  If you see a = b & c = d, it's much more likely you wanted (a = b) & (c = d) than

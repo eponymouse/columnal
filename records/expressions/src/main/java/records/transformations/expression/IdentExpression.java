@@ -37,7 +37,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         List<TypeExp> varType = state.findVarType(text);
         if (varType == null)
@@ -46,7 +46,7 @@ public class IdentExpression extends NonOperatorExpression
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType));
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), ExpressionKind.EXPRESSION, state);
     }
 
     @Override

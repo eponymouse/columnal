@@ -747,6 +747,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // If that doesn't exist, copy the name of the column if appropriate:
         if (expression == null && calc.getData().getColumns().stream().anyMatch(c -> c.getName().equals(columnId)))
             expression = new ColumnReference(columnId, ColumnReferenceType.CORRESPONDING_ROW); 
+        if (expression == null)
+            expression = new IdentExpression("");
         
         new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, true, null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());

@@ -1,17 +1,11 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
@@ -19,8 +13,8 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
+import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import styled.StyledString;

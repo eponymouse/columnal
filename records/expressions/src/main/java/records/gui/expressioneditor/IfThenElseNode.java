@@ -5,9 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -20,16 +18,14 @@ import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import styled.StyledShowable;
+import records.transformations.expression.QuickFix;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -283,7 +279,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
         condition.addErrorAndFixes(error, quickFixes);
     }

@@ -43,6 +43,7 @@ import records.transformations.expression.type.UnfinishedTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.ExpressionBase;
+import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 /**
@@ -83,26 +85,134 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         // If no such table is found, null is returned
         public @Nullable RecordSet getTable(@Nullable TableId tableId);
     }
+    
+    // PATTERN infects EXPRESSION: any bit of PATTERN in an inner expression
+    // causes the outer expression to either throw an error, or
+    // become a PATTERN itself
+    public static enum ExpressionKind { EXPRESSION, PATTERN;
 
-    // Checks that all used variable names and column references are defined,
-    // and that types check.  Return null if any problems
-    public abstract @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
-
-    // Like check, but for patterns.  For many expressions this is same as check,
-    // unless you are a new-variable declaration or can have one beneath you.
-    // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        // By default, check as normal, and return same TypeState:
-        @Nullable @Recorded TypeExp type = check(data, typeState, onError);
-        if (type == null)
-            return null;
-        else
+        // PATTERN if this or argument is PATTERN.  Otherwise EXPRESSION
+        public ExpressionKind or(ExpressionKind kind)
         {
-            return new Pair<>(type, typeState);
+            if (this == PATTERN || kind == PATTERN)
+                return PATTERN;
+            else
+                return EXPRESSION;
         }
     }
 
+    /**
+     * If something is a plain expression, then all we need to know is the TypeExp.
+     * 
+     * If something is a pattern, we then need to know:
+     *  - Its type (as above)
+     *  - The resulting type state (since a pattern may modify it)
+     *  - The types for which we need Equatable when this is use in a pattern match.
+     *  
+     *  For example, if you have the tuple:
+     *    (3, @anything, existingVar, $newVar)
+     *  
+     *  This is a pattern.  Its type is (Num, Any, existingVar's type, Any),
+     *  its resulting state assigns a type for newVar, and we require Equatable
+     *  on Num and existingVar's type.
+     *  
+     *  This can then validly be matched against:
+     *    (3, (? + 1), value of existingVar's type, (? - 1))
+     *  Provided existingVar's type is Equatable, without needing Equatable for the functions.
+     */
+
+    public static class CheckedExp
+    {
+        public final @Recorded TypeExp typeExp;
+        public final ExpressionKind expressionKind;
+        public final TypeState typeState;
+        // We could actually apply these immediately, because it's disallowed
+        // to have a pattern outside a pattern match.  But then any creation
+        // of a pattern would get that error, plus a whole load of
+        // Equatable failures without any equality check in sight.
+        // So we store the type that need Equatable here, and apply them once we see the equality match.
+        // Always empty if type is EXPRESSION
+        private final ImmutableList<TypeExp> equalityRequirements;
+
+        private CheckedExp(@Recorded TypeExp typeExp, TypeState typeState, ExpressionKind expressionKind, ImmutableList<TypeExp> equalityRequirements)
+        {
+            this.typeExp = typeExp;
+            this.typeState = typeState;
+            this.expressionKind = expressionKind;
+            this.equalityRequirements = equalityRequirements;
+        }
+
+        public CheckedExp(@Recorded TypeExp typeExp, TypeState typeState, ExpressionKind expressionKind)
+        {
+            this(typeExp, typeState, expressionKind, ImmutableList.of());
+        }
+        
+        // Used for things like tuple members, list members.
+        // If any of them are patterns, equality constraints are applied to
+        // any non-pattern items.  The type state used is the given argument.
+        public static CheckedExp combineStructural(@Recorded TypeExp typeExp, TypeState typeState, ImmutableList<CheckedExp> items)
+        {
+            boolean anyArePattern = items.stream().anyMatch(c -> c.expressionKind == ExpressionKind.PATTERN);
+            ExpressionKind kind = anyArePattern ? ExpressionKind.PATTERN : ExpressionKind.EXPRESSION;
+            ImmutableList<TypeExp> reqs;
+            if (anyArePattern)
+                reqs = items.stream().filter(c -> c.expressionKind != ExpressionKind.PATTERN)
+                        .map(c -> c.typeExp)
+                        .collect(ImmutableList.toImmutableList());
+            else
+                reqs = ImmutableList.of();
+            return new CheckedExp(typeExp, typeState, kind, reqs);
+        }
+
+        /**
+         * Make sure this item is equatable.
+         * @param onlyIfPattern Only apply the restrictions if this is a pattern
+         */
+        public void requireEquatable(boolean onlyIfPattern)
+        {
+            TypeClassRequirements equatable = TypeClassRequirements.require("Equatable", "<match>");
+            if (expressionKind == ExpressionKind.PATTERN)
+            {
+                for (TypeExp t : equalityRequirements)
+                {
+                    
+                    t.requireTypeClasses(equatable);
+                }
+            }
+            else if (expressionKind == ExpressionKind.EXPRESSION && !onlyIfPattern)
+            {
+                typeExp.requireTypeClasses(equatable);
+            }
+        }
+
+        // If the argument is null, just return this.
+        // If non-null, check the item is an expression, and then apply the operator to our type
+        public CheckedExp applyToType(@Nullable UnaryOperator<TypeExp> changeType)
+        {
+            if (changeType == null)
+                return this;
+            return new CheckedExp(changeType.apply(typeExp), typeState, expressionKind, equalityRequirements);
+        }
+    }
+    
+    // Checks that all used variable names and column references are defined,
+    // and that types check.  Return null if any problems.  Can be either EXPRESSION or PATTERN
+    public abstract @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    
+    // Calls check, but makes sure it is an EXPRESSION
+    public final @Nullable TypeExp checkExpression(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    {
+        @Nullable CheckedExp check = check(dataLookup, typeState, onError);
+        if (check == null)
+            return null;
+        if (check.expressionKind != ExpressionKind.EXPRESSION)
+        {
+            onError.recordError(this, StyledString.s("Pattern is not valid here"));
+            return null;
+        }
+        return check.typeExp;
+    }
+    
     /**
      * Gets the value for this expression at the given evaluation state
      */
@@ -480,12 +590,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         public Expression visitImplicitLambdaParam(ImplicitLambdaParamContext ctx)
         {
             return new ImplicitLambdaArg();
-        }
-
-        @Override
-        public Expression visitMatchesExpression(MatchesExpressionContext ctx)
-        {
-            return new MatchesOneExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
         }
 
         @Override

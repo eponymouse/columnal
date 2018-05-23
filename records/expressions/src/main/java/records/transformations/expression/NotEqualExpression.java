@@ -38,24 +38,22 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // TODO require Equatable
-        if (onError.recordError(this, TypeExp.unifyTypes(lhsType, rhsType)) == null)
+        if (lhsType.expressionKind == ExpressionKind.PATTERN && rhsType.expressionKind == ExpressionKind.PATTERN)
         {
-            if (lhsType instanceof NumTypeExp && rhsType instanceof NumTypeExp)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    final @NonNull TypeProblemDetails typeProblemDetails = new TypeProblemDetails(ImmutableList.of(Optional.ofNullable(lhsType), Optional.ofNullable(rhsType)), ImmutableList.of(lhs, rhs), i);
-                    // Must show an error to get the quick fixes to show:
-                    onError.recordError(typeProblemDetails.getOurExpression(), StyledString.s("Operands to <> must have matching units"));
-                    onError.recordQuickFixes(typeProblemDetails.getOurExpression(), ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, typeProblemDetails));
-                }
-            }
+            onError.recordError(this, StyledString.s("Only one side of <> can be a pattern"));
             return null;
         }
-        return TypeExp.bool(this);
+        boolean oneIsPattern = lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN;
+        // If one is pattern, only apply restrictions to the pattern side.  Otherwise if both expressions, apply to both:
+        lhsType.requireEquatable(oneIsPattern);
+        rhsType.requireEquatable(oneIsPattern);
+        if (onError.recordError(this, TypeExp.unifyTypes(lhsType.typeExp, rhsType.typeExp)) == null)
+        {
+            return null;
+        }
+        return new CheckedExp(TypeExp.bool(this), state, ExpressionKind.EXPRESSION);
     }
 
     @Override

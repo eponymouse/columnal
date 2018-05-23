@@ -43,10 +43,10 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = functionDefinition.getType(typeState.getTypeManager());
-        return type.getFirst();
+        return new CheckedExp(type.getFirst(), typeState, ExpressionKind.EXPRESSION);
     }
 
     @Override

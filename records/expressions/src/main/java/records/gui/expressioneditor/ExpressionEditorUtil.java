@@ -16,14 +16,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
 import records.gui.TypeDialog;
 import records.jellytype.JellyType;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.QuickFixParams;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
+import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.QuickFixParams;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
@@ -52,7 +49,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.CURRENT;
+import static records.transformations.expression.QuickFix.ReplacementTarget.CURRENT;
 
 /**
  * Created by neil on 21/01/2017.

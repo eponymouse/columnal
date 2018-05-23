@@ -6,13 +6,11 @@ import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
-import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -28,7 +26,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import static records.transformations.expression.AddSubtractExpression.Op.ADD;
-import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.PARENT;
+import static records.transformations.expression.QuickFix.ReplacementTarget.PARENT;
 
 /**
  * Created by neil on 10/12/2016.
@@ -37,7 +35,7 @@ public class AddSubtractExpression extends NaryOpExpression
 {
     public static enum Op { ADD, SUBTRACT };
     private final List<Op> ops;
-    private @Nullable @Recorded TypeExp type;
+    private @Nullable @Recorded CheckedExp type;
 
     public AddSubtractExpression(List<@Recorded Expression> expressions, List<Op> ops)
     {
@@ -77,9 +75,9 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = onError.recordType(this, checkAllOperandsSameType(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, onError, p -> {
+        type = onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, ImmutableList.of());
@@ -121,6 +119,6 @@ public class AddSubtractExpression extends NaryOpExpression
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         int index = r.nextInt(expressions.size());
-        return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(type)));
+        return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(type == null ? null : type.typeExp)));
     }
 }

@@ -14,7 +14,6 @@ import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -76,18 +75,25 @@ public class MatchExpression extends NonOperatorExpression
             }
             for (int i = 0; i < patterns.size(); i++)
             {
-                @Nullable Pair<@Recorded TypeExp, TypeState> ts = patterns.get(i).check(data, state, onError);
+                @Nullable CheckedExp ts = patterns.get(i).check(data, state, onError);
                 if (ts == null)
                     return null;
-                patternTypes[i] = ts.getFirst();
-                rhsStates[i] = ts.getSecond();
+                patternTypes[i] = ts.typeExp;
+                rhsStates[i] = ts.typeState;
             }
             TypeState rhsState = TypeState.intersect(Arrays.asList(rhsStates));
-            @Nullable TypeExp outcomeType = outcome.check(data, rhsState, onError);
+            @Nullable CheckedExp outcomeType = outcome.check(data, rhsState, onError);
             if (outcomeType == null)
                 return null;
             else
-                return new Pair<>(Arrays.asList(patternTypes), outcomeType);
+            {
+                if (outcomeType.expressionKind == ExpressionKind.PATTERN)
+                {
+                    onError.recordError(this, StyledString.s("Match clause outcome cannot be a pattern"));
+                    return null;
+                }
+                return new Pair<>(Arrays.asList(patternTypes), outcomeType.typeExp);
+            }
         }
 
         //Returns null if no match
@@ -171,19 +177,22 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */
-        public @Nullable Pair<@Recorded TypeExp, TypeState> check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
+        public @Nullable CheckedExp check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            final @Nullable Pair<@Recorded TypeExp, TypeState> rhsState = pattern.checkAsPattern(data, state, onError);
+            final @Nullable CheckedExp rhsState = pattern.check(data, state, onError);
             if (rhsState == null)
                 return null;
+            // No need to check expression versus pattern, either is fine, but we will require Equatable either way:
+            rhsState.requireEquatable(false);
             
             if (guard != null)
             {
-                @Nullable TypeExp type = guard.check(data, rhsState.getSecond(), onError);
-                if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.bool(guard), type)) == null)
+                @Nullable CheckedExp type = guard.check(data, rhsState.typeState, onError);
+                if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.bool(guard), type.typeExp)) == null)
                 {
                     return null;
                 }
+                return new CheckedExp(rhsState.typeExp, type.typeState, rhsState.expressionKind);
             }
             return rhsState;
         }
@@ -305,16 +314,23 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
         //   - That all of the outcome expressions have the same type as each other (and is what we will return)
 
-        @Nullable TypeExp srcType = expression.check(dataLookup, state, onError);
+        @Nullable CheckedExp srcType = expression.check(dataLookup, state, onError);
         if (srcType == null)
             return null;
+        if (srcType.expressionKind == ExpressionKind.PATTERN)
+        {
+            onError.recordError(this, StyledString.s("Cannot have pattern in the item to be matched"));
+            return null;
+        }
+        // The Equatable checks are done on the patterns, not the source item, because e.g. if all patterns match
+        // certain tuple item as @anything, we don't need Equatable on that value.
 
         if (clauses.isEmpty())
         {
@@ -324,7 +340,7 @@ public class MatchExpression extends NonOperatorExpression
         
         // Add one extra for the srcType:
         List<TypeExp> patternTypes = new ArrayList<>(1 + clauses.size());
-        patternTypes.add(srcType);
+        patternTypes.add(srcType.typeExp);
         TypeExp[] outcomeTypes = new TypeExp[clauses.size()];
         // Includes the original source pattern:
         List<Expression> patternExpressions = new ArrayList<>();
@@ -357,7 +373,8 @@ public class MatchExpression extends NonOperatorExpression
         if (onError.recordError(this, TypeExp.unifyTypes(patternTypes)) == null)
             return null;
 
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes));
+        // TypeState doesn't extend outside the match expression, so we discard and return original:
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes), ExpressionKind.EXPRESSION, state);
     }
 
     @Override

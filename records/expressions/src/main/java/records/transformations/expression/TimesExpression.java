@@ -11,6 +11,7 @@ import records.error.UserException;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
+import styled.StyledString;
 import utility.Utility;
 
 import java.util.List;
@@ -55,24 +56,30 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
         for (Expression expression : expressions)
         {
             UnitExp unitVar = UnitExp.makeVariable();
             TypeExp expectedType = new NumTypeExp(this, unitVar);
-            @Nullable TypeExp inferredType = expression.check(dataLookup, state, onError);
+            @Nullable CheckedExp inferredType = expression.check(dataLookup, state, onError);
             if (inferredType == null)
                 return null;
             
+            if (inferredType.expressionKind == ExpressionKind.PATTERN)
+            {
+                onError.recordError(this, StyledString.s("Cannot have pattern in multiplication"));
+                return null;
+            }
+            
             // This should unify our unitVar appropriately:
-            if (onError.recordError(this, TypeExp.unifyTypes(expectedType, inferredType)) == null)
+            if (onError.recordError(this, TypeExp.unifyTypes(expectedType, inferredType.typeExp)) == null)
                 return null;
             
             runningUnit = runningUnit.times(unitVar);
         }
-        return onError.recordType(this, new NumTypeExp(this, runningUnit));
+        return onError.recordType(this, ExpressionKind.EXPRESSION, state, new NumTypeExp(this, runningUnit));
     }
 
     @Override

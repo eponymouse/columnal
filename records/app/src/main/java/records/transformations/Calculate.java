@@ -23,6 +23,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -166,7 +167,7 @@ public class Calculate extends Transformation
                     return typeExp;
                 }
             };
-            @Nullable TypeExp type = expression.check(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
+            @Nullable TypeExp type = expression.checkExpression(tableLookup, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)

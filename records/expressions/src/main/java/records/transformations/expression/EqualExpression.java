@@ -10,7 +10,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
@@ -22,6 +21,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Random;
 
 /**
@@ -29,6 +29,8 @@ import java.util.Random;
  */
 public class EqualExpression extends NaryOpExpression
 {
+    private OptionalInt patternIndex = OptionalInt.empty();
+    
     public EqualExpression(List<@Recorded Expression> operands)
     {
         super(operands);
@@ -48,15 +50,49 @@ public class EqualExpression extends NaryOpExpression
 
 
     @Override
-    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeExp argType = checkAllOperandsSameType(new MutVar(this, TypeClassRequirements.require("Equatable", "=")), dataLookup, typeState, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
-                ExpressionEditorUtil.getFixesForMatchingNumericUnits(typeState, p)
-        ) : ImmutableList.of()));
-        if (argType == null)
-            return null;
-        else
-            return onError.recordType(this, TypeExp.bool(this));
+        // The rule is that zero or one args can be a pattern, the rest must be expressions.
+        // The type state must not carry over between operands, because otherwise you could write if ($s, $t) = (t, s) which doesn't pan out,
+        // because all the non-patterns must be evaluated before the pattern.
+        TypeExp type = new MutVar(this);
+        for (int i = 0; i < expressions.size(); i++)
+        {
+            Expression expression = expressions.get(i);
+            @Nullable CheckedExp checked = expression.check(dataLookup, typeState, onError);
+            if (checked == null)
+                return null;
+            if (checked.expressionKind == ExpressionKind.PATTERN)
+            {
+                // Have we already seen a pattern?
+                if (patternIndex.isPresent())
+                {
+                    onError.recordError(this, StyledString.s("Only one item in an equals expression can be a pattern."));
+                    return null;
+                }
+                else
+                {
+                    patternIndex = OptionalInt.of(i);
+                    checked.requireEquatable(false);
+                }
+            }
+            // If there is a pattern and an expression, we don't allow two expressions, because it's not
+            // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
+            // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
+            if (patternIndex.isPresent() && i >= 2)
+            {
+                onError.recordError(this, StyledString.s("If one part of an equals expression is a pattern, you may only compare it to one expression."));
+                return null;
+            }
+            
+            TypeExp.unifyTypes(type, checked.typeExp);
+        }
+        if (!patternIndex.isPresent())
+        {
+            type.requireTypeClasses(TypeClassRequirements.require("Equatable", "<equals>"));
+        }
+        
+        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.bool(this));
     }
 
     @Override

@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import records.typeExp.NumTypeExp;
@@ -36,39 +37,27 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    protected @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    @RequiresNonNull({"lhsType", "rhsType"})
+    protected @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        // If normal check is called, something has gone wrong because we are only
-        // valid in a pattern
-        onError.recordError(this, StyledString.s("Plus-minus cannot be declared outside pattern match"));
-        return null;
+        // The LHS and RHS must be numbers with matching units.  The result is then that same number
+        // LHS needs to be specific number value,
+        // a variable declaration would not be valid (how do you match 5.6 against defvar x +- 0.1 ?  Either match
+        // just against var x, or give value.  That would also allow weird nestings like (1 +- 0.1) +- 0.2), and exact same idea for RHS.
+        
+        if (lhsType.expressionKind == ExpressionKind.PATTERN || rhsType.expressionKind == ExpressionKind.PATTERN)
+        {
+            onError.recordError(this, StyledString.s("Patterns are not valid around "));
+            return null;
+        }
+        
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType.typeExp, rhsType.typeExp), ExpressionKind.EXPRESSION, state);
     }
 
     @Override
     public @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on plus minus pattern (should only call matchAsPattern)");
-    }
-
-    @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        // The LHS and RHS must be numbers with matching units.  The result is then that same number
-        
-        // We don't do checkAsPattern on LHS or RHS.  LHS needs to be specific number value,
-        // a variable declaration would not be valid (how do you match 5.6 against defvar x +- 0.1 ?  Either match
-        // just against var x, or give value.  That would also allow weird nestings like (1 +- 0.1) +- 0.2), and exact same idea for RHS.
-        lhsType = lhs.check(data, state, onError);
-        rhsType = rhs.check(data, state, onError);
-
-        if (lhsType == null || rhsType == null)
-            return null;
-
-        @Recorded TypeExp combined = onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType, rhsType));
-        if (combined == null)
-            return null;
-        else
-            return new Pair<>(combined, state);
     }
 
     @Override

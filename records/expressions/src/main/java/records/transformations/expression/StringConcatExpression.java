@@ -10,7 +10,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -43,63 +42,46 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Items in a String concat expression can be:
         // - Variable declaration
         // - Values
         // With the added restriction that two variables cannot be adjacent.
         // Although it's a bit hacky, we check for variables directly from here using instanceof
-        if (expressions.size() == 1) // Shouldn't happen; how are we a concat expression?
-            return expressions.get(0).checkAsPattern(data, typeState, onError);
         
+        ExpressionKind kind = ExpressionKind.EXPRESSION;
         boolean lastWasVariable = false;
-        TypeExp ourType = TypeExp.text(this);
-        for (int i = 0; i < expressions.size(); i++)
+        for (Expression expression : expressions)
         {
-            @Nullable Pair<@Recorded TypeExp, TypeState> p;
-            if (expressions.get(i) instanceof VarDeclExpression)
+            if (expression instanceof VarDeclExpression || expression instanceof MatchAnythingExpression)
             {
                 if (lastWasVariable)
                 {
-                    onError.recordError(expressions.get(i), Either.left(StyledString.s("Cannot have two variables next to each other in text pattern match; how can we know where one match stops and the next begins?")));
+                    onError.recordError(expression, Either.left(StyledString.s("Cannot have two variables/@anything next to each other in text pattern match; how can we know where one match stops and the next begins?")));
                     return null;
                 }
                 else
                 {
-                    p = expressions.get(i).checkAsPattern(data, typeState, onError);
                     lastWasVariable = true;
                 }
             }
             else
             {
-                p = expressions.get(i).checkAsPattern(data, typeState, onError);
+                
                 lastWasVariable = false;
             }
-            if (p == null)
-                return null;
+            @Nullable CheckedExp c = expression.check(dataLookup, state, onError);
             
-            onError.recordError(this, TypeExp.unifyTypes(ourType, p.getFirst()));
-            // This lets later items use matches from earlier, but I think that's fine:
-            typeState = p.getSecond();
-        }
-
-        return new Pair<>(onError.recordTypeNN(this, ourType), typeState);
-    }
-
-    @Override
-    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        return onError.recordType(this, checkAllOperandsSameType(TypeExp.text(this), dataLookup, state, onError, (typeAndExpression) -> {
+            if (c == null)
+                return null;
             // TODO offer a quick fix of wrapping to.string around operand
-            @Nullable TypeExp curType = typeAndExpression.getOurType();
-            @Nullable StyledString message;
-            if (curType == null || curType.toString().equals("Text"))
-                message = null;
-            else
-                message = StyledString.concat(StyledString.s("Operands to ';' must be text but found "), curType.toStyledString());
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(message, ImmutableList.of());
-        }));
+            if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.text(this), c.typeExp)) == null)
+                return null;
+            state = c.typeState;
+            kind = kind.or(c.expressionKind);
+        }
+        return onError.recordType(this, kind, state, TypeExp.text(this));
     }
 
     @Override

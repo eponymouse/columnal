@@ -1,17 +1,13 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
-import com.google.common.collect.ImmutableList;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
-import records.transformations.expression.Expression;
+import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import styled.StyledString;

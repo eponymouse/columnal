@@ -45,13 +45,13 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList<TypeExp> questTypes = typeState.findVarType(getVarName());
         if (questTypes == null || questTypes.isEmpty())
             throw new UserException("? is not a valid expression by itself");
         // Pick last one in case of nested definitions:
-        return onError.recordType(this, questTypes.get(questTypes.size() - 1));
+        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, questTypes.get(questTypes.size() - 1));
     }
 
     protected String getVarName()
@@ -115,8 +115,8 @@ public class ImplicitLambdaArg extends NonOperatorExpression
 
     // If any of the list are implicit lambda args ('?'), returns a new type state
     // with a type for '?' and a wrap function which will turn the item into a function.
-    // If none are, returns identity and unaltered type state.
-    protected static Pair<UnaryOperator<@Nullable TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
+    // If none are, returns null and unaltered type state.
+    protected static Pair<@Nullable UnaryOperator<TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
     {
         ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
         
@@ -128,11 +128,11 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                 argType = argTypes.get(0);
             else
                 argType = new TupleTypeExp(src, argTypes, true);
-            return new Pair<UnaryOperator<@Nullable TypeExp>, TypeState>(t -> t == null ? null : TypeExp.function(src, argType, t), typeState.addImplicitLambdas(lambdaArgs, argTypes));
+            return new Pair<@Nullable UnaryOperator<TypeExp>, TypeState>(t -> TypeExp.function(src, argType, t), typeState.addImplicitLambdas(lambdaArgs, argTypes));
         }
         else
         {
-            return new Pair<>(x -> x, typeState);
+            return new Pair<>(null, typeState);
         }
     }
     

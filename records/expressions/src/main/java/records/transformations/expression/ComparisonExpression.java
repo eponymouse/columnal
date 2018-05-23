@@ -10,7 +10,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
@@ -106,14 +105,14 @@ public class ComparisonExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameType(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
+        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
             ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p)
         ) : ImmutableList.of()));
         if (type == null)
             return null;
-        return onError.recordType(this, TypeExp.bool(this));
+        return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.bool(this));
     }
 
     @Override

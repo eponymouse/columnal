@@ -9,7 +9,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
@@ -41,11 +40,25 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return onError.recordType(this, checkAllOperandsSameType(TypeExp.bool(this), dataLookup, state, onError, typeAndExpression -> {
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(typeAndExpression.getOurType() == null ? null : StyledString.concat(StyledString.s("Operands to '&' must be boolean but found "), typeAndExpression.getOurType().toStyledString()), ImmutableList.of());
-        }));
+        // And has a special property: the type state is threaded through to the next item.
+        for (Expression expression : expressions)
+        {
+            @Nullable CheckedExp checked = expression.check(dataLookup, state, onError);
+            if (checked == null)
+                return null;
+            if (checked.expressionKind == ExpressionKind.PATTERN)
+            {
+                onError.recordError(this, StyledString.s("Pattern is not allowed in & expression"));
+                return null;
+            }
+            
+            if (TypeExp.unifyTypes(TypeExp.bool(this), checked.typeExp) == null)
+                return null;
+            state = checked.typeState;
+        }
+        return new CheckedExp(TypeExp.bool(this), state, ExpressionKind.EXPRESSION);
     }
 
     @Override

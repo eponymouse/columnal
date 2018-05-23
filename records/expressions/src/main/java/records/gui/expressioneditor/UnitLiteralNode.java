@@ -1,9 +1,8 @@
 package records.gui.expressioneditor;
 
-import javafx.scene.Node;
 import records.data.unit.UnitManager;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitLiteralExpression;

@@ -19,7 +19,6 @@ import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitLiteralNode;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -32,7 +31,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget.CURRENT;
+import static records.transformations.expression.QuickFix.ReplacementTarget.CURRENT;
 
 /**
  * Created by neil on 25/11/2016.
@@ -49,21 +48,22 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+    public Either<StyledString, TypeExp> checkType(TypeState state) throws InternalException
     {
         if (unit == null)
-            return onError.recordType(this, TypeExp.plainNumber(this));
+            return Either.right(TypeExp.plainNumber(this));
 
         Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {
-            onError.recordError(this, err.getFirst());
+        return errOrUnit.<Either<StyledString, TypeExp>>either(err -> {
+            /*
             onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
                 @SuppressWarnings("recorded")
                 NumericLiteral replacement = new NumericLiteral(value, u);
                 return new QuickFix<>("quick.fix.unit", CURRENT, replacement);
             }));
-            return null;
-        }, u -> onError.recordType(this, new NumTypeExp(this, u)));
+            */
+            return Either.left(err.getFirst());
+        }, u -> Either.right(new NumTypeExp(this, u)));
     }
 
     @Override

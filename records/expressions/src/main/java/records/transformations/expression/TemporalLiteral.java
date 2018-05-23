@@ -55,16 +55,17 @@ public class TemporalLiteral extends Literal
         return content;
     }
 
+    
+    
     @Override
-    public @Recorded @Nullable TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected Either<StyledString, TypeExp> checkType(TypeState typeState) throws InternalException
     {
         if (value.isLeft())
         {
-            onError.recordError(this, StyledString.concat(StyledString.s("Value "), styledExpressionInput(content), StyledString.s(" not recognised as "), DataType.date(new DateTimeInfo(literalType)).toStyledString(), StyledString.s(" because "), value.getLeft("Impossible")));
-            return null;
+            return Either.left(StyledString.concat(StyledString.s("Value "), styledExpressionInput(content), StyledString.s(" not recognised as "), DataType.date(new DateTimeInfo(literalType)).toStyledString(), StyledString.s(" because "), value.getLeft("Impossible")));
         }
         
-        return onError.recordType(this, TypeExp.fromDataType(this, DataType.date(new DateTimeInfo(literalType))));
+        return Either.right(TypeExp.fromDataType(this, DataType.date(new DateTimeInfo(literalType))));
     }
 
     @Override

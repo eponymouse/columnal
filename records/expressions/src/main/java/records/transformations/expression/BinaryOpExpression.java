@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableAndColumnRenames;
@@ -58,8 +59,8 @@ public abstract class BinaryOpExpression extends Expression
     private final Op op;*/
     protected final @Recorded Expression lhs;
     protected final @Recorded Expression rhs;
-    protected @Nullable TypeExp lhsType;
-    protected @Nullable TypeExp rhsType;
+    protected @MonotonicNonNull CheckedExp lhsType;
+    protected @MonotonicNonNull CheckedExp rhsType;
 
     protected BinaryOpExpression(@Recorded Expression lhs, @Recorded Expression rhs)
     {
@@ -135,19 +136,28 @@ public abstract class BinaryOpExpression extends Expression
     public abstract @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<UnaryOperator<@Nullable TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState);
+        Pair<@Nullable UnaryOperator<TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState);
         typeState = lambda.getSecond();
-        lhsType = lhs.check(dataLookup, typeState, onError);
-        rhsType = rhs.check(dataLookup, typeState, onError);
-        if (lhsType == null || rhsType == null)
+        @Nullable CheckedExp lhsChecked = lhs.check(dataLookup, typeState, onError);
+        if (lhsChecked == null)
             return null;
-        return onError.recordType(this, lambda.getFirst().apply(checkBinaryOp(dataLookup, typeState, onError)));
+        @Nullable CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, onError);
+        if (rhsChecked == null)
+            return null;
+        if (lhsChecked.expressionKind == ExpressionKind.PATTERN)
+            onError.recordError(lhs, StyledString.s("Operand to " + saveOp() + " cannot be a pattern"));
+        if (rhsChecked.expressionKind == ExpressionKind.PATTERN)
+            onError.recordError(rhs, StyledString.s("Operand to " + saveOp() + " cannot be a pattern"));
+        lhsType = lhsChecked;
+        rhsType = rhsChecked;
+        @Nullable CheckedExp checked = checkBinaryOp(dataLookup, typeState, onError);
+        return checked == null ? null : checked.applyToType(lambda.getFirst());
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    protected abstract @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @SuppressWarnings("recorded")
     @Override
@@ -166,11 +176,11 @@ public abstract class BinaryOpExpression extends Expression
         // Most binary ops require same type, so this is typical (can always override):
         if (r.nextBoolean())
         {
-            return copy(lhsType != null && lhsType.prune() instanceof NumTypeExp ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(rhsType), rhs);
+            return copy(lhsType != null && lhsType.typeExp.prune() instanceof NumTypeExp ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(rhsType == null ? null : rhsType.typeExp), rhs);
         }
         else
         {
-            return copy(lhs, rhsType != null && rhsType.prune() instanceof NumTypeExp ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(lhsType));
+            return copy(lhs, rhsType != null && rhsType.typeExp.prune() instanceof NumTypeExp ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(lhsType == null ? null : lhsType.typeExp));
         }
     }
 

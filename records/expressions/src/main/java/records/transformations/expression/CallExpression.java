@@ -15,8 +15,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
-import records.transformations.expression.ErrorAndTypeRecorder.QuickFix.ReplacementTarget;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.MutVar;
@@ -75,27 +74,40 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeExp paramType = param.check(dataLookup, state, onError);
+        @Nullable CheckedExp paramType = param.check(dataLookup, state, onError);
         if (paramType == null)
             return null;
-        @Nullable TypeExp functionType = function.check(dataLookup, state, onError);
+        @Nullable CheckedExp functionType = function.check(dataLookup, state, onError);
         if (functionType == null)
             return null;
-        TypeExp returnType = new MutVar(this);
-        TypeExp actualCallType = TypeExp.function(this, paramType, returnType);
         
-        Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType, actualCallType);
+        if (functionType.expressionKind == ExpressionKind.PATTERN)
+        {
+            onError.recordError(this, StyledString.s("Call target cannot be a pattern"));
+            return null;
+        }
+        // Param can only be a pattern if the function is a constructor expression:
+        if (functionType.expressionKind == ExpressionKind.PATTERN && !(function instanceof ConstructorExpression))
+        {
+            onError.recordError(this, StyledString.s("Function parameter cannot be a pattern."));
+            return null;
+        }
+        
+        TypeExp returnType = new MutVar(this);
+        TypeExp actualCallType = TypeExp.function(this, paramType.typeExp, returnType);
+        
+        Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType.typeExp, actualCallType);
         @Nullable TypeExp checked = onError.recordError(this, temp);
         if (checked == null)
         {
             // Check after unification attempted, because that will have constrained
             // to list if possible (and not, if not)
-            boolean takesList = TypeExp.isList(paramType);
+            boolean takesList = TypeExp.isList(paramType.typeExp);
             if (takesList)
             {
-                TypeExp prunedParam = paramType.prune();
+                TypeExp prunedParam = paramType.typeExp.prune();
 
                 if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference)param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
                 {
@@ -136,31 +148,7 @@ public class CallExpression extends Expression
             
             return null;
         }
-        return onError.recordType(this, returnType);
-    }
-
-    @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        if (function instanceof ConstructorExpression)
-        {
-            @Nullable TypeExp functionType = function.check(data, typeState, onError);
-            if (functionType == null)
-                return null;
-            @Nullable Pair<@Recorded TypeExp, TypeState> paramType = param.checkAsPattern(data, typeState, onError);
-            if (paramType == null)
-                return null;
-            TypeExp returnType = new MutVar(this);
-            TypeExp actualCallType = TypeExp.function(this, paramType.getFirst(), returnType);
-            Either<StyledString, TypeExp> temp = TypeExp.unifyTypes(functionType, actualCallType);
-            @Nullable TypeExp checked = onError.recordError(this, temp);
-            if (checked != null)
-                return new Pair<>(returnType, paramType.getSecond());
-            else
-                return null;
-        }
-        
-        return super.checkAsPattern(data, typeState, onError);
+        return onError.recordType(this, paramType.expressionKind, paramType.typeState, returnType);
     }
 
     @Override

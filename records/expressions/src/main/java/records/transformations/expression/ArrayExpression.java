@@ -53,46 +53,27 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return onError.recordType(this, TypeExp.list(this, new MutVar(this)));
+            return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.list(this, new MutVar(this)));
         TypeExp[] typeArray = new TypeExp[items.size()];
+        ExpressionKind kind = ExpressionKind.EXPRESSION;
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable TypeExp t = items.get(i).check(dataLookup, state, onError);
-            if (t == null)
+            @Nullable CheckedExp c = items.get(i).check(dataLookup, state, onError);
+            if (c == null)
                 return null;
-            typeArray[i] = t;
+            typeArray[i] = c.typeExp;
+            state = c.typeState;
+            kind = kind.or(c.expressionKind);
         }
         this.elementType = onError.recordError(this, TypeExp.unifyTypes(ImmutableList.copyOf(typeArray)));
         _test_originalTypes = Arrays.asList(typeArray);
         if (elementType == null)
             return null;
-        return onError.recordType(this, TypeExp.list(this, elementType));
-    }
-
-    @Override
-    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        // Empty array - special case:
-        if (items.isEmpty())
-            return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, new MutVar(this))), state);
-        TypeExp[] typeArray = new TypeExp[items.size()];
-        for (int i = 0; i < typeArray.length; i++)
-        {
-            @Nullable Pair<@Recorded TypeExp, TypeState> t = items.get(i).checkAsPattern(data, state, onError);
-            if (t == null)
-                return null;
-            typeArray[i] = t.getFirst();
-            state = t.getSecond();
-        }
-        this.elementType = onError.recordError(this, TypeExp.unifyTypes(ImmutableList.copyOf(typeArray)));
-        _test_originalTypes = Arrays.asList(typeArray);
-        if (elementType == null)
-            return null;
-        return new Pair<>(onError.recordTypeNN(this, TypeExp.list(this, elementType)), state);
+        return onError.recordType(this, kind, state, TypeExp.list(this, elementType));
     }
 
     @Override

@@ -139,7 +139,7 @@ public class Filter extends Transformation
                 // Must set it before, in case it throws:
                 typeChecked = true;
                 ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-                @Nullable TypeExp checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+                @Nullable TypeExp checked = filterExpression.checkExpression(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
                     typeFinal = errors.recordLeftError(getManager().getTypeManager(), filterExpression, checked.toConcreteType(getManager().getTypeManager()));

@@ -42,10 +42,10 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable TypeExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    protected @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @NonNull TypeExp lhsTypeFinal = lhsType;
-        @NonNull TypeExp rhsTypeFinal = rhsType;
+        @NonNull TypeExp lhsTypeFinal = lhsType.typeExp;
+        @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;
         UnitExp topUnit = UnitExp.makeVariable();
         UnitExp bottomUnit = UnitExp.makeVariable();
         // You can divide any number by any other number
@@ -54,7 +54,7 @@ public class DivideExpression extends BinaryOpExpression
         {
             return null;
         }
-        return new NumTypeExp(this, topUnit.divideBy(bottomUnit));
+        return new CheckedExp(new NumTypeExp(this, topUnit.divideBy(bottomUnit)), state, ExpressionKind.EXPRESSION);
     }
 
     @Override

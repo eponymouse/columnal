@@ -6,9 +6,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -20,18 +18,16 @@ import records.grammar.ExpressionLexer;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
-import styled.StyledShowable;
+import records.transformations.expression.QuickFix;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -314,7 +310,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<ErrorAndTypeRecorder.QuickFix<Expression,ExpressionNodeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
         matchLabel.getSecond().addErrorAndFixes(error, quickFixes);
     }

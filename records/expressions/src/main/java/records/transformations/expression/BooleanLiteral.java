@@ -10,6 +10,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import utility.Either;
 
 /**
  * Created by neil on 27/11/2016.
@@ -24,9 +25,9 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public @Nullable @Recorded TypeExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
+    protected Either<StyledString, TypeExp> checkType(TypeState typeState)
     {
-        return onError.recordType(this, TypeExp.bool(this));
+        return Either.right(TypeExp.bool(this));
     }
 
     @Override
