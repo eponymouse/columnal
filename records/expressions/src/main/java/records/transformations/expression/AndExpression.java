@@ -54,7 +54,7 @@ public class AndExpression extends NaryOpExpression
                 return null;
             }
             
-            if (TypeExp.unifyTypes(TypeExp.bool(this), checked.typeExp) == null)
+            if (onError.recordError(expression, TypeExp.unifyTypes(TypeExp.bool(this), checked.typeExp)) == null)
                 return null;
             state = checked.typeState;
         }

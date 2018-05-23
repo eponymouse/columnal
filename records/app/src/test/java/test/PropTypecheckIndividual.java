@@ -162,12 +162,12 @@ public class PropTypecheckIndividual
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         TableLookup tableLookup = id -> null;
-        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b))).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(b))).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(a), new DummyExpression(a))).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new EqualExpression(ImmutableList.of(new DummyExpression(b), new DummyExpression(b))).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(TypeExp.bool(null), new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -181,13 +181,13 @@ public class PropTypecheckIndividual
             // Will actually type-check
             Unit aOverB = a.getNumberInfo().getUnit().divideBy(b.getNumberInfo().getUnit());
             Unit bOverA = b.getNumberInfo().getUnit().divideBy(a.getNumberInfo().getUnit());
-            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
         else
         {
-            assertEquals(null, new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-            assertEquals(null, new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(null, new DivideExpression(new DummyExpression(a), new DummyExpression(b)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+            assertEquals(null, new DivideExpression(new DummyExpression(b), new DummyExpression(a)).checkExpression(tableLookup, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
         }
     }
 

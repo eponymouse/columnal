@@ -85,7 +85,8 @@ public class EqualExpression extends NaryOpExpression
                 return null;
             }
             
-            TypeExp.unifyTypes(type, checked.typeExp);
+            if (onError.recordError(this, TypeExp.unifyTypes(type, checked.typeExp)) == null)
+                return null;
         }
         if (!patternIndex.isPresent())
         {

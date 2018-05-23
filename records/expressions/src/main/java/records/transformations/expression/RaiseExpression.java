@@ -88,6 +88,7 @@ public class RaiseExpression extends BinaryOpExpression
                             return null;
                         ourType = new NumTypeExp(this, new UnitExp(lhsUnit).raisedTo(r.getNum().intValueExact()));
                     }
+                    return new CheckedExp(ourType, typeState, ExpressionKind.EXPRESSION);
                 }
                 catch (ArithmeticException e)
                 {
