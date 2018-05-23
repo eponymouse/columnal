@@ -168,8 +168,31 @@
             <output>false</output>
         </example>
     </naryOperatorGroup>
-    <!-- TODO or -->
-    
+    <naryOperatorGroup title="And">
+        <operator>|</operator>
+        <argType>Boolean</argType>
+        <resultType>Boolean</resultType>
+        <description>
+            <p>Checks if any items is true.</p>
+            <p>The items are checked left-to-right and are not evaluated beyond the first true item.  See the first example for how this is useful.</p>
+        </description>
+        <example>
+            <!-- TODO have a table to provide list -->
+            <description>Will not cause an error because list size is checked before getting the item.</description>
+            <input>(@call @function list length([6, 7]) &gt;= 2) &amp; (@call @function element([6, 7], 2) = 5)</input>
+            <output>false</output>
+        </example>
+        <example>
+            <input>("a" = "b") | ("a" &lt;&gt; "b")</input>
+            <output>true</output>
+        </example>
+        <example>
+            <input>true | true | false</input>
+            <output>true</output>
+        </example>
+    </naryOperatorGroup>
+
+
     <naryOperatorGroup title="Less-than comparison">
         <operator>&lt;</operator>
         <operator>&lt;=</operator>

@@ -7,6 +7,7 @@
         <returnType>Date</returnType>
         <description>
             <p>Creates a date from the given year, month and day.</p>
+            <p>Months and days start at 1: 1{month} is January, and 1{day} is the first day of the month.</p>
         </description>
         <equivalence display="false">
             <forany name="x">Date</forany>

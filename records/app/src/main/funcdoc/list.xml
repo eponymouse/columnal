@@ -93,7 +93,7 @@
         <argType>[[@typevar t]]</argType>
         <returnType>[@typevar t]</returnType>
         <description>
-            <p>Takes a list of lists, and joins them all in order into one list.</p>
+            <p>Takes a list of lists, and joins them into one list by joining them end-to-end.</p>
             <p>Each item in the passed list must be a list.  To include single items, wrap them in square brackets [].</p>
         </description>
         <example>

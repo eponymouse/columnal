@@ -77,7 +77,7 @@
                         name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:value-of select="$functionName"/><xsl:call-template
                         name="processExpression"><xsl:with-param name="expression"><xsl:call-template
                             name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="function-arrow"/> <xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span></div>
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>
             <xsl:for-each select="seeAlso">
@@ -109,7 +109,7 @@
                             name="processExpression"><xsl:with-param name="expression" select="input"/></xsl:call-template></xsl:if><xsl:if test="inputArg"><xsl:call-template
                             name="processExpression"><xsl:with-param name="expression"><xsl:call-template
                             name="bracketed"><xsl:with-param name="expression" select="inputArg"/></xsl:call-template></xsl:with-param></xsl:call-template></xsl:if> <span class="function-arrow"/> <xsl:call-template
-                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/></xsl:with-param></xsl:call-template></span></div>
+                            name="processExpression"><xsl:with-param name="expression"><xsl:value-of select="output"/><xsl:value-of select="outputPattern"/></xsl:with-param></xsl:call-template></span></div>
                 </xsl:for-each>
             </div>
             <xsl:for-each select="seeAlso">

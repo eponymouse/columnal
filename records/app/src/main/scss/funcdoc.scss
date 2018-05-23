@@ -68,7 +68,8 @@ html {
     }
 }
 .function-arrow::before {
-    content: "\27F6";
+    /*content: "\27F6";*/
+    content: "->";
 } 
 .function-type, .operator-type {
     font-family: 'Droid Sans Mono';
