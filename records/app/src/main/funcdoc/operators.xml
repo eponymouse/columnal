@@ -54,43 +54,7 @@
         </description>
         <example>
             <description>Deal with inexact fractions by using a tolerance</description>
-            <input>(1 / 3) ~ (0.333 &#x00B1; 0.001)</input>
-            <output>true</output>
-        </example>
-    </binaryOperator>
-    <binaryOperator title="Match test">
-        <operator>~</operator>
-        <argTypeLeft>@typevar t</argTypeLeft>
-        <argTypeRight>@typevar t</argTypeRight>
-        <resultType>Boolean</resultType>
-        <description>
-            <p>Checks if the value on the left, matches the pattern on the right.</p>
-            <p>If there are no special patterns on the right-hand side (e.g. <link keyword="@anything"/>, <link operator="&#x00B1;"/>, new variables) then it is equivalent to <link operator="="/>.</p>
-            <p>If you do declare a variable in the right-hand side, the variable will not be accessible outside the pattern.  For that, use the full <link keyword="@match"/> expression.</p>
-        </description>
-        <example>
-            <description>Check if text starts with a dollar sign</description>
-            <input>"$50" ~ ("$" ; @anything)</input>
-            <output>true</output>
-        </example>
-        <example>
-            <description>Check if number is close to another</description>
-            <input>50.0006 ~ (50 &#x00B1; 0.01)</input>
-            <output>true</output>
-        </example>
-        <example>
-            <description>Check if a list has two items, and the first is an empty text value</description>
-            <input>["Hi", "there"] ~ ["", @anything]</input>
-            <output>false</output>
-        </example>
-        <example>
-            <description>Check if a pair has two numbers, with the second being one higher than the first</description>
-            <input>(2, 4) ~ (@newvar x, (x + 1))</input>
-            <output>false</output>
-        </example>
-        <example>
-            <description>Check if a list has two values, and they are the same</description>
-            <input>["Bye", "Bye"] ~ [@newvar s, s]</input>
+            <input>(1 / 3) = (0.333 &#x00B1; 0.001)</input>
             <output>true</output>
         </example>
     </binaryOperator>
@@ -123,6 +87,9 @@
         <description>
             <p>Checks that all the items are equal.</p>
             <p>Note that you can compare more than two items at once.  The equals expression is true only if all the items are equal to each other.</p>
+            <p>Checks if the value on the left, matches the pattern on the right.</p>
+            <p>If there are no special patterns on the right-hand side (e.g. <link keyword="@anything"/>, <link operator="&#x00B1;"/>, new variables) then it is equivalent to <link operator="="/>.</p>
+            <p>If you do declare a variable in the right-hand side, the variable will not be accessible outside the pattern.  For that, use the full <link keyword="@match"/> expression.</p>
         </description>
         <equivalence display="false">
             <foranytype name="t"><typeConstraint>Equatable</typeConstraint></foranytype>
@@ -144,6 +111,32 @@
             <input>(1-1)=(0.3-0.3)=0</input>
             <output>true</output>
         </example>
+        <example>
+            <description>Check if text starts with a dollar sign</description>
+            <input>"$50" = ("$" ; @anything)</input>
+            <output>true</output>
+        </example>
+        <example>
+            <description>Check if number is close to another</description>
+            <input>50.0006 = (50 &#x00B1; 0.01)</input>
+            <output>true</output>
+        </example>
+        <example>
+            <description>Check if a list has two items, and the first is an empty text value</description>
+            <input>["Hi", "there"] = ["", @anything]</input>
+            <output>false</output>
+        </example>
+        <example>
+            <description>Check if a pair has two numbers, with the second being one higher than the first</description>
+            <input>(2, 4) = (@newvar x, (x + 1))</input>
+            <output>false</output>
+        </example>
+        <example>
+            <description>Check if a list has two values, and they are the same</description>
+            <input>["Bye", "Bye"] = [@newvar s, s]</input>
+            <output>true</output>
+        </example>
+        
     </naryOperatorGroup>
     <naryOperatorGroup title="And">
         <operator>&amp;</operator>

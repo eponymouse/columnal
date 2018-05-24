@@ -51,7 +51,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
             return null;
         }
         
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType.typeExp, rhsType.typeExp), ExpressionKind.EXPRESSION, state);
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType.typeExp, rhsType.typeExp), ExpressionKind.PATTERN, state);
     }
 
     @Override

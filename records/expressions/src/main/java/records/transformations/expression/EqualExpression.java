@@ -70,19 +70,19 @@ public class EqualExpression extends NaryOpExpression
                     onError.recordError(this, StyledString.s("Only one item in an equals expression can be a pattern."));
                     return null;
                 }
+                else if (expressions.size() > 2)
+                {
+                    // If there is a pattern and an expression, we don't allow two expressions, because it's not
+                    // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
+                    // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
+                    onError.recordError(this, StyledString.s("Cannot have a pattern in an equals expression with more than two operands."));
+                    return null;
+                }
                 else
                 {
                     patternIndex = OptionalInt.of(i);
                     checked.requireEquatable(false);
                 }
-            }
-            // If there is a pattern and an expression, we don't allow two expressions, because it's not
-            // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
-            // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
-            if (patternIndex.isPresent() && i >= 2)
-            {
-                onError.recordError(this, StyledString.s("If one part of an equals expression is a pattern, you may only compare it to one expression."));
-                return null;
             }
             
             if (onError.recordError(this, TypeExp.unifyTypes(type, checked.typeExp)) == null)
@@ -100,6 +100,16 @@ public class EqualExpression extends NaryOpExpression
     @OnThread(Tag.Simulation)
     public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
+        if (patternIndex.isPresent())
+        {
+            if (expressions.size() > 2)
+                throw new InternalException("Pattern present in equals despite having more than two operands");
+            @Value Object value = expressions.get(1 - patternIndex.getAsInt()).getValue(state);
+            @Nullable EvaluateState result = expressions.get(patternIndex.getAsInt()).matchAsPattern(value, state);
+            // TODO we need to return state, too!
+            return DataTypeUtility.value(result != null);    
+        }
+        
         @Value Object first = expressions.get(0).getValue(state);
         for (int i = 1; i < expressions.size(); i++)
         {
