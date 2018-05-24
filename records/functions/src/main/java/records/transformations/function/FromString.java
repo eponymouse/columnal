@@ -53,7 +53,7 @@ public class FromString
                     };
                 }
             },
-            new FunctionDefinition("conversion:typed from text")
+            new FunctionDefinition("conversion:from text to")
             {
                 @Override
                 public @OnThread(Tag.Simulation) ValueFunction getInstance(TypeManager typeManager, SimulationFunction<String, Either<Unit, DataType>> paramTypes) throws InternalException, UserException
@@ -175,9 +175,15 @@ public class FromString
                         if (src.tryRead(indexedTag.getSecond().getName()))
                         {
                             // Found it!
-                            if (indexedTag.getSecond().getInner() != null)
+                            final @Nullable DataType innerType = indexedTag.getSecond().getInner();
+                            if (innerType != null)
                             {
-                                return new TaggedValue(indexedTag.getFirst(), convertFromString(indexedTag.getSecond().getInner(), src));
+                                if (!src.tryRead("("))
+                                    throw new UserException("Tag name must be followed by round brackets around inner value");
+                                TaggedValue r = new TaggedValue(indexedTag.getFirst(), convertFromString(innerType, src));
+                                if (!src.tryRead(")"))
+                                    throw new UserException("Missing closing round bracket around tag's inner value");
+                                return r;
                             }
                             else
                             {

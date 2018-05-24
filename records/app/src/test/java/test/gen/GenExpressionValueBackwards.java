@@ -28,6 +28,10 @@ import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
+import test.gen.backwards.BackwardsFromText;
+import test.gen.backwards.BackwardsProvider;
+import test.gen.backwards.ExpressionMaker;
+import test.gen.backwards.RequestBackwardsExpression;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -79,7 +83,6 @@ import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -107,7 +110,8 @@ import java.util.stream.Stream;
  * not quite crack it).
  */
 @SuppressWarnings("recorded")
-public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
+@OnThread(Tag.Simulation)
+public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> implements RequestBackwardsExpression
 {
 
     @SuppressWarnings("initialization")
@@ -118,6 +122,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
     private List<SimulationFunction<RecordSet, Column>> columns;
     private int nextVar = 0;
+    
+    private ImmutableList<BackwardsProvider> providers;
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
@@ -127,6 +133,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         this.gs = generationStatus;
         this.numberOnlyInt = true;
         this.columns = new ArrayList<>();
+        providers = ImmutableList.of(
+                new BackwardsFromText(r, this)
+        );
         try
         {
             DataType type = makeType(r);
@@ -137,6 +146,12 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public TypeManager getTypeManager()
+    {
+        return DummyManager.INSTANCE.getTypeManager();
     }
 
     @NonNull
@@ -157,8 +172,21 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     }
 
     @SuppressWarnings("valuetype")
-    private Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException
+    public Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException
     {
+        if (r.nextBoolean())
+        {
+            ImmutableList.Builder<ExpressionMaker> terminals = ImmutableList.builder();
+            ImmutableList.Builder<ExpressionMaker> deep = ImmutableList.builder();
+            for (BackwardsProvider provider : providers)
+            {
+                terminals.addAll(provider.terminals(type, targetValue));
+                deep.addAll(provider.terminals(type, targetValue));
+            }
+            
+            return termDeep(maxLevels, type, terminals.build(), deep.build());
+        }
+        
         return type.apply(new ConcreteDataTypeVisitor<Expression>()
         {
             @Override
@@ -739,12 +767,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         return new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW);
     }
 
-    @FunctionalInterface
-    public static interface ExpressionMaker
-    {
-        public Expression make() throws InternalException, UserException;
-    }
-
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
     {
         return Arrays.asList(suppliers);
@@ -765,9 +787,24 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             return r.choose(deeper).make();
     }
 
+    /**
+     * Make a match expression or an if expression with a match.
+     * @param maxLevels
+     * @param makeCorrectOutcome Make an expression that has the desired outcome value
+     * @param makeOtherOutcome Make an expression with the right type but arbitrary value.
+     * @return A MatchExpression or IfThenElseExpression that evaluates to the correct outcome.
+     * @throws InternalException
+     * @throws UserException
+     */
     @OnThread(Tag.Simulation)
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
     {
+        if (r.nextBoolean())
+        {
+            // Use an if-then-else
+            
+        }
+        
         DataType t = makeType(r);
         @Value Object actual = makeValue(t);
         // Make a bunch of guards which won't fire:
@@ -823,6 +860,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return t.apply(new SpecificDataTypeVisitor<Pair<Expression, @Nullable Expression>>()
                 {
                     @Override
+                    @OnThread(value = Tag.Simulation, ignoreParent = true)
                     public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
                         TagType<DataType> tagType = tagTypes.get(p.getTagIndex());

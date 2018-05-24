@@ -36,7 +36,7 @@
         </example>
     </function>
 
-    <function name="typed from text">
+    <function name="from text to">
         <typeArg>t</typeArg>
         <typeConstraint>Readable t</typeConstraint>
         <argType>(@tagged Type(@typevar t), Text)</argType>
