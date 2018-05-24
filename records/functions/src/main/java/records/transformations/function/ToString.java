@@ -96,7 +96,7 @@ public class ToString extends FunctionDefinition
                 {
                     TaggedValue taggedValue = Utility.cast(param, TaggedValue.class);
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
-                    return tag.getName() + ((taggedValue.getInner() == null || tag.getInner() == null) ? "" : (" " + convertToString(tag.getInner(), taggedValue.getInner())));
+                    return tag.getName() + ((taggedValue.getInner() == null || tag.getInner() == null) ? "" : ("(" + convertToString(tag.getInner(), taggedValue.getInner()) + ")"));
                 }
 
                 @Override
