@@ -28,6 +28,7 @@ import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
+import test.gen.backwards.BackwardsBooleans;
 import test.gen.backwards.BackwardsColumnRef;
 import test.gen.backwards.BackwardsFromText;
 import test.gen.backwards.BackwardsLiteral;
@@ -136,7 +137,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         this.numberOnlyInt = true;
         columnProvider = new BackwardsColumnRef(r, this);
         providers = ImmutableList.of(
-            columnProvider, 
+            columnProvider,
+            new BackwardsBooleans(r, this),
             new BackwardsFromText(r, this),
             new BackwardsLiteral(r, this)
         );
@@ -421,141 +423,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             public Expression bool() throws InternalException, UserException
             {
                 boolean target = (Boolean)targetValue;
-                return termDeep(maxLevels, type, l(() -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue),
-                    () -> {
-                        int size = r.nextInt(2, 5);
-                        ArrayList<Expression> expressions = new ArrayList<>();
-                        DataType t = makeType(r);
-                        if (target == true)
-                        {
-                            @Value Object valA = makeValue(t);
-                            for (int i = 0; i < size; i++)
-                            {
-                                expressions.add(make(t, valA, maxLevels - 1));
-                            }
-                            return new EqualExpression(expressions);
-                        }
-                        else
-                        {
-                            // To provide a good test, we make an initial value, plus 
-                            // somewhere between 0 and size - 2 (incl) duplicates,
-                            // then the remaining 1 to size - 1 (incl) are different than original
-                            // (may be same as each other by coincidence, but that's okay)
-                            @Value Object valA = makeValue(t);
-                            int sameAsA = r.nextInt(0, size - 2);
-                            for (int i = 0; i < sameAsA; i++)
-                            {
-                                expressions.add(make(t, valA, maxLevels - 1));
-                            }
-                            while (expressions.size() < size)
-                            {
-                                @Value Object diffValFromA;
-                                int attempts = 0;
-                                do
-                                {
-                                    diffValFromA = makeValue(t);
-                                    if (attempts++ >= 100)
-                                        return new BooleanLiteral(target);
-                                }
-                                while (Utility.compareValues(valA, diffValFromA) == 0);
-                                expressions.add(make(t, diffValFromA, maxLevels - 1));
-                            }
-                        }
-                        return new EqualExpression(expressions);
-                    },
-                    () -> {
-                        DataType t = makeType(r);
-                        @Value Object valA = makeValue(t);
-                        @Value Object valB;
-                        int attempts = 0;
-                        do
-                        {
-                            valB = makeValue(t);
-                            if (attempts++ >= 100)
-                                return new BooleanLiteral(target);
-                        }
-                        while (Utility.compareValues(valA, valB) == 0);
-                        return new NotEqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valB : valA, maxLevels - 1));
-                    },
-                    () -> {
-                        // If target is true, all must be true:
-                        if ((Boolean)targetValue)
-                            return new AndExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, true, maxLevels - 1)));
-                        // Otherwise they can take on random values, but one must be false:
-                        else
-                        {
-                            int size = r.nextInt(2, 5);
-                            int mustBeFalse = r.nextInt(0, size - 1);
-                            ArrayList<Expression> exps = new ArrayList<Expression>();
-                            for (int i = 0; i < size; i++)
-                                exps.add(make(DataType.BOOLEAN, mustBeFalse == i ? false : r.nextBoolean(), maxLevels - 1));
-                            return new AndExpression(exps);
-                        }
-                    },
-                    () -> {
-                        // If target is false, all must be false:
-                        if ((Boolean)targetValue == false)
-                            return new OrExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, false, maxLevels - 1)));
-                            // Otherwise they can take on random values, but one must be false:
-                        else
-                        {
-                            int size = r.nextInt(2, 5);
-                            int mustBeTrue = r.nextInt(0, size - 1);
-                            ArrayList<Expression> exps = new ArrayList<Expression>();
-                            for (int i = 0; i < size; i++)
-                                exps.add(make(DataType.BOOLEAN, mustBeTrue == i ? true : r.nextBoolean(), maxLevels - 1));
-                            return new OrExpression(exps);
-                        }
-                    },
-                    () -> {
-                        // First form a valid set of values and sort them into order
-                        boolean ascending = r.nextBoolean();
-                        DataType dataType = r.choose(TestUtil.distinctTypes);
-                        List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TestUtil.makeList(r, 2, 5, () -> makeOfType(dataType)));
-                        Collections.sort(operands, (a, b) -> { try
-                        {
-                            return Utility.compareValues(a.getFirst(), b.getFirst()) * (ascending ? 1 : -1);
-                        } catch (UserException | InternalException e) { throw new RuntimeException(e); }});
-                        List<ComparisonOperator> ops = new ArrayList<>();
-                        for (int i = 0; i < operands.size() - 1; i++)
-                        {
-                            // We may have randomly generated equal values, so check for that and adjust
-                            // operator to the or-equals variant if necessary:
-                            ops.add(
-                                Utility.compareValues(operands.get(i).getFirst(), operands.get(i+1).getFirst()) == 0 ?
-                                  (ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)
-                                : (ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN));
-                        }
-                        // Randomly duplicate a value and change to <=/>=:
-                        int swap = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
-                        // Copy from left to right or right to left:
-                        if (r.nextBoolean())
-                        {
-                            // Copy from right to left:
-                            Object newTarget = operands.get(swap + 1).getFirst();
-                            operands.set(swap, new Pair<>(newTarget, make(dataType, newTarget, maxLevels - 1)));
-                            ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
-                        }
-                        else
-                        {
-                            // Copy from left to right:
-                            Object newTarget = operands.get(swap).getFirst();
-                            operands.set(swap + 1, new Pair<>(newTarget, make(dataType, newTarget, maxLevels - 1)));
-                            ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
-                        }
-                        // If we are aiming for true, job done.
-                        if ((Boolean)targetValue == false)
-                        {
-                            // Need to make it false by swapping two adjacent values (and getting rid of <=/>=)
-                            int falsifyOp = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
-                            Pair<Object, Expression> temp = operands.get(falsifyOp);
-                            operands.set(falsifyOp, operands.get(falsifyOp + 1));
-                            operands.set(falsifyOp + 1, temp);
-                            ops.set(falsifyOp, ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);
-                        }
-                        return new ComparisonExpression(Utility.mapList(operands, p -> p.getSecond()), ImmutableList.copyOf(ops));
-                    }
-                ));
+                return termDeep(maxLevels, type, l(() -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue)));
             }
 
             @Override
@@ -878,5 +746,11 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
     public @Value Object makeValue(DataType t) throws UserException, InternalException
     {
         return super.makeValue(t);
+    }
+
+    @Override
+    public DataType makeType() throws InternalException, UserException
+    {
+        return makeType(r);
     }
 }

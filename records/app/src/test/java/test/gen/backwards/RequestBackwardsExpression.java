@@ -13,5 +13,7 @@ public interface RequestBackwardsExpression
 
     public @Value Object makeValue(DataType t) throws UserException, InternalException;
     
+    public DataType makeType() throws InternalException, UserException;
+    
     public TypeManager getTypeManager();
 }
