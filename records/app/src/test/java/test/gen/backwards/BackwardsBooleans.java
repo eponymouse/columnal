@@ -182,7 +182,7 @@ public class BackwardsBooleans extends BackwardsProvider
 
     private Expression not(int maxLevels, boolean b) throws InternalException, UserException
     {
-        return new CallExpression(parent.getTypeManager().getUnitManager(), "not", parent.make(DataType.BOOLEAN, !b, maxLevels -1));
+        return call("not", parent.make(DataType.BOOLEAN, !b, maxLevels -1));
     }
 
     private Expression or(int maxLevels, boolean b) throws InternalException, UserException

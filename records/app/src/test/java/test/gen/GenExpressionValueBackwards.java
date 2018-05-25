@@ -28,14 +28,7 @@ import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
-import test.gen.backwards.BackwardsBooleans;
-import test.gen.backwards.BackwardsColumnRef;
-import test.gen.backwards.BackwardsFromText;
-import test.gen.backwards.BackwardsLiteral;
-import test.gen.backwards.BackwardsProvider;
-import test.gen.backwards.BackwardsText;
-import test.gen.backwards.ExpressionMaker;
-import test.gen.backwards.RequestBackwardsExpression;
+import test.gen.backwards.*;
 import utility.Either;
 import utility.SimulationFunction;
 import utility.TaggedValue;
@@ -142,6 +135,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             new BackwardsBooleans(r, this),
             new BackwardsFromText(r, this),
             new BackwardsLiteral(r, this),
+            new BackwardsNumbers(r, this),
+            new BackwardsTemporal(r, this),
             new BackwardsText(r, this)
         );
         try
@@ -224,112 +219,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                 List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
                 deep.add(() -> call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", make(DataType.TEXT, targetValue.toString(), maxLevels - 1))));
 
-                switch (dateTimeInfo.getType())
-                {
-                    case YEARMONTHDAY:
-                    {
-                        Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                            new Pair<>("date from datetime", DateTimeType.DATETIME),
-                            new Pair<>("date from datetimezoned", DateTimeType.DATETIMEZONED)));
-                        DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
-                        deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
-                        LocalDate target = (LocalDate) targetValue;
-                        deep.add(() -> call("date",
-                            make(DataType.number(new NumberInfo(getUnit("year"))), target.getYear(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("month"))), target.getMonthValue(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("day"))), target.getDayOfMonth(), maxLevels - 1)
-                        ));
-                        /*
-                        deep.add(() -> call("date.from.ym.day",
-                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), YearMonth.of(target.getYear(), target.getMonth()), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("day"))), target.getDayOfMonth(), maxLevels - 1)
-                        ));
-                        */
-                    }
-                        break;
-                    case YEARMONTH:
-                    {
-                        Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                            new Pair<>("dateym from date", DateTimeType.YEARMONTHDAY)));
-                        DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
-                        deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
-                        YearMonth target = (YearMonth) targetValue;
-                        deep.add(() -> call("dateym",
-                            make(DataType.number(new NumberInfo(getUnit("year"))), target.getYear(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("month"))), target.getMonthValue(), maxLevels - 1)
-                        ));
-                    }
-                        break;
-                    case TIMEOFDAY:
-                    {
-                        Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
-                            //new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
-                            new Pair<>("time from datetime", DateTimeType.DATETIME),
-                            new Pair<>("time from datetimezoned", DateTimeType.DATETIMEZONED)));
-                        DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
-                        deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
-                        LocalTime target = (LocalTime) targetValue;
-                        deep.add(() -> call("time",
-                            make(DataType.number(new NumberInfo(getUnit("hour"))), target.getHour(), maxLevels - 1),
-                            make(DataType.number(new NumberInfo(getUnit("min"))), target.getMinute(), maxLevels - 1),
-                            // We only generate integers in this class, so generate nanos then divide:
-                            new DivideExpression(make(DataType.number(new NumberInfo(getUnit("s"))), (long)target.getSecond() * 1_000_000_000L + target.getNano(), maxLevels - 1), new NumericLiteral(1_000_000_000L, null))
-                        ));
-                    }
-                        break;
-                    /*
-                    case TIMEOFDAYZONED:
-                    {
-                        DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED));
-                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> call("timezoned.from.datetimezoned", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
-                        OffsetTime target = (OffsetTime) targetValue;
-                        deep.add(() -> call("timezoned",
-                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1),
-                            make(DataType.TEXT, target.getOffset().toString(), maxLevels - 1)
-                        ));
-                    }
-                        break;
-                    */
-                    case DATETIME:
-                    {
-                        LocalDateTime target = (LocalDateTime) targetValue;
-                        //date+time+zone:
-                        deep.add(() -> call("datetime",
-                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
-                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1)
-                        ));
-                    }
-                        break;
-                    case DATETIMEZONED:
-                    {
-                        ZonedDateTime target = (ZonedDateTime) targetValue;
-                        //datetime+zone
-                        /*
-                        deep.add(() -> call("datetimezoned.from.datetime.zone",
-                            make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), target.toLocalDateTime(), maxLevels - 1),
-                            make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
-                        ));
-                        */
-                        /*
-                        //date + time&zone
-                        // only if using offset, not a zone:
-                        if (target.getZone().equals(target.getOffset()))
-                        {
-                            deep.add(() -> call("datetimezoned.from.date.timezoned",
-                                make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
-                                make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), target.toOffsetDateTime().toOffsetTime(), maxLevels - 1)
-                            ));
-                        }*/
-                        //date+time+zone:
-                        deep.add(() -> call("datetimezoned",
-                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
-                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1),
-                            make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
-                        ));
-                    }
-                        break;
-                }
                 deep.add(fixType(maxLevels - 1, type, targetValue));
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
@@ -408,63 +297,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
-    }
-
-    // Makes a value which, when the right fields are extracted, will give the value target
-    // That is, you pass a type which is "bigger" than the intended (e.g. datetimezone)
-    // and a target value (e.g. a timezoned), and it will make a datetimezone
-    // value which you can downcast to your target value.
-    private Temporal makeTemporalToMatch(DateTimeType type, TemporalAccessor target)
-    {
-        Function<TemporalField, Integer> tf = field -> {
-            if (target.isSupported(field))
-                return target.get(field);
-            if (field.equals(ChronoField.YEAR))
-                return r.nextInt(1, 9999);
-            if (field.equals(ChronoField.MONTH_OF_YEAR))
-                return r.nextInt(1, 12);
-            if (field.equals(ChronoField.DAY_OF_MONTH))
-                return r.nextInt(1, 28);
-            if (field.equals(ChronoField.HOUR_OF_DAY))
-                return r.nextInt(0, 23);
-            if (field.equals(ChronoField.MINUTE_OF_HOUR))
-                return r.nextInt(0, 59);
-            if (field.equals(ChronoField.SECOND_OF_MINUTE))
-                return r.nextInt(0, 59);
-            if (field.equals(ChronoField.NANO_OF_SECOND))
-                return r.nextInt(0, 999999999);
-            if (field.equals(ChronoField.OFFSET_SECONDS))
-                return r.nextInt(-12*60, 12*60) * 60;
-
-            throw new RuntimeException("Unknown temporal field: " + field + " on type " + target);
-        };
-
-        switch (type)
-        {
-            case YEARMONTHDAY:
-                return LocalDate.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH));
-            case YEARMONTH:
-                return YearMonth.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR));
-            case TIMEOFDAY:
-                return LocalTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND));
-            /*
-            case TIMEOFDAYZONED:
-                return OffsetTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS)));*/
-            case DATETIME:
-                return LocalDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND));
-            case DATETIMEZONED:
-                if (target instanceof ZonedDateTime)
-                    return (ZonedDateTime)target; //Preserves zone name properly; this is the only type that can have a named zone
-                else
-                    return ZonedDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneId.ofOffset("", ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS)))).withFixedOffsetZone();
-        }
-        throw new RuntimeException("Cannot match " + type);
-    }
-
-    private Unit getUnit(String name) throws InternalException, UserException
-    {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
-        return m.loadUse(name);
     }
     
     private ExpressionMaker fixType(int maxLevels, DataType type, @Value Object value)
