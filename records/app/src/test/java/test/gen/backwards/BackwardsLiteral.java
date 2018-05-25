@@ -109,9 +109,79 @@ public class BackwardsLiteral extends BackwardsProvider
         });
     }
 
+    // Structural semi-literals: structural outer layer, then recurse for inner item.
     @Override
     public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
-        return ImmutableList.of();
+        return targetType.apply(new DataTypeVisitor<List<ExpressionMaker>>()
+        {
+            @Override
+            public List<ExpressionMaker> number(NumberInfo numberInfo) throws InternalException, UserException
+            {
+                return ImmutableList.of();
+            }
+
+            @Override
+            public List<ExpressionMaker> text() throws InternalException, UserException
+            {
+                return ImmutableList.of();
+            }
+
+            @Override
+            public List<ExpressionMaker> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return ImmutableList.of();
+            }
+
+            @Override
+            public List<ExpressionMaker> bool() throws InternalException, UserException
+            {
+                return ImmutableList.of();
+            }
+
+            @Override
+            public List<ExpressionMaker> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return ImmutableList.of(() -> {
+                    TaggedValue taggedValue = (TaggedValue) targetValue;
+                    TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
+
+                    ConstructorExpression constructor = new ConstructorExpression(parent.getTypeManager(), typeName.getRaw(), tag.getName());
+                    if (tag.getInner() == null || taggedValue.getInner() == null)
+                        return constructor;
+                    else
+                        return new CallExpression(constructor, parent.make(tag.getInner(), taggedValue.getInner(), maxLevels - 1));
+                });
+            }
+
+            @Override
+            public List<ExpressionMaker> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            {
+                return ImmutableList.of(() -> {
+                    Object[] items = (Object[]) targetValue;
+                    ImmutableList.Builder<Expression> exps = ImmutableList.builder();
+                    for (int i = 0; i < inner.size(); i++)
+                    {
+                        exps.add(parent.make(inner.get(i), items[i], maxLevels - 1));
+                    }
+                    return new TupleExpression(exps.build());
+                });
+            }
+
+            @Override
+            public List<ExpressionMaker> array(DataType inner) throws InternalException, UserException
+            {
+                return ImmutableList.of(() -> {
+                    ListEx list = (ListEx)targetValue;
+                    ImmutableList.Builder<Expression> exps = ImmutableList.builder();
+                    for (int i = 0; i < list.size(); i++)
+                    {
+                        exps.add(parent.make(inner, list.get(i), maxLevels - 1));
+                    }
+                    return new ArrayExpression(exps.build());
+                });
+            }
+        });
+
     }
 }
