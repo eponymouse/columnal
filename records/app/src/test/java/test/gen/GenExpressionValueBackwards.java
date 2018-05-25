@@ -30,6 +30,7 @@ import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
 import test.gen.backwards.BackwardsColumnRef;
 import test.gen.backwards.BackwardsFromText;
+import test.gen.backwards.BackwardsLiteral;
 import test.gen.backwards.BackwardsProvider;
 import test.gen.backwards.ExpressionMaker;
 import test.gen.backwards.RequestBackwardsExpression;
@@ -136,7 +137,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         columnProvider = new BackwardsColumnRef(r, this);
         providers = ImmutableList.of(
             columnProvider, 
-            new BackwardsFromText(r, this)
+            new BackwardsFromText(r, this),
+            new BackwardsLiteral(r, this)
         );
         try
         {
