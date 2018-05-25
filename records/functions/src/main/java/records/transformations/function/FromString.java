@@ -15,6 +15,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -129,10 +130,9 @@ public class FromString
                 {
                     if (!src.tryRead("\""))
                         throw new UserException("Expected start of string but found: " + src.snippet());
-                    // TODO deal with escaped quotes
                     @Nullable String content = src.readUntil('\"');
                     if (content != null)
-                        return DataTypeUtility.value(content);
+                        return DataTypeUtility.value(GrammarUtility.processEscapes("\"" + content + "\""));
                     else
                         throw new UserException("Could not find end of string");
                 }

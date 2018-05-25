@@ -368,7 +368,25 @@ public class TestUtil
         // with things likely to trip up parser
         if (r.nextBoolean() && gs != null)
         {
-            return new GenString().generate(r, gs);
+            /*
+            if (r.nextInt(5) == 1)
+            {
+                // Generate awkward escapes:
+                int numItems = r.nextInt(20);
+                StringBuilder s = new StringBuilder();
+                for (int i = 0; i < numItems; i++)
+                {
+                    s.append(r.choose(ImmutableList.of(
+                        "^q", "q", "\"", "^c", "c", "^", "\n", "^n", "@", "\r", "\u0000", " "
+                    )));
+                }
+                return s.toString();
+            }
+            else
+                */
+            {
+                return new GenString().generate(r, gs);
+            }
         }
         else
             return generateIdent(r);

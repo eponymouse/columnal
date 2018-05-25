@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -28,9 +29,7 @@ import utility.ValueFunction;
 import java.util.Collections;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class PropStringFunctions
@@ -275,5 +274,25 @@ public class PropStringFunctions
                 TestUtil.assertValueEqual(asString.toString(), value, roundTripped);
             }
         }
+    }
+    
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testEscape() throws InternalException, UserException
+    {
+        @SuppressWarnings("nullness") // Will throw if null
+        @NonNull FunctionDefinition toString = FunctionList.lookup(DummyManager.INSTANCE.getUnitManager(), "to text");
+
+        @Nullable Pair<ValueFunction, DataType> checkedToString = TestUtil.typeCheckFunction(toString, DataType.TEXT, DataType.TEXT, null);
+        assertNotNull(checkedToString);
+        if (checkedToString == null)
+            return;
+        ValueFunction f = checkedToString.getFirst();
+        
+        assertEquals("\"\"", f.call(DataTypeUtility.value("")));
+        assertEquals("\"hi\"", f.call(DataTypeUtility.value("hi")));
+        assertEquals("\"^q\"", f.call(DataTypeUtility.value("\"")));
+        assertEquals("\"^c^q\"", f.call(DataTypeUtility.value("^\"")));
+        assertEquals("\"^cc^cq\"", f.call(DataTypeUtility.value("^c^q")));
     }
 }

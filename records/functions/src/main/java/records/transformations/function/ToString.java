@@ -14,6 +14,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -73,7 +74,7 @@ public class ToString extends FunctionDefinition
                 @OnThread(Tag.Simulation)
                 public String text() throws InternalException, InternalException
                 {
-                    return "\"" + param.toString() + "\"";
+                    return "\"" + GrammarUtility.escapeChars(Utility.cast(param, String.class)) + "\"";
                 }
 
                 @Override
