@@ -33,6 +33,7 @@ import test.gen.backwards.BackwardsColumnRef;
 import test.gen.backwards.BackwardsFromText;
 import test.gen.backwards.BackwardsLiteral;
 import test.gen.backwards.BackwardsProvider;
+import test.gen.backwards.BackwardsText;
 import test.gen.backwards.ExpressionMaker;
 import test.gen.backwards.RequestBackwardsExpression;
 import utility.Either;
@@ -140,7 +141,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             columnProvider,
             new BackwardsBooleans(r, this),
             new BackwardsFromText(r, this),
-            new BackwardsLiteral(r, this)
+            new BackwardsLiteral(r, this),
+            new BackwardsText(r, this)
         );
         try
         {
@@ -203,69 +205,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                 // could cause failures in things like equal expressions.
                 return termDeep(maxLevels, type, l(
                     () -> new NumericLiteral((Number)targetValue, makeUnitExpression(displayInfo.getUnit()))
-                ), l(fixType(maxLevels - 1, type, targetValue), () -> {
-                    // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
-                    int numMiddle = r.nextInt(0, 6);
-                    List<Expression> expressions = new ArrayList<>();
-                    List<Op> ops = new ArrayList<>();
-                    BigDecimal curTotal = BigDecimal.valueOf(genInt());
-                    expressions.add(make(type, curTotal, maxLevels - 1));
-                    for (int i = 0; i < numMiddle; i++)
-                    {
-                        //System.err.println("Exp Cur: " + curTotal.toPlainString() + " after " + expressions.get(i));
-                        long next = genInt();
-                        expressions.add(make(type, next, maxLevels - 1));
-                        BigDecimal prevTotal = curTotal;
-                        if (r.nextBoolean())
-                        {
-                            curTotal = curTotal.add(BigDecimal.valueOf(next), MathContext.DECIMAL128);
-                            if (prevTotal.add(BigDecimal.valueOf(next)).compareTo(curTotal) != 0)
-                                throw new RuntimeException("Error building expression +");
-                            ops.add(Op.ADD);
-                        }
-                        else
-                        {
-                            curTotal = curTotal.subtract(BigDecimal.valueOf(next), MathContext.DECIMAL128);
-                            if (prevTotal.subtract(BigDecimal.valueOf(next)).compareTo(curTotal) != 0)
-                                throw new RuntimeException("Error building expression +");
-                            ops.add(Op.SUBTRACT);
-                        }
-                    }
-                    //System.err.println("Exp Cur: " + curTotal.toPlainString() + " after " + expressions.get(expressions.size() - 1));
-                    // Now add one more to make the difference:
-                    BigDecimal diff = (targetValue instanceof BigDecimal ? (BigDecimal)targetValue : BigDecimal.valueOf(((Number)targetValue).longValue())).subtract(curTotal, MathContext.DECIMAL128);
-                    boolean add = r.nextBoolean();
-                    expressions.add(make(type, DataTypeUtility.value(add ? diff : diff.negate()), maxLevels - 1));
-                    ops.add(add ? Op.ADD : Op.SUBTRACT);
-                    //System.err.println("Exp Result: " + Utility.toBigDecimal((Number)targetValue).toPlainString() + " after " + expressions.get(expressions.size() - 1) + " diff was: " + diff.toPlainString());
-                    return new AddSubtractExpression(expressions, ops);
-                }, () -> {
-                    // A few options; keep units and value in numerator and divide by 1
-                    // Or make random denom, times that by target to get num, and make up crazy units which work
-                    if (r.nextInt(0, 4) == 0)
-                        return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, makeUnitExpression(Unit.SCALAR)));
-                    else
-                    {
-                        long denominator;
-                        do
-                        {
-                            denominator = genInt();
-                        }
-                        while (Utility.compareNumbers(denominator, 0) == 0);
-                        Number numerator = Utility.multiplyNumbers((Number) targetValue, denominator);
-                        if (Utility.compareNumbers(Utility.divideNumbers(numerator, denominator), targetValue) != 0)
-                        {
-                            // Divide won't come out right: just divide by 1:
-                            return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, makeUnitExpression(Unit.SCALAR)));
-                        }
-
-                        // Either just use numerator, or make up crazy one
-                        Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
-                        Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
-                        // TODO test division by zero behaviour (test errors generally)
-                        return new DivideExpression(make(DataType.number(new NumberInfo(numUnit)), numerator, maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit)), denominator, maxLevels - 1));
-                    }
-                }));
+                ), l(fixType(maxLevels - 1, type, targetValue)));
             }
 
             @Override
@@ -274,26 +214,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             {
                 return termDeep(maxLevels, type, l(
                     () -> new StringLiteral((String)targetValue)
-                ), l(fixType(maxLevels - 1, type, targetValue), () -> {
-                    int numOperands = r.nextInt(2, 5);
-                    List<Integer> breakpoints = new ArrayList<>();
-                    int[] codepoints = ((String)targetValue).codePoints().toArray();
-                    for (int i = 0; i < numOperands - 1; i++)
-                    {
-                        breakpoints.add(r.nextInt(0, codepoints.length));
-                    }
-                    Collections.sort(breakpoints);
-                    //Simplify following code by adding start and end index to list:
-                    breakpoints.add(0, 0);
-                    breakpoints.add(codepoints.length);
-                    List<Expression> operands = new ArrayList<>();
-                    for (int i = 0; i < numOperands; i++)
-                    {
-                        Expression e = make(DataType.TEXT, new String(codepoints, breakpoints.get(i), breakpoints.get(i + 1) - breakpoints.get(i)), maxLevels - 1);
-                        operands.add(e);
-                    }
-                    return new StringConcatExpression(operands);
-                }));
+                ), l(fixType(maxLevels - 1, type, targetValue)));
             }
 
             @Override
@@ -540,30 +461,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         throw new RuntimeException("Cannot match " + type);
     }
 
-    // What unit do you have to multiply src by to get dest?
-    private Unit calculateRequiredMultiplyUnit(Unit src, Unit dest)
-    {
-        // So we have src * x = dest
-        // This can be rearranged to x = dest/src
-        return dest.divideBy(src);
-    }
-
-    private Unit makeUnit() throws InternalException, UserException
-    {
-        UnitManager m = DummyManager.INSTANCE.getUnitManager();
-        return r.<@NonNull Unit>choose(Arrays.asList(
-            m.loadUse("m"),
-            m.loadUse("cm"),
-            m.loadUse("inch"),
-            m.loadUse("g"),
-            m.loadUse("kg"),
-            m.loadUse("deg"),
-            m.loadUse("s"),
-            m.loadUse("hour"),
-            m.loadUse("$")
-        ));
-    }
-
     private Unit getUnit(String name) throws InternalException, UserException
     {
         UnitManager m = DummyManager.INSTANCE.getUnitManager();
@@ -752,5 +649,14 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
     public DataType makeType() throws InternalException, UserException
     {
         return makeType(r);
+    }
+    
+    // Make public:
+
+    @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public @Value long genInt()
+    {
+        return super.genInt();
     }
 }

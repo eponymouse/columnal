@@ -3,9 +3,11 @@ package test.gen.backwards;
 import annotation.qual.Value;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import records.transformations.expression.UnitExpression;
 
 public interface RequestBackwardsExpression
 {
@@ -16,4 +18,8 @@ public interface RequestBackwardsExpression
     public DataType makeType() throws InternalException, UserException;
     
     public TypeManager getTypeManager();
+    
+    public UnitExpression makeUnitExpression(Unit unit);
+
+    public @Value long genInt();
 }

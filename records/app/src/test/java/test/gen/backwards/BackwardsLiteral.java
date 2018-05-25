@@ -37,8 +37,8 @@ public class BackwardsLiteral extends BackwardsProvider
             public List<ExpressionMaker> number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 return ImmutableList.of(
-                    () -> new NumericLiteral((Number)targetValue, UnitExpression.load(numberInfo.getUnit())),
-                        () -> new TimesExpression(ImmutableList.of(new NumericLiteral((Number)targetValue, null), new NumericLiteral(1, UnitExpression.load(numberInfo.getUnit()))))
+                    () -> new NumericLiteral((Number)targetValue, parent.makeUnitExpression(numberInfo.getUnit())),
+                        () -> new TimesExpression(ImmutableList.of(new NumericLiteral((Number)targetValue, null), new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit()))))
                 );
             }
 
