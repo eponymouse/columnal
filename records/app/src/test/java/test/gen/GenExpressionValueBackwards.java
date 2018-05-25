@@ -28,6 +28,7 @@ import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.type.TypeExpression;
+import test.gen.backwards.BackwardsColumnRef;
 import test.gen.backwards.BackwardsFromText;
 import test.gen.backwards.BackwardsProvider;
 import test.gen.backwards.ExpressionMaker;
@@ -120,9 +121,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         super(ExpressionValue.class);
     }
 
-    private List<SimulationFunction<RecordSet, Column>> columns;
     private int nextVar = 0;
-    
+
+    private BackwardsColumnRef columnProvider;
     private ImmutableList<BackwardsProvider> providers;
 
     @Override
@@ -132,9 +133,10 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         this.r = r;
         this.gs = generationStatus;
         this.numberOnlyInt = true;
-        this.columns = new ArrayList<>();
+        columnProvider = new BackwardsColumnRef(r, this);
         providers = ImmutableList.of(
-                new BackwardsFromText(r, this)
+            columnProvider, 
+            new BackwardsFromText(r, this)
         );
         try
         {
@@ -158,7 +160,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
-        return new KnownLengthRecordSet(this.columns, 1);
+        return new KnownLengthRecordSet(columnProvider.getColumns(), 1);
     }
 
     // Only valid after calling generate
@@ -196,7 +198,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                 // We only do integers because beyond that the result isn't guaranteed, which
                 // could cause failures in things like equal expressions.
                 return termDeep(maxLevels, type, l(
-                    () -> columnRef(type, targetValue),
                     () -> new NumericLiteral((Number)targetValue, makeUnitExpression(displayInfo.getUnit()))
                 ), l(fixType(maxLevels - 1, type, targetValue), () -> {
                     // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
@@ -268,7 +269,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             public Expression text() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
-                    () -> columnRef(type, targetValue),
                     () -> new StringLiteral((String)targetValue)
                 ), l(fixType(maxLevels - 1, type, targetValue), () -> {
                     int numOperands = r.nextInt(2, 5);
@@ -411,7 +411,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                     return call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", new StringLiteral(targetValue.toString())));
                 }, (ExpressionMaker)() -> {
                     return new TemporalLiteral(dateTimeInfo.getType(), targetValue.toString());
-                },() -> columnRef(type, targetValue)), deep);
+                }), deep);
             }
 
             @Override
@@ -419,7 +419,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             public Expression bool() throws InternalException, UserException
             {
                 boolean target = (Boolean)targetValue;
-                return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue),
+                return termDeep(maxLevels, type, l(() -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue),
                     () -> {
                         int size = r.nextInt(2, 5);
                         ArrayList<Expression> expressions = new ArrayList<>();
@@ -584,7 +584,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                         return TestUtil.tagged(Either.right(tagInfo), make(nonNullInner, innerValue, maxLevels - 1));
                     });
                 }
-                terminals.add(() -> columnRef(type, targetValue));
                 nonTerm.add(fixType(maxLevels - 1, type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
@@ -598,7 +597,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                 terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], 1))));
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], maxLevels - 1))));
-                terminals.add(() -> columnRef(type, targetValue));
                 nonTerm.add(fixType(maxLevels - 1, type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
@@ -615,7 +613,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
                 terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, 1))));
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, maxLevels - 1))));
-                terminals.add(() -> columnRef(type, targetValue));
                 nonTerm.add(fixType(maxLevels - 1, type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
@@ -708,65 +705,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         TypeManager m = DummyManager.INSTANCE.getTypeManager();
         return () -> TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), make(type, value, maxLevels - 1));
     }
-
-    private Expression columnRef(DataType type, @Value Object value)
-    {
-        ColumnId name = new ColumnId("GEV Col " + columns.size());
-        columns.add(rs -> type.apply(new ConcreteDataTypeVisitor<Column>()
-        {
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column number(NumberInfo numberInfo) throws InternalException, UserException
-            {
-                return new MemoryNumericColumn(rs, name, numberInfo, Stream.of(Utility.toBigDecimal((Number) value).toPlainString()));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column text() throws InternalException, UserException
-            {
-                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value), "");
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList((Temporal)value), DateTimeInfo.DEFAULT_VALUE);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column bool() throws InternalException, UserException
-            {
-                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value), false);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return new MemoryTaggedColumn(rs, name, typeName, typeVars, tags, Collections.singletonList((TaggedValue) value), (TaggedValue)makeValue(type));
-            }
-
-            @Override
-            @SuppressWarnings("value")
-            @OnThread(Tag.Simulation)
-            public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                return new MemoryTupleColumn(rs, name, inner, Collections.singletonList((Object[])value), (Object[])makeValue(type));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Column array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                return new MemoryArrayColumn(rs, name, inner, Collections.singletonList((ListEx)value), new ListExList(Collections.emptyList()));
-            }
-        }));
-        return new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW);
-    }
-
+    
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
     {
         return Arrays.asList(suppliers);
@@ -929,5 +868,13 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         {
             return Collections.emptyList();
         }
+    }
+
+    // Turn makeValue public:
+    @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public @Value Object makeValue(DataType t) throws UserException, InternalException
+    {
+        return super.makeValue(t);
     }
 }
