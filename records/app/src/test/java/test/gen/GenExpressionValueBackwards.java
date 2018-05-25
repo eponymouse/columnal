@@ -133,6 +133,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         providers = ImmutableList.of(
             columnProvider,
             new BackwardsBooleans(r, this),
+            new BackwardsFixType(r, this),
             new BackwardsFromText(r, this),
             new BackwardsLiteral(r, this),
             new BackwardsNumbers(r, this),
@@ -177,132 +178,15 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
     @SuppressWarnings("valuetype")
     public Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException
     {
-        if (r.nextBoolean())
+        ImmutableList.Builder<ExpressionMaker> terminals = ImmutableList.builder();
+        ImmutableList.Builder<ExpressionMaker> deep = ImmutableList.builder();
+        for (BackwardsProvider provider : providers)
         {
-            ImmutableList.Builder<ExpressionMaker> terminals = ImmutableList.builder();
-            ImmutableList.Builder<ExpressionMaker> deep = ImmutableList.builder();
-            for (BackwardsProvider provider : providers)
-            {
-                terminals.addAll(provider.terminals(type, targetValue));
-                deep.addAll(provider.terminals(type, targetValue));
-            }
-            
-            return termDeep(maxLevels, type, terminals.build(), deep.build());
+            terminals.addAll(provider.terminals(type, targetValue));
+            deep.addAll(provider.terminals(type, targetValue));
         }
-        
-        return type.apply(new ConcreteDataTypeVisitor<Expression>()
-        {
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                // We only do integers because beyond that the result isn't guaranteed, which
-                // could cause failures in things like equal expressions.
-                return termDeep(maxLevels, type, l(
-                    () -> new NumericLiteral((Number)targetValue, makeUnitExpression(displayInfo.getUnit()))
-                ), l(fixType(maxLevels - 1, type, targetValue)));
-            }
 
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression text() throws InternalException, UserException
-            {
-                return termDeep(maxLevels, type, l(
-                    () -> new StringLiteral((String)targetValue)
-                ), l(fixType(maxLevels - 1, type, targetValue)));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
-                deep.add(() -> call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", make(DataType.TEXT, targetValue.toString(), maxLevels - 1))));
-
-                deep.add(fixType(maxLevels - 1, type, targetValue));
-
-                return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
-                    return call("asType", new TypeLiteralExpression(TypeExpression.fromDataType(DataType.date(dateTimeInfo))), call("from text", new StringLiteral(targetValue.toString())));
-                }, (ExpressionMaker)() -> {
-                    return new TemporalLiteral(dateTimeInfo.getType(), targetValue.toString());
-                }), deep);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression bool() throws InternalException, UserException
-            {
-                boolean target = (Boolean)targetValue;
-                return termDeep(maxLevels, type, l(() -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue)));
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                List<ExpressionMaker> terminals = new ArrayList<>();
-                List<ExpressionMaker> nonTerm = new ArrayList<>();
-                int tagIndex = ((TaggedValue) targetValue).getTagIndex();
-                TagType<DataType> tag = tags.get(tagIndex);
-                @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
-                if (typeDefinition == null)
-                    throw new InternalException("Looked up type but null definition: " + typeName);
-                TagInfo tagInfo = new TagInfo(typeDefinition, tagIndex);
-                final @Nullable DataType inner = tag.getInner();
-                if (inner == null)
-                {
-                    terminals.add(() -> TestUtil.tagged(Either.right(tagInfo), null));
-                }
-                else
-                {
-                    final @NonNull DataType nonNullInner = inner;
-                    nonTerm.add(() ->
-                    {
-                        @Nullable Object innerValue = ((TaggedValue) targetValue).getInner();
-                        if (innerValue == null)
-                            throw new InternalException("Type says inner value but is null");
-                        return TestUtil.tagged(Either.right(tagInfo), make(nonNullInner, innerValue, maxLevels - 1));
-                    });
-                }
-                nonTerm.add(fixType(maxLevels - 1, type, targetValue));
-                return termDeep(maxLevels, type, terminals, nonTerm);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                @Value Object[] target = (@Value Object[]) targetValue;
-                List<ExpressionMaker> terminals = new ArrayList<>();
-                terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], 1))));
-                List<ExpressionMaker> nonTerm = new ArrayList<>();
-                terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], maxLevels - 1))));
-                nonTerm.add(fixType(maxLevels - 1, type, targetValue));
-                return termDeep(maxLevels, type, terminals, nonTerm);
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public Expression array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                if (inner == null)
-                    return new ArrayExpression(ImmutableList.of());
-                @NonNull DataType innerFinal = inner;
-                @Value ListEx target = Utility.valueList(targetValue);
-                List<ExpressionMaker> terminals = new ArrayList<>();
-                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, 1))));
-                List<ExpressionMaker> nonTerm = new ArrayList<>();
-                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, maxLevels - 1))));
-                nonTerm.add(fixType(maxLevels - 1, type, targetValue));
-                return termDeep(maxLevels, type, terminals, nonTerm);
-            }
-        });
-    }
-    
-    private ExpressionMaker fixType(int maxLevels, DataType type, @Value Object value)
-    {
-        TypeManager m = DummyManager.INSTANCE.getTypeManager();
-        return () -> TypeLiteralExpression.fixType(m, JellyType.fromConcrete(type), make(type, value, maxLevels - 1));
+        return termDeep(maxLevels, type, terminals.build(), deep.build());
     }
     
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
