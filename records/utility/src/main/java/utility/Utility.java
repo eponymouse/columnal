@@ -906,6 +906,11 @@ public class Utility
         return stream.filter(x -> x != null);
     }
 
+    public static <T> Stream<T> filterOptional(Stream<Optional<T>> stream)
+    {
+        return stream.flatMap(x -> x.isPresent() ? Stream.of(x.get()) : Stream.empty());
+    }
+
     // Having different arity versions of this prevents the varargs/generics warning
     public static <T> List<T> concat(List<T> a, List<T> b)
     {

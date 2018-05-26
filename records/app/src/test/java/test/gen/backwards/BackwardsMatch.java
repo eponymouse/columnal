@@ -152,7 +152,7 @@ public class BackwardsMatch extends BackwardsProvider
             {
                 return ImmutableList.of();
             }
-        });
+        }).stream().map(m -> m.withBias(10)).collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -177,10 +177,10 @@ public class BackwardsMatch extends BackwardsProvider
         DataType t = parent.makeType();
         @Value Object actual = parent.makeValue(t);
         // Make a bunch of guards which won't fire:
-        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOutNulls(TestUtil.<@Nullable Pair<PatternInfo, Expression>>makeList(r, 0, 4, () -> {
+        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOptional(TestUtil.<Optional<Pair<PatternInfo, Expression>>>makeList(r, 0, 4, () -> {
             @Nullable PatternInfo nonMatch = makeNonMatchingPattern(maxLevels - 1, t, actual);
-            return nonMatch == null ? null : new Pair<>(nonMatch,
-                    parent.make(targetType, parent.makeValue(targetType), maxLevels - 1));
+            return nonMatch == null ? Optional.empty() : Optional.of(new Pair<>(nonMatch,
+                    parent.make(targetType, parent.makeValue(targetType), maxLevels - 1)));
         }).stream()).collect(Collectors.toList()));
 
         // Add var context for successful pattern:
@@ -341,7 +341,7 @@ public class BackwardsMatch extends BackwardsProvider
     @OnThread(Tag.Simulation)
     private List<PatternInfo> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual) throws InternalException, UserException
     {
-        return Utility.filterOutNulls(TestUtil.<@Nullable PatternInfo>makeList(r, 1, 3, () -> makeNonMatchingPattern(maxLevels, t, actual)).stream()).collect(ImmutableList.toImmutableList());
+        return Utility.filterOptional(TestUtil.<Optional<PatternInfo>>makeList(r, 1, 3, () -> Optional.ofNullable(makeNonMatchingPattern(maxLevels, t, actual))).stream()).collect(ImmutableList.toImmutableList());
     }
 
     @OnThread(Tag.Simulation)

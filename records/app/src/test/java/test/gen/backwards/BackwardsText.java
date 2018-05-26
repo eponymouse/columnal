@@ -29,6 +29,9 @@ public class BackwardsText extends BackwardsProvider
     @Override
     public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
+        if (!targetType.equals(DataType.TEXT))
+            return ImmutableList.of();
+        
         return ImmutableList.of(() -> {
             int numOperands = r.nextInt(2, 5);
             List<Integer> breakpoints = new ArrayList<>();
