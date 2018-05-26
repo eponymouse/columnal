@@ -117,8 +117,6 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         super(ExpressionValue.class);
     }
 
-    private int nextVar = 0;
-
     private BackwardsColumnRef columnProvider;
     private ImmutableList<BackwardsProvider> providers;
 
@@ -136,6 +134,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             new BackwardsFixType(r, this),
             new BackwardsFromText(r, this),
             new BackwardsLiteral(r, this),
+            new BackwardsMatch(r, this),
             new BackwardsNumbers(r, this),
             new BackwardsTemporal(r, this),
             new BackwardsText(r, this)
@@ -197,162 +196,12 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
     @OnThread(Tag.Simulation)
     private Expression termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
-        if (maxLevels > 1 && r.nextInt(0, 5) == 0)
-        {
-            return makeMatch(maxLevels - 1, () -> termDeep(maxLevels - 1, type, terminals, deeper), () -> make(type, makeValue(type), maxLevels - 1));
-        }
-
-        //TODO generate match expressions here (valid for all types)
         if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
             return r.choose(terminals).make();
         else
             return r.choose(deeper).make();
     }
-
-    /**
-     * Make a match expression or an if expression with a match.
-     * @param maxLevels
-     * @param makeCorrectOutcome Make an expression that has the desired outcome value
-     * @param makeOtherOutcome Make an expression with the right type but arbitrary value.
-     * @return A MatchExpression or IfThenElseExpression that evaluates to the correct outcome.
-     * @throws InternalException
-     * @throws UserException
-     */
-    @OnThread(Tag.Simulation)
-    private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
-    {
-        if (r.nextBoolean())
-        {
-            // Use an if-then-else
-            
-        }
-        
-        DataType t = makeType(r);
-        @Value Object actual = makeValue(t);
-        // Make a bunch of guards which won't fire:
-        List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 4, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
-            // Generate a bunch which can't match the item:
-            List<ExFunction<MatchExpression, Pattern>> patterns = makeNonMatchingPatterns(maxLevels - 1, t, actual);
-            Expression outcome = makeOtherOutcome.get();
-            if (patterns.isEmpty())
-                return Optional.<Function<MatchExpression, MatchClause>>empty();
-            return Optional.<Function<MatchExpression, MatchClause>>of((MatchExpression me) -> {
-                try
-                {
-                    return me.new MatchClause(Utility.<ExFunction<MatchExpression, Pattern>, Pattern>mapListEx(patterns, p -> p.apply(me)), outcome);
-                }
-                catch (UserException | InternalException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            });
-        }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
-        Expression correctOutcome = makeCorrectOutcome.get();
-        List<ExFunction<MatchExpression, Pattern>> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels - 1, t, actual));
-        Pair<Expression, @Nullable Expression> match = makePatternMatch(maxLevels - 1, t, actual);
-        patterns.add(r.nextInt(0, patterns.size()), me -> {
-            @Nullable Expression guard = r.nextBoolean() ? null : make(DataType.BOOLEAN, true, maxLevels - 1);
-            @Nullable Expression extraGuard = match.getSecond();
-            if (extraGuard != null)
-                guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
-            return new Pattern(match.getFirst(), guard);
-        });
-        clauses.add(r.nextInt(0, clauses.size()), me -> {
-            try
-            {
-                return me.new MatchClause(Utility.<ExFunction<MatchExpression, Pattern>, Pattern>mapListEx(patterns, p -> p.apply(me)), correctOutcome);
-            }
-            catch (InternalException | UserException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
-        return new MatchExpression(make(t, actual, maxLevels - 1), clauses);
-    }
-
-    // Pattern and an optional guard
-    @NonNull
-    private Pair<Expression, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, Object actual)
-    {
-        try
-        {
-            if (t.isTagged() && r.nextBoolean())
-            {
-                TaggedValue p = (TaggedValue) actual;
-                return t.apply(new SpecificDataTypeVisitor<Pair<Expression, @Nullable Expression>>()
-                {
-                    @Override
-                    @OnThread(value = Tag.Simulation, ignoreParent = true)
-                    public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
-                    {
-                        TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
-                        @Nullable DataType inner = tagType.getInner();
-                        @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
-                        if (typeDefinition == null)
-                            throw new InternalException("Looked up type but null definition: " + typeName);
-                        if (inner == null)
-                            return new Pair<>(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
-                        @Nullable Object innerValue = p.getInner();
-                        if (innerValue == null)
-                            throw new InternalException("Type says inner value but is null");
-                        Pair<Expression, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, innerValue);
-                        return new Pair<>(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), subPattern.getFirst()), subPattern.getSecond());
-                    }
-                });
-
-            }
-            else if (r.nextBoolean()) // Do equals but using variable + guard
-            {
-                String varName = "var" + nextVar++;
-                return new Pair<>(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), make(t, actual, maxLevels))));
-            }
-            Expression expression = make(t, actual, maxLevels);
-            return new Pair<Expression, @Nullable Expression>(expression, null);
-        }
-        catch (InternalException | UserException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @OnThread(Tag.Simulation)
-    private List<ExFunction<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual)
-    {
-        class CantMakeNonMatching extends RuntimeException {}
-        try
-        {
-            return TestUtil.<ExFunction<MatchExpression, Pattern>>makeList(r, 1, 4, () ->
-            {
-                Pair<Expression, @Nullable Expression> match = r.choose(Arrays.<ExSupplier<Pair<Expression, @Nullable Expression>>>asList(
-                    () ->
-                    {
-                        @Value Object nonMatchingValue;
-                        int attempts = 0;
-                        do
-                        {
-                            nonMatchingValue = makeValue(t);
-                            if (attempts++ >= 30)
-                                throw new CantMakeNonMatching();
-                        }
-                        while (Utility.compareValues(nonMatchingValue, actual) == 0);
-                        Object nonMatchingValueFinal = nonMatchingValue;
-                        return makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal);
-                    }
-                )).get();
-                @Nullable Expression guard = r.nextBoolean() ? null : make(DataType.BOOLEAN, true, maxLevels - 1);
-                @Nullable Expression extraGuard = match.getSecond();
-                if (extraGuard != null)
-                    guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
-                @Nullable Expression guardFinal = guard;
-                return (ExFunction<MatchExpression, Pattern>)((MatchExpression me) -> new Pattern(match.getFirst(), guardFinal));
-            });
-        }
-        catch (CantMakeNonMatching e)
-        {
-            return Collections.emptyList();
-        }
-    }
-
+    
     // Turn makeValue public:
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
