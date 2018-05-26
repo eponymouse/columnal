@@ -159,11 +159,53 @@ public class BackwardsMatch extends BackwardsProvider
     public List<ExpressionMaker> deep(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
     {
         return ImmutableList.of(
-            () -> makeMatch(maxLevels, targetType, targetValue)//,
-            //() -> makeMatchIf(maxLevels, targetType, targetValue)
+            () -> makeMatch(maxLevels, targetType, targetValue),
+            () -> makeMatchIf(maxLevels, targetType, targetValue)
         );
     }
 
+    /**
+     * Make a match expression with a match.
+     *
+     * @return A MatchExpression that evaluates to the correct outcome.
+     * @throws InternalException
+     * @throws UserException
+     */
+    @OnThread(Tag.Simulation)
+    private IfThenElseExpression makeMatchIf(int maxLevels, DataType targetType, @Value Object targetValue) throws InternalException, UserException
+    {
+        DataType t = parent.makeType();
+        @Value Object actual = parent.makeValue(t);
+        // Make a bunch of guards which won't fire:
+        List<Pair<PatternInfo, Expression>> clauses = new ArrayList<>(Utility.filterOutNulls(TestUtil.<@Nullable Pair<PatternInfo, Expression>>makeList(r, 0, 4, () -> {
+            @Nullable PatternInfo nonMatch = makeNonMatchingPattern(maxLevels - 1, t, actual);
+            return nonMatch == null ? null : new Pair<>(nonMatch,
+                    parent.make(targetType, parent.makeValue(targetType), maxLevels - 1));
+        }).stream()).collect(Collectors.toList()));
+
+        // Add var context for successful pattern:
+        varContexts.add(new ArrayList<>());
+        PatternInfo match = makePatternMatch(maxLevels - 1, t, actual);
+        Expression correctOutcome = parent.make(targetType, targetValue, maxLevels - 1);
+        @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
+        @Nullable Expression extraGuard = match.guard;
+        if (extraGuard != null)
+            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
+        PatternInfo successful = new PatternInfo(match.pattern, guard);
+        clauses.add(r.nextInt(0, clauses.size()), new Pair<>(successful, correctOutcome));
+        // Remove for successful pattern:
+        varContexts.remove(varContexts.size() -1);
+
+        Expression toMatch = parent.make(t, actual, maxLevels - 1);
+        IfThenElseExpression cur = new IfThenElseExpression(clauses.get(0).getFirst().toEquals(toMatch), clauses.get(0).getSecond(), parent.make(targetType, parent.makeValue(targetType), maxLevels - 1));
+
+        for (int i = 1; i < clauses.size(); i++)
+        {
+            cur = new IfThenElseExpression(clauses.get(i).getFirst().toEquals(toMatch), clauses.get(i).getSecond(), cur);
+        }
+        
+        return cur;
+    }
 
     /**
      * Make a match expression with a match.
@@ -236,6 +278,16 @@ public class BackwardsMatch extends BackwardsProvider
         public Pattern toPattern()
         {
             return new Pattern(pattern, guard);
+        }
+
+        public Expression toEquals(Expression matchAgainst)
+        {
+            EqualExpression equalExpression = new EqualExpression(
+                    r.nextBoolean() ? ImmutableList.of(matchAgainst, pattern) : ImmutableList.of(pattern, matchAgainst)
+            );
+            return guard == null ? equalExpression : new AndExpression(
+                ImmutableList.of(equalExpression, guard)
+            );
         }
     }
 
