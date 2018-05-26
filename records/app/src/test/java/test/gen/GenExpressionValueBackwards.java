@@ -182,7 +182,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         for (BackwardsProvider provider : providers)
         {
             terminals.addAll(provider.terminals(type, targetValue));
-            deep.addAll(provider.terminals(type, targetValue));
+            deep.addAll(provider.deep(4, type, targetValue));
         }
 
         return termDeep(maxLevels, type, terminals.build(), deep.build());
