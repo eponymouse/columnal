@@ -52,6 +52,9 @@ public class EqualExpression extends NaryOpExpression
     @Override
     public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        // The one to be returned, but not used for later operands:
+        TypeState retTypeState = typeState;
+        
         // The rule is that zero or one args can be a pattern, the rest must be expressions.
         // The type state must not carry over between operands, because otherwise you could write if ($s, $t) = (t, s) which doesn't pan out,
         // because all the non-patterns must be evaluated before the pattern.
@@ -81,6 +84,7 @@ public class EqualExpression extends NaryOpExpression
                 else
                 {
                     patternIndex = OptionalInt.of(i);
+                    retTypeState = checked.typeState;
                     checked.requireEquatable(false);
                 }
             }
@@ -93,7 +97,7 @@ public class EqualExpression extends NaryOpExpression
             type.requireTypeClasses(TypeClassRequirements.require("Equatable", "<equals>"));
         }
         
-        return onError.recordType(this, ExpressionKind.EXPRESSION, typeState, TypeExp.bool(this));
+        return onError.recordType(this, ExpressionKind.EXPRESSION, retTypeState, TypeExp.bool(this));
     }
 
     @Override
