@@ -104,7 +104,7 @@ public class BackwardsMatch extends BackwardsProvider
                     return new AddSubtractExpression(ImmutableList.of(
                         new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(numVarFinal.type.getNumberInfo().getUnit()))))),
                             new NumericLiteral(Utility.addSubtractNumbers((Number)targetValue, Utility.cast(numVarFinal.value, Number.class), false), parent.makeUnitExpression(numberInfo.getUnit()))
-                    ), ImmutableList.of(Op.SUBTRACT));
+                    ), ImmutableList.of(Op.ADD));
                 });
             }
 
