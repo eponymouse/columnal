@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -85,17 +84,18 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         if (column == null)
             throw new InternalException("Attempting to fetch value despite type check failure");
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return column.getType().getCollapsed(state.getRowIndex());
+                return new Pair<>(column.getType().getCollapsed(state.getRowIndex()), state);
             case WHOLE_COLUMN:
                 @NonNull Column columnFinal = column;
-                return DataTypeUtility.value(new ListEx() {
+                return new Pair<>(DataTypeUtility.value(new ListEx() {
 
                     @Override
                     @OnThread(Tag.Simulation)
@@ -110,7 +110,7 @@ public class ColumnReference extends NonOperatorExpression
                     {
                         return columnFinal.getType().getCollapsed(index);
                     }
-                });
+                }), state);
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

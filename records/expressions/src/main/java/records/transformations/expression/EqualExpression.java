@@ -2,21 +2,15 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.typeExp.MutVar;
-import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -101,28 +95,26 @@ public class EqualExpression extends NaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         if (patternIndex.isPresent())
         {
             if (expressions.size() > 2)
                 throw new InternalException("Pattern present in equals despite having more than two operands");
-            @Value Object value = expressions.get(1 - patternIndex.getAsInt()).getValue(state);
+            @Value Object value = expressions.get(1 - patternIndex.getAsInt()).getValue(state).getFirst();
             @Nullable EvaluateState result = expressions.get(patternIndex.getAsInt()).matchAsPattern(value, state);
-            // TODO we need to return state, too!
-            return DataTypeUtility.value(result != null);    
+            return new Pair<>(DataTypeUtility.value(result != null), result != null ? result : state);    
         }
         
-        @Value Object first = expressions.get(0).getValue(state);
+        @Value Object first = expressions.get(0).getValue(state).getFirst();
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object rhsVal = expressions.get(i).getValue(state);
+            @Value Object rhsVal = expressions.get(i).getValue(state).getFirst();
             if (0 != Utility.compareValues(first, rhsVal))
-                return DataTypeUtility.value(false);
+                return new Pair<>(DataTypeUtility.value(false), state);
         }
 
-        return DataTypeUtility.value(true);
+        return new Pair<>(DataTypeUtility.value(true), state);
     }
 
     @Override

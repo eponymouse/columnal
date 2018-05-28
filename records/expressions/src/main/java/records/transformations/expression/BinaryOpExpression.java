@@ -122,18 +122,18 @@ public abstract class BinaryOpExpression extends Expression
 
     @Override
     @OnThread(Tag.Simulation)
-    public final @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         if (lhs instanceof ImplicitLambdaArg || rhs instanceof  ImplicitLambdaArg)
         {
-            return ImplicitLambdaArg.makeImplicitFunction(ImmutableList.of(lhs, rhs), state, s -> getValueBinaryOp(s));
+            return new Pair<>(ImplicitLambdaArg.makeImplicitFunction(ImmutableList.of(lhs, rhs), state, s -> getValueBinaryOp(s).getFirst()), state);
         }
         else
             return getValueBinaryOp(state);
     }
 
     @OnThread(Tag.Simulation)
-    public abstract @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
+    public abstract Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
     public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException

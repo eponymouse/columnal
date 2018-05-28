@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -22,6 +21,8 @@ import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 
@@ -50,13 +51,14 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         if (type == null)
             throw new InternalException("Attempting to fetch function despite failing type check");
 
         @NonNull Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> typeFinal = type;
-        return DataTypeUtility.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
+        return new Pair<>(DataTypeUtility.value(functionDefinition.getInstance(state.getTypeManager(), s -> {
             Either<MutUnitVar, MutVar> typeExp = typeFinal.getSecond().get(s);
             if (typeExp == null)
                 throw new InternalException("Type " + s + " cannot be found for function " + functionDefinition.getName());
@@ -69,7 +71,7 @@ public class StandardFunction extends NonOperatorExpression
                 l -> {throw new UserException(StyledString.concat(StyledString.s("Ambiguous type for call to " + functionDefinition.getName() + " "),  l.getErrorText()));},
                 t2 -> t2
             ));
-        }));
+        })), state);
     }
 
     @Override

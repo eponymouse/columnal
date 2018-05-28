@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
@@ -16,6 +15,7 @@ import records.typeExp.TypeExp;
 import styled.CommonStyles;
 import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 
 /**
  * Created by neil on 25/11/2016.
@@ -36,9 +36,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        return value;
+        return new Pair<>(value, state);
     }
 
     @Override

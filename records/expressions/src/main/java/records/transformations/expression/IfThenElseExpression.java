@@ -13,7 +13,9 @@ import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -77,13 +79,16 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        Boolean b = (Boolean)condition.getValue(state);
+        Pair<@Value Object, EvaluateState> condValState = condition.getValue(state);
+        Boolean b = Utility.cast(condValState.getFirst(), Boolean.class);
+        // We always return original state:
         if (b)
-            return thenExpression.getValue(state);
+            return new Pair<>(thenExpression.getValue(condValState.getSecond()).getFirst(), state);
         else
-            return elseExpression.getValue(state);
+            // Else gets original state, condition didn't pass:
+            return new Pair<>(elseExpression.getValue(state).getFirst(), state);
     }
 
     @Override

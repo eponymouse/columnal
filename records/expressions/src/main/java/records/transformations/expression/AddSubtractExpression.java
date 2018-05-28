@@ -102,16 +102,16 @@ public class AddSubtractExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Number n = (Number)expressions.get(0).getValue(state);
+        @Value Number n = Utility.cast(expressions.get(0).getValue(state).getFirst(), Number.class);
         for (int i = 1; i < expressions.size(); i++)
         {
             //System.err.println("Actual Cur: " + Utility.toBigDecimal(n).toPlainString() + " after " + expressions.get(i-1).save(true));
-            n = Utility.addSubtractNumbers(n, Utility.cast(expressions.get(i).getValue(state), Number.class), ops.get(i - 1) == ADD);
+            n = Utility.addSubtractNumbers(n, Utility.cast(expressions.get(i).getValue(state).getFirst(), Number.class), ops.get(i - 1) == ADD);
         }
         //System.err.println("Actual Result: " + Utility.toBigDecimal(n).toPlainString() + " after " + expressions.get(expressions.size()-1).save(true));
-        return n;
+        return new Pair<>(n, state);
     }
 
     @SuppressWarnings("recorded")

@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
-import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -12,6 +11,9 @@ import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
@@ -83,12 +85,13 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Number n = Utility.cast(expressions.get(0).getValue(state), Number.class);
+        @Value Number n = Utility.cast(expressions.get(0).getValue(state).getFirst(), Number.class);
         for (int i = 1; i < expressions.size(); i++)
-            n = Utility.multiplyNumbers(n, Utility.cast(expressions.get(i).getValue(state), Number.class));
-        return n;
+            n = Utility.multiplyNumbers(n, Utility.cast(expressions.get(i).getValue(state).getFirst(), Number.class));
+        return new Pair<>(n, state);
     }
 
     @SuppressWarnings("recorded")

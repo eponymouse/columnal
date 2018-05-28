@@ -2,18 +2,15 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -85,16 +82,17 @@ public class StringConcatExpression extends NaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         StringBuilder sb = new StringBuilder();
         for (Expression expression : expressions)
         {
-            String s = Utility.cast(expression.getValue(state), String.class);
+            Pair<@Value Object, EvaluateState> valueAndState = expression.getValue(state);
+            String s = Utility.cast(valueAndState.getFirst(), String.class);
             sb.append(s);
+            state = valueAndState.getSecond();
         }
-        return DataTypeUtility.value(sb.toString());
+        return new Pair<>(DataTypeUtility.value(sb.toString()), state);
     }
 
     @Override
@@ -113,7 +111,7 @@ public class StringConcatExpression extends NaryOpExpression
             else
             {
                 // It's a value; get that value:
-                String subValue = Utility.cast(expressions.get(i).getValue(state), String.class);
+                String subValue = Utility.cast(expressions.get(i).getValue(state).getFirst(), String.class);
                 if (subValue.isEmpty())
                 {
                     // Matches, but nothing to do.  Keep going...

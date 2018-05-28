@@ -50,9 +50,9 @@ public class BackwardsMatch extends BackwardsProvider
     {
         private final String name;
         private final DataType type;
-        private final Object value;
+        private final @Value Object value;
 
-        public VarInfo(String name, DataType type, Object value)
+        public VarInfo(String name, DataType type, @Value Object value)
         {
             this.name = name;
             this.type = type;
@@ -103,7 +103,7 @@ public class BackwardsMatch extends BackwardsProvider
                 return ImmutableList.of(() -> {
                     return new AddSubtractExpression(ImmutableList.of(
                         new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(numVarFinal.type.getNumberInfo().getUnit()))))),
-                            new NumericLiteral(Utility.addSubtractNumbers((Number)targetValue, (Number)numVarFinal.value, false), parent.makeUnitExpression(numberInfo.getUnit()))
+                            new NumericLiteral(Utility.addSubtractNumbers((Number)targetValue, Utility.cast(numVarFinal.value, Number.class), false), parent.makeUnitExpression(numberInfo.getUnit()))
                     ), ImmutableList.of(Op.SUBTRACT));
                 });
             }
@@ -293,7 +293,7 @@ public class BackwardsMatch extends BackwardsProvider
 
     // Pattern and an optional guard
     @NonNull
-    private PatternInfo makePatternMatch(int maxLevels, DataType t, Object actual)
+    private PatternInfo makePatternMatch(int maxLevels, DataType t, @Value Object actual)
     {
         try
         {
@@ -313,7 +313,7 @@ public class BackwardsMatch extends BackwardsProvider
                             throw new InternalException("Looked up type but null definition: " + typeName);
                         if (inner == null)
                             return new PatternInfo(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
-                        @Nullable Object innerValue = p.getInner();
+                        @Nullable @Value Object innerValue = p.getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
                         PatternInfo subPattern = makePatternMatch(maxLevels, inner, innerValue);
@@ -356,7 +356,7 @@ public class BackwardsMatch extends BackwardsProvider
                 return null;
         }
         while (Utility.compareValues(nonMatchingValue, actual) == 0);
-        Object nonMatchingValueFinal = nonMatchingValue;
+        @Value Object nonMatchingValueFinal = nonMatchingValue;
         PatternInfo match = makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal);
     
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);

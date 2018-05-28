@@ -1,7 +1,6 @@
 package test;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -74,7 +73,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+        public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
         {
             throw new InternalException("Testing");
         }
@@ -384,7 +383,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+        public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
         {
             throw new InternalException("Should not be called");
         }

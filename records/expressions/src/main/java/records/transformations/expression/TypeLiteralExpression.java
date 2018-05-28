@@ -84,10 +84,10 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         // TODO return the actual type literal once we define the GADT
-        return new TaggedValue(0, null);
+        return new Pair<>(new TaggedValue(0, null), state);
     }
 
     @Override

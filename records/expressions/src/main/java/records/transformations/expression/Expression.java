@@ -69,16 +69,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
-    @OnThread(Tag.Simulation)
-    public boolean getBoolean(EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
-    {
-        Object val = getValue(state);
-        if (val instanceof Boolean)
-            return (Boolean) val;
-        else
-            throw new InternalException("Expected boolean but got: " + val.getClass());
-    }
-    
     public static interface TableLookup
     {
         // If you pass null, you get the default table (or null if none)
@@ -217,7 +207,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
      * Gets the value for this expression at the given evaluation state
      */
     @OnThread(Tag.Simulation)
-    public abstract @Value Object getValue(EvaluateState state) throws UserException, InternalException;
+    public abstract Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
@@ -273,7 +263,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @OnThread(Tag.Simulation)
     public @Nullable EvaluateState matchAsPattern(@Value Object value, EvaluateState state) throws InternalException, UserException
     {
-        @Value Object ourValue = getValue(state);
+        @Value Object ourValue = getValue(state).getFirst();
         return Utility.compareValues(value, ourValue) == 0 ? state : null;
     }
 

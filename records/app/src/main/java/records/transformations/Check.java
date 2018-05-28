@@ -96,7 +96,7 @@ public class Check extends Transformation
 
             type = typeFinal;
         }
-        return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty()));
+        return checkExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.empty())).getFirst();
     }
 
     @Override

@@ -98,14 +98,17 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         List<@Value Object> values = new ArrayList<>(items.size());
         for (Expression item : items)
         {
-            values.add(item.getValue(state));
+            Pair<@Value Object, EvaluateState> valueAndState = item.getValue(state);
+            values.add(valueAndState.getFirst());
+            state = valueAndState.getSecond();
         }
-        return DataTypeUtility.value(values);
+        return new Pair<>(DataTypeUtility.value(values), state);
     }
 
     @Override

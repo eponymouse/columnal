@@ -16,6 +16,7 @@ import records.error.UserException;
 import records.transformations.expression.*;
 import utility.Either;
 import utility.TaggedValue;
+import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.time.temporal.TemporalAccessor;
@@ -83,7 +84,7 @@ public class BackwardsLiteral extends BackwardsProvider
             public List<ExpressionMaker> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return ImmutableList.of(() -> {
-                    Object[] items = (Object[]) targetValue;
+                    @Value Object[] items = Utility.castTuple(targetValue, inner.size());
                     ImmutableList.Builder<Expression> exps = ImmutableList.builder();
                     for (int i = 0; i < inner.size(); i++)
                     {

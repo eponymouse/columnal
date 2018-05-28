@@ -18,6 +18,7 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
 import utility.Pair;
 import utility.Utility;
 
@@ -84,14 +85,16 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         @Value Object[] values = new Object[members.size()];
         for (int i = 0; i < values.length; i++)
         {
-            values[i] = members.get(i).getValue(state);
+            Pair<@Value Object, EvaluateState> pair = members.get(i).getValue(state);
+            values[i] = pair.getFirst();
+            state = pair.getSecond();
         }
-        return DataTypeUtility.value(values);
+        return new Pair<>(DataTypeUtility.value(values), state);
     }
 
     @Override

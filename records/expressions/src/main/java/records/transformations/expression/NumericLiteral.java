@@ -31,8 +31,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static records.transformations.expression.QuickFix.ReplacementTarget.CURRENT;
-
 /**
  * Created by neil on 25/11/2016.
  */
@@ -76,9 +74,9 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        return value;
+        return new Pair<>(value, state);
     }
 
     @Override

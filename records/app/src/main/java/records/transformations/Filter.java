@@ -35,6 +35,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -164,7 +165,7 @@ public class Filter extends Transformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && recordSet.indexValid(nextIndexToExamine))
         {
-            boolean keep = filterExpression.getBoolean(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine)), prog);
+            boolean keep = Utility.cast(filterExpression.getValue(new EvaluateState(getManager().getTypeManager(), OptionalInt.of(nextIndexToExamine))).getFirst(), Boolean.class);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

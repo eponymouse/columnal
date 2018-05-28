@@ -179,7 +179,7 @@ public class SummaryStatistics extends Transformation
                 if (type == null || concrete == null)
                     throw new UserException((@NonNull StyledString)errors.getAllErrors().findFirst().orElse(StyledString.s("Unknown type error")));
                 @NonNull DataType typeFinal = concrete;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty()))));
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).getFirst()));
                 
             }
 

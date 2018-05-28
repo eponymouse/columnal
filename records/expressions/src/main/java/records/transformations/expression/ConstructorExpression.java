@@ -1,11 +1,9 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
@@ -65,11 +63,11 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        return tag.<@Value Object>eitherEx(s -> {
+        return new Pair<>(tag.<@Value Object>eitherEx(s -> {
             throw new InternalException("Attempting to fetch function despite failing type check");
-        }, t -> t.makeValue());
+        }, t -> t.makeValue()), state);
     }
 
     @Override

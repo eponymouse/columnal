@@ -2,23 +2,17 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
-import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
-
-import java.util.Optional;
 
 /**
  * Created by neil on 30/11/2016.
@@ -58,11 +52,11 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public @Value Object getValueBinaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object lhsVal = lhs.getValue(state);
-        @Value Object rhsVal = rhs.getValue(state);
-        return DataTypeUtility.value(0 != Utility.compareValues(lhsVal, rhsVal));
+        @Value Object lhsVal = lhs.getValue(state).getFirst();
+        @Value Object rhsVal = rhs.getValue(state).getFirst();
+        return new Pair<>(DataTypeUtility.value(0 != Utility.compareValues(lhsVal, rhsVal)), state);
     }
 
     @Override

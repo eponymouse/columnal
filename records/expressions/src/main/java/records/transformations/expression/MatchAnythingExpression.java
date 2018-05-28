@@ -12,7 +12,6 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.OperandNode;
 import records.typeExp.MutVar;
-import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -34,7 +33,7 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Calling getValue on \"@anything\" pattern (should only call matchAsPattern)");
     }

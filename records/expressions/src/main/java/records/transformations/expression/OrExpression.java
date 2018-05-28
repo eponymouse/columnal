@@ -11,6 +11,8 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -48,15 +50,16 @@ public class OrExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         for (Expression expression : expressions)
         {
-            Boolean b = Utility.cast(expression.getValue(state), Boolean.class);
+            Boolean b = Utility.cast(expression.getValue(state).getFirst(), Boolean.class);
             if (b == true)
-                return DataTypeUtility.value(true);
+                return new Pair<>(DataTypeUtility.value(true), state);
         }
-        return DataTypeUtility.value(false);
+        return new Pair<>(DataTypeUtility.value(false), state);
     }
 
     @SuppressWarnings("recorded")

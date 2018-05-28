@@ -117,17 +117,17 @@ public class ComparisonExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
-        @Value Object cur = expressions.get(0).getValue(state);
+        @Value Object cur = expressions.get(0).getValue(state).getFirst();
         for (int i = 1; i < expressions.size(); i++)
         {
-            @Value Object next = expressions.get(i).getValue(state);
+            @Value Object next = expressions.get(i).getValue(state).getFirst();
             if (!operators.get(i - 1).comparisonTrue(cur, next))
-                return DataTypeUtility.value(false);
+                return new Pair<>(DataTypeUtility.value(false), state);
             cur = next;
         }
-        return DataTypeUtility.value(true);
+        return new Pair<>(DataTypeUtility.value(true), state);
     }
 
     @SuppressWarnings("recorded")

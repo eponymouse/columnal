@@ -2,15 +2,14 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
 import utility.Pair;
 import utility.Utility;
 
@@ -62,15 +61,18 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(final EvaluateState origState) throws UserException, InternalException
     {
+        EvaluateState state = origState;
         for (Expression expression : expressions)
         {
-            Boolean b = Utility.cast(expression.getValue(state), Boolean.class);
+            Pair<@Value Object, EvaluateState> valState = expression.getValue(state);
+            Boolean b = Utility.cast(valState.getFirst(), Boolean.class);
             if (b == false)
-                return DataTypeUtility.value(false);
+                return new Pair<>(DataTypeUtility.value(false), origState);
+            state = valState.getSecond();
         }
-        return DataTypeUtility.value(true);
+        return new Pair<>(DataTypeUtility.value(true), state);
     }
 
     @SuppressWarnings("recorded")

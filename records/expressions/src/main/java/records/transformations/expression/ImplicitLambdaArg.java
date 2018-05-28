@@ -60,9 +60,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        return state.get(getVarName());
+        return new Pair<>(state.get(getVarName()), state);
     }
 
     @Override

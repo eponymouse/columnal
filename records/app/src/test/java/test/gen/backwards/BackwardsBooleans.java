@@ -61,7 +61,7 @@ public class BackwardsBooleans extends BackwardsProvider
             // First form a valid set of values and sort them into order
             boolean ascending = r.nextBoolean();
             DataType dataType = parent.makeType();
-            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TestUtil.makeList(r, 2, 5, () -> {
+            List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TestUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 5, () -> {
                 @Value Object value = parent.makeValue(dataType);
                 return new Pair<>(value, parent.make(dataType, value, maxLevels - 1));
             }));
@@ -85,14 +85,14 @@ public class BackwardsBooleans extends BackwardsProvider
             if (r.nextBoolean())
             {
                 // Copy from right to left:
-                Object newTarget = operands.get(swap + 1).getFirst();
+                @Value Object newTarget = operands.get(swap + 1).getFirst();
                 operands.set(swap, new Pair<>(newTarget, parent.make(dataType, newTarget, maxLevels - 1)));
                 ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
             }
             else
             {
                 // Copy from left to right:
-                Object newTarget = operands.get(swap).getFirst();
+                @Value Object newTarget = operands.get(swap).getFirst();
                 operands.set(swap + 1, new Pair<>(newTarget, parent.make(dataType, newTarget, maxLevels - 1)));
                 ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
             }
@@ -101,7 +101,7 @@ public class BackwardsBooleans extends BackwardsProvider
             {
                 // Need to make it false by swapping two adjacent values (and getting rid of <=/>=)
                 int falsifyOp = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
-                Pair<Object, Expression> temp = operands.get(falsifyOp);
+                Pair<@Value Object, Expression> temp = operands.get(falsifyOp);
                 operands.set(falsifyOp, operands.get(falsifyOp + 1));
                 operands.set(falsifyOp + 1, temp);
                 ops.set(falsifyOp, ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);

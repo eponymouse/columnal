@@ -10,7 +10,6 @@ import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
@@ -41,7 +40,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     }
 
     @Override
-    public @Value Object getValueNaryOp(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
     {
         throw new InternalException("Cannot get value for invalid expression");
     }

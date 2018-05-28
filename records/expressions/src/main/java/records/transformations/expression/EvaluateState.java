@@ -43,6 +43,10 @@ public class EvaluateState
         return new EvaluateState(copy.build(), typeManager, rowIndex);
     }
 
+    /**
+     * Gets value of variable.  Throws InternalException if variable not found
+     * (since if we passed the type check, variable must be present during execution).
+     */
     public @Value Object get(String varName) throws InternalException
     {
         @Value Object value = variables.get(varName);

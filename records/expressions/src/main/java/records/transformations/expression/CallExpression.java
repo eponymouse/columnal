@@ -152,11 +152,11 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        ValueFunction functionValue = Utility.cast(function.getValue(state), ValueFunction.class);
+        ValueFunction functionValue = Utility.cast(function.getValue(state).getFirst(), ValueFunction.class);
             
-        return functionValue.call(param.getValue(state));
+        return new Pair<>(functionValue.call(param.getValue(state).getFirst()), state);
     }
 
     @Override

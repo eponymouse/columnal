@@ -204,8 +204,15 @@ public class MatchExpression extends NonOperatorExpression
             @Nullable EvaluateState newState = pattern.matchAsPattern(value, state);
             if (newState == null)
                 return null;
-            if (guard != null && !guard.getBoolean(newState, null))
-                return null;
+            if (guard != null)
+            {
+                Pair<@Value Object, EvaluateState> valAndState = guard.getValue(newState);
+                boolean b = Utility.cast(valAndState.getFirst(), Boolean.class);
+                if (b)
+                    return valAndState.getSecond();
+                else
+                    return null;
+            }
             return newState;
         }
 
@@ -278,10 +285,10 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        @Value Object value = expression.getValue(state);
+        @Value Object value = expression.getValue(state).getFirst();
         for (MatchClause clause : clauses)
         {
             EvaluateState newState = clause.matches(value, state);

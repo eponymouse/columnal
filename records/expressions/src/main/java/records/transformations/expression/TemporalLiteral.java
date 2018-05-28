@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -15,9 +14,8 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;
@@ -69,11 +67,11 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    public @OnThread(Tag.Simulation) @Value Object getValue(EvaluateState state) throws UserException, InternalException
+    public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        return value.<@Value Object>eitherInt(err -> {
+        return new Pair<>(value.<@Value Object>eitherInt(err -> {
             throw new InternalException("Executing with unrecognised date/time literal: " + content + " " + err);
-        }, v -> v);
+        }, v -> v), state);
     }
 
     @Override

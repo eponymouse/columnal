@@ -1085,7 +1085,7 @@ public class TestUtil
         DummyManager mgr = managerWithTestTypes();
         Expression expression = Expression.parse(null, expressionSrc, mgr.getTypeManager());
         expression.check(r -> null, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), excOnError());
-        return expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty()));
+        return expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.empty())).getFirst();
     }
 
 

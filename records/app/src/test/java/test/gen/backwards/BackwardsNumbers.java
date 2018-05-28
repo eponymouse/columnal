@@ -94,8 +94,8 @@ public class BackwardsNumbers extends BackwardsProvider
                             denominator = parent.genInt();
                         }
                         while (Utility.compareNumbers(denominator, 0) == 0);
-                        Number numerator = Utility.multiplyNumbers((Number) targetValue, denominator);
-                        if (Utility.compareNumbers(Utility.divideNumbers(numerator, denominator), targetValue) != 0)
+                        @Value Number numerator = Utility.multiplyNumbers((Number) targetValue, DataTypeUtility.value(denominator));
+                        if (Utility.compareNumbers(Utility.divideNumbers(numerator, DataTypeUtility.value(denominator)), targetValue) != 0)
                         {
                             // Divide won't come out right: just divide by 1:
                             return new DivideExpression(parent.make(type, targetValue, maxLevels - 1), new NumericLiteral(1, parent.makeUnitExpression(Unit.SCALAR)));
