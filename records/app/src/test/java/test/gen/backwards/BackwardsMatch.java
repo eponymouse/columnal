@@ -238,11 +238,13 @@ public class BackwardsMatch extends BackwardsProvider
             });
         }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
         List<PatternInfo> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels - 1, t, actual));
+
+        Expression toMatch = parent.make(targetType, targetValue, maxLevels - 1);
         
         // Add var context for successful pattern:
         varContexts.add(new ArrayList<>());
         PatternInfo match = makePatternMatch(maxLevels - 1, t, actual);
-        Expression correctOutcome = parent.make(targetType, targetValue, maxLevels - 1);
+        
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
         if (extraGuard != null)
@@ -254,7 +256,7 @@ public class BackwardsMatch extends BackwardsProvider
         clauses.add(r.nextInt(0, clauses.size()), me -> {
             try
             {
-                return me.new MatchClause(Utility.mapListEx(patterns, p -> p.toPattern()), correctOutcome);
+                return me.new MatchClause(Utility.mapListEx(patterns, p -> p.toPattern()), toMatch);
             }
             catch (InternalException | UserException e)
             {
@@ -322,14 +324,17 @@ public class BackwardsMatch extends BackwardsProvider
                 });
 
             }
-            else if (r.nextBoolean()) // Do equals but using variable + guard
+            Expression expression = parent.make(t, actual, maxLevels);
+            
+            if (r.nextBoolean()) // Do equals but using variable + guard
             {
+                Expression rhsVal = parent.make(t, actual, maxLevels);
                 String varName = "var" + nextVar++;
                 if (!varContexts.isEmpty())
                     varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
-                return new PatternInfo(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), parent.make(t, actual, maxLevels))));
+                return new PatternInfo(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal)));
             }
-            Expression expression = parent.make(t, actual, maxLevels);
+            
             return new PatternInfo(expression, null);
         }
         catch (InternalException | UserException e)
@@ -357,12 +362,15 @@ public class BackwardsMatch extends BackwardsProvider
         }
         while (Utility.compareValues(nonMatchingValue, actual) == 0);
         @Value Object nonMatchingValueFinal = nonMatchingValue;
+        // Add var context for successful pattern:
+        varContexts.add(new ArrayList<>());
         PatternInfo match = makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal);
     
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
         if (extraGuard != null)
             guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
+        varContexts.remove(varContexts.size() - 1);
         @Nullable Expression guardFinal = guard;
         return new PatternInfo(match.pattern, guardFinal);
     }

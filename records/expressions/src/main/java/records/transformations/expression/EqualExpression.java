@@ -62,7 +62,7 @@ public class EqualExpression extends NaryOpExpression
             if (checked.expressionKind == ExpressionKind.PATTERN)
             {
                 // Have we already seen a pattern?
-                if (patternIndex.isPresent())
+                if (patternIndex.isPresent() && patternIndex.getAsInt() != i)
                 {
                     onError.recordError(this, StyledString.s("Only one item in an equals expression can be a pattern."));
                     return null;
