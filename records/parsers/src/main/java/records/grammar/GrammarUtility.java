@@ -75,6 +75,31 @@ public class GrammarUtility
         // Underscore is not letter or digit, so needs special case here:
         return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_' || c == '.' || c ==' ');
     }
+    
+    public static boolean validIdentifier(String s)
+    {
+        int[] codepoints = s.codePoints().toArray();
+        if (!Character.isLetter(codepoints[0]))
+            return false;
+        final int SPACE_CODEPOINT = 32;
+        boolean lastWasSpace = false;
+        for (int i = 1; i < codepoints.length; i++)
+        {
+            if (Character.isAlphabetic(codepoints[i]) || Character.isDigit(codepoints[i]))
+            {
+                lastWasSpace = false;
+            }
+            else if (codepoints[i] == SPACE_CODEPOINT)
+            {
+                if (lastWasSpace)
+                    return false;
+                lastWasSpace = true;
+            }
+            else
+                return false;
+        }
+        return !lastWasSpace;
+    }
 
     public static String escapeChars(String s)
     {

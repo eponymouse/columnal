@@ -6,6 +6,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
@@ -14,6 +15,8 @@ import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.List;
@@ -38,6 +41,12 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        if (!GrammarUtility.validIdentifier(text))
+        {
+            onError.recordError(this, StyledString.s("Invalid identifier: \"" + text + "\""));
+            return null;
+        }
+        
         List<TypeExp> varType = state.findVarType(text);
         if (varType == null)
         {

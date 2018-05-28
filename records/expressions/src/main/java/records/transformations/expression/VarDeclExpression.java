@@ -7,6 +7,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
@@ -34,6 +35,12 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public @Nullable @Recorded CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
+        if (!GrammarUtility.validIdentifier(varName))
+        {
+            onError.recordError(this, StyledString.s("Invalid identifier: \"" + varName + "\""));
+            return null;
+        }
+        
         MutVar type = new MutVar(this);
         @Nullable TypeState newState = typeState.add(varName, type, onError.recordErrorCurried(this));
         if (newState == null)

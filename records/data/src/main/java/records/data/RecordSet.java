@@ -242,8 +242,8 @@ public abstract class RecordSet
     {
         return columns.stream().map(c -> { try
         {
-            return "\"" + c.getType().getCollapsed(i).toString() + "\"";
-        }catch (Exception e) { return "ERR:" + e.getLocalizedMessage(); }}).collect(Collectors.joining(","));
+            return c.getName().getRaw() + ":\"" + c.getType().getCollapsed(i).toString() + "\"";
+        }catch (Exception e) { return "ERR:" + e.getLocalizedMessage(); }}).collect(Collectors.joining(", "));
     }
 
     @OnThread(Tag.Any)
