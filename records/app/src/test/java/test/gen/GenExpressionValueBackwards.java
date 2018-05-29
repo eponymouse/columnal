@@ -137,7 +137,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             new BackwardsMatch(r, this),
             new BackwardsNumbers(r, this),
             new BackwardsTemporal(r, this),
-            new BackwardsText(r, this)
+            new BackwardsText(r, this),
+            new BackwardsTuple(r, this)
         );
         try
         {
