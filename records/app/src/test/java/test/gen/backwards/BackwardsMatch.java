@@ -131,7 +131,15 @@ public class BackwardsMatch extends BackwardsProvider
                 else
                 {
                     String name = boolVar.name;
-                    return ImmutableList.of(() -> new IdentExpression(name));
+                    // need to negate the value if it doesn't match:
+                    if (boolVar.value.equals(targetValue))
+                        return ImmutableList.of(() -> new IdentExpression(name));
+                    else
+                    {
+                        return ImmutableList.of(() -> new CallExpression(parent.getTypeManager().getUnitManager(), "not", new IdentExpression(name)),
+                            () -> new EqualExpression(ImmutableList.of(new BooleanLiteral(false), new IdentExpression(name)))
+                        );
+                    }
                 }
             }
 
