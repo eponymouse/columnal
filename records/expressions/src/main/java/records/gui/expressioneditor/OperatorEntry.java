@@ -264,7 +264,7 @@ public class OperatorEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> e
         @Override
         public @Nullable String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
         {
-            if (textField.leavingByCursorLeft())
+            if (textField.leavingByCursor())
                 return null;
             
             if (selectedItem != null && selectedItem instanceof SimpleCompletion)

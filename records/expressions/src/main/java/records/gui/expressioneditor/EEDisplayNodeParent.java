@@ -33,6 +33,16 @@ public interface EEDisplayNodeParent
     void focusLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child);
 
     /**
+     * Delete the child to the right of the given child.
+     */
+    default void deleteRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child) {};
+
+    /**
+     * Delete the child to the left of the given child.
+     */
+    default void deleteLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child) {};
+
+    /**
      * Gets the parent styles (for styling the top).  The first one is the outermost,
      * the last one is the innermost.
      */

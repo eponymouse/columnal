@@ -1,21 +1,22 @@
-Adjacent items is never valid.  Always item-operator-item, etc
+Possible designs
+================
 
-Tags w/ inner and function calls are one item with args (like Stride brackets, but the function call/tag is glued to the opening bracket)
 
-No special characters to distinguish any of them, all done in auto complete
+Full AST Structured
+-------------------
 
-String literal as in Stride, press quote to enter, backspace at end to turn back into ordinary
+Tried this one first.  Problems:
+ - Fiddly to understand scope, like in the original editors.  E.g. when entering next @case, tricky to know where to enter.
+ - Always showing two extra fields when adding new blank is confusing.
+ - Deciding on delete logic is confusing: What happens if you backspace after @else?
+ - Cannot cut/paste fragments to rearrange, e.g. to change bracket position by cut/paste bracket
+ 
+Sequence of items
+-----------------
 
-Special all & only functions for column references, available in auto complete like:
-   Card  -- Only available from this table
-   Card  [all]
-   Const.Foo [all]
-   Const.Foo  [only]  -- Only available if known to be size 1, and from another table.
+Idea: each token (string literal, identifier, bracket, operator) is a separate text field, but there is no other editor structure, just a sequence of identifiers.  Caret is in field while editing, but space completes a field.
 
-Add operator for String concat?  ++ is awkward I think, maybe ~
-
-Comma is just an operator
-
-When operators are mixed, offer quick fix to bracket one way or the other
-
-TODO: think about pattern matches
+Drawbacks:
+ - Harder to retro-engineer which node we are in.
+ - Can mismatch brackets in this design, and put items adjacent or operators adjacent.
+ - 

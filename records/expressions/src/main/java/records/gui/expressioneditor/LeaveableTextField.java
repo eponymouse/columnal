@@ -16,7 +16,7 @@ public class LeaveableTextField extends TextField
 {
     private final EEDisplayNode us;
     private final EEDisplayNodeParent parent;
-    private boolean leavingByPressingLeft = false;
+    private boolean leavingByCursor = false;
 
     public LeaveableTextField(EEDisplayNode us, EEDisplayNodeParent parent)
     {
@@ -29,7 +29,11 @@ public class LeaveableTextField extends TextField
     public void forward()
     {
         if (getCaretPosition() == getLength())
+        {
+            leavingByCursor = true;
             parent.focusRightOf(us, Focus.LEFT);
+            leavingByCursor = false;
+        }
         else
             super.forward();
     }
@@ -40,20 +44,51 @@ public class LeaveableTextField extends TextField
     {
         if (getCaretPosition() == 0)
         {
-            leavingByPressingLeft = true;
-            Log.debug("Leaving to left from " + this);
+            leavingByCursor = true;
             parent.focusLeftOf(us);
-            leavingByPressingLeft = false;
+            leavingByCursor = false;
             
         }
         else
             super.backward();
     }
 
-    @OnThread(Tag.FXPlatform)
-    public boolean leavingByCursorLeft()
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public boolean deletePreviousChar()
     {
-        return leavingByPressingLeft;
+        if (getCaretPosition() == 0)
+        {
+            leavingByCursor = true;
+            parent.deleteLeftOf(us);
+            leavingByCursor = false;
+            // No need to do anything following deletion:
+            return false;
+        }
+        else
+            return super.deletePreviousChar();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public boolean deleteNextChar()
+    {
+        if (getCaretPosition() == getLength())
+        {
+            leavingByCursor = true;
+            parent.deleteRightOf(us);
+            leavingByCursor = false;
+            // No need to do anything following deletion:
+            return false;
+        }
+        else
+            return super.deleteNextChar();
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public boolean leavingByCursor()
+    {
+        return leavingByCursor;
     }
 
     @Override
