@@ -32,6 +32,7 @@ import utility.ExSupplier;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -193,7 +194,7 @@ public class BackwardsMatch extends BackwardsProvider
 
         // Add var context for successful pattern:
         varContexts.add(new ArrayList<>());
-        PatternInfo match = makePatternMatch(maxLevels - 1, t, actual);
+        PatternInfo match = makePatternMatch(maxLevels - 1, t, actual, true);
         Expression correctOutcome = parent.make(targetType, targetValue, maxLevels - 1);
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
@@ -251,7 +252,7 @@ public class BackwardsMatch extends BackwardsProvider
         
         // Add var context for successful pattern:
         varContexts.add(new ArrayList<>());
-        PatternInfo match = makePatternMatch(maxLevels - 1, t, actual);
+        PatternInfo match = makePatternMatch(maxLevels - 1, t, actual, true);
         
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
@@ -303,47 +304,137 @@ public class BackwardsMatch extends BackwardsProvider
 
     // Pattern and an optional guard
     @NonNull
-    private PatternInfo makePatternMatch(int maxLevels, DataType t, @Value Object actual)
+    private PatternInfo makePatternMatch(int maxLevels, DataType t, @Value Object actual, boolean canMatchMore)
     {
         try
         {
-            if (t.isTagged() && r.nextBoolean())
+            //TODO
+            return t.apply(new DataTypeVisitor<PatternInfo>()
             {
-                TaggedValue p = (TaggedValue) actual;
-                return t.apply(new SpecificDataTypeVisitor<PatternInfo>()
+                @Override
+                public PatternInfo number(NumberInfo numberInfo) throws InternalException, UserException
                 {
-                    @Override
-                    @OnThread(value = Tag.Simulation, ignoreParent = true)
-                    public PatternInfo tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
-                    {
-                        TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
-                        @Nullable DataType inner = tagType.getInner();
-                        @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
-                        if (typeDefinition == null)
-                            throw new InternalException("Looked up type but null definition: " + typeName);
-                        if (inner == null)
-                            return new PatternInfo(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
-                        @Nullable @Value Object innerValue = p.getInner();
-                        if (innerValue == null)
-                            throw new InternalException("Type says inner value but is null");
-                        PatternInfo subPattern = makePatternMatch(maxLevels, inner, innerValue);
-                        return new PatternInfo(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), subPattern.pattern), subPattern.guard);
-                    }
-                });
+                    return general();
+                }
 
-            }
-            Expression expression = parent.make(t, actual, maxLevels);
-            
-            if (r.nextBoolean()) // Do equals but using variable + guard
-            {
-                Expression rhsVal = parent.make(t, actual, maxLevels);
-                String varName = "var" + nextVar++;
-                if (!varContexts.isEmpty())
-                    varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
-                return new PatternInfo(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal)));
-            }
-            
-            return new PatternInfo(expression, null);
+                @Override
+                public PatternInfo text() throws InternalException, UserException
+                {
+                    return general();
+                }
+
+                @Override
+                public PatternInfo date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                {
+                    return general();
+                }
+
+                @Override
+                public PatternInfo bool() throws InternalException, UserException
+                {
+                    return general();
+                }
+
+                @Override
+                public PatternInfo tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                {
+                    if (r.nextBoolean())
+                    {
+                        TaggedValue p = (TaggedValue) actual;
+                        return t.apply(new SpecificDataTypeVisitor<PatternInfo>()
+                        {
+                            @Override
+                            @OnThread(value = Tag.Simulation, ignoreParent = true)
+                            public PatternInfo tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
+                            {
+                                TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
+                                @Nullable DataType inner = tagType.getInner();
+                                @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
+                                if (typeDefinition == null)
+                                    throw new InternalException("Looked up type but null definition: " + typeName);
+                                if (inner == null)
+                                    return new PatternInfo(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
+                                @Nullable @Value Object innerValue = p.getInner();
+                                if (innerValue == null)
+                                    throw new InternalException("Type says inner value but is null");
+                                PatternInfo subPattern = makePatternMatch(maxLevels, inner, innerValue, canMatchMore);
+                                return new PatternInfo(TestUtil.tagged(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), subPattern.pattern), subPattern.guard);
+                            }
+                        });
+                    }
+                    else
+                        return general();
+                }
+
+                @Override
+                public PatternInfo tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                {
+                    if (r.nextBoolean())
+                    {
+                        ImmutableList.Builder<Expression> members = ImmutableList.builderWithExpectedSize(inner.size());
+                        ImmutableList.Builder<Expression> guards = ImmutableList.builder();
+                        @Value Object[] values = Utility.castTuple(actual, inner.size());
+                        for (int i = 0; i < inner.size(); i++)
+                        {
+                            DataType dataType = inner.get(i);
+                            PatternInfo p = makePatternMatch(maxLevels - 1, dataType, values[i], canMatchMore);
+                            members.add(p.pattern);
+                            if (p.guard != null)
+                                guards.add(p.guard);
+                        }
+                        ImmutableList<Expression> g = guards.build();
+                        return new PatternInfo(new TupleExpression(members.build()),
+                            g.size() == 0 ? null : (g.size() == 1 ? g.get(0) : new AndExpression(g))    
+                        );
+                    }
+                    else
+                        return general();
+                }
+
+                @Override
+                public PatternInfo array(DataType inner) throws InternalException, UserException
+                {
+                    if (r.nextBoolean())
+                    {
+                        ListEx values = Utility.cast(actual, ListEx.class);
+                        ImmutableList.Builder<Expression> members = ImmutableList.builderWithExpectedSize(values.size());
+                        ImmutableList.Builder<Expression> guards = ImmutableList.builder();
+                        
+                        for (int i = 0; i < values.size(); i++)
+                        {
+                            PatternInfo p = makePatternMatch(maxLevels - 1, inner, values.get(i), canMatchMore);
+                            members.add(p.pattern);
+                            if (p.guard != null)
+                                guards.add(p.guard);
+                        }
+                        ImmutableList<Expression> g = guards.build();
+                        return new PatternInfo(new ArrayExpression(members.build()),
+                                g.size() == 0 ? null : (g.size() == 1 ? g.get(0) : new AndExpression(g))
+                        );
+                    }
+                    else
+                        return general();
+
+                }
+                
+                private PatternInfo general() throws InternalException, UserException
+                {
+                    Expression expression = parent.make(t, actual, maxLevels);
+
+                    if (r.nextBoolean()) // Do equals but using variable + guard
+                    {
+                        Expression rhsVal = parent.make(t, actual, maxLevels);
+                        String varName = "var" + nextVar++;
+                        if (!varContexts.isEmpty())
+                            varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
+                        return new PatternInfo(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal)));
+                    }
+                    if (canMatchMore && r.nextInt(0, 5) == 1)
+                        return new PatternInfo(new MatchAnythingExpression(), null);
+
+                    return new PatternInfo(expression, null);
+                }
+            });
         }
         catch (InternalException | UserException e)
         {
@@ -370,9 +461,9 @@ public class BackwardsMatch extends BackwardsProvider
         }
         while (Utility.compareValues(nonMatchingValue, actual) == 0);
         @Value Object nonMatchingValueFinal = nonMatchingValue;
-        // Add var context for successful pattern:
+        // Add var context for pattern:
         varContexts.add(new ArrayList<>());
-        PatternInfo match = makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal);
+        PatternInfo match = makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal, false);
     
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
