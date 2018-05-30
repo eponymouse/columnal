@@ -182,6 +182,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 try
                 {
                     // Short-cut: check if the last index we are interested in has a row.  If so, can return early:
+                    // TODO restore this optimisation, but note that it was removed because
+                    // it wasn't working, and would show tables too short:
+                    /*
                     boolean lastRowValid = recordSetFinal.indexValid(checkUpToRowIncl);
                     if (lastRowValid)
                     {
@@ -191,6 +194,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                             updateSizeAndPositions.run();
                         });
                     } else
+                        */
                     {
                         // Just a matter of working out where it ends.  Since we know end is close,
                         // just force with getLength:
