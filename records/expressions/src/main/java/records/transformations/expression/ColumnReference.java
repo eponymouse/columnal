@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -16,9 +17,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -138,9 +139,9 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean roundBracketed)
     {
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.ColumnRef(this), p, s);
+        return ImmutableList.of((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.ColumnRef(this), p, s));
     }
 
     @Override

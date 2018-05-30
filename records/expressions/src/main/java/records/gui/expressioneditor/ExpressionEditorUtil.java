@@ -175,7 +175,7 @@ public class ExpressionEditorUtil
     }
 
     @NonNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E, P>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<?, ?> surrounding, TopLevelEditor<?, ?> expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replace, Stream<String> parentStyles)
+    protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E, P>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization EntryNode<?, ?> surrounding, TopLevelEditor<?, ?> expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replace, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
@@ -277,12 +277,10 @@ public class ExpressionEditorUtil
          * tracks whether first one was an operator (otherwise: operand)
          */
         public final List<String> items;
-        public final boolean startsOnOperator;
 
-        public CopiedItems(List<String> items, boolean startsOnOperator)
+        public CopiedItems(List<String> items)
         {
             this.items = items;
-            this.startsOnOperator = startsOnOperator;
         }
     }
 

@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION, SEMANTIC_PARENT>
+abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * A label to the left of the text-field, used for displaying things like the

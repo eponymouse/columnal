@@ -14,8 +14,6 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
@@ -152,12 +150,6 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         {
             return loadUnit(ctx.unit());
         }
-    }
-
-    @Override
-    public SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>> loadAsSingle()
-    {
-        return (p, s) -> new UnitCompound(p, false, SingleLoader.withSemanticParent(loadAsConsecutive(true), s));
     }
 
     // Either gives back an error + (maybe empty) list of quick fixes, or a successful unit

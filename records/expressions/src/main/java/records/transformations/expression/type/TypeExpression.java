@@ -25,8 +25,6 @@ import records.grammar.FormatParser.RoundTypeExpressionContext;
 import records.grammar.FormatParser.TaggedTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
@@ -34,11 +32,7 @@ import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
-
-import java.util.Collections;
-import java.util.List;
 
 public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeParent>, StyledShowable
 {
@@ -181,13 +175,6 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 throw new UnimplementedException();
             }
         });
-    }
-
-    // Remember to override this when appropriate (I think only in TypeApplyExpression)
-    @Override
-    public Pair<List<SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>>>, List<SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-    {
-        return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }
 
     public abstract String save(TableAndColumnRenames renames);

@@ -12,7 +12,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.OperandNode;
 import records.typeExp.MutVar;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
@@ -78,9 +77,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean roundBracketed)
     {
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.QuestValue(), p, s);
+        return ImmutableList.of((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.QuestValue(), p, s));
     }
 
     @Override

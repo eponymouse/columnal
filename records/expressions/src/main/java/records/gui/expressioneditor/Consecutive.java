@@ -81,16 +81,4 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     {
         return endCharacters;
     }
-
-    public static class ConsecutiveStartContent<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
-    {
-        private final List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION, SEMANTIC_PARENT>>> startingOperands;
-        private final List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> startingOperators;
-
-        public ConsecutiveStartContent(List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION, SEMANTIC_PARENT>>> startingOperands, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> startingOperators)
-        {
-            this.startingOperands = startingOperands;
-            this.startingOperators = startingOperators;
-        }
-    }
 }

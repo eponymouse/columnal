@@ -10,7 +10,7 @@ import records.transformations.expression.Expression;
 import java.util.stream.Stream;
 
 // Super-class of TypeLiteralNode/UnitLiteralNode with all the shared functionality
-public abstract class OtherLiteralNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression, ExpressionNodeParent>
+public abstract class OtherLiteralNode extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<Expression, ExpressionNodeParent>
 {
     protected final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
 

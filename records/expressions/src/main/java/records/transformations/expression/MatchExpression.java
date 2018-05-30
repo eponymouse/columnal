@@ -8,12 +8,11 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ClauseNode;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.PatternMatchNode;
+import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -151,12 +150,20 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         @OnThread(Tag.FXPlatform)
-        public ClauseNode load(PatternMatchNode parent)
+        public ImmutableList<EntryNode<Expression, ExpressionNodeParent>> load()
         {
-            Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome
-                = new Pair<List<Pair<Expression, @Nullable Expression>>, Expression>(
-                    Utility.<Pattern, Pair<Expression, @Nullable Expression>>mapList(patterns, p -> p.load()), outcome);
-            return new ClauseNode(parent, patternsAndGuardsToOutcome);
+            ImmutableList.Builder<EntryNode<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
+
+            boolean first = true;
+            for (Pattern pattern : patterns)
+            {
+                r.add(GeneralExpressionEntry.keyword(first ? "@case" : "@orcase"));
+                r.addAll(pattern.load());
+                first = false;
+            }
+            r.add(GeneralExpressionEntry.keyword("@then"));
+            r.add(outcome.loadAsConsecutive(false));
+            return r.build();
         }
     }
 
@@ -253,9 +260,13 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         // Load pattern and guard
-        public Pair<Expression, @Nullable Expression> load()
+        public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> load()
         {
-            return new Pair<>(pattern, guard);
+            ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
+            r.addAll(pattern.loadAsConsecutive(false));
+            if (guard != null)
+                r.add(GeneralExpressionEntry.keyword("@given")).addAll(guard.loadAsConsecutive(false));
+            return r.build();
         }
 
         public @Nullable Expression getGuard()
@@ -385,9 +396,17 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean roundBracketed)
     {
-        return (p, s) -> new PatternMatchNode(p, new Pair<>(expression, clauses));
+        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
+        r.add((p, s) -> GeneralExpressionEntry.keyword("@match"));
+        r.addAll(expression.loadAsConsecutive(false));
+        for (MatchClause clause : clauses)
+        {
+            r.addAll(clause.load());
+        }
+        r.add((p, s) -> GeneralExpressionEntry.keyword("@endmatch"));
+        return r.build();
     }
 
     @Override

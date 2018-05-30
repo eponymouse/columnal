@@ -9,18 +9,16 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -175,21 +173,16 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
-        List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>> ops = new ArrayList<>();
+        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> nodes = ImmutableList.builder();
         for (int i = 0; i < expressions.size() - 1; i++)
         {
             int iFinal = i;
-            ops.add((p, s) -> new OperatorEntry<>(Expression.class, saveOp(iFinal), false, p));
+            nodes.addAll(expressions.get(i).loadAsConsecutive(false));
+            nodes.add((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.Op(saveOp(iFinal)), p, s));
         }
-        return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
-    }
-
-    @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
-    {
-        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
+        return nodes.build();
     }
 
     // Can be overriden by subclasses if needed:

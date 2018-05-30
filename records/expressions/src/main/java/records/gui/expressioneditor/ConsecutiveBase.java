@@ -44,38 +44,12 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>, Locatable
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, Locatable
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 
     protected final String style;
-    /**
-     * The operands and operators are always exactly interleaved.
-     * The first item is operands.get(0), followed by operators.get(0),
-     * followed by operands.get(1), etc.
-     *
-     * If X stands for any operand and ? for any operator, you can have:
-     *   X
-     *   X ?
-     *   X ? X
-     *   X ? X ?
-     *   and so on.  So operators is always same size as operands, or one smaller.
-     *
-     * There can be blanks in the middle, but there should only be blanks on the end
-     * if that item is focused.  So if X* means blank and ?* means blank, you're allowed:
-     *    X* ?* X
-     * if the focus is in the first operand or first operator.  But as soon as it is in
-     * the first non-blank, the previous items should be removed.  Similarly at the end:
-     *    X ?*
-     * is allowed if the focus is in the last slot.  The following operand is only added
-     * once the user has filled in the operator, giving:
-     *    X ? X*
-     * In this case, the last operator is left even when focus is lost, because it's guaranteed
-     * the expression is invalid without ther operand being filled in.  Same logic applies to:
-     *    X* ? X
-     */
-    protected final ObservableList<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>> operands;
-    protected final ObservableList<OperatorEntry<@NonNull EXPRESSION, SEMANTIC_PARENT>> operators;
+    protected final ObservableList<EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>> children;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
@@ -85,19 +59,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         this.operations = operations;
         this.style = style;
-        operands = FXCollections.observableArrayList();
-        operators = FXCollections.observableArrayList();
+        children = FXCollections.observableArrayList();
 
         this.prefixNode = prefixNode;
         this.suffixNode = suffixNode;
-        listenToNodeRelevantList(operands);
-        listenToNodeRelevantList(operators);
-        FXUtility.listen(operands, c -> {
+        listenToNodeRelevantList(children);
+        FXUtility.listen(children, c -> {
             //Utility.logStackTrace("Operands size: " + operands.size());
-            if (!atomicEdit.get())
-                selfChanged();
-        });
-        FXUtility.listen(operators, c -> {
             if (!atomicEdit.get())
                 selfChanged();
         });
@@ -111,12 +79,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected Stream<Node> calculateNodes()
     {
         List<Node> childrenNodes = new ArrayList<Node>();
-        for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
+        for (EntryNode<EXPRESSION, SEMANTIC_PARENT> child : children)
         {
-            if (i < operands.size())
-                childrenNodes.addAll(operands.get(i).nodes());
-            if (i < operators.size())
-                childrenNodes.addAll(operators.get(i).nodes());
+            childrenNodes.addAll(child.nodes());
         }
         if (this.prefixNode != null)
             childrenNodes.add(0, this.prefixNode);
@@ -128,17 +93,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     protected Stream<EEDisplayNode> calculateChildren()
     {
-        return Stream.concat(operators.stream(), operands.stream());
+        return children.stream().map(c -> c);
     }
 
     @NonNull
-    protected OperatorEntry<EXPRESSION, SEMANTIC_PARENT> makeBlankOperator()
-    {
-        return new OperatorEntry<>(operations.getOperandClass(), this);
-    }
-
-    @NonNull
-    protected OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> makeBlankOperand()
+    protected EntryNode<EXPRESSION, SEMANTIC_PARENT> makeBlankChild()
     {
         return operations.makeGeneral(this, getThisAsSemanticParent(), null);
     }
@@ -156,11 +115,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     private void updatePrompt()
     {
-        if (operands.size() == 1 && prompt != null)
-            operands.get(0).prompt(prompt);
+        if (children.size() == 1 && prompt != null)
+            children.get(0).prompt(prompt);
         else
         {
-            for (OperandNode child : operands)
+            for (EntryNode<?, ?> child : children)
             {
                 child.prompt("");
             }
@@ -170,7 +129,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void focus(Focus side)
     {
-        if (operands.isEmpty())
+        if (children.isEmpty())
         {
             // Shouldn't happen, but better to ignore call than throw exception:
             Log.logStackTrace("Empty operands!");
@@ -178,16 +137,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
         
         if (side == Focus.LEFT)
-            operands.get(0).focus(side);
+            children.get(0).focus(side);
         else
-            operands.get(operands.size() - 1).focus(side);
+            children.get(children.size() - 1).focus(side);
     }
     
-    protected void replaceLoad(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> newNode)
+    protected void replaceLoad(EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> newNode)
     {
         if (newNode.getFirst() == ReplacementTarget.CURRENT)
         {
-            replace(oldNode, newNode.getSecond().loadAsSingle().load(this, getThisAsSemanticParent()));
+            replace(oldNode, newNode.getSecond().loadAsConsecutive().load(this, getThisAsSemanticParent()));
         }
         else
         {
@@ -208,9 +167,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected abstract boolean hasImplicitRoundBrackets();
 
     // Replaces the whole operator-expression that operator was part of, with the new expression
-    protected void replaceWholeLoad(OperatorEntry<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> e)
+    protected void replaceWholeLoad(EntryNode<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> e)
     {
-        if (operators.contains(oldOperator))
+        if (children.contains(oldOperator))
         {
             Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> loaded = e.loadAsConsecutive(hasImplicitRoundBrackets());
             List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
@@ -226,7 +185,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
     }
 
-    public void replace(OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @Nullable OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> newNode)
+    public void replace(EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @Nullable EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> newNode)
     {
         int index = getOperandIndex(oldNode);
         //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
@@ -234,9 +193,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         {
             //Utility.logStackTrace("Removing " + oldNode + " from " + this);
             if (newNode != null)
-                operands.set(index, newNode);
+                children.set(index, newNode);
             else
-                operands.remove(index).cleanup();
+                children.remove(index).cleanup();
         }
     }
 
@@ -256,40 +215,38 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * If the operand to the right of rightOf does NOT pass the given test (or the operator between is non-blank),
      * use the supplier to make one and insert it with blank operator between.
      */
-    public void ensureOperandToRight(OperandNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<OperandNode<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<OperandNode<EXPRESSION, SEMANTIC_PARENT>> makeNew)
+    public void ensureOperandToRight(EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<EntryNode<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<EntryNode<EXPRESSION, SEMANTIC_PARENT>> makeNew)
     {
-        int index = Utility.indexOfRef(operands, rightOf);
-        if (index + 1 < operands.size() && isAcceptable.test(operands.get(index + 1)) && operators.get(index).isBlank())
+        int index = Utility.indexOfRef(children, rightOf);
+        if (index + 1 < children.size() && isAcceptable.test(children.get(index + 1)) && children.get(index).isBlank())
             return; // Nothing to do; already acceptable
         // Must add:
         atomicEdit.set(true);
-        operators.add(index, makeBlankOperator());
-        operands.add(index + 1, makeNew.get());
+        children.add(index + 1, makeNew.get());
         atomicEdit.set(false);
     }
 
     public static enum OperatorOutcome { KEEP, BLANK }
     
-    public OperatorOutcome addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
+    public OperatorOutcome addOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
     {
         // Must add operand and operator
-        int index = Utility.indexOfRef(operators, rightOf);
+        int index = Utility.indexOfRef(children, rightOf);
         
-        if (index + 1 < operands.size())
+        if (index + 1 < children.size())
         {
             if (focus)
-                operands.get(index + 1).focus(Focus.LEFT);
+                children.get(index + 1).focus(Focus.LEFT);
             return OperatorOutcome.KEEP;
         }
         
         if (index != -1)
         {
             atomicEdit.set(true);
-            operators.add(index+1, makeBlankOperator());
-            OperandNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, getThisAsSemanticParent(), initialContent);
+            EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, getThisAsSemanticParent(), initialContent);
             if (focus)
                 operandNode.focusWhenShown();
-            operands.add(index+1, operandNode);
+            children.add(index+1, operandNode);
             atomicEdit.set(false);
             return OperatorOutcome.KEEP;
         }
@@ -298,26 +255,24 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
 
-    public void setOperatorToRight(@UnknownInitialization OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> rightOf, String operator)
+    public void setOperatorToRight(@UnknownInitialization EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> rightOf, String operator)
     {
         int index = getOperandIndex(rightOf);
         if (index != -1)
         {
-            if (index >= operators.size() || !operators.get(index).fromBlankTo(operator))
+            if (index >= children.size() || !children.get(index).fromBlankTo(operator))
             {
-                // Add new operator and new operand:
+                // Add new operator:
                 atomicEdit.set(true);
-                operators.add(index, new OperatorEntry<>(operations.getOperandClass(), operator, true, this));
-                OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankOperand();
-                operands.add(index+1, blankOperand);
+                children.add(index + 1, new OperatorEntry<>(operations.getOperandClass(), operator, true, this));
                 atomicEdit.set(false);
             }
         }
     }
 
-    private int getOperandIndex(@UnknownInitialization OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> operand)
+    private int getOperandIndex(@UnknownInitialization EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> operand)
     {
-        int index = Utility.indexOfRef(operands, operand);
+        int index = Utility.indexOfRef(children, operand);
         if (index == -1)
             Log.logStackTrace("Asked for index but " + operand + " not a child of parent " + this);
         return index;
@@ -339,20 +294,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
-        if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        if (child instanceof EntryNode && Utility.containsRef(children, (EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
         {
-            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
-            if (index >= operators.size())
-            {
-                operators.add(makeBlankOperator());
-            }
-            operators.get(index).focus(side);
-        }
-        else if (child instanceof OperatorEntry)
-        {
-            int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
-            if (index + 1 < operands.size())
-                operands.get(index + 1).focus(side);
+            int index = getOperandIndex((EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
+            if (index + 1 < children.size())
+                children.get(index + 1).focus(side);
             else
                 parentFocusRightOfThis(side);
         }
@@ -364,16 +310,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void focusLeftOf(@UnknownInitialization EEDisplayNode child)
     {
-        if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        if (child instanceof EntryNode && Utility.containsRef(children, (EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
         {
-            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
+            int index = getOperandIndex((EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
             if (index > 0)
-                operators.get(index - 1).focus(Focus.RIGHT);
+                children.get(index - 1).focus(Focus.RIGHT);
             else
             {
                 // index is zero.  If we are blank then we do go to parent's left
                 // If we aren't blank, we make a new blank before us:
-                if (operands.get(0).isBlank())
+                if (children.get(0).isBlank())
                     parentFocusLeftOfThis();
                 else
                 {
@@ -381,22 +327,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                 }
             }
         }
-        else if (child instanceof OperatorEntry && Utility.containsRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child))
-        {
-            int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
-            if (index != -1)
-                operands.get(index).focus(Focus.RIGHT);
-        }
     }
 
     private void addBlankAtLeft()
     {
         Log.debug("Adding blank at left");
         atomicEdit.set(true);
-        OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankOperand();
+        EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankChild();
         blankOperand.focusWhenShown();
-        operands.add(0, blankOperand);
-        operators.add(0, makeBlankOperator());
+        children.add(0, blankOperand);
         atomicEdit.set(false);
     }
 
@@ -404,7 +343,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void focusWhenShown()
     {
-        operands.get(0).focusWhenShown();
+        children.get(0).focusWhenShown();
     }
 
     public void prompt(String value)
@@ -413,22 +352,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         updatePrompt();
     }
 
-    // If an expression is valid, it will not have an operator last, e.g.
-    // 1 + 2 + 3 +
-    // If has an operator last, there's a missing operand
-    // This method returns true, operators if last is not an operator (i.e. if expression is valid), or false, operators if last is an operator
-    protected Pair<Boolean, List<String>> getOperators(int firstIndex, int lastIndex)
-    {
-        boolean lastOp = operators.size() == operands.size();
-        return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>, String>mapList(operators, op -> op.get()));
-    }
-
     public @UnknownIfRecorded EXPRESSION saveUnrecorded(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
     {
-        if (operands.isEmpty())
+        if (children.isEmpty())
             return operations.makeExpression(errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
         else
-            return save(errorDisplayers, onError, operands.get(0), operands.get(operands.size() - 1));
+            return save(errorDisplayers, onError, children.get(0), children.get(children.size() - 1));
     }
 
     protected BracketedStatus getChildrenBracketedStatus()
@@ -436,34 +365,23 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return BracketedStatus.MISC;
     }
 
-    public @UnknownIfRecorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
+    public @UnknownIfRecorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> first, EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
     {
-        int firstIndex = operands.indexOf(first);
-        int lastIndex = operands.indexOf(last);
+        int firstIndex = children.indexOf(first);
+        int lastIndex = children.indexOf(last);
         BracketedStatus bracketedStatus = BracketedStatus.MISC;
         if (firstIndex == -1 || lastIndex == -1 || lastIndex < firstIndex)
         {
             firstIndex = 0;
-            lastIndex = operands.size() - 1;
+            lastIndex = children.size() - 1;
         }
         // May be because it was -1, or just those values were passed directly:
-        if (firstIndex == 0 && lastIndex == operands.size() - 1)
+        if (firstIndex == 0 && lastIndex == children.size() - 1)
         {
             bracketedStatus = getChildrenBracketedStatus();
         }
 
-        ImmutableList<@NonNull @Recorded EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT>, @NonNull @Recorded EXPRESSION>mapListI(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION, SEMANTIC_PARENT> n) -> n.save(errorDisplayers, onError));
-        Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
-        List<String> ops = opsValid.getSecond();
-
-        if (ops.isEmpty()) // Must be valid in this case
-        {
-            // Only one operand:
-            // Must still call this method in case brackets make it a list:
-            return operations.makeExpression(errorDisplayers, ImmutableList.of(expressionExps.get(0)), ImmutableList.of(), bracketedStatus);
-        }
-
-        return operations.makeExpression(errorDisplayers, expressionExps, ops, bracketedStatus);
+        return operations.makeExpression(errorDisplayers, children.subList(firstIndex, lastIndex + 1), bracketedStatus);
     }
 
     public @Nullable DataType inferType()
@@ -486,61 +404,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return allChildren.subList(a, b + 1);
     }
 
-    protected List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> getAllChildren()
+    protected ImmutableList<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> getAllChildren()
     {
-        return interleaveOperandsAndOperators(operands, operators);
-    }
-
-    /**
-     * Produces a list which interleaves the operands and operators together.  Note that
-     * the returned list is a *live mirror* of the lists.  Any removals from the returned list
-     * will affect the originals.  Additions are not permitted.
-     *
-     * If you let the lists get into an inconsistent state (e.g. remove one operand from the middle)
-     * then you'll get undefined behaviour.
-     *
-     * @param operands
-     * @param operators
-     * @return
-     */
-
-    private static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> List<COMMON> interleaveOperandsAndOperators(List<OPERAND> operands, List<OPERATOR> operators)
-    {
-        return new AbstractList<COMMON>()
-        {
-            @Override
-            public COMMON get(int index)
-            {
-                return ((index & 1) == 0) ? operands.get(index >> 1) : operators.get(index >> 1);
-            }
-
-            @Override
-            public int size()
-            {
-                return operands.size() + operators.size();
-            }
-
-            @Override
-            public COMMON remove(int index)
-            {
-                if ((index & 1) == 0)
-                    return operands.remove(index >> 1);
-                else
-                    return operators.remove(index >> 1);
-            }
-
-            // We presume that they intend to add operatorentry at odd indexes
-            // and operator at even indexes
-            @SuppressWarnings("unchecked")
-            @Override
-            public void add(int index, COMMON element)
-            {
-                if ((index & 1) == 0)
-                    operands.add(index >> 1, (OPERAND) element);
-                else
-                    operators.add(index >> 1, (OPERATOR) element);
-            }
-        };
+        return ImmutableList.copyOf(children);
     }
 
     public void markSelection(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> from, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> to, boolean selected)
@@ -554,8 +420,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void visitLocatable(LocatableVisitor visitor)
     {
-        operands.forEach(o -> o.visitLocatable(visitor));
-        operators.forEach(o -> o.visitLocatable(visitor));
+        children.forEach(o -> o.visitLocatable(visitor));
     }
 
     @SuppressWarnings("unchecked")
@@ -656,32 +521,22 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return true;
     }
 
-    private @Nullable Pair<List<OperandNode<EXPRESSION, SEMANTIC_PARENT>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loadItems(CopiedItems copiedItems)
+    private @Nullable List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loadItems(CopiedItems copiedItems)
     {
-        List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> operands = new ArrayList<>();
-        List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators = new ArrayList<>();
+        List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loaded = new ArrayList<>();
         try
         {
             for (int i = 0; i < copiedItems.items.size(); i++)
             {
-                // First: is it even?  If it's even and we start on operator then it's an operator
-                // Equally, if it's odd and we didn't start on operator, then it's an operator.
                 String curItem = copiedItems.items.get(i);
-                if (((i & 1) == 0) == copiedItems.startsOnOperator)
-                {
-                    operators.add(new OperatorEntry<>(operations.getOperandClass(), curItem, false, this));
-                }
-                else
-                {
-                    operands.add(operations.loadOperand(curItem, this));
-                }
+                loaded.add(operations.loadOperand(curItem, this));
             }
         }
         catch (UserException | InternalException e)
         {
             return null;
         }
-        return new Pair<>(operands, operators);
+        return loaded;
     }
 
     public void removeItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
@@ -689,31 +544,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(true);
         int startIndex;
         int endIndex;
-        List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> all = interleaveOperandsAndOperators(operands, operators);
-        startIndex = all.indexOf(start);
-        endIndex = all.indexOf(end);
+        startIndex = children.indexOf(start);
+        endIndex = children.indexOf(end);
         if (startIndex != -1 && endIndex != -1)
         {
             // Important to go backwards so that the indexes don't get screwed up:
             for (int i = endIndex; i >= startIndex; i--)
-                all.remove(i).cleanup();
+                children.remove(i).cleanup();
         }
         
-        // There's three cases:
-        // - We begin and end with operator; need to add a new blank one after
-        // - We begin and end with operand; need to add a new blank one after
-        // - We begin and end with different; will be complete whichever way round it is
-        // However: if next to the blank operator/operand there is a blank operand/operator
-        // we can cancel the two out instead and remove them both.
-        if (start instanceof OperatorEntry && end instanceof OperatorEntry)
-        {
-            all.add(startIndex, makeBlankOperator());
-        }
-        else if (!(start instanceof OperatorEntry) && !(end instanceof OperatorEntry))
-        {
-            all.add(startIndex, makeBlankOperand());
-        }
-        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, null);
+        removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, null);
         atomicEdit.set(false);
     }
 
@@ -735,8 +575,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      */
     public void focusBlankAtLeft()
     {
-        if (operands.get(0).isBlank())
-            operands.get(0).focus(Focus.LEFT);
+        if (children.get(0).isBlank())
+            children.get(0).focus(Focus.LEFT);
         else
             addBlankAtLeft();
     }
@@ -754,7 +594,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void focusChanged()
     {
         //Log.debug("Removing blanks, focus owner: " + nodes().get(0).getScene().getFocusOwner() + " items: " + nodes().stream().map(Object::toString).collect(Collectors.joining(", ")));
-        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
+        removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned
@@ -780,12 +620,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> void removeBlanks(List<OPERAND> operands, List<OPERATOR> operators, Predicate<COMMON> isBlank, Predicate<COMMON> isFocused, Consumer<COMMON> withRemoved, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
+    static <ITEM> void removeBlanks(List<ITEM> operands, Predicate<ITEM> isBlank, Predicate<ITEM> isFocused, Consumer<ITEM> withRemoved, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
         // which will do nothing if we never edited
 
-        List<COMMON> all = ConsecutiveBase.<COMMON, OPERAND, OPERATOR>interleaveOperandsAndOperators(operands, operators);
+        List<I> all = ConsecutiveBase.<COMMON, OPERAND, OPERATOR>interleaveOperandsAndOperators(operands, operators);
 
         // We check for blanks on the second of the pair, as it makes the index checks easier
         // Hence we only need start at 1:

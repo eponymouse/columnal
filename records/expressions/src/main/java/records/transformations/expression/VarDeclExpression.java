@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -11,7 +12,6 @@ import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.OperandNode;
 import records.typeExp.MutVar;
 import styled.StyledString;
 import utility.Pair;
@@ -80,9 +80,9 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.VarDecl(varName), p, s);
+        return ImmutableList.of((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.VarDecl(varName), p, s));
     }
 
     @Override

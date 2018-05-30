@@ -59,7 +59,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements ConsecutiveChild<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
@@ -1234,5 +1234,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             return new NumericLiteral(number, null);
         }
+    }
+    
+    public static class Op implements GeneralValue
+    {
+        
     }
 }

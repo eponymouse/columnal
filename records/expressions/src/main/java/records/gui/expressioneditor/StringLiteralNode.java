@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 20/12/2016.
  */
-public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParent> implements OperandNode<Expression, ExpressionNodeParent>
+public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParent> implements ConsecutiveChild<Expression, ExpressionNodeParent>
 {
     private final AutoComplete autoComplete;
     private final ErrorTop container;

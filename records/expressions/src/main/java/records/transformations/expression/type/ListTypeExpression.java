@@ -1,18 +1,14 @@
 package records.transformations.expression.type;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.SquareBracketedExpression;
-import records.gui.expressioneditor.SquareBracketedTypeNode;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import styled.StyledString;
 
 import java.util.Objects;
-
-import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
 
 public class ListTypeExpression extends TypeExpression
 {
@@ -24,9 +20,9 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new SquareBracketedTypeNode(p, withSemanticParent(innerType.loadAsConsecutive(false), s));
+        return squareBracket(innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED));
     }
 
     @Override

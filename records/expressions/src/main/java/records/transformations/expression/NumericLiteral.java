@@ -13,6 +13,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
@@ -111,7 +112,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent, EntryNode<Expression, ExpressionNodeParent>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
         ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>> builder = ImmutableList.builder();
         builder.add((p, s) -> new GeneralExpressionEntry(new NumLit(value), p, s));
