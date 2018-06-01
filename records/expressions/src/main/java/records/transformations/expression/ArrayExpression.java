@@ -12,9 +12,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
-import records.gui.expressioneditor.SquareBracketedExpression;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -22,12 +21,12 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
@@ -130,17 +129,19 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
-    }
-
-    @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
-    {
-        List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>> loadOperands = Utility.mapList(items, x -> x.loadAsSingle());
-        List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>> loadCommas = Utility.replicate(Math.max(items.size() - 1, 0), (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p));
-        return (p, s) -> new SquareBracketedExpression(p, SingleLoader.withSemanticParent(new Pair<>(loadOperands, loadCommas), s));
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        r.add(GeneralExpressionEntry.load(Keyword.OPEN_SQUARE));
+        for (int i = 0; i < items.size(); i++)
+        {
+            Expression item = items.get(i);
+            r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
+            if (i > 0)
+                r.add(GeneralExpressionEntry.load(Keyword.COMMA));
+        }
+        r.add(GeneralExpressionEntry.load(Keyword.CLOSE_SQUARE));
+        return r.stream();
     }
 
     @SuppressWarnings("recorded")

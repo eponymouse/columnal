@@ -8,9 +8,11 @@ import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.stream.Stream;
+
 public interface LoadableExpression<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends StyledShowable
 {
-    public abstract ImmutableList<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> loadAsConsecutive(BracketedStatus bracketedStatus);
+    public abstract Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> loadAsConsecutive(BracketedStatus bracketedStatus);
     
     @FunctionalInterface
     public static interface SingleLoader<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>

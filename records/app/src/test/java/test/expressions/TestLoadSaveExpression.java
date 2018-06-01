@@ -8,7 +8,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.AddSubtractExpression;
-import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
@@ -17,7 +17,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
-import records.transformations.function.FunctionList;
 import test.DummyManager;
 
 import java.math.BigDecimal;
@@ -103,10 +102,10 @@ public class TestLoadSaveExpression
                         new BooleanLiteral(false),
                         new NumericLiteral(632, null),
                         new ColumnReference(new ColumnId("Date"), ColumnReferenceType.CORRESPONDING_ROW)),
-                        Arrays.asList(Op.ADD, Op.SUBTRACT, Op.ADD))),
+                        Arrays.asList(AddSubtractOp.ADD, AddSubtractOp.SUBTRACT, AddSubtractOp.ADD))),
                 new NumericLiteral(62, null),
                 new StringLiteral("hi")
-            ), Arrays.asList(Op.SUBTRACT, Op.ADD)),
+            ), Arrays.asList(AddSubtractOp.SUBTRACT, AddSubtractOp.ADD)),
             "@call @function abs(true + false - 632 + @column Date) - 62 + \"hi\""
         );
     }

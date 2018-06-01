@@ -16,6 +16,7 @@ import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.jellytype.JellyType;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.StringConcatExpression;
 import records.transformations.expression.TemporalLiteral;
 import records.transformations.expression.TypeLiteralExpression;
@@ -34,7 +35,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
-import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
@@ -160,7 +160,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 ), l(fix(maxLevels - 1, type), () -> {
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
-                    List<Op> ops = new ArrayList<>();
+                    List<AddSubtractOp> addSubtractOps = new ArrayList<>();
                     List<@Value Number> curTotals = replicate(DataTypeUtility.value(0));
                     for (int i = 0; i < numArgs; i++)
                     {
@@ -170,9 +170,9 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         boolean opIsAdd = i == 0 || r.nextBoolean();
                         eachI(curTotals, (row, curTotal) -> Utility.addSubtractNumbers(curTotal, Utility.cast(pair.getFirst().get(row), Number.class), opIsAdd));
                         if (i > 0)
-                            ops.add(opIsAdd ? Op.ADD : Op.SUBTRACT);
+                            addSubtractOps.add(opIsAdd ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT);
                     }
-                    return num(curTotals, new AddSubtractExpression(expressions, ops));
+                    return num(curTotals, new AddSubtractExpression(expressions, addSubtractOps));
                 }, () -> {
                     // Either just use target unit, or make up crazy one
                     Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();

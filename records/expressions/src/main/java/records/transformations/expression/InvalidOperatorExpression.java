@@ -9,15 +9,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 

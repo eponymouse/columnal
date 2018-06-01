@@ -10,21 +10,18 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -88,7 +85,11 @@ public abstract class BinaryOpExpression extends Expression
             return StyledString.roundBracket(inner);
     }
 
+    // For saving to string:
     protected abstract String saveOp();
+    
+    // For loading in expression editor:
+    protected abstract Op loadOp();
 
     @Override
     public Stream<ColumnReference> allColumnReferences()
@@ -195,15 +196,15 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return new Pair<>(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), Collections.singletonList((p, s) -> new OperatorEntry<Expression, ExpressionNodeParent>(Expression.class, saveOp(), false, p)));
-    }
-
-    @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
-    {
-        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        roundBracket(bracketedStatus, r, () -> {
+            r.addAll(lhs.loadAsConsecutive(BracketedStatus.MISC));
+            r.add(GeneralExpressionEntry.load(loadOp()));
+            r.addAll(rhs.loadAsConsecutive(BracketedStatus.MISC));
+        });
+        return r.stream();
     }
 
     public String _test_getOperatorEntry()

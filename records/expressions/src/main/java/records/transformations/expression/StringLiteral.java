@@ -8,7 +8,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
@@ -16,6 +15,8 @@ import styled.CommonStyles;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
+
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 25/11/2016.
@@ -71,9 +72,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new StringLiteralNode(editString(), p);
+        return Stream.of((p, s) -> new StringLiteralNode(editString(), p));
     }
 
     @Override

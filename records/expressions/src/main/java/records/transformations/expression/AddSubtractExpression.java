@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-import static records.transformations.expression.AddSubtractExpression.Op.ADD;
+import static records.transformations.expression.AddSubtractExpression.AddSubtractOp.ADD;
 import static records.transformations.expression.QuickFix.ReplacementTarget.PARENT;
 
 /**
@@ -33,15 +33,16 @@ import static records.transformations.expression.QuickFix.ReplacementTarget.PARE
  */
 public class AddSubtractExpression extends NaryOpExpression
 {
-    public static enum Op { ADD, SUBTRACT };
-    private final List<Op> ops;
+    public static enum AddSubtractOp
+    { ADD, SUBTRACT };
+    private final List<AddSubtractOp> ops;
     private @Nullable @Recorded CheckedExp type;
 
-    public AddSubtractExpression(List<@Recorded Expression> expressions, List<Op> ops)
+    public AddSubtractExpression(List<@Recorded Expression> expressions, List<AddSubtractOp> addSubtractOps)
     {
         super(expressions);
-        this.ops = ops;
-        if (ops.isEmpty())
+        this.ops = addSubtractOps;
+        if (addSubtractOps.isEmpty())
             Log.logStackTrace("Ops empty");
     }
 
@@ -60,7 +61,7 @@ public class AddSubtractExpression extends NaryOpExpression
             Optional<Rational> r = expressions.get(i).constantFold();
             if (r.isPresent())
             {
-                running = i == 0 || ops.get(i) == Op.ADD ? running.plus(r.get()) : running.minus(r.get());
+                running = i == 0 || ops.get(i) == AddSubtractOp.ADD ? running.plus(r.get()) : running.minus(r.get());
             }
             else
                 return Optional.empty();
@@ -88,7 +89,7 @@ public class AddSubtractExpression extends NaryOpExpression
             // Note: we don't unify here because we don't want to alter the type.  We could try a 
             // "could this be string?" unification attempt, but really we're only interested in offering
             // the quick fix if it is definitely a string, for which we can use equals:
-            if (ourType.equals(TypeExp.text(null)) && ops.stream().allMatch(op -> op.equals(Op.ADD)))
+            if (ourType.equals(TypeExp.text(null)) && ops.stream().allMatch(op -> op.equals(AddSubtractOp.ADD)))
             {
                 fixes.add(new QuickFix<Expression,ExpressionNodeParent>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
             }

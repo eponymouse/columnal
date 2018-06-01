@@ -10,20 +10,17 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -124,20 +121,19 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        if (implicitlyRoundBracketed)
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder();
+        r.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
+        for (int i = 0; i < members.size(); i++)
         {
-            return new Pair<>(Utility.mapList(members, m -> m.loadAsSingle()), Utility.replicate(members.size() - 1, (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p)));
+            Expression item = members.get(i);
+            r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
+            if (i > 0)
+                r.add(GeneralExpressionEntry.load(Keyword.COMMA));
         }
-        else
-            return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
-    }
-
-    @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
-    {
-        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
+        r.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
+        return r.stream();
     }
 
     @SuppressWarnings("recorded")

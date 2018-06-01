@@ -10,6 +10,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.OperandNode;
 import records.typeExp.MutVar;
 import styled.StyledString;
@@ -64,9 +65,9 @@ public class MatchAnythingExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.MatchAnything(), p, s);
+        return Stream.of(GeneralExpressionEntry.load(Keyword.ANYTHING));
     }
 
     @Override

@@ -5,18 +5,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.BracketedTypeNode;
-import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
-import utility.FXPlatformFunction;
-import utility.Pair;
-import utility.Utility;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -30,23 +22,18 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (outerParent, s) -> {
-            List<FXPlatformFunction<ConsecutiveBase<TypeExpression, TypeParent>, OperandNode<TypeExpression, TypeParent>>> operands = new ArrayList<>();
-            List<FXPlatformFunction<ConsecutiveBase<TypeExpression, TypeParent>, OperatorEntry<TypeExpression, TypeParent>>> operators = new ArrayList<>();
-            for (int i = 0; i < members.size(); i++)
-            {
-                Pair<List<SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>>>, List<SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>>> items = members.get(i).loadAsConsecutive(members.size() == 1);
-                operators.addAll(Utility.mapList(items.getSecond(), f -> p -> f.load(p, p.getThisAsSemanticParent())));
-                operands.addAll(Utility.mapList(items.getFirst(), f -> p -> f.load(p, p.getThisAsSemanticParent())));
-                // Now we must add the comma:
-                if (i < members.size() - 1)
-                    operators.add(p -> new OperatorEntry<>(TypeExpression.class, ",", false, p));
-            }
+        ImmutableList.Builder<SingleLoader<TypeExpression, TypeParent>> items = ImmutableList.builder();
+        for (int i = 0; i < members.size(); i++)
+        {
+            items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
+            // Now we must add the comma:
+            if (i < members.size() - 1)
+                items.add((p, s) -> new TypeEntry(p, s, ","));
+        }
 
-            return new BracketedTypeNode(outerParent, new ConsecutiveStartContent<>(operands, operators));
-        };
+        return items.build();
     }
 
     @Override

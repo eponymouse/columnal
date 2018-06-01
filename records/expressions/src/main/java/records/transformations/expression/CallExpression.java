@@ -9,11 +9,8 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
@@ -26,12 +23,12 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.ValueFunction;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -196,18 +193,13 @@ public class CallExpression extends Expression
         return StyledString.concat(function.toDisplay(BracketedStatus.MISC), StyledString.s("("), param.toDisplay(BracketedStatus.DIRECT_ROUND_BRACKETED), StyledString.s(")"));
     }
 
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
-    {
-        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
-    }
-
     @Override
-    public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return new Pair<>(
-            ImmutableList.of(function.loadAsSingle(), (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(param.loadAsConsecutive(true), s), ')')),
-            ImmutableList.of((p, s) -> new OperatorEntry<>(Expression.class, "", false, p))
-        );
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        r.addAll(function.loadAsConsecutive(BracketedStatus.MISC));
+        roundBracket(BracketedStatus.MISC, r, () -> r.addAll(param.loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)));
+        return r.stream();
     }
 
     /*

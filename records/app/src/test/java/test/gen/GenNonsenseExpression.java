@@ -11,7 +11,7 @@ import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
-import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.function.FunctionList;
@@ -94,7 +94,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
                     @SuppressWarnings("unchecked")
-                    Generator<Op> opGenerator = (Generator<Op>) (Generator<?>) new EnumGenerator(Op.class);
+                    Generator<AddSubtractOp> opGenerator = (Generator<AddSubtractOp>) (Generator<?>) new EnumGenerator(AddSubtractOp.class);
                     return new AddSubtractExpression(expressions, TestUtil.makeList(expressions.size() - 1, opGenerator, r, gs));
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),

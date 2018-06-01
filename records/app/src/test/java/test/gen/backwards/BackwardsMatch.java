@@ -10,7 +10,6 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
@@ -19,7 +18,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
-import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import test.DummyManager;
@@ -27,7 +26,6 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.TaggedValue;
@@ -36,8 +34,6 @@ import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -105,7 +101,7 @@ public class BackwardsMatch extends BackwardsProvider
                     return new AddSubtractExpression(ImmutableList.of(
                         new TimesExpression(ImmutableList.of(varRef, new NumericLiteral(1, parent.makeUnitExpression(numberInfo.getUnit().divideBy(numVarFinal.type.getNumberInfo().getUnit()))))),
                             new NumericLiteral(Utility.addSubtractNumbers((Number)targetValue, Utility.cast(numVarFinal.value, Number.class), false), parent.makeUnitExpression(numberInfo.getUnit()))
-                    ), ImmutableList.of(Op.ADD));
+                    ), ImmutableList.of(AddSubtractOp.ADD));
                 });
             }
 

@@ -9,12 +9,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.IfThenElseNode;
-import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.Random;
@@ -118,10 +118,19 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new IfThenElseNode(p, s, condition, thenExpression, elseExpression);
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        r.add(GeneralExpressionEntry.load(Keyword.IF));
+        r.addAll(condition.loadAsConsecutive(BracketedStatus.MISC));
+        r.add(GeneralExpressionEntry.load(Keyword.THEN));
+        r.addAll(thenExpression.loadAsConsecutive(BracketedStatus.MISC));
+        r.add(GeneralExpressionEntry.load(Keyword.ELSE));
+        r.addAll(elseExpression.loadAsConsecutive(BracketedStatus.MISC));
+        r.add(GeneralExpressionEntry.load(Keyword.ENDIF));
+        return r.stream();
     }
+    
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()

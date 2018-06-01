@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -11,12 +12,9 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
-import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.List;
@@ -82,12 +80,9 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
-        return (p, s) -> {
-            GeneralExpressionEntry generalExpressionEntry = new GeneralExpressionEntry(new Unfinished(text), p, s);
-            return generalExpressionEntry;
-        };
+        return ImmutableList.of(GeneralExpressionEntry.load(new Unfinished(text)));
     }
 
     @Override

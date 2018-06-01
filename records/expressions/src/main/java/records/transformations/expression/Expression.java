@@ -31,7 +31,9 @@ import records.grammar.ExpressionParserBaseVisitor;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.transformations.expression.AddSubtractExpression.Op;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -49,7 +51,9 @@ import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -241,13 +245,6 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         return Optional.empty();
     }
 
-    /**
-     * Loads this expression as the contents of an outer Consecutive.
-     * @param implicitlyRoundBracketed Is this implicitly in a round bracket?  True for function arguments and [round] bracketed expression, false elsewhere
-     * @return
-     */
-    public abstract ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed);
-
     // Vaguely similar to getValue, but instead checks if the expression matches the given value
     // For many expressions, matching means equality, but if a new-variable item is involved
     // it's not necessarily plain equality.
@@ -362,7 +359,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitAddSubtractExpression(AddSubtractExpressionContext ctx)
         {
-            return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, Op>mapList(ctx.ADD_OR_SUBTRACT(), op -> op.getText().equals("+") ? Op.ADD : Op.SUBTRACT));
+            return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, AddSubtractOp>mapList(ctx.ADD_OR_SUBTRACT(), op -> op.getText().equals("+") ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
         }
 
         @Override
@@ -754,6 +751,21 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         protected boolean equalsStyle(ExpressionInputStyle item)
         {
             return true;
+        }
+    }
+    
+    // Round brackets if needed
+    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> builder, FXPlatformRunnable buildContent)
+    {
+        if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
+        {
+            buildContent.run();
+        }
+        else
+        {
+            builder.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
+            buildContent.run();
+            builder.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
         }
     }
 }

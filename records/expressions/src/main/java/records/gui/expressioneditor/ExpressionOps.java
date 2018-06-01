@@ -11,7 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.*;
-import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import utility.Either;
 import utility.Pair;
@@ -137,7 +137,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
 
     private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<String> ops, BracketedStatus _b)
     {
-        return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT));
+        return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals("+") ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
     }
 
     private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<String> _ops, BracketedStatus _b)

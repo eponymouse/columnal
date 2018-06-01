@@ -12,7 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
-import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
@@ -49,7 +49,7 @@ public class BackwardsNumbers extends BackwardsProvider
                 // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
                 int numMiddle = r.nextInt(0, 6);
                 List<Expression> expressions = new ArrayList<>();
-                List<Op> ops = new ArrayList<>();
+                List<AddSubtractOp> addSubtractOps = new ArrayList<>();
                 BigDecimal curTotal = BigDecimal.valueOf(parent.genInt());
                 expressions.add(parent.make(type, curTotal, maxLevels - 1));
                 for (int i = 0; i < numMiddle; i++)
@@ -63,14 +63,14 @@ public class BackwardsNumbers extends BackwardsProvider
                         curTotal = curTotal.add(BigDecimal.valueOf(next), MathContext.DECIMAL128);
                         if (prevTotal.add(BigDecimal.valueOf(next)).compareTo(curTotal) != 0)
                             throw new RuntimeException("Error building expression +");
-                        ops.add(Op.ADD);
+                        addSubtractOps.add(AddSubtractOp.ADD);
                     }
                     else
                     {
                         curTotal = curTotal.subtract(BigDecimal.valueOf(next), MathContext.DECIMAL128);
                         if (prevTotal.subtract(BigDecimal.valueOf(next)).compareTo(curTotal) != 0)
                             throw new RuntimeException("Error building expression +");
-                        ops.add(Op.SUBTRACT);
+                        addSubtractOps.add(AddSubtractOp.SUBTRACT);
                     }
                 }
                 //System.err.println("Exp Cur: " + curTotal.toPlainString() + " after " + expressions.get(expressions.size() - 1));
@@ -78,9 +78,9 @@ public class BackwardsNumbers extends BackwardsProvider
                 BigDecimal diff = (targetValue instanceof BigDecimal ? (BigDecimal)targetValue : BigDecimal.valueOf(((Number)targetValue).longValue())).subtract(curTotal, MathContext.DECIMAL128);
                 boolean add = r.nextBoolean();
                 expressions.add(parent.make(type, DataTypeUtility.value(add ? diff : diff.negate()), maxLevels - 1));
-                ops.add(add ? Op.ADD : Op.SUBTRACT);
+                addSubtractOps.add(add ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT);
                 //System.err.println("Exp Result: " + Utility.toBigDecimal((Number)targetValue).toPlainString() + " after " + expressions.get(expressions.size() - 1) + " diff was: " + diff.toPlainString());
-                return new AddSubtractExpression(expressions, ops);
+                return new AddSubtractExpression(expressions, addSubtractOps);
             }, () -> {
                     // A few options; keep units and value in numerator and divide by 1
                     // Or make random denom, times that by target to get num, and make up crazy units which work

@@ -14,7 +14,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import records.transformations.function.FunctionDefinition;
 import records.typeExp.MutVar;
@@ -87,9 +86,9 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.StdFunc(functionDefinition), p, s);
+        return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.StdFunc(functionDefinition)));
     }
 
     @Override

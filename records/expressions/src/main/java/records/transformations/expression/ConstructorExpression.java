@@ -14,7 +14,6 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
-import records.gui.expressioneditor.OperandNode;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
@@ -83,9 +82,9 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new GeneralExpressionEntry(tag.<GeneralValue>either(str -> new GeneralExpressionEntry.Unfinished(str), t -> new GeneralExpressionEntry.TagName(t)), p, s);
+        return Stream.of(GeneralExpressionEntry.load(tag.<GeneralValue>either(str -> new GeneralExpressionEntry.Unfinished(str), t -> new GeneralExpressionEntry.TagName(t))));
     }
 
     @Override

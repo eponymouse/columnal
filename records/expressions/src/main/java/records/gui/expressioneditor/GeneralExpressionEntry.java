@@ -35,6 +35,7 @@ import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import styled.StyledString;
@@ -260,13 +261,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    public GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         this(Either.right(initialValue), parent, semanticParent);
     }
     
     // If initial value is String, it was user entered.  If GeneralValue, we trust it.
-    public GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         super(Expression.class, parent);
         this.semanticParent = semanticParent;
@@ -1239,5 +1240,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public static class Op implements GeneralValue
     {
         
+    }
+    
+    public static SingleLoader<Expression, ExpressionNodeParent> load(GeneralValue value)
+    {
+        return (p, s) -> new GeneralExpressionEntry(value, p, s);
+    }
+    
+    public static enum Keyword implements GeneralValue
+    {
+        COMMA, OPEN_SQUARE, CLOSE_SQUARE, OPEN_ROUND, CLOSE_ROUND, ANYTHING, IF, THEN, ELSE, ENDIF;
     }
 }
