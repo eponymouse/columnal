@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -9,12 +10,13 @@ import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
 
 import java.util.Collections;
+import java.util.List;
 
 public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent> implements UnitNodeParent
 {
-    public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable ConsecutiveStartContent<UnitExpression, UnitNodeParent> startContent)
+    public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable List<SingleLoader<UnitExpression, UnitNodeParent>> startContent)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : new ConsecutiveStartContent<UnitExpression, UnitNodeParent>(Collections.singletonList((ConsecutiveBase<UnitExpression, UnitNodeParent> p) -> new UnitEntry(p, "", false)), Collections.emptyList()), topLevel ? '}' : ')');
+        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : ImmutableList.of((p, s) -> new UnitEntry(p, "", false)), topLevel ? '}' : ')');
     }
 
     @Override

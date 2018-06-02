@@ -7,6 +7,8 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.function.list.Single;
 import styled.StyledShowable;
 import utility.FXPlatformFunction;
 import utility.Utility;
@@ -23,7 +25,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable List<FXPlatformFunction<Consecutive<EXPRESSION, SEMANTIC_PARENT>, EntryNode<EXPRESSION, SEMANTIC_PARENT>>> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable List<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content, char... endCharacters)
     {
         super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
@@ -31,7 +33,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
         if (content != null)
         {
             atomicEdit.set(true);
-            children.addAll(Utility.mapList(content, f -> f.apply(this)));
+            children.addAll(Utility.mapList(content, f -> f.load(this, getThisAsSemanticParent())));
             atomicEdit.set(false);
             // Get rid of anything which would go if you got focus and lost it again:
             focusChanged();

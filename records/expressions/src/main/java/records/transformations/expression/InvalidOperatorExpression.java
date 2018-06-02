@@ -4,20 +4,25 @@ import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.Utility;
+import utility.StreamTreeBuilder;
 
-import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * An expression with mixed operators, which make it invalid.  Can't be run, but may be
@@ -33,25 +38,6 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
-    {
-        onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
-        return null; // Invalid expressions can't type check
-    }
-
-    @Override
-    public Pair<@Value Object, EvaluateState> getValueNaryOp(EvaluateState state) throws UserException, InternalException
-    {
-        throw new InternalException("Cannot get value for invalid expression");
-    }
-
-    @Override
-    public NaryOpExpression copyNoNull(List<@Recorded Expression> replacements)
-    {
-        return new InvalidOperatorExpression(replacements, operators);
-    }
-
-    @Override
     protected String getSpecialPrefix()
     {
         return "@invalidops ";
@@ -64,15 +50,46 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
-        for (int i = 0; i < operators.size(); i++)
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        for (int i = 0; i < items.size(); i++)
         {
-            int iFinal = i;
-            ops.add((p, s) -> new OperatorEntry<>(Expression.class, operators.get(iFinal), false, p));
+            items.get(i).either_(s -> r.add(GeneralExpressionEntry.load(new Unfinished(s))),
+                e -> r.addAll(e.loadAsConsecutive(BracketedStatus.MISC)));
         }
-        return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
+        return r.stream();
+    }
+
+    @Override
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    {
+        onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
+        return null; // Invalid expressions can't type check
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
+    {
+        throw new InternalException("Cannot get value for invalid expression");
+    }
+
+    @Override
+    public Stream<ColumnReference> allColumnReferences()
+    {
+        return items.stream().flatMap(x -> x.either(s -> Stream.of(), e -> e.allColumnReferences()));
+    }
+
+    @Override
+    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    {
+        return null;
+    }
+
+    @Override
+    public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+    {
+        return Stream.of();
     }
 
     @Override
@@ -86,18 +103,21 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
+        
         InvalidOperatorExpression that = (InvalidOperatorExpression) o;
 
-        return operators.equals(that.operators);
+        return items.equals(that.items);
     }
 
     @Override
     public int hashCode()
     {
-        int result = super.hashCode();
-        result = 31 * result + operators.hashCode();
-        return result;
+        return items.hashCode();
+    }
+
+    @Override
+    protected StyledString toDisplay(BracketedStatus bracketedStatus)
+    {
+        return null;
     }
 }

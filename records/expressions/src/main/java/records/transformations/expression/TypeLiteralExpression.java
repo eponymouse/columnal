@@ -12,7 +12,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
@@ -109,9 +108,9 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new TypeLiteralNode(p, s, type);
+        return Stream.of((p, s) -> new TypeLiteralNode(p, s, type));
     }
 
     @Override
