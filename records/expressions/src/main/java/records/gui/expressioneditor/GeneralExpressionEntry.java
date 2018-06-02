@@ -1237,7 +1237,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    public static class Op implements GeneralValue
+    public static enum Op implements GeneralValue
     {
         
     }

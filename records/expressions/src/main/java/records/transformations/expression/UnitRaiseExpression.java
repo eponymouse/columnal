@@ -2,17 +2,17 @@ package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class UnitRaiseExpression extends UnitExpression
 {
@@ -72,10 +72,12 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return new Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>>(
-            Arrays.asList(unit.loadAsSingle(), new UnitExpressionIntLiteral(power).loadAsSingle()),
-            Collections.singletonList((p, s) -> new OperatorEntry<>(UnitExpression.class, "^", false, p)));
+        StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
+        r.addAll(unit.loadAsConsecutive(BracketedStatus.MISC));
+        r.add(UnitEntry.load(UnitOp.RAISE));
+        r.addAll(new UnitExpressionIntLiteral(power).loadAsConsecutive(BracketedStatus.MISC));
+        return r.stream();
     }
 }

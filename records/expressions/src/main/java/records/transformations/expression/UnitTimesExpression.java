@@ -3,16 +3,18 @@ package records.transformations.expression;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 public class UnitTimesExpression extends UnitExpression
 {
@@ -88,8 +90,12 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return new Pair<>(Utility.mapList(operands, o -> o.loadAsSingle()), Utility.replicate(operands.size() - 1, (p, s) -> new OperatorEntry<>(UnitExpression.class, "*", false, p)));
+        StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
+        r.add(UnitEntry.load(Bracket.OPEN_ROUND));
+        Utility.intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(Op.MULTIPLY)));
+        r.add(UnitEntry.load(Bracket.CLOSE_ROUND));
+        return r.stream();
     }
 }

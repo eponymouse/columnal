@@ -4,8 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
@@ -15,6 +14,7 @@ import utility.Pair;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class SingleUnitExpression extends UnitExpression
 {
@@ -46,9 +46,9 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new UnitEntry(p, name, false);
+        return Stream.of((p, s) -> new UnitEntry(p, name, false));
     }
 
     @Override
@@ -78,11 +78,5 @@ public class SingleUnitExpression extends UnitExpression
     public int hashCode()
     {
         return name.hashCode();
-    }
-
-    @Override
-    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-    {
-        return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }
 }

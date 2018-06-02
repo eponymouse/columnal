@@ -41,7 +41,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public OperandNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
+    public EntryNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
     {
         return new UnitEntry(parent, initialContent == null ? "" : initialContent, true);
     }

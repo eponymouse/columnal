@@ -10,12 +10,14 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeEntry;
 import records.loadsave.OutputBuilder;
 import styled.StyledString;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class TaggedTypeNameExpression extends TypeExpression
 {
@@ -27,9 +29,9 @@ public class TaggedTypeNameExpression extends TypeExpression
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
+    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new TypeEntry(p, s, typeName.getRaw());
+        return Stream.of((p, s) -> new TypeEntry(p, s, typeName.getRaw()));
     }
 
     @Override

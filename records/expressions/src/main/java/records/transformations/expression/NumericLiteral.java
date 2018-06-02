@@ -11,14 +11,10 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.UnitLiteralNode;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
@@ -31,6 +27,7 @@ import utility.Utility;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 25/11/2016.
@@ -106,25 +103,16 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new BracketedExpression(p, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
-    }
-
-    @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent, EntryNode<Expression, ExpressionNodeParent>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-    {
-        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>> builder = ImmutableList.builder();
-        builder.add((p, s) -> new GeneralExpressionEntry(new NumLit(value), p, s));
+        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> builder = ImmutableList.builder();
+        builder.add(GeneralExpressionEntry.load(new NumLit(value)));
         if (unit != null)
         {
             @NonNull UnitExpression unitFinal = unit;
             builder.add((p, s) -> new UnitLiteralNode(p, unitFinal));
         }
-        return new Pair<>(
-            builder.build(),
-            ImmutableList.of((p, s) -> new OperatorEntry<>(Expression.class, p))
-        );
+        return builder.build().stream();
     }
 
     @Override

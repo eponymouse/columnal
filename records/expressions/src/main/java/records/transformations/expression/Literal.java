@@ -1,15 +1,13 @@
 package records.transformations.expression;
 
-import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Lit;
-import records.gui.expressioneditor.OperandNode;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -51,9 +49,9 @@ public abstract class Literal extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new GeneralExpressionEntry(new Lit(this), p, s);
+        return Stream.of(GeneralExpressionEntry.load(new Lit(this)));
     }
 
     public abstract String editString();

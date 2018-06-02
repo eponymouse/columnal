@@ -49,7 +49,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 
     protected final String style;
-    protected final ObservableList<EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>> children;
+    protected final ObservableList<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> children;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
@@ -79,7 +79,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected Stream<Node> calculateNodes()
     {
         List<Node> childrenNodes = new ArrayList<Node>();
-        for (EntryNode<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
         {
             childrenNodes.addAll(child.nodes());
         }
@@ -119,7 +119,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             children.get(0).prompt(prompt);
         else
         {
-            for (EntryNode<?, ?> child : children)
+            for (ConsecutiveChild<?, ?> child : children)
             {
                 child.prompt("");
             }
@@ -167,6 +167,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected abstract boolean hasImplicitRoundBrackets();
 
     // Replaces the whole operator-expression that operator was part of, with the new expression
+    /*
     protected void replaceWholeLoad(EntryNode<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> e)
     {
         if (children.contains(oldOperator))
@@ -184,6 +185,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             focusChanged();
         }
     }
+    */
 
     public void replace(EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @Nullable EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> newNode)
     {
@@ -448,6 +450,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             }), startIsOperator);
     }
 
+    /*
     public boolean insertBefore(ConsecutiveChild insertBefore, CopiedItems itemsToInsert)
     {
         // At the beginning and at the end, we may get a match (e.g. inserting an operator
@@ -520,6 +523,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
         return true;
     }
+    */
 
     private @Nullable List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loadItems(CopiedItems copiedItems)
     {
@@ -620,6 +624,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
+    /*
     static <ITEM> void removeBlanks(List<ITEM> operands, Predicate<ITEM> isBlank, Predicate<ITEM> isFocused, Consumer<ITEM> withRemoved, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
@@ -668,6 +673,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         if (atomicEdit != null)
             atomicEdit.set(false);
     }
+    */
 
     // We deliberately don't directly override OperandNode's isFocused,
     // because then it would be too easily to forget to override it a subclass
@@ -697,20 +703,19 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void clearAllErrors()
     {
-        operators.forEach(op -> op.clearAllErrors());
-        operands.forEach(x -> x.clearAllErrors());
+        children.forEach(op -> op.clearAllErrors());
     }
 
     @Override
     public boolean isShowingError()
     {
-        return operands.get(0).isShowingError();
+        return children.get(0).isShowingError();
     }
 
     @Override
     public void showType(String type)
     {
-        for (OperatorEntry<EXPRESSION, SEMANTIC_PARENT> operator : operators)
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> operator : operators)
         {
             operator.showType(type);
         }
@@ -719,8 +724,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void cleanup()
     {
-        operands.forEach(EEDisplayNode::cleanup);
-        operators.forEach(EEDisplayNode::cleanup);
+        children.forEach(EEDisplayNode::cleanup);
     }
 
     public static enum BracketedStatus

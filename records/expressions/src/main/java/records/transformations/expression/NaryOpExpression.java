@@ -13,12 +13,14 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,8 +41,7 @@ public abstract class NaryOpExpression extends Expression
     public NaryOpExpression(List<@Recorded Expression> expressions)
     {
         this.expressions = ImmutableList.copyOf(expressions);
-        // Bit hacky to use instanceof, but only for logging purposes anyway:
-        if (expressions.size() < 2 && !(this instanceof InvalidOperatorExpression))
+        if (expressions.size() < 2)
             Log.logStackTrace("Expressions size: " + expressions.size());
     }
 
@@ -129,6 +130,8 @@ public abstract class NaryOpExpression extends Expression
 
     protected abstract String saveOp(int index);
 
+    protected abstract Op loadOp(int index);
+
     @SuppressWarnings("recorded")
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
@@ -173,16 +176,16 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> nodes = ImmutableList.builder();
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> nodes = new StreamTreeBuilder<>();
         for (int i = 0; i < expressions.size() - 1; i++)
         {
             int iFinal = i;
-            nodes.addAll(expressions.get(i).loadAsConsecutive(false));
-            nodes.add((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.Op(saveOp(iFinal)), p, s));
+            nodes.addAll(expressions.get(i).loadAsConsecutive(BracketedStatus.MISC));
+            nodes.add(GeneralExpressionEntry.load(loadOp(iFinal)));
         }
-        return nodes.build();
+        return nodes.stream();
     }
 
     // Can be overriden by subclasses if needed:

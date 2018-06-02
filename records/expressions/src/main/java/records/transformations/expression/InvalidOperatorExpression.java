@@ -12,6 +12,7 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperatorEntry;
 import styled.StyledString;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -22,14 +23,13 @@ import java.util.Random;
  * An expression with mixed operators, which make it invalid.  Can't be run, but may be
  * used while editing and for loading/saving invalid expressions.
  */
-public class InvalidOperatorExpression extends NaryOpExpression
+public class InvalidOperatorExpression extends NonOperatorExpression
 {
-    private final List<String> operators;
+    private final ImmutableList<Either<String, Expression>> items;
 
-    public InvalidOperatorExpression(List<@Recorded Expression> operands, List<String> operators)
+    public InvalidOperatorExpression(ImmutableList<Either<String, @Recorded Expression>> operands)
     {
-        super(operands);
-        this.operators = operators;
+        this.items = operands;
     }
 
     @Override

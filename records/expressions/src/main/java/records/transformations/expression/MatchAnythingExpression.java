@@ -11,7 +11,6 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
-import records.gui.expressioneditor.OperandNode;
 import records.typeExp.MutVar;
 import styled.StyledString;
 import threadchecker.OnThread;

@@ -139,9 +139,10 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean roundBracketed)
+    @OnThread(Tag.FXPlatform)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return ImmutableList.of((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.ColumnRef(this), p, s));
+        return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.ColumnRef(this)));
     }
 
     @Override

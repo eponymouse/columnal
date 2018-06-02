@@ -446,7 +446,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 }
             }
             ImmutableList<Lit<?>> loaders = ImmutableList.of(
-                new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, UnfinishedUnitExpression::new),
+                new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, SingleUnitExpression::new),
                 new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), UnfinishedTypeExpression::new),
                 new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
                 new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),

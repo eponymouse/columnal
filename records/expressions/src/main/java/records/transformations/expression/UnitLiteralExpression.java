@@ -8,7 +8,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitLiteralNode;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -23,6 +22,9 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * An Expression that contains a UnitExpression.
+ */
 public class UnitLiteralExpression extends NonOperatorExpression
 {
     private final UnitExpression unitExpression;
@@ -62,9 +64,9 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new UnitLiteralNode(p, unitExpression);
+        return Stream.of((p, s) -> new UnitLiteralNode(p, unitExpression));
     }
 
     @Override
