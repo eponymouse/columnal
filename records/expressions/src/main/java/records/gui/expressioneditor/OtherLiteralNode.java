@@ -125,10 +125,4 @@ public abstract class OtherLiteralNode extends DeepNodeTree implements EEDisplay
     {
         // Pretty needless when we are the type/unit...
     }
-
-    @Override
-    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
-    {
-        return null;
-    }
 }

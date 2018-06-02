@@ -1,10 +1,13 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import threadchecker.OnThread;
@@ -42,4 +45,6 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
 
     @OnThread(Tag.FXPlatform)
     Stream<Pair<String, Boolean>> _test_getHeaders();
+
+    public @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError);
 }

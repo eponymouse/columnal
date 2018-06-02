@@ -1,9 +1,10 @@
 package records.gui.expressioneditor;
 
 import records.data.unit.UnitManager;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitLiteralExpression;
 import styled.StyledString;
@@ -15,8 +16,9 @@ import utility.Utility;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
-
+/**
+ * An expression with a unit expression inside.
+ */
 public class UnitLiteralNode extends OtherLiteralNode implements UnitNodeParent
 {
     private final UnitCompoundBase unit;
@@ -24,7 +26,7 @@ public class UnitLiteralNode extends OtherLiteralNode implements UnitNodeParent
     public UnitLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, UnitExpression unitExpression)
     {
         super(parent);
-        this.unit = new UnitCompoundBase(Utility.later(this), true, withSemanticParent(unitExpression.loadAsConsecutive(false), Utility.later(this)));
+        this.unit = new UnitCompoundBase(Utility.later(this), true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL));
         updateNodes();
         Utility.later(this).updateListeners();
     }

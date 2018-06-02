@@ -450,13 +450,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    @Override
-    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
-    {
-        return null;
-        //return FXUtility.<Status, @Nullable String>mapBindingLazy(currentValue, Status::getStyleWhenInner);
-    }
-
     private static abstract class GeneralCompletion extends Completion
     {
         abstract GeneralValue getValue(String currentText);

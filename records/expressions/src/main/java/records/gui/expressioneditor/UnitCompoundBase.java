@@ -11,12 +11,13 @@ import records.transformations.expression.UnitExpression;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent> implements UnitNodeParent
 {
-    public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable List<SingleLoader<UnitExpression, UnitNodeParent>> startContent)
+    public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable Stream<SingleLoader<UnitExpression, UnitNodeParent>> startContent)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : ImmutableList.of((p, s) -> new UnitEntry(p, "", false)), topLevel ? '}' : ')');
+        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of((p, s) -> new UnitEntry(p, "", false)), topLevel ? '}' : ')');
     }
 
     @Override

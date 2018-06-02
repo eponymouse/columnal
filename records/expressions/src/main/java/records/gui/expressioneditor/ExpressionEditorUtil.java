@@ -268,22 +268,6 @@ public class ExpressionEditorUtil
         return Collections.emptyList();
     }
 
-    public static class CopiedItems implements Serializable
-    {
-        private static final long serialVersionUID = 3245083225504039668L;
-        /**
-         * Expressions are saved to string, operators are there as the raw string
-         * They strictly alternate (operand-operator-operand etc) and the boolean
-         * tracks whether first one was an operator (otherwise: operand)
-         */
-        public final List<String> items;
-
-        public CopiedItems(List<String> items)
-        {
-            this.items = items;
-        }
-    }
-
     @SuppressWarnings("initialization")
     public static <E extends StyledShowable, P> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src)
     {

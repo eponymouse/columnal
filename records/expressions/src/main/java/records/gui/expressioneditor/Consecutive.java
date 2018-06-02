@@ -14,6 +14,7 @@ import utility.FXPlatformFunction;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -25,7 +26,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable List<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content, char... endCharacters)
     {
         super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
@@ -33,7 +34,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
         if (content != null)
         {
             atomicEdit.set(true);
-            children.addAll(Utility.mapList(content, f -> f.load(this, getThisAsSemanticParent())));
+            children.addAll(content.map(f -> f.load(this, getThisAsSemanticParent())).collect(Collectors.toList()));
             atomicEdit.set(false);
             // Get rid of anything which would go if you got focus and lost it again:
             focusChanged();

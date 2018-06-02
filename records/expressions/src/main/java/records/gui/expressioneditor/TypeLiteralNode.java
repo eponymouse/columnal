@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
@@ -17,8 +18,9 @@ import utility.Pair;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
-
+/**
+ * An Expression with a type expression inside.
+ */
 public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
 {
     private final Consecutive<TypeExpression, TypeParent> type;
@@ -27,7 +29,7 @@ public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
     public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable TypeExpression startingType)
     {
         super(parent);
-        this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : withSemanticParent(startingType.loadAsConsecutive(false), this), '`')
+        this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL), '`')
         {
             @Override
             public TypeParent getThisAsSemanticParent()
