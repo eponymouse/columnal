@@ -7,6 +7,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -36,6 +37,12 @@ public class AndExpression extends NaryOpExpression
     protected String saveOp(int index)
     {
         return "&";
+    }
+
+    @Override
+    protected Op loadOp(int index)
+    {
+        return Op.AND;
     }
 
     @Override

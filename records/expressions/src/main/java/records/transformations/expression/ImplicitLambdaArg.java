@@ -77,9 +77,9 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean roundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return ImmutableList.of((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.QuestValue(), p, s));
+        return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.QuestValue()));
     }
 
     @Override

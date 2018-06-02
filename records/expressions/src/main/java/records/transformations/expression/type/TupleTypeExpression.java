@@ -8,9 +8,11 @@ import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
+import utility.StreamTreeBuilder;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TupleTypeExpression extends TypeExpression
 {
@@ -22,9 +24,9 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        ImmutableList.Builder<SingleLoader<TypeExpression, TypeParent>> items = ImmutableList.builder();
+        StreamTreeBuilder<SingleLoader<TypeExpression, TypeParent>> items = new StreamTreeBuilder<>();
         for (int i = 0; i < members.size(); i++)
         {
             items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
@@ -33,7 +35,7 @@ public class TupleTypeExpression extends TypeExpression
                 items.add((p, s) -> new TypeEntry(p, s, ","));
         }
 
-        return items.build();
+        return items.stream();
     }
 
     @Override

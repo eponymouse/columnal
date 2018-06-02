@@ -7,6 +7,7 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -55,6 +56,12 @@ public class TimesExpression extends NaryOpExpression
     protected String saveOp(int index)
     {
         return "*";
+    }
+
+    @Override
+    protected Op loadOp(int index)
+    {
+        return Op.MULTIPLY;
     }
 
     @Override

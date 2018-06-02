@@ -11,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -73,6 +74,12 @@ public class AddSubtractExpression extends NaryOpExpression
     protected String saveOp(int index)
     {
         return ops.get(index) == ADD ? "+" : "-";
+    }
+
+    @Override
+    protected Op loadOp(int index)
+    {
+        return ops.get(index) == ADD ? Op.ADD : Op.SUBTRACT;
     }
 
     @Override

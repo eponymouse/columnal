@@ -80,9 +80,9 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return ImmutableList.of((p, s) -> new GeneralExpressionEntry(new GeneralExpressionEntry.VarDecl(varName), p, s));
+        return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.VarDecl(varName)));
     }
 
     @Override

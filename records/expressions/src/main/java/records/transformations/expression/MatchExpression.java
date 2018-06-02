@@ -9,16 +9,19 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.gui.expressioneditor.ConsecutiveChild;
 import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -150,20 +153,20 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         @OnThread(Tag.FXPlatform)
-        public ImmutableList<EntryNode<Expression, ExpressionNodeParent>> load()
+        public Stream<SingleLoader<Expression, ExpressionNodeParent>> load()
         {
-            ImmutableList.Builder<EntryNode<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
+            StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
 
             boolean first = true;
             for (Pattern pattern : patterns)
             {
-                r.add(GeneralExpressionEntry.keyword(first ? "@case" : "@orcase"));
+                r.add(GeneralExpressionEntry.load(first ? Keyword.CASE : Keyword.ORCASE));
                 r.addAll(pattern.load());
                 first = false;
             }
-            r.add(GeneralExpressionEntry.keyword("@then"));
-            r.add(outcome.loadAsConsecutive(false));
-            return r.build();
+            r.add(GeneralExpressionEntry.load(Keyword.THEN));
+            r.addAll(outcome.loadAsConsecutive(BracketedStatus.MISC));
+            return r.stream();
         }
     }
 
@@ -260,13 +263,17 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         // Load pattern and guard
-        public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> load()
+        @OnThread(Tag.FXPlatform)
+        public Stream<SingleLoader<Expression, ExpressionNodeParent>> load()
         {
-            ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
-            r.addAll(pattern.loadAsConsecutive(false));
+            StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+            r.addAll(pattern.loadAsConsecutive(BracketedStatus.MISC));
             if (guard != null)
-                r.add(GeneralExpressionEntry.keyword("@given")).addAll(guard.loadAsConsecutive(false));
-            return r.build();
+            {
+                r.add(GeneralExpressionEntry.load(Keyword.GIVEN));
+                r.addAll(guard.loadAsConsecutive(BracketedStatus.MISC));
+            }
+            return r.stream();
         }
 
         public @Nullable Expression getGuard()
@@ -396,17 +403,17 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean roundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> r = ImmutableList.builder();
-        r.add((p, s) -> GeneralExpressionEntry.keyword("@match"));
-        r.addAll(expression.loadAsConsecutive(false));
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        r.add(GeneralExpressionEntry.load(Keyword.MATCH));
+        r.addAll(expression.loadAsConsecutive(BracketedStatus.MISC));
         for (MatchClause clause : clauses)
         {
             r.addAll(clause.load());
         }
-        r.add((p, s) -> GeneralExpressionEntry.keyword("@endmatch"));
-        return r.build();
+        r.add(GeneralExpressionEntry.load(Keyword.ENDMATCH));
+        return r.stream();
     }
 
     @Override

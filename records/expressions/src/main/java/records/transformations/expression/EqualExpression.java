@@ -7,6 +7,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.MutVar;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
@@ -42,6 +43,11 @@ public class EqualExpression extends NaryOpExpression
         return "=";
     }
 
+    @Override
+    protected Op loadOp(int index)
+    {
+        return Op.EQUALS;
+    }
 
     @Override
     public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException

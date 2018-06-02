@@ -80,9 +80,9 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return ImmutableList.of(GeneralExpressionEntry.load(new Unfinished(text)));
+        return Stream.of(GeneralExpressionEntry.load(new Unfinished(text)));
     }
 
     @Override

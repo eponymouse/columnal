@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * A child of a ConsecutiveBase item.  Has methods for selection, dragging and focusing.
  */
-public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode, Locatable
+public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode, Locatable, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     @Pure
     public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent();

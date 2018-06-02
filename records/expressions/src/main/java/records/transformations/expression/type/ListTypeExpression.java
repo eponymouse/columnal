@@ -9,6 +9,7 @@ import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import styled.StyledString;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class ListTypeExpression extends TypeExpression
 {
@@ -20,7 +21,7 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public ImmutableList<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return squareBracket(innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED));
     }
