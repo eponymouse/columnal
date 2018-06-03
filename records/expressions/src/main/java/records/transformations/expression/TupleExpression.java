@@ -122,7 +122,7 @@ public class TupleExpression extends Expression
     @Override
     public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder();
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
         r.add(GeneralExpressionEntry.load(Keyword.OPEN_ROUND));
         for (int i = 0; i < members.size(); i++)
         {

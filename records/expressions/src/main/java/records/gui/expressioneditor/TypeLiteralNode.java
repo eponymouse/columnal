@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 /**
  * An Expression with a type expression inside.
  */
-public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
+public class TypeLiteralNode extends OtherLiteralNode
 {
     private final Consecutive<TypeExpression, TypeParent> type;
     
@@ -31,12 +31,6 @@ public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
         super(parent);
         this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL), '`')
         {
-            @Override
-            public TypeParent getThisAsSemanticParent()
-            {
-                return TypeLiteralNode.this;
-            }
-
             @Override
             protected boolean hasImplicitRoundBrackets()
             {

@@ -1,13 +1,10 @@
 package records.transformations.expression;
 
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.grammar.GrammarUtility;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -15,20 +12,18 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
 {
-    private final ImmutableList<@Recorded UnitExpression> operands;
-    private final ImmutableList<String> operators;
+    private final ImmutableList<Either<String, UnitExpression>> items;
 
-    public InvalidOperatorUnitExpression(ImmutableList<@Recorded UnitExpression> operands, ImmutableList<String> operators)
+    public InvalidOperatorUnitExpression(ImmutableList<Either<String, UnitExpression>> items)
     {
-        this.operands = operands;
-        this.operators = operators;
+        this.items = items;
     }
 
     @Override
@@ -40,21 +35,12 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     @Override
     public String save(boolean topLevel)
     {
-        final StringBuilder b = new StringBuilder();
-        if (!topLevel)
-            b.append("(");
-        b.append("@invalidopunit ");
-        for (int i = 0; i < operands.size(); i++)
+        StringBuilder s = new StringBuilder("@INVALIDOPS (");
+        for (Either<String, UnitExpression> item : items)
         {
-            b.append(operands.get(i).save(false));
-            if (i < operators.size() - 1)
-            {
-                b.append("\"" + GrammarUtility.escapeChars(operators.get(i)) + "\"");
-            }
+            s.append(item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(false)));
         }
-        if (!topLevel)
-            b.append(")");
-        return b.toString();
+        return s.append(")").toString();
     }
 
     @Override
@@ -65,41 +51,31 @@ public class InvalidOperatorUnitExpression extends UnitExpression
 
         InvalidOperatorUnitExpression that = (InvalidOperatorUnitExpression) o;
 
-        if (!operands.equals(that.operands)) return false;
-        return operators.equals(that.operators);
+        return items.equals(that.items);
     }
 
     @Override
     public boolean isEmpty()
     {
-        return operators.isEmpty() && operands.size() == 1 && operands.get(0).isEmpty();
+        return false;
     }
 
     @Override
     public boolean isScalar()
     {
-        return operators.isEmpty() && operands.size() == 1 && operands.get(0).isScalar();
+        return false;
     }
 
     @Override
     public int hashCode()
     {
-        int result = operands.hashCode();
-        result = 31 * result + operators.hashCode();
-        return result;
+        return items.hashCode();
     }
 
     @Override
-    public Pair<List<SingleLoader<UnitExpression, UnitNodeParent, OperandNode<UnitExpression, UnitNodeParent>>>, List<SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return new Pair<>(Utility.mapList(operands, o -> o.loadAsSingle()), Utility.mapList(operators, o -> new SingleLoader<UnitExpression, UnitNodeParent, OperatorEntry<UnitExpression, UnitNodeParent>>()
-        {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public OperatorEntry<UnitExpression, UnitNodeParent> load(ConsecutiveBase<UnitExpression, UnitNodeParent> p, UnitNodeParent s)
-            {
-                return new OperatorEntry<>(UnitExpression.class, o, false, p);
-            }
-        }));
+        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitNodeParent>)(p -> new UnitEntry(p, s, false))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
+
 }

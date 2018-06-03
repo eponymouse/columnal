@@ -42,7 +42,10 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     @UnknownIfRecorded EXPRESSION makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
 
     String save(EXPRESSION expression, TableAndColumnRenames renames);
-    
+
+    // The toString() method of the saver can be used to get the string content
+    SEMANTIC_PARENT saveToClipboard();
+
     public static interface MakeNary<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
         public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<String> operators, BracketedStatus bracketedStatus);

@@ -6,12 +6,13 @@ import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeEntry;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class NumberTypeExpression extends TypeExpression
 {
@@ -48,10 +49,10 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
+    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        // TODO
-        return (p, s) -> new TypeEntry(p, s, "TODONUMBER");
+        // TODO include the unit
+        return Stream.of(p -> new TypeEntry(p, "Number"));
     }
 
     @Override

@@ -37,18 +37,6 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
-    protected String getSpecialPrefix()
-    {
-        return "@invalidops ";
-    }
-
-    @Override
-    protected String saveOp(int index)
-    {
-        return "\"" + GrammarUtility.escapeChars(operators.get(index)) + "\"";
-    }
-
-    @Override
     public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();

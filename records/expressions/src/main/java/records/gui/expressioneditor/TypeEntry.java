@@ -15,6 +15,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnfinishedUnitExpression;
@@ -44,7 +45,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))
         //DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))
     );
-    private final TypeParent semanticParent;
     private final TypeCompletion bracketCompletion = new TypeCompletion("(", 0);
     private final TypeCompletion listCompletion = new TypeCompletion("[", 0);
     private final TypeCompletion plainNumberCompletion = new TypeCompletion("Number", 0);
@@ -67,7 +67,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         ).collect(ImmutableList.toImmutableList());
         
         FXUtility.sizeToFit(textField, 30.0, 30.0);
-        this.autoComplete = new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c));
                 
         textField.setText(initialContent);
         updateNodes();
@@ -275,7 +275,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
             if (unitExpression == null)
                 unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, null));
             else
-                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, SingleLoader.withSemanticParent(unitExpression.loadAsConsecutive(true), this)));
+                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL)));
         }
         updateNodes();
         updateListeners();

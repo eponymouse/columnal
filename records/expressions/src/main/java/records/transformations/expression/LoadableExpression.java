@@ -18,5 +18,14 @@ public interface LoadableExpression<EXPRESSION extends StyledShowable, SEMANTIC_
     {
         @OnThread(Tag.FXPlatform)
         public ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> load(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent);
+        
+        public default SingleLoader<EXPRESSION, SEMANTIC_PARENT> focusWhenShown()
+        {
+            return p -> {
+                ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> loaded = load(p);
+                loaded.focusWhenShown();
+                return loaded;
+            };
+        }
     }
 }

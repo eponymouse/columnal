@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -117,26 +118,20 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             children.get(children.size() - 1).focus(side);
     }
     
-    protected void replaceLoad(EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @NonNull Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> newNode)
+    protected void replaceLoad(EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, ReplacementTarget replacementTarget, Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> newNodes)
     {
-        if (newNode.getFirst() == ReplacementTarget.CURRENT)
+        if (replacementTarget == ReplacementTarget.CURRENT)
         {
-            replace(oldNode, newNode.getSecond().loadAsConsecutive().load(this, getThisAsSemanticParent()));
+            int index = getOperandIndex(oldNode);
+            if (index != -1)
+            {
+                atomicEdit.set(true);
+                children.remove(index);
+                children.addAll(index, newNodes.map(n -> n.load(this)).collect(Collectors.toList()));
+                atomicEdit.set(false);
+            }
         }
-        else
-        {
-            Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> loaded = newNode.getSecond().loadAsConsecutive(hasImplicitRoundBrackets());
-
-            List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
-            List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> startingOperators = Utility.mapList(loaded.getSecond(), operator -> operator.load(this, getThisAsSemanticParent()));
-            
-            atomicEdit.set(true);
-            operands.setAll(startingOperands);
-            operators.setAll(startingOperators);
-            atomicEdit.set(false);
-            // Get rid of anything which would go if you got focus and lost it again:
-            focusChanged();
-        }
+        // TODO support parent replacement (through saver?)
     }
 
     protected abstract boolean hasImplicitRoundBrackets();
@@ -192,7 +187,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * If the operand to the right of rightOf does NOT pass the given test (or the operator between is non-blank),
      * use the supplier to make one and insert it with blank operator between.
      */
-    public void ensureOperandToRight(EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<EntryNode<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<EntryNode<EXPRESSION, SEMANTIC_PARENT>> makeNew)
+    public void ensureOperandToRight(EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<EntryNode<EXPRESSION, SEMANTIC_PARENT>> makeNew)
     {
         int index = Utility.indexOfRef(children, rightOf);
         if (index + 1 < children.size() && isAcceptable.test(children.get(index + 1)) && children.get(index).isBlank())
@@ -220,7 +215,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         if (index != -1)
         {
             atomicEdit.set(true);
-            EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, getThisAsSemanticParent(), initialContent);
+            EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, initialContent);
             if (focus)
                 operandNode.focusWhenShown();
             children.add(index+1, operandNode);
@@ -659,17 +654,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         //Log.logStackTrace("\n\n\n" + this + " showing " + error.toPlain() + " " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
-        if (operators.isEmpty())
-        {
-            operands.get(0).addErrorAndFixes(error, quickFixes);
-        }
-        else
-        {
-            for (OperatorEntry<EXPRESSION, SEMANTIC_PARENT> operator : operators)
-            {
-                operator.addErrorAndFixes(error, quickFixes);
-            }
-        }
+        children.get(0).addErrorAndFixes(error, quickFixes);
     }
 
     @Override

@@ -11,9 +11,11 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import styled.StyledString;
 import utility.Pair;
 import utility.gui.FXUtility;
@@ -104,7 +106,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     @Override
     public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionNodeParent>> quickFixes)
     {
-        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e));
+        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e.getFirst(), e.getSecond().loadAsConsecutive(BracketedStatus.MISC)));
     }
 
     @Override

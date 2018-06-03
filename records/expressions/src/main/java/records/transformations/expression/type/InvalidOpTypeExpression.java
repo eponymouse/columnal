@@ -5,62 +5,39 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.BracketedTypeNode;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
-import records.loadsave.OutputBuilder;
+import records.grammar.GrammarUtility;
+import records.gui.expressioneditor.TypeEntry;
+import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.Utility;
+import utility.Either;
 
-import java.util.List;
 import java.util.Objects;
-
-import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
+import java.util.stream.Stream;
 
 public class InvalidOpTypeExpression extends TypeExpression
 {
-    private final ImmutableList<TypeExpression> operands;
-    private final ImmutableList<String> operators;
+    private final ImmutableList<Either<String, TypeExpression>> items;
 
-    public InvalidOpTypeExpression(ImmutableList<TypeExpression> operands, List<String> ops)
+    public InvalidOpTypeExpression(ImmutableList<Either<String, TypeExpression>> items)
     {
-        this.operands = operands;
-        this.operators = ImmutableList.copyOf(ops);
+        this.items = items;
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
+    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return (p, s) -> new BracketedTypeNode(p, withSemanticParent(loadAsConsecutive(true), s));
-    }
-
-    @Override
-    public Pair<List<SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>>>, List<SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-    {
-        return new Pair<>(Utility.mapList(operands, (TypeExpression o) -> o.loadAsSingle()), Utility.mapList(operators, o -> new SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>()
-        {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public OperatorEntry<TypeExpression, TypeParent> load(ConsecutiveBase<TypeExpression, TypeParent> p, TypeParent s)
-            {
-                return new OperatorEntry<>(TypeExpression.class, o, false, p);
-            }
-        }));
+        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<TypeExpression, TypeParent>)(p -> new TypeEntry(p, s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
 
     @Override
     public String save(TableAndColumnRenames renames)
     {
         StringBuilder s = new StringBuilder("@INVALIDOPS (");
-        for (int i = 0; i < operands.size(); i++)
+        for (Either<String, TypeExpression> item : items)
         {
-            s.append(operands.get(i).save(renames));
-            if (i < operators.size())
-                s.append(OutputBuilder.quoted(operators.get(i)));
+            s.append(item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(renames)));
         }
         return s.append(")").toString();
     }
@@ -74,7 +51,7 @@ public class InvalidOpTypeExpression extends TypeExpression
     @Override
     public boolean isEmpty()
     {
-        return operands.size() == 1 && operators.isEmpty() && operands.get(0).isEmpty();
+        return false;
     }
 
     @Override
@@ -83,14 +60,9 @@ public class InvalidOpTypeExpression extends TypeExpression
         return StyledString.s("Invalid"); // TODO
     }
 
-    public ImmutableList<TypeExpression> _test_getOperands()
+    public ImmutableList<Either<String, TypeExpression>> _test_getItems()
     {
-        return operands;
-    }
-    
-    public ImmutableList<String> _test_getOperators()
-    {
-        return operators;
+        return items;
     }
 
     @Override
@@ -99,14 +71,12 @@ public class InvalidOpTypeExpression extends TypeExpression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InvalidOpTypeExpression that = (InvalidOpTypeExpression) o;
-        return Objects.equals(operands, that.operands) &&
-            Objects.equals(operators, that.operators);
+        return Objects.equals(items, that.items);
     }
 
     @Override
     public int hashCode()
     {
-
-        return Objects.hash(operands, operators);
+        return Objects.hash(items);
     }
 }

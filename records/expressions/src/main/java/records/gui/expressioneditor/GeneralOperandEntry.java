@@ -6,6 +6,7 @@ import javafx.scene.layout.HBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
@@ -82,7 +83,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     {
         container.setError(true);
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> e) -> {
-            getParent().replaceLoad(this, e);
+            getParent().replaceLoad(this, e.getFirst(), e.getSecond().loadAsConsecutive(BracketedStatus.MISC));
         });
     }
 

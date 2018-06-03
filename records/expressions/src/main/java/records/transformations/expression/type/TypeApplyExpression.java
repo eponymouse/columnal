@@ -116,21 +116,6 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public Pair<List<SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>>>, List<SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-    {
-        // TODo support unit literal editing.
-        return new Pair<>(Utility.mapList(arguments, e -> e.either(u -> new UnfinishedTypeExpression(u.save(true)).loadAsSingle(), (TypeExpression o) -> o.loadAsSingle())), Utility.replicateM(arguments.size() - 1, () -> new SingleLoader<TypeExpression, TypeParent, OperatorEntry<TypeExpression, TypeParent>>()
-        {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public OperatorEntry<TypeExpression, TypeParent> load(ConsecutiveBase<TypeExpression, TypeParent> p, TypeParent s)
-            {
-                return new OperatorEntry<>(TypeExpression.class, "-", false, p);
-            }
-        }));
-    }
-
-    @Override
     public StyledString toStyledString()
     {
         return arguments.stream().map(e -> e.either(UnitExpression::toStyledString, TypeExpression::toStyledString)).collect(StyledString.joining("-"));

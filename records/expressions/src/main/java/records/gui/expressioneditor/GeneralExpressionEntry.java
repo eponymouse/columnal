@@ -36,6 +36,7 @@ import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import styled.StyledString;
@@ -253,24 +254,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      */
     private final ObjectProperty<GeneralValue> currentValue;
 
-    /**
-     * The semantic parent which can be asked about available variables, etc
-     */
-    private final ExpressionNodeParent semanticParent;
-
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
-        this(Either.right(initialValue), parent, semanticParent);
+        this(Either.right(initialValue), parent);
     }
     
     // If initial value is String, it was user entered.  If GeneralValue, we trust it.
-    GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
         super(Expression.class, parent);
-        this.semanticParent = semanticParent;
         roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
         squareBracketCompletion = new KeyShortcutCompletion("autocomplete.list", '[');
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
@@ -820,15 +815,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == roundBracketCompletion)
                 {
-                    BracketedExpression bracketedExpression = new BracketedExpression(parent, null, ')');
-                    bracketedExpression.focusWhenShown();
-                    parent.replace(GeneralExpressionEntry.this, bracketedExpression);
+                    parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, loadEmptyRoundBrackets());
                 }
                 else if (ksc == squareBracketCompletion)
                 {
-                    BracketedExpression bracketedExpression = new SquareBracketedExpression(parent, null);
-                    bracketedExpression.focusWhenShown();
-                    parent.replace(GeneralExpressionEntry.this, bracketedExpression);
+                    parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, Stream.of(load(Keyword.OPEN_SQUARE), load(new Unfinished("")).focusWhenShown(), load(Keyword.CLOSE_SQUARE)));
                 }
                 else if (ksc == stringCompletion)
                 {
@@ -836,7 +827,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 }
                 else if (ksc == typeLiteralCompletion)
                 {
-                    parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, semanticParent, null)));
+                    parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, null)));
                 }
             }
             else if (Objects.equals(c, unitCompletion))
@@ -850,18 +841,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c != null && c.equals(ifCompletion))
             {
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new IfThenElseNode(parent, semanticParent, null, null, null)));
+                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, Stream.of(load(Keyword.IF), load(new Unfinished("")).focusWhenShown(), load(Keyword.THEN), load(new Unfinished("")), load(Keyword.ELSE), load(new Unfinished("")), load(Keyword.ENDIF)));
             }
             else if (c != null && c.equals(matchCompletion))
             {
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new PatternMatchNode(parent, null)));
+                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, Stream.of(load(Keyword.MATCH), load(new Unfinished("")).focusWhenShown(), load(Keyword.CASE), load(new Unfinished("")), load(Keyword.THEN), load(new Unfinished("")), load(Keyword.ENDMATCH)));
             }
             else if (c instanceof FunctionCompletion)
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
                 currentValue.setValue(new StdFunc(fc.function));
-                parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(parent, null, ')')));
+                parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
                 return fc.function.getName();
             }
             else if (c instanceof TagCompletion)
@@ -871,7 +862,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 
                 if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
-                    parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> x instanceof BracketedExpression, () -> focusWhenShown(new BracketedExpression(parent, null, ')')));
+                    parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
                 }
                 else
                 {
@@ -928,6 +919,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
         }
+    }
+
+    private Stream<SingleLoader<Expression, ExpressionNodeParent>> loadEmptyRoundBrackets()
+    {
+        return Stream.of(load(Keyword.OPEN_ROUND), load(new Unfinished("")).focusWhenShown(), load(Keyword.CLOSE_ROUND));
     }
 
     @Override
@@ -1231,7 +1227,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     public static SingleLoader<Expression, ExpressionNodeParent> load(GeneralValue value)
     {
-        return (p, s) -> new GeneralExpressionEntry(value, p, s);
+        return p -> new GeneralExpressionEntry(value, p);
     }
     
     public static enum Keyword implements GeneralValue
