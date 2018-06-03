@@ -16,6 +16,7 @@ import utility.UnitType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class UnfinishedTypeExpression extends TypeExpression
 {
@@ -27,9 +28,9 @@ public class UnfinishedTypeExpression extends TypeExpression
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent> loadAsSingle()
+    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive()
     {
-        return (p, s) -> new TypeEntry(p, s, value);
+        return Stream.of(p -> new TypeEntry(p, value));
     }
 
     @Override

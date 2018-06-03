@@ -10,6 +10,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -35,6 +36,12 @@ public class DivideExpression extends BinaryOpExpression
     protected String saveOp()
     {
         return "/";
+    }
+
+    @Override
+    protected Op loadOp()
+    {
+        return Op.DIVIDE;
     }
 
     @Override

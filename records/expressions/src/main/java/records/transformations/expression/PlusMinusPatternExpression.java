@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -28,6 +29,12 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     protected String saveOp()
     {
         return "+-";
+    }
+
+    @Override
+    protected Op loadOp()
+    {
+        return Op.PLUS_MINUS;
     }
 
     @Override

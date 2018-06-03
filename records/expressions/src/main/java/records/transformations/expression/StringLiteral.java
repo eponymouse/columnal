@@ -73,7 +73,7 @@ public class StringLiteral extends Literal
     @Override
     public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of((p, s) -> new StringLiteralNode(editString(), p));
+        return Stream.of(p -> new StringLiteralNode(editString(), p));
     }
 
     @Override

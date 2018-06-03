@@ -9,6 +9,7 @@ import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
@@ -36,6 +37,12 @@ public class RaiseExpression extends BinaryOpExpression
     protected String saveOp()
     {
         return "^";
+    }
+
+    @Override
+    protected Op loadOp()
+    {
+        return Op.RAISE;
     }
 
     @Override

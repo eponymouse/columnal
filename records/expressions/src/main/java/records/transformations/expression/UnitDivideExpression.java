@@ -90,7 +90,7 @@ public class UnitDivideExpression extends UnitExpression
     {
         StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
         r.addAll(numerator.loadAsConsecutive(BracketedStatus.MISC));
-        r.add((p, s) -> new UnitEntry(p, "/", false));
+        r.add(p -> new UnitEntry(p, "/", false));
         r.addAll(denominator.loadAsConsecutive(BracketedStatus.MISC));
         return r.stream();
     }

@@ -109,7 +109,7 @@ public class NumericLiteral extends Literal
         if (unit != null)
         {
             @NonNull UnitExpression unitFinal = unit;
-            builder.add((p, s) -> new UnitLiteralNode(p, unitFinal));
+            builder.add(p -> new UnitLiteralNode(p, unitFinal));
         }
         return builder.build().stream();
     }

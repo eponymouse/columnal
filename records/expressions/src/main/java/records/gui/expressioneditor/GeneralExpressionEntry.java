@@ -1222,7 +1222,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     public static enum Op implements GeneralValue
     {
-        AND, OR, MULTIPLY, ADD, SUBTRACT, DIVIDE, STRING_CONCAT, EQUALS;
+        AND, OR, MULTIPLY, ADD, SUBTRACT, DIVIDE, STRING_CONCAT, EQUALS, NOT_EQUAL, PLUS_MINUS, RAISE;
     }
     
     public static SingleLoader<Expression, ExpressionNodeParent> load(GeneralValue value)

@@ -65,7 +65,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of((p, s) -> new UnitLiteralNode(p, unitExpression));
+        return Stream.of(p -> new UnitLiteralNode(p, unitExpression));
     }
 
     @Override

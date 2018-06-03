@@ -40,7 +40,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     @Override
     public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of((p, s) -> new UnitEntry(p, Integer.toString(number), false));
+        return Stream.of(p -> new UnitEntry(p, Integer.toString(number), false));
     }
 
     public int getNumber()

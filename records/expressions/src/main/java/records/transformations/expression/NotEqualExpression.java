@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -28,6 +29,12 @@ public class NotEqualExpression extends BinaryOpExpression
     protected String saveOp()
     {
         return "<>";
+    }
+
+    @Override
+    protected Op loadOp()
+    {
+        return Op.NOT_EQUAL;
     }
 
     @Override
