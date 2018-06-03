@@ -109,7 +109,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(p -> new TypeLiteralNode(p, type));
+        return Stream.<SingleLoader<Expression, ExpressionNodeParent>>of(p -> new TypeLiteralNode(p, type));
     }
 
     @Override

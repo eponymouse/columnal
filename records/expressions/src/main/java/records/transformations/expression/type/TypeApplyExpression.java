@@ -9,26 +9,17 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.BracketedTypeNode;
-import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.UnitLiteralTypeNode;
 import records.transformations.expression.BracketedStatus;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.StreamTreeBuilder;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;
 
 // An Nary expression applying a tagged type, e.g. Either-Int-String.  That would have three args.
 public class TypeApplyExpression extends TypeExpression
@@ -106,11 +97,14 @@ public class TypeApplyExpression extends TypeExpression
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<TypeExpression, TypeParent>> r = new StreamTreeBuilder<>();
-        r.addAll(arguments.get(0).loadAsConsecutive(BracketedStatus.MISC));
+        r.addAll(arguments.get(0).<Stream<SingleLoader<TypeExpression, TypeParent>>>either(u -> Stream.<SingleLoader<TypeExpression, TypeParent>>of(p -> new UnitLiteralTypeNode(p, u)), t -> t.loadAsConsecutive(BracketedStatus.MISC)));
         for (int i = 1; i < arguments.size(); i++)
         {
             Either<UnitExpression, TypeExpression> arg = arguments.get(i);
-            roundBracket(BracketedStatus.MISC, r, () -> r.addAll(arg.loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)));
+            arg.either_(
+                u -> r.add(p -> new UnitLiteralTypeNode(p, u)),
+                t -> roundBracket(BracketedStatus.MISC, r, () -> r.addAll(t.loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)))
+            );
         }
         return r.stream();
     }

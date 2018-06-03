@@ -7,7 +7,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.UnitLiteralNode;
+import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -65,7 +65,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(p -> new UnitLiteralNode(p, unitExpression));
+        return Stream.of(p -> new UnitLiteralExpressionNode(p, unitExpression));
     }
 
     @Override

@@ -5,7 +5,6 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
@@ -17,7 +16,6 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
@@ -42,7 +40,6 @@ import records.transformations.function.FunctionList;
 import styled.StyledString;
 import utility.Either;
 import utility.ExFunction;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
@@ -833,8 +830,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (Objects.equals(c, unitCompletion))
             {
                 currentValue.setValue(getNumberOrUnfinished(currentText.replace("{", "")));
-                parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralNode, () -> {
-                    UnitLiteralNode unitLiteralNode = new UnitLiteralNode(parent, new UnfinishedUnitExpression(rest));
+                parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralExpressionNode, () -> {
+                    UnitLiteralExpressionNode unitLiteralNode = new UnitLiteralExpressionNode(parent, new UnfinishedUnitExpression(rest));
                     unitLiteralNode.focusWhenShown();
                     return unitLiteralNode;
                 });

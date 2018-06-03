@@ -6,15 +6,16 @@ import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.Expression;
+import styled.StyledShowable;
 
 import java.util.stream.Stream;
 
-// Super-class of TypeLiteralNode/UnitLiteralNode with all the shared functionality
-public abstract class OtherLiteralNode extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
+// Super-class of TypeLiteralNode/UnitLiteralExpressionNode with all the shared functionality
+public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
-    protected final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
+    protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> consecParent;
 
-    protected OtherLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> consecParent)
+    protected OtherLiteralNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> consecParent)
     {
         this.consecParent = consecParent;
     }
@@ -79,7 +80,7 @@ public abstract class OtherLiteralNode extends DeepNodeTree implements EEDisplay
     }
 
     @Override
-    public ConsecutiveBase<Expression, ExpressionNodeParent> getParent()
+    public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent()
     {
         return consecParent;
     }

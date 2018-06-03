@@ -14,7 +14,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
-import records.gui.expressioneditor.UnitLiteralNode;
+import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -109,7 +109,7 @@ public class NumericLiteral extends Literal
         if (unit != null)
         {
             @NonNull UnitExpression unitFinal = unit;
-            builder.add(p -> new UnitLiteralNode(p, unitFinal));
+            builder.add(p -> new UnitLiteralExpressionNode(p, unitFinal));
         }
         return builder.build().stream();
     }

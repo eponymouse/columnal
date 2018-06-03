@@ -2,11 +2,12 @@ package records.gui.expressioneditor;
 
 import records.data.unit.UnitManager;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitLiteralExpression;
+import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.TypeParent;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -19,11 +20,11 @@ import java.util.stream.Stream;
 /**
  * An expression with a unit expression inside.
  */
-public class UnitLiteralNode extends OtherLiteralNode
+public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypeParent>
 {
     private final UnitCompoundBase unit;
     
-    public UnitLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, UnitExpression unitExpression)
+    public UnitLiteralTypeNode(ConsecutiveBase<TypeExpression, TypeParent> parent, UnitExpression unitExpression)
     {
         super(parent);
         this.unit = new UnitCompoundBase(Utility.later(this), true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL));
@@ -44,7 +45,7 @@ public class UnitLiteralNode extends OtherLiteralNode
     }
 
     @Override
-    public void save(ExpressionNodeParent saver)
+    public void save(TypeParent saver)
     {
         saver.saveOperand(new UnitLiteralExpression(unit), this, c -> {});
     }
@@ -74,7 +75,7 @@ public class UnitLiteralNode extends OtherLiteralNode
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionNodeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<TypeExpression, TypeParent>> quickFixes)
     {
         // TODO
     }
