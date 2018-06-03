@@ -6,7 +6,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.BooleanLiteral;

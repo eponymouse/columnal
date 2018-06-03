@@ -1,11 +1,10 @@
 package records.transformations.expression.type;
 
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 
 import java.util.Objects;

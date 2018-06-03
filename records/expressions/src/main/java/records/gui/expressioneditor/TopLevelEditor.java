@@ -1,8 +1,6 @@
 package records.gui.expressioneditor;
 
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Window;
@@ -10,25 +8,21 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
 import records.data.datatype.TypeManager;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.LoadableExpression;
-import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
-import utility.gui.FXUtility.DragHandler;
 import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>

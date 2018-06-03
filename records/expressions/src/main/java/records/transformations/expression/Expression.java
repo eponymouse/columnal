@@ -28,8 +28,6 @@ import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParserBaseVisitor;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;

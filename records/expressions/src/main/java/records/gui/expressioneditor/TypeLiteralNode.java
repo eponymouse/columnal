@@ -3,7 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;

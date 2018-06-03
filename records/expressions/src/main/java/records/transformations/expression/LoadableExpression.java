@@ -1,10 +1,7 @@
 package records.transformations.expression;
 
-import com.google.common.collect.ImmutableList;
 import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.gui.expressioneditor.ConsecutiveChild;
-import records.gui.expressioneditor.EntryNode;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;

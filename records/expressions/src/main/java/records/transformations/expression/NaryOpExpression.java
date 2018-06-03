@@ -9,8 +9,6 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
-import records.gui.expressioneditor.EntryNode;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;

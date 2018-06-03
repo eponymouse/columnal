@@ -23,7 +23,7 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
 import records.gui.View;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;

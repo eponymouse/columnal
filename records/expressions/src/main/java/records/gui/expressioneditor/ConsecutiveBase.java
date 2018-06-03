@@ -1,10 +1,8 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -16,8 +14,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.*;
 import records.transformations.expression.QuickFix.ReplacementTarget;
@@ -30,11 +26,9 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -525,6 +519,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
     */
 
+    /*
     private @Nullable List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loadItems(CopiedItems copiedItems)
     {
         List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loaded = new ArrayList<>();
@@ -542,6 +537,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
         return loaded;
     }
+    */
 
     public void removeItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
     {
@@ -725,18 +721,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void cleanup()
     {
         children.forEach(EEDisplayNode::cleanup);
-    }
-
-    public static enum BracketedStatus
-    {
-        /** Direct round brackets, i.e. if there's only commas, this can be a tuple expression */
-        DIRECT_ROUND_BRACKETED,
-        /** Direct square brackets, i.e. this has to be an array expression */
-        DIRECT_SQUARE_BRACKETED,
-        /** Top level in an expression, i.e. you don't need brackets around operators, but do around a tuple */
-        TOP_LEVEL, 
-        /* Normal state: the others above don't apply */
-        MISC;
     }
 
 

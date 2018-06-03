@@ -5,7 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
 import utility.StreamTreeBuilder;

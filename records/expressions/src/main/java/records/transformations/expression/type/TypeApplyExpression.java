@@ -11,7 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedTypeNode;
 import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.UnitExpression;
@@ -22,12 +22,10 @@ import utility.Either;
 import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
-import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static records.transformations.expression.LoadableExpression.SingleLoader.withSemanticParent;

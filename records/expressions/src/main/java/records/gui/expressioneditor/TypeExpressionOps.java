@@ -2,13 +2,12 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
@@ -19,7 +18,6 @@ import records.transformations.expression.type.TypeParent;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.Either;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;

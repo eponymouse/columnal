@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitDivideExpression;
@@ -18,7 +18,6 @@ import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;

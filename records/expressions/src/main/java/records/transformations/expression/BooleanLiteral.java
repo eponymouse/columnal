@@ -6,7 +6,6 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;

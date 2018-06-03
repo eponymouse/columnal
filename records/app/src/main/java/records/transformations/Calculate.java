@@ -16,7 +16,7 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
 import records.gui.View;
-import records.gui.expressioneditor.ConsecutiveBase.BracketedStatus;
+import records.transformations.expression.BracketedStatus;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
