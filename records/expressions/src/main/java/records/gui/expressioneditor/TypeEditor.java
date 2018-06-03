@@ -30,12 +30,6 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
     }
 
     @Override
-    public TypeParent getThisAsSemanticParent()
-    {
-        return this;
-    }
-
-    @Override
     protected void selfChanged()
     {
         super.selfChanged();
@@ -77,11 +71,4 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> imple
     {
         return Stream.empty();
     }
-
-    @Override
-    public boolean isRoundBracketed()
-    {
-        return false;
-    }
-
 }

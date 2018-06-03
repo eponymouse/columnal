@@ -17,6 +17,6 @@ public interface LoadableExpression<EXPRESSION extends StyledShowable, SEMANTIC_
     public static interface SingleLoader<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     {
         @OnThread(Tag.FXPlatform)
-        public ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> load(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent);
+        public ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> load(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent);
     }
 }

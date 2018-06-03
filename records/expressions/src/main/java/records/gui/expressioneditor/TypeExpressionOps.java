@@ -26,9 +26,9 @@ import java.util.List;
 public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
 {
     @Override
-    public OperandNode<TypeExpression, TypeParent> makeGeneral(ConsecutiveBase<TypeExpression, TypeParent> parent, TypeParent semanticParent, @Nullable String initialContent)
+    public EntryNode<TypeExpression, TypeParent> makeGeneral(ConsecutiveBase<TypeExpression, TypeParent> parent, @Nullable String initialContent)
     {
-        return new TypeEntry(parent, semanticParent, initialContent == null ? "" : initialContent);
+        return new TypeEntry(parent, initialContent == null ? "" : initialContent);
     }
 
     @Override
@@ -135,17 +135,5 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     public String save(TypeExpression typeExpression, TableAndColumnRenames renames)
     {
         return typeExpression.save(renames);
-    }
-
-    @Override
-    public OperandNode<TypeExpression, TypeParent> loadOperand(String src, ConsecutiveBase<TypeExpression, TypeParent> parent) throws UserException, InternalException
-    {
-        return TypeExpression.parseTypeExpression(parent.getEditor().getTypeManager(), src).loadAsSingle().load(parent, parent.getThisAsSemanticParent());
-    }
-
-    @Override
-    public TypeExpression makeInvalidOpExpression(ImmutableList<@Recorded TypeExpression> expressionExps, List<String> ops)
-    {
-        return new InvalidOpTypeExpression(expressionExps, ops);
     }
 }

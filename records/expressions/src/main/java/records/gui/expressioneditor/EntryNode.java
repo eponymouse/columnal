@@ -102,12 +102,6 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     }
 
     @Override
-    protected void updateDisplay()
-    {
-
-    }
-
-    @Override
     protected Stream<EEDisplayNode> calculateChildren()
     {
         return Stream.empty();

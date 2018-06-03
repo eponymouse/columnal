@@ -32,7 +32,7 @@ public class TupleTypeExpression extends TypeExpression
             items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
             // Now we must add the comma:
             if (i < members.size() - 1)
-                items.add((p, s) -> new TypeEntry(p, s, ","));
+                items.add(p -> new TypeEntry(p, ","));
         }
 
         return items.stream();

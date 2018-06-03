@@ -47,7 +47,7 @@ public class SingleUnitExpression extends UnitExpression
     @Override
     public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of((p, s) -> new UnitEntry(p, name, false));
+        return Stream.of(p -> new UnitEntry(p, name, false));
     }
 
     @Override

@@ -17,7 +17,6 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
 import utility.gui.FXUtility;
-import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
@@ -127,7 +126,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     protected void loadContent(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> this, LoadableExpression<EXPRESSION, SEMANTIC_PARENT> startingValue)
     {
         atomicEdit.set(true);
-        children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this, getThisAsSemanticParent())).collect(Collectors.toList()));
+        children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
         atomicEdit.set(false);
     }
 
@@ -209,7 +208,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             return parent.getChildrenFromTo(start, end).contains(item);
         }
 
-        public ExpressionEditorUtil.@Nullable CopiedItems copyItems()
+        public @Nullable String copyItems()
         {
             return parent.copyItems(start, end);
         }
@@ -302,7 +301,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
     }
 
-    public @Nullable CopiedItems getSelection()
+    public @Nullable String getSelection()
     {
         if (selection != null)
         {

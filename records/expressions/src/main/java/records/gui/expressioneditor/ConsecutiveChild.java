@@ -46,5 +46,5 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     @OnThread(Tag.FXPlatform)
     Stream<Pair<String, Boolean>> _test_getHeaders();
 
-    public @Recorded EXPRESSION save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError);
+    public void save(SEMANTIC_PARENT saver);
 }

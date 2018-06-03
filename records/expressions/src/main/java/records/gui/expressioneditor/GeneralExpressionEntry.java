@@ -287,7 +287,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         });
         updateNodes();
 
-        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c)));
 
         updateGraphics();
         FXUtility.addChangeListenerPlatformNN(currentValue, v -> updateGraphics());
@@ -433,12 +433,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         */
         r.removeIf(c -> !c.shouldShow(text));
         return r;
-    }
-
-    @SuppressWarnings("initialization")
-    private boolean canDeclareVariable(@UnknownInitialization GeneralExpressionEntry this)
-    {
-        return semanticParent.canDeclareVariable(this);
     }
 
     @RequiresNonNull("parent")

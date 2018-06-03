@@ -7,12 +7,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.Expression;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 
 import java.util.List;
 
-public interface ExpressionNodeParent
+// TODO rename ExpressionSaver
+public class ExpressionNodeParent
 {
+    class Context {}
+    
+    // Note: if we are copying to clipboard, callback will not be called
+    public void saveKeyword(Keyword keyword, ErrorDisplayer<Expression, ExpressionNodeParent> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
+    public void saveOperator(Op operator, ErrorDisplayer<Expression, ExpressionNodeParent> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
+    public void saveOperand(Expression singleItem, ErrorDisplayer<Expression, ExpressionNodeParent> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
+    
+    
     /**
      * Get likely types and completions for given child.  For example,
      * if the expression is column Name = _ (where the RHS
@@ -25,19 +38,19 @@ public interface ExpressionNodeParent
      * particular sense in this particular context, e.g. a commonly passed argument
      * to a function.
      */
-    List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException;
+    //List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException;
 
     /**
      * Gets all special keywords available in child operators,
      * e.g. "then", paired with their description.
      */
-    default ImmutableList<Pair<String, @Localized String>> operatorKeywords()
-    {
-        return ImmutableList.of();
-    }
+    //default ImmutableList<Pair<String, @Localized String>> operatorKeywords()
+    //{
+    //    return ImmutableList.of();
+    //}
 
     /**
      * Can this direct child node declare a variable?  i.e. is it part of a pattern?
      */
-    boolean canDeclareVariable(EEDisplayNode chid);
+    //boolean canDeclareVariable(EEDisplayNode chid);
 }

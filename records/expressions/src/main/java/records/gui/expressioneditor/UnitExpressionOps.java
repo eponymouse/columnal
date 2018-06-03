@@ -40,7 +40,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public EntryNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
+    public EntryNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, @Nullable String initialContent)
     {
         return new UnitEntry(parent, initialContent == null ? "" : initialContent, true);
     }
@@ -61,12 +61,6 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     public Class<UnitExpression> getOperandClass()
     {
         return UnitExpression.class;
-    }
-
-    @Override
-    public UnitExpression makeUnfinished(String s)
-    {
-        return new UnfinishedUnitExpression(s);
     }
 
     @Override
@@ -130,17 +124,5 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     public String save(UnitExpression unitExpression, TableAndColumnRenames renames)
     {
         return unitExpression.save(true);
-    }
-
-    @Override
-    public OperandNode<UnitExpression, UnitNodeParent> loadOperand(String src, ConsecutiveBase<UnitExpression, UnitNodeParent> parent) throws UserException, InternalException
-    {
-        return UnitExpression.load(src).loadAsSingle().load(parent, parent.getThisAsSemanticParent());
-    }
-
-    @Override
-    public UnitExpression makeInvalidOpExpression(ImmutableList<@Recorded UnitExpression> expressionExps, List<String> ops)
-    {
-        return new InvalidOperatorUnitExpression(expressionExps, ImmutableList.copyOf(ops));
     }
 }

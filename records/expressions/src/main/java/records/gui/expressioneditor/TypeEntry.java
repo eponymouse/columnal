@@ -57,10 +57,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
      */
     private @Nullable UnitCompoundBase unitSpecifier;
 
-    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, TypeParent typeParent, String initialContent)
+    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, String initialContent)
     {
         super(TypeExpression.class, parent);
-        this.semanticParent = typeParent;
         this.allCompletions = Utility.concatStreams(
             Stream.of(listCompletion, bracketCompletion, plainNumberCompletion, numberWithUnitsCompletion),
             PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.toString(), 0)),

@@ -20,12 +20,6 @@ public abstract class OtherLiteralNode extends DeepNodeTree implements EEDisplay
     }
 
     @Override
-    protected void updateDisplay()
-    {
-        
-    }
-
-    @Override
     protected Stream<Node> calculateNodes()
     {
         // Note: deliberately don't call calculateNodes() again as that's unneeded work if nothing has changed:

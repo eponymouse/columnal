@@ -27,7 +27,7 @@ public class UnfinishedTypeExpression extends TypeExpression
     }
 
     @Override
-    public SingleLoader<TypeExpression, TypeParent, OperandNode<TypeExpression, TypeParent>> loadAsSingle()
+    public SingleLoader<TypeExpression, TypeParent> loadAsSingle()
     {
         return (p, s) -> new TypeEntry(p, s, value);
     }

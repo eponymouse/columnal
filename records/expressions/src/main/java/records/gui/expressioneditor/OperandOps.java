@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
-    public EntryNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
+    public EntryNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, @Nullable String initialContent);
 
     public ImmutableList<Pair<String, @Localized String>> getValidOperators(SEMANTIC_PARENT semanticParent);
 
@@ -39,13 +39,9 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 
     public Class<EXPRESSION> getOperandClass();
 
-    @NonNull EXPRESSION makeUnfinished(String s);
-
     @UnknownIfRecorded EXPRESSION makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
 
     String save(EXPRESSION expression, TableAndColumnRenames renames);
-
-    EntryNode<EXPRESSION, SEMANTIC_PARENT> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
     
     public static interface MakeNary<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
@@ -436,6 +432,4 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     {
         return "id-munged-" + replacement.toString().codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
     }
-
-    EXPRESSION makeInvalidOpExpression(ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops);
 }

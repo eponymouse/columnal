@@ -10,10 +10,9 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.BracketedStatus;
-import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.TypeEntry;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 
 import java.util.Objects;
@@ -31,7 +30,7 @@ public class TaggedTypeNameExpression extends TypeExpression
     @Override
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of((p, s) -> new TypeEntry(p, s, typeName.getRaw()));
+        return Stream.of(p -> new TypeEntry(p, typeName.getRaw()));
     }
 
     @Override

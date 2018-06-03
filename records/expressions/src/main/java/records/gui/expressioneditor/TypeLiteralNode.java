@@ -26,7 +26,7 @@ public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
     private final Consecutive<TypeExpression, TypeParent> type;
     
     @SuppressWarnings("initialization")
-    public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable TypeExpression startingType)
+    public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable TypeExpression startingType)
     {
         super(parent);
         this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL), '`')
@@ -69,12 +69,6 @@ public class TypeLiteralNode extends OtherLiteralNode implements TypeParent
     @Override
     public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionNodeParent>> quickFixes)
     {
-    }
-
-    @Override
-    public void prompt(String prompt)
-    {
-        type.prompt(prompt);
     }
 
     @Override

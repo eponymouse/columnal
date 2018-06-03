@@ -7,9 +7,6 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.error.InternalException;
-import records.error.UserException;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
@@ -187,7 +184,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public OperandNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
+    public EntryNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
     {
         return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent, semanticParent);
     }
@@ -342,17 +339,5 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     public String save(Expression child, TableAndColumnRenames renames)
     {
         return child.save(BracketedStatus.MISC, renames);
-    }
-
-    @Override
-    public OperandNode<Expression, ExpressionNodeParent> loadOperand(String curItem, ConsecutiveBase<Expression, ExpressionNodeParent> consecutiveBase) throws UserException, InternalException
-    {
-        return Expression.parse(null, curItem, consecutiveBase.getEditor().getTypeManager()).loadAsSingle().load(consecutiveBase, consecutiveBase.getThisAsSemanticParent());
-    }
-
-    @Override
-    public Expression makeInvalidOpExpression(ImmutableList<@Recorded Expression> expressionExps, List<String> ops)
-    {
-        return new InvalidOperatorExpression(expressionExps, ops);
     }
 }

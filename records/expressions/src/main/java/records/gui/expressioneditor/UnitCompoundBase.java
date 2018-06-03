@@ -13,17 +13,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent> implements UnitNodeParent
+public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent>
 {
     public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable Stream<SingleLoader<UnitExpression, UnitNodeParent>> startContent)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of((p, s) -> new UnitEntry(p, "", false)), topLevel ? '}' : ')');
-    }
-
-    @Override
-    public UnitNodeParent getThisAsSemanticParent()
-    {
-        return this;
+        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of(p -> new UnitEntry(p, "", false)), topLevel ? '}' : ')');
     }
 
     @Override

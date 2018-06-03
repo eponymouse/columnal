@@ -10,7 +10,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import log.Log;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -30,7 +29,6 @@ import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.TypeState;
-import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -46,7 +44,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeParent> implements ExpressionNodeParent
+public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeParent>
 {
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
@@ -206,12 +204,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     }
 
     @Override
-    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
-    {
-        return false;
-    }
-
-    @Override
     protected void parentFocusRightOfThis(Focus side)
     {
 
@@ -228,12 +220,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     {
         // Nothing terminates the overall editor:
         return ImmutableSet.of();
-    }
-
-    @Override
-    public ExpressionNodeParent getThisAsSemanticParent()
-    {
-        return this;
     }
 
     @Override
@@ -290,18 +276,4 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     {
         return Stream.empty();
     }
-
-
-    @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
-    {
-        @Nullable DataType t = expectedType.get();
-        if (t == null)
-            return Collections.emptyList();
-        else
-            return Collections.singletonList(new Pair<>(t, Collections.emptyList()));
-    }
-
-    
-
 }

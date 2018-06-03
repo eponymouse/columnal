@@ -96,9 +96,9 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public void save(ExpressionNodeParent saver)
     {
-        return errorDisplayer.record(this, new records.transformations.expression.StringLiteral(textField.getText()));
+        saver.saveOperand(new records.transformations.expression.StringLiteral(textField.getText()), this, c -> {});
     }
 
     @Override

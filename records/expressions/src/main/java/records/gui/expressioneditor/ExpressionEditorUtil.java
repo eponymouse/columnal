@@ -274,7 +274,7 @@ public class ExpressionEditorUtil
         TopLevelEditor<?, ?> editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
             editor.ensureSelectionIncludes(src);
-            @Nullable CopiedItems selection = editor.getSelection();
+            @Nullable String selection = editor.getSelection();
             if (selection != null)
             {
                 editor.setSelectionLocked(true);

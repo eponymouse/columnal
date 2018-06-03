@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * An expression with a unit expression inside.
  */
-public class UnitLiteralNode extends OtherLiteralNode implements UnitNodeParent
+public class UnitLiteralNode extends OtherLiteralNode
 {
     private final UnitCompoundBase unit;
     
@@ -44,15 +44,9 @@ public class UnitLiteralNode extends OtherLiteralNode implements UnitNodeParent
     }
 
     @Override
-    public void prompt(String prompt)
+    public void save(ExpressionNodeParent saver)
     {
-        unit.prompt(prompt);
-    }
-
-    @Override
-    public Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
-    {
-        return new UnitLiteralExpression(errorDisplayer.recordUnit(unit, unit.saveUnrecorded(errorDisplayer, onError)));
+        saver.saveOperand(new UnitLiteralExpression(unit), this, c -> {});
     }
 
     @Override

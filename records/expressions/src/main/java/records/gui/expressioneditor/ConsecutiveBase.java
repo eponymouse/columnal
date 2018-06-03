@@ -12,12 +12,15 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
-import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
-import records.transformations.expression.*;
-import records.transformations.expression.QuickFix.ReplacementTarget;
+import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.QuickFix;
+import records.transformations.expression.QuickFix.ReplacementTarget;
+import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import styled.StyledShowable;
@@ -93,32 +96,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @NonNull
     protected EntryNode<EXPRESSION, SEMANTIC_PARENT> makeBlankChild()
     {
-        return operations.makeGeneral(this, getThisAsSemanticParent(), null);
+        return operations.makeGeneral(this, null);
     }
-
-    // Get us as a semantic parent.  Do not get OUR parent.
-    public abstract SEMANTIC_PARENT getThisAsSemanticParent();
 
     protected abstract void selfChanged();
-
-    // Call after children have changed
-    protected void updateDisplay()
-    {
-        updatePrompt();
-    }
-
-    private void updatePrompt()
-    {
-        if (children.size() == 1 && prompt != null)
-            children.get(0).prompt(prompt);
-        else
-        {
-            for (ConsecutiveChild<?, ?> child : children)
-            {
-                child.prompt("");
-            }
-        }
-    }
 
     @Override
     public void focus(Focus side)
@@ -423,7 +404,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public @Nullable String copyItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
     {
         List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> all = getAllChildren();
-        boolean startIsOperator = start instanceof OperatorEntry;
         int startIndex = all.indexOf(start);
         int endIndex = all.indexOf(end);
 
@@ -431,17 +411,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             // Problem:
             return null;
 
-        return new CopiedItems(
-            Utility.<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, String>mapList(all.subList(startIndex, endIndex + 1), child -> {
-                if (child instanceof OperatorEntry)
-                    return ((OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child).get();
-                else
-                {
-                    @SuppressWarnings("recorded")
-                    EXPRESSION saved = ((OperandNode<EXPRESSION, SEMANTIC_PARENT>) child).save(new ErrorDisplayerRecord(), new ErrorAndTypeRecorderStorer());
-                    return operations.save(saved, TableAndColumnRenames.EMPTY);
-                }
-            }), startIsOperator);
+        SEMANTIC_PARENT saver = operations.saveToClipboard();
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : all.subList(startIndex, endIndex + 1))
+        {
+            child.save(saver);
+        }
+        
+        return saver.toString();
     }
 
     /*
