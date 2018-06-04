@@ -8,7 +8,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.typeExp.MutVar;
 import styled.StyledString;
@@ -78,7 +78,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.VarDecl(varName)));
     }

@@ -19,7 +19,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BracketedStatus;
@@ -111,7 +111,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
         {
             throw new RuntimeException("Testing");
         }
@@ -415,7 +415,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
         {
             throw new RuntimeException("Testing");
         }

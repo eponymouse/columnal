@@ -1,8 +1,6 @@
 package records.gui.expressioneditor;
 
-import records.data.unit.UnitManager;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
@@ -19,11 +17,11 @@ import java.util.stream.Stream;
 /**
  * An expression with a unit expression inside.
  */
-public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, ExpressionNodeParent>
+public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, ExpressionSaver>
 {
     private final UnitCompoundBase unit;
     
-    public UnitLiteralExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, UnitExpression unitExpression)
+    public UnitLiteralExpressionNode(ConsecutiveBase<Expression, ExpressionSaver> parent, UnitExpression unitExpression)
     {
         super(parent);
         this.unit = new UnitCompoundBase(Utility.later(this), true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL));
@@ -44,7 +42,7 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
-    public void save(ExpressionNodeParent saver)
+    public void save(ExpressionSaver saver)
     {
         saver.saveOperand(new UnitLiteralExpression(unit.save()), this, c -> {});
     }
@@ -74,7 +72,7 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionNodeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionSaver>> quickFixes)
     {
         // TODO
     }

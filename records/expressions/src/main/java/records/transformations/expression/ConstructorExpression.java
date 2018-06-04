@@ -10,7 +10,7 @@ import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.jellytype.JellyType;
@@ -81,7 +81,7 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Stream.of(GeneralExpressionEntry.load(tag.<GeneralValue>either(str -> new GeneralExpressionEntry.Unfinished(str), t -> new GeneralExpressionEntry.TagName(t))));
     }

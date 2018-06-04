@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,20 +16,18 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static records.gui.expressioneditor.DeepNodeTree.opD;
 
-class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
+class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
 {
     // Remember: earlier means more likely to be inner-bracketed.  Outer list is groups of operators
     // with equal bracketing likelihood/precedence.
     @SuppressWarnings("recorded")
-    private final static ImmutableList<ImmutableList<OperatorExpressionInfo<Expression, ExpressionNodeParent>>> OPERATORS = ImmutableList.of(
+    private final static ImmutableList<ImmutableList<OperatorExpressionInfo<Expression, ExpressionSaver>>> OPERATORS = ImmutableList.of(
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
         ImmutableList.of(
             new OperatorExpressionInfo<>(
@@ -45,10 +42,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
                 opD("+", "op.plus"),
                 opD("-", "op.minus")
             ), ExpressionOps::makeAddSubtract),
-            new OperatorExpressionInfo<Expression, ExpressionNodeParent>(ImmutableList.of(
+            new OperatorExpressionInfo<Expression, ExpressionSaver>(ImmutableList.of(
                 opD("*", "op.times")
             ), ExpressionOps::makeTimes),
-            new OperatorExpressionInfo<Expression, ExpressionNodeParent>(
+            new OperatorExpressionInfo<Expression, ExpressionSaver>(
                 opD("/", "op.divide")
             , (lhs, rhs, _b) -> new DivideExpression(lhs, rhs))
         ),
@@ -101,14 +98,14 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
         ImmutableList.of(
-            new OperatorExpressionInfo<Expression, ExpressionNodeParent>(
+            new OperatorExpressionInfo<Expression, ExpressionSaver>(
                 opD(",", "op.separator")
             , (lhs, rhs, _b) -> /* Dummy, see below: */ lhs)
             {
                 @Override
-                public OperatorSection<Expression, ExpressionNodeParent> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
+                public OperatorSection<Expression, ExpressionSaver> makeOperatorSection(int operatorSetPrecedence, String initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection<Expression, ExpressionNodeParent>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, bracketedStatus) -> {
+                    return new NaryOperatorSection<Expression, ExpressionSaver>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, bracketedStatus) -> {
                         switch (bracketedStatus)
                         {
                             case DIRECT_SQUARE_BRACKETED:
@@ -182,7 +179,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public EntryNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable String initialContent)
+    public EntryNode<Expression, ExpressionSaver> makeGeneral(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable String initialContent)
     {
         return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent);
     }
@@ -343,9 +340,9 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     }
 
     @Override
-    public ExpressionNodeParent saveToClipboard()
+    public ExpressionSaver saveToClipboard()
     {
-        return new ExpressionNodeParent()
+        return new ExpressionSaver()
         {
             @Override
             public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)

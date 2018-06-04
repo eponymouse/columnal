@@ -11,7 +11,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
 import records.gui.expressioneditor.UnitLiteralExpressionNode;
@@ -102,9 +102,9 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        ImmutableList.Builder<SingleLoader<Expression, ExpressionNodeParent>> builder = ImmutableList.builder();
+        ImmutableList.Builder<SingleLoader<Expression, ExpressionSaver>> builder = ImmutableList.builder();
         builder.add(GeneralExpressionEntry.load(new NumLit(value)));
         if (unit != null)
         {

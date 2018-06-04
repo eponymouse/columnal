@@ -10,7 +10,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
@@ -88,9 +88,9 @@ public class AddSubtractExpression extends NaryOpExpression
         type = onError.recordType(this, ExpressionKind.EXPRESSION, state, checkAllOperandsSameTypeAndNotPatterns(new NumTypeExp(this, new UnitExp(new MutUnitVar())), dataLookup, state, onError, p -> {
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
-                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(null, ImmutableList.of());
+                return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(null, ImmutableList.of());
             @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers with matching units but found "), ourType.toStyledString());
-            ImmutableList.Builder<QuickFix<Expression,ExpressionNodeParent>> fixes = ImmutableList.builder();
+            ImmutableList.Builder<QuickFix<Expression,ExpressionSaver>> fixes = ImmutableList.builder();
             // Is the problematic type text, and all ops '+'? If so, offer to convert it 
             
             // Note: we don't unify here because we don't want to alter the type.  We could try a 
@@ -98,12 +98,12 @@ public class AddSubtractExpression extends NaryOpExpression
             // the quick fix if it is definitely a string, for which we can use equals:
             if (ourType.equals(TypeExp.text(null)) && ops.stream().allMatch(op -> op.equals(AddSubtractOp.ADD)))
             {
-                fixes.add(new QuickFix<Expression,ExpressionNodeParent>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
+                fixes.add(new QuickFix<Expression,ExpressionSaver>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
             }
 
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p));
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionNodeParent>>>(err, fixes.build());
+            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(err, fixes.build());
         }));
         return type;
     }

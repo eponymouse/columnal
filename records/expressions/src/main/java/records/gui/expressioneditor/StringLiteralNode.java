@@ -1,7 +1,5 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -12,10 +10,8 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
-import records.transformations.expression.QuickFix.ReplacementTarget;
 import styled.StyledString;
 import utility.Pair;
 import utility.gui.FXUtility;
@@ -27,13 +23,13 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 20/12/2016.
  */
-public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParent> implements ConsecutiveChild<Expression, ExpressionNodeParent>
+public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> implements ConsecutiveChild<Expression, ExpressionSaver>
 {
     private final AutoComplete autoComplete;
     private final ErrorTop container;
     private final ExpressionInfoDisplay expressionInfoDisplay;
 
-    public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
+    public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         super(parent, Expression.class);
         // We need a completion so you can leave the field using tab/enter
@@ -97,13 +93,13 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public void save(ExpressionNodeParent saver)
+    public void save(ExpressionSaver saver)
     {
         saver.saveOperand(new records.transformations.expression.StringLiteral(textField.getText()), this, c -> {});
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionNodeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionSaver>> quickFixes)
     {
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e.getFirst(), e.getSecond().loadAsConsecutive(BracketedStatus.MISC)));
     }

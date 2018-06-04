@@ -9,7 +9,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
@@ -193,9 +193,9 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
         r.addAll(function.loadAsConsecutive(BracketedStatus.MISC));
         roundBracket(BracketedStatus.MISC, r, () -> r.addAll(param.loadAsConsecutive(BracketedStatus.DIRECT_ROUND_BRACKETED)));
         return r.stream();
@@ -203,7 +203,7 @@ public class CallExpression extends Expression
 
     /*
         @Override
-        public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+        public SingleLoader<Expression, ExpressionSaver, OperandNode<Expression, ExpressionSaver>> loadAsSingle()
         {
             // If successfully type-checked:
             if (definition != null)

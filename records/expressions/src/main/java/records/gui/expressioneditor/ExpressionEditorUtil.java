@@ -9,7 +9,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
-import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -41,7 +40,6 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -190,10 +188,10 @@ public class ExpressionEditorUtil
 
     @SuppressWarnings("recorded")
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionNodeParent>> quickFixesForTypeError(TypeManager typeManager, Expression src, @Nullable DataType fix)
+    public static List<QuickFix<Expression,ExpressionSaver>> quickFixesForTypeError(TypeManager typeManager, Expression src, @Nullable DataType fix)
     {
-        List<QuickFix<Expression,ExpressionNodeParent>> quickFixes = new ArrayList<>();
-        FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionNodeParent>>> makeTypeFix = params -> {
+        List<QuickFix<Expression,ExpressionSaver>> quickFixes = new ArrayList<>();
+        FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionSaver>>> makeTypeFix = params -> {
             TypeDialog typeDialog = new TypeDialog(params.parentWindow, params.tableManager.getTypeManager(), false);
             @Nullable JellyType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
             if (dataType != null)
@@ -205,17 +203,17 @@ public class ExpressionEditorUtil
                 return new Pair<>(CURRENT, src);
             }
         };
-        quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), makeTypeFix));
+        quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), makeTypeFix));
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(typeManager, JellyType.fromConcrete(fixFinal), src))));
+            quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(typeManager, JellyType.fromConcrete(fixFinal), src))));
         }
         return quickFixes;
     }
 
     @OnThread(Tag.Any)
-    public static List<QuickFix<Expression,ExpressionNodeParent>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
+    public static List<QuickFix<Expression,ExpressionSaver>> getFixesForMatchingNumericUnits(TypeState state, TypeProblemDetails p)
     {
         // Must be a units issue.  Check if fixing a numeric literal involved would make
         // the units match all non-literal units:
@@ -259,7 +257,7 @@ public class ExpressionEditorUtil
                 //Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                 if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
-                    return Collections.singletonList(new QuickFix<Expression,ExpressionNodeParent>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), params -> {
+                    return Collections.singletonList(new QuickFix<Expression,ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), params -> {
                         return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
                     }));
                 }

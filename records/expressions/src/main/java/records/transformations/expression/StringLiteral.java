@@ -6,7 +6,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
@@ -71,7 +71,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Stream.of(p -> new StringLiteralNode(editString(), p));
     }

@@ -9,7 +9,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TypeExp;
@@ -174,9 +174,9 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> nodes = new StreamTreeBuilder<>();
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> nodes = new StreamTreeBuilder<>();
         for (int i = 0; i < expressions.size() - 1; i++)
         {
             int iFinal = i;
@@ -234,7 +234,7 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionNodeParent>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
@@ -271,7 +271,7 @@ public abstract class NaryOpExpression extends Expression
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionNodeParent>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
+                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
                 onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
                 StyledString error;
                 if (errorAndQuickFix.getFirst() != null)

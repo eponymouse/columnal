@@ -1,30 +1,19 @@
 package records.gui.expressioneditor;
 
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
-import utility.Pair;
 
-import java.util.List;
-
-// TODO rename ExpressionSaver
-public abstract class ExpressionNodeParent implements ErrorAndTypeRecorder
+public abstract class ExpressionSaver implements ErrorAndTypeRecorder
 {
     class Context {}
     
     // Note: if we are copying to clipboard, callback will not be called
-    public void saveKeyword(Keyword keyword, ErrorDisplayer<Expression, ExpressionNodeParent> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
-    public void saveOperator(Op operator, ErrorDisplayer<Expression, ExpressionNodeParent> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
-    public void saveOperand(Expression singleItem, ErrorDisplayer<Expression, ExpressionNodeParent> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
+    public void saveKeyword(Keyword keyword, ErrorDisplayer<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
+    public void saveOperator(Op operator, ErrorDisplayer<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
+    public void saveOperand(Expression singleItem, ErrorDisplayer<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext) {}
     
     
     /**

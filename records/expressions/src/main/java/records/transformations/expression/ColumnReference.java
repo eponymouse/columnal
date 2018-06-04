@@ -15,7 +15,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
@@ -137,7 +137,7 @@ public class ColumnReference extends NonOperatorExpression
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.ColumnRef(this)));
     }

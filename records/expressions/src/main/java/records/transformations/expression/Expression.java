@@ -28,7 +28,7 @@ import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.*;
 import records.grammar.ExpressionParserBaseVisitor;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
@@ -66,7 +66,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionNodeParent>, StyledShowable
+public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 
@@ -755,7 +755,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     
     // Round brackets if needed
     @OnThread(Tag.FXPlatform)
-    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> builder, FXPlatformRunnable buildContent)
+    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> builder, FXPlatformRunnable buildContent)
     {
         if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
         {

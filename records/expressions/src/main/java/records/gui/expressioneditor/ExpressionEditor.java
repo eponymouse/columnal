@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -22,30 +21,22 @@ import records.error.UserException;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
-import records.transformations.expression.Expression.CheckedExp;
-import records.transformations.expression.Expression.ExpressionKind;
-import records.transformations.expression.Expression.MultipleTableLookup;
-import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.IdentExpression;
-import records.transformations.expression.TypeState;
 import styled.StyledShowable;
-import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.FXUtility;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 /**
  * Created by neil on 17/12/2016.
  */
-public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeParent>
+public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver>
 {
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;

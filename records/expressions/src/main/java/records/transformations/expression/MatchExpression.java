@@ -9,7 +9,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
@@ -150,9 +150,9 @@ public class MatchExpression extends NonOperatorExpression
         }
 
         @OnThread(Tag.FXPlatform)
-        public Stream<SingleLoader<Expression, ExpressionNodeParent>> load()
+        public Stream<SingleLoader<Expression, ExpressionSaver>> load()
         {
-            StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+            StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
 
             boolean first = true;
             for (Pattern pattern : patterns)
@@ -261,9 +261,9 @@ public class MatchExpression extends NonOperatorExpression
 
         // Load pattern and guard
         @OnThread(Tag.FXPlatform)
-        public Stream<SingleLoader<Expression, ExpressionNodeParent>> load()
+        public Stream<SingleLoader<Expression, ExpressionSaver>> load()
         {
-            StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+            StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
             r.addAll(pattern.loadAsConsecutive(BracketedStatus.MISC));
             if (guard != null)
             {
@@ -383,7 +383,7 @@ public class MatchExpression extends NonOperatorExpression
         for (int i = 0; i < patternExpressions.size(); i++)
         {
             Expression expression = patternExpressions.get(i);
-            List<QuickFix<Expression, ExpressionNodeParent>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i));
+            List<QuickFix<Expression, ExpressionSaver>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i));
             if (!fixesForMatchingNumericUnits.isEmpty())
             {
                 // Must show an error to get the quick fixes to show:
@@ -400,9 +400,9 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<Expression, ExpressionNodeParent>> r = new StreamTreeBuilder<>();
+        StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
         r.add(GeneralExpressionEntry.load(Keyword.MATCH));
         r.addAll(expression.loadAsConsecutive(BracketedStatus.MISC));
         for (MatchClause clause : clauses)

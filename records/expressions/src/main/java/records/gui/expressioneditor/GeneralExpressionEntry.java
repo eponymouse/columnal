@@ -1,10 +1,7 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
@@ -30,7 +27,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
-import records.gui.expressioneditor.ExpressionNodeParent.Context;
+import records.gui.expressioneditor.ExpressionSaver.Context;
 import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
@@ -60,7 +57,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent, GeneralValue> implements ConsecutiveChild<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionSaver, GeneralValue> implements ConsecutiveChild<Expression, ExpressionSaver>, ErrorDisplayer<Expression, ExpressionSaver>
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
@@ -93,13 +90,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
         default String getTypeLabel(boolean focused) {return "";};
         
-        public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee);
+        public void save(ExpressionSaver saver, GeneralExpressionEntry gee);
     }
     
     public abstract static class GeneralOperand implements GeneralValue
     {
         @Override
-        public final void save(ExpressionNodeParent saver, GeneralExpressionEntry gee)
+        public final void save(ExpressionSaver saver, GeneralExpressionEntry gee)
         {
             saver.saveOperand(saveUnrecorded(saver), gee, this::afterSave);
         }
@@ -257,13 +254,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
+    GeneralExpressionEntry(GeneralValue initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         this(Either.right(initialValue), parent);
     }
     
     // If initial value is String, it was user entered.  If GeneralValue, we trust it.
-    GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
+    GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         super(Expression.class, parent, initialValue.either(s -> new Unfinished(s), v -> v));
         roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
@@ -634,7 +631,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public void save(ExpressionNodeParent saver)
+    public void save(ExpressionSaver saver)
     {
         currentValue.get().save(saver, this);
     }
@@ -873,12 +870,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    private static boolean isRoundBracket(ConsecutiveChild<Expression, ExpressionNodeParent> item)
+    private static boolean isRoundBracket(ConsecutiveChild<Expression, ExpressionSaver> item)
     {
         return item instanceof GeneralExpressionEntry && ((GeneralExpressionEntry)item).currentValue.get().equals(Keyword.OPEN_ROUND);
     }
 
-    private Stream<SingleLoader<Expression, ExpressionNodeParent>> loadEmptyRoundBrackets()
+    private Stream<SingleLoader<Expression, ExpressionSaver>> loadEmptyRoundBrackets()
     {
         return Stream.of(load(Keyword.OPEN_ROUND), load(new Unfinished("")).focusWhenShown(), load(Keyword.CLOSE_ROUND));
     }
@@ -1197,13 +1194,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee)
+        public void save(ExpressionSaver saver, GeneralExpressionEntry gee)
         {
             saver.saveOperator(this, gee, c -> {});
         }
     }
     
-    public static SingleLoader<Expression, ExpressionNodeParent> load(GeneralValue value)
+    public static SingleLoader<Expression, ExpressionSaver> load(GeneralValue value)
     {
         return p -> new GeneralExpressionEntry(value, p);
     }
@@ -1228,7 +1225,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee)
+        public void save(ExpressionSaver saver, GeneralExpressionEntry gee)
         {
             saver.saveKeyword(this, gee, c -> {});
         }

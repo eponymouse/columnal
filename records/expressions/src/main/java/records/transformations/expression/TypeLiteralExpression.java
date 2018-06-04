@@ -10,7 +10,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
@@ -107,9 +107,9 @@ public class TypeLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of((SingleLoader<Expression, ExpressionNodeParent>)p -> new TypeLiteralNode(p, type));
+        return Stream.of((SingleLoader<Expression, ExpressionSaver>) p -> new TypeLiteralNode(p, type));
     }
 
     @Override
