@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -9,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.unit.UnitManager;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
@@ -18,8 +16,7 @@ import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.UnfinishedUnitExpression;
+import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TaggedTypeNameExpression;
@@ -33,7 +30,7 @@ import utility.gui.FXUtility;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, OperandValue<TypeParent>> implements EEDisplayNodeParent
+public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, OperandValue> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
     private static final ImmutableList<DataType> PRIMITIVE_TYPES = ImmutableList.of(
@@ -104,7 +101,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
                 {
                     if (unitSpecifier == null)
                     {
-                        addUnitSpecifier(new UnfinishedUnitExpression(rest));
+                        addUnitSpecifier(new SingleUnitExpression(rest));
                     }
                     else
                     {
@@ -183,12 +180,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
         return parent.getEditor();
     }
 
-    @Override
-    public UnitManager getUnitManager()
-    {
-        return getEditor().getTypeManager().getUnitManager();
-    }
-
     private class TypeCompletion extends Completion
     {
         private final String completion;
@@ -255,12 +246,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
                 .filter(t -> t.getRaw().equals(content))
                 .map(t -> new TaggedTypeNameExpression(t))
         ).findFirst().orElseGet(() -> new UnfinishedTypeExpression(textField.getText()));
-    }
-
-    @Override
-    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
-    {
-        return null;
     }
 
     @Override

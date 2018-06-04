@@ -7,11 +7,9 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.error.InternalException;
-import records.error.UserException;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.InvalidOperatorUnitExpression;
-import records.transformations.expression.UnfinishedUnitExpression;
+import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitDivideExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
@@ -74,7 +72,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
         //System.err.println("  Operands: " + Utility.listToString(Utility.mapList(operands, o -> o.getClass().getName() + ":" + o.save(false))));
 
         // Trim blanks from end:
-        ConsecutiveBase.removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
+        ConsecutiveBase.removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof SingleUnitExpression && ((SingleUnitExpression)o).getText().trim().isEmpty(), o -> false, o -> {}, false, null);
 
         //System.err.println("  Trimmed: " + Utility.listToString(ops) + " " + ops.size());
 

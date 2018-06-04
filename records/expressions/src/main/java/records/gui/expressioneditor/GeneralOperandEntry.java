@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -61,9 +62,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
 
 
 
-    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
+    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, VALUE initialValue)
     {
         super(parent, operandClass);
+        currentValue = new SimpleObjectProperty<>(initialValue);
 
         FXUtility.sizeToFit(textField, null, null);
         typeLabel = new Label();

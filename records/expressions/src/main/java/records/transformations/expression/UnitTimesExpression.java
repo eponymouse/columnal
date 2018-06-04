@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
+import records.gui.expressioneditor.UnitEntry.UnitBracket;
+import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -92,9 +94,9 @@ public class UnitTimesExpression extends UnitExpression
     public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
-        r.add(UnitEntry.load(Bracket.OPEN_ROUND));
-        Utility.intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(Op.MULTIPLY)));
-        r.add(UnitEntry.load(Bracket.CLOSE_ROUND));
+        r.add(UnitEntry.load(UnitBracket.OPEN_ROUND));
+        Utility.intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY)));
+        r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND));
         return r.stream();
     }
 }

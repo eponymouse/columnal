@@ -265,7 +265,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     // If initial value is String, it was user entered.  If GeneralValue, we trust it.
     GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
-        super(Expression.class, parent);
+        super(Expression.class, parent, initialValue.either(s -> new Unfinished(s), v -> v));
         roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
         squareBracketCompletion = new KeyShortcutCompletion("autocomplete.list", '[');
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
@@ -275,7 +275,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
         typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
         varDeclCompletion = new VarDeclCompletion();
-        currentValue = new SimpleObjectProperty<>(initialValue.either(s -> new Unfinished(s), v -> v));
         initialValue.ifRight(v -> {
             textField.setText(v.getContent()); // Do before auto complete is on the field
             initialContentEntered.set(true);

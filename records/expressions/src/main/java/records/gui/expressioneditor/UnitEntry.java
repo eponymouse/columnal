@@ -2,7 +2,6 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -17,7 +16,6 @@ import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
-import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.ExBiFunction;
@@ -102,7 +100,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
 
         if (text.isEmpty())
         {
-            return errorDisplayer.recordUnit(this, new UnfinishedUnitExpression(""));
+            return errorDisplayer.recordUnit(this, new SingleUnitExpression(""));
         }
 
         try
@@ -120,7 +118,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             }
             else
             {
-                return errorDisplayer.recordUnit(this, new UnfinishedUnitExpression(text));
+                return errorDisplayer.recordUnit(this, new SingleUnitExpression(text));
             }
         }
     }

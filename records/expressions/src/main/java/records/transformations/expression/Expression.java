@@ -48,6 +48,7 @@ import styled.StyledString;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -587,7 +588,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
         {
-            return new InvalidOperatorExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.STRING(), op -> op.getText()));
+            return new InvalidOperatorExpression(Utility.<ExpressionContext, Either<String, Expression>>mapListI(ctx.expression(), c -> Either.right(visitExpression(c))));
         }
 
         public Expression visitChildren(RuleNode node) {
