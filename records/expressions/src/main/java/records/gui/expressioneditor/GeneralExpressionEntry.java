@@ -371,10 +371,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         if (completionQuery != CompletionQuery.LEAVING_SLOT)
             r.add(unitCompletion);
 
-        if (canDeclareVariable())
-        {
-            r.add(varDeclCompletion);
-        }
+        r.add(varDeclCompletion);
 
         r.add(roundBracketCompletion);
         r.add(squareBracketCompletion);
@@ -637,53 +634,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public void save(ExpressionNodeParent saver)
     {
-        return errorDisplayer.record(this, currentValue.get().saveUnrecorded(onError));
-        /*
-        if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
-        {
-            return errorDisplayer.record(this, new ColumnReference(new ColumnId(textField.getText()), status.get() == Status.COLUMN_REFERENCE_SAME_ROW ? ColumnReferenceType.CORRESPONDING_ROW : ColumnReferenceType.WHOLE_COLUMN));
-        }
-        else if (status.get() == Status.LITERAL)
-        {
-            CompleteBooleanLiteralContext bool = parseOrNull(ExpressionParser::completeBooleanLiteral);
-            if (bool != null)
-            {
-                return errorDisplayer.record(this, new BooleanLiteral(bool.booleanLiteral().getText().equals("true")));
-            }
-            // Numeric literals are handled at the end, so deliberately fall through:
-        }
-        else if (status.get() == Status.VARIABLE_DECL && textField.getText().trim().length() > 0)
-        {
-            return errorDisplayer.record(this, new VarDeclExpression(textField.getText().trim()));
-        }
-        else if (status.get() == Status.VARIABLE_USE)
-        {
-            return errorDisplayer.record(this, new VarUseExpression(textField.getText().trim()));
-        }
-        else if (status.get() == Status.IMPLICIT_LAMBDA_ARG)
-        {
-            return errorDisplayer.record(this, new ImplicitLambdaArg());
-        }
-        // Unfinished -- could be number though:
-        CompleteNumericLiteralContext number = parseOrNull(ExpressionParser::completeNumericLiteral);
-        if (number != null)
-        {
-            try
-            {
-                return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.numericLiteral().getText()), unitSpecifier == null ? null : errorDisplayer.recordUnit(unitSpecifier, unitSpecifier.saveUnrecorded(errorDisplayer, onError))));
-            }
-            catch (UserException e)
-            {
-                // Fall through to unfinished case...
-            }
-        }
-        
-        UnfinishedExpression unfinishedExpression = new UnfinishedExpression(textField.getText().trim());
-        onError.recordError(unfinishedExpression, StyledString.concat(StyledString.s("Invalid expression: "), unfinishedExpression.toStyledString()));
-        return errorDisplayer.record(this, unfinishedExpression);
-        */
+        currentValue.get().save(saver, this);
     }
 
     private <T> @Nullable T parseOrNull(ExFunction<ExpressionParser, T> parse)
@@ -832,11 +785,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (Objects.equals(c, unitCompletion))
             {
                 currentValue.setValue(getNumberOrUnfinished(currentText.replace("{", "")));
-                parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralExpressionNode, () -> {
-                    UnitLiteralExpressionNode unitLiteralNode = new UnitLiteralExpressionNode(parent, new UnfinishedUnitExpression(rest));
+                parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralExpressionNode, () -> Stream.of(p -> {
+                    UnitLiteralExpressionNode unitLiteralNode = new UnitLiteralExpressionNode(p, new SingleUnitExpression(rest));
                     unitLiteralNode.focusWhenShown();
                     return unitLiteralNode;
-                });
+                }));
             }
             else if (c != null && c.equals(ifCompletion))
             {
@@ -861,7 +814,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 
                 if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
-                    parent.ensureOperandToRight(GeneralExpressionEntry.this, x -> GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
+                    parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
                 }
                 else
                 {
@@ -918,6 +871,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
         }
+    }
+    
+    private static boolean isRoundBracket(ConsecutiveChild<Expression, ExpressionNodeParent> item)
+    {
+        return item instanceof GeneralExpressionEntry && ((GeneralExpressionEntry)item).currentValue.get().equals(Keyword.OPEN_ROUND);
     }
 
     private Stream<SingleLoader<Expression, ExpressionNodeParent>> loadEmptyRoundBrackets()

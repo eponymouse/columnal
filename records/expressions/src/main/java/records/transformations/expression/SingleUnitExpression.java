@@ -5,6 +5,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.UnitEntry;
+import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -47,7 +48,7 @@ public class SingleUnitExpression extends UnitExpression
     @Override
     public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(p -> new UnitEntry(p, name, false));
+        return Stream.of(UnitEntry.load(new UnitText(name)));
     }
 
     @Override

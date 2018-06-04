@@ -12,7 +12,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
-import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
+import records.gui.expressioneditor.UnitEntry.UnitValue;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
@@ -27,35 +27,20 @@ import java.util.List;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent, OperandValue> implements ErrorDisplayer<UnitExpression, UnitNodeParent>
+public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent, UnitValue> implements ErrorDisplayer<UnitExpression, UnitNodeParent>
 {
     private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    public UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, String initialContent, boolean userEntered)
+    UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitValue initialContent)
     {
-        super(UnitExpression.class, parent);
-        if (!userEntered)
-        {
-            textField.setText(initialContent); // Do before auto complete is on the field
-            initialContentEntered.set(true);
-        }
+        super(UnitExpression.class, parent, initialContent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
         ExBiFunction<String, CompletionQuery, List<Completion>> getSuggestions = this::getSuggestions;
         this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c)));
         updateNodes();
-
-        if (userEntered)
-        {
-            // Do this after auto-complete is set up and we are set as part of parent,
-            // in case it finishes a completion:
-            FXUtility.runAfter(() -> {
-                textField.setText(initialContent);
-                initialContentEntered.set(true);
-            });
-        }
     }
 
     private List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
@@ -235,18 +220,64 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
     }
     
-    public static enum UnitOp implements OperandValue
+    public static interface UnitValue extends GeneralOperandEntry.OperandValue {} 
+    
+    public static enum UnitOp implements UnitValue
     {
-        MULTIPLY, DIVIDE, RAISE;
+        MULTIPLY("*"), DIVIDE("/"), RAISE("^");
+        
+        private final String op;
+        
+        private UnitOp(String op)
+        {
+            this.op = op;
+        }
+
+
+        @Override
+        public String getContent()
+        {
+            return op;
+        }
     }
 
-    public static enum UnitBracket implements OperandValue
+    public static enum UnitBracket implements UnitValue
     {
-        OPEN_ROUND, CLOSE_ROUND;
+        OPEN_ROUND("("), CLOSE_ROUND(")");
+        
+        private final String bracket;
+
+        private UnitBracket(String bracket)
+        {
+            this.bracket = bracket;
+        }
+
+
+        @Override
+        public String getContent()
+        {
+            return bracket;
+        }
+    }
+    
+    public static class UnitText implements UnitValue
+    {
+        private final String text;
+
+        public UnitText(String text)
+        {
+            this.text = text;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return text;
+        }
     }
 
-    public static SingleLoader<UnitExpression, UnitNodeParent> load(OperandValue value)
+    public static SingleLoader<UnitExpression, UnitNodeParent> load(UnitValue value)
     {
-        return p -> new UnitEntry(p, value, false);
+        return p -> new UnitEntry(p, value);
     }
 }

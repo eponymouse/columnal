@@ -57,7 +57,6 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             @Override
             protected String selected(String currentText, @Nullable EndStringCompletion c, String rest)
             {
-                parent.setOperatorToRight(StringLiteralNode.this, "");
                 parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
                 return currentText;
             }

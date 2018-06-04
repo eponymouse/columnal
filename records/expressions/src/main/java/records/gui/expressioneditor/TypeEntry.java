@@ -16,6 +16,7 @@ import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.NumberTypeExpression;
@@ -311,5 +312,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
             return input.equalsIgnoreCase("number");
         }
     }
-    
+
+    public static SingleLoader<TypeExpression, TypeParent> load(OperandValue value)
+    {
+        return p -> new TypeEntry(p, value);
+    }
 }
