@@ -46,7 +46,7 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     @Override
     public void save(ExpressionNodeParent saver)
     {
-        saver.saveOperand(new UnitLiteralExpression(unit), this, c -> {});
+        saver.saveOperand(new UnitLiteralExpression(unit.save()), this, c -> {});
     }
 
     @Override

@@ -18,6 +18,7 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.Either;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.TranslationUtility;
 
@@ -140,5 +141,18 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     public String save(TypeExpression typeExpression, TableAndColumnRenames renames)
     {
         return typeExpression.save(renames);
+    }
+
+    @Override
+    public TypeParent saveToClipboard()
+    {
+        return new TypeParent()
+        {
+            @Override
+            public void saveOperand(UnitExpression unitExpression, ErrorDisplayer<TypeExpression, TypeParent> unitLiteralTypeNode, FXPlatformConsumer<Context> withContext)
+            {
+                
+            }
+        };
     }
 }

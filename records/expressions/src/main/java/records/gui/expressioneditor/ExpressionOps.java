@@ -10,6 +10,9 @@ import records.data.TableAndColumnRenames;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.typeExp.TypeExp;
+import styled.StyledShowable;
+import styled.StyledString;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -339,5 +342,30 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     public String save(Expression child, TableAndColumnRenames renames)
     {
         return child.save(BracketedStatus.MISC, renames);
+    }
+
+    @Override
+    public ExpressionNodeParent saveToClipboard()
+    {
+        return new ExpressionNodeParent()
+        {
+            @Override
+            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
+            {
+                
+            }
+
+            @Override
+            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+            {
+
+            }
+
+            @Override
+            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            {
+                return typeExp;
+            }
+        };
     }
 }

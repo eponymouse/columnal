@@ -126,4 +126,10 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     {
         return unitExpression.save(true);
     }
+
+    @Override
+    public UnitNodeParent saveToClipboard()
+    {
+        return new UnitNodeParent();
+    }
 }

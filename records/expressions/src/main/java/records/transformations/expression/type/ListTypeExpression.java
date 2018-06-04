@@ -4,8 +4,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.gui.expressioneditor.TypeEntry;
+import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
+import utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -22,7 +25,11 @@ public class ListTypeExpression extends TypeExpression
     @Override
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return squareBracket(innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED));
+        return Utility.concatStreams(
+            Stream.of(TypeEntry.load(new TypeValue("["))),
+            innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED),
+            Stream.of(TypeEntry.load(new TypeValue("]")))
+        );
     }
 
     @Override

@@ -99,6 +99,12 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionNode
     }
 
     @Override
+    public void save(ExpressionNodeParent saver)
+    {
+        saver.saveOperand(new TypeLiteralExpression(type.save()), this, c -> {});
+    }
+
+    @Override
     public void visitLocatable(LocatableVisitor visitor)
     {
         type.visitLocatable(visitor);

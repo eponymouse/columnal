@@ -15,7 +15,7 @@ import utility.FXPlatformConsumer;
 
 import java.util.stream.Stream;
 
-public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent> implements TypeParent
+public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent>
 {
     private final FXPlatformConsumer<@Nullable DataType> onChange;
 

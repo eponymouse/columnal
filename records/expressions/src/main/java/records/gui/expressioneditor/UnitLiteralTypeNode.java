@@ -47,7 +47,7 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     @Override
     public void save(TypeParent saver)
     {
-        saver.saveOperand(new UnitLiteralExpression(unit), this, c -> {});
+        saver.saveOperand(new UnitLiteralExpression(unit.save()), this, c -> {});
     }
 
     @Override
