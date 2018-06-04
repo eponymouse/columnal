@@ -4,17 +4,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.TypeEntry;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
-import utility.Pair;
-import utility.UnitType;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -28,7 +22,7 @@ public class UnfinishedTypeExpression extends TypeExpression
     }
 
     @Override
-    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive()
+    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Stream.of(p -> new TypeEntry(p, value));
     }

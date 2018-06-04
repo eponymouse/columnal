@@ -1,27 +1,26 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
-import records.data.unit.SingleUnit;
+import records.data.unit.UnitManager;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.ExBiFunction;
-import utility.FXPlatformConsumer;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -30,13 +29,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent> implements ErrorDisplayer<UnitExpression, UnitNodeParent>
+public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent, OperandValue> implements ErrorDisplayer<UnitExpression, UnitNodeParent>
 {
     private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
-
 
     public UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, String initialContent, boolean userEntered)
     {
@@ -48,7 +46,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
         ExBiFunction<String, CompletionQuery, List<Completion>> getSuggestions = this::getSuggestions;
-        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c)));
         updateNodes();
 
         if (userEntered)
@@ -67,12 +65,17 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         List<Completion> r = new ArrayList<>();
         r.add(bracketedCompletion);
         r.add(new NumericLiteralCompletion());
-        for (SingleUnit unit : parent.getThisAsSemanticParent().getUnitManager().getAllDeclared())
+        for (SingleUnit unit : getUnitManager().getAllDeclared())
         {
             r.add(new KnownUnitCompletion(unit.getName()));
         }
         r.removeIf(c -> !c.shouldShow(current));
         return r;
+    }
+
+    private UnitManager getUnitManager()
+    {
+        return parent.getEditor().getTypeManager().getUnitManager();
     }
 
     @Override
@@ -93,12 +96,6 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     }
 
     @Override
-    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
-    {
-        return null;
-    }
-
-    @Override
     public @Recorded UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
         String text = textField.getText().trim();
@@ -116,7 +113,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
         catch (NumberFormatException e)
         {
-            if (parent.getThisAsSemanticParent().getUnitManager().isUnit(text))
+            if (getUnitManager().isUnit(text))
             {
                 SingleUnitExpression singleUnitExpression = new SingleUnitExpression(text);
                 return errorDisplayer.recordUnit(this, singleUnitExpression);
@@ -238,5 +235,20 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         {
             return name.contains("" + character);
         }
+    }
+    
+    public static enum UnitOp implements OperandValue
+    {
+        MULTIPLY, DIVIDE, RAISE;
+    }
+
+    public static enum UnitBracket implements OperandValue
+    {
+        OPEN_ROUND, CLOSE_ROUND;
+    }
+
+    public static SingleLoader<UnitExpression, UnitNodeParent> load(OperandValue value)
+    {
+        return p -> new UnitEntry(p, value, false);
     }
 }

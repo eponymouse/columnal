@@ -3,6 +3,7 @@ package records.transformations.expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
+import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;

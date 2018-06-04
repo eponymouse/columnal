@@ -30,6 +30,8 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.ExpressionNodeParent.Context;
+import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -58,7 +60,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements ConsecutiveChild<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent, GeneralValue> implements ConsecutiveChild<Expression, ExpressionNodeParent>, ErrorDisplayer<Expression, ExpressionNodeParent>
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
@@ -83,18 +85,31 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
     
     // A value object:
-    public static interface GeneralValue
+    public static interface GeneralValue extends GeneralOperandEntry.OperandValue
     {
         public String getContent();
 
         @Nullable GeneralPseudoclass getPseudoclass();
 
         String getTypeLabel(boolean focused);
-
-        @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError);
+        
+        public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee);
     }
     
-    public static class Unfinished implements GeneralValue
+    public abstract static class GeneralOperand implements GeneralValue
+    {
+        @Override
+        public final void save(ExpressionNodeParent saver, GeneralExpressionEntry gee)
+        {
+            saver.saveOperand(saveUnrecorded(saver), gee, this::afterSave);
+        }
+
+        public abstract @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError);
+        
+        public void afterSave(Context context) {}
+    }
+    
+    public static class Unfinished extends GeneralOperand
     {
         private final String value;
 
@@ -121,7 +136,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return focused ? "" : "error";
         }
 
-        
         @Override
         public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
         {
@@ -132,7 +146,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
 
-    public static class StdFunc implements GeneralValue
+    public static class StdFunc extends GeneralOperand
     {
         private final FunctionDefinition function;
 
@@ -166,7 +180,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    public static class TagName implements GeneralValue
+    public static class TagName extends GeneralOperand
     {
         private final TagInfo tagInfo;
 
@@ -239,17 +253,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private final Completion typeLiteralCompletion;
 
     private final SimpleCompletion questionCompletion;
-
-    /**
-     * Set to true while updating field with auto completion.  Allows us to avoid
-     * certain listeners firing which should only fire when the user has made a change.
-     */
-    private boolean completing;
-
-    /**
-     * Current status of the field.
-     */
-    private final ObjectProperty<GeneralValue> currentValue;
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
@@ -1018,7 +1021,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    public static class QuestValue implements GeneralValue
+    public static class QuestValue extends GeneralOperand
     {
         @Override
         public String getContent()
@@ -1045,7 +1048,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    public static class MatchAnything implements GeneralValue
+    public static class MatchAnything extends GeneralOperand
     {
 
         @Override
@@ -1073,7 +1076,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    public static class VarDecl implements GeneralValue
+    public static class VarDecl extends GeneralOperand
     {
         private static final String PREFIX = "$";
         private final String varName; // Without prefix
@@ -1109,7 +1112,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    public static class Lit implements GeneralValue
+    public static class Lit extends GeneralOperand
     {
         private final Literal literal;
 
@@ -1143,7 +1146,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     
-    public static class ColumnRef implements GeneralValue
+    public static class ColumnRef extends GeneralOperand
     {
         private final ColumnReference columnReference;
 
@@ -1183,7 +1186,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    public static class NumLit implements GeneralValue
+    public static class NumLit extends GeneralOperand
     {
         private final Number number;
 

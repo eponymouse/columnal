@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * An expression with a unit expression inside.
+ * A TypeExpression with a unit expression inside.
  */
 public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypeParent>
 {
@@ -84,11 +84,5 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     public void visitLocatable(LocatableVisitor visitor)
     {
         unit.visitLocatable(visitor);
-    }
-
-    @Override
-    public UnitManager getUnitManager()
-    {
-        return getEditor().getTypeManager().getUnitManager();
     }
 }

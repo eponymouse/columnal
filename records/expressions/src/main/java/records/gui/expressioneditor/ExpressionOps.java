@@ -172,13 +172,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         return new OrExpression(args);
     }
 
-    @Override
-    public ImmutableList<Pair<String, @Localized String>> getValidOperators(ExpressionNodeParent parent)
-    {
-        return Stream.concat(OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream()), parent.operatorKeywords().stream()).collect(ImmutableList.toImmutableList());
-    }
-
-    public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
+    public boolean isOperatorAlphabet(char character)
     {
         return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
     }

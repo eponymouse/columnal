@@ -27,12 +27,6 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     }
 
     @Override
-    public UnitManager getUnitManager()
-    {
-        return parent.getEditor().getTypeManager().getUnitManager();
-    }
-
-    @Override
     public void showType(String type)
     {
         // This shouldn't occur for units

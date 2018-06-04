@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.QuickFix;
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 /**
  * An Expression with a type expression inside.
  */
-public class TypeLiteralNode extends OtherLiteralNode
+public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionNodeParent>
 {
     private final Consecutive<TypeExpression, TypeParent> type;
     
@@ -101,11 +102,5 @@ public class TypeLiteralNode extends OtherLiteralNode
     public void visitLocatable(LocatableVisitor visitor)
     {
         type.visitLocatable(visitor);
-    }
-
-    @Override
-    public boolean isRoundBracketed()
-    {
-        return false;
     }
 }

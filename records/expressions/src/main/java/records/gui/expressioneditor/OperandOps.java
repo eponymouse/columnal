@@ -33,9 +33,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
     public EntryNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, @Nullable String initialContent);
 
-    public ImmutableList<Pair<String, @Localized String>> getValidOperators(SEMANTIC_PARENT semanticParent);
-
-    public boolean isOperatorAlphabet(char character, SEMANTIC_PARENT semanticParent);
+    public boolean isOperatorAlphabet(char character);
 
     public Class<EXPRESSION> getOperandClass();
 

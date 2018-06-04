@@ -15,6 +15,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -32,7 +33,7 @@ import utility.gui.FXUtility;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> implements EEDisplayNodeParent, UnitNodeParent
+public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, OperandValue<TypeParent>> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
     private static final ImmutableList<DataType> PRIMITIVE_TYPES = ImmutableList.of(

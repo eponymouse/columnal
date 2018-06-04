@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -16,7 +17,7 @@ import utility.Pair;
 import java.util.List;
 
 // TODO rename ExpressionSaver
-public class ExpressionNodeParent
+public class ExpressionNodeParent implements ErrorAndTypeRecorder
 {
     class Context {}
     

@@ -84,10 +84,4 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     {
         unit.visitLocatable(visitor);
     }
-
-    @Override
-    public UnitManager getUnitManager()
-    {
-        return getEditor().getTypeManager().getUnitManager();
-    }
 }
