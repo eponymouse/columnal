@@ -7,6 +7,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.SingleUnitExpression;
@@ -40,17 +41,17 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     @Override
     public EntryNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, @Nullable String initialContent)
     {
-        return new UnitEntry(parent, initialContent == null ? "" : initialContent, true);
+        return new UnitEntry(parent, new UnitText(initialContent == null ? "" : initialContent));
     }
 
-    @Override
-    public ImmutableList<Pair<String, @Localized String>> getValidOperators(UnitNodeParent parent)
-    {
-        return OPERATORS;
-    }
+    //@Override
+    //public ImmutableList<Pair<String, @Localized String>> getValidOperators()
+    //{
+        //return OPERATORS;
+    //}
 
     @Override
-    public boolean isOperatorAlphabet(char character, UnitNodeParent parent)
+    public boolean isOperatorAlphabet(char character)
     {
         return ALPHABET.contains((int)character);
     }
@@ -61,6 +62,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
         return UnitExpression.class;
     }
 
+    /*
     @Override
     public @UnknownIfRecorded UnitExpression makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded UnitExpression> originalOperands, List<String> ops, BracketedStatus bracketedStatus)
     {
@@ -117,6 +119,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
 
         return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));
     }
+    */
 
     @Override
     public String save(UnitExpression unitExpression, TableAndColumnRenames renames)

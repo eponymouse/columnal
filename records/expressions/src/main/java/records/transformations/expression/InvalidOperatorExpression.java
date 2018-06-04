@@ -70,7 +70,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return null;
+        return "TODO";
     }
 
     @Override
@@ -105,6 +105,6 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return null;
+        return StyledString.s("TODO");
     }
 }

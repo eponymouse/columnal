@@ -174,14 +174,17 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
 
     public boolean isOperatorAlphabet(char character)
     {
-        return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
+        return ALPHABET.contains((Integer)(int)character)
+            ; //|| expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
     }
 
+    /*
     @Override
     public EntryNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
     {
         return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent, semanticParent);
     }
+    */
 
     @Override
     public Class<Expression> getOperandClass()
@@ -189,6 +192,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
         return Expression.class;
     }
 
+    /*
     @Override
     public Expression makeUnfinished(String s)
     {
@@ -253,6 +257,9 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             expression = new InvalidOperatorExpression(expressionExps, ops);
 
         return expression;
+    }
+    */
+        
         /*
         else if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
         {
@@ -319,7 +326,6 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             // TODO offer fix to bracket this?
         }
         */
-    }
 
     private static boolean isCallTarget(Expression expression)
     {

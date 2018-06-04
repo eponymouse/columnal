@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.MutVar;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
@@ -102,6 +103,23 @@ public class ComparisonExpression extends NaryOpExpression
     protected String saveOp(int index)
     {
         return operators.get(index).saveOp();
+    }
+
+    @Override
+    protected Op loadOp(int index)
+    {
+        switch (operators.get(index))
+        {
+            case LESS_THAN:
+                return Op.LESS_THAN;
+            case LESS_THAN_OR_EQUAL_TO:
+                return Op.LESS_THAN_OR_EQUAL;
+            case GREATER_THAN:
+                return Op.GREATER_THAN;
+            case GREATER_THAN_OR_EQUAL_TO:
+            default: // To avoid compiler error
+                return Op.GREATER_THAN_OR_EQUAL;
+        }
     }
 
     @Override

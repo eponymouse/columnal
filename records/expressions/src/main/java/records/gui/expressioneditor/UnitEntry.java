@@ -78,6 +78,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         return Stream.of(textField);
     }
 
+    /*
     @Override
     public @Recorded UnitExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
@@ -107,6 +108,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             }
         }
     }
+    */
 
     @Override
     public boolean isOrContains(EEDisplayNode child)
@@ -155,6 +157,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         @Override
         protected String selected(String currentText, AutoComplete.@Nullable Completion c, String rest)
         {
+            /*
             if (c == bracketedCompletion)
             {
                 UnitCompound bracketedExpression = new UnitCompound(parent, false, null);
@@ -170,6 +173,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
                 parent.setOperatorToRight(UnitEntry.this, rest);
                 parent.focusRightOf(UnitEntry.this, Focus.RIGHT);
             }
+            */
             return currentText;
         }
 
@@ -232,8 +236,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         {
             this.op = op;
         }
-
-
+        
         @Override
         public String getContent()
         {
@@ -279,5 +282,11 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     public static SingleLoader<UnitExpression, UnitNodeParent> load(UnitValue value)
     {
         return p -> new UnitEntry(p, value);
+    }
+
+    @Override
+    public void save(UnitNodeParent saver)
+    {
+        //currentValue.get().save()
     }
 }

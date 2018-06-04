@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.InvalidOpTypeExpression;
@@ -28,9 +29,10 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     @Override
     public EntryNode<TypeExpression, TypeParent> makeGeneral(ConsecutiveBase<TypeExpression, TypeParent> parent, @Nullable String initialContent)
     {
-        return new TypeEntry(parent, initialContent == null ? "" : initialContent);
+        return new TypeEntry(parent, new TypeValue(initialContent == null ? "" : initialContent));
     }
 
+    /*
     @Override
     public ImmutableList<Pair<String, @Localized String>> getValidOperators(TypeParent parent)
     {
@@ -40,9 +42,10 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
             ops.add(new Pair<String, @Localized String>(",", TranslationUtility.getString("type.tuple")));
         return ops.build();
     }
+    */
 
     @Override
-    public boolean isOperatorAlphabet(char character, TypeParent parent)
+    public boolean isOperatorAlphabet(char character)
     {
         return character == '-' || character == ',';
     }
@@ -53,6 +56,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
         return TypeExpression.class;
     }
 
+    /*
     @Override
     public TypeExpression makeUnfinished(String s)
     {
@@ -130,6 +134,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
         // Return an unfinished expression:
         return makeInvalidOpExpression(ImmutableList.copyOf(expressionExps), ops);
     }
+    */
 
     @Override
     public String save(TypeExpression typeExpression, TableAndColumnRenames renames)

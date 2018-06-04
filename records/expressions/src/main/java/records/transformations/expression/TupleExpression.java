@@ -13,6 +13,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -129,7 +130,7 @@ public class TupleExpression extends Expression
             Expression item = members.get(i);
             r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
             if (i > 0)
-                r.add(GeneralExpressionEntry.load(Keyword.COMMA));
+                r.add(GeneralExpressionEntry.load(Op.COMMA));
         }
         r.add(GeneralExpressionEntry.load(Keyword.CLOSE_ROUND));
         return r.stream();

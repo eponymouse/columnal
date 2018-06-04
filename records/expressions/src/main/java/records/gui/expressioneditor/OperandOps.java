@@ -37,12 +37,12 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 
     public Class<EXPRESSION> getOperandClass();
 
-    @UnknownIfRecorded EXPRESSION makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
+    //@UnknownIfRecorded EXPRESSION makeExpression(ErrorDisplayerRecord errorDisplayers, ImmutableList<@Recorded EXPRESSION> expressionExps, BracketedStatus bracketedStatus);
 
     String save(EXPRESSION expression, TableAndColumnRenames renames);
 
     // The toString() method of the saver can be used to get the string content
-    SEMANTIC_PARENT saveToClipboard();
+    @NonNull SEMANTIC_PARENT saveToClipboard();
 
     public static interface MakeNary<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT>
     {
@@ -266,6 +266,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
      *                   plus will come earlier in the list than equals, because given "a + b = c", we're more likely
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
+    /*
     static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> @Nullable EXPRESSION makeExpressionWithOperators(OperandOps<EXPRESSION, SEMANTIC_PARENT> operandOps, ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         if (ops.size() != expressionExps.size() - 1)
@@ -427,6 +428,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         }
         return invalidOpExpression;
     }
+    */
 
     @OnThread(Tag.Any)
     public static String makeCssClass(Object replacement)

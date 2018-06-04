@@ -17,7 +17,7 @@ import utility.Pair;
 import java.util.List;
 
 // TODO rename ExpressionSaver
-public class ExpressionNodeParent implements ErrorAndTypeRecorder
+public abstract class ExpressionNodeParent implements ErrorAndTypeRecorder
 {
     class Context {}
     

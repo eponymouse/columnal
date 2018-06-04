@@ -26,6 +26,7 @@ import records.grammar.FormatParser.TaggedTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
 import records.gui.expressioneditor.TypeEntry;
+import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.jellytype.JellyType;
 import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
@@ -325,9 +326,9 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
         }
         else
         {
-            builder.add(TypeEntry.load("("));
+            builder.add(TypeEntry.load(new TypeValue("(")));
             buildContent.run();
-            builder.add(TypeEntry.load(")"));
+            builder.add(TypeEntry.load(new TypeValue(")")));
         }
     }
 }

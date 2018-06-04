@@ -89,9 +89,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         public String getContent();
 
-        @Nullable GeneralPseudoclass getPseudoclass();
+        default @Nullable GeneralPseudoclass getPseudoclass() {return null;};
 
-        String getTypeLabel(boolean focused);
+        default String getTypeLabel(boolean focused) {return "";};
         
         public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee);
     }
@@ -826,7 +826,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 completing = true;
                 currentValue.setValue(new VarDecl(varDeclCompletion.getVarName(currentText)));
-                parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
+                //parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 if (moveFocus)
                     parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 return currentText;
@@ -835,7 +835,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 @Nullable GeneralCompletion gc = (GeneralCompletion) c;
                 completing = true;
-                parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
+                //parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 currentValue.setValue(gc == null ? new Unfinished(currentText) : gc.getValue(currentText));
                 // End of following operator, since we pushed rest into there:
                 if (moveFocus)
@@ -1179,7 +1179,28 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     public static enum Op implements GeneralValue
     {
-        AND, OR, MULTIPLY, ADD, SUBTRACT, DIVIDE, STRING_CONCAT, EQUALS, NOT_EQUAL, PLUS_MINUS, RAISE;
+        AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS, RAISE("^"),
+        COMMA(","),
+        LESS_THAN("<"), LESS_THAN_OR_EQUAL("<="), GREATER_THAN(">"), GREATER_THAN_OR_EQUAL(">=");
+
+        private final String op;
+
+        private Op(String op)
+        {
+            this.op = op;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return op;
+        }
+
+        @Override
+        public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee)
+        {
+            saver.saveOperator(this, gee, c -> {});
+        }
     }
     
     public static SingleLoader<Expression, ExpressionNodeParent> load(GeneralValue value)
@@ -1189,8 +1210,29 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     public static enum Keyword implements GeneralValue
     {
-        COMMA, OPEN_SQUARE, CLOSE_SQUARE, OPEN_ROUND, CLOSE_ROUND, ANYTHING, 
-        IF, THEN, ELSE, ENDIF,
-        MATCH, CASE, ORCASE, GIVEN, ENDMATCH;
+        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING("@anything"), 
+        IF("@if"), THEN("@then"), ELSE("@else"), ENDIF("@endif"),
+        MATCH("@match"), CASE("@case"), ORCASE("@orcase"), GIVEN("@given"), ENDMATCH("@endmatch");
+
+        private final String op;
+
+        private Keyword(String op)
+        {
+            this.op = op;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return op;
+        }
+
+        @Override
+        public void save(ExpressionNodeParent saver, GeneralExpressionEntry gee)
+        {
+            saver.saveKeyword(this, gee, c -> {});
+        }
+
+
     }
 }

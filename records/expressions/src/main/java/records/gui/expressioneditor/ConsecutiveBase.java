@@ -301,7 +301,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         children.get(0).focusWhenShown();
     }
-
+/*
     public @UnknownIfRecorded EXPRESSION saveUnrecorded(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
     {
         if (children.isEmpty())
@@ -309,12 +309,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         else
             return save(errorDisplayers, onError, children.get(0), children.get(children.size() - 1));
     }
-
+*/
     protected BracketedStatus getChildrenBracketedStatus()
     {
         return BracketedStatus.MISC;
     }
-
+/*
     public @UnknownIfRecorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> first, ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
     {
         int firstIndex = children.indexOf(first);
@@ -333,7 +333,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
         return operations.makeExpression(errorDisplayers, children.subList(firstIndex, lastIndex + 1), bracketedStatus);
     }
-
+*/
     public @Nullable DataType inferType()
     {
         return null; //TODO
@@ -384,7 +384,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             // Problem:
             return null;
 
-        SEMANTIC_PARENT saver = operations.saveToClipboard();
+        final SEMANTIC_PARENT saver = operations.saveToClipboard();
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : all.subList(startIndex, endIndex + 1))
         {
             child.save(saver);
@@ -502,7 +502,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                 children.remove(i).cleanup();
         }
         
-        removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, null);
+        //removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, null);
         atomicEdit.set(false);
     }
 
@@ -543,7 +543,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void focusChanged()
     {
         //Log.debug("Removing blanks, focus owner: " + nodes().get(0).getScene().getFocusOwner() + " items: " + nodes().stream().map(Object::toString).collect(Collectors.joining(", ")));
-        removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
+        //removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned
@@ -650,10 +650,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void showType(String type)
     {
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> operator : operators)
-        {
-            operator.showType(type);
-        }
     }
 
     @Override

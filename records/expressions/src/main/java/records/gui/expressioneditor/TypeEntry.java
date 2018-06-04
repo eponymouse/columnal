@@ -14,6 +14,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
+import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -31,7 +32,7 @@ import utility.gui.FXUtility;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, OperandValue> implements EEDisplayNodeParent
+public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, TypeValue> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
     private static final ImmutableList<DataType> PRIMITIVE_TYPES = ImmutableList.of(
@@ -56,9 +57,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
      */
     private @Nullable UnitCompoundBase unitSpecifier;
 
-    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, String initialContent)
+    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, TypeValue initialContent)
     {
-        super(TypeExpression.class, parent);
+        super(TypeExpression.class, parent, initialContent);
         this.allCompletions = Utility.concatStreams(
             Stream.of(listCompletion, bracketCompletion, plainNumberCompletion, numberWithUnitsCompletion),
             PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.toString(), 0)),
@@ -67,8 +68,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
         
         FXUtility.sizeToFit(textField, 30.0, 30.0);
         this.autoComplete = new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c));
-                
-        textField.setText(initialContent);
+
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
             parent.changed(this);
@@ -88,6 +88,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
             protected @Nullable String selected(String currentText, @Nullable TypeCompletion typeCompletion, String rest)
             {
                 @Nullable String keep = null;
+                /*
                 if (typeCompletion == listCompletion)
                 {
                     parent.replace(TypeEntry.this, focusWhenShown(new SquareBracketedTypeNode(parent, null)));
@@ -137,7 +138,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
                 }
                 parent.setOperatorToRight(TypeEntry.this, rest);
                 parent.focusRightOf(TypeEntry.this, Focus.RIGHT);
-                
+                */
                 return keep;
             }
 
@@ -224,6 +225,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
         return Stream.concat(Stream.of(textField), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
     }
     
+    /*
     @Override
     public TypeExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
@@ -248,6 +250,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
                 .map(t -> new TaggedTypeNameExpression(t))
         ).findFirst().orElseGet(() -> new UnfinishedTypeExpression(textField.getText()));
     }
+    */
 
     @Override
     public boolean isOrContains(EEDisplayNode child)
@@ -312,9 +315,31 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, O
             return input.equalsIgnoreCase("number");
         }
     }
+    
+    public static class TypeValue implements OperandValue
+    {
+        private final String content;
 
-    public static SingleLoader<TypeExpression, TypeParent> load(OperandValue value)
+        public TypeValue(String content)
+        {
+            this.content = content;
+        }
+
+        @Override
+        public String getContent()
+        {
+            return content;
+        }
+    }
+
+    public static SingleLoader<TypeExpression, TypeParent> load(TypeValue value)
     {
         return p -> new TypeEntry(p, value);
+    }
+
+    @Override
+    public void save(TypeParent saver)
+    {
+        // TODO
     }
 }

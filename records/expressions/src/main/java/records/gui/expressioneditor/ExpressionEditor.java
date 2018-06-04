@@ -60,10 +60,12 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
         return latestType;
     }
 
+    /*
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayerRecord, ErrorAndTypeRecorderStorer errorAndTypeRecorderStorer)
     {
         return errorDisplayerRecord.record(this, saveUnrecorded(errorDisplayerRecord, errorAndTypeRecorderStorer));
     }
+    */
 
     // Gets content, and error (true = error) state of all header labels.
     @OnThread(Tag.FXPlatform)
@@ -234,6 +236,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
             ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
             ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
             clearAllErrors();
+            /*
             Expression expression = errorDisplayers.record(this, saveUnrecorded(errorDisplayers, recorder));
             //Log.debug("Saved as: " + expression);
             if (onChange != null)
@@ -262,6 +265,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
                 if (msg != null)
                     addErrorAndFixes(StyledString.s(msg), Collections.emptyList());
             }
+            */
         }
     }
 
