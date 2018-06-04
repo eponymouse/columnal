@@ -84,6 +84,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             TaggedTypeNameExpression tag = (TaggedTypeNameExpression) typeExpression;
             write(tag.getTypeName().getRaw(), DELAY);
         }
+        /*
         else if (typeExpression instanceof InvalidOpTypeExpression)
         {
             InvalidOpTypeExpression e = (InvalidOpTypeExpression)typeExpression;
@@ -97,6 +98,7 @@ public interface EnterTypeTrait extends FxRobotInterface
                     write(operators.get(i), DELAY);
             }
         }
+        */
         else
         {
             throw new RuntimeException("Unknown TypeExpression sub type: " + typeExpression.getClass());

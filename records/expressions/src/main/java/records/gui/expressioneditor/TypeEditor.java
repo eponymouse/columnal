@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.FXPlatformConsumer;
 
 import java.util.stream.Stream;
@@ -48,6 +49,12 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent>
     protected boolean hasImplicitRoundBrackets()
     {
         return false;
+    }
+
+    @Override
+    public TypeExpression save()
+    {
+        return new UnfinishedTypeExpression("TODO");
     }
 
     @Override

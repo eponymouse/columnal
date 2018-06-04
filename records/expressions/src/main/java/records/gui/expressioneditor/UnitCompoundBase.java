@@ -8,6 +8,7 @@ import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 
 import java.util.Collections;
@@ -37,5 +38,11 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     protected boolean hasImplicitRoundBrackets()
     {
         return true;
+    }
+
+    @Override
+    public UnitExpression save()
+    {
+        return new SingleUnitExpression("TODO");
     }
 }

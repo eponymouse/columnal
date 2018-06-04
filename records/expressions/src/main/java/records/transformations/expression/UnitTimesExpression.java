@@ -95,7 +95,7 @@ public class UnitTimesExpression extends UnitExpression
     {
         StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
         r.add(UnitEntry.load(UnitBracket.OPEN_ROUND));
-        Utility.intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY)));
+        r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitNodeParent>>>intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
         r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND));
         return r.stream();
     }

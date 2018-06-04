@@ -181,13 +181,11 @@ class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
             ; //|| expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
     }
 
-    /*
     @Override
-    public EntryNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
+    public EntryNode<Expression, ExpressionNodeParent> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable String initialContent)
     {
-        return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent, semanticParent);
+        return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent);
     }
-    */
 
     @Override
     public Class<Expression> getOperandClass()

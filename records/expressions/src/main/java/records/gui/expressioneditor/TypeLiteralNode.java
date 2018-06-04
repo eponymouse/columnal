@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -11,6 +12,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypePrimitiveLiteral;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -32,6 +34,12 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionNode
         super(parent);
         this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL), '`')
         {
+            @Override
+            public TypeExpression save()
+            {
+                return new TypePrimitiveLiteral(DataType.BOOLEAN);
+            }
+
             @Override
             protected boolean hasImplicitRoundBrackets()
             {
@@ -66,6 +74,7 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionNode
     {
     }
 
+    /*
     @Override
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
     {
@@ -73,6 +82,7 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionNode
             errorDisplayer.recordType(type, type.saveUnrecorded(errorDisplayer, onError))
         ));
     }
+    */
 
     @Override
     public void setSelected(boolean selected)

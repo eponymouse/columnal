@@ -19,20 +19,35 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.ExpressionNodeParent;
-import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.OperatorEntry;
-import records.transformations.expression.*;
+import records.transformations.expression.AndExpression;
+import records.transformations.expression.ArrayExpression;
+import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DivideExpression;
+import records.transformations.expression.EqualExpression;
+import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
+import records.transformations.expression.EvaluateState;
+import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.TableLookup;
+import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.NonOperatorExpression;
+import records.transformations.expression.NotEqualExpression;
+import records.transformations.expression.OrExpression;
+import records.transformations.expression.RaiseExpression;
+import records.transformations.expression.TypeState;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -47,7 +62,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 24/01/2017.
@@ -97,13 +111,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Pair<List<SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>>>, List<SingleLoader<Expression, ExpressionNodeParent, OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
-        {
-            throw new RuntimeException("Testing");
-        }
-
-        @Override
-        public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
         {
             throw new RuntimeException("Testing");
         }
@@ -407,9 +415,9 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public SingleLoader<Expression, ExpressionNodeParent, OperandNode<Expression, ExpressionNodeParent>> loadAsSingle()
+        public @OnThread(Tag.FXPlatform) Stream<SingleLoader<Expression, ExpressionNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
         {
-            throw new RuntimeException("N/A");
+            throw new RuntimeException("Testing");
         }
 
         @Override

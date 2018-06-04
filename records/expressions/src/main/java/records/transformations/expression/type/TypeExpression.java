@@ -259,9 +259,9 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 @Override
                 public TypeExpression visitInvalidOpsTypeExpression(InvalidOpsTypeExpressionContext ctx)
                 {
-                    return new InvalidOpTypeExpression(Utility.mapListI(ctx.typeExpression(), t -> visitTypeExpression(t)),
+                    return new InvalidOpTypeExpression(ImmutableList.of()/*Utility.mapListI(ctx.typeExpression(), t -> visitTypeExpression(t)),
                         Utility.mapListI(ctx.STRING(), s -> s.getText())
-                    );
+                    */);
                 }
 
                 @Override

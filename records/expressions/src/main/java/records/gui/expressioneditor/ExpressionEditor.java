@@ -28,6 +28,7 @@ import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
+import records.transformations.expression.IdentExpression;
 import records.transformations.expression.TypeState;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -72,6 +73,12 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionNodeP
     public Stream<Pair<String, Boolean>> _test_getHeaders()
     {
         return getAllChildren().stream().flatMap(c -> c._test_getHeaders());
+    }
+
+    @Override
+    public Expression save()
+    {
+        return new IdentExpression("TODO");
     }
 
     public boolean allowsSameRow()

@@ -82,6 +82,4 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     {
         return endCharacters;
     }
-
-    public abstract EXPRESSION save();
 }

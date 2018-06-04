@@ -102,12 +102,13 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new CallExpression(genTerminal(r, gs, true), genDepth(true, r, depth + 1, gs)),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
                 () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
-                () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
+                () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs))))
+                /*,
                 () ->
                 {
-                    List<Expression> expressions = TestUtil.makeList(r, 3, 6, () -> genDepth(r, depth + 1, gs));
-                    return new InvalidOperatorExpression(expressions, TestUtil.makeList(expressions.size() - 1, new GenRandomOp(), r, gs));
-                }
+                    List<Either<String, Expression>> contents = TestUtil.makeList(r, 3, 6, () -> genDepth(r, depth + 1, gs));
+                    return new InvalidOperatorExpression(contents); //expressions, TestUtil.makeList(expressions.size() - 1, new GenRandomOp(), r, gs));
+                }*/
             )).get();
         }
     }

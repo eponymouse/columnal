@@ -327,7 +327,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return Stream.of(container);
     }
 
-    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "typeLiteralCompletion", "varDeclCompletion", "questionCompletion", "parent", "semanticParent"})
+    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "typeLiteralCompletion", "varDeclCompletion", "questionCompletion", "parent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
@@ -1179,7 +1179,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     public static enum Op implements GeneralValue
     {
-        AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS, RAISE("^"),
+        AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS("\u00B1"), RAISE("^"),
         COMMA(","),
         LESS_THAN("<"), LESS_THAN_OR_EQUAL("<="), GREATER_THAN(">"), GREATER_THAN_OR_EQUAL(">=");
 

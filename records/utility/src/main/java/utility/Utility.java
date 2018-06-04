@@ -1721,4 +1721,19 @@ public class Utility
         else
             return OptionalInt.empty();
     }
+    
+    // Between each pair of items in the first stream, makes a new item and adds it 
+    public static <T> Stream<T> intercalateStreamM(Stream<T> original, Supplier<T> makeSpacer)
+    {
+        // Not ideal, but it works:
+        ImmutableList<T> origList = original.collect(ImmutableList.toImmutableList());
+        ArrayList<T> inclSpacers = new ArrayList<>();
+        for (int i = 0; i < origList.size(); i++)
+        {
+            if (i > 0)
+                inclSpacers.add(makeSpacer.get());
+            inclSpacers.add(origList.get(i));
+        }
+        return inclSpacers.stream();
+    }
 }

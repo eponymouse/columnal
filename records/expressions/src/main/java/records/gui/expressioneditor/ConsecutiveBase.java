@@ -198,6 +198,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
     }
 
+    public abstract EXPRESSION save();
+
     public static enum OperatorOutcome { KEEP, BLANK }
     
     public OperatorOutcome addOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
