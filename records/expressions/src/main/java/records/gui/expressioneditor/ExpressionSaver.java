@@ -43,7 +43,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     private static interface Terminator
     {
         // content may be an invalidopsexpression.  Note that calling makeContent pops the scope.
-        public void terminate(Supplier<CommaSeparatedExpressions> makeContent, Keyword terminator, ErrorDisplayer<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
+        public void terminate(Supplier<Expression> makeContent, Keyword terminator, ErrorDisplayer<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
     }
     
     public class WithInfo<T>
@@ -57,51 +57,6 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
             this.errorDisplayer = errorDisplayer;
             this.withContext = withContext;
             this.item = item;
-        }
-    }
-    
-    public class CommaSeparatedExpressions
-    {
-        private final ImmutableList<Expression> expressions;
-        private final ImmutableList<Op> commas;
-        
-        public CommaSeparatedExpressions()
-        {
-            // Empty
-            expressions = ImmutableList.of();
-            commas = ImmutableList.of();
-        }
-
-        public CommaSeparatedExpressions(Expression single)
-        {
-            // Single:
-            expressions = ImmutableList.of(single);
-            commas = ImmutableList.of();
-        }
-        
-        public Expression forceSingle()
-        {
-            if (expressions.size() == 1)
-                return expressions.get(0);
-            else
-                return new InvalidOperatorExpression(asOneList());
-        }
-
-        public ImmutableList<Expression> getExpressions()
-        {
-            return expressions;
-        }
-
-        public ImmutableList<Either<String, Expression>> asOneList()
-        {
-            ImmutableList.Builder<Either<String, Expression>> r = ImmutableList.builder();
-            for (int i = 0; i < expressions.size(); i++)
-            {
-                r.add(Either.right(expressions.get(i)));
-                if (i < commas.size());
-                    r.add(Either.left(","));
-            }
-            return r.build();
         }
     }
     
@@ -124,7 +79,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         }
         else
         {
-            return makeExpression(currentScopes.pop().getFirst()).forceSingle();
+            return makeExpression(currentScopes.pop().getFirst());
         }
     }
     
@@ -139,24 +94,19 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         {
             // TODO support function calls here as special case
             // TODO support commas (list of expressions to expect?
-            currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.CLOSE_ROUND, e -> {
-                if (e.expressions.size() == 1)
-                    return Either.left(e.forceSingle());
-                else
-                    return Either.left(new TupleExpression(e.getExpressions()));
-            })));
+            currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.CLOSE_ROUND, BracketedStatus.DIRECT_ROUND_BRACKETED, Either::left)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
             // TODO support commas (list of expressions to expect?
-            currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.CLOSE_SQUARE, e -> Either.left(new ArrayExpression(e.getExpressions())))));
+            currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.CLOSE_SQUARE, BracketedStatus.DIRECT_SQUARE_BRACKETED, Either::left)));
         }
         else if (keyword == Keyword.IF)
         {
-            currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.THEN, condition ->
-                Either.right(expect(Keyword.ELSE, thenPart -> 
-                    Either.right(expect(Keyword.ENDIF, elsePart -> {
-                        return Either.left(new IfThenElseExpression(condition.forceSingle(), thenPart.forceSingle(), elsePart.forceSingle()));
+            currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.THEN, BracketedStatus.MISC, condition ->
+                Either.right(expect(Keyword.ELSE, BracketedStatus.MISC, thenPart -> 
+                    Either.right(expect(Keyword.ENDIF, BracketedStatus.MISC, elsePart -> {
+                        return Either.left(new IfThenElseExpression(condition, thenPart, elsePart));
                     })
                 )    
             )))));
@@ -170,10 +120,10 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     }
 
     // Returns a list of comma separated expressions
-    private CommaSeparatedExpressions makeExpression(List<Either<Expression, Op>> content)
+    private Expression makeExpression(List<Either<Expression, Op>> content)
     {
         if (content.isEmpty())
-            return new CommaSeparatedExpressions();
+            return new InvalidOperatorExpression(ImmutableList.of());
         
         // Although it's duplication, we keep a list for if it turns out invalid, and two lists for if it is valid:
         boolean[] valid = new boolean[] {true};
@@ -210,7 +160,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         {
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
-                return new CommaSeparatedExpressions(validOperands.get(0));
+                return validOperands.get(0);
                         
             // Now we need to check the operators can work together as one group:
             
@@ -218,12 +168,12 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
             
         }
         
-        return new CommaSeparatedExpressions(new InvalidOperatorExpression(ImmutableList.copyOf(invalid)));
+        return new InvalidOperatorExpression(ImmutableList.copyOf(invalid));
     }
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
-    // terminator for a new scope
-    public Terminator expect(Keyword expected, Function<CommaSeparatedExpressions, Either<Expression, Terminator>> onClose)
+    // terminator for a new scope, compiled using the scope content and given bracketed status
+    public Terminator expect(Keyword expected, BracketedStatus bracketedStatus, Function<Expression, Either<Expression, Terminator>> onClose)
     {
         return (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
             if (terminator == expected)
@@ -238,7 +188,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
                 keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
                 // Important to call makeContent before adding to scope on the next line:
                 ImmutableList.Builder<Either<String, Expression>> items = ImmutableList.builder();
-                items.addAll(makeContent.get().asOneList());
+                items.add(Either.right(makeContent.get()));
                 items.add(Either.left(terminator.getContent()));
                 InvalidOperatorExpression invalid = new InvalidOperatorExpression(items.build());
                 currentScopes.peek().getFirst().add(Either.left(invalid));
