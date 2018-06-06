@@ -93,7 +93,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     {
         protected final ImmutableList<Pair<String, @Localized String>> possibleOperators;
         // The ordering in the candidates list:
-        private final int operatorSetPrecedence;
+        public final int operatorSetPrecedence;
 
         protected OperatorSection(ImmutableList<Pair<String, @Localized String>> possibleOperators, int operatorSetPrecedence)
         {

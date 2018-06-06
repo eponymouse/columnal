@@ -39,6 +39,7 @@ NEWVAR : '@newvar';
 ANY : '@anything';
 UNFINISHED : '@unfinished';
 INVALIDOPS : '@invalidops';
+INVALIDEXP : '@invalidexp';
 CONSTRUCTOR : '@tag';
 CALL: '@call'; 
 RAISEDTO : '^';

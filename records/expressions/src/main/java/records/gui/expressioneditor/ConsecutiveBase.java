@@ -197,6 +197,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public abstract EXPRESSION save();
 
+    protected final void save(SEMANTIC_PARENT saver)
+    {
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            child.save(saver);
+        }
+    }
+    
+
     public static enum OperatorOutcome { KEEP, BLANK }
     
     public OperatorOutcome addOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)

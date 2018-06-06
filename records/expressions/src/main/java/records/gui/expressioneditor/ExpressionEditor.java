@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -23,7 +24,10 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IdentExpression;
+import records.transformations.expression.QuickFix;
+import records.typeExp.TypeExp;
 import styled.StyledShowable;
+import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -69,7 +73,26 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public Expression save()
     {
-        return new IdentExpression("TODO");
+        ExpressionSaver saver = new ExpressionSaver()
+        {
+            @Override
+            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
+            {
+            }
+
+            @Override
+            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+            {
+            }
+
+            @Override
+            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            {
+                return typeExp;
+            }
+        };
+        super.save(saver);
+        return saver.finish();
     }
 
     public boolean allowsSameRow()

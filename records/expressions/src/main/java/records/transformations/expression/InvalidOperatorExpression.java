@@ -8,6 +8,7 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
@@ -20,6 +21,7 @@ import utility.StreamTreeBuilder;
 
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -69,7 +71,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "TODO";
+        return "@invalidops(" + items.stream().map(x -> x.either(s -> "@invalidexp \"" + GrammarUtility.escapeChars(s) + "\"", e -> e.save(BracketedStatus.MISC, renames))).collect(Collectors.joining(" "))+ ")";
     }
 
     @Override
