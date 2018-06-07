@@ -5,36 +5,18 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.AndExpression;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.InvalidOperatorExpression;
-import records.transformations.expression.LoadableExpression;
-import records.transformations.expression.MatchAnythingExpression;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.OrExpression;
-import records.transformations.expression.PlusMinusPatternExpression;
-import records.transformations.expression.QuickFix;
+import records.transformations.expression.MatchExpression.MatchClause;
+import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.QuickFix.ReplacementTarget;
-import records.transformations.expression.RaiseExpression;
-import records.transformations.expression.StringConcatExpression;
-import records.transformations.expression.TimesExpression;
-import records.transformations.expression.TupleExpression;
 import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
@@ -49,7 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public abstract class ExpressionSaver implements ErrorAndTypeRecorder
 {
@@ -58,7 +40,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     // Ends a mini-expression
     private static interface Terminator
     {
-        public void terminate(Supplier<Expression> makeContent, Keyword terminator, ErrorDisplayer<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
+        public void terminate(Function<BracketedStatus, Expression> makeContent, Keyword terminator, ErrorDisplayer<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
     }
     
     public class WithInfo<T>
@@ -79,12 +61,18 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     
     public ExpressionSaver()
     {
+        addTopLevelScope();
+    }
+
+    @RequiresNonNull("currentScopes")
+    public void addTopLevelScope(@UnknownInitialization(Object.class) ExpressionSaver this)
+    {
         currentScopes.push(new Pair<>(new ArrayList<>(), (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
             currentScopes.peek().getFirst().add(Either.left(new InvalidOperatorExpression(ImmutableList.of(Either.left(terminator.getContent())))));
         }));
     }
-    
+
     public Expression finish()
     {
         if (currentScopes.size() > 1)
@@ -94,7 +82,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         }
         else
         {
-            return makeExpression(currentScopes.pop().getFirst());
+            return makeExpression(currentScopes.pop().getFirst(), BracketedStatus.TOP_LEVEL);
         }
     }
     
@@ -136,16 +124,24 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
                 )    
             )))));
         }
+        else if (keyword == Keyword.MATCH)
+        {            
+            currentScopes.push(new Pair<>(new ArrayList<>(), expectOneOf(ImmutableList.of(new Case()))));
+        }
         else
         {
             // Should be a terminator:
             Pair<ArrayList<Either<Expression, Op>>, Terminator> cur = currentScopes.pop();
-            cur.getSecond().terminate(() -> makeExpression(cur.getFirst()), keyword, errorDisplayer, withContext);
+            if (currentScopes.size() == 0)
+            {
+                addTopLevelScope();
+            }
+            cur.getSecond().terminate(bracketedStatus -> makeExpression(cur.getFirst(), bracketedStatus), keyword, errorDisplayer, withContext);
         }
     }
 
     // Returns a list of comma separated expressions
-    private Expression makeExpression(List<Either<Expression, Op>> content)
+    private Expression makeExpression(List<Either<Expression, Op>> content, BracketedStatus bracketedStatus)
     {
         if (content.isEmpty())
             return new InvalidOperatorExpression(ImmutableList.of());
@@ -192,7 +188,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
                         
             // Now we need to check the operators can work together as one group:
             
-            @Nullable Expression e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, ExpressionSaver::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), BracketedStatus.MISC);
+            @Nullable Expression e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, ExpressionSaver::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), bracketedStatus);
             if (e != null)
                 return e;
             
@@ -214,7 +210,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
             if (terminator == expected)
             {
                 // All is well:
-                Either<Expression, Terminator> result = onClose.apply(makeContent.get());
+                Either<Expression, Terminator> result = onClose.apply(makeContent.apply(bracketedStatus));
                 result.either_(e -> currentScopes.peek().getFirst().add(Either.left(e)), t -> currentScopes.push(new Pair<>(new ArrayList<>(), t)));
             }
             else
@@ -223,11 +219,206 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
                 keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
                 // Important to call makeContent before adding to scope on the next line:
                 ImmutableList.Builder<Either<String, Expression>> items = ImmutableList.builder();
-                items.add(Either.right(makeContent.get()));
+                items.add(Either.right(makeContent.apply(bracketedStatus)));
                 items.add(Either.left(terminator.getContent()));
                 InvalidOperatorExpression invalid = new InvalidOperatorExpression(items.build());
                 currentScopes.peek().getFirst().add(Either.left(invalid));
             }
+        };
+    }
+    
+    // Looks for a keyword, then takes the expression before the keyword and gives next step.
+    private abstract class Choice
+    {
+        public final Keyword keyword;
+
+        protected Choice(Keyword keyword)
+        {
+            this.keyword = keyword;
+        }
+
+        public abstract Either<Expression, Terminator> foundKeyword(Expression expressionBefore);
+    }
+    
+    // Looks for @case
+    private class Case extends Choice
+    {
+        // If null, we are the first case.  Otherwise we are a later case,
+        // in which case we are Right with the given patterns
+        private final @Nullable Pair<Expression, ImmutableList<Pattern>> matchAndPatterns;
+        // Previous complete clauses
+        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        
+        // Looks for first @case after a @match
+        public Case()
+        {
+            super(Keyword.CASE);
+            matchAndPatterns = null;
+            previousClauses = ImmutableList.of();
+        }
+        
+        // Matches a later @case, meaning we follow a @then and an outcome
+        public Case(Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> patternsForCur)
+        {
+            super(Keyword.CASE);
+            matchAndPatterns = new Pair<>(matchFrom, patternsForCur);
+            this.previousClauses = previousClauses;
+        }
+
+        @Override
+        public Either<Expression, Terminator> foundKeyword(Expression expressionBefore)
+        {
+            final Expression m;
+            final ImmutableList<Function<MatchExpression, MatchClause>> newClauses;
+            // If we are first case, use the expression as the match expression:
+            if (matchAndPatterns == null)
+            {
+                m = expressionBefore;
+                newClauses = previousClauses;
+            }
+            else
+            {
+                // Otherwise this is the outcome for the most recent clause:
+                m = matchAndPatterns.getFirst();
+                ImmutableList<Pattern> patterns = matchAndPatterns.getSecond();
+                newClauses = Utility.appendToList(previousClauses, me -> me.new MatchClause(patterns, expressionBefore));
+            }
+            return Either.right(expectOneOf(ImmutableList.of(
+                new Then(m, newClauses, ImmutableList.of(), Keyword.CASE),
+                new Given(m, newClauses, ImmutableList.of()),
+                new OrCase(m, newClauses, ImmutableList.of(), null)
+            )));
+        }
+    }
+    
+    // Looks for @given to add a guard
+    private class Given extends Choice
+    {
+        private final Expression matchFrom;
+        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<Pattern> previousCases;
+
+        public Given(Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> previousCases)
+        {
+            super(Keyword.GIVEN);
+            this.matchFrom = matchFrom;
+            this.previousClauses = previousClauses;
+            this.previousCases = previousCases;
+        }
+
+        @Override
+        public Either<Expression, Terminator> foundKeyword(Expression expressionBefore)
+        {
+            // Expression here is the pattern, which comes before the guard:
+            return Either.right(expectOneOf(ImmutableList.of(
+                new OrCase(matchFrom, previousClauses, previousCases, expressionBefore),
+                new Then(matchFrom, previousClauses, Utility.appendToList(previousCases, new Pattern(expressionBefore, null)), Keyword.GIVEN)
+            )));
+        }
+    }
+    
+    // Looks for @orcase
+    private class OrCase extends Choice
+    {
+        private final Expression matchFrom;
+        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<Pattern> previousCases;
+        private final @Nullable Expression curMatch; // if null, nothing so far, if non-null we are a guard
+
+        private OrCase(Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> previousCases, @Nullable Expression curMatch)
+        {
+            super(Keyword.ORCASE);
+            this.matchFrom = matchFrom;
+            this.previousClauses = previousClauses;
+            this.previousCases = previousCases;
+            this.curMatch = curMatch;
+        }
+
+        @Override
+        public Either<Expression, Terminator> foundKeyword(Expression expressionBefore)
+        {
+            ImmutableList<Pattern> newCases = Utility.appendToList(previousCases, curMatch == null ?
+                // We are the pattern:
+                new Pattern(expressionBefore, null) :
+                // We are the guard:    
+                new Pattern(curMatch, expressionBefore)
+            );
+            return Either.right(expectOneOf(ImmutableList.of(
+                new Given(matchFrom, previousClauses, newCases),
+                new OrCase(matchFrom, previousClauses, newCases, null),
+                new Then(matchFrom, previousClauses, newCases, Keyword.ORCASE)
+            )));
+        }
+    }
+    
+    // Looks for @then (in match expressions; if-then-else is handled separately) 
+    private class Then extends Choice
+    {
+        private final Expression matchFrom;
+        private final ImmutableList<Function<MatchExpression, MatchClause>> previousClauses;
+        private final ImmutableList<Pattern> previousPatterns;
+        private final Keyword precedingKeyword;
+
+        // Preceding keyword may be CASE, GIVEN or ORCASE:
+        private Then(Expression matchFrom, ImmutableList<Function<MatchExpression, MatchClause>> previousClauses, ImmutableList<Pattern> previousPatterns, Keyword precedingKeyword)
+        {
+            super(Keyword.THEN);
+            this.matchFrom = matchFrom;
+            this.previousClauses = previousClauses;
+            this.previousPatterns = previousPatterns;
+            this.precedingKeyword = precedingKeyword;
+        }
+
+        @Override
+        public Either<Expression, Terminator> foundKeyword(Expression expressionBefore)
+        {
+            final ImmutableList<Pattern> newPatterns;
+            if (precedingKeyword == Keyword.GIVEN)
+            {
+                // The expression is a guard for the most recent pattern:
+                newPatterns = Utility.appendToList(previousPatterns.subList(0, previousPatterns.size() - 1), new Pattern(previousPatterns.get(previousPatterns.size() - 1).getPattern(), expressionBefore));
+            }
+            else //if (precedingKeyword == Keyword.ORCASE || precedingKeyword == Keyword.CASE)
+            {
+                // The expression is a pattern:
+                newPatterns = Utility.appendToList(previousPatterns, new Pattern(expressionBefore, null));
+            }
+            return Either.right(expectOneOf(ImmutableList.of(
+                new Case(matchFrom, previousClauses, newPatterns),
+                new Choice(Keyword.ENDMATCH) {
+                    @Override
+                    public Either<Expression, Terminator> foundKeyword(Expression lastExpression)
+                    {
+                        return Either.left(new MatchExpression(matchFrom, Utility.appendToList(previousClauses, me -> me.new MatchClause(newPatterns, lastExpression))));
+                    }
+                }
+            )));
+        }
+    }
+    
+
+    public Terminator expectOneOf(ImmutableList<Choice> choices)
+    {
+        return (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
+            for (Choice choice : choices)
+            {
+                if (choice.keyword.equals(terminator))
+                {
+                    // All is well:
+                    Either<Expression, Terminator> result = choice.foundKeyword(makeContent.apply(BracketedStatus.MISC));
+                    result.either_(e -> currentScopes.peek().getFirst().add(Either.left(e)), t -> currentScopes.push(new Pair<>(new ArrayList<>(), t)));
+                    return;
+                }
+            }
+            
+            // Error!
+            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator), ImmutableList.of());
+            // Important to call makeContent before adding to scope on the next line:
+            ImmutableList.Builder<Either<String, Expression>> items = ImmutableList.builder();
+            items.add(Either.right(makeContent.apply(BracketedStatus.MISC)));
+            items.add(Either.left(terminator.getContent()));
+            InvalidOperatorExpression invalid = new InvalidOperatorExpression(items.build());
+            currentScopes.peek().getFirst().add(Either.left(invalid));
         };
     }
     
