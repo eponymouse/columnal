@@ -140,7 +140,6 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         }
     }
 
-    // Returns a list of comma separated expressions
     private Expression makeExpression(List<Either<Expression, Op>> content, BracketedStatus bracketedStatus)
     {
         if (content.isEmpty())

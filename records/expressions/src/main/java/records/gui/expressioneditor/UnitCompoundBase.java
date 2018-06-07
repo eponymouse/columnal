@@ -1,12 +1,20 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.UnitEntry.UnitText;
+import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
+import records.typeExp.TypeExp;
+import styled.StyledShowable;
+import styled.StyledString;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
@@ -36,7 +44,31 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
 
     @Override
     public UnitExpression save()
-    {        
-        return new SingleUnitExpression("TODO");
+    {
+        UnitSaver unitSaver = new UnitSaver() {
+
+            @Override
+            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
+            {
+                
+            }
+
+            @Override
+            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+            {
+
+            }
+
+            @Override
+            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            {
+                return typeExp;
+            }
+        };
+        for (ConsecutiveChild<UnitExpression, UnitSaver> child : children)
+        {
+            child.save(unitSaver);
+        }
+        return unitSaver.finish();
     }
 }

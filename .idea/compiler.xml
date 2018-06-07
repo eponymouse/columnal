@@ -136,11 +136,10 @@
       <module name="parsers" target="1.8" />
       <module name="records" target="1.8" />
       <module name="stf" target="1.8" />
-      <module name="types" target="1.8" />
       <module name="utility" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.4.0/jdk8-2.4.0.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.5.1/jdk8-2.5.1.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200 -AprintErrorStack" />
   </component>
 </project>

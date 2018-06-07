@@ -1,26 +1,29 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitEntry.UnitText;
+import records.transformations.expression.Expression;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
+import records.typeExp.TypeExp;
+import styled.StyledShowable;
+import styled.StyledString;
 import utility.Pair;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
 {
-    private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
-        DeepNodeTree.opD("*", "op.times"),
-        DeepNodeTree.opD("/", "op.divide"),
-        DeepNodeTree.opD("^", "op.raise")
-    ));
-    private final Set<Integer> ALPHABET = OPERATORS.stream().map(UnitExpressionOps::getOp).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private final Set<Integer> ALPHABET = UnitSaver.OPERATORS.stream().flatMap(o -> o.operators.stream()).map(p -> p.getFirst()).map(UnitOp::getContent).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     private static String getOp(Pair<String, @Localized String> p)
     {
@@ -119,6 +122,25 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     @Override
     public UnitSaver saveToClipboard()
     {
-        return new UnitSaver();
+        return new UnitSaver() {
+
+            @Override
+            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
+            {
+                
+            }
+
+            @Override
+            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+            {
+
+            }
+
+            @Override
+            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            {
+                return typeExp;
+            }
+        };
     }
 }
