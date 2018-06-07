@@ -69,7 +69,7 @@ pattern : topLevelExpression (CASEGUARD topLevelExpression)?;
 //function: FUNCTION (functionArg | functionCase);
 
 matchClause : CASE pattern (ORCASE pattern)* THEN expression;
-match : MATCH expression matchClause* ENDMATCH;
+match : MATCH expression matchClause+ ENDMATCH;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor
