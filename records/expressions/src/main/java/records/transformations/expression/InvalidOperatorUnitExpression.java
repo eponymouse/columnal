@@ -6,7 +6,7 @@ import records.data.unit.UnitManager;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitEntry.UnitText;
-import records.gui.expressioneditor.UnitNodeParent;
+import records.gui.expressioneditor.UnitSaver;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -74,9 +74,9 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitNodeParent>)(UnitEntry.load(new UnitText(s)))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
+        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitSaver>)(UnitEntry.load(new UnitText(s)))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
 
 }

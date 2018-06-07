@@ -668,6 +668,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
 
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();
-    public static final OperandOps<UnitExpression, UnitNodeParent> UNIT_OPS = new UnitExpressionOps();
+    public static final OperandOps<UnitExpression, UnitSaver> UNIT_OPS = new UnitExpressionOps();
     public static final OperandOps<TypeExpression, TypeParent> TYPE_OPS = new TypeExpressionOps();
 }

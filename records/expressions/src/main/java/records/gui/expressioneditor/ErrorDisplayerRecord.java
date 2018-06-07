@@ -35,7 +35,7 @@ public class ErrorDisplayerRecord
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
     private final IdentityHashMap<Expression, ErrorDisplayer<Expression, ExpressionSaver>> expressionDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression, UnitNodeParent>> unitDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression, UnitSaver>> unitDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<TypeExpression, ErrorDisplayer<TypeExpression, TypeParent>> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
@@ -55,7 +55,7 @@ public class ErrorDisplayerRecord
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression, UnitNodeParent> displayer, @NonNull UNIT_EXPRESSION e)
+    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression, UnitSaver> displayer, @NonNull UNIT_EXPRESSION e)
     {
         unitDisplayers.put(e, displayer);
         return e;

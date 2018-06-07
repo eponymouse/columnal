@@ -4,7 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
-import records.gui.expressioneditor.UnitNodeParent;
+import records.gui.expressioneditor.UnitSaver;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
@@ -87,9 +87,9 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
+        StreamTreeBuilder<SingleLoader<UnitExpression, UnitSaver>> r = new StreamTreeBuilder<>();
         r.addAll(numerator.loadAsConsecutive(BracketedStatus.MISC));
         r.add(UnitEntry.load(UnitOp.DIVIDE));
         r.addAll(denominator.loadAsConsecutive(BracketedStatus.MISC));

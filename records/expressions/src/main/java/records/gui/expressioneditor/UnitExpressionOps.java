@@ -1,30 +1,19 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.UnitEntry.UnitText;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.InvalidOperatorUnitExpression;
-import records.transformations.expression.SingleUnitExpression;
-import records.transformations.expression.UnitDivideExpression;
 import records.transformations.expression.UnitExpression;
-import records.transformations.expression.UnitExpressionIntLiteral;
-import records.transformations.expression.UnitRaiseExpression;
-import records.transformations.expression.UnitTimesExpression;
 import utility.Pair;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
+class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
 {
     private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
         DeepNodeTree.opD("*", "op.times"),
@@ -39,7 +28,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public EntryNode<UnitExpression, UnitNodeParent> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, @Nullable String initialContent)
+    public EntryNode<UnitExpression, UnitSaver> makeGeneral(ConsecutiveBase<UnitExpression, UnitSaver> parent, @Nullable String initialContent)
     {
         return new UnitEntry(parent, new UnitText(initialContent == null ? "" : initialContent));
     }
@@ -128,8 +117,8 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     }
 
     @Override
-    public UnitNodeParent saveToClipboard()
+    public UnitSaver saveToClipboard()
     {
-        return new UnitNodeParent();
+        return new UnitSaver();
     }
 }

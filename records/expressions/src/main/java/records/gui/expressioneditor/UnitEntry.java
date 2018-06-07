@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
@@ -13,11 +12,8 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.UnitEntry.UnitValue;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
-import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.ExBiFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -27,14 +23,14 @@ import java.util.List;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent, UnitValue> implements ErrorDisplayer<UnitExpression, UnitNodeParent>
+public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, UnitValue> implements ErrorDisplayer<UnitExpression, UnitSaver>
 {
     private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitValue initialContent)
+    UnitEntry(ConsecutiveBase<UnitExpression, UnitSaver> parent, UnitValue initialContent)
     {
         super(UnitExpression.class, parent, initialContent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
@@ -279,13 +275,13 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
     }
 
-    public static SingleLoader<UnitExpression, UnitNodeParent> load(UnitValue value)
+    public static SingleLoader<UnitExpression, UnitSaver> load(UnitValue value)
     {
         return p -> new UnitEntry(p, value);
     }
 
     @Override
-    public void save(UnitNodeParent saver)
+    public void save(UnitSaver saver)
     {
         //currentValue.get().save()
     }

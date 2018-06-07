@@ -6,7 +6,7 @@ import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
-import records.gui.expressioneditor.UnitNodeParent;
+import records.gui.expressioneditor.UnitSaver;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
@@ -91,11 +91,11 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public Stream<SingleLoader<UnitExpression, UnitNodeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<UnitExpression, UnitNodeParent>> r = new StreamTreeBuilder<>();
+        StreamTreeBuilder<SingleLoader<UnitExpression, UnitSaver>> r = new StreamTreeBuilder<>();
         r.add(UnitEntry.load(UnitBracket.OPEN_ROUND));
-        r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitNodeParent>>>intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
+        r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitSaver>>>intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
         r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND));
         return r.stream();
     }

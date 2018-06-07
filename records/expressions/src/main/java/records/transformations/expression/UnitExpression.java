@@ -14,7 +14,7 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
-import records.gui.expressioneditor.UnitNodeParent;
+import records.gui.expressioneditor.UnitSaver;
 import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
 import styled.StyledShowable;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitNodeParent>, StyledShowable
+public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitSaver>, StyledShowable
 {
     @SuppressWarnings("recorded")
     public static @Recorded UnitExpression load(Unit unit)
