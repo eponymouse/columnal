@@ -135,10 +135,10 @@ public class ArrayExpression extends Expression
         r.add(GeneralExpressionEntry.load(Keyword.OPEN_SQUARE));
         for (int i = 0; i < items.size(); i++)
         {
-            Expression item = items.get(i);
-            r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
             if (i > 0)
                 r.add(GeneralExpressionEntry.load(Op.COMMA));
+            Expression item = items.get(i);
+            r.addAll(item.loadAsConsecutive(BracketedStatus.MISC));
         }
         r.add(GeneralExpressionEntry.load(Keyword.CLOSE_SQUARE));
         return r.stream();
