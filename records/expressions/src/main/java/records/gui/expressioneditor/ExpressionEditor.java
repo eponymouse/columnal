@@ -257,13 +257,13 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
             ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
             clearAllErrors();
-            /*
-            Expression expression = errorDisplayers.record(this, saveUnrecorded(errorDisplayers, recorder));
+            Expression expression = save();
             //Log.debug("Saved as: " + expression);
             if (onChange != null)
             {
                 onChange.consume(expression);
             }
+            /*
             try
             {
                 if (tableManager != null)
