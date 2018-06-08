@@ -280,15 +280,26 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     @SuppressWarnings("unchecked")
     @Override
-    public void focusRightOf(@UnknownInitialization EEDisplayNode child, Focus side)
+    public void focusRightOf(EEDisplayNode child, Focus side)
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
         if (child instanceof ConsecutiveChild && Utility.containsRef(children, child))
         {
-            int index = getOperandIndex((EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
+            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>) child).isBlank();
+            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
             if (index + 1 < children.size())
-                children.get(index + 1).focus(side);
+            {
+                if (leavingBlank)
+                {
+                    if (children.get(index + 1).availableForFocus())
+                        children.get(index + 1).focus(side);
+                    else
+                        children.add(index + 2, focusWhenShown(makeBlankChild()));
+                }
+                else
+                    children.add(index + 1, focusWhenShown(makeBlankChild()));
+            }
             else
                 parentFocusRightOfThis(side);
         }
@@ -296,20 +307,42 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     protected abstract void parentFocusRightOfThis(Focus side);
 
+    protected static <T extends EEDisplayNode> T focusWhenShown(T node)
+    {
+        node.focusWhenShown();
+        return node;
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
-    public void focusLeftOf(@UnknownInitialization EEDisplayNode child)
+    public void focusLeftOf(EEDisplayNode child)
     {
-        if (child instanceof EntryNode && Utility.containsRef(children, (EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
-        {
-            int index = getOperandIndex((EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
+        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        {   
+            // There's two cases:
+            //   A) If we are leaving a blank, we try to focus the item to the left.
+            //      If that isn't focusable, we add a blank to its left.
+            //   B) If we are leaving a non-blank, we add a blank to its left.
+            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>) child).isBlank();
+            
+            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
             if (index > 0)
-                children.get(index - 1).focus(Focus.RIGHT);
+            {
+                if (leavingBlank)
+                {
+                    if (children.get(index - 1).availableForFocus())
+                        children.get(index - 1).focus(Focus.RIGHT);
+                    else
+                        children.add(index - 1, focusWhenShown(makeBlankChild()));
+                }
+                else
+                    children.add(index, focusWhenShown(makeBlankChild()));
+            }
             else
             {
                 // index is zero.  If we are blank then we do go to parent's left
                 // If we aren't blank, we make a new blank before us:
-                if (children.get(0).isBlank())
+                if (leavingBlank)
                     parentFocusLeftOfThis();
                 else
                 {

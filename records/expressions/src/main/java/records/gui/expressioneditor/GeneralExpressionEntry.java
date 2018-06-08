@@ -1186,7 +1186,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             saver.saveKeyword(this, gee, c -> {});
         }
+    }
 
-
+    @Override
+    public boolean availableForFocus()
+    {
+        return currentValue.get() instanceof GeneralOperand;
     }
 }

@@ -26,6 +26,11 @@ public @Interned interface EEDisplayNode
     public void focusWhenShown();
 
     public boolean isOrContains(EEDisplayNode child);
+    
+    public default boolean availableForFocus()
+    {
+        return true;
+    }
 
     /**
      * Called when being removed from the display

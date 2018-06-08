@@ -25,12 +25,12 @@ public interface EEDisplayNodeParent
     /**
      * Focus the child to the right of the given child.
      */
-    void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side);
+    void focusRightOf(EEDisplayNode child, Focus side);
 
     /**
      * Focus the child to the left of the given child.
      */
-    void focusLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child);
+    void focusLeftOf(EEDisplayNode child);
 
     /**
      * Delete the child to the right of the given child.

@@ -4,6 +4,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -39,7 +40,7 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     
     void setHoverDropLeft(boolean on);
 
-    default boolean isBlank() { return false; }
+    default boolean isBlank(/*@UnknownInitialization(Object.class) ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> this*/) { return false; }
 
     void focusChanged();
 
