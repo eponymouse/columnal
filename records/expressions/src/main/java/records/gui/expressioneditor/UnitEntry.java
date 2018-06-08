@@ -13,13 +13,16 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.UnitEntry.UnitValue;
 import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.ExBiFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
@@ -220,7 +223,10 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
         }
     }
     
-    public static interface UnitValue extends GeneralOperandEntry.OperandValue {} 
+    public static interface UnitValue extends GeneralOperandEntry.OperandValue
+    {
+        void save(UnitSaver saver, UnitEntry entry);
+    } 
     
     public static enum UnitOp implements UnitValue
     {
@@ -237,6 +243,13 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
         public String getContent()
         {
             return op;
+        }
+
+
+        @Override
+        public void save(UnitSaver saver, UnitEntry entry)
+        {
+            saver.saveOperator(this, entry, c -> {});
         }
     }
 
@@ -257,6 +270,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
         {
             return bracket;
         }
+
+        @Override
+        public void save(UnitSaver saver, UnitEntry entry)
+        {
+            saver.saveBracket(this, entry, c -> {});
+        }
     }
     
     public static class UnitText implements UnitValue
@@ -273,6 +292,16 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
         {
             return text;
         }
+
+        @Override
+        public void save(UnitSaver saver, UnitEntry entry)
+        {
+            OptionalInt num = Utility.parseIntegerOpt(text);
+            if (num.isPresent())
+                saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), entry, c -> {});
+            else
+                saver.saveOperand(new SingleUnitExpression(text), entry, c -> {});
+        }
     }
 
     public static SingleLoader<UnitExpression, UnitSaver> load(UnitValue value)
@@ -283,6 +312,6 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
     @Override
     public void save(UnitSaver saver)
     {
-        //currentValue.get().save()
+        currentValue.get().save(saver, this);
     }
 }

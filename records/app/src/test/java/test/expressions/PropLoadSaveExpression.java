@@ -47,7 +47,7 @@ public class PropLoadSaveExpression
 
     @Property(trials = 1000)
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void testEditNonsense(@When(seed=1L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save();
         assertEquals(expression, edited);

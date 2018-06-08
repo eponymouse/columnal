@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
+import records.gui.expressioneditor.GeneralExpressionEntry.NumLit;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
@@ -143,7 +144,12 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     private Expression makeExpression(List<Either<Expression, Op>> content, BracketedStatus bracketedStatus)
     {
         if (content.isEmpty())
-            return new InvalidOperatorExpression(ImmutableList.of());
+        {
+            if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+                return new ArrayExpression(ImmutableList.of());
+            else
+                return new InvalidOperatorExpression(ImmutableList.of());
+        }
         
         // Although it's duplication, we keep a list for if it turns out invalid, and two lists for if it is valid:
         // Valid means that operands interleave exactly with operators, and there is an operand at beginning and end.
@@ -181,15 +187,24 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         
         if (valid[0])
         {
+            @Nullable Expression e;
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
-                return validOperands.get(0);
-                        
-            // Now we need to check the operators can work together as one group:
-            
-            @Nullable Expression e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, ExpressionSaver::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), bracketedStatus);
+            {
+                e = validOperands.get(0);
+                if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+                    e = new ArrayExpression(ImmutableList.of(e));
+            }
+            else
+            {
+                // Now we need to check the operators can work together as one group:
+
+                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, ExpressionSaver::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), bracketedStatus, arg -> new ArrayExpression(ImmutableList.of(arg)));
+            }
             if (e != null)
+            {
                 return e;
+            }
             
         }
         
@@ -428,7 +443,19 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     }
     public void saveOperand(Expression singleItem, ErrorDisplayer<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
-        currentScopes.peek().getFirst().add(Either.left(singleItem));
+        ArrayList<Either<Expression, Op>> curItems = currentScopes.peek().getFirst();
+        if (singleItem instanceof UnitLiteralExpression && curItems.size() >= 1)
+        {
+            Either<Expression, Op> recent = curItems.get(curItems.size() - 1);
+            @Nullable NumericLiteral num = recent.<@Nullable NumericLiteral>either(e -> e instanceof NumericLiteral ? (NumericLiteral)e : null, o -> null);
+            if (num != null && num.getUnitExpression() == null)
+            {
+                curItems.set(curItems.size() - 1, Either.left(new NumericLiteral(num.getNumber(), ((UnitLiteralExpression)singleItem).getUnit())));
+                return;
+            }
+        }
+        
+        curItems.add(Either.left(singleItem));
     }
     
     
@@ -686,7 +713,7 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP> @Nullable EXPRESSION makeExpressionWithOperators(
         ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT, OP>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder,
         Function<ImmutableList<Either<@NonNull OP, EXPRESSION>>, EXPRESSION> makeInvalidOpExpression,
-        ImmutableList<@Recorded EXPRESSION> expressionExps, ImmutableList<@NonNull OP> ops, BracketedStatus bracketedStatus)
+        ImmutableList<@Recorded EXPRESSION> expressionExps, ImmutableList<@NonNull OP> ops, BracketedStatus bracketedStatus, Function<EXPRESSION, EXPRESSION> makeSingletonList)
     {
         if (ops.size() != expressionExps.size() - 1)
         {
@@ -696,8 +723,10 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         
         if (ops.isEmpty())
         {
-            // TODO should we make array expression here if square bracketed?
-            return expressionExps.get(0);
+            if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+                return makeSingletonList.apply(expressionExps.get(0));
+            else
+                return expressionExps.get(0);
         }
         
         // First, split it into sections based on cohesive parts that have the same operators:
