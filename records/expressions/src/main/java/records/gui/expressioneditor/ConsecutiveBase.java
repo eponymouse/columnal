@@ -208,7 +208,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public static enum OperatorOutcome { KEEP, BLANK }
     
-    public OperatorOutcome addOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
+    public OperatorOutcome addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> rightOf, String initialContent, boolean focus)
     {
         // Must add operand and operator
         int index = Utility.indexOfRef(children, rightOf);
@@ -258,7 +258,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
-        if (child instanceof EntryNode && Utility.containsRef(children, (EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        if (child instanceof ConsecutiveChild && Utility.containsRef(children, child))
         {
             int index = getOperandIndex((EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
             if (index + 1 < children.size())
