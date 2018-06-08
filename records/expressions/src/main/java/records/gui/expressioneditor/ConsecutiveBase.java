@@ -48,6 +48,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
+    private boolean removingBlanks;
 
     @SuppressWarnings("initialization")
     public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
@@ -100,16 +101,28 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     // Make sure to call if you override
     protected void selfChanged()
     {
-        FXUtility.runAfter(() -> {
-            removeBlanks();
-        });
+        removeBlanksLater();
+    }
+
+    private void removeBlanksLater()
+    {
+        if (!removingBlanks)
+        {
+            FXUtility.runAfter(() -> {
+                removeBlanks();
+            });
+        }
     }
 
     private void removeBlanks()
     {
+        removingBlanks = true;
+        //Log.debug("Removing blanks, was size " + children.size());
         atomicEdit.set(true);
         children.removeIf(c -> c.isBlank() && !c.isFocused());
         atomicEdit.set(false);
+        //Log.debug("  Now size " + children.size());
+        removingBlanks = false;
     }
 
     @Override
@@ -565,6 +578,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         //Log.debug("Removing blanks, focus owner: " + nodes().get(0).getScene().getFocusOwner() + " items: " + nodes().stream().map(Object::toString).collect(Collectors.joining(", ")));
         //removeBlanks(children, c -> c.isBlank(), c -> c.isFocused(), EEDisplayNode::cleanup, true, atomicEdit);
+        removeBlanksLater();
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned

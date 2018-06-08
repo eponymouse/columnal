@@ -229,7 +229,8 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     protected void parentFocusRightOfThis(Focus side)
     {
-        addOperandToRight(children.get(children.size() - 1), "", true);
+        if (!children.get(children.size() - 1).isBlank())
+            addOperandToRight(children.get(children.size() - 1), "", true);
     }
 
     @Override
