@@ -94,6 +94,10 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         {
             saveOperand(new MatchAnythingExpression(), errorDisplayer, withContext);
         }
+        else if (keyword == Keyword.QUEST)
+        {
+            saveOperand(new ImplicitLambdaArg(), errorDisplayer, withContext);
+        }
         else if (keyword == Keyword.OPEN_ROUND)
         {
             currentScopes.push(new Pair<>(new ArrayList<>(), expect(Keyword.CLOSE_ROUND, BracketedStatus.DIRECT_ROUND_BRACKETED, bracketed -> {

@@ -212,13 +212,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     /**
-     * Shortcut for opening a bracketed section.  This is passed back to us by reference
-     * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
-     */
-    private final KeyShortcutCompletion roundBracketCompletion;
-
-    private final KeyShortcutCompletion squareBracketCompletion;
-    /**
      * Shortcut for opening a unit section.  This is passed back to us by reference
      * from AutoCompletion.
      */
@@ -233,23 +226,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * Completion for declaring a new variable
      */
     private final VarDeclCompletion varDeclCompletion;
-
-    /**
-     * Completion for if-then-else
-     */
-    private final Completion ifCompletion;
-
-    /**
-     * Completion for match expressions
-     */
-    private final Completion matchCompletion;
-
+    
     /**
      * Completion for fixed-type expressions
      */
     private final Completion typeLiteralCompletion;
-
-    private final SimpleCompletion questionCompletion;
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
@@ -263,13 +244,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     GeneralExpressionEntry(Either<String, GeneralValue> initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         super(Expression.class, parent, initialValue.either(s -> new Unfinished(s), v -> v));
-        roundBracketCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
-        squareBracketCompletion = new KeyShortcutCompletion("autocomplete.list", '[');
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
-        questionCompletion = new SimpleCompletion( "", "?", "autocomplete.implicitArg", new QuestValue());
         unitCompletion = new AddUnitCompletion();
-        ifCompletion = new KeywordCompletion(ExpressionLexer.IF, "autocomplete.if");
-        matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH, "autocomplete.match");
         typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
         varDeclCompletion = new VarDeclCompletion();
         initialValue.ifRight(v -> {
@@ -324,16 +300,21 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return Stream.of(container);
     }
 
-    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "typeLiteralCompletion", "varDeclCompletion", "questionCompletion", "parent"})
+    @RequiresNonNull({"unitCompletion", "stringCompletion", "typeLiteralCompletion", "varDeclCompletion", "parent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
-        r.add(ifCompletion);
-        r.add(matchCompletion);
+        for (Keyword keyword : Keyword.values())
+        {
+            r.add(new KeywordCompletion(keyword));
+        }
+        for (Op op : Op.values())
+        {
+            r.add(new OperatorCompletion(op));
+        }
         r.add(typeLiteralCompletion);
         
         addAllFunctions(r);
-        r.add(new SimpleCompletion("", "@anything", "autocomplete.match.anything", new MatchAnything()));
         r.add(new SimpleCompletion("", "true", null, new Lit(new BooleanLiteral(true))));
         r.add(new SimpleCompletion("", "false", null, new Lit(new BooleanLiteral(false))));
         for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))
@@ -370,10 +351,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
         r.add(varDeclCompletion);
 
-        r.add(roundBracketCompletion);
-        r.add(squareBracketCompletion);
         r.add(stringCompletion);
-        r.add(questionCompletion);
         r.add(new NumericLiteralCompletion());
 
         // TODO: use type to prioritise and to filter
@@ -650,37 +628,79 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     private static class KeywordCompletion extends Completion
     {
-        private final String keyword;
-        private final @Nullable @LocalizableKey String descriptionKey;
+        private final Keyword keyword;
 
-        private KeywordCompletion(int expressionLexerKeywordIndex, @Nullable @LocalizableKey String descriptionKey)
+        private KeywordCompletion(Keyword keyword)
         {
-            this.keyword = Utility.literal(ExpressionLexer.VOCABULARY, expressionLexerKeywordIndex);
-            this.descriptionKey = descriptionKey;
+            this.keyword = keyword;
         }
 
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(keyword, descriptionKey == null ? null : TranslationUtility.getString(descriptionKey));
+            return new CompletionContent(keyword.getContent(), null /* TODO */);
         }
 
         @Override
         public boolean shouldShow(String input)
         {
-            return keyword.startsWith(input);
+            return keyword.getContent().startsWith(input);
         }
 
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            return input.equals(keyword) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+            return input.equals(keyword) ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.NONE;
         }
 
         @Override
         public boolean features(String curInput, char character)
         {
-            return keyword.startsWith(curInput) && keyword.substring(curInput.length()).contains("" + character);
+            return keyword.getContent().startsWith(curInput) && keyword.getContent().substring(curInput.length()).contains("" + character);
+        }
+
+        public Stream<SingleLoader<Expression, ExpressionSaver>> load()
+        {
+            return Stream.of(p -> new GeneralExpressionEntry(keyword, p));
+        }
+    }
+
+    private static class OperatorCompletion extends Completion
+    {
+        private final Op operator;
+
+        private OperatorCompletion(Op operator)
+        {
+            this.operator = operator;
+        }
+
+        @Override
+        public CompletionContent getDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(operator.getContent(), null /* TODO */);
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return operator.getContent().startsWith(input);
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return input.equals(operator) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return operator.getContent().startsWith(curInput) && operator.getContent().substring(curInput.length()).contains("" + character);
+        }
+
+        public Stream<SingleLoader<Expression, ExpressionSaver>> load()
+        {
+            return Stream.of(p -> new GeneralExpressionEntry(operator, p));
         }
     }
 
@@ -762,15 +782,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (c instanceof KeyShortcutCompletion)
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
-                if (ksc == roundBracketCompletion)
-                {
-                    parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, loadEmptyRoundBrackets());
-                }
-                else if (ksc == squareBracketCompletion)
-                {
-                    parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, Stream.of(load(Keyword.OPEN_SQUARE), load(new Unfinished("")).focusWhenShown(), load(Keyword.CLOSE_SQUARE)));
-                }
-                else if (ksc == stringCompletion)
+                if (ksc == stringCompletion)
                 {
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
                 }
@@ -788,13 +800,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                     return unitLiteralNode;
                 }));
             }
-            else if (c != null && c.equals(ifCompletion))
+            else if (c instanceof KeywordCompletion)
             {
-                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, Stream.of(load(Keyword.IF), load(new Unfinished("")).focusWhenShown(), load(Keyword.THEN), load(new Unfinished("")), load(Keyword.ELSE), load(new Unfinished("")), load(Keyword.ENDIF)));
+                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, ((KeywordCompletion)c).load());
             }
-            else if (c != null && c.equals(matchCompletion))
+            else if (c instanceof OperatorCompletion)
             {
-                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, Stream.of(load(Keyword.MATCH), load(new Unfinished("")).focusWhenShown(), load(Keyword.CASE), load(new Unfinished("")), load(Keyword.THEN), load(new Unfinished("")), load(Keyword.ENDMATCH)));
+                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, ((OperatorCompletion)c).load());
             }
             else if (c instanceof FunctionCompletion)
             {
@@ -972,61 +984,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public String getVarName(String currentText)
         {
             return StringUtils.removeStart(currentText, VarDecl.PREFIX);
-        }
-    }
-
-    public static class QuestValue extends GeneralOperand
-    {
-        @Override
-        public String getContent()
-        {
-            return "?";
-        }
-
-        @Override
-        public @Nullable GeneralPseudoclass getPseudoclass()
-        {
-            return GeneralPseudoclass.LAMBDA_ARG;
-        }
-
-        @Override
-        public String getTypeLabel(boolean focused)
-        {
-            return "";
-        }
-
-        @Override
-        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
-        {
-            return new ImplicitLambdaArg();
-        }
-    }
-    
-    public static class MatchAnything extends GeneralOperand
-    {
-
-        @Override
-        public String getContent()
-        {
-            return "@anything";
-        }
-
-        @Override
-        public @Nullable GeneralPseudoclass getPseudoclass()
-        {
-            return GeneralPseudoclass.MATCH_ANYTHING;
-        }
-
-        @Override
-        public String getTypeLabel(boolean focused)
-        {
-            return "";
-        }
-
-        @Override
-        public @UnknownIfRecorded Expression saveUnrecorded(ErrorAndTypeRecorder onError)
-        {
-            return new MatchAnythingExpression();
         }
     }
     
@@ -1207,7 +1164,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     public static enum Keyword implements GeneralValue
     {
-        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING("@anything"), 
+        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING("@anything"), QUEST("?"),
         IF("@if"), THEN("@then"), ELSE("@else"), ENDIF("@endif"),
         MATCH("@match"), CASE("@case"), ORCASE("@orcase"), GIVEN("@given"), ENDMATCH("@endmatch");
 

@@ -11,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.typeExp.MutVar;
 import records.typeExp.TupleTypeExp;
 import records.typeExp.TypeExp;
@@ -78,7 +79,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.QuestValue()));
+        return Stream.of(GeneralExpressionEntry.load(Keyword.QUEST));
     }
 
     @Override
