@@ -97,7 +97,20 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return operations.makeGeneral(this, null);
     }
 
-    protected abstract void selfChanged();
+    // Make sure to call if you override
+    protected void selfChanged()
+    {
+        FXUtility.runAfter(() -> {
+            removeBlanks();
+        });
+    }
+
+    private void removeBlanks()
+    {
+        atomicEdit.set(true);
+        children.removeIf(c -> c.isBlank() && !c.isFocused());
+        atomicEdit.set(false);
+    }
 
     @Override
     public void focus(Focus side)

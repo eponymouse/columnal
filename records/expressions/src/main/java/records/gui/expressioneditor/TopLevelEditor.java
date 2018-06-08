@@ -160,6 +160,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     @Override
     protected void selfChanged()
     {
+        super.selfChanged();
         scrollPane.fillViewport();
     }
 
