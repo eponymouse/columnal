@@ -131,9 +131,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         if (children.isEmpty())
         {
-            // Shouldn't happen, but better to ignore call than throw exception:
-            Log.logStackTrace("Empty operands!");
-            return;
+            // Shouldn't happen, but better to fix than complain:
+            children.add(makeBlankChild());
         }
         
         if (side == Focus.LEFT)
@@ -385,9 +384,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void deleteRightOf(EEDisplayNode child)
     {
         withChildIndex(child, index -> {
-            if (index + 1 < children.size() && children.get(index + 1).availableForFocus())
+            if (index + 1 < children.size())
             {
-                if (!children.get(index + 1).deleteFirst())
+                if (!children.get(index + 1).availableForFocus() || !children.get(index + 1).deleteFirst())
                     children.remove(index + 1);
             }
         });
@@ -397,9 +396,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void deleteLeftOf(EEDisplayNode child)
     {
         withChildIndex(child, index -> {
-            if (index > 0 && children.get(index - 1).availableForFocus())
+            if (index > 0)
             {
-                if (!children.get(index - 1).deleteLast())
+                if (!children.get(index - 1).availableForFocus() || !children.get(index - 1).deleteLast())
                     children.remove(index - 1);
             }
         });
