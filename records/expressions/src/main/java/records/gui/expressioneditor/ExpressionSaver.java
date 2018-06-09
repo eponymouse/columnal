@@ -76,15 +76,14 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
 
     public Expression finish()
     {
-        if (currentScopes.size() > 1)
+        while (currentScopes.size() > 1)
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
-            return new InvalidOperatorExpression(ImmutableList.of(Either.right(new IdentExpression("TODO unterminated"))));
+            ArrayList<Either<Expression, Op>> items = currentScopes.pop().getFirst();
+            currentScopes.peek().getFirst().add(Either.left(makeInvalidOp(items.stream().map(Either::swap).collect(ImmutableList.toImmutableList()))));
         }
-        else
-        {
-            return makeExpression(currentScopes.pop().getFirst(), BracketedStatus.TOP_LEVEL);
-        }
+        
+        return makeExpression(currentScopes.pop().getFirst(), BracketedStatus.TOP_LEVEL);
     }
     
     // Note: if we are copying to clipboard, callback will not be called
