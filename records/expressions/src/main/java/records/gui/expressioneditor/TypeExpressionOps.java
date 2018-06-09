@@ -1,36 +1,18 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.error.InternalException;
-import records.error.UserException;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
-import records.transformations.expression.type.InvalidOpTypeExpression;
-import records.transformations.expression.type.ListTypeExpression;
-import records.transformations.expression.type.TupleTypeExpression;
-import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
-import records.transformations.expression.type.UnfinishedTypeExpression;
-import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.Pair;
-import utility.gui.TranslationUtility;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
 {
     @Override
     public EntryNode<TypeExpression, TypeParent> makeGeneral(ConsecutiveBase<TypeExpression, TypeParent> parent, @Nullable String initialContent)
     {
-        return new TypeEntry(parent, new TypeValue(initialContent == null ? "" : initialContent));
+        return new TypeEntry(parent, initialContent == null ? "" : initialContent);
     }
 
     /*

@@ -5,7 +5,6 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.TypeEntry;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
@@ -25,7 +24,7 @@ public class UnfinishedTypeExpression extends TypeExpression
     @Override
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(p -> new TypeEntry(p, new TypeValue(value)));
+        return Stream.of(p -> new TypeEntry(p, value));
     }
 
     @Override

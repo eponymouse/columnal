@@ -3,7 +3,6 @@ package records.transformations.expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
-import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.gui.expressioneditor.UnitSaver;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -41,7 +40,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     @Override
     public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(UnitEntry.load(new UnitText(Integer.toString(number))));
+        return Stream.of(UnitEntry.load(Integer.toString(number)));
     }
 
     public int getNumber()

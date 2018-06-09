@@ -139,7 +139,7 @@ public class ColumnReference extends NonOperatorExpression
     @OnThread(Tag.FXPlatform)
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(new GeneralExpressionEntry.ColumnRef(this)));
+        return Stream.of(GeneralExpressionEntry.load(columnName.getRaw()));
     }
 
     @Override

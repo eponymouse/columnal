@@ -9,7 +9,6 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
@@ -80,7 +79,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(new Unfinished(text)));
+        return Stream.of(GeneralExpressionEntry.load(text));
     }
 
     @Override

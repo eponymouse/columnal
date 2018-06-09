@@ -11,7 +11,6 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
-import records.gui.expressioneditor.UnitEntry.UnitValue;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
@@ -26,20 +25,21 @@ import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, UnitValue> implements ErrorDisplayer<UnitExpression, UnitSaver>
+public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> implements ErrorDisplayer<UnitExpression, UnitSaver>
 {
     private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
-    UnitEntry(ConsecutiveBase<UnitExpression, UnitSaver> parent, UnitValue initialContent)
+    UnitEntry(ConsecutiveBase<UnitExpression, UnitSaver> parent, String initialContent)
     {
-        super(UnitExpression.class, parent, initialContent);
+        super(UnitExpression.class, parent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
         ExBiFunction<String, CompletionQuery, List<Completion>> getSuggestions = this::getSuggestions;
         this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c)));
         updateNodes();
+        textField.setText(initialContent);
     }
 
     private List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
@@ -223,12 +223,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
         }
     }
     
-    public static interface UnitValue extends GeneralOperandEntry.OperandValue
-    {
-        void save(UnitSaver saver, UnitEntry entry);
-    } 
-    
-    public static enum UnitOp implements UnitValue
+    public static enum UnitOp
     {
         MULTIPLY("*"), DIVIDE("/"), RAISE("^");
         
@@ -238,22 +233,14 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
         {
             this.op = op;
         }
-        
-        @Override
+
         public String getContent()
         {
             return op;
         }
-
-
-        @Override
-        public void save(UnitSaver saver, UnitEntry entry)
-        {
-            saver.saveOperator(this, entry, c -> {});
-        }
     }
 
-    public static enum UnitBracket implements UnitValue
+    public static enum UnitBracket
     {
         OPEN_ROUND("("), CLOSE_ROUND(")");
         
@@ -264,54 +251,48 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver, Un
             this.bracket = bracket;
         }
 
-
-        @Override
         public String getContent()
         {
             return bracket;
         }
-
-        @Override
-        public void save(UnitSaver saver, UnitEntry entry)
-        {
-            saver.saveBracket(this, entry, c -> {});
-        }
-    }
-    
-    public static class UnitText implements UnitValue
-    {
-        private final String text;
-
-        public UnitText(String text)
-        {
-            this.text = text;
-        }
-
-        @Override
-        public String getContent()
-        {
-            return text;
-        }
-
-        @Override
-        public void save(UnitSaver saver, UnitEntry entry)
-        {
-            OptionalInt num = Utility.parseIntegerOpt(text);
-            if (num.isPresent())
-                saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), entry, c -> {});
-            else
-                saver.saveOperand(new SingleUnitExpression(text), entry, c -> {});
-        }
     }
 
-    public static SingleLoader<UnitExpression, UnitSaver> load(UnitValue value)
+    public static SingleLoader<UnitExpression, UnitSaver> load(String value)
     {
         return p -> new UnitEntry(p, value);
+    }
+
+    public static SingleLoader<UnitExpression, UnitSaver> load(UnitOp value)
+    {
+        return load(value.getContent());
     }
 
     @Override
     public void save(UnitSaver saver)
     {
-        currentValue.get().save(saver, this);
+        String text = textField.getText().trim();
+        for (UnitOp unitOp : UnitOp.values())
+        {
+            if (unitOp.getContent().equals(text))
+            {
+                saver.saveOperator(unitOp, this, c -> {});
+                return;
+            }
+        }
+
+        for (UnitBracket unitBracket : UnitBracket.values())
+        {
+            if (unitBracket.getContent().equals(text))
+            {
+                saver.saveBracket(unitBracket, this, c -> {});
+                return;
+            }
+        }
+        
+        OptionalInt num = Utility.parseIntegerOpt(text);
+        if (num.isPresent())
+            saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), this, c -> {});
+        else
+            saver.saveOperand(new SingleUnitExpression(text), this, c -> {});
     }
 }

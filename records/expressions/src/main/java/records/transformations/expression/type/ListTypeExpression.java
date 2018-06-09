@@ -5,7 +5,6 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.gui.expressioneditor.TypeEntry;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 import utility.Utility;
@@ -26,9 +25,9 @@ public class ListTypeExpression extends TypeExpression
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Utility.concatStreams(
-            Stream.of(TypeEntry.load(new TypeValue("["))),
+            Stream.of(TypeEntry.load("[")),
             innerType.loadAsConsecutive(BracketedStatus.DIRECT_SQUARE_BRACKETED),
-            Stream.of(TypeEntry.load(new TypeValue("]")))
+            Stream.of(TypeEntry.load("]"))
         );
     }
 

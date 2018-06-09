@@ -6,7 +6,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Lit;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -50,7 +49,7 @@ public abstract class Literal extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(new Lit(this)));
+        return Stream.of(GeneralExpressionEntry.load(editString()));
     }
 
     public abstract String editString();

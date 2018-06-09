@@ -7,7 +7,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.TypeEntry;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -29,7 +28,7 @@ public class InvalidOpTypeExpression extends TypeExpression
     @Override
     public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<TypeExpression, TypeParent>)(p -> new TypeEntry(p, new TypeValue(s)))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
+        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<TypeExpression, TypeParent>)(p -> new TypeEntry(p, s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
 
     @Override

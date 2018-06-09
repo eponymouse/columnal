@@ -7,7 +7,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
-import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
@@ -33,7 +32,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     @Override
     public EntryNode<UnitExpression, UnitSaver> makeGeneral(ConsecutiveBase<UnitExpression, UnitSaver> parent, @Nullable String initialContent)
     {
-        return new UnitEntry(parent, new UnitText(initialContent == null ? "" : initialContent));
+        return new UnitEntry(parent, initialContent == null ? "" : initialContent);
     }
 
     //@Override

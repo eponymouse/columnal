@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
@@ -33,7 +32,7 @@ public class TupleTypeExpression extends TypeExpression
             items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
             // Now we must add the comma:
             if (i < members.size() - 1)
-                items.add(p -> new TypeEntry(p, new TypeValue(",")));
+                items.add(p -> new TypeEntry(p, ","));
         }
 
         return items.stream();

@@ -48,7 +48,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     @Override
     public EntryNode<Expression, ExpressionSaver> makeGeneral(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable String initialContent)
     {
-        return new GeneralExpressionEntry(Either.left(initialContent == null ? "" : initialContent), parent);
+        return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, parent);
     }
 
     @Override

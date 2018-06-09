@@ -472,20 +472,26 @@ public class Utility
     @SuppressWarnings("value")
     public static @Value Number parseNumber(String number) throws UserException
     {
+        return parseNumberOpt(number).orElseThrow(() -> new UserException("Problem parsing number \"" + number + "\""));
+    }
+
+    @SuppressWarnings("value")
+    public static Optional<@Value Number> parseNumberOpt(String number)
+    {
         // First try as a long:
         try
         {
-            return Long.valueOf(number);
+            return Optional.of(Long.valueOf(number));
         }
         catch (NumberFormatException ex) { }
         // Last try: big decimal (and re-throw if not)
         try
         {
-            return new BigDecimal(number, MathContext.DECIMAL128);
+            return Optional.of(new BigDecimal(number, MathContext.DECIMAL128));
         }
         catch (NumberFormatException e)
         {
-            throw new UserException("Problem parsing number \"" + number + "\"");
+            return Optional.empty();
         }
     }
 

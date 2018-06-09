@@ -11,7 +11,6 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
@@ -31,7 +30,7 @@ public class TaggedTypeNameExpression extends TypeExpression
     @Override
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(p -> new TypeEntry(p, new TypeValue(typeName.getRaw())));
+        return Stream.of(p -> new TypeEntry(p, typeName.getRaw()));
     }
 
     @Override

@@ -11,7 +11,6 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.Unfinished;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -43,7 +42,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
         for (int i = 0; i < items.size(); i++)
         {
-            items.get(i).either_(s -> r.add(GeneralExpressionEntry.load(new Unfinished(s))),
+            items.get(i).either_(s -> r.add(GeneralExpressionEntry.load(s)),
                 e -> r.addAll(e.loadAsConsecutive(BracketedStatus.MISC)));
         }
         return r.stream();

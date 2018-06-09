@@ -4,11 +4,9 @@ import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.QuickFix;
-import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -21,7 +19,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
 {
     public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable Stream<SingleLoader<UnitExpression, UnitSaver>> startContent)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of(UnitEntry.load(new UnitText(""))), topLevel ? '}' : ')');
+        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of(UnitEntry.load("")), topLevel ? '}' : ')');
     }
 
     @Override

@@ -635,6 +635,7 @@ public class View extends StackPane
         if (choice.isPresent())
         {
             InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
+            FXPlatformConsumer<DataSource> record = tableManager::record;
             switch (choice.get().getSecond())
             {
                 case DATA:
@@ -649,10 +650,10 @@ public class View extends StackPane
                     });
                     break;
                 case IMPORT_FILE:
-                    ImporterManager.getInstance().chooseAndImportFile(window, tableManager, cellPosition, tableManager::record);
+                    ImporterManager.getInstance().chooseAndImportFile(window, tableManager, cellPosition, record);
                     break;
                 case IMPORT_URL:
-                    ImporterManager.getInstance().chooseAndImportURL(window, tableManager, cellPosition, tableManager::record);
+                    ImporterManager.getInstance().chooseAndImportURL(window, tableManager, cellPosition, record);
                     break;
                 case TRANSFORM:
                     new PickTransformationDialog(window).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {

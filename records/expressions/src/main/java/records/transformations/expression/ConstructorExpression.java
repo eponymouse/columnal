@@ -12,7 +12,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
-import records.gui.expressioneditor.GeneralExpressionEntry.GeneralValue;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
@@ -83,7 +82,7 @@ public class ConstructorExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(tag.<GeneralValue>either(str -> new GeneralExpressionEntry.Unfinished(str), t -> new GeneralExpressionEntry.TagName(t))));
+        return Stream.of(GeneralExpressionEntry.load(tag.<String>either(str -> str, t -> t.getTypeName().getRaw() + ":" + t.getTagInfo().getName())));
     }
 
     @Override

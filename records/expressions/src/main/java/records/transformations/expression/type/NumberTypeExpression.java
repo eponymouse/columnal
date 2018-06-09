@@ -7,7 +7,6 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.gui.expressioneditor.TypeEntry;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
@@ -53,7 +52,7 @@ public class NumberTypeExpression extends TypeExpression
     public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         // TODO include the unit
-        return Stream.of(p -> new TypeEntry(p, new TypeValue("Number")));
+        return Stream.of(p -> new TypeEntry(p, "Number"));
     }
 
     @Override

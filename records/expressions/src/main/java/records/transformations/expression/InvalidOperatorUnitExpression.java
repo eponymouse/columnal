@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.UnitEntry;
-import records.gui.expressioneditor.UnitEntry.UnitText;
 import records.gui.expressioneditor.UnitSaver;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -76,7 +75,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     @Override
     public @OnThread(Tag.FXPlatform) Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitSaver>)(UnitEntry.load(new UnitText(s)))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
+        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitSaver>)(UnitEntry.load(s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
 
 }

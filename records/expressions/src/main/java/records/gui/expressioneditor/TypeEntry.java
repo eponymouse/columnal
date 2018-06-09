@@ -13,8 +13,6 @@ import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
-import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
-import records.gui.expressioneditor.TypeEntry.TypeValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -32,7 +30,7 @@ import utility.gui.FXUtility;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, TypeValue> implements EEDisplayNodeParent
+public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
     private static final ImmutableList<DataType> PRIMITIVE_TYPES = ImmutableList.of(
@@ -57,9 +55,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, T
      */
     private @Nullable UnitCompoundBase unitSpecifier;
 
-    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, TypeValue initialContent)
+    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, String initialContent)
     {
-        super(TypeExpression.class, parent, initialContent);
+        super(TypeExpression.class, parent);
         this.allCompletions = Utility.concatStreams(
             Stream.of(listCompletion, bracketCompletion, plainNumberCompletion, numberWithUnitsCompletion),
             PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.toString(), 0)),
@@ -73,6 +71,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, T
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
             parent.changed(this);
         });
+        textField.setText(initialContent);
     }
 
     private List<TypeCompletion> calculateCompletions(String s, CompletionQuery completionQuery)
@@ -316,23 +315,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent, T
         }
     }
     
-    public static class TypeValue implements OperandValue
-    {
-        private final String content;
-
-        public TypeValue(String content)
-        {
-            this.content = content;
-        }
-
-        @Override
-        public String getContent()
-        {
-            return content;
-        }
-    }
-
-    public static SingleLoader<TypeExpression, TypeParent> load(TypeValue value)
+    public static SingleLoader<TypeExpression, TypeParent> load(String value)
     {
         return p -> new TypeEntry(p, value);
     }

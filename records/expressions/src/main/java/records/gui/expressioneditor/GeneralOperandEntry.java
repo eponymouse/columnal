@@ -8,7 +8,6 @@ import javafx.scene.layout.HBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
-import records.gui.expressioneditor.GeneralOperandEntry.OperandValue;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.QuickFix.ReplacementTarget;
@@ -26,7 +25,7 @@ import java.util.stream.Stream;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT, VALUE extends OperandValue> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     /**
      * A label to the left of the text-field, used for displaying things like the
@@ -55,18 +54,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
      */
     protected boolean completing;
 
-    /**
-     * Current status of the field.
-     */
-    protected final ObjectProperty<VALUE> currentValue;
-
-
-
-    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, VALUE initialValue)
+    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
         super(parent, operandClass);
-        currentValue = new SimpleObjectProperty<>(initialValue);
-
+        
         FXUtility.sizeToFit(textField, null, null);
         typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
@@ -170,10 +161,5 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
             return true;
         }
         return false;
-    }
-
-    public static interface OperandValue
-    {
-        public String getContent();
     }
 }
