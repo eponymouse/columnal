@@ -46,7 +46,7 @@ plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | PLUS_MINUS | COMMA;
 invalidOpExpression : INVALIDOPS OPEN_BRACKET (INVALIDEXP STRING | expression)* CLOSE_BRACKET;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
-compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression | invalidOpExpression;
+compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression;
 
 constructor : CONSTRUCTOR typeName COLON constructorName;
 
@@ -73,7 +73,7 @@ match : MATCH expression matchClause+ ENDMATCH;
 
 bracketedExpression : OPEN_BRACKET topLevelExpression CLOSE_BRACKET;
 // callExpression doesn't need brackets because the constructor means it's identifiable from its left token.  Same for fixTypeExpression and constructor
-expression : bracketedExpression | terminal | callExpression | tupleExpression | arrayExpression;
+expression : bracketedExpression | terminal | callExpression | tupleExpression | arrayExpression | invalidOpExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;
