@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -131,7 +132,15 @@ public class MainWindow
         if (src != null)
         {
             @NonNull Pair<File, String> srcFinal = src;
-            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> v.getManager().loadAll(srcFinal.getSecond())));
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> {
+                v.getManager().loadAll(srcFinal.getSecond());
+                Platform.runLater(() -> v.enableWriting());
+            }));
+        }
+        else
+        {
+            // Enable writing mode
+            v.enableWriting();
         }
 
         stage.show();

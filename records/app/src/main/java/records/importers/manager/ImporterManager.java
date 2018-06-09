@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OnThread(Tag.FXPlatform)
 public class ImporterManager
 {
     // Singleton:
@@ -54,7 +55,6 @@ public class ImporterManager
         registeredImporters.add(importer);
     }
 
-    @OnThread(Tag.FXPlatform)
     public void chooseAndImportFile(Window parent, TableManager tableManager, CellPosition destination, FXPlatformConsumer<DataSource> onLoad)
     {
         ArrayList<ExtensionFilter> filters = new ArrayList<>();

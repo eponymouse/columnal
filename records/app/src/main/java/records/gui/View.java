@@ -99,8 +99,14 @@ public class View extends StackPane
     // Pass true when empty
     private final FXPlatformConsumer<Boolean> emptyListener;
 
+    // We start in readOnly mode, and enable writing later if everything goes well:
+    private boolean readOnly = true;
+    
     private void save()
     {
+        if (readOnly)
+            return;
+        
         File dest = diskFile.get();
         class Fetcher extends FullSaver
         {
@@ -547,74 +553,10 @@ public class View extends StackPane
             }
         });
         
-        mainPane = new VirtualGrid((CellPosition cellPosition, Point2D mouseScreenPos, VirtualGrid virtualGrid) -> {
-                // Data table if there are none, or if we ask and they say data
-
-                View thisView = FXUtility.mouse(this);
-                
-                // Ask what they want
-                GaussianBlur blur = new GaussianBlur(4.0);
-                blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
-                virtualGrid.setEffectOnNonOverlays(blur);
-                Optional<Pair<Point2D, DataOrTransform>> choice = new DataOrTransformChoice(thisView.getWindow(), !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
-                
-                if (choice.isPresent())
-                {
-                    InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
-                    switch (choice.get().getSecond())
-                    {
-                        case DATA:
-                            Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(thisView.getWindow(), thisView.getManager(), new ColumnId("A")).showAndWait();
-                            optInitialDetails.ifPresent(initialDetails -> {
-                                Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
-                                    FXUtility.alertOnError_(() -> {
-                                        ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
-                                        tableManager.record(data);
-                                    });
-                                });
-                            });
-                            break;
-                        case IMPORT_FILE:
-                            ImporterManager.getInstance().chooseAndImportFile(thisView.getWindow(), tableManager, cellPosition, tableManager::record);
-                            break;
-                        case IMPORT_URL:
-                            ImporterManager.getInstance().chooseAndImportURL(thisView.getWindow(), tableManager, cellPosition, tableManager::record);
-                            break;
-                        case TRANSFORM:
-                            new PickTransformationDialog(thisView.getWindow()).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
-                                @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView, thisView.getManager(), cellPosition, () ->
-                                    new PickTableDialog(thisView, null, createTrans.getFirst()).showAndWait());
-                                if (makeTrans != null)
-                                {
-                                    @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
-                                    Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
-                                        FXUtility.alertOnError_(() -> {
-                                            @OnThread(Tag.Simulation) Transformation transformation = makeTransFinal.get();
-                                            tableManager.record(transformation);
-                                            Platform.runLater(() -> {
-                                                TableDisplay display = (TableDisplay) transformation.getDisplay();
-                                                if (display != null)
-                                                    display.editAfterCreation();
-                                            });
-                                        });
-                                    });
-                                }
-                            });
-                            break;
-                        case CHECK:
-                            new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                                new EditExpressionDialog(thisView, srcTable, new IdentExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
-                                    Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
-                                        Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
-                                        tableManager.record(check);
-                                    }));
-                                });
-                            });
-                            break;
-                    }
-                }
-                virtualGrid.setEffectOnNonOverlays(null);
-        }, 10, 20, "main-view-grid");
+        mainPane = new VirtualGrid(// Data table if there are none, or if we ask and they say data
+// Ask what they want
+            (cellPos, mousePos, grid) -> createTable(FXUtility.mouse(this), tableManager, cellPos, mousePos, grid),
+            10, 20, "main-view-grid");
         expandTableArrowSupplier = new ExpandTableArrowSupplier(Utility.later(this));
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
@@ -679,6 +621,79 @@ public class View extends StackPane
     public DataCellSupplier _test_getDataCellSupplier()
     {
         return dataCellSupplier;
+    }
+
+    private static void createTable(View thisView, TableManager tableManager, CellPosition cellPosition, Point2D mouseScreenPos, VirtualGrid virtualGrid)
+    {
+        // Ask what they want
+        GaussianBlur blur = new GaussianBlur(4.0);
+        blur.setInput(new ColorAdjust(0.0, 0.0, -0.2, 0.0));
+        virtualGrid.setEffectOnNonOverlays(blur);
+        Window window = thisView.getWindow();
+        Optional<Pair<Point2D, DataOrTransform>> choice = new DataOrTransformChoice(window, !tableManager.getAllTables().isEmpty()).showAndWaitCentredOn(mouseScreenPos);
+
+        if (choice.isPresent())
+        {
+            InitialLoadDetails initialLoadDetails = new InitialLoadDetails(null, cellPosition, null);
+            switch (choice.get().getSecond())
+            {
+                case DATA:
+                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(window, thisView.getManager(), new ColumnId("A")).showAndWait();
+                    optInitialDetails.ifPresent(initialDetails -> {
+                        Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
+                            FXUtility.alertOnError_(() -> {
+                                ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
+                                tableManager.record(data);
+                            });
+                        });
+                    });
+                    break;
+                case IMPORT_FILE:
+                    ImporterManager.getInstance().chooseAndImportFile(window, tableManager, cellPosition, tableManager::record);
+                    break;
+                case IMPORT_URL:
+                    ImporterManager.getInstance().chooseAndImportURL(window, tableManager, cellPosition, tableManager::record);
+                    break;
+                case TRANSFORM:
+                    new PickTransformationDialog(window).showAndWaitCentredOn(mouseScreenPos).ifPresent(createTrans -> {
+                        @Nullable SimulationSupplier<Transformation> makeTrans = createTrans.getSecond().make(thisView, thisView.getManager(), cellPosition, () ->
+                            new PickTableDialog(thisView, null, createTrans.getFirst()).showAndWait());
+                        if (makeTrans != null)
+                        {
+                            @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
+                            Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
+                                FXUtility.alertOnError_(() -> {
+                                    @OnThread(Tag.Simulation) Transformation transformation = makeTransFinal.get();
+                                    tableManager.record(transformation);
+                                    Platform.runLater(() -> {
+                                        TableDisplay display = (TableDisplay) transformation.getDisplay();
+                                        if (display != null)
+                                            display.editAfterCreation();
+                                    });
+                                });
+                            });
+                        }
+                    });
+                    break;
+                case CHECK:
+                    new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
+                        new EditExpressionDialog(thisView, srcTable, new IdentExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                            Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                                Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
+                                tableManager.record(check);
+                            }));
+                        });
+                    });
+                    break;
+            }
+        }
+        virtualGrid.setEffectOnNonOverlays(null);
+    }
+
+    public void enableWriting()
+    {
+        readOnly = false;
+        save();
     }
 
     @OnThread(Tag.FXPlatform)
