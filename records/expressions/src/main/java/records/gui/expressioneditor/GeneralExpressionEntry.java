@@ -802,11 +802,21 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c instanceof KeywordCompletion)
             {
-                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, ((KeywordCompletion)c).load());
+                completing = true;
+                currentValue.setValue(((KeywordCompletion) c).keyword);
+                // Must do this while completing so that we're not marked as blank:
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                completing = false;                
+                return currentValue.get().getContent();
             }
             else if (c instanceof OperatorCompletion)
             {
-                parent.replaceLoad(GeneralExpressionEntry.this, ReplacementTarget.CURRENT, ((OperatorCompletion)c).load());
+                completing = true;
+                currentValue.setValue(((OperatorCompletion) c).operator);
+                // Must do this while completing so that we're not marked as blank:
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                completing = false;                
+                return currentValue.get().getContent();
             }
             else if (c instanceof FunctionCompletion)
             {

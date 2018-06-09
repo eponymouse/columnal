@@ -82,7 +82,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     @Override
     public boolean isBlank()
     {
-        return textField.getText().trim().isEmpty();
+        return textField.getText().trim().isEmpty() && !completing;
     }
 
     @Override
