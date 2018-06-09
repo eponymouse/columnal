@@ -1183,7 +1183,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(table.getId(), () -> new Check(parent.getManager(),
                             table.getDetailsForCopy(), newSource, check.getCheckExpression()), null)),
                     StyledString.s(" that "),
-                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), false, DataType.BOOLEAN, e -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e))
+                    editExpressionLink(check.getCheckExpression(), parent.getManager().getSingleTableOrNull(check.getSource()), false, DataType.BOOLEAN, e -> 
+                        parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
+                    )
                 );
             }
             else

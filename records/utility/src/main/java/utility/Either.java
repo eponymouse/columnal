@@ -271,4 +271,9 @@ public class Either<A, B>
     {
         return e.<@Nullable Either<@NonNull A, @NonNull B>>either((@Nullable A l) -> l == null ? null : Either.<@NonNull A, @NonNull B>left(l), (@Nullable B r) -> r == null ? null : Either.<@NonNull A, @NonNull B>right(r));
     }
+    
+    public Either<B, A> swap()
+    {
+        return either(Either::right, Either::left);
+    }
 }
