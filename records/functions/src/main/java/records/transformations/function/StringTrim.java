@@ -33,7 +33,7 @@ public class StringTrim extends FunctionDefinition
         public @Value Object call(@Value Object param) throws UserException, InternalException
         {
             String src = Utility.cast(param, String.class);
-            String trimmed = CharMatcher.breakingWhitespace().trimFrom(src);
+            String trimmed = CharMatcher.whitespace().trimFrom(src);
             return DataTypeUtility.value(trimmed);
         }
     }
