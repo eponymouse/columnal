@@ -650,7 +650,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            return input.equals(keyword) ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.NONE;
+            return input.equals(keyword.getContent()) ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.NONE;
         }
 
         @Override
@@ -689,7 +689,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            return input.equals(operator) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+            return input.equals(operator.getContent()) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
         }
 
         @Override
