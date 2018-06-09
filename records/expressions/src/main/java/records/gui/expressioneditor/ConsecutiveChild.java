@@ -26,6 +26,12 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     @Pure
     public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent();
 
+    // Delete from the end, backspace pressed ahead of us.  Return true if handled, false if not.
+    boolean deleteLast();
+    
+    // Delete from the beginning, delete pressed before us.  Return true if handled, false if not.
+    boolean deleteFirst();
+    
     void setSelected(boolean selected);
 
     // Ideally this would be protected access:

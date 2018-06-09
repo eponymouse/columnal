@@ -35,12 +35,12 @@ public interface EEDisplayNodeParent
     /**
      * Delete the child to the right of the given child.
      */
-    default void deleteRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child) {};
+    default void deleteRightOf(EEDisplayNode child) {};
 
     /**
      * Delete the child to the left of the given child.
      */
-    default void deleteLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child) {};
+    default void deleteLeftOf(EEDisplayNode child) {};
 
     /**
      * Gets the parent styles (for styling the top).  The first one is the outermost,

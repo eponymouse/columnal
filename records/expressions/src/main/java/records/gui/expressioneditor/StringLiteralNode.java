@@ -53,7 +53,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             @Override
             protected String selected(String currentText, @Nullable EndStringCompletion c, String rest)
             {
-                parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
+                parent.focusRightOf(FXUtility.mouse(StringLiteralNode.this), Focus.LEFT);
                 return currentText;
             }
 
@@ -66,7 +66,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             @Override
             public void tabPressed()
             {
-                parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
+                parent.focusRightOf(FXUtility.keyboard(StringLiteralNode.this), Focus.LEFT);
             }
         }, WhitespacePolicy.ALLOW_ANYWHERE, c -> false);
 
@@ -132,6 +132,18 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
     public void cleanup()
     {
         expressionInfoDisplay.hideImmediately();
+    }
+
+    @Override
+    public boolean deleteLast()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean deleteFirst()
+    {
+        return false;
     }
 
     @Override

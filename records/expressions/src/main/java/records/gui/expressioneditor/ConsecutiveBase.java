@@ -22,6 +22,7 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -284,10 +285,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
-        if (child instanceof ConsecutiveChild && Utility.containsRef(children, child))
+        withChildIndex(child, index ->
         {
             boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>) child).isBlank();
-            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>)child);
             if (index + 1 < children.size())
             {
                 if (leavingBlank)
@@ -302,7 +302,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             }
             else
                 parentFocusRightOfThis(side);
-        }
+        });
     }
 
     protected abstract void parentFocusRightOfThis(Focus side);
@@ -317,7 +317,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void focusLeftOf(EEDisplayNode child)
     {
-        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        withChildIndex(child, index ->
         {   
             // There's two cases:
             //   A) If we are leaving a blank, we try to focus the item to the left.
@@ -325,7 +325,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             //   B) If we are leaving a non-blank, we add a blank to its left.
             boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>) child).isBlank();
             
-            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
             if (index > 0)
             {
                 if (leavingBlank)
@@ -349,7 +348,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                     addBlankAtLeft();
                 }
             }
-        }
+        });
     }
 
     private void addBlankAtLeft()
@@ -368,15 +367,53 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         children.get(0).focusWhenShown();
     }
-/*
-    public @UnknownIfRecorded EXPRESSION saveUnrecorded(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
+    
+    // If item is a child of us, run the given lambda and return true.  If not, just return false.
+    @SuppressWarnings("unchecked") // It's not actually unchecked...
+    private boolean withChildIndex(EEDisplayNode child, FXPlatformConsumer<Integer> withIndex)
     {
-        if (children.isEmpty())
-            return operations.makeExpression(errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
-        else
-            return save(errorDisplayers, onError, children.get(0), children.get(children.size() - 1));
+        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        {
+            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
+            withIndex.consume(index);
+            return true;
+        }
+        return false;
     }
-*/
+
+    @Override
+    public void deleteRightOf(EEDisplayNode child)
+    {
+        withChildIndex(child, index -> {
+            if (index + 1 < children.size() && children.get(index + 1).availableForFocus())
+            {
+                if (!children.get(index + 1).deleteFirst())
+                    children.remove(index + 1);
+            }
+        });
+    }
+
+    @Override
+    public void deleteLeftOf(EEDisplayNode child)
+    {
+        withChildIndex(child, index -> {
+            if (index > 0 && children.get(index - 1).availableForFocus())
+            {
+                if (!children.get(index - 1).deleteLast())
+                    children.remove(index - 1);
+            }
+        });
+    }
+
+    /*
+        public @UnknownIfRecorded EXPRESSION saveUnrecorded(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError)
+        {
+            if (children.isEmpty())
+                return operations.makeExpression(errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
+            else
+                return save(errorDisplayers, onError, children.get(0), children.get(children.size() - 1));
+        }
+    */
     protected BracketedStatus getChildrenBracketedStatus()
     {
         return BracketedStatus.MISC;

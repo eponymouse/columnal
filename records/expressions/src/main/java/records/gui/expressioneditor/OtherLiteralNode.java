@@ -120,4 +120,16 @@ public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable, SEMANT
     {
         // Pretty needless when we are the type/unit...
     }
+
+    @Override
+    public boolean deleteLast()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean deleteFirst()
+    {
+        return false;
+    }
 }

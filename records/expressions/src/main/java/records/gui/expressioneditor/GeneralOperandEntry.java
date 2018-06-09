@@ -145,7 +145,33 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     {
         return container._test_getHeaderState();
     }
-    
+
+    @Override
+    public boolean deleteLast()
+    {
+        if (availableForFocus())
+        {
+            textField.requestFocus();
+            textField.end();
+            textField.deletePreviousChar();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean deleteFirst()
+    {
+        if (availableForFocus())
+        {
+            textField.requestFocus();
+            textField.home();
+            textField.deleteNextChar();
+            return true;
+        }
+        return false;
+    }
+
     public static interface OperandValue
     {
         public String getContent();
