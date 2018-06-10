@@ -44,9 +44,11 @@ orExpression :  expression (OR expression)+;
 ifThenElseExpression : IF expression THEN expression ELSE expression ENDIF;
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | PLUS_MINUS | COMMA;
-invalidOpExpression : INVALIDOPS OPEN_BRACKET (INVALIDEXP STRING | expression)* CLOSE_BRACKET;
 stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression;
+
+invalidOpItem : INVALIDEXP STRING | expression;
+invalidOpExpression : INVALIDOPS OPEN_BRACKET invalidOpItem* CLOSE_BRACKET;
 
 constructor : CONSTRUCTOR typeName COLON constructorName;
 
