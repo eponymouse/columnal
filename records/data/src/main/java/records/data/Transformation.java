@@ -50,7 +50,7 @@ public abstract class Transformation extends Table
         // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
         b.t(MainLexer.TRANSFORMATION).id(renames.tableId(getId())).id(getTransformationName(), QuoteBehaviour.QUOTE_SPACES).nl();
         b.t(MainLexer.SOURCE);
-        for (TableId src : getSources())
+        for (TableId src : getPrimarySources().collect(ImmutableList.toImmutableList()))
             b.id(renames.tableId(src));
         b.nl();
         b.inner(() -> saveDetail(destination, renames));
