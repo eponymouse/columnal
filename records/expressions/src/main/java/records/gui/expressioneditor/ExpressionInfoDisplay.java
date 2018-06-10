@@ -238,7 +238,8 @@ public class ExpressionInfoDisplay
                 if (popup == null)
                 {
                     show();
-                } else
+                }
+                else
                 {
                     // Make sure to cancel any hide animation:
                     cancelHideAnimation();
@@ -268,7 +269,7 @@ public class ExpressionInfoDisplay
     
     public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> replace)
     {
-        //Log.debug("Message and fixes: " + newMsgAndFixes);
+        Log.debug("Message and fixes: " + msg + " " + fixes.size());
         // The listener on this property should make the popup every time:
         errorMessage.set(StyledString.concat(errorMessage.get(), msg));
         this.fixes.set(Utility.concatI(this.fixes.get(), fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {

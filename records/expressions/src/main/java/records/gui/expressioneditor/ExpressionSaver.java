@@ -47,7 +47,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         public void terminate(Function<BracketedStatus, Expression> makeContent, Keyword terminator, ErrorDisplayer<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
     }
     
-    private final Stack<Pair<ArrayList<Either<Expression, Op>>, Terminator>> currentScopes = new Stack<>();
+    private final Stack<Pair<ArrayList<Either<@Recorded Expression, Op>>, Terminator>> currentScopes = new Stack<>();
     private final ErrorDisplayerRecord errorDisplayerRecord = new ErrorDisplayerRecord();
     
     public ExpressionSaver()
@@ -64,7 +64,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         }));
     }
 
-    public Expression finish()
+    public @Recorded Expression finish()
     {
         while (currentScopes.size() > 1)
         {
@@ -449,6 +449,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         }
         
         curItems.add(Either.left(singleItem));
+        errorDisplayerRecord.record(errorDisplayer, singleItem);
     }
     
     
