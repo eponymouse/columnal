@@ -178,7 +178,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
 
         // If the argument is null, just return this.
         // If non-null, check the item is an expression, and then apply the operator to our type
-        public CheckedExp applyToType(@Nullable UnaryOperator<TypeExp> changeType)
+        public CheckedExp applyToType(@Nullable UnaryOperator<@Recorded TypeExp> changeType)
         {
             if (changeType == null)
                 return this;

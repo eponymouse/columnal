@@ -244,7 +244,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             this.keyword = keyword;
         }
 
-        public abstract Either<Expression, Terminator> foundKeyword(Expression expressionBefore);
+        public abstract Either<Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore);
     }
     
     // Looks for @case
@@ -273,7 +273,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         }
 
         @Override
-        public Either<Expression, Terminator> foundKeyword(Expression expressionBefore)
+        public Either<Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore)
         {
             final Expression m;
             final ImmutableList<Function<MatchExpression, MatchClause>> newClauses;
