@@ -4,6 +4,7 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -68,6 +69,21 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         container.getStyleClass().add("entry");
         this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
+        
+        GeneralOperandEntry us = FXUtility.mouse(this);
+        textField.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            if (!us.availableForFocus())
+            {
+                if (textField.getCaretPosition() < textField.getLength() / 2)
+                {
+                    parent.focusLeftOf(us);
+                }
+                else
+                {
+                    parent.focusRightOf(us, Focus.LEFT);
+                }
+            }
+        });
     }
 
     @Override

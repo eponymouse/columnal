@@ -92,6 +92,14 @@ public class LeaveableTextField extends TextField
     }
 
     @Override
+    @OnThread(Tag.FX)
+    public void requestFocus()
+    {
+        if (isEditable())
+            super.requestFocus();
+    }
+
+    @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public String toString()
     {

@@ -1055,8 +1055,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @Override
     public boolean availableForFocus()
     {
-        // TODO base this on last saved item.
-        return true;
+        return textField.isEditable();
     }
 
 
@@ -1064,6 +1063,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public void save(ExpressionSaver saver)
     {
         String text = textField.getText().trim();
+        textField.setEditable(true);
         
         if (text.isEmpty())
             return; // Don't save blanks
@@ -1073,6 +1073,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (op.getContent().equals(text))
             {
                 saver.saveOperator(op, this, this::afterSave);
+                textField.setEditable(false);
                 return;
             }
         }
@@ -1082,6 +1083,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (keyword.getContent().equals(text))
             {
                 saver.saveKeyword(keyword, this, this::afterSave);
+                textField.setEditable(false);
                 return;
             }
         }
