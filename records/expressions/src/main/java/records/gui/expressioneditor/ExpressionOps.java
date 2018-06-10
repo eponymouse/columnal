@@ -209,25 +209,6 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     @Override
     public ExpressionSaver saveToClipboard()
     {
-        return new ExpressionSaver()
-        {
-            @Override
-            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
-            {
-                
-            }
-
-            @Override
-            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
-            {
-
-            }
-
-            @Override
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-            {
-                return typeExp;
-            }
-        };
+        return new ExpressionSaver();
     }
 }

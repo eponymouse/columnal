@@ -23,8 +23,13 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.CheckedExp;
+import records.transformations.expression.Expression.ExpressionKind;
+import records.transformations.expression.Expression.MultipleTableLookup;
+import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.IdentExpression;
 import records.transformations.expression.QuickFix;
+import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -34,6 +39,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.gui.FXUtility;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -73,26 +79,35 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public Expression save()
     {
-        ExpressionSaver saver = new ExpressionSaver()
-        {
-            @Override
-            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
-            {
-            }
-
-            @Override
-            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
-            {
-            }
-
-            @Override
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-            {
-                return typeExp;
-            }
-        };
+        ExpressionSaver saver = new ExpressionSaver();
         super.save(saver);
-        return saver.finish();
+        Expression expression = saver.finish();
+
+        try
+        {
+            if (tableManager != null)
+            {
+                TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
+                @Nullable CheckedExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), saver);
+                if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
+                {
+                    saver.recordError(expression, StyledString.s("Expression cannot be a pattern"));
+                }
+                latestType.set(dataType == null ? null : saver.recordLeftError(tableManager.getTypeManager(), expression, dataType.typeExp.toConcreteType(tableManager.getTypeManager())));
+                //Log.debug("Latest type: " + dataType);
+                //errorDisplayers.showAllTypes(tableManager.getTypeManager());
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            Log.log(e);
+            String msg = e.getLocalizedMessage();
+            if (msg != null)
+                addErrorAndFixes(StyledString.s(msg), Collections.emptyList());
+        }
+        
+        
+        return expression;
     }
 
     public boolean allowsSameRow()

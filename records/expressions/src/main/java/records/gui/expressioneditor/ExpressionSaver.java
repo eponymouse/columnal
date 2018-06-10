@@ -17,7 +17,11 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.QuickFix.ReplacementTarget;
+import records.typeExp.TypeExp;
+import styled.StyledShowable;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -33,7 +37,7 @@ import java.util.Stack;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class ExpressionSaver implements ErrorAndTypeRecorder
+public class ExpressionSaver implements ErrorAndTypeRecorder
 {
     class Context {}
     
@@ -43,21 +47,8 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
         public void terminate(Function<BracketedStatus, Expression> makeContent, Keyword terminator, ErrorDisplayer<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
     }
     
-    public class WithInfo<T>
-    {
-        private final ErrorDisplayer<Expression, ExpressionSaver> errorDisplayer;
-        private final FXPlatformConsumer<Context> withContext;
-        private final T item;
-
-        public WithInfo(T item, ErrorDisplayer<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
-        {
-            this.errorDisplayer = errorDisplayer;
-            this.withContext = withContext;
-            this.item = item;
-        }
-    }
-    
     private final Stack<Pair<ArrayList<Either<Expression, Op>>, Terminator>> currentScopes = new Stack<>();
+    private final ErrorDisplayerRecord errorDisplayerRecord = new ErrorDisplayerRecord();
     
     public ExpressionSaver()
     {
@@ -1034,4 +1025,26 @@ public abstract class ExpressionSaver implements ErrorAndTypeRecorder
     {
         return new OrExpression(args);
     }
+
+
+    @Override
+    @OnThread(Tag.Any)
+    public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
+    {
+        errorDisplayerRecord.getRecorder().recordError(src, error);
+    }
+    
+    @Override
+    @OnThread(Tag.Any)
+    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+    {
+        errorDisplayerRecord.getRecorder().recordQuickFixes(src, quickFixes);
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+    {
+        return errorDisplayerRecord.getRecorder().recordTypeNN(expression, typeExp);
+    }    
 }

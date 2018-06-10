@@ -18,6 +18,8 @@ import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -119,6 +121,7 @@ public class ErrorDisplayerRecord
         types.put(src, errorOrType);
     }
     
+    @OnThread(Tag.Any)
     public ErrorAndTypeRecorder getRecorder()
     {
         return new ErrorAndTypeRecorder()
