@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
@@ -82,7 +83,7 @@ public class ConstructorExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(tag.<String>either(str -> str, t -> t.getTypeName().getRaw() + ":" + t.getTagInfo().getName())));
+        return Stream.of(GeneralExpressionEntry.load(this));
     }
 
     @Override
@@ -124,9 +125,14 @@ public class ConstructorExpression extends NonOperatorExpression
         return tag.eitherInt(s -> {throw new InternalException("Could not find tag " + s);}, t -> t.tagIndex);        
     }
     
-    public String _test_getName()
+    public String getName()
     {
         return tag.either(s -> s, t -> t.getTagInfo().getName());
+    }
+    
+    public @Nullable TypeId getTypeName()
+    {
+        return tag.<@Nullable TypeId>either(s -> null, t -> t.getTypeName());
     }
 
     public boolean _test_hasInner()

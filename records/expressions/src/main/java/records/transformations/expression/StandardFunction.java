@@ -87,7 +87,7 @@ public class StandardFunction extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(functionDefinition.getName()));
+        return Stream.of(GeneralExpressionEntry.load(this));
     }
 
     @Override
@@ -123,8 +123,13 @@ public class StandardFunction extends NonOperatorExpression
         return Objects.hash(functionDefinition.getName());
     }
 
-    public String _test_getName()
+    public String getName()
     {
         return functionDefinition.getName();
+    }
+
+    public FunctionDefinition getFunction()
+    {
+        return functionDefinition;
     }
 }

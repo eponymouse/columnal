@@ -114,7 +114,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == StandardFunction.class)
         {
             StandardFunction function = (StandardFunction) expression;
-            write(function._test_getName(), DELAY);
+            write(function.getName(), DELAY);
             push(KeyCode.ENTER);
             // Get rid of brackets; if in a call expression, we will add them again:
             push(KeyCode.BACK_SPACE);
@@ -122,7 +122,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == ConstructorExpression.class)
         {
             ConstructorExpression tag = (ConstructorExpression) expression;
-            write(tag._test_getName(), DELAY);
+            write(tag.getName(), DELAY);
             push(KeyCode.ENTER);
             if (tag._test_hasInner())
             {

@@ -9,13 +9,17 @@ import javafx.scene.Node;
 import log.Log;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.ColumnId;
+import records.data.TableId;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -39,6 +43,7 @@ import records.transformations.function.FunctionList;
 import styled.StyledString;
 import utility.Either;
 import utility.ExFunction;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
@@ -48,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -108,6 +114,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
+    private @Nullable Pair<String, Function<String, Expression>> savePrefix;
+    
     GeneralExpressionEntry(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         super(Expression.class, parent);
@@ -124,6 +132,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             updateGraphics();
         });
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
+            if (!completing)
+            {
+                savePrefix = null;
+                prefix.setText("");
+            }
+            completing = false;
             updateGraphics();
             parent.changed(GeneralExpressionEntry.this);
         });
@@ -169,18 +183,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(typeLiteralCompletion);
         
         addAllFunctions(r);
-        r.add(new SimpleCompletion("", "true", null));
-        r.add(new SimpleCompletion("", "false", null));
+        r.add(new SimpleCompletion("true", null));
+        r.add(new SimpleCompletion("false", null));
         for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))
         {
-            if (column.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
-            {
-                r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getColumnId().getRaw(), "autocomplete.column.sameRow"));
-            }
-            else
-            {
-                r.add(new SimpleCompletion(ARROW_WHOLE, "@entire " + column.getColumnId().getRaw(), "autocomplete.column.entire"));
-            }
+            r.add(new ColumnCompletion(column));
         }
         for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
         {
@@ -260,7 +267,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         for (FunctionDefinition function : FunctionList.getAllFunctions(parent.getEditor().getTypeManager().getUnitManager()))
         {
-            r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
+            r.add(new FunctionCompletion(function));
         }
     }
 
@@ -271,13 +278,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     private static class SimpleCompletion extends GeneralCompletion
     {
-        private final String prefix;
         private final String text;
         private final @Nullable @LocalizableKey String descriptionKey;
 
-        public SimpleCompletion(String prefix, String text, @Nullable @LocalizableKey String descriptionKey)
+        public SimpleCompletion(String text, @Nullable @LocalizableKey String descriptionKey)
         {
-            this.prefix = prefix;
             this.descriptionKey = descriptionKey;
             this.text = text;
         }
@@ -286,7 +291,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(prefix + text, descriptionKey == null ? null : TranslationUtility.getString(descriptionKey));
+            return new CompletionContent(text, descriptionKey == null ? null : TranslationUtility.getString(descriptionKey));
         }
 
         @Override
@@ -318,10 +323,74 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public String toString()
         {
             return "SimpleCompletion{" +
-                    "prefix='" + prefix + '\'' +
                     ", text='" + text + '\'' +
                     ", description='" + descriptionKey + '\'' +
                     '}';
+        }
+    }
+
+    private static class ColumnCompletion extends GeneralCompletion
+    {
+        private final ColumnReference columnReference;
+
+        public ColumnCompletion(ColumnReference columnReference)
+        {
+            this.columnReference = columnReference;
+        }
+
+
+        @Override
+        public CompletionContent getDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(getArrow() + columnReference.getColumnId().getRaw(), getDescription());
+        }
+
+        private String getArrow()
+        {
+            if (columnReference.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+            {
+                return ARROW_SAME_ROW;
+            }
+            else
+            {
+                return ARROW_WHOLE;
+            }
+        }
+        
+        private @Localized String getDescription()
+        {
+            if (columnReference.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+            {
+                return TranslationUtility.getString("autocomplete.column.sameRow");
+            }
+            else
+            {
+                return TranslationUtility.getString("autocomplete.column.entire");
+            }
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return columnReference.getColumnId().getRaw().startsWith(input);
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return columnReference.getColumnId().getRaw().equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return columnReference.getColumnId().getRaw().contains("" + character);
+        }
+
+        @Override
+        String getValue(String currentText)
+        {
+            return columnReference.getColumnId().getRaw();
         }
     }
 
@@ -329,12 +398,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public static class FunctionCompletion extends Completion
     {
         private final FunctionDefinition function;
-        private final UnitManager unitManager;
 
-        public FunctionCompletion(FunctionDefinition function, UnitManager unitManager)
+        public FunctionCompletion(FunctionDefinition function)
         {
             this.function = function;
-            this.unitManager = unitManager;
         }
 
         @Override
@@ -606,6 +673,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         
         private String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
         {
+            savePrefix = null;
+            prefix.setText("");
+            
             if (c instanceof KeyShortcutCompletion)
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
@@ -631,23 +701,23 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 completing = true;
                 // Must do this while completing so that we're not marked as blank:
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
-                completing = false;                
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);                
                 return ((KeywordCompletion) c).keyword.getContent();
             }
             else if (c instanceof OperatorCompletion)
             {
                 completing = true;
                 // Must do this while completing so that we're not marked as blank:
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
-                completing = false;                
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);                
                 return ((OperatorCompletion) c).operator.getContent();
             }
             else if (c instanceof FunctionCompletion)
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
+                completing = true;
                 parent.ensureOperandToRight(GeneralExpressionEntry.this, GeneralExpressionEntry::isRoundBracket, () -> loadEmptyRoundBrackets());
+                setPrefixFunction(fc.function);
                 return fc.function.getName();
             }
             else if (c instanceof TagCompletion)
@@ -663,8 +733,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                     if (moveFocus)
                         parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
                 }
-                
+                completing = true;
+                setPrefixTag(tc.tagInfo.getTypeName());
                 return tc.tagInfo.getTagInfo().getName();
+            }
+            else if (c instanceof ColumnCompletion)
+            {
+                ColumnCompletion cc = (ColumnCompletion)c;
+                completing = true;
+                setPrefixColumn(cc.columnReference);
+                return cc.columnReference.getColumnId().getRaw();
             }
             else if (c == varDeclCompletion)
             {
@@ -684,7 +762,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 
                 if (gc instanceof SimpleCompletion)
                 {
-                    prefix.setText(((SimpleCompletion)gc).prefix);
                     return ((SimpleCompletion) gc).getValue(currentText);
                 }
                 else // Numeric literal or unfinished:
@@ -886,6 +963,66 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return p -> new GeneralExpressionEntry(value, p);
     }
 
+    public static SingleLoader<Expression, ExpressionSaver> load(ColumnReference columnReference)
+    {
+        return p -> {
+            GeneralExpressionEntry gee = new GeneralExpressionEntry(columnReference.getColumnId().getRaw(), p);
+            gee.setPrefixColumn(columnReference);
+            return gee;
+        };
+    }
+    
+    private void setPrefixColumn(ColumnReference columnReference)
+    {
+        savePrefix = new Pair<>(columnReference.getTableId() == null ? "" : (columnReference.getTableId().getRaw() + ":"), r -> new ColumnReference(columnReference.getTableId(), new ColumnId(r), columnReference.getReferenceType()));
+    }
+
+    public static SingleLoader<Expression, ExpressionSaver> load(ConstructorExpression constructorExpression)
+    {
+        return p -> {
+            GeneralExpressionEntry gee = new GeneralExpressionEntry(constructorExpression.getName(), p);
+            @Nullable TypeId typeName = constructorExpression.getTypeName();
+            if (typeName != null)
+            {
+                gee.setPrefixTag(typeName);
+            }
+            return gee;
+        };
+    }
+    
+    private void setPrefixTag(TypeId typeName)
+    {
+        savePrefix = new Pair<>(typeName.getRaw() + ":", r -> new ConstructorExpression(getParent().getEditor().getTypeManager(), typeName.getRaw(), r));
+        prefix.setText(savePrefix.getFirst());
+    }
+
+    public static SingleLoader<Expression, ExpressionSaver> load(StandardFunction standardFunction)
+    {
+        return p -> {
+            GeneralExpressionEntry gee = new GeneralExpressionEntry(standardFunction.getName(), p);
+            gee.setPrefixFunction(standardFunction.getFunction());
+            return gee;
+        };
+    }
+    
+    private void setPrefixFunction(FunctionDefinition standardFunction)
+    {
+        savePrefix = new Pair<>(standardFunction.getNamespace() + ":", r -> {
+            try
+            {
+                FunctionDefinition functionDefinition = FunctionList.lookup(getParent().getEditor().getTypeManager().getUnitManager(), standardFunction.getNamespace() + ":" + r);
+                if (functionDefinition != null)
+                    return new StandardFunction(functionDefinition);
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+            return new IdentExpression(r);
+        });
+        prefix.setText(savePrefix.getFirst());
+    }
+
     public static SingleLoader<Expression, ExpressionSaver> load(Op value)
     {
         return load(value.getContent());
@@ -927,6 +1064,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public void save(ExpressionSaver saver)
     {
         String text = textField.getText().trim();
+        
+        if (text.isEmpty())
+            return; // Don't save blanks
 
         for (Op op : Op.values())
         {
@@ -961,9 +1101,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         else
         {
-            // TODO Tags and functions and columns
-            
-            saver.saveOperand(new IdentExpression(text), this, this::afterSave);
+            if (savePrefix != null)
+                saver.saveOperand(savePrefix.getSecond().apply(text), this, this::afterSave);
+            else
+                saver.saveOperand(new IdentExpression(text), this, this::afterSave);
         }
         
     }

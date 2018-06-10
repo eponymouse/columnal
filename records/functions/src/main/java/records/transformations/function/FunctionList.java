@@ -111,7 +111,7 @@ public class FunctionList
     {
         for (FunctionDefinition functionDefinition : getAllFunctions(mgr))
         {
-            if (functionDefinition.getName().equals(functionName))
+            if (functionDefinition.getName().equals(functionName) || functionDefinition.getScopedName().equals(functionName))
                 return functionDefinition;
         }
         return null;

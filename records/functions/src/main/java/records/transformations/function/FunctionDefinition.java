@@ -44,19 +44,23 @@ public abstract class FunctionDefinition
     private static final ResourceBundle FUNCTION_UNITARGS = ResourceBundle.getBundle("function_unitargs");
     private static final ResourceBundle FUNCTION_TYPES = ResourceBundle.getBundle("function_types");
     
-    // Namespace slash function name
+    // Namespace colon function name
     private final @FuncDocKey String funcDocKey;
-    private final String name;
     private final TypeMatcher typeMatcher;
     private final @Localized String miniDescription;
 
     public FunctionDefinition(@FuncDocKey String funcDocKey) throws InternalException
     {
         this.funcDocKey = funcDocKey;
-        this.name = extractName(funcDocKey);
-        Details details = lookupFunction(name, funcDocKey);
+        Details details = lookupFunction(extractName(funcDocKey), funcDocKey);
         this.miniDescription = details.miniDescription;
         this.typeMatcher = details.typeMatcher;
+    }
+
+    private static String extractNamespace(@FuncDocKey String funcDocKey)
+    {
+        String[] split = funcDocKey.split(":");
+        return split[0];
     }
 
     private static String extractName(@FuncDocKey String funcDocKey)
@@ -64,7 +68,12 @@ public abstract class FunctionDefinition
         String[] split = funcDocKey.split(":");
         return split[split.length - 1];
     }
-    
+
+    public Object getScopedName()
+    {
+        return funcDocKey;
+    }
+
     private static class Details
     {
         private final @Localized String miniDescription;
@@ -202,7 +211,12 @@ public abstract class FunctionDefinition
 
     public String getName()
     {
-        return name;
+        return extractName(funcDocKey);
+    }
+
+    public String getNamespace()
+    {
+        return extractNamespace(funcDocKey);
     }
 
     public @FuncDocKey String getDocKey()
