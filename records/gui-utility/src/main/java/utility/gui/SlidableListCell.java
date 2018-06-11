@@ -42,7 +42,7 @@ public class SlidableListCell<T> extends ListCell<T>
         }
 
         Timeline t = new Timeline(new KeyFrame(Duration.millis(200),
-            Utility.mapList(cells, c -> new KeyValue(c.xPosition, c.getWidth())).toArray(new KeyValue[0])));
+            cells.stream().map(c -> new KeyValue(c.xPosition, c.getWidth())).toArray(KeyValue[]::new)));
 
         if (after != null)
         {
@@ -61,7 +61,7 @@ public class SlidableListCell<T> extends ListCell<T>
         }
 
         Timeline t = new Timeline(new KeyFrame(Duration.millis(200),
-            Utility.mapList(cells, c -> new KeyValue(c.xPosition, 0)).toArray(new KeyValue[0])));
+            cells.stream().map(c -> new KeyValue(c.xPosition, 0)).toArray(KeyValue[]::new)));
 
         if (after != null)
         {

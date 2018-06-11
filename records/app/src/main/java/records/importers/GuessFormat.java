@@ -354,9 +354,11 @@ public class GuessFormat
         }
         else
         {
-            initialCharsetGuess = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+            @SuppressWarnings("keyfor")
+            Optional<@KeyFor("initialByCharset") Charset> c = GuessFormat.<@KeyFor("initialByCharset") Charset>guessCharset(initialByCharset.keySet());
+            initialCharsetGuess = c;
         }
-        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.orElse(null));
+        SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.<Charset>map(c -> c).orElse(null));
         @Nullable Pair<String, String> sepAndQuot = itfOverride != null ? new Pair<>(itfOverride.separator, itfOverride.quote) :
             initialCharsetGuess.map(initialByCharset::get).map(GuessFormat::guessSepAndQuot).orElse(null);
         SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getFirst());
