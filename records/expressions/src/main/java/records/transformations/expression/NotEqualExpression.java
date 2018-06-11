@@ -54,7 +54,7 @@ public class NotEqualExpression extends BinaryOpExpression
         {
             return null;
         }
-        return new CheckedExp(TypeExp.bool(this), state, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state, ExpressionKind.EXPRESSION);
     }
 
     @Override

@@ -44,7 +44,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable @Recorded CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         ImmutableList<TypeExp> questTypes = typeState.findVarType(getVarName());
         if (questTypes == null || questTypes.isEmpty())

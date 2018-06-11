@@ -41,6 +41,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
         this.type = type;
     }
 
+    @SuppressWarnings("recorded") // Don't need to record when making a fix
     public static Expression fixType(TypeManager typeManager, JellyType fix, @Recorded Expression expression) throws InternalException
     {
         try

@@ -64,7 +64,7 @@ public class AndExpression extends NaryOpExpression
                 return null;
             state = checked.typeState;
         }
-        return new CheckedExp(TypeExp.bool(this), state, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state, ExpressionKind.EXPRESSION);
     }
 
     @Override

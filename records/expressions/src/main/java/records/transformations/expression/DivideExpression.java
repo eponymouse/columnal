@@ -64,7 +64,7 @@ public class DivideExpression extends BinaryOpExpression
         {
             return null;
         }
-        return new CheckedExp(new NumTypeExp(this, topUnit.divideBy(bottomUnit)), state, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, new NumTypeExp(this, topUnit.divideBy(bottomUnit))), state, ExpressionKind.EXPRESSION);
     }
 
     @Override

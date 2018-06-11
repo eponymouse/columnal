@@ -37,7 +37,7 @@ public class AddSubtractExpression extends NaryOpExpression
     public static enum AddSubtractOp
     { ADD, SUBTRACT };
     private final List<AddSubtractOp> ops;
-    private @Nullable @Recorded CheckedExp type;
+    private @Nullable CheckedExp type;
 
     public AddSubtractExpression(List<@Recorded Expression> expressions, List<AddSubtractOp> addSubtractOps)
     {

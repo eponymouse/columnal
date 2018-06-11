@@ -135,6 +135,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
 
             }
 
+            @SuppressWarnings("recorded")
             @Override
             public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
             {

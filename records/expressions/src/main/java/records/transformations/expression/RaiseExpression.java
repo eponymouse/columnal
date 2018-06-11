@@ -98,7 +98,7 @@ public class RaiseExpression extends BinaryOpExpression
                             return null;
                         ourType = new NumTypeExp(this, new UnitExp(lhsUnit).raisedTo(r.getNum().intValueExact()));
                     }
-                    return new CheckedExp(ourType, typeState, ExpressionKind.EXPRESSION);
+                    return new CheckedExp(onError.recordTypeNN(this, ourType), typeState, ExpressionKind.EXPRESSION);
                 }
                 catch (ArithmeticException e)
                 {
@@ -114,7 +114,7 @@ public class RaiseExpression extends BinaryOpExpression
             return null;
         if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.plainNumber(this), rhsTypeFinal)) == null)
             return null;
-        return new CheckedExp(TypeExp.plainNumber(this), typeState, ExpressionKind.EXPRESSION);
+        return new CheckedExp(onError.recordTypeNN(this, TypeExp.plainNumber(this)), typeState, ExpressionKind.EXPRESSION);
     }
 
     @Override
