@@ -79,9 +79,9 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public Expression save()
     {
-        ExpressionSaver saver = new ExpressionSaver();
+        ExpressionSaver saver = new ExpressionSaver(this);
         super.save(saver);
-        Expression expression = saver.finish();
+        Expression expression = saver.finish(children.get(children.size() - 1));
 
         try
         {
@@ -103,7 +103,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             Log.log(e);
             String msg = e.getLocalizedMessage();
             if (msg != null)
-                addErrorAndFixes(StyledString.s(msg), Collections.emptyList());
+                addErrorAndFixes(null, null, StyledString.s(msg), Collections.emptyList());
         }
         
         

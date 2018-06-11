@@ -29,24 +29,45 @@ import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
- * Created by neil on 24/02/2017.
+ * For displaying semantic errors (which occur on a particular expression)
  */
 public class ErrorDisplayerRecord
 {    
+    // A semantic error matches an expression which may span multiple children.
+    public class Span<E extends StyledShowable, S>
+    {
+        public final ConsecutiveBase<E, S> parent;
+        public final @Nullable ConsecutiveChild<E, S> start;
+        public final @Nullable ConsecutiveChild<E, S> end;
+        
+        public Span(ConsecutiveBase<E, S> parent, @Nullable ConsecutiveChild<E, S> start, @Nullable ConsecutiveChild<E, S> end)
+        {
+            this.parent = parent;
+            this.start = start;
+            this.end = end;
+        }
+
+        public void addErrorAndFixes(StyledString styledString, List<QuickFix<E, S>> quickFixes)
+        {
+            parent.addErrorAndFixes(start, end, styledString, quickFixes);
+        }
+    }
+    
+    
     // We use IdentityHashMap because we want to distinguish between multiple duplicate sub-expressions,
     // e.g. in the expression 2 + abs(2), we want to assign any error to the right 2.  Because of this
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
-    private final IdentityHashMap<Expression, ErrorDisplayer<Expression, ExpressionSaver>> expressionDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<UnitExpression, ErrorDisplayer<UnitExpression, UnitSaver>> unitDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<TypeExpression, ErrorDisplayer<TypeExpression, TypeParent>> typeDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<Expression, Span<Expression, ExpressionSaver>> expressionDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<UnitExpression, Span<UnitExpression, UnitSaver>> unitDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<TypeExpression, Span<TypeExpression, TypeParent>> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?, ?>>>> pending = new IdentityHashMap<>();
     
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
-    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer<Expression, ExpressionSaver> displayer, @NonNull EXPRESSION e)
+    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable ConsecutiveChild<Expression, ExpressionSaver> start, @Nullable ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
     {
-        expressionDisplayers.put(e, displayer);
+        expressionDisplayers.put(e, new Span<>(parent, start, end));
         Pair<StyledString, List<QuickFix<?, ?>>> pendingItem = pending.remove(e);
         if (pendingItem != null)
         {
@@ -57,22 +78,22 @@ public class ErrorDisplayerRecord
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(@UnknownInitialization(Object.class) ErrorDisplayer<UnitExpression, UnitSaver> displayer, @NonNull UNIT_EXPRESSION e)
+    public <UNIT_EXPRESSION extends UnitExpression> @NonNull @Recorded UNIT_EXPRESSION recordUnit(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, @NonNull UNIT_EXPRESSION e)
     {
-        unitDisplayers.put(e, displayer);
+        unitDisplayers.put(e, new Span<>(start.getParent(), start, end));
         return e;
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(@UnknownInitialization(Object.class) ErrorDisplayer<TypeExpression, TypeParent> displayer, @NonNull TYPE_EXPRESSION e)
+    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(ConsecutiveChild<TypeExpression, TypeParent> start, ConsecutiveChild<TypeExpression, TypeParent> end, @NonNull TYPE_EXPRESSION e)
     {
-        typeDisplayers.put(e, displayer);
+        typeDisplayers.put(e, new Span<>(start.getParent(), start, end));
         return e;
     }
 
     private void showError(Expression e, @Nullable StyledString s, List<QuickFix<Expression,ExpressionSaver>> quickFixes)
     {
-        @Nullable ErrorDisplayer<Expression, ExpressionSaver> d = expressionDisplayers.get(e);
+        @Nullable Span<Expression, ExpressionSaver> d = expressionDisplayers.get(e);
         if (d != null)
         {
             d.addErrorAndFixes(s == null ? StyledString.s("") : s, quickFixes);
@@ -88,6 +109,7 @@ public class ErrorDisplayerRecord
         }
     }
     
+    /*
     public void showAllTypes(TypeManager typeManager)
     {
         expressionDisplayers.forEach(((expression, errorDisplayer) -> {
@@ -115,6 +137,7 @@ public class ErrorDisplayerRecord
             
         }));
     }
+    */
 
     public void recordType(Expression src, Either<TypeConcretisationError, TypeExp> errorOrType)
     {
@@ -156,7 +179,7 @@ public class ErrorDisplayerRecord
     }
 
     @SuppressWarnings("nullness")
-    public ErrorDisplayer<Expression, ExpressionSaver> recorderFor(@Recorded Expression expression)
+    public Span<Expression, ExpressionSaver> recorderFor(@Recorded Expression expression)
     {
         return expressionDisplayers.get(expression);
     }

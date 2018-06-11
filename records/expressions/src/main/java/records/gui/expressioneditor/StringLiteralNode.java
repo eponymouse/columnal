@@ -95,7 +95,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
     @Override
     public void save(ExpressionSaver saver)
     {
-        saver.saveOperand(new records.transformations.expression.StringLiteral(textField.getText()), this, c -> {});
+        saver.saveOperand(new records.transformations.expression.StringLiteral(textField.getText()), this, this, c -> {});
     }
 
     @Override

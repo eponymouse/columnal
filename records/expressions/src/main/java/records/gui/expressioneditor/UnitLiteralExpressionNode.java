@@ -36,15 +36,9 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
-    protected ErrorDisplayer<?, ?> getInnerErrorDisplayer()
-    {
-        return unit;
-    }
-
-    @Override
     public void save(ExpressionSaver saver)
     {
-        saver.saveOperand(new UnitLiteralExpression(unit.save()), this, c -> {});
+        saver.saveOperand(new UnitLiteralExpression(unit.save()), this, this, c -> {});
     }
 
     @Override

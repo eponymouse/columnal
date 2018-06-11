@@ -42,7 +42,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     String save(EXPRESSION expression, TableAndColumnRenames renames);
 
     // The toString() method of the saver can be used to get the string content
-    @NonNull SEMANTIC_PARENT saveToClipboard();
+    @NonNull SEMANTIC_PARENT saveToClipboard(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent);
     
     
 

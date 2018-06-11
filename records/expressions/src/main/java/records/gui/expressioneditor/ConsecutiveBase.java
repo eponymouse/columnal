@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, Locatable, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, Locatable
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
 
@@ -487,7 +487,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             // Problem:
             return null;
 
-        final SEMANTIC_PARENT saver = operations.saveToClipboard();
+        final SEMANTIC_PARENT saver = operations.saveToClipboard(this);
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : all.subList(startIndex, endIndex + 1))
         {
             child.save(saver);
@@ -732,26 +732,33 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return getAllChildren().stream().anyMatch(c -> c.isFocused());
     }
 
-    @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+    public void addErrorAndFixes(@Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, @Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end, StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         //Log.logStackTrace("\n\n\n" + this + " showing " + error.toPlain() + " " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
-        children.get(0).addErrorAndFixes(error, quickFixes);
+        boolean inSpan = start == null;
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            if (child == start)
+                inSpan = true;
+            
+            if (inSpan)
+                child.addErrorAndFixes(error, quickFixes);
+            
+            if (child == end)
+                inSpan = false;
+        }
     }
 
-    @Override
     public void clearAllErrors()
     {
         children.forEach(op -> op.clearAllErrors());
     }
 
-    @Override
     public boolean isShowingError()
     {
         return children.get(0).isShowingError();
     }
 
-    @Override
     public void showType(String type)
     {
     }

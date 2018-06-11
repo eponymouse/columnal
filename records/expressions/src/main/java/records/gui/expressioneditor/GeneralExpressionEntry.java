@@ -1091,22 +1091,22 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         Optional<@Value Number> number = Utility.parseNumberOpt(text);
         if (number.isPresent())
         {
-            saver.saveOperand(new NumericLiteral(number.get(), null), this, this::afterSave);
+            saver.saveOperand(new NumericLiteral(number.get(), null), this, this, this::afterSave);
         }
         else if (text.startsWith("$"))
         {
-            saver.saveOperand(new VarDeclExpression(text.substring(1)), this, this::afterSave);
+            saver.saveOperand(new VarDeclExpression(text.substring(1)), this, this, this::afterSave);
         }
         else if (text.equals("true") || text.equals("false"))
         {
-            saver.saveOperand(new BooleanLiteral(text.equals("true")), this, this::afterSave);
+            saver.saveOperand(new BooleanLiteral(text.equals("true")), this, this, this::afterSave);
         }
         else
         {
             if (savePrefix != null)
-                saver.saveOperand(savePrefix.getSecond().apply(text), this, this::afterSave);
+                saver.saveOperand(savePrefix.getSecond().apply(text), this, this, this::afterSave);
             else
-                saver.saveOperand(new IdentExpression(text), this, this::afterSave);
+                saver.saveOperand(new IdentExpression(text), this, this, this::afterSave);
         }
         
     }

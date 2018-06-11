@@ -119,7 +119,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     }
 
     @Override
-    public UnitSaver saveToClipboard()
+    public UnitSaver saveToClipboard(ConsecutiveBase<UnitExpression, UnitSaver> parent)
     {
         return new UnitSaver() {
 

@@ -61,12 +61,6 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
     }
 
     @Override
-    protected ErrorDisplayer<?, ?> getInnerErrorDisplayer()
-    {
-        return type;
-    }
-
-    @Override
     public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionSaver>> quickFixes)
     {
     }
@@ -108,7 +102,7 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
     @Override
     public void save(ExpressionSaver saver)
     {
-        saver.saveOperand(new TypeLiteralExpression(type.save()), this, c -> {});
+        saver.saveOperand(new TypeLiteralExpression(type.save()), this, this, c -> {});
     }
 
     @Override

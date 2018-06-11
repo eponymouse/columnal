@@ -126,7 +126,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     }
 
     @Override
-    public TypeParent saveToClipboard()
+    public TypeParent saveToClipboard(ConsecutiveBase<TypeExpression, TypeParent> parent)
     {
         return new TypeParent()
         {

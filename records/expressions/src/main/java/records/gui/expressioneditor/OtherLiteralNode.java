@@ -35,7 +35,6 @@ public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable, SEMANT
 
     // Can't use Java generics to share the types, so we have to have multiple methods which should return the same thing:
     protected abstract EEDisplayNode getInnerDisplayNode();
-    protected abstract ErrorDisplayer<?, ?> getInnerErrorDisplayer();
 
     @Override
     public void focus(Focus side)
@@ -106,13 +105,13 @@ public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable, SEMANT
     @Override
     public void clearAllErrors()
     {
-        getInnerErrorDisplayer().clearAllErrors();
+        consecParent.clearAllErrors();
     }
 
     @Override
     public boolean isShowingError()
     {
-        return getInnerErrorDisplayer().isShowingError();
+        return consecParent.isShowingError();
     }
 
     @Override

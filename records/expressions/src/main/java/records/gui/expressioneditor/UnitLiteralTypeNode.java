@@ -37,13 +37,7 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     {
         return unit;
     }
-
-    @Override
-    protected ErrorDisplayer<?, ?> getInnerErrorDisplayer()
-    {
-        return unit;
-    }
-
+    
     @Override
     public void save(TypeParent saver)
     {
