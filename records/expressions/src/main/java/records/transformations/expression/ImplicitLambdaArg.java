@@ -115,7 +115,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     // If any of the list are implicit lambda args ('?'), returns a new type state
     // with a type for '?' and a wrap function which will turn the item into a function.
     // If none are, returns null and unaltered type state.
-    protected static Pair<@Nullable UnaryOperator<TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
+    protected static Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
     {
         ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
         
@@ -147,7 +147,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
      * @return
      */
     @OnThread(Tag.Simulation)
-    public static @Value Object makeImplicitFunction(ImmutableList<Expression> possibleArgs, EvaluateState state, SimulationFunction<EvaluateState, @Value Object> body) throws UserException, InternalException
+    public static @Value Object makeImplicitFunction(ImmutableList<@Recorded Expression> possibleArgs, EvaluateState state, SimulationFunction<EvaluateState, @Value Object> body) throws UserException, InternalException
     {
         ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(possibleArgs);
         if (lambdaArgs.size() == 0)

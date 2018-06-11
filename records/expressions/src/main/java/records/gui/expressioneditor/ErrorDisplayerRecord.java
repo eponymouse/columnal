@@ -154,4 +154,10 @@ public class ErrorDisplayerRecord
             }
         };
     }
+
+    @SuppressWarnings("nullness")
+    public ErrorDisplayer<Expression, ExpressionSaver> recorderFor(@Recorded Expression expression)
+    {
+        return expressionDisplayers.get(expression);
+    }
 }
