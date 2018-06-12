@@ -7,6 +7,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.gui.expressioneditor.ExpressionSaver.BracketAndNodes;
 import records.gui.expressioneditor.ExpressionSaver.OperatorExpressionInfo;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
@@ -20,6 +21,7 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
+import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
@@ -41,17 +43,17 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
     new OperatorExpressionInfo<UnitExpression, UnitSaver, UnitOp>(
             opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
 
-    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<UnitOp> operators, BracketedStatus bracketedStatus)
+    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<UnitOp> operators, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
     {
         return new UnitTimesExpression(expressions);
     }
 
-    private static UnitExpression makeDivide(UnitExpression lhs, UnitExpression rhs, BracketedStatus bracketedStatus)
+    private static UnitExpression makeDivide(UnitExpression lhs, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
     {
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static UnitExpression makeRaise(UnitExpression lhs, UnitExpression rhs, BracketedStatus bracketedStatus)
+    private static UnitExpression makeRaise(UnitExpression lhs, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
     {
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
@@ -70,7 +72,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
     // Ends a mini-expression
     private static interface Terminator
     {
-        public void terminate(Function<BracketedStatus, UnitExpression> makeContent, UnitBracket terminator, ErrorDisplayer<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
+        public void terminate(Function<BracketAndNodes<UnitExpression, UnitSaver>, UnitExpression> makeContent, UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
     }
     
     public UnitSaver()
@@ -87,7 +89,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
         }));
     }
 
-    public UnitExpression finish()
+    public UnitExpression finish(ConsecutiveBase<UnitExpression, UnitSaver> parent)
     {
         if (currentScopes.size() > 1)
         {
@@ -96,11 +98,11 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
         }
         else
         {
-            return makeExpression(currentScopes.pop().getFirst(), BracketedStatus.TOP_LEVEL);
+            return makeExpression(currentScopes.pop().getFirst(), new BracketAndNodes<>(BracketedStatus.TOP_LEVEL, parent.children.get(0), parent.children.get(parent.children.size() - 1)));
         }
     }
 
-    private UnitExpression makeExpression(List<Either<UnitExpression, UnitOp>> content, BracketedStatus bracketedStatus)
+    private UnitExpression makeExpression(List<Either<UnitExpression, UnitOp>> content, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
     {
         if (content.isEmpty())
             return new InvalidOperatorUnitExpression(ImmutableList.of());
@@ -190,15 +192,17 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
         currentScopes.peek().getFirst().add(Either.left(singleItem));
     }
 
-    public void saveBracket(UnitBracket bracket, ErrorDisplayer<UnitExpression, UnitSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
+    public void saveBracket(UnitBracket bracket, ConsecutiveChild<UnitExpression, UnitSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
         if (bracket == UnitBracket.OPEN_ROUND)
         {
             currentScopes.push(new Pair<>(new ArrayList<>(), (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
+                BracketAndNodes<UnitExpression, UnitSaver> brackets = new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, keywordErrorDisplayer);
                 if (terminator == UnitBracket.CLOSE_ROUND)
                 {
                     // All is well:
-                    UnitExpression result = makeContent.apply(BracketedStatus.DIRECT_ROUND_BRACKETED);
+                    
+                    UnitExpression result = makeContent.apply(brackets);
                     currentScopes.peek().getFirst().add(Either.left(result));
                 }
                 else
@@ -207,7 +211,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
                     keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<String, UnitExpression>> items = ImmutableList.builder();
-                    items.add(Either.right(makeContent.apply(BracketedStatus.DIRECT_ROUND_BRACKETED)));
+                    items.add(Either.right(makeContent.apply(brackets)));
                     items.add(Either.left(terminator.getContent()));
                     InvalidOperatorUnitExpression invalid = new InvalidOperatorUnitExpression(items.build());
                     currentScopes.peek().getFirst().add(Either.left(invalid));

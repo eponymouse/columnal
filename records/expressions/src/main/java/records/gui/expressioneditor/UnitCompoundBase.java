@@ -67,6 +67,6 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
         {
             child.save(unitSaver);
         }
-        return unitSaver.finish();
+        return unitSaver.finish(this);
     }
 }
