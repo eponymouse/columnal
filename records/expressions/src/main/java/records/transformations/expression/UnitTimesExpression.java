@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
@@ -19,9 +20,9 @@ import java.util.stream.Stream;
 
 public class UnitTimesExpression extends UnitExpression
 {
-    private final ImmutableList<UnitExpression> operands;
+    private final ImmutableList<@Recorded UnitExpression> operands;
 
-    public UnitTimesExpression(ImmutableList<UnitExpression> operands)
+    public UnitTimesExpression(ImmutableList<@Recorded UnitExpression> operands)
     {
         this.operands = operands;
     }

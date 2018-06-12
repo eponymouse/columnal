@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -26,9 +27,9 @@ import java.util.stream.Stream;
  */
 public class UnitLiteralExpression extends NonOperatorExpression
 {
-    private final UnitExpression unitExpression;
+    private final @Recorded UnitExpression unitExpression;
 
-    public UnitLiteralExpression(UnitExpression unitExpression)
+    public UnitLiteralExpression(@Recorded UnitExpression unitExpression)
     {
         this.unitExpression = unitExpression;
     }
@@ -101,7 +102,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
         return StyledString.concat(StyledString.s("{"), unitExpression.toStyledString(), StyledString.s("}"));
     }
 
-    public UnitExpression getUnit()
+    public @Recorded UnitExpression getUnit()
     {
         return unitExpression;
     }

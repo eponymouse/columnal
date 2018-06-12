@@ -172,8 +172,8 @@ public class MatchExpression extends NonOperatorExpression
      */
     public static class Pattern
     {
-        private final Expression pattern;
-        private final @Nullable Expression guard;
+        private final @Recorded Expression pattern;
+        private final @Nullable @Recorded Expression guard;
 
         public Pattern(@Recorded Expression pattern, @Nullable @Recorded Expression guard)
         {
@@ -234,7 +234,7 @@ public class MatchExpression extends NonOperatorExpression
             return guard == null ? patternDisplay : StyledString.concat(StyledString.s(" given "), guard.toDisplay(BracketedStatus.MISC));
         }
 
-        public Expression getPattern()
+        public @Recorded Expression getPattern()
         {
             return pattern;
         }

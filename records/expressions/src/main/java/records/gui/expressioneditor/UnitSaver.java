@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -40,7 +41,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
     new OperatorExpressionInfo<UnitExpression, UnitSaver, UnitOp>(
             opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
 
-    private static UnitExpression makeTimes(ImmutableList<UnitExpression> expressions, List<UnitOp> operators, BracketedStatus bracketedStatus)
+    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<UnitOp> operators, BracketedStatus bracketedStatus)
     {
         return new UnitTimesExpression(expressions);
     }

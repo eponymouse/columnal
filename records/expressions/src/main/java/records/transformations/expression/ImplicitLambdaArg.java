@@ -117,7 +117,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     // If none are, returns null and unaltered type state.
     protected static Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
     {
-        ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
+        ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
         
         if (!lambdaArgs.isEmpty())
         {
@@ -188,7 +188,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
         }
     }
 
-    public static ImmutableList<ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<Expression> possibleArgs)
+    public static ImmutableList<@Recorded ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<@Recorded Expression> possibleArgs)
     {
         return Utility.filterClass(possibleArgs.stream(), ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
     }

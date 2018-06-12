@@ -57,6 +57,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             return new UnitDivideExpression(r, new UnitTimesExpression(bottom));
     }
 
+    @SuppressWarnings("recorded") // Don't record when loading from Jelly
     public static @Recorded UnitExpression load(JellyUnit unit)
     {
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
