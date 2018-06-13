@@ -7,8 +7,14 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.gui.expressioneditor.ExpressionSaver.BinaryOperatorSection;
 import records.gui.expressioneditor.ExpressionSaver.BracketAndNodes;
+import records.gui.expressioneditor.ExpressionSaver.MakeBinary;
+import records.gui.expressioneditor.ExpressionSaver.MakeNary;
+import records.gui.expressioneditor.ExpressionSaver.NaryOperatorSection;
 import records.gui.expressioneditor.ExpressionSaver.OperatorExpressionInfo;
+import records.gui.expressioneditor.ExpressionSaver.OperatorExpressionInfoBase;
+import records.gui.expressioneditor.ExpressionSaver.OperatorSection;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
@@ -36,12 +42,67 @@ import java.util.function.Function;
 
 public abstract class UnitSaver implements ErrorAndTypeRecorder
 {
-    final static ImmutableList<OperatorExpressionInfo<UnitExpression, UnitSaver, UnitOp>> OPERATORS = ImmutableList.of(new OperatorExpressionInfo<UnitExpression, UnitSaver, UnitOp>(ImmutableList.of(
+    final static ImmutableList<OperatorExpressionInfoBase<UnitExpression, UnitSaver, UnitOp>> OPERATORS = ImmutableList.of(
+        new OperatorExpressionInfoUnit(ImmutableList.of(
             opD(UnitOp.MULTIPLY, "op.times")), UnitSaver::makeTimes),
-    new OperatorExpressionInfo<UnitExpression, UnitSaver, UnitOp>(
+    new OperatorExpressionInfoUnit(
             opD(UnitOp.DIVIDE, "op.divide"), UnitSaver::makeDivide),
-    new OperatorExpressionInfo<UnitExpression, UnitSaver, UnitOp>(
+    new OperatorExpressionInfoUnit(
             opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
+
+    private static class OperatorExpressionInfoUnit extends OperatorExpressionInfoBase<UnitExpression, UnitSaver, UnitOp>
+    {
+        OperatorExpressionInfoUnit(ImmutableList<Pair<UnitOp, @Localized String>> operators, MakeNary<UnitExpression, UnitSaver, UnitOp> makeExpression)
+        {
+            super(operators, makeExpression);
+        }
+
+        OperatorExpressionInfoUnit(Pair<UnitOp, @Localized String> operator, MakeBinary<UnitExpression, UnitSaver> makeExpression)
+        {
+            super(operator, makeExpression);
+        }
+
+        @Override
+        public OperatorSection<UnitExpression, UnitSaver, UnitOp> makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, UnitOp initialOperator, int initialIndex)
+        {
+            return makeExpression.either(
+                nAry -> new NaryOperatorSectionUnit(errorDisplayerRecord, operators, operatorSetPrecedence, nAry, initialIndex, initialOperator),
+                binary -> new BinaryOperatorSectionUnit(errorDisplayerRecord, operators, operatorSetPrecedence, binary, initialIndex)
+            );
+        }
+    }
+
+    static class BinaryOperatorSectionUnit extends BinaryOperatorSection<UnitExpression, UnitSaver, UnitOp>
+    {
+        private BinaryOperatorSectionUnit(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<UnitOp, @Localized String>> operators, int candidatePrecedence, MakeBinary<UnitExpression, UnitSaver> makeExpression, int initialIndex)
+        {
+            super(errorDisplayerRecord, operators, candidatePrecedence, makeExpression, initialIndex);
+        }
+
+        protected @Recorded UnitExpression makeBinary(@Recorded UnitExpression lhs, @Recorded UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> brackets)
+        {
+            return errorDisplayerRecord.recordUnit(brackets.start, brackets.end, makeExpression.makeBinary(lhs, rhs, brackets));
+        }
+    }
+
+    static class NaryOperatorSectionUnit extends NaryOperatorSection<UnitExpression, UnitSaver, UnitOp>
+    {
+        NaryOperatorSectionUnit(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<UnitOp, @Localized String>> operators, int candidatePrecedence, MakeNary<UnitExpression, UnitSaver, UnitOp> makeExpression, int initialIndex, UnitOp initialOperator)
+        {
+            super(errorDisplayerRecord, operators, candidatePrecedence, makeExpression, initialIndex, initialOperator);
+        }
+
+        @Override
+        protected @Nullable @Recorded UnitExpression makeNary(ImmutableList<@Recorded UnitExpression> expressions, List<UnitOp> operators, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
+        {
+            UnitExpression expression = makeExpression.makeNary(expressions, operators, bracketedStatus);
+            if (expression == null)
+                return null;
+            else
+                return errorDisplayerRecord.recordUnit(bracketedStatus.start, bracketedStatus.end, expression);
+        }
+    }
+
 
     private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<UnitOp> operators, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
     {
@@ -67,6 +128,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
 
     class Context {}
 
+    private final ErrorDisplayerRecord errorDisplayerRecord = new ErrorDisplayerRecord();
     private final Stack<Pair<ArrayList<Either<UnitExpression, UnitOp>>, Terminator>> currentScopes = new Stack<>();
 
     // Ends a mini-expression
@@ -89,7 +151,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
         }));
     }
 
-    public UnitExpression finish(ConsecutiveBase<UnitExpression, UnitSaver> parent)
+    public @Recorded UnitExpression finish(ConsecutiveBase<UnitExpression, UnitSaver> parent)
     {
         if (currentScopes.size() > 1)
         {
@@ -162,17 +224,18 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
             }
             
             // Now we need to check the operators can work together as one group:
-
-            @Nullable UnitExpression e = ExpressionSaver.<UnitExpression, UnitSaver, UnitOp>makeExpressionWithOperators(ImmutableList.of(OPERATORS), this, UnitSaver::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), bracketedStatus, arg -> arg);
+            @Nullable UnitExpression e = ExpressionSaver.<UnitExpression, UnitSaver, UnitOp>makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, this::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), bracketedStatus, arg -> arg);
             if (e != null)
+            {
                 return e;
+            }
 
         }
 
         return new InvalidOperatorUnitExpression(ImmutableList.copyOf(invalid));
     }
 
-    private static UnitExpression makeInvalidOp(ImmutableList<Either<UnitOp, UnitExpression>> items)
+    private @Recorded UnitExpression makeInvalidOp(ImmutableList<Either<UnitOp, UnitExpression>> items)
     {
         return new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.mapBoth(op -> op.getContent(), y -> y)));
     }

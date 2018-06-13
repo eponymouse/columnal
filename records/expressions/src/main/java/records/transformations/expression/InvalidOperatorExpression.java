@@ -29,7 +29,7 @@ import java.util.stream.Stream;
  */
 public class InvalidOperatorExpression extends NonOperatorExpression
 {
-    private final ImmutableList<Either<String, Expression>> items;
+    private final ImmutableList<Either<String, @Recorded Expression>> items;
 
     public InvalidOperatorExpression(ImmutableList<Either<String, @Recorded Expression>> operands)
     {

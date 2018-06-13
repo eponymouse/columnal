@@ -41,7 +41,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
     }
 
     @Override
-    public UnitExpression save()
+    public @Recorded UnitExpression save()
     {
         UnitSaver unitSaver = new UnitSaver() {
 
@@ -58,6 +58,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
             }
 
             @Override
+            @SuppressWarnings("recorded")
             public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
             {
                 return typeExp;

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.collections.FXCollections;
@@ -221,7 +222,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
     }
 
-    public abstract EXPRESSION save();
+    public abstract @Recorded EXPRESSION save();
 
     protected final void save(SEMANTIC_PARENT saver)
     {

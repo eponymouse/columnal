@@ -246,7 +246,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             {
                 // Now we need to check the operators can work together as one group:
 
-                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, (ImmutableList<Either<Op, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> 
+                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<Op, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> 
                     errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(arg)))
                 );
             }
@@ -491,7 +491,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             // Error!
             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
-            ImmutableList.Builder<Either<String, Expression>> items = ImmutableList.builder();
+            ImmutableList.Builder<Either<String, @Recorded Expression>> items = ImmutableList.builder();
             items.add(Either.right(makeContent.apply(brackets)));
             items.add(Either.left(terminator.getContent()));
             @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
@@ -564,12 +564,12 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         
 
     // One set of operators that can be used to make a particular expression
-    static class OperatorExpressionInfo<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP>
+    static abstract class OperatorExpressionInfoBase<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP>
     {
         public final ImmutableList<Pair<OP, @Localized String>> operators;
         public final Either<MakeNary<EXPRESSION, SEMANTIC_PARENT, OP>, MakeBinary<EXPRESSION, SEMANTIC_PARENT>> makeExpression;
 
-        OperatorExpressionInfo(ImmutableList<Pair<OP, @Localized String>> operators, MakeNary<EXPRESSION, SEMANTIC_PARENT, OP> makeExpression)
+        OperatorExpressionInfoBase(ImmutableList<Pair<OP, @Localized String>> operators, MakeNary<EXPRESSION, SEMANTIC_PARENT, OP> makeExpression)
         {
             this.operators = operators;
             this.makeExpression = Either.left(makeExpression);
@@ -578,7 +578,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         // I know it's a bit odd, but we distinguish the N-ary constructor from the binary constructor by 
         // making the operators a non-list here.  The only expression with multiple operators
         // is add-subtract, which is N-ary.  And you can't have a binary expression with multiple different operators...
-        OperatorExpressionInfo(Pair<OP, @Localized String> operator, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression)
+        OperatorExpressionInfoBase(Pair<OP, @Localized String> operator, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression)
         {
             this.operators = ImmutableList.of(operator);
             this.makeExpression = Either.right(makeExpression);
@@ -589,23 +589,41 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             return operators.stream().anyMatch(p -> op.equals(p.getFirst()));
         }
 
-        public OperatorSection<EXPRESSION, SEMANTIC_PARENT, OP> makeOperatorSection(int operatorSetPrecedence, OP initialOperator, int initialIndex)
+        public abstract OperatorSection<EXPRESSION, SEMANTIC_PARENT, OP> makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, OP initialOperator, int initialIndex);
+    }
+    
+    static class OperatorExpressionInfo extends OperatorExpressionInfoBase<Expression, ExpressionSaver, Op>
+    {
+        OperatorExpressionInfo(ImmutableList<Pair<Op, @Localized String>> operators, MakeNary<Expression, ExpressionSaver, Op> makeExpression)
+        {
+            super(operators, makeExpression);
+        }
+
+        OperatorExpressionInfo(Pair<Op, @Localized String> operator, MakeBinary<Expression, ExpressionSaver> makeExpression)
+        {
+            super(operator, makeExpression);
+        }
+
+        @Override
+        public OperatorSection<Expression, ExpressionSaver, Op> makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, Op initialOperator, int initialIndex)
         {
             return makeExpression.either(
-                nAry -> new NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>(operators, operatorSetPrecedence, nAry, initialIndex, initialOperator),
-                binary -> new BinaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>(operators, operatorSetPrecedence, binary, initialIndex)
+                nAry -> new NaryOperatorSectionExpression(errorDisplayerRecord, operators, operatorSetPrecedence, nAry, initialIndex, initialOperator),
+                binary -> new BinaryOperatorSectionExpression(errorDisplayerRecord, operators, operatorSetPrecedence, binary, initialIndex)
             );
         }
     }
 
     static abstract class OperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP>
     {
+        protected final ErrorDisplayerRecord errorDisplayerRecord;
         protected final ImmutableList<Pair<OP, @Localized String>> possibleOperators;
         // The ordering in the candidates list:
         public final int operatorSetPrecedence;
 
-        protected OperatorSection(ImmutableList<Pair<OP, @Localized String>> possibleOperators, int operatorSetPrecedence)
+        protected OperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> possibleOperators, int operatorSetPrecedence)
         {
+            this.errorDisplayerRecord = errorDisplayerRecord;
             this.possibleOperators = possibleOperators;
             this.operatorSetPrecedence = operatorSetPrecedence;
         }
@@ -626,18 +644,18 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
 
         abstract int getLastOperandIndex();
         
-        abstract @Nullable EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets);
-        abstract @Nullable EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets);
+        abstract @Nullable @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets);
+        abstract @Nullable @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> allOriginalExps, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets);
     }
 
-    static class BinaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, OP> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>
+    static abstract class BinaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, OP> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>
     {
-        private final MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression;
+        protected final MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression;
         private final int operatorIndex;
 
-        private BinaryOperatorSection(ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression, int initialIndex)
+        BinaryOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SEMANTIC_PARENT> makeExpression, int initialIndex)
         {
-            super(operators, candidatePrecedence);
+            super(errorDisplayerRecord, operators, candidatePrecedence);
             this.makeExpression = makeExpression;
             this.operatorIndex = initialIndex;
         }
@@ -652,8 +670,10 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         @Override
         @Recorded EXPRESSION makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
         {
-            return makeExpression.makeBinary(expressions.get(operatorIndex), expressions.get(operatorIndex + 1), brackets);
+            return makeBinary(expressions.get(operatorIndex), expressions.get(operatorIndex + 1), brackets);
         }
+
+        protected abstract @Recorded EXPRESSION makeBinary(@Recorded EXPRESSION lhs, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets);
 
         @Override
         int getFirstOperandIndex()
@@ -668,28 +688,41 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         }
 
         @Override
-        EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
+        @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
         {
-            return makeExpression.makeBinary(lhs , expressions.get(operatorIndex + 1), brackets);
+            return makeBinary(lhs , expressions.get(operatorIndex + 1), brackets);
         }
 
         @Override
-        EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
+        @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
         {
-            return makeExpression.makeBinary(expressions.get(operatorIndex), rhs, brackets);
+            return makeBinary(expressions.get(operatorIndex), rhs, brackets);
+        }
+    }
+    
+    static class BinaryOperatorSectionExpression extends BinaryOperatorSection<Expression, ExpressionSaver, Op>
+    {
+        private BinaryOperatorSectionExpression(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<Op, @Localized String>> operators, int candidatePrecedence, MakeBinary<Expression, ExpressionSaver> makeExpression, int initialIndex)
+        {
+            super(errorDisplayerRecord, operators, candidatePrecedence, makeExpression, initialIndex);
+        }
+
+        protected @Recorded Expression makeBinary(@Recorded Expression lhs, @Recorded Expression rhs, BracketAndNodes<Expression, ExpressionSaver> brackets)
+        {
+            return errorDisplayerRecord.record(brackets.start, brackets.end, makeExpression.makeBinary(lhs, rhs, brackets));
         }
     }
 
-    static class NaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>
+    static abstract class NaryOperatorSection<EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP> extends OperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>
     {
-        private final MakeNary<EXPRESSION, SEMANTIC_PARENT, OP> makeExpression;
+        protected final MakeNary<EXPRESSION, SEMANTIC_PARENT, OP> makeExpression;
         private final ArrayList<OP> actualOperators = new ArrayList<>();
         private final int startingOperatorIndexIncl;
         private int endingOperatorIndexIncl;
 
-        NaryOperatorSection(ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION, SEMANTIC_PARENT, OP> makeExpression, int initialIndex, OP initialOperator)
+        NaryOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION, SEMANTIC_PARENT, OP> makeExpression, int initialIndex, OP initialOperator)
         {
-            super(operators, candidatePrecedence);
+            super(errorDisplayerRecord, operators, candidatePrecedence);
             this.makeExpression = makeExpression;
             this.startingOperatorIndexIncl = initialIndex;
             this.endingOperatorIndexIncl = initialIndex;
@@ -716,7 +749,8 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         {
             // Given a + b + c, if end operator is 1, we want to include operand index 2, hence we pass excl index 3,
             // so it's last operator-inclusive, plus 2.
-            return makeExpression.makeNary(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2), actualOperators, brackets);
+            ImmutableList<@Recorded EXPRESSION> selected = expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2);
+            return makeNary(selected, actualOperators, brackets);
         }
 
         @Override
@@ -732,19 +766,19 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         }
 
         @Override
-        @Nullable EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
+        @Nullable @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
         {
             ArrayList<@Recorded EXPRESSION> args = new ArrayList<>(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2));
             args.set(0, lhs);
-            return makeExpression.makeNary(ImmutableList.copyOf(args), actualOperators, brackets);
+            return makeNary(ImmutableList.copyOf(args), actualOperators, brackets);
         }
 
         @Override
-        @Nullable EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
+        @Nullable @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
         {
             ArrayList<@Recorded EXPRESSION> args = new ArrayList<>(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2));
             args.set(args.size() - 1, rhs);
-            return makeExpression.makeNary(ImmutableList.copyOf(args), actualOperators, brackets);
+            return makeNary(ImmutableList.copyOf(args), actualOperators, brackets);
         }
 
         /**
@@ -752,7 +786,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
          * to join two NaryOpExpressions while bracketing an item in the middle.
          */
 
-        public @Nullable EXPRESSION makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP> rhs, List<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
+        public @Nullable @Recorded EXPRESSION makeExpressionMiddleMerge(@Recorded EXPRESSION middle, NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP> rhs, List<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets)
         {
             List<@Recorded EXPRESSION> args = new ArrayList<>();
             // Add our args, minus the end one:
@@ -762,6 +796,26 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             // Add RHS, minus the start one:
             args.addAll(expressions.subList(rhs.startingOperatorIndexIncl + 1, rhs.endingOperatorIndexIncl + 2));
             return makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets);
+        }
+
+        protected abstract @Nullable @Recorded EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<OP> operators, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> bracketedStatus);
+    }
+    
+    static class NaryOperatorSectionExpression extends NaryOperatorSection<Expression, ExpressionSaver, Op>
+    {
+        NaryOperatorSectionExpression(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<Op, @Localized String>> operators, int candidatePrecedence, MakeNary<Expression, ExpressionSaver, Op> makeExpression, int initialIndex, Op initialOperator)
+        {
+            super(errorDisplayerRecord, operators, candidatePrecedence, makeExpression, initialIndex, initialOperator);
+        }
+
+        @Override
+        protected @Nullable @Recorded Expression makeNary(ImmutableList<@Recorded Expression> expressions, List<Op> operators, BracketAndNodes<Expression, ExpressionSaver> bracketedStatus)
+        {
+            Expression expression = makeExpression.makeNary(expressions, operators, bracketedStatus);
+            if (expression == null)
+                return null;
+            else
+                return errorDisplayerRecord.record(bracketedStatus.start, bracketedStatus.end, expression);
         }
     }
     
@@ -776,7 +830,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
     static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT, @NonNull OP> @Nullable @Recorded EXPRESSION makeExpressionWithOperators(
-        ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT, OP>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder,
+        ImmutableList<ImmutableList<OperatorExpressionInfoBase<EXPRESSION, SEMANTIC_PARENT, OP>>> candidates, ErrorDisplayerRecord errorDisplayerRecord,
         Function<ImmutableList<Either<@NonNull OP, @Recorded EXPRESSION>>, @Recorded EXPRESSION> makeInvalidOpExpression,
         ImmutableList<@Recorded EXPRESSION> expressionExps, ImmutableList<@NonNull OP> ops, BracketAndNodes<EXPRESSION, SEMANTIC_PARENT> brackets, Function<@Recorded EXPRESSION, @Recorded EXPRESSION> makeSingletonList)
     {
@@ -803,11 +857,11 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                 // Make new section:
                 for (int candidateIndex = 0; candidateIndex < candidates.size(); candidateIndex++)
                 {
-                    for (OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT, OP> operatorExpressionInfo : candidates.get(candidateIndex))
+                    for (OperatorExpressionInfoBase<EXPRESSION, SEMANTIC_PARENT, OP> operatorExpressionInfo : candidates.get(candidateIndex))
                     {
                         if (operatorExpressionInfo.includes(ops.get(i)))
                         {
-                            operatorSections.add(operatorExpressionInfo.makeOperatorSection(candidateIndex, ops.get(i), i));
+                            operatorSections.add(operatorExpressionInfo.makeOperatorSection(errorDisplayerRecord, candidateIndex, ops.get(i), i));
                             continue nextOp; 
                         }
                     }
@@ -837,15 +891,15 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                 if (!possibles.isEmpty())
                 {
                     @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
-                    errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, e)));
+                    errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
+                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, e)));
                     return invalidOpExpression;
                 }
             }
         }
 
         @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
-        errorAndTypeRecorder.recordError(invalidOpExpression, StyledString.s("Mixed operators: brackets required"));
+        errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Mixed operators: brackets required"));
         
         if (operatorSections.size() == 3
             && operatorSections.get(0).possibleOperators.equals(operatorSections.get(2).possibleOperators)
@@ -860,7 +914,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             @Nullable @Recorded EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, brackets);
             if (middle != null)
             {
-                @Nullable EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>) operatorSections.get(0)).makeExpressionMiddleMerge(
+                @Nullable @Recorded EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>) operatorSections.get(0)).makeExpressionMiddleMerge(
                     middle,
                     (NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT, OP>) operatorSections.get(2),
                     expressionExps, brackets
@@ -868,7 +922,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
 
                 if (replacement != null)
                 {
-                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
+                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
                         new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, replacement)
                     ));
                 }
@@ -933,7 +987,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
 
                 if (replacement != null)
                 {
-                    errorAndTypeRecorder.recordQuickFixes(invalidOpExpression, Collections.singletonList(
+                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
                         new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, replacement)
                     ));
                 }
@@ -964,10 +1018,10 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
     // Remember: earlier means more likely to be inner-bracketed.  Outer list is groups of operators
     // with equal bracketing likelihood/precedence.
     @SuppressWarnings("recorded")
-    final static ImmutableList<ImmutableList<OperatorExpressionInfo<Expression, ExpressionSaver, Op>>> OPERATORS = ImmutableList.of(
+    final static ImmutableList<ImmutableList<OperatorExpressionInfoBase<Expression, ExpressionSaver, Op>>> OPERATORS = ImmutableList.of(
         // Raise does come above arithmetic, because I think it is more likely that 1 * 2 ^ 3 is actually 1 * (2 ^ 3)
         ImmutableList.of(
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(
+            new OperatorExpressionInfo(
                 opD(Op.RAISE, "op.raise")
                 , (lhs, rhs, _b) -> new RaiseExpression(lhs, rhs))
         ),
@@ -975,14 +1029,14 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         // Arithmetic operators are all one group.  I know we could separate +- from */, but if you see
         // an expression like 1 + 2 * 3, I'm not sure either bracketing is obviously more likely than the other.
         ImmutableList.of(
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.ADD, "op.plus"),
                 opD(Op.SUBTRACT, "op.minus")
             ), ExpressionSaver::makeAddSubtract),
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.MULTIPLY, "op.times")
             ), ExpressionSaver::makeTimes),
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(
+            new OperatorExpressionInfo(
                 opD(Op.DIVIDE, "op.divide")
                 , (lhs, rhs, _b) -> new DivideExpression(lhs, rhs))
         ),
@@ -991,31 +1045,31 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         // is "val: (" ; to.string(1 * 2); ")" which requires an extra function call, but bracketing the arithmetic
         // will be the first step, and much more likely than ("val: (" ; 1) * (2; ")")
         ImmutableList.of(
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.STRING_CONCAT, "op.stringConcat")
             ), ExpressionSaver::makeStringConcat)
         ),
 
         // It's moot really whether this is before or after string concat, but feels odd putting them in same group:
         ImmutableList.of(
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(
+            new OperatorExpressionInfo(
                 opD(Op.PLUS_MINUS, "op.plusminus")
                 , (lhs, rhs, _b) -> new PlusMinusPatternExpression(lhs, rhs))
         ),
 
         // Equality and comparison operators:
         ImmutableList.of(
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.EQUALS, "op.equal")
             ), ExpressionSaver::makeEqual),
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(
+            new OperatorExpressionInfo(
                 opD(Op.NOT_EQUAL, "op.notEqual")
                 , (lhs, rhs, _b) -> new NotEqualExpression(lhs, rhs)),
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.LESS_THAN, "op.lessThan"),
                 opD(Op.LESS_THAN_OR_EQUAL, "op.lessThanOrEqual")
             ), ExpressionSaver::makeComparisonLess),
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.GREATER_THAN, "op.greaterThan"),
                 opD(Op.GREATER_THAN_OR_EQUAL, "op.greaterThanOrEqual")
             ), ExpressionSaver::makeComparisonGreater)
@@ -1024,10 +1078,10 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         // Boolean and, or expressions come near-last.  If you see a = b & c = d, it's much more likely you wanted (a = b) & (c = d) than
         // a = (b & c) = d.
         ImmutableList.of(
-            new OperatorExpressionInfo<>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.AND, "op.and")
             ), ExpressionSaver::makeAnd),
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(ImmutableList.of(
+            new OperatorExpressionInfo(ImmutableList.of(
                 opD(Op.OR, "op.or")
             ), ExpressionSaver::makeOr)
         ),
@@ -1035,14 +1089,14 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         // But the very last is the comma separator.  If you see (a & b, c | d), almost certain that you want a tuple
         // like that, rather than a & (b, c) | d.  Especially since tuples can't be fed to any binary operators besides comparison!
         ImmutableList.of(
-            new OperatorExpressionInfo<Expression, ExpressionSaver, Op>(
+            new OperatorExpressionInfoBase<Expression, ExpressionSaver, Op>(
                 opD(Op.COMMA, "op.separator")
                 , (lhs, rhs, _b) -> /* Dummy, see below: */ lhs)
             {
                 @Override
-                public OperatorSection<Expression, ExpressionSaver, Op> makeOperatorSection(int operatorSetPrecedence, Op initialOperator, int initialIndex)
+                public OperatorSection<Expression, ExpressionSaver, Op> makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, Op initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection<Expression, ExpressionSaver, Op>(operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets) -> {
+                    return new NaryOperatorSectionExpression(errorDisplayerRecord, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets) -> {
                         switch (brackets.bracketedStatus)
                         {
                             case DIRECT_SQUARE_BRACKETED:

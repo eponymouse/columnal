@@ -77,11 +77,11 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     }
 
     @Override
-    public Expression save()
+    public @Recorded Expression save()
     {
         ExpressionSaver saver = new ExpressionSaver(this);
         super.save(saver);
-        Expression expression = saver.finish(children.get(children.size() - 1));
+        @Recorded Expression expression = saver.finish(children.get(children.size() - 1));
 
         try
         {

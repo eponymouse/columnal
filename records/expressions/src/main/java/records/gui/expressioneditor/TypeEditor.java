@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +53,8 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent>
     }
 
     @Override
-    public TypeExpression save()
+    @SuppressWarnings("recorded") // TODO implement this method and remove this
+    public @Recorded TypeExpression save()
     {
         return new UnfinishedTypeExpression("TODO");
     }

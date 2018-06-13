@@ -127,7 +127,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                 argType = argTypes.get(0);
             else
                 argType = new TupleTypeExp(src, argTypes, true);
-            return new Pair<@Nullable UnaryOperator<TypeExp>, TypeState>(t -> TypeExp.function(src, argType, t), typeState.addImplicitLambdas(lambdaArgs, argTypes));
+            return new Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState>(t -> TypeExp.function(src, argType, t), typeState.addImplicitLambdas(lambdaArgs, argTypes));
         }
         else
         {
@@ -149,7 +149,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     @OnThread(Tag.Simulation)
     public static @Value Object makeImplicitFunction(ImmutableList<@Recorded Expression> possibleArgs, EvaluateState state, SimulationFunction<EvaluateState, @Value Object> body) throws UserException, InternalException
     {
-        ImmutableList<ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(possibleArgs);
+        ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(possibleArgs);
         if (lambdaArgs.size() == 0)
         {
             // Not an implicit lambda
@@ -190,6 +190,6 @@ public class ImplicitLambdaArg extends NonOperatorExpression
 
     public static ImmutableList<@Recorded ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<@Recorded Expression> possibleArgs)
     {
-        return Utility.filterClass(possibleArgs.stream(), ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
+        return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
     }
 }

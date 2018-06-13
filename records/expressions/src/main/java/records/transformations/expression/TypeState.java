@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
@@ -58,7 +59,7 @@ public class TypeState
         return new TypeState(copy.build(), typeManager, unitManager);
     }
 
-    public TypeState addImplicitLambdas(ImmutableList<ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes)
+    public TypeState addImplicitLambdas(ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs, ImmutableList<TypeExp> argTypes)
     {
         TypeState typeState = this;
         for (int i = 0; i < lambdaArgs.size(); i++)

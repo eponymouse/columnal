@@ -57,7 +57,7 @@ public class UnitTimesExpression extends UnitExpression
         return b.toString();
     }
 
-    public ImmutableList<UnitExpression> getOperands()
+    public ImmutableList<@Recorded UnitExpression> getOperands()
     {
         return operands;
     }

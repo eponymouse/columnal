@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -32,7 +33,7 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
         this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("`"), new Label("`"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL), '`')
         {
             @Override
-            public TypeExpression save()
+            public @Recorded TypeExpression save()
             {
                 return new TypePrimitiveLiteral(DataType.BOOLEAN);
             }

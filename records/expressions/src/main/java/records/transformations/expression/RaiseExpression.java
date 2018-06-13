@@ -55,7 +55,7 @@ public class RaiseExpression extends BinaryOpExpression
     @RequiresNonNull({"lhsType", "rhsType"})
     protected @Nullable CheckedExp checkBinaryOp(TableLookup data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        final @NonNull TypeExp lhsTypeFinal = lhsType.typeExp;
+        final @NonNull @Recorded TypeExp lhsTypeFinal = lhsType.typeExp;
         final @NonNull TypeExp rhsTypeFinal = rhsType.typeExp;
         
         // Raise expression is sort of an overloaded operator.  If the right-hand side is an integer
