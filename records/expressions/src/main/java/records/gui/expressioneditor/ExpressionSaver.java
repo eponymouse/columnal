@@ -112,7 +112,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
     {
         currentScopes.push(new Scope(parent.getAllChildren().get(0), (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
-            currentScopes.peek().items.add(Either.left(errorDisplayerRecord.record(parent, parent.getAllChildren().get(0), keywordErrorDisplayer, new InvalidOperatorExpression(ImmutableList.of(Either.left(terminator.getContent()))))));
+            currentScopes.peek().items.add(Either.left(errorDisplayerRecord.record(parent.getAllChildren().get(0), keywordErrorDisplayer, new InvalidOperatorExpression(ImmutableList.of(Either.left(terminator.getContent()))))));
         }));
     }
 
@@ -122,7 +122,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
             Scope closed = currentScopes.pop();
-            currentScopes.peek().items.add(Either.left(makeInvalidOp(errorDisplayer.getParent(), closed.openingNode, errorDisplayer, closed.items.stream().map(e -> e.map(x -> x.op)).map(Either::swap).collect(ImmutableList.toImmutableList()))));
+            currentScopes.peek().items.add(Either.left(makeInvalidOp(closed.openingNode, errorDisplayer, closed.items.stream().map(e -> e.map(x -> x.op)).map(Either::swap).collect(ImmutableList.toImmutableList()))));
         }
 
         Scope closed = currentScopes.pop();
@@ -152,10 +152,10 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                     // Shouldn't ever be null:
                     if (callTarget != null)
                     {
-                        return Either.left(errorDisplayerRecord.record(errorDisplayer.getParent(),errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed)));
+                        return Either.left(errorDisplayerRecord.record(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new CallExpression(callTarget, bracketed)));
                     }
                 }
-                return Either.left(errorDisplayerRecord.record(errorDisplayer.getParent(), errorDisplayer, bracketEnd, bracketed));
+                return Either.left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
             })));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
@@ -167,7 +167,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             currentScopes.push(new Scope(errorDisplayer, expect(Keyword.THEN, BracketAndNodes.misc(errorDisplayer), (condition, conditionEnd) ->
                 Either.right(expect(Keyword.ELSE, BracketAndNodes.misc(conditionEnd), (thenPart, thenEnd) -> 
                     Either.right(expect(Keyword.ENDIF, BracketAndNodes.misc(thenEnd), (elsePart, elseEnd) -> {
-                        return Either.left(errorDisplayerRecord.record(errorDisplayer.getParent(),errorDisplayer, elseEnd, new IfThenElseExpression(condition, thenPart, elsePart)));
+                        return Either.left(errorDisplayerRecord.record(errorDisplayer, elseEnd, new IfThenElseExpression(condition, thenPart, elsePart)));
                     })
                 )    
             )))));
@@ -193,9 +193,9 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         if (content.isEmpty())
         {
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                return errorDisplayerRecord.record(brackets.start.getParent(), brackets.start, brackets.end, new ArrayExpression(ImmutableList.of()));
+                return errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of()));
             else
-                return errorDisplayerRecord.record(end.getParent(), start, end, new InvalidOperatorExpression(ImmutableList.of()));
+                return errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(ImmutableList.of()));
         }
         
         // Although it's duplication, we keep a list for if it turns out invalid, and two lists for if it is valid:
@@ -240,14 +240,14 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             {
                 e = validOperands.get(0);
                 if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                    e = errorDisplayerRecord.record(brackets.end.getParent(), brackets.start, brackets.end, new ArrayExpression(ImmutableList.<@Recorded Expression>of(e)));
+                    e = errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.<@Recorded Expression>of(e)));
             }
             else
             {
                 // Now we need to check the operators can work together as one group:
 
-                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, (ImmutableList<Either<Op, @Recorded Expression>> es) -> makeInvalidOp(end.getParent(), start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> 
-                    errorDisplayerRecord.record(brackets.start.getParent(), brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(arg)))
+                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, (ImmutableList<Either<Op, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> 
+                    errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(arg)))
                 );
             }
             if (e != null)
@@ -257,12 +257,12 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             
         }
         
-        return errorDisplayerRecord.record(end.getParent(), start, end, new InvalidOperatorExpression(ImmutableList.copyOf(invalid)));
+        return errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(ImmutableList.copyOf(invalid)));
     }
 
-    private @Recorded Expression makeInvalidOp(ConsecutiveBase<Expression, ExpressionSaver> parent, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<Op, @Recorded Expression>> items)
+    private @Recorded Expression makeInvalidOp(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<Op, @Recorded Expression>> items)
     {
-        return errorDisplayerRecord.record(parent, start, end, new InvalidOperatorExpression(Utility.<Either<Op, @Recorded Expression>, Either<String, @Recorded Expression>>mapListI(items, x -> x.<String, @Recorded Expression>mapBoth(op -> op.getContent(), y -> y))));
+        return errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(Utility.<Either<Op, @Recorded Expression>, Either<String, @Recorded Expression>>mapListI(items, x -> x.<String, @Recorded Expression>mapBoth(op -> op.getContent(), y -> y))));
     }
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
@@ -285,7 +285,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                 ImmutableList.Builder<Either<String, @Recorded Expression>> items = ImmutableList.builder();
                 items.add(Either.right(makeContent.apply(makeBrackets.apply(keywordErrorDisplayer))));
                 items.add(Either.left(terminator.getContent()));
-                @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(keywordErrorDisplayer.getParent(), start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
+                @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
                 currentScopes.peek().items.add(Either.left(invalid));
             }
         };
@@ -464,7 +464,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                     public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, ConsecutiveChild<Expression, ExpressionSaver> node)
                     {
                         MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, me -> me.new MatchClause(newPatterns, lastExpression)));
-                        return Either.left(errorDisplayerRecord.record(node.getParent(), matchKeywordNode, node, matchExpression));
+                        return Either.left(errorDisplayerRecord.record(matchKeywordNode, node, matchExpression));
                     }
                 }
             )));
@@ -494,7 +494,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             ImmutableList.Builder<Either<String, Expression>> items = ImmutableList.builder();
             items.add(Either.right(makeContent.apply(brackets)));
             items.add(Either.left(terminator.getContent()));
-            @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start.getParent(), start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
+            @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
             currentScopes.peek().items.add(Either.left(invalid));
         };
     }
@@ -519,8 +519,8 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             }
         }
         
-        curItems.add(Either.left(errorDisplayerRecord.record(start.getParent(), start, end, singleItem)));
-        errorDisplayerRecord.record(start.getParent(), start, end, singleItem);
+        curItems.add(Either.left(errorDisplayerRecord.record(start, end, singleItem)));
+        errorDisplayerRecord.record(start, end, singleItem);
     }
     
     
