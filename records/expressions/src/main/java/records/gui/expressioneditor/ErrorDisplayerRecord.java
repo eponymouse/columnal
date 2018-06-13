@@ -37,10 +37,10 @@ public class ErrorDisplayerRecord
     public class Span<E extends StyledShowable, S>
     {
         public final ConsecutiveBase<E, S> parent;
-        public final @Nullable ConsecutiveChild<E, S> start;
-        public final @Nullable ConsecutiveChild<E, S> end;
+        public final ConsecutiveChild<E, S> start;
+        public final ConsecutiveChild<E, S> end;
         
-        public Span(ConsecutiveBase<E, S> parent, @Nullable ConsecutiveChild<E, S> start, @Nullable ConsecutiveChild<E, S> end)
+        public Span(ConsecutiveBase<E, S> parent, ConsecutiveChild<E, S> start, ConsecutiveChild<E, S> end)
         {
             this.parent = parent;
             this.start = start;
@@ -65,7 +65,7 @@ public class ErrorDisplayerRecord
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?, ?>>>> pending = new IdentityHashMap<>();
     
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
-    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable ConsecutiveChild<Expression, ExpressionSaver> start, @Nullable ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
+    public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(ConsecutiveBase<Expression, ExpressionSaver> parent, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
     {
         expressionDisplayers.put(e, new Span<>(parent, start, end));
         Pair<StyledString, List<QuickFix<?, ?>>> pendingItem = pending.remove(e);

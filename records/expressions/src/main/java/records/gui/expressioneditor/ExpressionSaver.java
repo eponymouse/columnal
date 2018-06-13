@@ -112,7 +112,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
     {
         currentScopes.push(new Scope(parent.getAllChildren().get(0), (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
-            currentScopes.peek().items.add(Either.left(errorDisplayerRecord.record(parent, null, keywordErrorDisplayer, new InvalidOperatorExpression(ImmutableList.of(Either.left(terminator.getContent()))))));
+            currentScopes.peek().items.add(Either.left(errorDisplayerRecord.record(parent, parent.getAllChildren().get(0), keywordErrorDisplayer, new InvalidOperatorExpression(ImmutableList.of(Either.left(terminator.getContent()))))));
         }));
     }
 
@@ -188,7 +188,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         }
     }
 
-    private @Recorded Expression makeExpression(@Nullable ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
+    private @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
     {
         if (content.isEmpty())
         {
@@ -246,7 +246,9 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
             {
                 // Now we need to check the operators can work together as one group:
 
-                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, (ImmutableList<Either<Op, @Recorded Expression>> es) -> makeInvalidOp(end.getParent(), start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> new ArrayExpression(ImmutableList.of(arg)));
+                e = ExpressionSaver.<Expression, ExpressionSaver, Op>makeExpressionWithOperators(OPERATORS, this, (ImmutableList<Either<Op, @Recorded Expression>> es) -> makeInvalidOp(end.getParent(), start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> 
+                    errorDisplayerRecord.record(brackets.start.getParent(), brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(arg)))
+                );
             }
             if (e != null)
             {
@@ -258,7 +260,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         return errorDisplayerRecord.record(end.getParent(), start, end, new InvalidOperatorExpression(ImmutableList.copyOf(invalid)));
     }
 
-    private @Recorded Expression makeInvalidOp(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<Op, @Recorded Expression>> items)
+    private @Recorded Expression makeInvalidOp(ConsecutiveBase<Expression, ExpressionSaver> parent, ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<Op, @Recorded Expression>> items)
     {
         return errorDisplayerRecord.record(parent, start, end, new InvalidOperatorExpression(Utility.<Either<Op, @Recorded Expression>, Either<String, @Recorded Expression>>mapListI(items, x -> x.<String, @Recorded Expression>mapBoth(op -> op.getContent(), y -> y))));
     }
