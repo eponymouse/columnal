@@ -11,6 +11,7 @@ import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
 import utility.gui.LightDialog;
 
@@ -24,7 +25,7 @@ public class EditExpressionDialog extends LightDialog<Expression>
 
     public EditExpressionDialog(View parent, @Nullable Table srcTable, Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
     {
-        super(parent.getWindow());
+        super(parent.getWindow(), new DialogPaneWithSideButtons());
         setResizable(true);
         curValue = initialExpression;
 
