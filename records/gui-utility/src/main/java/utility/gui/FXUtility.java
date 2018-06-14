@@ -169,8 +169,8 @@ public class FXUtility
                 text.setFont(tf.getFont()); // Set the same font, so the size is the same
                 double width = text.getLayoutBounds().getWidth() // This big is the Text in the TextField
                     //+ tf.getPadding().getLeft() + tf.getPadding().getRight() // Add the padding of the TextField
-                    + tf.getInsets().getLeft() + + tf.getInsets().getRight()
-                    + 5d; // Add some spacing
+                    + tf.getInsets().getLeft() + tf.getInsets().getRight()
+                    + 1d; // Add some spacing
                 return Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width);
             }
         });

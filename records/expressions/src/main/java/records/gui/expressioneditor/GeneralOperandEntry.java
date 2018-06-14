@@ -59,7 +59,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     {
         super(parent, operandClass);
         
-        FXUtility.sizeToFit(textField, null, null);
+        FXUtility.sizeToFit(textField, 3.0, 3.0);
         typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditorUtil.enableSelection(typeLabel, this);
