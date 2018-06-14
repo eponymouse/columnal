@@ -987,7 +987,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private void setPrefixTag(TypeId typeName)
     {
         savePrefix = new Pair<>(typeName.getRaw() + ":", r -> new ConstructorExpression(getParent().getEditor().getTypeManager(), typeName.getRaw(), r));
-        prefix.setText(savePrefix.getFirst());
+        typeLabel.setText(savePrefix.getFirst());
     }
 
     public static SingleLoader<Expression, ExpressionSaver> load(StandardFunction standardFunction)
@@ -1014,7 +1014,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             return new IdentExpression(r);
         });
-        prefix.setText(savePrefix.getFirst());
+        typeLabel.setText(savePrefix.getFirst());
     }
 
     public static SingleLoader<Expression, ExpressionSaver> load(Op value)
