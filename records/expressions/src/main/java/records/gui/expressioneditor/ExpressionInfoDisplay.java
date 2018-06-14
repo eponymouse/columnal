@@ -115,6 +115,11 @@ public class ExpressionInfoDisplay
         return maskingErrors;
     }
 
+    public void unmaskErrors()
+    {
+        maskingErrors.set(false);
+    }
+
     private class ErrorMessagePopup extends PopOver
     {
         private final FixList fixList;

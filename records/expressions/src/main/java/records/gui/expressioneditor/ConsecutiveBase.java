@@ -644,6 +644,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      */
     public abstract ImmutableSet<Character> terminatedByChars();
 
+    protected void unmaskErrors()
+    {
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            child.unmaskErrors();
+        }
+    }
+
     public void focusChanged()
     {
         //Log.debug("Removing blanks, focus owner: " + nodes().get(0).getScene().getFocusOwner() + " items: " + nodes().stream().map(Object::toString).collect(Collectors.joining(", ")));

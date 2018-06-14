@@ -45,6 +45,12 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     }
 
     @Override
+    public void unmaskErrors()
+    {
+        unit.unmaskErrors();
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         // TODO

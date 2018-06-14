@@ -54,4 +54,6 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     Stream<Pair<String, Boolean>> _test_getHeaders();
 
     public void save(SEMANTIC_PARENT saver);
+
+    void unmaskErrors();
 }

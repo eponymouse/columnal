@@ -128,6 +128,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         atomicEdit.set(true);
         children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
         atomicEdit.set(false);
+        unmaskErrors();
     }
 
 

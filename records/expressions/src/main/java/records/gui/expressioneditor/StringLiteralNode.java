@@ -99,6 +99,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
     }
 
     @Override
+    public void unmaskErrors()
+    {
+        expressionInfoDisplay.unmaskErrors();
+    }
+
+    @Override
     public void addErrorAndFixes(StyledString error, List<QuickFix<Expression,ExpressionSaver>> quickFixes)
     {
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent.getEditor().getWindow(), parent.getEditor().getTableManager(), e -> parent.replaceLoad(this, e.getFirst(), e.getSecond().loadAsConsecutive(BracketedStatus.MISC)));

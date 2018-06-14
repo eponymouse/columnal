@@ -42,6 +42,12 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
+    public void unmaskErrors()
+    {
+        unit.unmaskErrors();
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         // TODO

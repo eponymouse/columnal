@@ -178,4 +178,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         }
         return false;
     }
+
+    @Override
+    public void unmaskErrors()
+    {
+        expressionInfoDisplay.unmaskErrors();
+    }
 }
