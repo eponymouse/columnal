@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import log.Log;
@@ -235,6 +236,21 @@ public class TableManager
         return Stream.<Table>concat(sources.stream(), transformations.stream());
     }
 
+    public synchronized Stream<Table> streamAllTablesAvailableTo(@Nullable TableId tableId)
+    {
+        // Sources are always available.  Transformations require that they do not
+        // (transitively) depend on us.
+        Map<TableId, Collection<TableId>> edges = new HashMap<>();
+        HashSet<TableId> allIds = new HashSet<>();
+        fetchIdsAndEdges(edges, allIds);
+        List<TableId> linearised = GraphUtility.<@NonNull TableId>lineariseDAG(allIds, edges, tableId == null ? ImmutableList.<@NonNull TableId>of() : ImmutableList.<@NonNull TableId>of(tableId));
+        int lastIndexIncl = tableId != null ? linearised.indexOf(tableId) : linearised.size() - 1;
+        // Shouldn't be any nulls but must satisfy type checker:
+        return Utility.filterOutNulls(linearised.subList(0, lastIndexIncl + 1)
+            .stream()
+            .<@Nullable Table>map(t -> getSingleTableOrNull(t)));
+    }
+
     public synchronized List<Table> getAllTables()
     {
         return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(Collectors.<Table>toList());
@@ -269,22 +285,13 @@ public class TableManager
         if (renames == null)
             renames = TableAndColumnRenames.EMPTY;
         
-        Map<TableId, Collection<TableId>> edges = new HashMap<>();
         HashSet<TableId> affected = new HashSet<>();
         // If it is null, new table, so nothing should be affected:
         if (affectedTableId != null)
             affected.add(affectedTableId);
+        Map<TableId, Collection<TableId>> edges = new HashMap<>();
         HashSet<TableId> allIds = new HashSet<>();
-        synchronized (this)
-        {
-            for (Table t : sources)
-                allIds.add(t.getId());
-            for (Transformation t : transformations)
-            {
-                allIds.add(t.getId());
-                edges.put(t.getId(), t.getSources());
-            }
-        }
+        fetchIdsAndEdges(edges, allIds);
         allIds.addAll(affected);
         List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, affected);
 
@@ -339,6 +346,20 @@ public class TableManager
         savedToReRun.thenAccept(ss -> {
             FXUtility.alertOnError_(() -> reAddAll(ss));
         });
+    }
+
+    public void fetchIdsAndEdges(Map<TableId, Collection<TableId>> edges, HashSet<TableId> allIds)
+    {
+        synchronized (this)
+        {
+            for (Table t : sources)
+                allIds.add(t.getId());
+            for (Transformation t : transformations)
+            {
+                allIds.add(t.getId());
+                edges.put(t.getId(), t.getSources());
+            }
+        }
     }
 
     /**

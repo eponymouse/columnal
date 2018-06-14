@@ -326,17 +326,22 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private static class ColumnCompletion extends GeneralCompletion
     {
         private final ColumnReference columnReference;
+        private final String fullText;
 
         public ColumnCompletion(ColumnReference columnReference)
         {
             this.columnReference = columnReference;
+            if (columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
+                fullText = "@entire " + columnReference.getColumnId().getRaw();
+            else
+                fullText = columnReference.getColumnId().getRaw();
         }
 
 
         @Override
         public CompletionContent getDisplay(ObservableStringValue currentText)
         {
-            return new CompletionContent(getArrow() + columnReference.getColumnId().getRaw(), getDescription());
+            return new CompletionContent(fullText, getDescription());
         }
 
         private String getArrow()
@@ -366,25 +371,25 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean shouldShow(String input)
         {
-            return columnReference.getColumnId().getRaw().startsWith(input);
+            return fullText.startsWith(input) || columnReference.getColumnId().getRaw().startsWith(input);
         }
 
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            return columnReference.getColumnId().getRaw().equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+            return fullText.equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
         }
 
         @Override
         public boolean features(String curInput, char character)
         {
-            return columnReference.getColumnId().getRaw().contains("" + character);
+            return fullText.contains("" + character);
         }
 
         @Override
         String getValue(String currentText)
         {
-            return columnReference.getColumnId().getRaw();
+            return fullText;
         }
     }
 

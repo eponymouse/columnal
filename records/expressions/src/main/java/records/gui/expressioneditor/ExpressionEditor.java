@@ -218,7 +218,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public Stream<ColumnReference> getAvailableColumnReferences()
     {
-        return tableManager.streamAllTables().flatMap(t -> {
+        return tableManager.streamAllTablesAvailableTo(srcTable == null ? null : srcTable.getId()).flatMap(t -> {
             try
             {
                 List<Column> columns = t.getData().getColumns();
