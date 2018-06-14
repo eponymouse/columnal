@@ -756,9 +756,9 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     
     // Round brackets if needed
     @OnThread(Tag.FXPlatform)
-    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> builder, FXPlatformRunnable buildContent)
+    protected static void roundBracket(BracketedStatus bracketedStatus, boolean evenAtTopLevel, StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> builder, FXPlatformRunnable buildContent)
     {
-        if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
+        if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED || (bracketedStatus == BracketedStatus.TOP_LEVEL && !evenAtTopLevel))
         {
             buildContent.run();
         }

@@ -198,7 +198,7 @@ public abstract class BinaryOpExpression extends Expression
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
-        roundBracket(bracketedStatus, r, () -> {
+        roundBracket(bracketedStatus, false, r, () -> {
             r.addAll(lhs.loadAsConsecutive(BracketedStatus.MISC));
             r.add(GeneralExpressionEntry.load(loadOp()));
             r.addAll(rhs.loadAsConsecutive(BracketedStatus.MISC));

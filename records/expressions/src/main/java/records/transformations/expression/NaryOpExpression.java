@@ -177,7 +177,7 @@ public abstract class NaryOpExpression extends Expression
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> nodes = new StreamTreeBuilder<>();
-        roundBracket(bracketedStatus, nodes, () -> {
+        roundBracket(bracketedStatus, false, nodes, () -> {
             for (int i = 0; i < expressions.size(); i++)
             {
                 int iFinal = i;
