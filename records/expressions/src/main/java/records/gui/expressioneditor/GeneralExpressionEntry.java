@@ -71,15 +71,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     
     private static enum GeneralPseudoclass
     {
-        COLUMN_REFERENCE("ps-column"),
-        FUNCTION("ps-function"),
-        TAG("ps-tag"),
-        LITERAL("ps-literal"),
-        VARIABLE_USE("ps-use"),
-        VARIABLE_DECL("ps-decl"),
-        LAMBDA_ARG("ps-lambda"),
-        MATCH_ANYTHING("ps-anything"),
-        UNFINISHED("ps-unfinished");
+        STANDARD("ps-standard"),
+        KEYWORD("ps-keyword"),
+        OP("ps-op");
 
         private final String name;
         private GeneralPseudoclass(String name)
@@ -1058,12 +1052,20 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return textField.isEditable();
     }
 
+    private void setPseudoClass(GeneralPseudoclass selected)
+    {
+        for (GeneralPseudoclass pseudoclass : GeneralPseudoclass.values())
+        {
+            FXUtility.setPseudoclass(textField, pseudoclass.name, pseudoclass == selected);
+        }
+    }
 
     @Override
     public void save(ExpressionSaver saver)
     {
         String text = textField.getText().trim();
         textField.setEditable(true);
+        setPseudoClass(GeneralPseudoclass.STANDARD);
         
         if (text.isEmpty())
             return; // Don't save blanks
@@ -1074,6 +1076,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 saver.saveOperator(op, this, this::afterSave);
                 textField.setEditable(false);
+                setPseudoClass(GeneralPseudoclass.OP);
                 return;
             }
         }
@@ -1084,6 +1087,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 saver.saveKeyword(keyword, this, this::afterSave);
                 textField.setEditable(false);
+                setPseudoClass(GeneralPseudoclass.KEYWORD);
                 return;
             }
         }

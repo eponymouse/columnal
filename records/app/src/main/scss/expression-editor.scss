@@ -92,8 +92,17 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
 .entry:ps-column {
     -fx-background-color: $column-color;
 }
+.entry-field:ps-keyword, .entry-field:ps-op {
+    -fx-text-fill: green; 
+}
+.entry-field:ps-op {
+    -fx-font-family: "Droid Sans Mono";
+}
 .entry:exp-error {
     -fx-background-color: red;
+    & .label, & .text-field {
+        -fx-text-fill: $focus-color-text;
+    }
 }
 
 /* Must come later to have precendence: */
