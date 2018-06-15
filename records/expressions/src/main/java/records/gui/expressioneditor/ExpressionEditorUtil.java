@@ -103,82 +103,11 @@ public class ExpressionEditorUtil
         }
     }
     
-    /**
-     * Returns
-     * @param textField
-     * @param cssClass
-     * @param label
-     * @param surrounding
-     * @param parentStyles
-     * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
-     */
-    @NonNull
-    protected static <E extends StyledShowable, P> Pair<ErrorTop, ErrorDisplayer<E, P>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<?, ?> surrounding, TopLevelEditor<?, ?> editor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replaceWithFixed, Stream<String> parentStyles)
-    {
-        FXUtility.sizeToFit(textField, 10.0, 10.0);
-        textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
-        Label typeLabel = new Label(label);
-        typeLabel.getStyleClass().addAll(cssClass + "-top", "labelled-top");
-        if (surrounding != null)
-        {
-            enableSelection(typeLabel, surrounding);
-            enableDragFrom(typeLabel, surrounding);
-        }
-        setStyles(typeLabel, parentStyles);
-        ErrorTop vBox = new ErrorTop(typeLabel, textField);
-        vBox.getStyleClass().add(cssClass);
-        ExpressionInfoDisplay errorShower = installErrorShower(vBox, typeLabel, textField);
-        return new Pair<>(vBox, new ErrorDisplayer<E, P>()
-        {
-            @Override
-            public boolean isShowingError()
-            {
-                return errorShower.isShowingError();
-            }
-
-            @SuppressWarnings("recorded") // Damned if I can work out the right annotation
-            @Override
-            public void addErrorAndFixes(StyledString s, List<QuickFix<E, P>> q)
-            {
-                vBox.setError(true);
-                errorShower.addMessageAndFixes(s, q, editor.getWindow(), editor.getTableManager(), replaceWithFixed);
-            }
-
-            @Override
-            public void clearAllErrors()
-            {
-                vBox.setError(false);
-                errorShower.clearError();
-            }
-
-            @Override
-            public void showType(String type)
-            {
-                errorShower.setType(type);
-            }
-
-            @Override
-            public void cleanup()
-            {
-                errorShower.hideImmediately();
-            }
-        });
-    }
-
     public static ExpressionInfoDisplay installErrorShower(ErrorTop vBox, Label topLabel, TextField textField)
     {
         ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField);
         vBox.bindErrorMasking(expressionInfoDisplay.maskingErrors());
         return expressionInfoDisplay;
-    }
-
-    @NonNull
-    protected static <E extends LoadableExpression<E, P>, P> Pair<ErrorTop, ErrorDisplayer<E, P>> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization EntryNode<?, ?> surrounding, TopLevelEditor<?, ?> expressionEditor, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<E, P>>> replace, Stream<String> parentStyles)
-    {
-        TextField t = new TextField(keyword);
-        t.setEditable(false);
-        t.setDisable(true);
-        return ExpressionEditorUtil.<E, P>withLabelAbove(t, cssClass, "", surrounding, expressionEditor, replace, parentStyles);
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)
