@@ -294,7 +294,6 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
-            //push(KeyCode.TAB);
             write(original);
             Node lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<Node>query();
             assertNotNull(lhs);

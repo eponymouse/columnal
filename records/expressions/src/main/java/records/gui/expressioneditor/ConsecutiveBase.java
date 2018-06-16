@@ -210,7 +210,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * If the operand to the right of rightOf does NOT pass the given test (or the operator between is non-blank),
      * use the supplier to make one and insert it with blank operator between.
      */
-    public void ensureOperandToRight(EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>>> makeNew)
+    public void ensureOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>>> makeNew)
     {
         int index = Utility.indexOfRef(children, rightOf);
         if (index + 1 < children.size() && isAcceptable.test(children.get(index + 1)) && children.get(index).isBlank())
@@ -300,7 +300,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                     children.add(index + 1, focusWhenShown(makeBlankChild()));
             }
             else
-                parentFocusRightOfThis(side);
+            {
+                if (leavingBlank)
+                    parentFocusRightOfThis(side);
+                else
+                    children.add(index + 1, focusWhenShown(makeBlankChild()));
+            }
         });
     }
 
