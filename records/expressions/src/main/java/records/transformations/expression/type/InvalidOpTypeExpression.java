@@ -12,6 +12,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -78,5 +79,14 @@ public class InvalidOpTypeExpression extends TypeExpression
     public int hashCode()
     {
         return Objects.hash(items);
+    }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new InvalidOpTypeExpression(Utility.mapListI(items, e -> e.map(u -> u.replaceSubExpression(toReplace, replaceWith))));
     }
 }

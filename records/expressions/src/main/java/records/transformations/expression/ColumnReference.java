@@ -191,6 +191,12 @@ public class ColumnReference extends NonOperatorExpression
     {
         return referenceType;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }
 
 

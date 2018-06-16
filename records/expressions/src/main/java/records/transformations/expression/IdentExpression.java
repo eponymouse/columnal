@@ -110,4 +110,10 @@ public class IdentExpression extends NonOperatorExpression
     {
         return text;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

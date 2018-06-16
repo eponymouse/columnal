@@ -53,4 +53,10 @@ public abstract class Literal extends NonOperatorExpression
     }
 
     public abstract String editString();
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

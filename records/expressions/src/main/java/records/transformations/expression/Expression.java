@@ -66,7 +66,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable
+public abstract class Expression extends ExpressionBase implements LoadableExpression<Expression, ExpressionSaver>, StyledShowable, Replaceable<Expression>
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 

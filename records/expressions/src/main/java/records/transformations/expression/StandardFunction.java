@@ -132,4 +132,10 @@ public class StandardFunction extends NonOperatorExpression
     {
         return functionDefinition;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

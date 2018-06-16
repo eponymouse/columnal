@@ -121,6 +121,15 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
 
     @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return copy(lhs.replaceSubExpression(toReplace, replaceWith), rhs.replaceSubExpression(toReplace, replaceWith));
+    }
+
+    @Override
     @OnThread(Tag.Simulation)
     public final Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {

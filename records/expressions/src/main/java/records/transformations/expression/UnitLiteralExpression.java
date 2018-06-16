@@ -106,4 +106,10 @@ public class UnitLiteralExpression extends NonOperatorExpression
     {
         return unitExpression;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

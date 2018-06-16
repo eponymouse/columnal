@@ -9,6 +9,7 @@ import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
 import utility.StreamTreeBuilder;
+import utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -89,5 +90,14 @@ public class TupleTypeExpression extends TypeExpression
     {
 
         return Objects.hash(members);
+    }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new TupleTypeExpression(Utility.mapListI(members, t -> t.replaceSubExpression(toReplace, replaceWith)));
     }
 }

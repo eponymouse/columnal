@@ -3,11 +3,15 @@ package records.gui.expressioneditor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.LoadableExpression.SingleLoader;
+import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
@@ -23,8 +27,11 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 
     // The toString() method of the saver can be used to get the string content
     @NonNull SEMANTIC_PARENT saveToClipboard(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent);
-    
-    
+
+
+    Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> replaceAndLoad(EXPRESSION topLevel, EXPRESSION toReplace, EXPRESSION replaceWith, BracketedStatus childrenBracketedStatus);
+
+
 
     /**
      * If all operators are from the same {@link OperatorExpressionInfo}, returns a normal expression with those operators.

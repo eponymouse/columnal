@@ -91,4 +91,10 @@ public class MatchAnythingExpression extends NonOperatorExpression
     {
         return 0;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

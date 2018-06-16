@@ -171,4 +171,13 @@ public class TupleExpression extends Expression
     {
         return members;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new TupleExpression(Utility.mapListI(members, e -> e.replaceSubExpression(toReplace, replaceWith)));
+    }
 }

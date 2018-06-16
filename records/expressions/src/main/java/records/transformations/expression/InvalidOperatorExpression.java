@@ -17,6 +17,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.StreamTreeBuilder;
+import utility.Utility;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -106,5 +107,14 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
         return StyledString.s("TODO");
+    }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new InvalidOperatorExpression(Utility.mapListI(items, e -> e.map(u -> u.replaceSubExpression(toReplace, replaceWith))));
     }
 }

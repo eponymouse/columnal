@@ -10,6 +10,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -20,6 +21,7 @@ import utility.Utility;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static records.gui.expressioneditor.DeepNodeTree.opD;
 
@@ -210,5 +212,11 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     public ExpressionSaver saveToClipboard(ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         return new ExpressionSaver(parent);
+    }
+
+    @Override
+    public Stream<SingleLoader<Expression, ExpressionSaver>> replaceAndLoad(Expression topLevel, Expression toReplace, Expression replaceWith, BracketedStatus childrenBracketedStatus)
+    {
+        return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }
 }

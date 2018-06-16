@@ -15,6 +15,7 @@ import records.transformations.expression.UnitExpression;
 import styled.StyledString;
 import utility.Either;
 import utility.StreamTreeBuilder;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -133,5 +134,11 @@ public class TypeApplyExpression extends TypeExpression
     public int hashCode()
     {
         return Objects.hash(arguments);
+    }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        return new TypeApplyExpression(Utility.mapListI(arguments, x -> x.map(t -> t.replaceSubExpression(toReplace, replaceWith))));
     }
 }

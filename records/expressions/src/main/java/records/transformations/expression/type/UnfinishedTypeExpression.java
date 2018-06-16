@@ -71,4 +71,10 @@ public class UnfinishedTypeExpression extends TypeExpression
 
         return Objects.hash(value);
     }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

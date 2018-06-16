@@ -84,4 +84,10 @@ public class NumberTypeExpression extends TypeExpression
 
         return Objects.hash(unitExpression);
     }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

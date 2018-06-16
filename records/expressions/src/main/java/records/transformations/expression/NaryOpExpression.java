@@ -19,6 +19,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.StreamTreeBuilder;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,6 +88,15 @@ public abstract class NaryOpExpression extends Expression
     }
 
     public abstract NaryOpExpression copyNoNull(List<@Recorded Expression> replacements);
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return copyNoNull(Utility.mapList(expressions, e -> e.replaceSubExpression(toReplace, replaceWith)));
+    }
 
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)

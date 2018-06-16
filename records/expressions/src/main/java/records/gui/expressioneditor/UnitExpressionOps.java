@@ -7,7 +7,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
+import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.typeExp.TypeExp;
@@ -19,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
 {
@@ -142,5 +145,11 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
                 return typeExp;
             }
         };
+    }
+
+    @Override
+    public Stream<SingleLoader<UnitExpression, UnitSaver>> replaceAndLoad(UnitExpression topLevel, UnitExpression toReplace, UnitExpression replaceWith, BracketedStatus childrenBracketedStatus)
+    {
+        return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }
 }

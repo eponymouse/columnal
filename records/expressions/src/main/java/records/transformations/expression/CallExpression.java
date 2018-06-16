@@ -256,4 +256,13 @@ public class CallExpression extends Expression
     {
         return param;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new CallExpression(function.replaceSubExpression(toReplace, replaceWith), param.replaceSubExpression(toReplace, replaceWith));
+    }
 }

@@ -79,4 +79,13 @@ public class ListTypeExpression extends TypeExpression
 
         return Objects.hash(innerType);
     }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new ListTypeExpression(innerType.replaceSubExpression(toReplace, replaceWith));
+    }
 }

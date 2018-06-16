@@ -209,4 +209,13 @@ public class ArrayExpression extends Expression
     {
         return items;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new ArrayExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
+    }
 }

@@ -12,6 +12,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
@@ -78,4 +79,12 @@ public class InvalidOperatorUnitExpression extends UnitExpression
         return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitSaver>)(UnitEntry.load(s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
 
+    @Override
+    public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new InvalidOperatorUnitExpression(Utility.mapListI(items, e -> e.map(u -> u.replaceSubExpression(toReplace, replaceWith))));
+    }
 }

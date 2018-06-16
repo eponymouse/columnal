@@ -96,4 +96,10 @@ public class TaggedTypeNameExpression extends TypeExpression
 
         return Objects.hash(typeName);
     }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

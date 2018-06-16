@@ -78,4 +78,10 @@ public class SingleUnitExpression extends UnitExpression
     {
         return name.hashCode();
     }
+
+    @Override
+    public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

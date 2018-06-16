@@ -31,6 +31,7 @@ import records.jellytype.JellyType.JellyTypeVisitorEx;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.Replaceable;
 import records.transformations.expression.UnitExpression;
 import styled.StyledShowable;
 import threadchecker.OnThread;
@@ -40,7 +41,7 @@ import utility.FXPlatformRunnable;
 import utility.StreamTreeBuilder;
 import utility.Utility;
 
-public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeParent>, StyledShowable
+public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeParent>, StyledShowable, Replaceable<TypeExpression>
 {
 
     public static TypeExpression fromDataType(DataType dataType) throws InternalException

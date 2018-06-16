@@ -96,4 +96,10 @@ public class TypePrimitiveLiteral extends TypeExpression
 
         return Objects.hash(dataType);
     }
+
+    @Override
+    public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

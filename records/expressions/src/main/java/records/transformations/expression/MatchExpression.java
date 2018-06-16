@@ -165,6 +165,11 @@ public class MatchExpression extends NonOperatorExpression
             r.addAll(outcome.loadAsConsecutive(BracketedStatus.MISC));
             return r.stream();
         }
+
+        public Function<MatchExpression, MatchClause> replaceSubExpression(Expression toReplace, Expression replaceWith)
+        {
+            return me -> me.new MatchClause(Utility.mapList(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
+        }
     }
 
     /**
@@ -276,6 +281,11 @@ public class MatchExpression extends NonOperatorExpression
         public @Nullable Expression getGuard()
         {
             return guard;
+        }
+
+        public Pattern replaceSubExpression(Expression toReplace, Expression replaceWith)
+        {
+            return new Pattern(pattern.replaceSubExpression(toReplace, replaceWith), guard == null ? null : guard.replaceSubExpression(toReplace, replaceWith));
         }
     }
 
@@ -446,5 +456,14 @@ public class MatchExpression extends NonOperatorExpression
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         return null;
+    }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (toReplace == replaceWith)
+            return this;
+        else
+            return new MatchExpression(expression.replaceSubExpression(toReplace, replaceWith), Utility.mapList(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)));
     }
 }

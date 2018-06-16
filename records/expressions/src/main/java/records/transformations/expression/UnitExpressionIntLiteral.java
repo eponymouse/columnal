@@ -76,4 +76,10 @@ public class UnitExpressionIntLiteral extends UnitExpression
     {
         return number;
     }
+
+    @Override
+    public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

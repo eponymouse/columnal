@@ -154,4 +154,10 @@ public class TypeLiteralExpression extends NonOperatorExpression
     {
         return type;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

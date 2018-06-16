@@ -6,12 +6,13 @@ import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
 
 import java.util.stream.Stream;
 
 // Super-class of TypeLiteralNode/UnitLiteralExpressionNode with all the shared functionality
-public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable & Replaceable<EXPRESSION>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> consecParent;
 

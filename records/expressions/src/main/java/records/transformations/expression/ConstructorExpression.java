@@ -139,4 +139,10 @@ public class ConstructorExpression extends NonOperatorExpression
     {
         return tag.either(s -> false, t -> t.getTagInfo().getInner() != null);
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

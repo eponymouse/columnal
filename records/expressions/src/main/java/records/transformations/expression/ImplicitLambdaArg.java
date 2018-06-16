@@ -192,4 +192,10 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     {
         return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }

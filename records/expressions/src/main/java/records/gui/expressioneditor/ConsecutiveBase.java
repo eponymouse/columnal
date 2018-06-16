@@ -53,7 +53,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     private @Nullable String prompt = null;
     private boolean removingBlanks;
     
-    protected @MonotonicNonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT> mostRecentSave;
+    protected @MonotonicNonNull EXPRESSION mostRecentSave;
 
     @SuppressWarnings("initialization")
     public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
@@ -150,7 +150,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         if (mostRecentSave != null)
         {
             atomicEdit.set(true);
-            children.setAll(mostRecentSave.replaceSubExpression(target, replacement).loadAsConsecutive(getChildrenBracketedStatus()).map(l -> l.load(this)).collect(Collectors.toList()));
+            children.setAll(operations.replaceAndLoad(mostRecentSave, target, replacement, getChildrenBracketedStatus()).map(l -> l.load(this)).collect(Collectors.toList()));
             atomicEdit.set(false);
         }
     }

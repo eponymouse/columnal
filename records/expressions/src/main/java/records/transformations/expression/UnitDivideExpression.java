@@ -95,4 +95,13 @@ public class UnitDivideExpression extends UnitExpression
         r.addAll(denominator.loadAsConsecutive(BracketedStatus.MISC));
         return r.stream();
     }
+
+    @Override
+    public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new UnitDivideExpression(numerator.replaceSubExpression(toReplace, replaceWith), denominator.replaceSubExpression(toReplace, replaceWith));
+    }
 }

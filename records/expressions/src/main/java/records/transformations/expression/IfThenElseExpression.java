@@ -179,4 +179,17 @@ public class IfThenElseExpression extends NonOperatorExpression
     {
         return elseExpression;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else 
+            return new IfThenElseExpression(
+                condition.replaceSubExpression(toReplace, replaceWith),
+                thenExpression.replaceSubExpression(toReplace, replaceWith),
+                elseExpression.replaceSubExpression(toReplace, replaceWith)
+            );
+    }
 }

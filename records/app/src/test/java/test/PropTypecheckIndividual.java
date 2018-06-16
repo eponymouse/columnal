@@ -140,6 +140,12 @@ public class PropTypecheckIndividual
         {
             return System.identityHashCode(this);
         }
+
+        @Override
+        public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+        {
+            return this == toReplace ? replaceWith : this;
+        }
     }
 
     class DummyConstExpression extends DummyExpression
@@ -442,6 +448,12 @@ public class PropTypecheckIndividual
         public int hashCode()
         {
             return 0;
+        }
+
+        @Override
+        public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+        {
+            return this == toReplace ? replaceWith : this;
         }
     }
 }

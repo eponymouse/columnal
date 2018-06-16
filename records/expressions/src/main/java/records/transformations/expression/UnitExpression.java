@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitSaver>, StyledShowable
+public abstract class UnitExpression implements LoadableExpression<UnitExpression, UnitSaver>, StyledShowable, Replaceable<UnitExpression>
 {
     @SuppressWarnings("recorded")
     public static @Recorded UnitExpression load(Unit unit)

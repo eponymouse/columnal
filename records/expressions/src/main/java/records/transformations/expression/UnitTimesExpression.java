@@ -100,4 +100,13 @@ public class UnitTimesExpression extends UnitExpression
         r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND.getContent()));
         return r.stream();
     }
+
+    @Override
+    public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new UnitTimesExpression(Utility.mapListI(operands, t -> t.replaceSubExpression(toReplace, replaceWith)));
+    }
 }

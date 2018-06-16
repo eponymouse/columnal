@@ -80,4 +80,13 @@ public class UnitRaiseExpression extends UnitExpression
         r.addAll(new UnitExpressionIntLiteral(power).loadAsConsecutive(BracketedStatus.MISC));
         return r.stream();
     }
+
+    @Override
+    public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
+    {
+        if (this == toReplace)
+            return replaceWith;
+        else
+            return new UnitRaiseExpression(unit.replaceSubExpression(toReplace, replaceWith), power);
+    }
 }

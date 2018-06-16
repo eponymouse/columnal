@@ -28,6 +28,4 @@ public interface LoadableExpression<EXPRESSION extends StyledShowable, SEMANTIC_
             };
         }
     }
-    
-    public default LoadableExpression<EXPRESSION, SEMANTIC_PARENT> replaceSubExpression(EXPRESSION toReplace, EXPRESSION replaceWith) {return null; /*TODO*/};
 }

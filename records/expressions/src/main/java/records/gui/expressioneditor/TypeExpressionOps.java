@@ -2,10 +2,14 @@ package records.gui.expressioneditor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
+import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import utility.FXPlatformConsumer;
+
+import java.util.stream.Stream;
 
 public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
 {
@@ -136,5 +140,11 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
                 
             }
         };
+    }
+
+    @Override
+    public Stream<SingleLoader<TypeExpression, TypeParent>> replaceAndLoad(TypeExpression topLevel, TypeExpression toReplace, TypeExpression replaceWith, BracketedStatus childrenBracketedStatus)
+    {
+        return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }
 }

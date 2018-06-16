@@ -116,4 +116,10 @@ public class VarDeclExpression extends NonOperatorExpression
     {
         return varName;
     }
+
+    @Override
+    public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
+    {
+        return this == toReplace ? replaceWith : this;
+    }
 }
