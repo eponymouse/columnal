@@ -461,8 +461,8 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
-        if (toReplace == replaceWith)
-            return this;
+        if (toReplace == this)
+            return replaceWith;
         else
             return new MatchExpression(expression.replaceSubExpression(toReplace, replaceWith), Utility.mapList(clauses, c -> c.replaceSubExpression(toReplace, replaceWith)));
     }

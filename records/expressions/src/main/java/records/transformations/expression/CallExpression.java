@@ -216,7 +216,10 @@ public class CallExpression extends Expression
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
-        return param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newParam -> new CallExpression(function, newParam)));
+        return Stream.concat(
+            function._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(p.getSecond().apply(newExp), param))),
+            param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newExp -> new CallExpression(function, p.getSecond().apply(newExp))))
+        );
     }
 
     @SuppressWarnings("recorded")
