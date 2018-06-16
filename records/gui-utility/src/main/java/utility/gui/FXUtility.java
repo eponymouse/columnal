@@ -652,6 +652,11 @@ public class FXUtility
         });
     }
 
+    public static boolean hasPseudoclass(Node node, String className)
+    {
+        return node.getPseudoClassStates().stream().anyMatch(p -> p.getPseudoClassName().equals(className));
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)

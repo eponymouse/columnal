@@ -1,5 +1,6 @@
 package test.gui;
 
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -14,20 +15,25 @@ import org.controlsfx.control.PopOver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.service.query.NodeQuery;
 import org.testfx.util.WaitForAsyncUtils;
+import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableManager;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.MainWindow.MainWindowActions;
 import records.gui.expressioneditor.OperandOps;
+import records.gui.grid.RectangleBounds;
 import records.transformations.Calculate;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.Expression;
@@ -37,6 +43,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +55,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestQuickFix extends ApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait
+public class TestQuickFix extends ApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait
 {
     @SuppressWarnings("nullness")
     private Stage windowToUse;
@@ -271,17 +278,23 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
                 columns.add(rs -> new MemoryStringColumn(rs, new ColumnId("S" + iFinal), Collections.emptyList(), ""));
                 columns.add(rs -> new MemoryNumericColumn(rs, new ColumnId("ACC" + iFinal), new NumberInfo(u.loadUse("m/s^2")), Collections.emptyList(), 0));
             }
-            TableManager tableManager = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0))._test_getTableManager();
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager, new EditableRecordSet(columns, () -> 0));
+            TableManager tableManager = mainWindowActions._test_getTableManager();
 
-            scrollTo(".id-tableDisplay-menu-button");
-            clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-            // TODO fix this
-            //selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().startsWith("calculate"));
-            push(KeyCode.TAB);
+            CellPosition position = new CellPosition(CellPosition.row(7), CellPosition.col(1));
+            tableManager.edit(null, () -> new Calculate(tableManager, new InitialLoadDetails(null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()), null);
+
+            TestUtil.sleep(2000);
+            NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));
+            clickOnItemInBounds(arrowQuery, mainWindowActions._test_getVirtualGrid(), new RectangleBounds(
+                new CellPosition(CellPosition.row(7), CellPosition.col(1)),
+                new CellPosition(CellPosition.row(10), CellPosition.col(20))
+            ));
+            TestUtil.sleep(1000);
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
-            push(KeyCode.TAB);
+            //push(KeyCode.TAB);
             write(original);
             Node lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<Node>query();
             assertNotNull(lhs);
