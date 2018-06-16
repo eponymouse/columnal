@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.scene.Node;
@@ -15,26 +14,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.gui.TypeDialog;
 import records.jellytype.JellyType;
-import records.transformations.expression.QuickFix;
-import records.transformations.expression.QuickFix.QuickFixParams;
-import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.Expression;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.UnfinishedTypeExpression;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformFunctionInt;
+import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -43,11 +39,8 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static records.transformations.expression.QuickFix.ReplacementTarget.CURRENT;
 
 /**
  * Created by neil on 21/01/2017.
@@ -120,23 +113,14 @@ public class ExpressionEditorUtil
     public static List<QuickFix<Expression,ExpressionSaver>> quickFixesForTypeError(TypeManager typeManager, Expression src, @Nullable DataType fix)
     {
         List<QuickFix<Expression,ExpressionSaver>> quickFixes = new ArrayList<>();
-        FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, LoadableExpression<Expression, ExpressionSaver>>> makeTypeFix = params -> {
-            TypeDialog typeDialog = new TypeDialog(params.parentWindow, params.tableManager.getTypeManager(), false);
-            @Nullable JellyType dataType = typeDialog.showAndWait().orElse(Optional.empty()).orElse(null);
-            if (dataType != null)
-            {
-                return new Pair<>(CURRENT, TypeLiteralExpression.fixType(typeManager, dataType, src));
-            }
-            else
-            {
-                return new Pair<>(CURRENT, src);
-            }
+        FXPlatformSupplierInt<Expression> makeTypeFix = () -> {
+            return TypeLiteralExpression.fixType(typeManager, fix == null ? new UnfinishedTypeExpression("") : TypeExpression.fromDataType(fix), src);
         };
-        quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), makeTypeFix));
+        quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
         if (fix != null)
         {
             @NonNull DataType fixFinal = fix;
-            quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), p -> new Pair<>(CURRENT, TypeLiteralExpression.fixType(typeManager, JellyType.fromConcrete(fixFinal), src))));
+            quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setTypeTo", fix.toString())), ImmutableList.of(), src, () -> TypeLiteralExpression.fixType(typeManager, JellyType.fromConcrete(fixFinal), src)));
         }
         return quickFixes;
     }
@@ -186,8 +170,8 @@ public class ExpressionEditorUtil
                 //Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                 if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
-                    return Collections.singletonList(new QuickFix<Expression,ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), params -> {
-                        return new Pair<>(CURRENT, literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0)));
+                    return Collections.singletonList(new QuickFix<Expression,ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), p.getOurExpression(), () -> {
+                        return literal.getFirst().withUnit(uniqueNonLiteralUnits.get(0));
                     }));
                 }
             }

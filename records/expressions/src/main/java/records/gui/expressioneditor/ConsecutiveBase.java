@@ -9,15 +9,16 @@ import javafx.scene.Node;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.QuickFix;
-import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
@@ -44,13 +45,15 @@ import java.util.stream.Stream;
 public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, Locatable
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
-
+    
     protected final String style;
     protected final ObservableList<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> children;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
     private boolean removingBlanks;
+    
+    protected @MonotonicNonNull LoadableExpression<EXPRESSION, SEMANTIC_PARENT> mostRecentSave;
 
     @SuppressWarnings("initialization")
     public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
@@ -142,20 +145,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             children.get(children.size() - 1).focus(side);
     }
     
-    protected void replaceLoad(EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, ReplacementTarget replacementTarget, Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> newNodes)
+    protected void replaceSubExpression(EXPRESSION target, EXPRESSION replacement)
     {
-        if (replacementTarget == ReplacementTarget.CURRENT)
+        if (mostRecentSave != null)
         {
-            int index = getOperandIndex(oldNode);
-            if (index != -1)
-            {
-                atomicEdit.set(true);
-                children.remove(index);
-                children.addAll(index, newNodes.map(n -> n.load(this)).collect(Collectors.toList()));
-                atomicEdit.set(false);
-            }
+            atomicEdit.set(true);
+            children.setAll(mostRecentSave.replaceSubExpression(target, replacement).loadAsConsecutive(getChildrenBracketedStatus()).map(l -> l.load(this)).collect(Collectors.toList()));
+            atomicEdit.set(false);
         }
-        // TODO support parent replacement (through saver?)
     }
 
     protected abstract boolean hasImplicitRoundBrackets();

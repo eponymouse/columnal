@@ -1,8 +1,6 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -11,7 +9,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
-import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -107,9 +104,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
         container.setError(true);
-        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent().getEditor().getWindow(), getParent().getEditor().getTableManager(), (Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> e) -> {
-            getParent().replaceLoad(this, e.getFirst(), e.getSecond().loadAsConsecutive(BracketedStatus.MISC));
-        });
+        expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent());
     }
 
     @Override

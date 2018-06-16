@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -14,6 +15,7 @@ import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.UnfinishedTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -41,33 +43,38 @@ public class TypeLiteralExpression extends NonOperatorExpression
         this.type = type;
     }
 
-    @SuppressWarnings("recorded") // Don't need to record when making a fix
     public static Expression fixType(TypeManager typeManager, JellyType fix, @Recorded Expression expression) throws InternalException
     {
         try
         {
-            TypeExpression typeExpression = TypeExpression.fromJellyType(fix, typeManager);
-            FunctionDefinition asType = FunctionList.lookup(typeManager.getUnitManager(), "asType");
-            if (asType == null)
-                throw new InternalException("Missing asType function");
-            if (expression instanceof CallExpression
-                && ((CallExpression) expression).getFunction().equals(new StandardFunction(asType))
-                && ((CallExpression) expression).getParam() instanceof TupleExpression)
-            {
-                expression = ((TupleExpression) ((CallExpression) expression).getParam()).getMembers().get(1);
-            }
-
-            return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(
-                new TypeLiteralExpression(typeExpression),
-                expression
-            )));
+            return fixType(typeManager, TypeExpression.fromJellyType(fix, typeManager), expression);
         }
         catch (UserException e)
         {
-            // If we have a user exception, we are trying to fix to a non-existent type, which means
-            // we fucked up, not the user:
-            throw new InternalException("Problem locating type for suggested fix", e);
+            // If we have a user exception, we are trying to fix to a non-existent type.
+            // Probably means we fucked up, but just use blank type:
+            Log.log(e);
+            return fixType(typeManager, new UnfinishedTypeExpression(""), expression);
         }
+    }
+    
+    @SuppressWarnings("recorded") // Don't need to record when making a fix
+    public static Expression fixType(TypeManager typeManager, TypeExpression fixTo, @Recorded Expression expression) throws InternalException
+    {
+        FunctionDefinition asType = FunctionList.lookup(typeManager.getUnitManager(), "asType");
+        if (asType == null)
+            throw new InternalException("Missing asType function");
+        if (expression instanceof CallExpression
+            && ((CallExpression) expression).getFunction().equals(new StandardFunction(asType))
+            && ((CallExpression) expression).getParam() instanceof TupleExpression)
+        {
+            expression = ((TupleExpression) ((CallExpression) expression).getParam()).getMembers().get(1);
+        }
+
+        return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(
+            new TypeLiteralExpression(fixTo),
+            expression
+        )));
     }
         
     @Override

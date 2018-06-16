@@ -1,32 +1,12 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.error.InternalException;
-import records.error.UserException;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.QuickFix;
-import records.transformations.expression.QuickFix.ReplacementTarget;
-import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
-import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
-import utility.Pair;
-import utility.Utility;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>

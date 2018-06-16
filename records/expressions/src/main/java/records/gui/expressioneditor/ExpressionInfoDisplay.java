@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -17,23 +16,19 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
-import records.data.TableManager;
 import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
-import records.transformations.expression.QuickFix;
-import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -272,7 +267,7 @@ public class ExpressionInfoDisplay
         }
     }
     
-    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, @Nullable Window parentWindow, TableManager tableManager, FXPlatformConsumer<Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> replace)
+    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> editor)
     {
         Log.debug("Message and fixes: " + msg + " " + fixes.size());
         // The listener on this property should make the popup every time:
@@ -283,7 +278,8 @@ public class ExpressionInfoDisplay
                 hide(true);
             try
             {
-                replace.consume(q.getFixedVersion(parentWindow, tableManager));
+                Pair<EXPRESSION, EXPRESSION> replaceWith = q.getReplacement();
+                editor.replaceSubExpression(replaceWith.getFirst(), replaceWith.getSecond());
             }
             catch (InternalException e)
             {

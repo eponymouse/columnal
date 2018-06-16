@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.Random;
 
 import static records.transformations.expression.AddSubtractExpression.AddSubtractOp.ADD;
-import static records.transformations.expression.QuickFix.ReplacementTarget.PARENT;
 
 /**
  * Created by neil on 10/12/2016.
@@ -98,7 +97,7 @@ public class AddSubtractExpression extends NaryOpExpression
             // the quick fix if it is definitely a string, for which we can use equals:
             if (ourType.equals(TypeExp.text(null)) && ops.stream().allMatch(op -> op.equals(AddSubtractOp.ADD)))
             {
-                fixes.add(new QuickFix<Expression,ExpressionSaver>("fix.stringConcat", PARENT, new StringConcatExpression(expressions)));
+                fixes.add(new QuickFix<Expression,ExpressionSaver>("fix.stringConcat", this, () -> new StringConcatExpression(expressions)));
             }
 
             if (ourType instanceof NumTypeExp)

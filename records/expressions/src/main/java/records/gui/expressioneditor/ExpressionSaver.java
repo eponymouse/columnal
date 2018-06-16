@@ -11,12 +11,36 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
-import records.transformations.expression.*;
+import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
+import records.transformations.expression.AndExpression;
+import records.transformations.expression.ArrayExpression;
+import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.DivideExpression;
+import records.transformations.expression.EqualExpression;
+import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.Expression;
+import records.transformations.expression.IfThenElseExpression;
+import records.transformations.expression.ImplicitLambdaArg;
+import records.transformations.expression.InvalidOperatorExpression;
+import records.transformations.expression.LoadableExpression;
+import records.transformations.expression.MatchAnythingExpression;
+import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.QuickFix.ReplacementTarget;
+import records.transformations.expression.NotEqualExpression;
+import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.OrExpression;
+import records.transformations.expression.PlusMinusPatternExpression;
+import records.transformations.expression.QuickFix;
+import records.transformations.expression.RaiseExpression;
+import records.transformations.expression.StringConcatExpression;
+import records.transformations.expression.TimesExpression;
+import records.transformations.expression.TupleExpression;
+import records.transformations.expression.UnitLiteralExpression;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -892,7 +916,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                 {
                     @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
                     errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, e)));
+                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> e)));
                     return invalidOpExpression;
                 }
             }
@@ -922,8 +946,9 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
 
                 if (replacement != null)
                 {
+                    @NonNull EXPRESSION replacementFinal = replacement;
                     errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, replacement)
+                        new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
                     ));
                 }
             }
@@ -988,7 +1013,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
                 if (replacement != null)
                 {
                     errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>("fix.bracketAs", ReplacementTarget.CURRENT, replacement)
+                        new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> replacement)
                     ));
                 }
             }

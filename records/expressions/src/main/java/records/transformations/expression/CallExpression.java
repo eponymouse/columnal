@@ -11,7 +11,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.QuickFix.ReplacementTarget;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.MutVar;
@@ -108,21 +107,19 @@ public class CallExpression extends Expression
                 if (!TypeExp.isList(prunedParam) && param instanceof ColumnReference && ((ColumnReference)param).getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
                 {
                     ColumnReference colRef = (ColumnReference)param;
-                    @SuppressWarnings("recorded")
-                    CallExpression replacementCall = new CallExpression(function, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
                     // Offer to turn a this-row column reference into whole column:
                     onError.recordQuickFixes(this, Collections.singletonList(
-                        new QuickFix<>("fix.wholeColumn", ReplacementTarget.CURRENT, replacementCall)
+                        new QuickFix<>("fix.wholeColumn", this, () ->
+                            new CallExpression(function, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN))
+                        )
                     ));
                 }
                 if (prunedParam instanceof TupleTypeExp && param instanceof TupleExpression)
                 {
                     // Offer to turn tuple into a list:
                     Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
-                    @SuppressWarnings("recorded")
-                    CallExpression replacementCall = new CallExpression(function, replacementParam);
                     onError.recordQuickFixes(this, Collections.singletonList(
-                            new QuickFix<>("fix.squareBracketAs", ReplacementTarget.CURRENT, replacementCall)
+                            new QuickFix<>("fix.squareBracketAs", this, () -> new CallExpression(function, replacementParam))
                     ));
                 }
                 // Although we may want to pass a tuple as a single-item list, it's much less likely
@@ -132,10 +129,8 @@ public class CallExpression extends Expression
                     // Offer to make a list:
                     @SuppressWarnings("recorded")
                     Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
-                    @SuppressWarnings("recorded")
-                    CallExpression replacementCall = new CallExpression(function, replacementParam);
                     onError.recordQuickFixes(this, Collections.singletonList(
-                        new QuickFix<>("fix.singleItemList", ReplacementTarget.CURRENT, replacementCall)
+                        new QuickFix<>("fix.singleItemList", this, () -> new CallExpression(function, replacementParam))
                     ));
                 }
                 

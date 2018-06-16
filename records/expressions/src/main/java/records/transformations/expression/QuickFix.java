@@ -4,6 +4,7 @@ import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
 import records.error.InternalException;
@@ -13,6 +14,8 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunctionInt;
+import utility.FXPlatformSupplier;
+import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.gui.TranslationUtility;
 
@@ -23,24 +26,24 @@ import utility.gui.TranslationUtility;
 public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
     private final StyledString title;
-    private final FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement;
+    // Identified by reference, not by contents/hashCode.
+    private final EXPRESSION replacementTarget;
+    private final FXPlatformSupplierInt<@UnknownIfRecorded EXPRESSION> makeReplacement;
     private final ImmutableList<String> cssClasses;
 
-    public QuickFix(@LocalizableKey String titleKey, ReplacementTarget replacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> replacement)
+    public QuickFix(@LocalizableKey String titleKey, EXPRESSION replacementTarget, FXPlatformSupplierInt<@NonNull EXPRESSION> makeReplacement)
     {
-        this(StyledString.concat(
-                StyledString.s(TranslationUtility.getString(titleKey)),
-                StyledString.s(": "),
-                replacement.toStyledString()),
-            ImmutableList.of(OperandOps.makeCssClass(replacement)),
-            p -> new Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>(replacementTarget, replacement));
+        this(StyledString.s(TranslationUtility.getString(titleKey)),
+            ImmutableList.of(),
+            replacementTarget, makeReplacement);
     }
     
-    public QuickFix(StyledString title, ImmutableList<String> cssClasses, FXPlatformFunctionInt<QuickFixParams, Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>>> fixedReplacement)
+    public QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, FXPlatformSupplierInt<EXPRESSION> makeReplacement)
     {
         this.title = title;
         this.cssClasses = cssClasses;
-        this.fixedReplacement = fixedReplacement;
+        this.replacementTarget = replacementTarget;
+        this.makeReplacement = makeReplacement;
     }
 
     public StyledString getTitle()
@@ -49,30 +52,14 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     }
     
     @OnThread(Tag.FXPlatform)
-    public Pair<ReplacementTarget, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> getFixedVersion(@Nullable Window parentWindow, TableManager tableManager) throws InternalException
+    // Gets the replacement target (first item) and replacement (second item)
+    public Pair<EXPRESSION, EXPRESSION> getReplacement() throws InternalException
     {
-        return fixedReplacement.apply(new QuickFixParams(parentWindow, tableManager));
+        return new Pair<>(replacementTarget, makeReplacement.get());
     }
 
     public ImmutableList<String> getCssClasses()
     {
         return cssClasses;
-    }
-
-    public static enum ReplacementTarget
-    {
-        CURRENT, PARENT;
-    }
-    
-    public static final class QuickFixParams
-    {
-        public final @Nullable Window parentWindow;
-        public final TableManager tableManager;
-
-        public QuickFixParams(@Nullable Window parentWindow, TableManager tableManager)
-        {
-            this.parentWindow = parentWindow;
-            this.tableManager = tableManager;
-        }
     }
 }
