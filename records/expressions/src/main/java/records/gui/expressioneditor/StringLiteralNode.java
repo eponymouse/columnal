@@ -158,6 +158,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         return container._test_getHeaderState();
     }
 
+    @Override
+    public void setText(String initialContent)
+    {
+        textField.setText(initialContent);
+    }
+
     private static class EndStringCompletion extends Completion
     {
         @Override

@@ -179,4 +179,10 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     {
         expressionInfoDisplay.unmaskErrors();
     }
+
+    @Override
+    public void setText(String initialContent)
+    {
+        textField.setText(initialContent);
+    }
 }

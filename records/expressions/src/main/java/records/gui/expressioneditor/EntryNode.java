@@ -106,4 +106,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     {
         return Stream.empty();
     }
+
+    // Should also trigger completions if applicable
+    public abstract void setText(String initialContent);
 }

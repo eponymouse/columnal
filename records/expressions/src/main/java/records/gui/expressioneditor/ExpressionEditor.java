@@ -82,6 +82,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         ExpressionSaver saver = new ExpressionSaver(this);
         super.save(saver);
         @Recorded Expression expression = saver.finish(children.get(children.size() - 1));
+        mostRecentSave = expression;
 
         try
         {

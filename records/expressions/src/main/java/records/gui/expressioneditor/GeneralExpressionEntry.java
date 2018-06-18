@@ -114,7 +114,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     GeneralExpressionEntry(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         super(Expression.class, parent);
-        Log.logStackTrace("Made new GEE with [[" + initialValue + "]]");
+        //Log.logStackTrace("Made new GEE with [[" + initialValue + "]]");
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
         typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
@@ -704,14 +704,20 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 completing = true;
                 // Must do this while completing so that we're not marked as blank:
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);                
+                if (rest.isEmpty())
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                else
+                    parent.addOperandToRight(GeneralExpressionEntry.this, rest, true);
                 return ((KeywordCompletion) c).keyword.getContent();
             }
             else if (c instanceof OperatorCompletion)
             {
                 completing = true;
                 // Must do this while completing so that we're not marked as blank:
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);                
+                if (rest.isEmpty())
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                else
+                    parent.addOperandToRight(GeneralExpressionEntry.this, rest, true);
                 return ((OperatorCompletion) c).operator.getContent();
             }
             else if (c instanceof FunctionCompletion)

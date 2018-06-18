@@ -291,7 +291,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                         // complete the top one (if any are available) and move character to next slot
                         List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
                         @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
-                        @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last);
+                        @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, Utility.codePointToString(last));
                         if (newContent == null)
                             newContent = withoutLast;
                         if (newContent != null)

@@ -249,11 +249,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         if (index != -1)
         {
             atomicEdit.set(true);
-            EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, initialContent);
+            EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, "");
             if (focus)
                 operandNode.focusWhenShown();
             children.add(index+1, operandNode);
             atomicEdit.set(false);
+            operandNode.setText(initialContent);
             return OperatorOutcome.KEEP;
         }
         // If we can't find it, I guess blank:
