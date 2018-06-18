@@ -638,16 +638,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             addBlankAtLeft();
     }
 
-    /**
-     * A collection of characters which terminate this item, i.e. which you could press in the child
-     * at the last position, and it should complete this ConsecutiveBase and move on.
-     *
-     * Note that while the returned collection is immutable, this method may return different values at
-     * different times, e.g. because we are using the parent's set, which in turn has changed (like when
-     * a clause node becomes/unbecomes the last item in a pattern match).
-     */
-    public abstract ImmutableSet<Character> terminatedByChars();
-
     protected void unmaskErrors()
     {
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)

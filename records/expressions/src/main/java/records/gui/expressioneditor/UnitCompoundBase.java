@@ -19,7 +19,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
 {
     public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable Stream<SingleLoader<UnitExpression, UnitSaver>> startContent)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of(UnitEntry.load("")), topLevel ? '}' : ')');
+        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", startContent != null ? startContent : Stream.of(UnitEntry.load("")));
     }
 
     @Override

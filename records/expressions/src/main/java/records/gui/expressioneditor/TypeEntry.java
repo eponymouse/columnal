@@ -65,7 +65,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         ).collect(ImmutableList.toImmutableList());
         
         FXUtility.sizeToFit(textField, 30.0, 30.0);
-        this.autoComplete = new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
 
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
@@ -211,9 +211,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return completion.contains("" + character);
+            return Utility.containsCodepoint(completion, character);
         }
     }
 

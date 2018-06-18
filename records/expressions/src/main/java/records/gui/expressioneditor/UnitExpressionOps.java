@@ -20,12 +20,13 @@ import utility.Pair;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
 {
-    private final Set<Integer> ALPHABET = UnitSaver.OPERATORS.stream().flatMap(o -> o.operators.stream()).map(p -> p.getFirst()).map(UnitOp::getContent).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private static final Set<Integer> OPERATOR_ALPHABET = UnitSaver.OPERATORS.stream().flatMap(o -> o.operators.stream()).map(p -> p.getFirst()).map(UnitOp::getContent).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     private static String getOp(Pair<String, @Localized String> p)
     {
@@ -43,12 +44,6 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     //{
         //return OPERATORS;
     //}
-
-    @Override
-    public boolean isOperatorAlphabet(char character)
-    {
-        return ALPHABET.contains((int)character);
-    }
 
     @Override
     public Class<UnitExpression> getOperandClass()
@@ -151,5 +146,31 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     public Stream<SingleLoader<UnitExpression, UnitSaver>> replaceAndLoad(UnitExpression topLevel, UnitExpression toReplace, UnitExpression replaceWith, BracketedStatus childrenBracketedStatus)
     {
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
+    }
+
+    public static boolean differentAlphabet(String current, int newCodepoint)
+    {
+        return OperandOps.alphabetDiffers(Arrays.asList(UnitAlphabet.values()), current, newCodepoint);
+    }
+    
+    private static enum UnitAlphabet implements Alphabet
+    {
+        WORD(c -> Character.isAlphabetic(c) || Character.getType(c) == Character.CURRENCY_SYMBOL || c == ' '),
+        DIGIT(Character::isDigit),
+        BRACKET(Alphabet.containsCodepoint("(){}")),
+        OPERATOR(OPERATOR_ALPHABET::contains);
+        
+        private Predicate<Integer> match;
+
+        UnitAlphabet(Predicate<Integer> match)
+        {
+            this.match = match;
+        }
+
+        @Override
+        public boolean test(int codepoint)
+        {
+            return match.test(codepoint);
+        }
     }
 }

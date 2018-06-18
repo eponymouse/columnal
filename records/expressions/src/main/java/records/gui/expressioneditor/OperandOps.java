@@ -10,14 +10,15 @@ import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 {
     public EntryNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, @Nullable String initialContent);
-
-    public boolean isOperatorAlphabet(char character);
 
     public Class<EXPRESSION> getOperandClass();
 
@@ -211,5 +212,22 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     public static String makeCssClass(Object replacement)
     {
         return "id-munged-" + replacement.toString().codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
+    }
+    
+    public static interface Alphabet
+    {
+        public boolean test(int codepoint);
+        
+        public static Predicate<Integer> containsCodepoint(String codepoints)
+        {
+            return a -> codepoints.codePoints().anyMatch(b -> a == b);
+        }    
+    }
+    
+    public static boolean alphabetDiffers(List<Alphabet> alphabets, String current, int nextCodepoint)
+    {
+        @Nullable Alphabet curAlphabet = alphabets.stream().filter(a -> a.test(current.codePointAt(0))).findFirst().orElse(null);
+        @Nullable Alphabet nextAlphabet = alphabets.stream().filter(a -> a.test(nextCodepoint)).findFirst().orElse(null);
+        return !Objects.equals(curAlphabet, nextAlphabet);
     }
 }

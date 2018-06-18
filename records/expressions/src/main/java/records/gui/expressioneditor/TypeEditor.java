@@ -72,12 +72,6 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent>
     }
     
     @Override
-    public ImmutableSet<Character> terminatedByChars()
-    {
-        return ImmutableSet.of();
-    }
-
-    @Override
     public Stream<String> getParentStyles()
     {
         return Stream.empty();

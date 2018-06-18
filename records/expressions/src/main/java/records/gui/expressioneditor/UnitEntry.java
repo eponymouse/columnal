@@ -37,7 +37,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         super(UnitExpression.class, parent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
         ExBiFunction<String, CompletionQuery, List<Completion>> getSuggestions = this::getSuggestions;
-        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, UnitExpressionOps::differentAlphabet);
         updateNodes();
         textField.setText(initialContent);
     }
@@ -137,17 +137,19 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
+            String possible;
             if (curInput.isEmpty())
-                return "0123456789+-_".contains("" + character);
+                possible = "0123456789+-_";
             else
             {
                 if (curInput.contains("."))
-                    return "0123456789_".contains("" + character);
+                    possible = "0123456789_";
                 else
-                    return "0123456789._".contains("" + character);
+                    possible = "0123456789._";
             }
+            return Utility.containsCodepoint(possible, character);
         }
     }
 
@@ -217,9 +219,9 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return name.contains("" + character);
+            return Utility.containsCodepoint(name, character);
         }
     }
     

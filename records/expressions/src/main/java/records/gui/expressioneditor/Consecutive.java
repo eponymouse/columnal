@@ -23,14 +23,12 @@ import java.util.stream.Stream;
 public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final EEDisplayNodeParent parent;
-    private final ImmutableSet<Character> endCharacters;
-
+    
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content)
     {
         super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
-        this.endCharacters = ImmutableSet.copyOf(Chars.asList(endCharacters));
         if (content != null)
         {
             atomicEdit.set(true);
@@ -75,11 +73,5 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
-    }
-
-    @Override
-    public ImmutableSet<Character> terminatedByChars()
-    {
-        return endCharacters;
     }
 }

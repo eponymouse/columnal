@@ -1068,6 +1068,11 @@ public class Utility
     {
         return new String(new int[] {codepoint}, 0, 1);
     }
+    
+    public static boolean containsCodepoint(String whole, int codepoint)
+    {
+        return whole.contains(codePointToString(codepoint));
+    }
 
     /**
      * Sets the list to the given new size.  If elements

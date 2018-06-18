@@ -114,13 +114,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     GeneralExpressionEntry(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
         super(Expression.class, parent);
+        Log.logStackTrace("Made new GEE with [[" + initialValue + "]]");
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
         typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
         varDeclCompletion = new VarDeclCompletion();
         updateNodes();
 
-        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c)));
+        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::differentAlphabet);
 
         updateGraphics();
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
@@ -302,9 +303,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return text.contains("" + character);
+            return Utility.containsCodepoint(text, character);
         }
 
         @Override
@@ -382,9 +383,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return fullText.contains("" + character);
+            return Utility.containsCodepoint(fullText, character);
         }
 
         @Override
@@ -430,9 +431,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return function.getName().contains("" + character) || (curInput.equals(function.getName()) && character == '(');
+            return Utility.containsCodepoint(function.getName(), character) || (curInput.equals(function.getName()) && character == '(');
         }
         
         @Override
@@ -488,17 +489,19 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
+            final String possible;
             if (curInput.isEmpty())
-                return "0123456789+-._".contains("" + character);
+                possible = "0123456789+-._";
             else
             {
                 if (curInput.contains("."))
-                    return "0123456789_".contains("" + character);
+                    possible = "0123456789_";
                 else
-                    return "0123456789._".contains("" + character);
+                    possible = "0123456789._";
             }
+            return Utility.containsCodepoint(possible, character);
         }
 
         @Override
@@ -548,9 +551,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return keyword.getContent().startsWith(curInput) && keyword.getContent().substring(curInput.length()).contains("" + character);
+            return keyword.getContent().startsWith(curInput) && Utility.containsCodepoint(keyword.getContent().substring(curInput.length()), character);
         }
 
         public Stream<SingleLoader<Expression, ExpressionSaver>> load()
@@ -587,9 +590,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return operator.getContent().startsWith(curInput) && operator.getContent().substring(curInput.length()).contains("" + character);
+            return operator.getContent().startsWith(curInput) && Utility.containsCodepoint(operator.getContent().substring(curInput.length()), character);
         }
 
         public Stream<SingleLoader<Expression, ExpressionSaver>> load()
@@ -634,24 +637,24 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
             // Important to check type first.  If type is same as tag,
             // type will permit more characters to follow than tag alone:
             if (tagInfo.getTypeName().getRaw().startsWith(curInput))
             {
                 // It is part/all of the type, what's left is colon
-                return character == ':' || tagInfo.getTagInfo().getName().contains("" + character);
+                return character == ':' || Utility.containsCodepoint(tagInfo.getTagInfo().getName(), character);
             }
             else if (getScopedName().startsWith(curInput))
             {
                 // Since type name didn't start with input, this must include middle
                 // colon and then some:
-                return getScopedName().substring(curInput.length()).contains("" + character);
+                return Utility.containsCodepoint(getScopedName().substring(curInput.length()), character);
             }
             else if (tagInfo.getTagInfo().getName().startsWith(curInput))
             {
-                return tagInfo.getTagInfo().getName().substring(curInput.length()).contains("" + character);
+                return Utility.containsCodepoint(tagInfo.getTagInfo().getName().substring(curInput.length()), character);
             }
             return false;
         }
@@ -842,7 +845,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
         private boolean isNumeric(String input)
         {
-            return input.codePoints().allMatch(c -> (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.' || c == '{');
+            return input.codePoints().allMatch(c -> (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.' || c == '{') && input.codePoints().anyMatch(c -> c >= '0' && c <= '9');
         }
 
         @Override
@@ -859,7 +862,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
             return character == '{';
         }
@@ -886,7 +889,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
             return (curInput.length() >= 1 && (Character.isDigit(character) || character == ' ')) || Character.isLetter(character);
         }
@@ -1081,7 +1084,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (op.getContent().equals(text))
             {
                 saver.saveOperator(op, this, this::afterSave);
-                textField.setEditable(false);
+                if (!textField.isFocused())
+                    textField.setEditable(false);
                 setPseudoClass(GeneralPseudoclass.OP);
                 return;
             }
@@ -1092,7 +1096,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (keyword.getContent().equals(text))
             {
                 saver.saveKeyword(keyword, this, this::afterSave);
-                textField.setEditable(false);
+                if (!textField.isFocused())
+                    textField.setEditable(false);
                 setPseudoClass(GeneralPseudoclass.KEYWORD);
                 return;
             }

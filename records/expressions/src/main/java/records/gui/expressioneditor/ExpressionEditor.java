@@ -255,13 +255,6 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     }
 
     @Override
-    public ImmutableSet<Character> terminatedByChars()
-    {
-        // Nothing terminates the overall editor:
-        return ImmutableSet.of();
-    }
-
-    @Override
     protected void selfChanged()
     {
         super.selfChanged();

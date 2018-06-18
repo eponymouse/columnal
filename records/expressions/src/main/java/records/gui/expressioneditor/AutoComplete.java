@@ -77,6 +77,20 @@ public class AutoComplete<C extends Completion> extends PopupControl
         // They've entered a char which does fit, so we're currently planning to stay in the slot:
         CONTINUED_ENTRY;
     }
+    
+    public static interface AlphabetCheck
+    {
+        /**
+         * Returns true if the new character (codepoint) is a different alphabet
+         * to the existing String.  That is, the new character cannot possibly continue
+         * the current item and must be part of a new entry.  This is the case e.g.
+         * for ("xyz", '+'), ("54", '{'), ("+", 'a') and so on.
+         * @param existing The string so far.  Will not be empty.
+         * @param newCodepoint The new codepoint.
+         * @return
+         */
+        public boolean differentAlphabet(String existing, int newCodepoint);
+    }
 
     /**
      *
@@ -93,7 +107,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, Predicate<Character> inNextAlphabet)
+    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
     {
         this.textField = textField;
         this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
@@ -255,6 +269,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
             String text = change.getControlNewText();
 
             text = text.trim();
+            int[] codepoints = text.codePoints().toArray();
             updatePosition(); // Just in case
             List<C> available = updateCompletions(calculateCompletions, text);
             // If they type an operator or non-operator char, and there is
@@ -263,10 +278,11 @@ public class AutoComplete<C extends Completion> extends PopupControl
             // involving "&", take it as an operator and move to next slot (which
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
-            if (text.length() >= 1 && inNextAlphabet.test(text.charAt(text.length() - 1)))
+            Log.debug("Checking alphabet: [[" + text + "]]");
+            if (codepoints.length >= 2 && inNextAlphabet.differentAlphabet(new String(codepoints, 0, codepoints.length - 1), codepoints[codepoints.length - 1]))
             {
-                char last = text.charAt(text.length() - 1);
-                String withoutLast = text.substring(0, text.length() - 1);
+                int last = codepoints[codepoints.length - 1];
+                String withoutLast = new String(codepoints, 0, codepoints.length - 1);
                 try
                 {
                     if (withoutLast != null && !available.stream().anyMatch(c -> c.features(withoutLast, last)))
@@ -552,7 +568,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
          * Does this completion feature the given character at all after
          * the current input?
          */
-        public abstract boolean features(String curInput, char character);
+        public abstract boolean features(String curInput, int character);
 
         /**
          * Gets the URL of the details to show to the right of the list.  If null, nothing
@@ -601,9 +617,9 @@ public class AutoComplete<C extends Completion> extends PopupControl
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
-            return Arrays.stream(shortcuts).anyMatch(c -> (char)c == character);
+            return Arrays.stream(shortcuts).anyMatch(c -> c.charValue() == character);
         }
     }
 

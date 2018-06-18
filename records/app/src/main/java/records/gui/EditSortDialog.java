@@ -45,6 +45,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.UnitType;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.LightDialog;
@@ -191,7 +192,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                         return Stream.empty();
                     }
                 }).filter(c -> c.getName().getOutput().contains(s)).map(ColumnCompletion::new).collect(Collectors.toList()),
-                getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
+                getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
             FXUtility.addChangeListenerPlatformNN(columnField.focusedProperty(), focus -> {
                 // Update whether focus is arriving or leaving:
                 lastEditTimeMillis = System.currentTimeMillis();
@@ -476,10 +477,10 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
             // I don't believe this will end up being called anyway as we don't use alphabets:
-            return c.getName().getOutput().contains("" + character);
+            return Utility.containsCodepoint(c.getName().getOutput(), character);
         }
     }
 }

@@ -9,6 +9,8 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeParent;
 import utility.FXPlatformConsumer;
 
+import java.util.Arrays;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
@@ -30,12 +32,6 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
         return ops.build();
     }
     */
-
-    @Override
-    public boolean isOperatorAlphabet(char character)
-    {
-        return character == '-' || character == ',';
-    }
 
     @Override
     public Class<TypeExpression> getOperandClass()
@@ -146,5 +142,30 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     public Stream<SingleLoader<TypeExpression, TypeParent>> replaceAndLoad(TypeExpression topLevel, TypeExpression toReplace, TypeExpression replaceWith, BracketedStatus childrenBracketedStatus)
     {
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
+    }
+
+    public static boolean differentAlphabet(String current, int newCodepoint)
+    {
+        return OperandOps.alphabetDiffers(Arrays.asList(TypeAlphabet.values()), current, newCodepoint);
+    }
+
+    private static enum TypeAlphabet implements Alphabet
+    {
+        WORD(c -> Character.isAlphabetic(c) || c == ' '),
+        BRACKET(Alphabet.containsCodepoint("(){}[]")),
+        OPERATOR(Alphabet.containsCodepoint(","));
+
+        private Predicate<Integer> match;
+
+        TypeAlphabet(Predicate<Integer> match)
+        {
+            this.match = match;
+        }
+
+        @Override
+        public boolean test(int codepoint)
+        {
+            return match.test(codepoint);
+        }
     }
 }

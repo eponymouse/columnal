@@ -1,50 +1,27 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.transformations.expression.*;
-import records.transformations.expression.AddSubtractExpression.AddSubtractOp;
-import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.typeExp.TypeExp;
-import styled.StyledShowable;
-import styled.StyledString;
-import utility.Either;
 import utility.Pair;
-import utility.Utility;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static records.gui.expressioneditor.DeepNodeTree.opD;
-
 class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
 {
-    private final Set<Integer> ALPHABET = makeAlphabet();
+    private static final Set<Integer> OPERATOR_ALPHABET = makeAlphabet();
 
     private static Set<@NonNull Integer> makeAlphabet()
     {
         return ExpressionSaver.OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map((Pair<Op, @Localized String> p) -> p.getFirst().getContent())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
-    }
-
-    private static String getOp(Pair<String, @Localized String> p)
-    {
-        return p.getFirst();
-    }
-
-    
-
-    public boolean isOperatorAlphabet(char character)
-    {
-        return ALPHABET.contains((Integer)(int)character)
-            ; //|| expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
     }
 
     @Override
@@ -218,5 +195,37 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     public Stream<SingleLoader<Expression, ExpressionSaver>> replaceAndLoad(Expression topLevel, Expression toReplace, Expression replaceWith, BracketedStatus childrenBracketedStatus)
     {
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
+    }
+
+    public static boolean differentAlphabet(String current, int newCodepoint)
+    {
+        // Special case: @ can only be followed by letters:
+        if (current.startsWith("@"))
+        {
+            return !Character.isLetter(newCodepoint);
+        }
+        
+        return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), current, newCodepoint);
+    }
+
+    private static enum ExpressionAlphabet implements Alphabet
+    {
+        WORD(c -> Character.isAlphabetic(c) || c == ' '),
+        DIGIT(Character::isDigit),
+        BRACKET(Alphabet.containsCodepoint("(){}[]\"")),
+        OPERATOR(OPERATOR_ALPHABET::contains);
+
+        private Predicate<Integer> match;
+
+        ExpressionAlphabet(Predicate<Integer> match)
+        {
+            this.match = match;
+        }
+
+        @Override
+        public boolean test(int codepoint)
+        {
+            return match.test(codepoint);
+        }
     }
 }

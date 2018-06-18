@@ -68,7 +68,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             {
                 parent.focusRightOf(FXUtility.keyboard(StringLiteralNode.this), Focus.LEFT);
             }
-        }, WhitespacePolicy.ALLOW_ANYWHERE, c -> false);
+        }, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> false);
 
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
@@ -182,7 +182,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
             return true;
         }

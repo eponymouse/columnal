@@ -24,6 +24,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.stream.Collectors;
@@ -43,7 +44,7 @@ public class PickTablePane extends BorderPane
         tableField.setText(initial.getRaw());
         autoComplete = new AutoComplete<TableCompletion>(tableField,
             (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.toList()),
-            getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, c -> false);
+            getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
         
         setCenter(tableField);
         label = new Label("Click on a table or type table name");
@@ -168,10 +169,10 @@ public class PickTablePane extends BorderPane
         }
 
         @Override
-        public boolean features(String curInput, char character)
+        public boolean features(String curInput, int character)
         {
             // I don't believe this will end up being called anyway as we don't use alphabets:
-            return t.getId().getOutput().contains("" + character);
+            return Utility.containsCodepoint(t.getId().getOutput(), character);
         }
     }
 }
