@@ -162,6 +162,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
     public void setText(String initialContent)
     {
         textField.setText(initialContent);
+        textField.positionCaret(textField.getLength());
     }
 
     private static class EndStringCompletion extends Completion

@@ -8,6 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -156,8 +157,8 @@ public class ExpressionEditorUtil
                 nonLiteralUnits.add(type == null ? null : ((NumTypeExp) type).unit.toConcreteUnit());
             }
         }
-        //Log.debug(">>> literals: " + Utility.listToString(literals));
-        //Log.debug(">>> non-literals: " + nonLiteralUnits.size());
+        Log.debug(">>> literals: " + Utility.listToString(literals));
+        Log.debug(">>> non-literals: " + Utility.listToString(nonLiteralUnits));
         
         // For us to offer the quick fix, we need the following conditions: all non-literals
         // have the same known unit (and there is at least one non-literal).

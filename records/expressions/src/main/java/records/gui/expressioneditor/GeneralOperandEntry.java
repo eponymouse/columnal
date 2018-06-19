@@ -184,5 +184,6 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     public void setText(String initialContent)
     {
         textField.setText(initialContent);
+        textField.positionCaret(textField.getLength());
     }
 }

@@ -32,8 +32,8 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.Completion.CompletionAction;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionContent;
+import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
@@ -290,7 +290,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
                         List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
-                        @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
+                        @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(withoutLast).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
                         @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, Utility.codePointToString(last));
                         if (newContent == null)
                             newContent = withoutLast;
@@ -312,9 +312,9 @@ public class AutoComplete<C extends Completion> extends PopupControl
             boolean haveSelected = false;
             for (C completion : available)
             {
-                CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
+                ShowStatus completionAction = completion.shouldShow(text);
                 //Log.debug("Completion for \"" + text + "\": " + completionAction);
-                if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY && !settingContentDirectly)
+                if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly)
                 {
                     completions.getSelectionModel().select(completion);
                     
@@ -328,7 +328,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     instruction.hide();
                     return change;
                 }
-                else if (completionAction == CompletionAction.SELECT || (settingContentDirectly && completionAction == CompletionAction.COMPLETE_IMMEDIATELY))
+                else if (completionAction == ShowStatus.START_DIRECT_MATCH || completionAction == ShowStatus.PHANTOM || (settingContentDirectly && completionAction == ShowStatus.DIRECT_MATCH))
                 {
                     // Select it, at least:
                     if (!haveSelected)
@@ -502,8 +502,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
         {
             // Say it's the only completion, because otherwise e.g. column completions
             // won't fire because there are always two of them:
-            CompletionAction completionAction = completion.completesOnExactly(textField.getText(), true);
-            if (completionAction != CompletionAction.NONE)
+            if (completion.shouldShow(textField.getText()).viableNow())
             {
                 return completion;
             }
@@ -543,26 +542,54 @@ public class AutoComplete<C extends Completion> extends PopupControl
          */
         public abstract CompletionContent getDisplay(ObservableStringValue currentText);
 
-        /**
-         * Given the current input, should we be showing this completion?
-         *
-         * TODO this shouldn't be here, it should be pushed down to a subclass, as it's
-         * not called by AutoComplete itself
-         */
-        public abstract boolean shouldShow(String input);
-
-        public static enum CompletionAction
+        public static enum ShowStatus
         {
-            COMPLETE_IMMEDIATELY,
-            SELECT,
-            NONE
+            /** An exact match as it stands right now,
+             *  e.g. you type @if and it matches @if */
+            DIRECT_MATCH,
+            /** A dummy completion, e.g. numeric literal
+             *  during entry. */
+            PHANTOM,
+            /**
+             * Could be a direct match if you keep typing,
+             * e.g. you've typed @mat but there is @match
+             */
+            START_DIRECT_MATCH,
+
+            /**
+             * An item to extend, e.g. typing { at the end
+             * of a numeric literal to add a unit.
+             */
+            EXTENSION,
+            /** Doesn't match directly but we know it
+             *  may relate due to a typo or synonym, e.g. you
+             *  type @mach but there is @match
+             */
+            RELATED_MATCH,
+            /**
+             * Totally unrelated.  You type "dog" and the
+             * item is @match.
+             */
+            NO_MATCH;
+
+            public boolean viableNow()
+            {
+                return this == DIRECT_MATCH || this == PHANTOM;
+            }
         }
+        
+        /**
+         * Given the current input, what is the relation
+         * of this completion?
+         */
+        public abstract ShowStatus shouldShow(String input);
 
         /**
-         * Given current input, and whether or not this is the only completion available,
-         * should we complete it right now, select it at least, or do nothing?
+         * Given current input, if there is one DIRECT_MATCH
+         * and no PHANTOM or START_DIRECT_MATCH
+         * should we complete it right now, or do nothing?
          */
-        public abstract CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion);
+        public abstract boolean completesWhenSingleDirect();
 
         /**
          * Does this completion feature the given character at all after
@@ -600,26 +627,77 @@ public class AutoComplete<C extends Completion> extends PopupControl
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return input.isEmpty() || Arrays.stream(shortcuts).anyMatch(c -> input.equals(c.toString()));
+            if (input.isEmpty())
+                return ShowStatus.START_DIRECT_MATCH;
+            else if (Arrays.stream(shortcuts).anyMatch(c -> input.equals(c.toString())))
+                return ShowStatus.DIRECT_MATCH;
+            else
+                return ShowStatus.NO_MATCH;
         }
 
         @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailable)
+        public boolean completesWhenSingleDirect()
         {
-            for (Character shortcut : shortcuts)
-            {
-                if (input.equals(shortcut.toString()))
-                    return CompletionAction.COMPLETE_IMMEDIATELY;
-            }
-            return CompletionAction.NONE;
+            return true;
         }
 
         @Override
         public boolean features(String curInput, int character)
         {
             return Arrays.stream(shortcuts).anyMatch(c -> c.charValue() == character);
+        }
+    }
+    
+    public static class SimpleCompletion extends Completion
+    {
+        protected final String completion;
+        private final @Nullable @Localized String description;
+
+        public SimpleCompletion(String completion, @Nullable @Localized String description)
+        {
+            this.completion = completion;
+            this.description = description;
+        }
+
+        @Override
+        public CompletionContent getDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(completion, description);
+        }
+
+        @Override
+        public ShowStatus shouldShow(String input)
+        {
+            if (input.equals(completion))
+                return ShowStatus.DIRECT_MATCH;
+            else if (completion.startsWith(input))
+                return ShowStatus.START_DIRECT_MATCH;
+            else
+                return ShowStatus.NO_MATCH;
+        }
+
+        @Override
+        public boolean completesWhenSingleDirect()
+        {
+            // Default is don't complete when we get it right for names:
+            return false;
+        }
+
+        @Override
+        public boolean features(String curInput, int character)
+        {
+            if (completion.startsWith(curInput))
+                return Utility.containsCodepoint(completion.substring(curInput.length()), character);
+            else
+                return false;
+        }
+
+        @Override
+        public @Nullable String getFurtherDetailsURL()
+        {
+            return super.getFurtherDetailsURL();
         }
     }
 
@@ -691,7 +769,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
         @Override
         public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter)
         {
-            return selected(textBefore, selectedItem != null && selectedItem.completesOnExactly(textBefore, true) != CompletionAction.NONE ? selectedItem : null, textAfter);
+            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore).viableNow() ? selectedItem : null, textAfter);
         }
 
         @Override

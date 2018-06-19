@@ -669,9 +669,9 @@ public class Utility
         return () -> values.iterator();
     }
 
-    public static <T> String listToString(List<@NonNull T> options)
+    public static <T> String listToString(List<T> options)
     {
-        return "[" + options.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
+        return "[" + options.stream().map(Objects::toString).collect(Collectors.joining(", ")) + "]";
     }
 
     public static <T> ImmutableList<T> replaceList(ImmutableList<T> members, int replaceIndex, T newValue)

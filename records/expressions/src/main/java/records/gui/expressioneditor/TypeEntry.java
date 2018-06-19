@@ -11,6 +11,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.BracketedStatus;
@@ -181,39 +182,14 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         return parent.getEditor();
     }
 
-    private class TypeCompletion extends Completion
+    private class TypeCompletion extends SimpleCompletion
     {
-        private final String completion;
         private final int numTypeParams;
 
         protected TypeCompletion(String completion, int numTypeParams)
         {
-            this.completion = completion;
+            super(completion);
             this.numTypeParams = numTypeParams;
-        }
-
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent(completion, null);
-        }
-
-        @Override
-        public boolean shouldShow(String input)
-        {
-            return completion.toLowerCase().startsWith(input.toLowerCase());
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            return completion.equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            return Utility.containsCodepoint(completion, character);
         }
     }
 

@@ -4,6 +4,7 @@ import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
@@ -60,7 +61,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
         FXUtility.onceNotNull(container.sceneProperty(), scene -> {
             FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
-                //Log.logStackTrace("Focus now with: " + owner);
+                Log.logStackTrace("Focus now with: " + owner);
                 FXUtility.runAfter(() -> {
                     //Log.debug("Focus now with [2]: " + owner);
                     // We are in a run-after so check focus hasn't changed again:

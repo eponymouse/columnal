@@ -250,10 +250,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         {
             atomicEdit.set(true);
             EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, "");
-            if (focus)
-                operandNode.focusWhenShown();
             children.add(index+1, operandNode);
             atomicEdit.set(false);
+            if (focus)
+                operandNode.focus(Focus.LEFT);
             operandNode.setText(initialContent);
             return OperatorOutcome.KEEP;
         }
