@@ -117,4 +117,10 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
     {
         type.visitLocatable(visitor);
     }
+
+    @Override
+    public void clearAllErrors()
+    {
+        type.clearAllErrors();
+    }
 }

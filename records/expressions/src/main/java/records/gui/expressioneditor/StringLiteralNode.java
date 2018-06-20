@@ -174,18 +174,18 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return true;
+            if (input.endsWith("\""))
+                return ShowStatus.DIRECT_MATCH;
+            else
+                return ShowStatus.EXTENSION;
         }
 
         @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public boolean completesWhenSingleDirect()
         {
-            if (input.endsWith("\""))
-                return CompletionAction.COMPLETE_IMMEDIATELY;
-
-            return CompletionAction.SELECT;
+            return true;
         }
 
         @Override

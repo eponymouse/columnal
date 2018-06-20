@@ -35,6 +35,7 @@ import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 
 /**
  * Manages the display of errors, quick fixes and type information in the expression editor.
@@ -55,6 +56,8 @@ public class ExpressionInfoDisplay
     private final SimpleObjectProperty<StyledString> errorMessage = new SimpleObjectProperty<>(StyledString.s(""));
     private final SimpleObjectProperty<ImmutableList<FixInfo>> fixes = new SimpleObjectProperty<>(ImmutableList.of());
     private final VBox expressionNode;
+    // Only currently used for debugging:
+    private final TextField textField;
     private @Nullable ErrorMessagePopup popup = null;
     private boolean focused = false;
     private boolean hoveringAttached = false;
@@ -68,6 +71,7 @@ public class ExpressionInfoDisplay
     public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField)
     {
         this.expressionNode = expressionNode;
+        this.textField = textField;
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
         FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> {
             hoveringAttached = b;
@@ -231,9 +235,10 @@ public class ExpressionInfoDisplay
 
     private void updateShowHide(boolean hideImmediately)
     {
+        //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
         if (hoveringPopup || hoveringTopOfAttached || ((hoveringAttached || focused) && !errorMessage.get().toPlain().isEmpty()) || (popup != null && popup.isDetached()))
         {
-            if (!maskingErrors.get())
+            if (!maskingErrors.get() || textField.getText().isEmpty())
             {
                 if (popup == null)
                 {
@@ -269,7 +274,6 @@ public class ExpressionInfoDisplay
     
     public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> editor)
     {
-        Log.debug("Message and fixes: " + msg + " " + fixes.size());
         // The listener on this property should make the popup every time:
         errorMessage.set(StyledString.concat(errorMessage.get(), msg));
         this.fixes.set(Utility.concatI(this.fixes.get(), fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
@@ -292,6 +296,7 @@ public class ExpressionInfoDisplay
         {
             popup.fixList.setFixes(this.fixes.get());
         }
+        Log.debug("Message and fixes on [[" + textField.getText() + "]]: " + this.errorMessage + " " + this.fixes.get().size() + " " + this.fixes.get().stream().map(f -> f._debug_getName()).collect(Collectors.joining(", ")));
     }
     
     public boolean isShowingError()

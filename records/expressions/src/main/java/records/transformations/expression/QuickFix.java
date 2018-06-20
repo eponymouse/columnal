@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -17,6 +18,7 @@ import utility.FXPlatformFunctionInt;
 import utility.FXPlatformSupplier;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.TranslationUtility;
 
 /**
@@ -29,7 +31,7 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     // Identified by reference, not by contents/hashCode.
     private final EXPRESSION replacementTarget;
     private final FXPlatformSupplierInt<@UnknownIfRecorded EXPRESSION> makeReplacement;
-    private final ImmutableList<String> cssClasses;
+    private final FXPlatformSupplier<ImmutableList<String>> cssClasses;
 
     public QuickFix(@LocalizableKey String titleKey, EXPRESSION replacementTarget, FXPlatformSupplierInt<@NonNull EXPRESSION> makeReplacement)
     {
@@ -41,7 +43,23 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     public QuickFix(StyledString title, ImmutableList<String> cssClasses, EXPRESSION replacementTarget, FXPlatformSupplierInt<EXPRESSION> makeReplacement)
     {
         this.title = title;
-        this.cssClasses = cssClasses;
+        this.cssClasses = new FXPlatformSupplier<ImmutableList<String>>()
+        {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public ImmutableList<String> get()
+            {
+                try
+                {
+                    return Utility.concatI(cssClasses, ImmutableList.of(OperandOps.makeCssClass(makeReplacement.get())));
+                }
+                catch (InternalException e)
+                {
+                    Log.log(e);
+                    return cssClasses;
+                }
+            }
+        };
         this.replacementTarget = replacementTarget;
         this.makeReplacement = makeReplacement;
     }
@@ -58,8 +76,9 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         return new Pair<>(replacementTarget, makeReplacement.get());
     }
 
+    @OnThread(Tag.FXPlatform)
     public ImmutableList<String> getCssClasses()
     {
-        return cssClasses;
+        return cssClasses.get();
     }
 }

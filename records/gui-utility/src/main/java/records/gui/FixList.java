@@ -63,6 +63,11 @@ public class FixList extends VBox
             this.cssClasses = cssClasses;
             this.executeFix = executeFix;
         }
+        
+        public String _debug_getName()
+        {
+            return label.toPlain();
+        }
     }
 
     private class FixRow extends BorderPane

@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
@@ -24,6 +25,7 @@ import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.CompleteNumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
@@ -212,7 +214,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(stringCompletion);
         r.add(new NumericLiteralCompletion());
 
-        // TODO: use type to prioritise and to filter
+        // TODO: use type and completion status to prioritise and to filter
         /*
         @Nullable DataType t = parent.getType(this);
         if (t != null)
@@ -255,7 +257,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             });
         }
         */
-        r.removeIf(c -> !c.shouldShow(text));
+        r.removeIf(c -> c.shouldShow(text) == ShowStatus.NO_MATCH);
         return r;
     }
 
@@ -268,7 +270,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    private static class ColumnCompletion extends GeneralCompletion
+    private static class ColumnCompletion extends Completion
     {
         private final ColumnReference columnReference;
         private final String fullText;
@@ -314,27 +316,23 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return fullText.startsWith(input) || columnReference.getColumnId().getRaw().startsWith(input);
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            return fullText.equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+            ShowStatus fallback = ShowStatus.NO_MATCH;
+            for (String possible : ImmutableList.of(fullText)) // TODO also support scoped name?
+            {
+                if (possible.equals(input))
+                    return ShowStatus.DIRECT_MATCH;
+                else if (possible.startsWith(input))
+                    fallback = ShowStatus.START_DIRECT_MATCH;
+            }
+            return fallback;
         }
 
         @Override
         public boolean features(String curInput, int character)
         {
             return Utility.containsCodepoint(fullText, character);
-        }
-
-        @Override
-        String getValue(String currentText)
-        {
-            return fullText;
         }
     }
 
@@ -355,22 +353,20 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return (function.getName() + "(").startsWith(input);
+            if (input.equals(function.getName() + "("))
+                return ShowStatus.DIRECT_MATCH;
+            else if (function.getName().startsWith(input))
+                return ShowStatus.START_DIRECT_MATCH;
+            else
+                return ShowStatus.NO_MATCH;
         }
 
         @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public boolean completesWhenSingleDirect()
         {
-            if ((function.getName() + "(").equals(input))
-            {
-                if (onlyAvailableCompletion)
-                    return CompletionAction.COMPLETE_IMMEDIATELY;
-                else
-                    return CompletionAction.SELECT;
-            }
-            return CompletionAction.NONE;
+            return true; // If it includes the bracket, it's a direct match, and complete immmediately
         }
 
         @Override
@@ -512,9 +508,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return tagInfo.getTagInfo().getName().startsWith(input) || getScopedName().startsWith(input);
+            ShowStatus fallback = ShowStatus.NO_MATCH;
+            for (String possible : ImmutableList.of(getScopedName(), tagInfo.getTagInfo().getName()))
+            {
+                if (possible.equals(input))
+                    return ShowStatus.DIRECT_MATCH;
+                else if (possible.startsWith(input))
+                    fallback = ShowStatus.START_DIRECT_MATCH;
+            }
+            
+            return fallback;
         }
 
         @NonNull
@@ -634,12 +639,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 newText = varDeclCompletion.getVarName(currentText);
             }
-            else if (c == null || c instanceof GeneralCompletion)
+            else if (c instanceof NumericLiteralCompletion)
             {
-                @Nullable GeneralCompletion gc = (GeneralCompletion) c;
-                if (gc instanceof SimpleCompletion)
+                newText = currentText;
+            }
+            else if (c == null || c instanceof SimpleCompletion)
+            {
+                if (c instanceof SimpleCompletion)
                 {
-                    newText = ((SimpleCompletion) gc).getValue(currentText);
+                    newText = ((SimpleCompletion)c).completion;
                 }
                 else // Numeric literal or unfinished:
                 {
@@ -757,15 +765,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return input.startsWith("$") && (input.length() == "$".length() || Character.isLetter(input.codePointAt("$".length())));
+            return input.startsWith("$") && (input.length() == "$".length() || Character.isLetter(input.codePointAt("$".length())))
+                ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
         }
 
         @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public boolean completesWhenSingleDirect()
         {
-            return onlyAvailableCompletion ? CompletionAction.SELECT : CompletionAction.NONE;
+            return true;
         }
 
         @Override

@@ -267,11 +267,13 @@ public class AutoComplete<C extends Completion> extends PopupControl
             if (!change.isContentChange())
                 return change;
             String text = change.getControlNewText();
+            
+            // Trim everything except single trailing space:
+            text = text.trim() + (text.endsWith(" ") ? " " : "");
 
-            text = text.trim();
             int[] codepoints = text.codePoints().toArray();
             updatePosition(); // Just in case
-            List<C> available = updateCompletions(calculateCompletions, text);
+            List<C> available = updateCompletions(calculateCompletions, text.trim());
             // If they type an operator or non-operator char, and there is
             // no completion containing such a char, finish with current and move
             // to next (e.g. user types "true&"; as long as there's no current completion
@@ -307,6 +309,9 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     Log.log(e);
                 }
             }
+            // Trim after alphabet check:
+            text = text.trim();
+            
             // We want to select top one, not last one, so keep track of
             // whether we've already selected top one:
             boolean haveSelected = false;
@@ -588,8 +593,13 @@ public class AutoComplete<C extends Completion> extends PopupControl
          * Given current input, if there is one DIRECT_MATCH
          * and no PHANTOM or START_DIRECT_MATCH
          * should we complete it right now, or do nothing?
+         * 
+         * By default, don't complete (generally this is only a good idea for keywords and operators)
          */
-        public abstract boolean completesWhenSingleDirect();
+        public boolean completesWhenSingleDirect()
+        {
+            return false;
+        }
 
         /**
          * Does this completion feature the given character at all after

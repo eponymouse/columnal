@@ -188,7 +188,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
 
         protected TypeCompletion(String completion, int numTypeParams)
         {
-            super(completion);
+            super(completion, null);
             this.numTypeParams = numTypeParams;
         }
     }
@@ -285,9 +285,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
-            return input.equalsIgnoreCase("number");
+            return input.equalsIgnoreCase("number") ? ShowStatus.EXTENSION : ShowStatus.NO_MATCH;
         }
     }
     

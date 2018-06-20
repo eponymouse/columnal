@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
@@ -208,8 +209,9 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     }
     */
 
+    // Parameter should be Expression/UnitExpression/etc
     @OnThread(Tag.Any)
-    public static String makeCssClass(Object replacement)
+    public static String makeCssClass(StyledShowable replacement)
     {
         return "id-munged-" + replacement.toString().codePoints().mapToObj(i -> Integer.toString(i)).collect(Collectors.joining("-"));
     }

@@ -48,6 +48,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             {
             }
         };
+        scrollPane.setMinHeight(200.0);
         this.tableManager = tableManager;
 
         container.getStyleClass().add("top-level-editor");
@@ -61,7 +62,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
         FXUtility.onceNotNull(container.sceneProperty(), scene -> {
             FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
-                Log.logStackTrace("Focus now with: " + owner);
+                //Log.logStackTrace("Focus now with: " + owner);
                 FXUtility.runAfter(() -> {
                     //Log.debug("Focus now with [2]: " + owner);
                     // We are in a run-after so check focus hasn't changed again:

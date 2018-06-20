@@ -19,6 +19,7 @@ import records.data.TableId;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -135,44 +136,14 @@ public class PickTablePane extends BorderPane
         return tableField.isFocused() ? System.currentTimeMillis() : lastEditTimeMillis;
     }
 
-    private static class TableCompletion extends Completion
+    private static class TableCompletion extends SimpleCompletion
     {
         private final Table t;
 
         public TableCompletion(Table t)
         {
+            super(t.getId().getRaw(), null);
             this.t = t;
-        }
-
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent(t.getId().getOutput(), null);
-        }
-
-        @Override
-        public boolean shouldShow(String input)
-        {
-            return true;
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            boolean match = input.equals(t.getId().getOutput());
-            if (match && onlyAvailableCompletion)
-                return CompletionAction.COMPLETE_IMMEDIATELY;
-            else if (match || (onlyAvailableCompletion && !input.isEmpty() && t.getId().getOutput().startsWith(input)))
-                return CompletionAction.SELECT;
-            else
-                return CompletionAction.NONE;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            // I don't believe this will end up being called anyway as we don't use alphabets:
-            return Utility.containsCodepoint(t.getId().getOutput(), character);
         }
     }
 }

@@ -38,6 +38,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.Sort.Direction;
 import threadchecker.OnThread;
@@ -443,44 +444,14 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
         }
     }
 
-    private static class ColumnCompletion extends Completion
+    private static class ColumnCompletion extends SimpleCompletion
     {
         private final Column c;
 
         private ColumnCompletion(Column c)
         {
+            super(c.getName().getRaw(), null);
             this.c = c;
-        }
-
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent(c.getName().getOutput(), null);
-        }
-
-        @Override
-        public boolean shouldShow(String input)
-        {
-            return c.getName().getRaw().toLowerCase().contains(input.toLowerCase());
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            boolean match = input.equals(c.getName().getOutput());
-            if (match && onlyAvailableCompletion)
-                return CompletionAction.COMPLETE_IMMEDIATELY;
-            else if (match || onlyAvailableCompletion)
-                return CompletionAction.SELECT;
-            else
-                return CompletionAction.NONE;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            // I don't believe this will end up being called anyway as we don't use alphabets:
-            return Utility.containsCodepoint(c.getName().getOutput(), character);
         }
     }
 }

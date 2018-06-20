@@ -110,7 +110,7 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save(TableAndColumnRenames renames)
         {
-            return " @case " + patterns.stream().map(p -> p.save(renames)).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(BracketedStatus.MISC, renames);
+            return " @case " + patterns.stream().map(p -> p.save(renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(BracketedStatus.MISC, renames);
         }
 
         public StyledString toDisplay()

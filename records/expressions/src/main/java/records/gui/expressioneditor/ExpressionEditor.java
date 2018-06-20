@@ -258,6 +258,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     protected void selfChanged()
     {
+        Log.logStackTrace("selfChanged: " + atomicEdit.get());
         super.selfChanged();
         //Log.debug("selfChanged: " + atomicEdit.get());
         clearSelection();
@@ -268,7 +269,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
             clearAllErrors();
             Expression expression = save();
-            //Log.debug("Saved as: " + expression);
+            Log.debug("Saved as: " + expression);
             if (onChange != null)
             {
                 onChange.consume(expression);

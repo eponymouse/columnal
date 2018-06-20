@@ -104,12 +104,6 @@ public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable & Repla
     }
 
     @Override
-    public void clearAllErrors()
-    {
-        consecParent.clearAllErrors();
-    }
-
-    @Override
     public boolean isShowingError()
     {
         return consecParent.isShowingError();

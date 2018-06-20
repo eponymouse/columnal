@@ -78,6 +78,12 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
+    public void clearAllErrors()
+    {
+        unit.clearAllErrors();
+    }
+
+    @Override
     public void visitLocatable(LocatableVisitor visitor)
     {
         unit.visitLocatable(visitor);

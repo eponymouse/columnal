@@ -12,6 +12,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -32,7 +34,14 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     {
         this.parent = parent;
         this.expressionClass = expressionClass;
-        textField = new LeaveableTextField(this, parent);
+        textField = new LeaveableTextField(this, parent) {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void home()
+            {
+                parent.focusBlankAtLeft();
+            }
+        };
         textField.getStyleClass().add("entry-field");
     }
     

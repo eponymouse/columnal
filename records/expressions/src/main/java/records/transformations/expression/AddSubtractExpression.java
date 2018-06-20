@@ -88,7 +88,7 @@ public class AddSubtractExpression extends NaryOpExpression
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(null, ImmutableList.of());
-            @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("Operands to '+'/'-' must be numbers with matching units but found "), ourType.toStyledString());
+            @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("You can only add/subtract numbers with identical units, but found "), ourType.toStyledString());
             ImmutableList.Builder<QuickFix<Expression,ExpressionSaver>> fixes = ImmutableList.builder();
             // Is the problematic type text, and all ops '+'? If so, offer to convert it 
             

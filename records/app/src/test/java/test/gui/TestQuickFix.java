@@ -9,6 +9,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
@@ -121,31 +122,31 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testUnitLiteralFix6()
     {
-        testFix("@matchACC1@case3@then52@case12@or14@then63", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12 @or 14 @then 63");
+        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12 @orcase 14 @then 63 @endmatch");
     }
 
     @Test
     public void testUnitLiteralFix6B()
     {
-        testFix("@matchACC1@case3@then52@case12@or14@then63", "12", "", "@match @column ACC1 @case 3 @then 52 @case 12{m/s^2} @or 14 @then 63");
+        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "12", "", "@match @column ACC1 @case 3 @then 52 @case 12{m/s^2} @orcase 14 @then 63 @endmatch");
     }
 
     @Test
     public void testUnitLiteralFix6C()
     {
-        testFix("@matchACC1@case3@then52@case12@or14@then63", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @or 14{m/s^2} @then 63");
+        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
     }
 
     @Test
     public void testBracketFix1()
     {
-        testSimpleFix("1+2*3", "*","1 + (2 * 3)");
+        testSimpleFix("1 + 2 * 3", "*","1 + (2 * 3)");
     }
 
     @Test
     public void testBracketFix1B()
     {
-        testSimpleFix("1+2*3", "+", "(1 + 2) * 3");
+        testSimpleFix("1+ 2*3", "+", "(1 + 2) * 3");
     }
 
     @Test
@@ -294,7 +295,11 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             write("DestCol");
             // Focus expression editor:
             push(KeyCode.TAB);
+            // Enter content:
             write(original, 20);
+            // Move field so that errors show up (cancel masking on new fields):
+            push(KeyCode.HOME);
+            
             Node lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<Node>query();
             assertNotNull(lhs);
             if (lhs == null) return;
@@ -309,6 +314,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
                 TestUtil.sleep(2000);
             }
             @Nullable Window errorPopup = listWindows().stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
+            TestUtil.sleep(3000);
             assertNotNull(errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
@@ -322,6 +328,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             List<String> fixStyles = TestUtil.fx(() -> fixRow.getStyleClass());
             String key = fixStyles.stream().filter(c -> c.startsWith("key-")).map(c -> c.substring("key-".length())).findFirst().orElse("");
             assertNotEquals(Utility.listToString(fixStyles), "", key);
+            Log.debug("Pressing: SHIFT-" + key);
             push(KeyCode.SHIFT, KeyCode.valueOf(key));
             // Check that popup vanishes pretty much straight away:
             TestUtil.sleep(200);

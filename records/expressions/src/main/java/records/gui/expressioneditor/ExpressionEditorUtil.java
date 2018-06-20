@@ -146,7 +146,8 @@ public class ExpressionEditorUtil
                 else
                     unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
                 literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
-            } else
+            }
+            else
             {
                 @Nullable TypeExp type = p.getType(i);
                 if (type != null && !(type instanceof NumTypeExp))
@@ -167,8 +168,8 @@ public class ExpressionEditorUtil
         {
             for (Pair<NumericLiteral, @Nullable Unit> literal : literals)
             {
-                //Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
-                //Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
+                Log.debug("Us: " + p.getOurExpression() + " literal: " + literal.getFirst() + " match: " + (literal.getFirst() == p.getOurExpression()));
+                Log.debug("Non-literal unit: " + uniqueNonLiteralUnits.get(0) + " us: " + literal.getSecond());
                 if (literal.getFirst() == p.getOurExpression() && !uniqueNonLiteralUnits.get(0).equals(literal.getSecond()))
                 {
                     return Collections.singletonList(new QuickFix<Expression,ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.changeUnit", uniqueNonLiteralUnits.get(0).toString())), ImmutableList.of(), p.getOurExpression(), () -> {

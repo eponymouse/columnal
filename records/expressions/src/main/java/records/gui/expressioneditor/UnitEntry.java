@@ -7,8 +7,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -51,7 +53,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         {
             r.add(new KnownUnitCompletion(unit.getName()));
         }
-        r.removeIf(c -> !c.shouldShow(current));
+        r.removeIf(c -> c.shouldShow(current) == ShowStatus.NO_MATCH);
         return r;
     }
 
@@ -124,16 +126,10 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         }
 
         @Override
-        public boolean shouldShow(String input)
+        public ShowStatus shouldShow(String input)
         {
             // To allow "+" or "-", we add zero at the end before parsing:
-            return Utility.parseIntegerOpt(input + "0").isPresent();
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            return onlyAvailableCompletion ? CompletionAction.SELECT : CompletionAction.NONE;
+            return Utility.parseIntegerOpt(input + "0").isPresent() ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
         }
 
         @Override
@@ -190,38 +186,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
             parent.focusRightOf(UnitEntry.this, Focus.LEFT);
         }
     }
-
-    private static class KnownUnitCompletion extends Completion
+    
+    private static class KnownUnitCompletion extends SimpleCompletion
     {
-        private final String name;
-
         public KnownUnitCompletion(String name)
         {
-            this.name = name;
-        }
-
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent(name, null);
-        }
-
-        @Override
-        public boolean shouldShow(String input)
-        {
-            return name.toLowerCase().startsWith(input.toLowerCase());
-        }
-
-        @Override
-        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-        {
-            return name.equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            return Utility.containsCodepoint(name, character);
+            super(name, null);
         }
     }
     

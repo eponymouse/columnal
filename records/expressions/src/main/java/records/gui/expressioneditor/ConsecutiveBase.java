@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -100,6 +101,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @NonNull
     protected EntryNode<EXPRESSION, SEMANTIC_PARENT> makeBlankChild()
     {
+        Log.logStackTrace("Make blank child");
         return operations.makeGeneral(this, null);
     }
 
@@ -113,7 +115,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         if (!removingBlanks)
         {
-            FXUtility.runAfter(() -> {
+            FXUtility.runAfterDelay(Duration.millis(200), () -> {
                 removeBlanks();
             });
         }

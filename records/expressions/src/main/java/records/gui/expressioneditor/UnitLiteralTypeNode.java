@@ -81,6 +81,12 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     }
 
     @Override
+    public void clearAllErrors()
+    {
+        unit.clearAllErrors();
+    }
+
+    @Override
     public void visitLocatable(LocatableVisitor visitor)
     {
         unit.visitLocatable(visitor);
