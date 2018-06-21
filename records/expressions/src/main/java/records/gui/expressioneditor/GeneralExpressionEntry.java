@@ -120,7 +120,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         //Log.logStackTrace("Made new GEE with [[" + initialValue + "]]");
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
-        typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`'); // TODO change to type{
+        typeLiteralCompletion = new NestedLiteralCompletion("type{");
         varDeclCompletion = new VarDeclCompletion();
         updateNodes();
 
@@ -447,6 +447,23 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return null;
         }
     }
+    
+    private static class NestedLiteralCompletion extends SimpleCompletion
+    {
+        private final String opener;
+        
+        private NestedLiteralCompletion(String opener)
+        {
+            super(opener, null);
+            this.opener = opener;
+        }
+
+        @Override
+        public boolean completesWhenSingleDirect()
+        {
+            return true;
+        }
+    }
 
     private static class KeywordCompletion extends SimpleCompletion
     {
@@ -580,10 +597,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 {
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
                 }
-                else if (ksc == typeLiteralCompletion)
-                {
-                    parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, null)));
-                }
+                return textField.getText();
+            }
+            else if (c == typeLiteralCompletion)
+            {
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, null)));
                 return textField.getText();
             }
             else if (Objects.equals(c, unitCompletion))
