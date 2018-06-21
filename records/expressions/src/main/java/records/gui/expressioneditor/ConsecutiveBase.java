@@ -101,7 +101,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @NonNull
     protected EntryNode<EXPRESSION, SEMANTIC_PARENT> makeBlankChild()
     {
-        Log.logStackTrace("Make blank child");
+        //Log.logStackTrace("Make blank child");
         return operations.makeGeneral(this, null);
     }
 

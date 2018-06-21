@@ -19,6 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebView;
 import javafx.stage.Window;
@@ -122,6 +123,14 @@ public class AutoComplete<C extends Completion> extends PopupControl
         completions.getStyleClass().add("autocomplete");
         completions.setPrefWidth(400.0);
         container = new BorderPane(null, null, null, null, completions);
+        completions.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+            if (e.getButton() == MouseButton.MIDDLE)
+            {
+                hide();
+                instruction.hide();
+                e.consume();
+            }
+        });
         this.webView = new WebView();
         this.webView.setPrefWidth(400.0);
         webViewHeightBinding = Bindings.max(300.0f, completions.heightProperty());
@@ -318,7 +327,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
             for (C completion : available)
             {
                 ShowStatus completionAction = completion.shouldShow(text);
-                //Log.debug("Completion for \"" + text + "\": " + completionAction);
+                Log.debug("Completion for \"" + text + "\": " + completionAction);
                 if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly)
                 {
                     completions.getSelectionModel().select(completion);

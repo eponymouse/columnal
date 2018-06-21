@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -46,6 +47,7 @@ import utility.SimulationFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import javax.swing.plaf.TextUI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -134,7 +136,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testUnitLiteralFix6C()
     {
-        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
+            testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
     }
 
     @Test
@@ -296,26 +298,32 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             // Focus expression editor:
             push(KeyCode.TAB);
             // Enter content:
-            write(original, 20);
+            write(original, 50);
             // Move field so that errors show up (cancel masking on new fields):
             push(KeyCode.HOME);
             
-            Node lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<Node>query();
+            TextField lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<TextField>query();
             assertNotNull(lhs);
             if (lhs == null) return;
             @NonNull Node lhsFinal = lhs;
             if (!TestUtil.fx(() -> lhsFinal.isFocused()))
             {
+                Log.debug("Focusing target field: " + lhsFinal);
+                moveTo(lhs);
                 // Get rid of any popups in the way:
-                push(KeyCode.ESCAPE);
-                push(KeyCode.ESCAPE);
-                push(KeyCode.ESCAPE);
+                clickOn(lhs, MouseButton.MIDDLE);
+                TestUtil.sleep(200);
+                clickOn(lhs, MouseButton.MIDDLE);
                 clickOn(lhs);
-                TestUtil.sleep(2000);
+                // Move mouse to avoid showing hover popup by accident:
+                moveTo(0, 0);                
+                // We don't test lhs for focus here, because it may not be able to receive focus
+                // For fix purposes, focusing the blank next to it should have the right effect.
+                TestUtil.sleep(2500);                
             }
-            @Nullable Window errorPopup = listWindows().stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
-            TestUtil.sleep(3000);
-            assertNotNull(errorPopup);
+            List<Window> windows = listWindows();
+            @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
+            assertNotNull(Utility.listToString(windows), errorPopup);
             assertEquals(lookup(".expression-info-error").queryAll().stream().map(n -> textFlowToString(n)).collect(Collectors.joining(" /// ")),
                 1L, lookup(".expression-info-error").queryAll().stream().filter(Node::isVisible).count());
             assertEquals("Looking for row that matches, among: " + lookup(".quick-fix-row").<Node>queryAll().stream().flatMap(n -> TestUtil.fx(() -> n.getStyleClass()).stream()).collect(Collectors.joining(", ")), 
@@ -350,7 +358,13 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
         {
             // Test fails regardless, so no harm turning checked exception
             // into unchecked for simpler signatures:
+            TestUtil.fx_(() -> TestUtil.copyScreenshotToClipboard());
             throw new RuntimeException(e);
+        }
+        catch (Throwable t)
+        {
+            TestUtil.fx_(() -> TestUtil.copyScreenshotToClipboard());
+            throw t;
         }
     }
 

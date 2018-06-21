@@ -12,7 +12,10 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
@@ -91,6 +94,10 @@ public class ExpressionInfoDisplay
                 // 1 is F1, but should trigger fix zero:
                 fixes.get().get(fKey.getAsInt() - 1).executeFix.run();
             }
+            if (e.getCode() == KeyCode.ESCAPE)
+            {
+                hideImmediately();
+            }
         });
 
         // Default is to mask errors if field has never *lost* focus.
@@ -165,6 +172,13 @@ public class ExpressionInfoDisplay
                 mouseHoverStatusChanged();
             });
             FXUtility.addChangeListenerPlatformNN(detachedProperty(), b -> updateShowHide(false));
+            container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                if (e.getButton() == MouseButton.MIDDLE)
+                {
+                    hideImmediately();
+                    e.consume();
+                }
+            });
         }
     }
 
@@ -178,7 +192,7 @@ public class ExpressionInfoDisplay
         if (expressionNode.getScene() != null)
         {
             popup = new ErrorMessagePopup();
-            //Log.debug(" # Showing: " + popup);
+            Log.logStackTrace(" # Showing: " + popup);
             popup.show(expressionNode);
         }
     }
@@ -187,6 +201,7 @@ public class ExpressionInfoDisplay
     // Can't have an ensuresnull check
     private void hide(boolean immediately)
     {
+        Log.logStackTrace("# Hiding " + popup);
         @NonNull PopOver popupFinal = popup;
         // Whether we hide immediately or not, stop any current animation:
         cancelHideAnimation();
@@ -208,7 +223,7 @@ public class ExpressionInfoDisplay
                 if (popup != null)
                 {
                     Log.debug("#####\n# Hiding (slowly) " + popup + "\n#####");
-                    popup.hide();
+                    popup.hide(Duration.ZERO);
                     popup = null;
                 }
             });
@@ -296,7 +311,7 @@ public class ExpressionInfoDisplay
         {
             popup.fixList.setFixes(this.fixes.get());
         }
-        Log.debug("Message and fixes on [[" + textField.getText() + "]]: " + this.errorMessage + " " + this.fixes.get().size() + " " + this.fixes.get().stream().map(f -> f._debug_getName()).collect(Collectors.joining(", ")));
+        //Log.debug("Message and fixes on [[" + textField.getText() + "]]: " + this.errorMessage + " " + this.fixes.get().size() + " " + this.fixes.get().stream().map(f -> f._debug_getName()).collect(Collectors.joining(", ")));
     }
     
     public boolean isShowingError()

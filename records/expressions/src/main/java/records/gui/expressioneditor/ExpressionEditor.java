@@ -258,7 +258,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     protected void selfChanged()
     {
-        Log.logStackTrace("selfChanged: " + atomicEdit.get());
+        //Log.logStackTrace("selfChanged: " + atomicEdit.get());
         super.selfChanged();
         //Log.debug("selfChanged: " + atomicEdit.get());
         clearSelection();

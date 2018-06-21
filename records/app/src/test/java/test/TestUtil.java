@@ -9,12 +9,14 @@ import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
 import javafx.scene.Node;
+import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import log.Log;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
 import org.apache.commons.lang3.SystemUtils;
@@ -70,6 +72,14 @@ import utility.Utility.ListEx;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
+import javax.imageio.ImageIO;
+import java.awt.AWTException;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -1133,6 +1143,33 @@ public class TestUtil
         ClipboardContent clipboardContent = new ClipboardContent();
         clipboardContent.putImage(img);
         Clipboard.getSystemClipboard().setContent(clipboardContent);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void copyScreenshotToClipboard()
+    {
+        Log.debug("Screenshotting...");
+        try
+        {
+            Robot robot = new Robot();
+
+            Toolkit myToolkit = Toolkit.getDefaultToolkit();
+            Dimension screenSize = myToolkit.getScreenSize();
+
+            Rectangle screen = new Rectangle(screenSize);
+
+            BufferedImage screenFullImage = robot.createScreenCapture(screen);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(screenFullImage, "jpg", baos);
+            Image image = new Image(new java.io.ByteArrayInputStream(baos.toByteArray()), screenFullImage.getWidth(), screenFullImage.getHeight(), true, true);
+            ClipboardContent clipboardContent = new ClipboardContent();
+            clipboardContent.putImage(image);
+            Clipboard.getSystemClipboard().setContent(clipboardContent);
+        }
+        catch (AWTException | IOException ex)
+        {
+            Log.log(ex);
+        }        
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
