@@ -192,7 +192,7 @@ public class ExpressionInfoDisplay
         if (expressionNode.getScene() != null)
         {
             popup = new ErrorMessagePopup();
-            Log.logStackTrace(" # Showing: " + popup);
+            //Log.logStackTrace(" # Showing: " + popup);
             popup.show(expressionNode);
         }
     }
@@ -201,7 +201,7 @@ public class ExpressionInfoDisplay
     // Can't have an ensuresnull check
     private void hide(boolean immediately)
     {
-        Log.logStackTrace("# Hiding " + popup);
+        //Log.logStackTrace("# Hiding " + popup);
         @NonNull PopOver popupFinal = popup;
         // Whether we hide immediately or not, stop any current animation:
         cancelHideAnimation();

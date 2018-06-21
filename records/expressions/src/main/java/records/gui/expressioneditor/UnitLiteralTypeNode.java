@@ -51,6 +51,12 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     }
 
     @Override
+    public boolean isFocusPending()
+    {
+        return false;
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         // TODO

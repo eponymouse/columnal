@@ -28,6 +28,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
@@ -44,7 +45,7 @@ public class PickTablePane extends BorderPane
         this.setResultAndClose = setResultAndFinishEditing;
         tableField.setText(initial.getRaw());
         autoComplete = new AutoComplete<TableCompletion>(tableField,
-            (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.toList()),
+            (s, q) -> view.getManager().getAllTables().stream().filter(t -> !exclude.contains(t) && t.getId().getOutput().contains(s)).map(TableCompletion::new),
             getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
         
         setCenter(tableField);

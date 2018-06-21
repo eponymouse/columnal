@@ -45,9 +45,13 @@ import utility.gui.GUI;
 import utility.gui.Instruction;
 import utility.gui.TranslationUtility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 17/12/2016.
@@ -108,7 +112,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
+    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
     {
         this.textField = textField;
         this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
@@ -300,7 +304,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
-                        List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
+                        List<C> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT).collect(Collectors.toList());
                         @Nullable C completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.shouldShow(withoutLast).viableNow()).findFirst().orElse(completionsWithoutLast.get(0));
                         @Nullable String newContent = onSelect.nonAlphabetCharacter(withoutLast, completion, Utility.codePointToString(last));
                         if (newContent == null)
@@ -463,11 +467,14 @@ public class AutoComplete<C extends Completion> extends PopupControl
     }
 
     @RequiresNonNull({"completions"})
-    private List<C> updateCompletions(@UnknownInitialization(Object.class) AutoComplete<C> this, ExBiFunction<String, CompletionQuery, List<C>> calculateCompletions, String text)
+    private List<C> updateCompletions(@UnknownInitialization(Object.class) AutoComplete<C> this, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, String text)
     {
         try
         {
-            this.completions.getItems().setAll(calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY));
+            List<C> calculated = calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY)
+                .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplay(new ReadOnlyStringWrapper(text)).completion.get()))    
+                .collect(Collectors.toList());
+            this.completions.getItems().setAll(calculated);
         }
         catch (InternalException | UserException e)
         {

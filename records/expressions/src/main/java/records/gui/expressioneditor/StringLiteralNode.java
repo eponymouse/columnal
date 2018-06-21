@@ -16,6 +16,7 @@ import styled.StyledString;
 import utility.Pair;
 import utility.gui.FXUtility;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -37,7 +38,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         EndStringCompletion currentCompletion = new EndStringCompletion();
         this.autoComplete = new AutoComplete<EndStringCompletion>(textField, (s, q) ->
         {
-            return Collections.singletonList(currentCompletion);
+            return Stream.of(currentCompletion);
         }, new SimpleCompletionListener<EndStringCompletion>()
         {
             @Override

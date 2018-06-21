@@ -38,15 +38,15 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     {
         super(UnitExpression.class, parent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
-        ExBiFunction<String, CompletionQuery, List<Completion>> getSuggestions = this::getSuggestions;
+        ExBiFunction<String, CompletionQuery, Stream<Completion>> getSuggestions = this::getSuggestions;
         this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, UnitExpressionOps::differentAlphabet);
         updateNodes();
         textField.setText(initialContent);
     }
 
-    private List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
+    private Stream<Completion> getSuggestions(String current, CompletionQuery completionQuery)
     {
-        List<Completion> r = new ArrayList<>();
+        ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketedCompletion);
         r.add(new NumericLiteralCompletion());
         for (SingleUnit unit : getUnitManager().getAllDeclared())
@@ -54,7 +54,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
             r.add(new KnownUnitCompletion(unit.getName()));
         }
         r.removeIf(c -> c.shouldShow(current) == ShowStatus.NO_MATCH);
-        return r;
+        return r.stream();
     }
 
     private UnitManager getUnitManager()

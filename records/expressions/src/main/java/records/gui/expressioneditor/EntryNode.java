@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -28,6 +29,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     private final Class<EXPRESSION> expressionClass;
 
     protected final LeaveableTextField textField;
+    private boolean focusPending;
 
     @SuppressWarnings("initialization")
     public EntryNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, Class<EXPRESSION> expressionClass)
@@ -86,13 +88,24 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     @Override
     public void focusWhenShown()
     {
-        FXUtility.onceNotNull(textField.sceneProperty(), s -> FXUtility.runAfter(() -> focus(Focus.RIGHT)));
+        Log.debug("### Focusing when shown: " + textField);
+        focusPending = true;
+        FXUtility.onceNotNull(textField.sceneProperty(), s -> FXUtility.runAfter(() -> {
+            focus(Focus.RIGHT);
+            focusPending = false;
+        }));
     }
 
+    @Override
+    public boolean isFocusPending()
+    {
+        return focusPending;
+    }
 
     @Override
     public void focus(Focus side)
     {
+        Log.debug("### Focusing now: " + textField + " Editable: " + textField.isEditable() + " Scene: " + textField.getScene());
         textField.requestFocus();
         if (side == Focus.LEFT)
         {

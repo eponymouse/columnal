@@ -62,7 +62,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
         FXUtility.onceNotNull(container.sceneProperty(), scene -> {
             FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
-                Log.logStackTrace("Focus now with: " + owner);
+                Log.normalStackTrace("Focus now with: " + owner, 40);
                 FXUtility.runAfter(() -> {
                     //Log.debug("Focus now with [2]: " + owner);
                     // We are in a run-after so check focus hasn't changed again:

@@ -115,9 +115,12 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         {
             StandardFunction function = (StandardFunction) expression;
             write(function.getName(), DELAY);
-            push(KeyCode.ENTER);
-            // Get rid of brackets; if in a call expression, we will add them again:
-            push(KeyCode.BACK_SPACE);
+            if (r.nextBoolean())
+            {
+                push(KeyCode.ENTER);
+                // Get rid of brackets; if in a call expression, we will add them again:
+                push(KeyCode.BACK_SPACE);
+            }
         }
         else if (c == ConstructorExpression.class)
         {
@@ -208,10 +211,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         }
         else if (c == TypeLiteralExpression.class)
         {
-            write("`", DELAY);
+            write("type{", DELAY);
             TypeLiteralExpression f = (TypeLiteralExpression)expression; 
             enterType(f.getType(), r);
-            write("`");
+            write("}");
         }
         else
         {

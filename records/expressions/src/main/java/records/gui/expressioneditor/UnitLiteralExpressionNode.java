@@ -48,6 +48,12 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
+    public boolean isFocusPending()
+    {
+        return false;
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         // TODO

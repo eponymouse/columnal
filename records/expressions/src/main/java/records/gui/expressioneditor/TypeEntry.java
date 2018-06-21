@@ -28,6 +28,7 @@ import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -75,9 +76,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         textField.setText(initialContent);
     }
 
-    private List<TypeCompletion> calculateCompletions(String s, CompletionQuery completionQuery)
+    private Stream<TypeCompletion> calculateCompletions(String s, CompletionQuery completionQuery)
     {
-        return allCompletions.stream().filter(c -> c.completion.toLowerCase().startsWith(s.toLowerCase())).collect(ImmutableList.toImmutableList());
+        return allCompletions.stream().filter(c -> c.completion.toLowerCase().startsWith(s.toLowerCase()));
     }
 
     private CompletionListener<TypeCompletion> getListener()

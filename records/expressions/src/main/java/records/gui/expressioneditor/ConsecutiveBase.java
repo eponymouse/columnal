@@ -126,7 +126,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         removingBlanks = true;
         //Log.debug("Removing blanks, was size " + children.size());
         atomicEdit.set(true);
-        children.removeIf(c -> c.isBlank() && !c.isFocused());
+        children.removeIf(c -> c.isBlank() && !c.isFocused() && !c.isFocusPending());
         if (children.isEmpty())
             children.add(makeBlankChild());
         atomicEdit.set(false);

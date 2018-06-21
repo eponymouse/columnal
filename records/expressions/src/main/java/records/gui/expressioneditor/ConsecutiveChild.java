@@ -56,4 +56,6 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     public void save(SEMANTIC_PARENT saver);
 
     void unmaskErrors();
+
+    boolean isFocusPending();
 }

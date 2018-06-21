@@ -70,7 +70,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     @OnThread(value = Tag.Any)
     public FxRobot write(String text)
     {
-        Log.normal("Pressing: {{{" + text + "}}}");
+        Log.normal("Writing: {{{" + text + "}}}");
         return super.write(text);
     }
 
@@ -78,7 +78,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     @OnThread(value = Tag.Any)
     public FxRobot write(String text, int sleepMillis)
     {
-        Log.normal("Pressing: {{{" + text + "}}}");
+        Log.normal("Writing: {{{" + text + "}}}");
         return super.write(text, sleepMillis);
     }
 

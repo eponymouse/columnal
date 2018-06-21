@@ -120,7 +120,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         //Log.logStackTrace("Made new GEE with [[" + initialValue + "]]");
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
-        typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`');
+        typeLiteralCompletion = new KeyShortcutCompletion("autocomplete.type", '`'); // TODO change to type{
         varDeclCompletion = new VarDeclCompletion();
         updateNodes();
 
@@ -168,7 +168,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @RequiresNonNull({"unitCompletion", "stringCompletion", "typeLiteralCompletion", "varDeclCompletion", "parent"})
-    private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
+    private Stream<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Keyword keyword : Keyword.values())
@@ -258,7 +258,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         */
         r.removeIf(c -> c.shouldShow(text) == ShowStatus.NO_MATCH);
-        return r;
+        return r.stream();
     }
 
     @RequiresNonNull("parent")
