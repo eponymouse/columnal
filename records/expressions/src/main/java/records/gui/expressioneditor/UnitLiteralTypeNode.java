@@ -1,13 +1,10 @@
 package records.gui.expressioneditor;
 
-import records.data.unit.UnitManager;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
-import records.transformations.expression.UnitLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypeSaver;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -20,11 +17,11 @@ import java.util.stream.Stream;
 /**
  * A TypeExpression with a unit expression inside.
  */
-public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypeParent>
+public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypeSaver>
 {
     private final UnitCompoundBase unit;
     
-    public UnitLiteralTypeNode(ConsecutiveBase<TypeExpression, TypeParent> parent, UnitExpression unitExpression)
+    public UnitLiteralTypeNode(ConsecutiveBase<TypeExpression, TypeSaver> parent, UnitExpression unitExpression)
     {
         super(parent);
         this.unit = new UnitCompoundBase(Utility.later(this), true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL));
@@ -39,7 +36,7 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     }
     
     @Override
-    public void save(TypeParent saver)
+    public void save(TypeSaver saver)
     {
         //saver.saveOperand(new UnitLiteralTypeExpression(unit.save()), this, c -> {});
     }
@@ -81,7 +78,7 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypePa
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<TypeExpression, TypeParent>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<TypeExpression, TypeSaver>> quickFixes)
     {
         // TODO
     }

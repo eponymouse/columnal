@@ -25,9 +25,9 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
-    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<TypeExpression, TypeParent>> items = new StreamTreeBuilder<>();
+        StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> items = new StreamTreeBuilder<>();
         for (int i = 0; i < members.size(); i++)
         {
             items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));

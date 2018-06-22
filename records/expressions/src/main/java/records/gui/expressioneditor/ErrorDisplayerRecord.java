@@ -2,18 +2,14 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.TypeManager;
-import records.error.InternalException;
-import records.error.UserException;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypeSaver;
 import records.typeExp.TypeConcretisationError;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -24,7 +20,6 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 
@@ -57,7 +52,7 @@ public class ErrorDisplayerRecord
     // we use identity hash map, and we cannot use Either (which would break this property).  So two maps it is:
     private final IdentityHashMap<Expression, Span<Expression, ExpressionSaver>> expressionDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<UnitExpression, Span<UnitExpression, UnitSaver>> unitDisplayers = new IdentityHashMap<>();
-    private final IdentityHashMap<TypeExpression, Span<TypeExpression, TypeParent>> typeDisplayers = new IdentityHashMap<>();
+    private final IdentityHashMap<TypeExpression, Span<TypeExpression, TypeSaver>> typeDisplayers = new IdentityHashMap<>();
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?, ?>>>> pending = new IdentityHashMap<>();
@@ -83,7 +78,7 @@ public class ErrorDisplayerRecord
     }
 
     @SuppressWarnings({"initialization", "recorded"})
-    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(ConsecutiveChild<TypeExpression, TypeParent> start, ConsecutiveChild<TypeExpression, TypeParent> end, @NonNull TYPE_EXPRESSION e)
+    public <TYPE_EXPRESSION extends TypeExpression> @NonNull @Recorded TYPE_EXPRESSION recordType(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, @NonNull TYPE_EXPRESSION e)
     {
         typeDisplayers.put(e, new Span<>(start, end));
         return e;

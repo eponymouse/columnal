@@ -1,23 +1,18 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import annotation.recorded.qual.UnknownIfRecorded;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.TableAndColumnRenames;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypeSaver;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.FXPlatformConsumer;
 
 import java.util.stream.Stream;
 
-public class TypeEditor extends TopLevelEditor<TypeExpression, TypeParent>
+public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
 {
     private final FXPlatformConsumer<@Nullable DataType> onChange;
 

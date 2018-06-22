@@ -2,7 +2,6 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -17,12 +16,11 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypeSaver;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.FXPlatformConsumer;
@@ -796,5 +794,5 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitSaver> UNIT_OPS = new UnitExpressionOps();
-    public static final OperandOps<TypeExpression, TypeParent> TYPE_OPS = new TypeExpressionOps();
+    public static final OperandOps<TypeExpression, TypeSaver> TYPE_OPS = new TypeExpressionOps();
 }

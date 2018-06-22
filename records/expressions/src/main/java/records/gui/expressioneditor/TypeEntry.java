@@ -1,40 +1,29 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
-import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
-import records.transformations.expression.type.NumberTypeExpression;
-import records.transformations.expression.type.TaggedTypeNameExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
-import records.transformations.expression.type.TypePrimitiveLiteral;
-import records.transformations.expression.type.UnfinishedTypeExpression;
-import styled.StyledShowable;
+import records.transformations.expression.type.TypeSaver;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Stream;
 
-public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> implements EEDisplayNodeParent
+public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
     private static final ImmutableList<DataType> PRIMITIVE_TYPES = ImmutableList.of(
@@ -59,7 +48,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
      */
     private @Nullable UnitCompoundBase unitSpecifier;
 
-    public TypeEntry(ConsecutiveBase<TypeExpression, TypeParent> parent, String initialContent)
+    public TypeEntry(ConsecutiveBase<TypeExpression, TypeSaver> parent, String initialContent)
     {
         super(TypeExpression.class, parent);
         this.allCompletions = Utility.concatStreams(
@@ -104,7 +93,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
                 }
                 else if (typeCompletion == unitBracketCompletion)
                 {
-                    SingleLoader<TypeExpression, TypeParent> load = p -> new UnitLiteralTypeNode(p, new InvalidOperatorUnitExpression(ImmutableList.of()));
+                    SingleLoader<TypeExpression, TypeSaver> load = p -> new UnitLiteralTypeNode(p, new InvalidOperatorUnitExpression(ImmutableList.of()));
                     parent.replace(TypeEntry.this, Stream.of(load.focusWhenShown()));
                 }
                 else if (typeCompletion != null && typeCompletion.numTypeParams > 0)
@@ -285,23 +274,23 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeParent> i
         }
     }
     
-    public static SingleLoader<TypeExpression, TypeParent> load(String value)
+    public static SingleLoader<TypeExpression, TypeSaver> load(String value)
     {
         return p -> new TypeEntry(p, value);
     }
 
     @Override
-    public void save(TypeParent saver)
+    public void save(TypeSaver saver)
     {
         // TODO
     }
 
-    private static Stream<SingleLoader<TypeExpression, TypeParent>> loadEmptyBrackets(Keyword open, Keyword close)
+    private static Stream<SingleLoader<TypeExpression, TypeSaver>> loadEmptyBrackets(Keyword open, Keyword close)
     {
         return Stream.of(load(open), load("").focusWhenShown(), load(close));
     }
 
-    public static SingleLoader<TypeExpression, TypeParent> load(Keyword value)
+    public static SingleLoader<TypeExpression, TypeSaver> load(Keyword value)
     {
         return load(value.getContent());
     }

@@ -26,7 +26,7 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         return Stream.of(p -> new TypeEntry(p, toDisplay()));
     }

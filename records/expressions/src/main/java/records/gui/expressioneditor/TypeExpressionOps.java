@@ -6,24 +6,24 @@ import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypeSaver;
 import utility.FXPlatformConsumer;
 
 import java.util.Arrays;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
+public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
 {
     @Override
-    public EntryNode<TypeExpression, TypeParent> makeGeneral(ConsecutiveBase<TypeExpression, TypeParent> parent, @Nullable String initialContent)
+    public EntryNode<TypeExpression, TypeSaver> makeGeneral(ConsecutiveBase<TypeExpression, TypeSaver> parent, @Nullable String initialContent)
     {
         return new TypeEntry(parent, initialContent == null ? "" : initialContent);
     }
 
     /*
     @Override
-    public ImmutableList<Pair<String, @Localized String>> getValidOperators(TypeParent parent)
+    public ImmutableList<Pair<String, @Localized String>> getValidOperators(TypeSaver parent)
     {
         ImmutableList.Builder<Pair<String, @Localized String>> ops = ImmutableList.builder();
         ops.add(new Pair<String, @Localized String>("-", TranslationUtility.getString("tagged.tuple.apply")));
@@ -126,12 +126,12 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     }
 
     @Override
-    public TypeParent saveToClipboard(ConsecutiveBase<TypeExpression, TypeParent> parent)
+    public TypeSaver saveToClipboard(ConsecutiveBase<TypeExpression, TypeSaver> parent)
     {
-        return new TypeParent()
+        return new TypeSaver()
         {
             @Override
-            public void saveOperand(UnitExpression unitExpression, ErrorDisplayer<TypeExpression, TypeParent> unitLiteralTypeNode, FXPlatformConsumer<Context> withContext)
+            public void saveOperand(UnitExpression unitExpression, ErrorDisplayer<TypeExpression, TypeSaver> unitLiteralTypeNode, FXPlatformConsumer<Context> withContext)
             {
                 
             }
@@ -139,7 +139,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeParent>
     }
 
     @Override
-    public Stream<SingleLoader<TypeExpression, TypeParent>> replaceAndLoad(TypeExpression topLevel, TypeExpression toReplace, TypeExpression replaceWith, BracketedStatus childrenBracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeSaver>> replaceAndLoad(TypeExpression topLevel, TypeExpression toReplace, TypeExpression replaceWith, BracketedStatus childrenBracketedStatus)
     {
         return topLevel.replaceSubExpression(toReplace, replaceWith).loadAsConsecutive(childrenBracketedStatus);
     }

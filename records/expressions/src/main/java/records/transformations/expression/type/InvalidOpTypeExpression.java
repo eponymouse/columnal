@@ -27,9 +27,9 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<TypeExpression, TypeParent>)(p -> new TypeEntry(p, s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
+        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<TypeExpression, TypeSaver>)(p -> new TypeEntry(p, s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
     }
 
     @Override

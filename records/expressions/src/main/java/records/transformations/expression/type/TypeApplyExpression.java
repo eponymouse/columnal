@@ -95,10 +95,10 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        StreamTreeBuilder<SingleLoader<TypeExpression, TypeParent>> r = new StreamTreeBuilder<>();
-        r.addAll(arguments.get(0).<Stream<SingleLoader<TypeExpression, TypeParent>>>either(u -> Stream.<SingleLoader<TypeExpression, TypeParent>>of(p -> new UnitLiteralTypeNode(p, u)), t -> t.loadAsConsecutive(BracketedStatus.MISC)));
+        StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> r = new StreamTreeBuilder<>();
+        r.addAll(arguments.get(0).<Stream<SingleLoader<TypeExpression, TypeSaver>>>either(u -> Stream.<SingleLoader<TypeExpression, TypeSaver>>of(p -> new UnitLiteralTypeNode(p, u)), t -> t.loadAsConsecutive(BracketedStatus.MISC)));
         for (int i = 1; i < arguments.size(); i++)
         {
             Either<UnitExpression, TypeExpression> arg = arguments.get(i);

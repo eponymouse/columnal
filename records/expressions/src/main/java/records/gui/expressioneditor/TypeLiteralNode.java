@@ -9,7 +9,7 @@ import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.TypeParent;
+import records.transformations.expression.type.TypeSaver;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -24,13 +24,13 @@ import java.util.stream.Stream;
  */
 public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSaver>
 {
-    private final Consecutive<TypeExpression, TypeParent> type;
+    private final Consecutive<TypeExpression, TypeSaver> type;
     
     @SuppressWarnings("initialization")
     public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable TypeExpression startingType)
     {
         super(parent);
-        this.type = new Consecutive<TypeExpression, TypeParent>(ConsecutiveBase.TYPE_OPS, this, new Label("type{"), new Label("}"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
+        this.type = new Consecutive<TypeExpression, TypeSaver>(ConsecutiveBase.TYPE_OPS, this, new Label("type{"), new Label("}"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
         {
             @Override
             public @Recorded TypeExpression save()

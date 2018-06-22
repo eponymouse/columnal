@@ -49,7 +49,7 @@ public class NumberTypeExpression extends TypeExpression
     }
 
     @Override
-    public Stream<SingleLoader<TypeExpression, TypeParent>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         // TODO include the unit
         return Stream.of(p -> new TypeEntry(p, "Number"));

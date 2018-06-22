@@ -41,7 +41,7 @@ import utility.FXPlatformRunnable;
 import utility.StreamTreeBuilder;
 import utility.Utility;
 
-public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeParent>, StyledShowable, Replaceable<TypeExpression>
+public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeSaver>, StyledShowable, Replaceable<TypeExpression>
 {
 
     public static TypeExpression fromDataType(DataType dataType) throws InternalException
@@ -318,7 +318,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
 
     // Round brackets if needed
     @OnThread(Tag.FXPlatform)
-    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<TypeExpression, TypeParent>> builder, FXPlatformRunnable buildContent)
+    protected static void roundBracket(BracketedStatus bracketedStatus, StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> builder, FXPlatformRunnable buildContent)
     {
         if (bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
         {
