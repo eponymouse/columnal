@@ -35,7 +35,9 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
             @Override
             public @Recorded TypeExpression save()
             {
-                return new TypePrimitiveLiteral(DataType.BOOLEAN);
+                TypeSaver typeSaver = new TypeSaver();
+                save(typeSaver);
+                return typeSaver.finish();
             }
 
             @Override

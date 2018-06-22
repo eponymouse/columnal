@@ -73,6 +73,7 @@ public class ExpressionSaver implements ErrorAndTypeRecorder
         public void terminate(Function<BracketAndNodes<Expression, ExpressionSaver>, @Recorded Expression> makeContent, Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
     }
     
+    // Op is an enum so we can't identity-hash-map it to a node, hence this wrapper
     private static class OpAndNode
     {
         public final Op op;

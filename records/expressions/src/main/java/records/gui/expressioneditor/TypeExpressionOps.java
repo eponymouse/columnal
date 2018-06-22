@@ -130,11 +130,6 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
     {
         return new TypeSaver()
         {
-            @Override
-            public void saveOperand(UnitExpression unitExpression, ErrorDisplayer<TypeExpression, TypeSaver> unitLiteralTypeNode, FXPlatformConsumer<Context> withContext)
-            {
-                
-            }
         };
     }
 

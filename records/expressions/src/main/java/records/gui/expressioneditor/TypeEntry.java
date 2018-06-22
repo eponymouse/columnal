@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TypeId;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
@@ -16,8 +17,11 @@ import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.TaggedTypeNameExpression;
 import records.transformations.expression.type.TypeExpression;
+import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.TypeSaver;
+import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -183,32 +187,40 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         return Stream.concat(Stream.of(textField), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
     }
     
-    /*
     @Override
-    public TypeExpression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)
+    public void save(TypeSaver typeSaver)
     {
-        // Number is special case:
         String content = textField.getText().trim();
-        if (content.equals("Number"))
+        for (Keyword keyword : Keyword.values())
         {
-            if (unitSpecifier != null)
+            if (content.equals(keyword.getContent()))
             {
-                return new NumberTypeExpression(unitSpecifier.saveUnrecorded(errorDisplayer, onError));
+                typeSaver.saveKeyword(keyword, this, c -> {});
+                return;
             }
-            else
-                return new NumberTypeExpression(null);
+        }
+
+        for (DataType primitiveType : PRIMITIVE_TYPES)
+        {
+            if (content.equals(primitiveType.toString()))
+            {
+                typeSaver.saveOperand(new TypePrimitiveLiteral(primitiveType), this, c -> {});
+                return;
+            }
+        }
+
+        for (TypeId typeId : parent.getEditor().getTypeManager().getKnownTaggedTypes().keySet())
+        {
+            if (typeId.getRaw().equals(content))
+            {
+                typeSaver.saveOperand(new TaggedTypeNameExpression(typeId), this, c -> {});
+                return;
+            }
         }
         
-        return Stream.<TypeExpression>concat(
-            PRIMITIVE_TYPES.stream()
-                .filter(t -> t.toString().equals(content))
-                .map(t -> new TypePrimitiveLiteral(t)), 
-            parent.getEditor().getTypeManager().getKnownTaggedTypes().keySet().stream()
-                .filter(t -> t.getRaw().equals(content))
-                .map(t -> new TaggedTypeNameExpression(t))
-        ).findFirst().orElseGet(() -> new UnfinishedTypeExpression(textField.getText()));
+        // Fallback:
+        typeSaver.saveOperand(new UnfinishedTypeExpression(content), this, c -> {});
     }
-    */
 
     @Override
     public boolean isOrContains(EEDisplayNode child)
@@ -277,12 +289,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     public static SingleLoader<TypeExpression, TypeSaver> load(String value)
     {
         return p -> new TypeEntry(p, value);
-    }
-
-    @Override
-    public void save(TypeSaver saver)
-    {
-        // TODO
     }
 
     private static Stream<SingleLoader<TypeExpression, TypeSaver>> loadEmptyBrackets(Keyword open, Keyword close)
