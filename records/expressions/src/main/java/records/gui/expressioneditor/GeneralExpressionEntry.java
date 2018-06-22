@@ -7,7 +7,6 @@ import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import log.Log;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -23,7 +22,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.CompleteNumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
@@ -713,7 +711,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return item instanceof GeneralExpressionEntry && ((GeneralExpressionEntry)item).textField.getText().equals(Keyword.OPEN_ROUND.getContent());
     }
 
-    private Stream<SingleLoader<Expression, ExpressionSaver>> loadEmptyRoundBrackets()
+    private static Stream<SingleLoader<Expression, ExpressionSaver>> loadEmptyRoundBrackets()
     {
         return Stream.of(load(Keyword.OPEN_ROUND), load("").focusWhenShown(), load(Keyword.CLOSE_ROUND));
     }
@@ -848,7 +846,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
     */
-    
+
+    /**
+     * An Op, unlike a Keyword, may have a longer alternative available, so should not
+     * complete on direct match (unless it is the only possible direct match).
+     */
     public static enum Op
     {
         AND("&"), OR("|"), MULTIPLY("*"), ADD("+"), SUBTRACT("-"), DIVIDE("/"), STRING_CONCAT(";"), EQUALS("="), NOT_EQUAL("<>"), PLUS_MINUS("\u00B1"), RAISE("^"),
@@ -942,23 +944,27 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         return load(value.getContent());
     }
-    
+
+    /**
+     * The difference between a Keyword and Op is that a Keyword is never a prefix of a longer
+     * item, and thus always completes immediately when directly matched.
+     */
     public static enum Keyword
     {
         OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING("@anything"), QUEST("?"),
         IF("@if"), THEN("@then"), ELSE("@else"), ENDIF("@endif"),
         MATCH("@match"), CASE("@case"), ORCASE("@orcase"), GIVEN("@given"), ENDMATCH("@endmatch");
 
-        private final String op;
+        private final String keyword;
 
-        private Keyword(String op)
+        private Keyword(String keyword)
         {
-            this.op = op;
+            this.keyword = keyword;
         }
 
         public String getContent()
         {
-            return op;
+            return keyword;
         }
     }
 

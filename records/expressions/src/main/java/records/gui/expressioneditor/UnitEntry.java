@@ -29,7 +29,9 @@ import java.util.stream.Stream;
 // Like GeneralExpressionEntry but for units only
 public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> implements ErrorDisplayer<UnitExpression, UnitSaver>
 {
-    private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
+    private final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
+
+    private final KeyShortcutCompletion endCompletion = new KeyShortcutCompletion("autocomplete.end", '}');
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
@@ -48,6 +50,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketedCompletion);
+        r.add(endCompletion);
         r.add(new NumericLiteralCompletion());
         for (SingleUnit unit : getUnitManager().getAllDeclared())
         {
@@ -152,8 +155,15 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         @Override
-        protected String selected(String currentText, AutoComplete.@Nullable Completion c, String rest)
+        protected @Nullable String selected(String currentText, AutoComplete.@Nullable Completion c, String rest)
         {
+            @Nullable String newText = null;
+            if (c == endCompletion)
+            {
+                parent.parentFocusRightOfThis(Focus.LEFT);
+                return null;
+            }
+            
             /*
             if (c == bracketedCompletion)
             {
@@ -171,7 +181,23 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
                 parent.focusRightOf(UnitEntry.this, Focus.RIGHT);
             }
             */
-            return currentText;
+            else if (c != null && c instanceof KnownUnitCompletion)
+            {
+                newText = ((KnownUnitCompletion)c).completion;
+            }
+
+            boolean moveFocus = true;
+
+            completing = true;
+            // Must do this while completing so that we're not marked as blank:
+            if (moveFocus)
+            {
+                if (rest.isEmpty())
+                    parent.focusRightOf(UnitEntry.this, Focus.LEFT);
+                else
+                    parent.addOperandToRight(UnitEntry.this, rest, true);
+            }
+            return newText;
         }
 
         @Override

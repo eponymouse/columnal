@@ -190,9 +190,24 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         {
             //Utility.logStackTrace("Removing " + oldNode + " from " + this);
             if (newNode != null)
+            {
+                children.get(index).cleanup();
                 children.set(index, newNode);
+            }
             else
                 children.remove(index).cleanup();
+        }
+    }
+
+    public void replace(ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> items)
+    {
+        int index = getOperandIndex(oldNode);
+        //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
+        if (index != -1)
+        {
+            //Utility.logStackTrace("Removing " + oldNode + " from " + this);
+            children.remove(index).cleanup();
+            children.addAll(index, items.map(l -> l.load(this)).collect(Collectors.toList()));
         }
     }
 
@@ -372,6 +387,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void focusWhenShown()
     {
+        if (children.isEmpty())
+            children.add(makeBlankChild());
+        
         children.get(0).focusWhenShown();
     }
     
