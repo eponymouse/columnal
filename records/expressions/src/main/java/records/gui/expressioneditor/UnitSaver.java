@@ -8,7 +8,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.gui.expressioneditor.ExpressionSaver.BinaryOperatorSection;
-import records.gui.expressioneditor.ExpressionSaver.BracketAndNodes;
 import records.gui.expressioneditor.ExpressionSaver.MakeBinary;
 import records.gui.expressioneditor.ExpressionSaver.MakeNary;
 import records.gui.expressioneditor.ExpressionSaver.NaryOperatorSection;
@@ -18,6 +17,7 @@ import records.gui.expressioneditor.ExpressionSaver.OperatorSection;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
+import records.gui.expressioneditor.UnitSaver.Context;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.InvalidOperatorUnitExpression;
@@ -32,6 +32,7 @@ import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.UnitType;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
@@ -40,7 +41,7 @@ import java.util.List;
 import java.util.Stack;
 import java.util.function.Function;
 
-public abstract class UnitSaver implements ErrorAndTypeRecorder
+public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitType, Context> implements ErrorAndTypeRecorder
 {
     final static ImmutableList<OperatorExpressionInfoBase<UnitExpression, UnitSaver, UnitOp>> OPERATORS = ImmutableList.of(
         new OperatorExpressionInfoUnit(ImmutableList.of(
@@ -288,7 +289,7 @@ public abstract class UnitSaver implements ErrorAndTypeRecorder
             {
                 addTopLevelScope();
             }
-            cur.getSecond().terminate(bracketedStatus -> makeExpression(cur.getFirst(), bracketedStatus), bracket, errorDisplayer, withContext);
+            cur.getSecond().terminate((BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus) -> makeExpression(cur.getFirst(), bracketedStatus), bracket, errorDisplayer, withContext);
         }
     }
 }
