@@ -69,38 +69,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     
     public ExpressionSaver(ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
-        addTopLevelScope(parent);
+        super(parent);
     }
 
-    public void addTopLevelScope(@UnknownInitialization(SaverBase.class) ExpressionSaver this, ConsecutiveBase<Expression, ExpressionSaver> parent)
-    {
-        final @NonNull Stack<Scope> currentScopesFinal = this.currentScopes;
-        @NonNull ErrorDisplayerRecord errorDisplayerRecordFinal = this.errorDisplayerRecord;
-        currentScopesFinal.push(new Scope(parent.getAllChildren().get(0), new Terminator()
-        {
-            @Override
-            public void terminate(Function<BracketAndNodes<Expression, ExpressionSaver>, @Recorded Expression> makeContent, Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
-            {
-                keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
-                currentScopesFinal.peek().items.add(Either.left(errorDisplayerRecordFinal.record(parent.getAllChildren().get(0), keywordErrorDisplayer, new InvalidOperatorExpression(ImmutableList.of(Either.left(terminator.getContent()))))));
-            }
-        }));
-    }
 
-    public @Recorded Expression finish(ConsecutiveChild<Expression, ExpressionSaver> errorDisplayer)
-    {
-        while (currentScopes.size() > 1)
-        {
-            // TODO give some sort of error.... somewhere?  On the opening item?
-            Scope closed = currentScopes.pop();
-            currentScopes.peek().items.add(Either.left(makeInvalidOp(closed.openingNode, errorDisplayer, closed.items.stream().map(e -> e.map(x -> x.op)).map(Either::swap).collect(ImmutableList.toImmutableList()))));
-        }
-
-        Scope closed = currentScopes.pop();
-        BracketAndNodes<Expression, ExpressionSaver> brackets = new BracketAndNodes<>(BracketedStatus.TOP_LEVEL, closed.openingNode, errorDisplayer);
-        return makeExpression(closed.openingNode, errorDisplayer, closed.items, brackets);
-    }
-    
     // Note: if we are copying to clipboard, callback will not be called
     public void saveKeyword(Keyword keyword, ConsecutiveChild<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
@@ -159,7 +131,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
     }
 
-    private @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
+    @Override
+    protected @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
     {
         if (content.isEmpty())
         {
@@ -231,9 +204,16 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(ImmutableList.copyOf(invalid)));
     }
 
-    private @Recorded Expression makeInvalidOp(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<Op, @Recorded Expression>> items)
+    @Override
+    protected @Recorded Expression makeInvalidOp(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, ImmutableList<Either<Op, @Recorded Expression>> items)
     {
         return errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(Utility.<Either<Op, @Recorded Expression>, Either<String, @Recorded Expression>>mapListI(items, x -> x.<String, @Recorded Expression>mapBoth(op -> op.getContent(), y -> y))));
+    }
+
+    @Override
+    protected Expression keywordToInvalid(Keyword keyword)
+    {
+        return new InvalidOperatorExpression(ImmutableList.of(Either.left(keyword.getContent())));
     }
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
@@ -1146,5 +1126,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
     {
         return errorDisplayerRecord.getRecorder().recordTypeNN(expression, typeExp);
-    }    
+    }
+
+    @Override
+    protected Expression record(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, Expression expression)
+    {
+        return errorDisplayerRecord.record(start, end, expression);
+    }
 }

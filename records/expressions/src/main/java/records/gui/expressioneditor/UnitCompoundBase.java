@@ -43,7 +43,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
     @Override
     public @Recorded UnitExpression save()
     {
-        UnitSaver unitSaver = new UnitSaver() {
+        UnitSaver unitSaver = new UnitSaver(this) {
 
             @Override
             public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
@@ -68,6 +68,6 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
         {
             child.save(unitSaver);
         }
-        return unitSaver.finish(this);
+        return unitSaver.finish(children.get(children.size() - 1));
     }
 }

@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -119,7 +118,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     @Override
     public UnitSaver saveToClipboard(ConsecutiveBase<UnitExpression, UnitSaver> parent)
     {
-        return new UnitSaver() {
+        return new UnitSaver(parent) {
 
             @Override
             public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)

@@ -3,14 +3,12 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
-import records.transformations.expression.type.TypePrimitiveLiteral;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -35,9 +33,9 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
             @Override
             public @Recorded TypeExpression save()
             {
-                TypeSaver typeSaver = new TypeSaver();
+                TypeSaver typeSaver = new TypeSaver(parent);
                 save(typeSaver);
-                return typeSaver.finish();
+                return typeSaver.finish(children.get(children.size() - 1));
             }
 
             @Override

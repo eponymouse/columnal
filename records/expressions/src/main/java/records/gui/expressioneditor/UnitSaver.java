@@ -4,17 +4,13 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.gui.expressioneditor.ExpressionSaver.BinaryOperatorSection;
 import records.gui.expressioneditor.ExpressionSaver.MakeBinary;
 import records.gui.expressioneditor.ExpressionSaver.MakeNary;
 import records.gui.expressioneditor.ExpressionSaver.NaryOperatorSection;
-import records.gui.expressioneditor.ExpressionSaver.OperatorExpressionInfo;
 import records.gui.expressioneditor.ExpressionSaver.OperatorExpressionInfoBase;
 import records.gui.expressioneditor.ExpressionSaver.OperatorSection;
-import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitSaver.Context;
@@ -27,21 +23,18 @@ import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
-import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.UnitType;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.function.Function;
 
-public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitType, Context> implements ErrorAndTypeRecorder
+public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Context> implements ErrorAndTypeRecorder
 {
     final static ImmutableList<OperatorExpressionInfoBase<UnitExpression, UnitSaver, UnitOp>> OPERATORS = ImmutableList.of(
         new OperatorExpressionInfoUnit(ImmutableList.of(
@@ -50,6 +43,11 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
             opD(UnitOp.DIVIDE, "op.divide"), UnitSaver::makeDivide),
     new OperatorExpressionInfoUnit(
             opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
+
+    public UnitSaver(ConsecutiveBase<UnitExpression, UnitSaver> parent)
+    {
+        super(parent);
+    }
 
     private static class OperatorExpressionInfoUnit extends OperatorExpressionInfoBase<UnitExpression, UnitSaver, UnitOp>
     {
@@ -128,44 +126,9 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
     //UnitManager getUnitManager();
 
     class Context {}
-
-    private final ErrorDisplayerRecord errorDisplayerRecord = new ErrorDisplayerRecord();
-    private final Stack<Pair<ArrayList<Either<UnitExpression, UnitOp>>, Terminator>> currentScopes = new Stack<>();
-
-    // Ends a mini-expression
-    private static interface Terminator
-    {
-        public void terminate(Function<BracketAndNodes<UnitExpression, UnitSaver>, UnitExpression> makeContent, UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext);
-    }
     
-    public UnitSaver()
-    {
-        addTopLevelScope();
-    }
-
-    @RequiresNonNull("currentScopes")
-    private void addTopLevelScope(@UnknownInitialization(Object.class) UnitSaver this)
-    {
-        currentScopes.add(new Pair<>(new ArrayList<>(), (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
-            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
-            currentScopes.peek().getFirst().add(Either.left(new InvalidOperatorUnitExpression(ImmutableList.of(Either.left(terminator.getContent())))));
-        }));
-    }
-
-    public @Recorded UnitExpression finish(ConsecutiveBase<UnitExpression, UnitSaver> parent)
-    {
-        if (currentScopes.size() > 1)
-        {
-            // TODO give some sort of error.... somewhere?  On the opening item?
-            return new InvalidOperatorUnitExpression(ImmutableList.of(Either.right(new SingleUnitExpression("TODO unterminated"))));
-        }
-        else
-        {
-            return makeExpression(currentScopes.pop().getFirst(), new BracketAndNodes<>(BracketedStatus.TOP_LEVEL, parent.children.get(0), parent.children.get(parent.children.size() - 1)));
-        }
-    }
-
-    private UnitExpression makeExpression(List<Either<UnitExpression, UnitOp>> content, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
+    @Override
+    protected UnitExpression makeExpression(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver> brackets)
     {
         if (content.isEmpty())
             return new InvalidOperatorUnitExpression(ImmutableList.of());
@@ -179,7 +142,7 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
 
         boolean lastWasExpression[] = new boolean[] {false}; // Think of it as an invisible empty prefix operator
 
-        for (Either<UnitExpression, UnitOp> item : content)
+        for (Either<UnitExpression, OpAndNode> item : content)
         {
             item.either_(expression -> {
                 invalid.add(Either.right(expression));
@@ -192,8 +155,8 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
                 }
                 lastWasExpression[0] = true;
             }, op -> {
-                invalid.add(Either.left(op.getContent()));
-                validOperators.add(op);
+                invalid.add(Either.left(op.op.getContent()));
+                validOperators.add(op.op);
 
                 if (!lastWasExpression[0])
                 {
@@ -225,7 +188,9 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
             }
             
             // Now we need to check the operators can work together as one group:
-            @Nullable UnitExpression e = ExpressionSaver.<UnitExpression, UnitSaver, UnitOp>makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, this::makeInvalidOp, ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), bracketedStatus, arg -> arg);
+            @Nullable UnitExpression e = ExpressionSaver.<UnitExpression, UnitSaver, UnitOp>makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, arg ->
+                    record(brackets.start, brackets.end, makeInvalidOp(brackets.start, brackets.end, arg))
+                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> arg);
             if (e != null)
             {
                 return e;
@@ -236,7 +201,8 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
         return new InvalidOperatorUnitExpression(ImmutableList.copyOf(invalid));
     }
 
-    private @Recorded UnitExpression makeInvalidOp(ImmutableList<Either<UnitOp, UnitExpression>> items)
+    @Override
+    protected UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<UnitOp, @Recorded UnitExpression>> items)
     {
         return new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.mapBoth(op -> op.getContent(), y -> y)));
     }
@@ -247,49 +213,61 @@ public abstract class UnitSaver extends SaverBase<UnitExpression, UnitSaver, Uni
     }
 
     // Note: if we are copying to clipboard, callback will not be called
-    public void saveOperator(UnitOp operator, ErrorDisplayer<UnitExpression, UnitSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
-    {
-        currentScopes.peek().getFirst().add(Either.right(operator));
-    }
     public void saveOperand(UnitExpression singleItem, ErrorDisplayer<UnitExpression, UnitSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
-        currentScopes.peek().getFirst().add(Either.left(singleItem));
+        currentScopes.peek().items.add(Either.left(singleItem));
     }
 
     public void saveBracket(UnitBracket bracket, ConsecutiveChild<UnitExpression, UnitSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
         if (bracket == UnitBracket.OPEN_ROUND)
         {
-            currentScopes.push(new Pair<>(new ArrayList<>(), (makeContent, terminator, keywordErrorDisplayer, keywordContext) -> {
-                BracketAndNodes<UnitExpression, UnitSaver> brackets = new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, keywordErrorDisplayer);
-                if (terminator == UnitBracket.CLOSE_ROUND)
+            currentScopes.push(new Scope(errorDisplayer, new Terminator()
+            {
+                @Override
+                public void terminate(Function<BracketAndNodes<UnitExpression, UnitSaver>, @Recorded UnitExpression> makeContent, UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
                 {
-                    // All is well:
-                    
-                    UnitExpression result = makeContent.apply(brackets);
-                    currentScopes.peek().getFirst().add(Either.left(result));
-                }
-                else
-                {
-                    // Error!
-                    keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
-                    // Important to call makeContent before adding to scope on the next line:
-                    ImmutableList.Builder<Either<String, UnitExpression>> items = ImmutableList.builder();
-                    items.add(Either.right(makeContent.apply(brackets)));
-                    items.add(Either.left(terminator.getContent()));
-                    InvalidOperatorUnitExpression invalid = new InvalidOperatorUnitExpression(items.build());
-                    currentScopes.peek().getFirst().add(Either.left(invalid));
+                    BracketAndNodes<UnitExpression, UnitSaver> brackets = new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, keywordErrorDisplayer);
+                    if (terminator == UnitBracket.CLOSE_ROUND)
+                    {
+                        // All is well:
+
+                        UnitExpression result = makeContent.apply(brackets);
+                        currentScopes.peek().items.add(Either.left(result));
+                    } else
+                    {
+                        // Error!
+                        keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
+                        // Important to call makeContent before adding to scope on the next line:
+                        ImmutableList.Builder<Either<String, UnitExpression>> items = ImmutableList.builder();
+                        items.add(Either.right(makeContent.apply(brackets)));
+                        items.add(Either.left(terminator.getContent()));
+                        InvalidOperatorUnitExpression invalid = new InvalidOperatorUnitExpression(items.build());
+                        currentScopes.peek().items.add(Either.left(invalid));
+                    }
                 }
             }));
         }
         else
         {
-            Pair<ArrayList<Either<UnitExpression, UnitOp>>, Terminator> cur = currentScopes.pop();
+            Scope cur = currentScopes.pop();
             if (currentScopes.size() == 0)
             {
-                addTopLevelScope();
+                addTopLevelScope(errorDisplayer.getParent());
             }
-            cur.getSecond().terminate((BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus) -> makeExpression(cur.getFirst(), bracketedStatus), bracket, errorDisplayer, withContext);
+            cur.terminator.terminate((BracketAndNodes<UnitExpression, UnitSaver> brackets) -> makeExpression(brackets.start, brackets.end, cur.items, brackets), bracket, errorDisplayer, withContext);
         }
+    }
+
+    @Override
+    protected UnitExpression keywordToInvalid(UnitBracket unitBracket)
+    {
+        return new InvalidOperatorUnitExpression(ImmutableList.of(Either.left(unitBracket.getContent())));
+    }
+
+    @Override
+    protected UnitExpression record(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, UnitExpression unitExpression)
+    {
+        return errorDisplayerRecord.recordUnit(start, end, unitExpression);
     }
 }

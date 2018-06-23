@@ -4,10 +4,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
-import utility.FXPlatformConsumer;
 
 import java.util.Arrays;
 import java.util.function.Predicate;
@@ -128,7 +126,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
     @Override
     public TypeSaver saveToClipboard(ConsecutiveBase<TypeExpression, TypeSaver> parent)
     {
-        return new TypeSaver()
+        return new TypeSaver(parent)
         {
         };
     }
