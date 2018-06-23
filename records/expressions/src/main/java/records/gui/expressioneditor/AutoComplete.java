@@ -332,7 +332,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
             {
                 ShowStatus completionAction = completion.shouldShow(text);
                 Log.debug("Completion for \"" + text + "\": " + completionAction);
-                if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly)
+                // TODO check if we are actually a single completion
+                if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly && completion.completesWhenSingleDirect())
                 {
                     completions.getSelectionModel().select(completion);
                     

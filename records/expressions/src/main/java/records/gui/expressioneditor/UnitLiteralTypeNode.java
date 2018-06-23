@@ -5,6 +5,7 @@ import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
+import records.transformations.expression.type.UnitLiteralTypeExpression;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -38,7 +39,7 @@ public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypeSa
     @Override
     public void save(TypeSaver saver)
     {
-        //saver.saveOperand(new UnitLiteralTypeExpression(unit.save()), this, c -> {});
+        saver.saveOperand(new UnitLiteralTypeExpression(unit.save()), this, this, c -> {});
     }
 
     @Override
