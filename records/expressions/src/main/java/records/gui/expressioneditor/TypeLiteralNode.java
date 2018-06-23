@@ -33,7 +33,7 @@ public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSave
             @Override
             public @Recorded TypeExpression save()
             {
-                TypeSaver typeSaver = new TypeSaver(parent);
+                TypeSaver typeSaver = new TypeSaver(this);
                 save(typeSaver);
                 return typeSaver.finish(children.get(children.size() - 1));
             }

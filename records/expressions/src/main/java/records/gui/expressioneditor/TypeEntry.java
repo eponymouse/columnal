@@ -204,7 +204,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         {
             if (content.equals(primitiveType.toString()))
             {
-                typeSaver.saveOperand(new TypePrimitiveLiteral(primitiveType), this, c -> {});
+                typeSaver.saveOperand(new TypePrimitiveLiteral(primitiveType), this, this, c -> {});
                 return;
             }
         }
@@ -213,13 +213,13 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         {
             if (typeId.getRaw().equals(content))
             {
-                typeSaver.saveOperand(new TaggedTypeNameExpression(typeId), this, c -> {});
+                typeSaver.saveOperand(new TaggedTypeNameExpression(typeId), this, this, c -> {});
                 return;
             }
         }
         
         // Fallback:
-        typeSaver.saveOperand(new UnfinishedTypeExpression(content), this, c -> {});
+        typeSaver.saveOperand(new UnfinishedTypeExpression(content), this, this, c -> {});
     }
 
     @Override
@@ -303,7 +303,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     
     public static enum Keyword
     {
-        OPEN_ROUND("("), CLOSE_ROUND(")"), OPEN_SQUARE("["), CLOSE_SQUARE("]"), COMMA(",");
+        OPEN_ROUND("("), CLOSE_ROUND(")"), OPEN_SQUARE("["), CLOSE_SQUARE("]");
 
         private final String keyword;
 
@@ -315,6 +315,23 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         public String getContent()
         {
             return keyword;
+        }
+    }
+    
+    public static enum Operator
+    {
+        COMMA(",");
+
+        private final String op;
+
+        private Operator(String op)
+        {
+            this.op = op;
+        }
+
+        public String getContent()
+        {
+            return op;
         }
     }
 }

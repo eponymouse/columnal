@@ -289,8 +289,8 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         
         OptionalInt num = Utility.parseIntegerOpt(text);
         if (num.isPresent())
-            saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), this, c -> {});
+            saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), this, this, c -> {});
         else
-            saver.saveOperand(new SingleUnitExpression(text), this, c -> {});
+            saver.saveOperand(new SingleUnitExpression(text), this, this, c -> {});
     }
 }

@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
 {
-    private static final Set<Integer> OPERATOR_ALPHABET = UnitSaver.OPERATORS.stream().flatMap(o -> o.operators.stream()).map(p -> p.getFirst()).map(UnitOp::getContent).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private static final Set<Integer> OPERATOR_ALPHABET = UnitSaver.getOperators().stream().flatMap(o -> o.operators.stream()).map(p -> p.getFirst()).map(UnitOp::getContent).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     private static String getOp(Pair<String, @Localized String> p)
     {
@@ -118,27 +118,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     @Override
     public UnitSaver saveToClipboard(ConsecutiveBase<UnitExpression, UnitSaver> parent)
     {
-        return new UnitSaver(parent) {
-
-            @Override
-            public <EXPRESSION> void recordError(EXPRESSION src, StyledString error)
-            {
-                
-            }
-
-            @Override
-            public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void recordQuickFixes(EXPRESSION src, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
-            {
-
-            }
-
-            @SuppressWarnings("recorded")
-            @Override
-            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
-            {
-                return typeExp;
-            }
-        };
+        return new UnitSaver(parent);
     }
 
     @Override

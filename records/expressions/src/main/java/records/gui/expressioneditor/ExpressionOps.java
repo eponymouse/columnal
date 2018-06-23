@@ -21,7 +21,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
 
     private static Set<@NonNull Integer> makeAlphabet()
     {
-        return ExpressionSaver.OPERATORS.stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map((Pair<Op, @Localized String> p) -> p.getFirst().getContent())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+        return ExpressionSaver.getOperators().stream().flatMap(l -> l.stream()).flatMap(oei -> oei.operators.stream().map((Pair<Op, @Localized String> p) -> p.getFirst().getContent())).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
     }
 
     @Override
