@@ -119,6 +119,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     {
         Log.debug("### Focusing now: " + textField + " Editable: " + textField.isEditable() + " Scene: " + textField.getScene());
         textField.requestFocus();
+        Log.debug("  Focused? " + textField.isFocused());
         if (side == Focus.LEFT)
         {
             textField.positionCaret(0);

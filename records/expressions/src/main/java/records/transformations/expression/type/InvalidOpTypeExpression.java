@@ -15,6 +15,7 @@ import utility.Either;
 import utility.Utility;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class InvalidOpTypeExpression extends TypeExpression
@@ -35,12 +36,9 @@ public class InvalidOpTypeExpression extends TypeExpression
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        StringBuilder s = new StringBuilder("@INVALIDOPS (");
-        for (Either<String, TypeExpression> item : items)
-        {
-            s.append(item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(renames)));
-        }
-        return s.append(")").toString();
+        return "@INVALIDOPS (" +
+            items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(renames))).collect(Collectors.joining(" ")) 
+            + ")";
     }
 
     @Override

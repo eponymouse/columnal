@@ -36,12 +36,9 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     @Override
     public String save(boolean topLevel)
     {
-        StringBuilder s = new StringBuilder("@INVALIDOPS (");
-        for (Either<String, UnitExpression> item : items)
-        {
-            s.append(item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(false)));
-        }
-        return s.append(")").toString();
+        return "@INVALIDOPS (" + 
+            items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(false)))
+            + ")";
     }
 
     @Override

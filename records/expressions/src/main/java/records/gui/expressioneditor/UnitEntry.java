@@ -3,12 +3,14 @@ package records.gui.expressioneditor;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
+import records.gui.expressioneditor.AutoComplete.EndCompletion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
@@ -31,7 +33,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
 {
     private final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
 
-    private final KeyShortcutCompletion endCompletion = new KeyShortcutCompletion("autocomplete.end", '}');
+    private final Completion endCompletion = new EndCompletion("}"); //"autocomplete.end");
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
@@ -155,11 +157,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     private class CompletionListener extends SimpleCompletionListener<Completion>
     {
         @Override
-        protected @Nullable String selected(String currentText, AutoComplete.@Nullable Completion c, String rest)
+        protected @Nullable String selected(String currentText, AutoComplete.@Nullable Completion c, String rest, boolean moveFocus)
         {
             @Nullable String newText = null;
             if (c == endCompletion)
             {
+                Log.debug("||| Ending unit");
                 parent.parentFocusRightOfThis(Focus.LEFT);
                 return null;
             }
@@ -186,8 +189,6 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
                 newText = ((KnownUnitCompletion)c).completion;
             }
 
-            boolean moveFocus = true;
-
             completing = true;
             // Must do this while completing so that we're not marked as blank:
             if (moveFocus)
@@ -210,6 +211,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         public void tabPressed()
         {
             parent.focusRightOf(UnitEntry.this, Focus.LEFT);
+        }
+
+        @Override
+        protected boolean isFocused()
+        {
+            return UnitEntry.this.isFocused();
         }
     }
     

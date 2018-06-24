@@ -39,6 +39,6 @@ taggedTypeExpression : TAGGED ident roundTypeExpression*;
 arrayTypeExpression : OPEN_SQUARE typeExpression CLOSE_SQUARE;
 roundTypeExpression : OPEN_BRACKET typeExpression (ARROW typeExpression | (COMMA typeExpression)+)? CLOSE_BRACKET;
 typeExpression : typeExpressionTerminal | arrayTypeExpression | roundTypeExpression | invalidOpsTypeExpression | taggedTypeExpression;
-invalidOpsTypeExpression : INVALIDOPS OPEN_BRACKET typeExpression (STRING typeExpression)+ CLOSE_BRACKET;
+invalidOpsTypeExpression : INVALIDOPS OPEN_BRACKET (STRING | typeExpression)* CLOSE_BRACKET;
 
 completeTypeExpression : typeExpression EOF;

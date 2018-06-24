@@ -569,19 +569,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     private class CompletionListener extends SimpleCompletionListener<Completion>
     {
-        public CompletionListener()
-        {
-        }
-
         @Override
-        protected String selected(String currentText, @Interned @Nullable Completion c, String rest)
-        {
-            // Only move focus if we had it to begin with:
-            return selected(currentText, c, rest, isFocused());
-        }
-
-        
-        private String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
+        protected String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
         {
             savePrefix = null;
             prefix.setText("");
@@ -704,6 +693,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
         }
+
+        @Override
+        protected boolean isFocused()
+        {
+            return GeneralExpressionEntry.this.isFocused();
+        }
     }
     
     private static boolean isRoundBracket(ConsecutiveChild<Expression, ExpressionSaver> item)
@@ -740,35 +735,17 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return super.toString() + ";" + textField;
     }
 
-    private class AddUnitCompletion extends Completion
+    private class AddUnitCompletion extends SimpleCompletion
     {
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
+        public AddUnitCompletion()
         {
-            return new CompletionContent("{", TranslationUtility.getString("expression.autocomplete.units"));
-        }
-
-        @Override
-        public ShowStatus shouldShow(String input)
-        {
-            return isNumeric(input) ? ShowStatus.EXTENSION : ShowStatus.NO_MATCH;
-        }
-
-        private boolean isNumeric(String input)
-        {
-            return input.codePoints().allMatch(c -> (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.' || c == '{') && input.codePoints().anyMatch(c -> c >= '0' && c <= '9');
+            super("{", TranslationUtility.getString("expression.autocomplete.units"));
         }
 
         @Override
         public boolean completesWhenSingleDirect()
         {
             return true;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            return character == '{';
         }
     }
 

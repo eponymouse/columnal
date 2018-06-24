@@ -6,18 +6,16 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.EndCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import styled.StyledString;
 import utility.Pair;
 import utility.gui.FXUtility;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -35,14 +33,14 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         super(parent, Expression.class);
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
-        EndStringCompletion currentCompletion = new EndStringCompletion();
-        this.autoComplete = new AutoComplete<EndStringCompletion>(textField, (s, q) ->
+        EndCompletion currentCompletion = new EndCompletion("\"");
+        this.autoComplete = new AutoComplete<EndCompletion>(textField, (s, q) ->
         {
             return Stream.of(currentCompletion);
-        }, new SimpleCompletionListener<EndStringCompletion>()
+        }, new SimpleCompletionListener<EndCompletion>()
         {
             @Override
-            public String exactCompletion(String currentText, EndStringCompletion selectedItem)
+            public String exactCompletion(String currentText, EndCompletion selectedItem)
             {
                 super.exactCompletion(currentText, selectedItem);
                 if (currentText.endsWith("\""))
@@ -52,14 +50,15 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             }
 
             @Override
-            protected String selected(String currentText, @Nullable EndStringCompletion c, String rest)
+            protected String selected(String currentText, @Nullable EndCompletion c, String rest, boolean moveFocus)
             {
-                parent.focusRightOf(FXUtility.mouse(StringLiteralNode.this), Focus.LEFT);
+                if (moveFocus)
+                    parent.focusRightOf(FXUtility.mouse(StringLiteralNode.this), Focus.LEFT);
                 return currentText;
             }
 
             @Override
-            public String focusLeaving(String currentText, @Nullable EndStringCompletion selectedItem)
+            public String focusLeaving(String currentText, @Nullable EndCompletion selectedItem)
             {
                 return currentText;
             }
@@ -68,6 +67,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             public void tabPressed()
             {
                 parent.focusRightOf(FXUtility.keyboard(StringLiteralNode.this), Focus.LEFT);
+            }
+
+            @Override
+            protected boolean isFocused()
+            {
+                return StringLiteralNode.this.isFocused();
             }
         }, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> false);
 
@@ -166,33 +171,4 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         textField.positionCaret(textField.getLength());
     }
 
-    private static class EndStringCompletion extends Completion
-    {
-        @Override
-        public CompletionContent getDisplay(ObservableStringValue currentText)
-        {
-            return new CompletionContent(currentText, null);
-        }
-
-        @Override
-        public ShowStatus shouldShow(String input)
-        {
-            if (input.endsWith("\""))
-                return ShowStatus.DIRECT_MATCH;
-            else
-                return ShowStatus.EXTENSION;
-        }
-
-        @Override
-        public boolean completesWhenSingleDirect()
-        {
-            return true;
-        }
-
-        @Override
-        public boolean features(String curInput, int character)
-        {
-            return true;
-        }
-    }
 }

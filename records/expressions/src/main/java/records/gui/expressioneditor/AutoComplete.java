@@ -578,11 +578,6 @@ public class AutoComplete<C extends Completion> extends PopupControl
              */
             START_DIRECT_MATCH,
 
-            /**
-             * An item to extend, e.g. typing { at the end
-             * of a numeric literal to add a unit.
-             */
-            EXTENSION,
             /** Doesn't match directly but we know it
              *  may relate due to a typo or synonym, e.g. you
              *  type @mach but there is @match
@@ -728,6 +723,19 @@ public class AutoComplete<C extends Completion> extends PopupControl
         }
     }
 
+    public static class EndCompletion extends SimpleCompletion
+    {
+        public EndCompletion(String ending)
+        {
+            super(ending, null);
+        }
+        @Override
+        public boolean completesWhenSingleDirect()
+        {
+            return true;
+        }
+    }
+
     private class CompleteCell extends ListCell<C>
     {
         public CompleteCell()
@@ -790,28 +798,30 @@ public class AutoComplete<C extends Completion> extends PopupControl
         @Override
         public @Nullable String doubleClick(String currentText, C selectedItem)
         {
-            return selected(currentText, selectedItem, "");
+            return selected(currentText, selectedItem, "", isFocused());
         }
 
         @Override
         public @Nullable String nonAlphabetCharacter(String textBefore, @Nullable C selectedItem, String textAfter)
         {
-            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore).viableNow() ? selectedItem : null, textAfter);
+            return selected(textBefore, selectedItem != null && selectedItem.shouldShow(textBefore).viableNow() ? selectedItem : null, textAfter, isFocused());
         }
 
         @Override
         public @Nullable String keyboardSelect(String currentText, C selectedItem)
         {
-            return selected(currentText, selectedItem, "");
+            return selected(currentText, selectedItem, "", isFocused());
         }
 
         @Override
         public @Nullable String exactCompletion(String currentText, C selectedItem)
         {
-            return selected(currentText, selectedItem, "");
+            return selected(currentText, selectedItem, "", isFocused());
         }
 
-        protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest);
+        protected abstract @Nullable String selected(String currentText, @Nullable C c, String rest, boolean moveFocus);
+        
+        protected abstract boolean isFocused();
     }
 
     private class AutoCompleteSkin implements Skin<AutoComplete>

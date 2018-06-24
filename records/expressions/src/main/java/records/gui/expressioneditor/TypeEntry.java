@@ -8,8 +8,11 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeId;
+import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
+import records.gui.expressioneditor.AutoComplete.EndCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
@@ -43,8 +46,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     );
     private final TypeCompletion bracketCompletion = new TypeCompletion("(", 0);
     private final TypeCompletion listCompletion = new TypeCompletion("[", 0);
-    private final TypeCompletion unitBracketCompletion = new TypeCompletion("{", 0);
-    private final ImmutableList<TypeCompletion> allCompletions;
+    private final TypeCompletion unitBracketCompletion = new UnitCompletion();
+    private final Completion endCompletion = new EndCompletion("}"); //"autocomplete.end");
+    private final ImmutableList<Completion> allCompletions;
 
     /**
      * An optional component appearing after the text field, for specifying units.
@@ -56,13 +60,13 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     {
         super(TypeExpression.class, parent);
         this.allCompletions = Utility.concatStreams(
-            Stream.of(listCompletion, bracketCompletion, unitBracketCompletion),
+            Stream.of(listCompletion, bracketCompletion, unitBracketCompletion, endCompletion),
             PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.toString(), 0)),
             parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream().map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), t.getTypeArguments().size()))
         ).collect(ImmutableList.toImmutableList());
         
         FXUtility.sizeToFit(textField, 30.0, 30.0);
-        this.autoComplete = new AutoComplete<TypeCompletion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
+        this.autoComplete = new AutoComplete<Completion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
 
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
@@ -71,20 +75,26 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         textField.setText(initialContent);
     }
 
-    private Stream<TypeCompletion> calculateCompletions(String s, CompletionQuery completionQuery)
+    private Stream<Completion> calculateCompletions(String s, CompletionQuery completionQuery)
     {
-        return allCompletions.stream().filter(c -> c.completion.toLowerCase().startsWith(s.toLowerCase()));
+        return allCompletions.stream().filter(c -> c.shouldShow(s) != ShowStatus.NO_MATCH);
     }
 
-    private CompletionListener<TypeCompletion> getListener()
+    private CompletionListener<Completion> getListener()
     {
-        return new SimpleCompletionListener<TypeCompletion>()
+        return new SimpleCompletionListener<Completion>()
         {
             @Override
-            protected @Nullable String selected(String currentText, @Nullable TypeCompletion typeCompletion, String rest)
+            protected @Nullable String selected(String currentText, @Nullable Completion typeCompletion, String rest, boolean moveFocus)
             {
                 @Nullable String keep = null;
 
+                if (typeCompletion == endCompletion)
+                {
+                    if (moveFocus)
+                        parent.parentFocusRightOfThis(Focus.LEFT);
+                    return null;
+                }
                 if (typeCompletion == listCompletion)
                 {
                     parent.replace(TypeEntry.this, loadEmptyBrackets(Keyword.OPEN_SQUARE, Keyword.CLOSE_SQUARE));
@@ -99,22 +109,23 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 {
                     SingleLoader<TypeExpression, TypeSaver> load = p -> new UnitLiteralTypeNode(p, new InvalidOperatorUnitExpression(ImmutableList.of()));
                     parent.replace(TypeEntry.this, Stream.of(load.focusWhenShown()));
+                    return null;
                 }
+                /*
                 else if (typeCompletion != null && typeCompletion.numTypeParams > 0)
                 {
                     // Should we auto-add operator ready for type-argument?
                     keep = typeCompletion.completion;
                 }
-                else if (typeCompletion != null)
+                */
+                else if (typeCompletion != null && typeCompletion instanceof TypeCompletion)
                 {
-                    keep = typeCompletion.completion;
+                    keep = ((TypeCompletion)typeCompletion).completion;
                 }
                 else
                 {
                     keep = null;
                 }
-                
-                boolean moveFocus = true;
 
                 completing = true;
                 // Must do this while completing so that we're not marked as blank:
@@ -130,7 +141,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             }
 
             @Override
-            public @Nullable String focusLeaving(String currentText, @Nullable TypeCompletion selectedItem)
+            public @Nullable String focusLeaving(String currentText, @Nullable Completion selectedItem)
             {
                 return currentText;
             }
@@ -139,6 +150,12 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             public void tabPressed()
             {
                 parent.focusRightOf(TypeEntry.this, Focus.LEFT);
+            }
+
+            @Override
+            protected boolean isFocused()
+            {
+                return TypeEntry.this.isFocused();
             }
         };
     }
@@ -278,11 +295,11 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         {
             super("{", 0);
         }
-
+        
         @Override
-        public ShowStatus shouldShow(String input)
+        public boolean completesWhenSingleDirect()
         {
-            return input.equalsIgnoreCase("number") ? ShowStatus.EXTENSION : ShowStatus.NO_MATCH;
+            return true;
         }
     }
     
