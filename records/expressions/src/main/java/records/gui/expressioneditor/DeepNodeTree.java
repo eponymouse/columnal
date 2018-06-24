@@ -73,7 +73,7 @@ abstract class DeepNodeTree
     protected abstract Stream<Node> calculateNodes();
 
     // Called after nodes have been updated
-    protected final void updateDisplay() {}
+    protected void updateDisplay() {}
 
     protected final void updateListeners()
     {

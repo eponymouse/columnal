@@ -245,7 +245,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             child.save(saver);
         }
     }
-    
+
+    public void flushFocusRequest()
+    {
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            child.flushFocusRequest();
+        }
+    }
+
 
     public static enum OperatorOutcome { KEEP, BLANK }
     
@@ -791,6 +799,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         children.forEach(EEDisplayNode::cleanup);
     }
 
+    @Override
+    protected void updateDisplay()
+    {
+        super.updateDisplay();
+        // Flush focus requests of children:
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            child.flushFocusRequest();
+        }
+    }
 
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitSaver> UNIT_OPS = new UnitExpressionOps();

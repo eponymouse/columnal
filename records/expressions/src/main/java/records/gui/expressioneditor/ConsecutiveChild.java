@@ -58,4 +58,7 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     void unmaskErrors();
 
     boolean isFocusPending();
+    
+    // Execute any pending focus request.
+    void flushFocusRequest();
 }

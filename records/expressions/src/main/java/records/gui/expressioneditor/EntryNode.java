@@ -91,9 +91,21 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
         Log.debug("### Focusing when shown: " + textField);
         focusPending = true;
         FXUtility.onceNotNull(textField.sceneProperty(), s -> FXUtility.runAfter(() -> {
+            flushFocusRequest();
+        }));
+    }
+
+    /**
+     * If waiting to request focus, do that now.
+     */
+    @Override
+    public void flushFocusRequest()
+    {
+        if (focusPending)
+        {
             focus(Focus.RIGHT);
             focusPending = false;
-        }));
+        }
     }
 
     @Override

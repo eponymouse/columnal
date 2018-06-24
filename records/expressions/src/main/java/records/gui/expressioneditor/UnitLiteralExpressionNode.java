@@ -54,6 +54,12 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     }
 
     @Override
+    public void flushFocusRequest()
+    {
+        unit.flushFocusRequest();
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         // TODO
