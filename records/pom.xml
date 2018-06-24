@@ -94,6 +94,8 @@
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
+
+                                    <annotationProcessor>annotation.identifier.IdentifierChecker</annotationProcessor>
                                 </annotationProcessors>
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->

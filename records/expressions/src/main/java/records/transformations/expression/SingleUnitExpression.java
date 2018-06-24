@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.UnitIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -17,9 +18,9 @@ import java.util.stream.Stream;
 
 public class SingleUnitExpression extends UnitExpression
 {
-    private final String name;
+    private final @UnitIdentifier String name;
 
-    public SingleUnitExpression(String text)
+    public SingleUnitExpression(@UnitIdentifier String text)
     {
         this.name = text;
     }
