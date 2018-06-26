@@ -31,17 +31,9 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ExpressionSaver.Context;
 import records.jellytype.JellyType;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.ColumnReference;
+import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.ConstructorExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IdentExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.SingleUnitExpression;
-import records.transformations.expression.StandardFunction;
-import records.transformations.expression.VarDeclExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import utility.ExFunction;
@@ -594,7 +586,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (Objects.equals(c, unitCompletion))
             {
                 parent.ensureOperandToRight(GeneralExpressionEntry.this,  o -> o instanceof UnitLiteralExpressionNode, () -> Stream.of(p -> {
-                    UnitLiteralExpressionNode unitLiteralNode = new UnitLiteralExpressionNode(p, new SingleUnitExpression(rest));
+                    UnitLiteralExpressionNode unitLiteralNode = new UnitLiteralExpressionNode(p, InvalidSingleUnitExpression.identOrUnfinished(rest));
                     unitLiteralNode.focusWhenShown();
                     return unitLiteralNode;
                 }));
@@ -907,7 +899,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 Log.log(e);
             }
-            return new IdentExpression(r);
+            return InvalidIdentExpression.identOrUnfinished(r);
         });
         typeLabel.setText(savePrefix.getFirst());
     }
@@ -1011,7 +1003,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (savePrefix != null)
                 saver.saveOperand(savePrefix.getSecond().apply(text), this, this, this::afterSave);
             else
-                saver.saveOperand(new IdentExpression(text), this, this, this::afterSave);
+                saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), this, this, this::afterSave);
         }
         
     }

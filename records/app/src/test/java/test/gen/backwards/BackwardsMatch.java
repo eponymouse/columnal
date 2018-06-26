@@ -1,5 +1,6 @@
 package test.gen.backwards;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -45,11 +46,11 @@ public class BackwardsMatch extends BackwardsProvider
 {
     private static class VarInfo
     {
-        private final String name;
+        private final @ExpressionIdentifier String name;
         private final DataType type;
         private final @Value Object value;
 
-        public VarInfo(String name, DataType type, @Value Object value)
+        public VarInfo(@ExpressionIdentifier String name, DataType type, @Value Object value)
         {
             this.name = name;
             this.type = type;
@@ -127,7 +128,7 @@ public class BackwardsMatch extends BackwardsProvider
                     return ImmutableList.of();
                 else
                 {
-                    String name = boolVar.name;
+                    @ExpressionIdentifier String name = boolVar.name;
                     // need to negate the value if it doesn't match:
                     if (boolVar.value.equals(targetValue))
                         return ImmutableList.of(() -> new IdentExpression(name));
@@ -420,7 +421,8 @@ public class BackwardsMatch extends BackwardsProvider
                     if (r.nextBoolean()) // Do equals but using variable + guard
                     {
                         Expression rhsVal = parent.make(t, actual, maxLevels);
-                        String varName = "var" + nextVar++;
+                        @SuppressWarnings("identifier")
+                        @ExpressionIdentifier String varName = "var" + nextVar++;
                         if (!varContexts.isEmpty())
                             varContexts.get(varContexts.size() - 1).add(new VarInfo(varName, t, actual));
                         return new PatternInfo(new VarDeclExpression(varName), new EqualExpression(ImmutableList.of(new IdentExpression(varName), rhsVal)));

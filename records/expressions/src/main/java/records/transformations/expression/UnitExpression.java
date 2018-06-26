@@ -21,6 +21,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import utility.ComparableEither;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
@@ -63,7 +64,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         ImmutableList<UnitExpression> top = unit.getDetails().entrySet().stream()
             .filter((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() > 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()") ComparableEither<String, SingleUnit>, Integer> p) -> {
-                SingleUnitExpression single = new SingleUnitExpression(p.getKey().either(n -> n, SingleUnit::getName));
+                UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
                 return p.getValue().intValue() == 1 ? single : new UnitRaiseExpression(single, p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
 
@@ -72,7 +73,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
         ImmutableList<UnitExpression> bottom = unit.getDetails().entrySet().stream()
             .filter((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> p.getValue() < 0)
             .<UnitExpression>map((Entry<@KeyFor("unit.getDetails()")ComparableEither<String, SingleUnit>, Integer> p) -> {
-                SingleUnitExpression single = new SingleUnitExpression(p.getKey().either(n -> n, SingleUnit::getName));
+                UnitExpression single = p.getKey().either(n -> InvalidSingleUnitExpression.identOrUnfinished(n), u -> new SingleUnitExpression(u.getName()));
                 return p.getValue().intValue() == -1 ? single : new UnitRaiseExpression(single, - p.getValue().intValue());
             }).collect(ImmutableList.toImmutableList());
 
@@ -116,7 +117,7 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
             else
             {
                 // TODO we need to support unit variables here.
-                SingleUnitExpression singleUnit = new SingleUnitExpression(singleItem.singleUnit().getText());
+                SingleUnitExpression singleUnit = new SingleUnitExpression(IdentifierUtility.fromParsed(singleItem.singleUnit()));
                 if (ctx.single().NUMBER() != null)
                 {
                     try

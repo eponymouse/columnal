@@ -1,15 +1,19 @@
 package records.transformations.expression;
 
 import annotation.identifier.qual.UnitIdentifier;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitSaver;
+import records.loadsave.OutputBuilder;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
+import utility.IdentifierUtility;
 import utility.Pair;
 
 import java.util.Collections;
@@ -17,11 +21,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 // Same distinction as IdentExpression/InvalidIdentExpression
-public class SingleUnitExpression extends UnitExpression
+public class InvalidSingleUnitExpression extends UnitExpression
 {
-    private final @UnitIdentifier String name;
+    private final String name;
 
-    public SingleUnitExpression(@UnitIdentifier String text)
+    public InvalidSingleUnitExpression(String text)
     {
         this.name = text;
     }
@@ -29,21 +33,13 @@ public class SingleUnitExpression extends UnitExpression
     @Override
     public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
-        try
-        {
-            return Either.right(UnitExp.fromConcrete(unitManager.loadUse(name)));
-        }
-        catch (InternalException | UserException e)
-        {
-            // TODO add similarly spelt unit names:
-            return Either.left(new Pair<>(StyledString.s(e.getLocalizedMessage()), Collections.emptyList()));
-        }
+        return Either.left(new Pair<>(StyledString.s("Invalid unit name"), ImmutableList.of()));
     }
 
     @Override
     public String save(boolean topLevel)
     {
-        return name;
+        return "@unfinished "+ OutputBuilder.quoted(name);
     }
 
     @Override
@@ -58,7 +54,7 @@ public class SingleUnitExpression extends UnitExpression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SingleUnitExpression that = (SingleUnitExpression) o;
+        InvalidSingleUnitExpression that = (InvalidSingleUnitExpression) o;
 
         return name.equals(that.name);
     }
@@ -85,5 +81,15 @@ public class SingleUnitExpression extends UnitExpression
     public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    // IdentExpression if possible, otherwise InvalidIdentExpression
+    public static UnitExpression identOrUnfinished(String src)
+    {
+        @UnitIdentifier String valid = IdentifierUtility.asUnitIdentifier(src);
+        if (valid != null)
+            return new SingleUnitExpression(valid);
+        else
+            return new InvalidSingleUnitExpression(src);
     }
 }

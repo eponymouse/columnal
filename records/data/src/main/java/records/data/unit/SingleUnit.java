@@ -1,17 +1,18 @@
 package records.data.unit;
 
+import annotation.identifier.qual.UnitIdentifier;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class SingleUnit implements Comparable<SingleUnit>
 {
-    private final String unitName;
+    private final @UnitIdentifier String unitName;
     private final String description;
     private final String prefix;
     private final String suffix;
 
     // package-private
-    SingleUnit(String unitName, String description, String prefix, String suffix)
+    SingleUnit(@UnitIdentifier String unitName, String description, String prefix, String suffix)
     {
         this.unitName = unitName;
         this.description = description;
@@ -19,7 +20,7 @@ public class SingleUnit implements Comparable<SingleUnit>
         this.suffix = suffix;
     }
 
-    public String getName()
+    public @UnitIdentifier String getName()
     {
         return unitName;
     }

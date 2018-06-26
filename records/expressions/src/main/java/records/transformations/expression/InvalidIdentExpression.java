@@ -13,6 +13,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.loadsave.OutputBuilder;
 import records.typeExp.TypeExp;
 import styled.StyledString;
+import utility.IdentifierUtility;
 import utility.Pair;
 
 import java.util.List;
@@ -24,20 +25,20 @@ import java.util.stream.Stream;
 /**
  * A plain identifier.  If it resolves to a variable, it's a variable-use.  If not, it's an unresolved identifier.
  * 
- * IdentExpression differs from InvalidIdentExpression
+ * IdentExpression differs from UnfinishedExpression
  * in that IdentExpression is always *syntactically* valid,
- * whereas InvalidIdentExpression is always syntactically
+ * whereas UnfinishedExpression is always syntactically
  * *invalid*, because it does not parse as an ident
  * and given its position, it cannot be treated as an
  * operator part of the expression (e.g. a trailing +
  * with no following operand)
  */
-public class IdentExpression extends NonOperatorExpression
+public class InvalidIdentExpression extends NonOperatorExpression
 {
     // TODO add resolver listener
-    private final @ExpressionIdentifier String text;
+    private final String text;
 
-    public IdentExpression(@ExpressionIdentifier String text)
+    public InvalidIdentExpression(String text)
     {
         this.text = text;
     }
@@ -45,26 +46,14 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        if (!GrammarUtility.validIdentifier(text))
-        {
-            onError.recordError(this, StyledString.s("Invalid identifier: \"" + text + "\""));
-            return null;
-        }
-        
-        List<TypeExp> varType = state.findVarType(text);
-        if (varType == null)
-        {
-            onError.recordError(this, StyledString.s("Incomplete expression or unknown function or variable: \"" + text + "\""));
-            return null;
-        }
-        // If they're trying to use it, it justifies us trying to unify all the types:
-        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType), ExpressionKind.EXPRESSION, state);
+        onError.recordError(this, StyledString.s("Invalid identifier: \"" + text + "\""));
+        return null;
     }
 
     @Override
     public Pair<@Value Object, EvaluateState> getValue(EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<>(state.get(text), state);
+        throw new InternalException("Cannot execute invalid ident expression");
     }
 
     @Override
@@ -76,7 +65,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return text;
+        return "@unfinished " + OutputBuilder.quoted(text);
     }
 
     @Override
@@ -106,7 +95,7 @@ public class IdentExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return o instanceof IdentExpression && text.equals(((IdentExpression)o).text);
+        return o instanceof InvalidIdentExpression && text.equals(((InvalidIdentExpression)o).text);
     }
 
     @Override
@@ -124,5 +113,15 @@ public class IdentExpression extends NonOperatorExpression
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    // IdentExpression if possible, otherwise InvalidIdentExpression
+    public static Expression identOrUnfinished(String src)
+    {
+        @ExpressionIdentifier String valid = IdentifierUtility.asExpressionIdentifier(src);
+        if (valid != null)
+            return new IdentExpression(valid);
+        else
+            return new InvalidIdentExpression(src);
     }
 }

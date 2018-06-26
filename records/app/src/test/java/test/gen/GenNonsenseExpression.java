@@ -129,7 +129,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             if (!onlyCallTargets)
             {
                 items.addAll(Arrays.asList(
-                    new IdentExpression(TestUtil.makeUnfinished(r)),
+                    InvalidIdentExpression.identOrUnfinished(TestUtil.makeUnfinished(r)),
                     new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), r.nextBoolean() ? null : genUnit(r, gs)),
                     new BooleanLiteral(r.nextBoolean()),
                     new StringLiteral(TestUtil.makeStringV(r, gs)),

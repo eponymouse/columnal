@@ -1,5 +1,6 @@
 package test;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
@@ -509,14 +510,14 @@ public class TestUtil
         }
     }
 
-    public static String generateVarName(SourceOfRandomness r)
+    public static @ExpressionIdentifier String generateVarName(SourceOfRandomness r)
     {
-        String s;
+        @ExpressionIdentifier String s;
         do
         {
-            s = generateIdent(r);
+            s = IdentifierUtility.asExpressionIdentifier(generateIdent(r));
         }
-        while (!GrammarUtility.validUnquoted(s));
+        while (s == null);
         return s;
     }
 

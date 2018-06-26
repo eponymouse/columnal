@@ -65,7 +65,7 @@ public class CallExpression extends Expression
         {
             Log.log(e);
         }
-        return new IdentExpression(functionName);
+        return InvalidIdentExpression.identOrUnfinished(functionName);
     }
 
     @Override

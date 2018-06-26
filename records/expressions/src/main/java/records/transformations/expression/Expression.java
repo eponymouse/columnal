@@ -51,6 +51,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformRunnable;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
@@ -445,7 +446,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
                 }
             }
             ImmutableList<Lit<?>> loaders = ImmutableList.of(
-                new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, SingleUnitExpression::new),
+                new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, InvalidSingleUnitExpression::identOrUnfinished),
                 new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), UnfinishedTypeExpression::new),
                 new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
                 new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),
@@ -456,7 +457,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             
             Optional<Expression> loaded = loaders.stream().flatMap(l -> l.load(literalContent).map(Stream::of).orElse(Stream.empty())).findFirst();
             
-            return loaded.orElseGet(() -> new IdentExpression(literalContent.replace('{','_').replace('}', '_')));
+            return loaded.orElseGet(() -> InvalidIdentExpression.identOrUnfinished(literalContent.replace('{','_').replace('}', '_')));
         }
 
         @Override
@@ -489,7 +490,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             if (functionDefinition == null)
             {
-                return new IdentExpression(functionName);
+                return InvalidIdentExpression.identOrUnfinished(functionName);
             }
             else
             {
@@ -552,13 +553,13 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitVarRef(VarRefContext ctx)
         {
-            return new IdentExpression(ctx.getText());
+            return new IdentExpression(IdentifierUtility.fromParsed(ctx.ident()));
         }
 
         @Override
         public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
         {
-            return new IdentExpression(ctx.STRING().getText());
+            return new InvalidIdentExpression(ctx.STRING().getText());
         }
 
         @Override

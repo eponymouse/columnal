@@ -15,6 +15,7 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
@@ -298,6 +299,6 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         if (num.isPresent())
             saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), this, this, c -> {});
         else
-            saver.saveOperand(new SingleUnitExpression(text), this, this, c -> {});
+            saver.saveOperand(InvalidSingleUnitExpression.identOrUnfinished(text), this, this, c -> {});
     }
 }

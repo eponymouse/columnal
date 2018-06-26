@@ -41,17 +41,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Modality;
 import log.Log;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.Vocabulary;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FileUtils;
@@ -1746,5 +1736,13 @@ public class Utility
             inclSpacers.add(origList.get(i));
         }
         return inclSpacers.stream();
+    }
+    
+    public static boolean lexesAs(String src, Function<CharStream, Lexer> makeLexer, int tokenType)
+    {
+        ANTLRInputStream inputStream = new ANTLRInputStream(src);
+        Lexer lexer = makeLexer.apply(inputStream);
+        Token token = lexer.nextToken();
+        return token.getType() == tokenType && token.getText().equals(src);
     }
 }
