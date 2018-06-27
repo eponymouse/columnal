@@ -22,7 +22,7 @@ public class IdentifierUtility
     @SuppressWarnings("identifier")
     public static @Nullable @ExpressionIdentifier String asExpressionIdentifier(String src)
     {
-        if (Utility.lexesAs(src, ExpressionLexer::new, ExpressionLexer.UNQUOTED_IDENT))
+        if (Utility.lexesAs(src, ExpressionLexer::new, ExpressionLexer.IDENT))
             return src;
         else
             return null;

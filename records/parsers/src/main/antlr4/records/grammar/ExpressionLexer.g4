@@ -51,8 +51,6 @@ NUMBER : [0-9]+ ('.' [0-9]+)?;
 
 TRUE: 'true';
 FALSE: 'false';
-
-UNQUOTED_IDENT : ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\,`]+ (' '+ ~[ \t\n\r"(){}[\]@+\-/*&|=?:;~$!<>\\,`]+)* 
-  {setText(GrammarUtility.collapseSpaces(getText()));}
-  {GrammarUtility.validUnquoted(getText())}?;
+  
+IDENT : [\p{Alpha}\p{General_Category=Other_Letter}] (('_' | ' ')? [\p{Alpha}\p{Digit}\p{General_Category=Other_Letter}])*;
 

@@ -2,7 +2,7 @@ parser grammar ExpressionParser;
 
 options { tokenVocab = ExpressionLexer; }
 
-ident : UNQUOTED_IDENT;
+ident : IDENT;
 
 tableId : ident;
 columnId : ident;

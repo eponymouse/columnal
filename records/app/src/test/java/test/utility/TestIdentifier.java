@@ -30,6 +30,7 @@ public class TestIdentifier
         assertFalse(u("_a"));
         assertFalse(u("a_"));
         assertFalse(u("a_b_"));
+        assertTrue(u("a_bc_d"));
         // Nor doubled:
         assertFalse(u("a__b"));
 
@@ -62,5 +63,61 @@ public class TestIdentifier
     private static boolean u(String src)
     {
         return src.equals(IdentifierUtility.asUnitIdentifier(src));
+    }
+
+    @Test
+    public void testExpressionIdents()
+    {
+        assertTrue(e("a"));
+        assertFalse(e("0"));
+        assertFalse(e(""));
+        assertFalse(e(" "));
+
+        // Numbers valid in names after first pos:
+        assertTrue(e("a0"));
+        assertTrue(e("a 01313"));
+        assertTrue(e("y"));
+        assertTrue(e("y_z"));
+        assertTrue(e("a_b"));
+        assertTrue(e("a_b_c"));
+        // Underscores not allowed in leading or trailing pos:
+        assertFalse(e("_a"));
+        assertFalse(e("a_"));
+        assertFalse(e("a_b_"));
+        // Nor doubled:
+        assertFalse(e("a__b"));
+        // Same rule for spaces:
+        assertFalse(e(" a"));
+        assertFalse(e("a "));
+        assertFalse(e("a b "));
+        // Nor doubled:
+        assertFalse(e("a  b"));
+
+        // Currency is not allowed in expressions:
+        assertFalse(e("£"));
+        assertFalse(e("$"));
+        assertFalse(e("$a"));
+        assertFalse(e("a$"));
+
+        // Operators are not allowed:
+        assertFalse(e("a+b"));
+        assertFalse(e("a*"));
+
+        // Brackets and quotes are not:
+        assertFalse(e("a("));
+        assertFalse(e("a}"));
+        assertFalse(e("a\""));
+        assertFalse(e("a\'"));
+        assertFalse(e("a#"));
+        assertFalse(e("a:b"));
+
+        assertFalse(e("a,g"));
+        assertFalse(e("a.z"));
+        assertFalse(e("a|b¬g"));
+    }
+
+    private static boolean e(String src)
+    {
+        return src.equals(IdentifierUtility.asExpressionIdentifier(src));
     }
 }
