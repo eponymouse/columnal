@@ -93,7 +93,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 {
                     if (moveFocus)
                         parent.parentFocusRightOfThis(Focus.LEFT);
-                    return null;
+                    return "";
                 }
                 if (typeCompletion == listCompletion)
                 {

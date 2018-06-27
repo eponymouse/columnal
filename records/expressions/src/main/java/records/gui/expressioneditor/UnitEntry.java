@@ -163,9 +163,8 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
             @Nullable String newText = null;
             if (c == endCompletion)
             {
-                Log.debug("||| Ending unit");
                 parent.parentFocusRightOfThis(Focus.LEFT);
-                return null;
+                return "";
             }
             
             /*
