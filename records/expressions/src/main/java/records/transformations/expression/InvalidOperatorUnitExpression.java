@@ -16,6 +16,7 @@ import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
@@ -37,7 +38,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     public String save(boolean topLevel)
     {
         return "@INVALIDOPS (" + 
-            items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(false)))
+            items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(false))).collect(Collectors.joining(" "))
             + ")";
     }
 

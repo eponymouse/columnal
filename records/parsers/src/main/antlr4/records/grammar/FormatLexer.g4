@@ -41,7 +41,7 @@ TAGOR: '|';
 
 
 INCOMPLETE : '@INCOMPLETE';
-INVALIDOPS : '@INVALIDOPS';
+INVALIDOPS : '@invalidtypeops';
 
 
 NEWLINE : '\r'? '\n' ;

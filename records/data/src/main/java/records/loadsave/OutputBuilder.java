@@ -77,6 +77,16 @@ public class OutputBuilder
         cur().add(stripQuotes(literalName));
         return this;
     }
+    
+    @OnThread(Tag.Any)
+    public static String token(Vocabulary vocabulary, int token)
+    {
+        String literalName = vocabulary.getLiteralName(token);
+        // Awkward to throw an exception here.  Tests should pick this up.
+        //if (literalName == null)
+        //    throw new InternalException("Unknown token in vocabulary: " + token);
+        return stripQuotes(literalName);
+    }
 
     @OnThread(Tag.Any)
     private static String stripQuotes(String quoted)

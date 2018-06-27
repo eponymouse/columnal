@@ -5,8 +5,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.TypeEntry;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -36,7 +38,7 @@ public class InvalidOpTypeExpression extends TypeExpression
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        return "@INVALIDOPS (" +
+        return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INVALIDOPS) + " (" +
             items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(renames))).collect(Collectors.joining(" ")) 
             + ")";
     }
