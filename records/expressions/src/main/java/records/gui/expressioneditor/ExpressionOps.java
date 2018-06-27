@@ -217,7 +217,8 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     {
         WORD(c -> Character.isAlphabetic(c) || c == ' '),
         DIGIT(Character::isDigit),
-        BRACKET(Alphabet.containsCodepoint("(){}[]\"")),
+        BRACKET(Alphabet.containsCodepoint("(){}[]")),
+        QUOTE(Alphabet.containsCodepoint("\"")),
         OPERATOR(OPERATOR_ALPHABET::contains);
 
         private Predicate<Integer> match;

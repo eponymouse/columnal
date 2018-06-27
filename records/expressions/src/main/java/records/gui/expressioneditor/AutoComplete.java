@@ -384,7 +384,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
         instruction.setAutoHide(false);
         
         textField.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.ESCAPE)
+            if (e.getCode() == KeyCode.ESCAPE && isShowing())
             {
                 hide();
                 instruction.hide();

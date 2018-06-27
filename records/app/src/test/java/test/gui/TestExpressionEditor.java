@@ -105,8 +105,6 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             push(KeyCode.TAB);
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
             enterExpression(expressionValue.expression, false, r);
-            // Finish any final column completion:
-            push(KeyCode.TAB);
             // Hide any code completion (also: check it doesn't dismiss dialog)
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);

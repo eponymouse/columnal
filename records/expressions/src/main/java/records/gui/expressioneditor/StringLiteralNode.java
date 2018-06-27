@@ -33,16 +33,17 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         super(parent, Expression.class);
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
-        EndCompletion currentCompletion = new EndCompletion("\"");
-        this.autoComplete = new AutoComplete<EndCompletion>(textField, (s, q) ->
+        StringEndCompletion currentCompletion = new StringEndCompletion();
+        this.autoComplete = new AutoComplete<StringEndCompletion>(textField, (s, q) ->
         {
             return Stream.of(currentCompletion);
-        }, new SimpleCompletionListener<EndCompletion>()
+        }, new SimpleCompletionListener<StringEndCompletion>()
         {
             @Override
-            public String exactCompletion(String currentText, EndCompletion selectedItem)
+            public String exactCompletion(String currentText, StringEndCompletion selectedItem)
             {
                 super.exactCompletion(currentText, selectedItem);
+                parent.focusRightOf(FXUtility.mouse(StringLiteralNode.this), Focus.LEFT);
                 if (currentText.endsWith("\""))
                     return currentText.substring(0, currentText.length() - 1);
                 else
@@ -50,7 +51,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             }
 
             @Override
-            protected String selected(String currentText, @Nullable EndCompletion c, String rest, boolean moveFocus)
+            protected String selected(String currentText, @Nullable StringEndCompletion c, String rest, boolean moveFocus)
             {
                 if (moveFocus)
                     parent.focusRightOf(FXUtility.mouse(StringLiteralNode.this), Focus.LEFT);
@@ -58,9 +59,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             }
 
             @Override
-            public String focusLeaving(String currentText, @Nullable EndCompletion selectedItem)
+            public String focusLeaving(String currentText, @Nullable StringEndCompletion selectedItem)
             {
-                return currentText;
+                if (selectedItem == null)
+                    return currentText;
+                else
+                    return exactCompletion(currentText, selectedItem);
             }
 
             @Override
@@ -74,7 +78,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
             {
                 return StringLiteralNode.this.isFocused();
             }
-        }, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> false);
+        }, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> next == '\"');
 
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
@@ -171,4 +175,27 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         textField.positionCaret(textField.getLength());
     }
 
+    private class StringEndCompletion extends Completion
+    {
+        @Override
+        public CompletionContent getDisplay(ObservableStringValue currentText)
+        {
+            return new CompletionContent(currentText.get() + "\"", null);
+        }
+
+        @Override
+        public ShowStatus shouldShow(String input)
+        {
+            if (input.endsWith("\""))
+                return ShowStatus.DIRECT_MATCH;
+            else
+                return ShowStatus.START_DIRECT_MATCH;
+        }
+
+        @Override
+        public boolean features(String curInput, int character)
+        {
+            return character != '\"';
+        }
+    }
 }
