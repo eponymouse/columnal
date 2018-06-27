@@ -21,6 +21,6 @@ ALIAS : 'ALIAS';
 
 UNITVAR : '@unitvar';
 
-IDENT : ~[0-9 \t\r\n^*/@()={}[\]"]+;
+IDENT : [\p{Alpha}\p{General_Category=Other_Letter}\p{General_Category=Currency_Symbol}]+ ('_' [\p{Alpha}\p{General_Category=Other_Letter}\p{General_Category=Currency_Symbol}]+)*;
 
 COMMENT : '//' ~[\r\n]* NEWLINE -> skip;

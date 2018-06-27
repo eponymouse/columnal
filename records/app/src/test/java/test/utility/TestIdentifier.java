@@ -22,10 +22,16 @@ public class TestIdentifier
         
         // Numbers not valid anywhere in unit names:
         assertFalse(u("a0"));
-        assertTrue(u("a_"));
+        assertTrue(u("y"));
+        assertTrue(u("y_z"));
         assertTrue(u("a_b"));
-        // Underscores not allowed in leading pos:
+        assertTrue(u("a_b_c"));
+        // Underscores not allowed in leading or trailing pos:
         assertFalse(u("_a"));
+        assertFalse(u("a_"));
+        assertFalse(u("a_b_"));
+        // Nor doubled:
+        assertFalse(u("a__b"));
 
         // Currency is allowed anywhere:
         assertTrue(u("£"));
@@ -33,10 +39,10 @@ public class TestIdentifier
         assertTrue(u("$a"));
         assertTrue(u("a$"));
         
-        // Spaces are allowed:
-        assertTrue(u("a b"));
+        // Spaces are not currently allowed:
+        assertFalse(u("a b"));
         
-        // Operators are not:
+        // Operators are not allowed:
         assertFalse(u("a+b"));
         assertFalse(u("a*"));
         

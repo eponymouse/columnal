@@ -1,5 +1,6 @@
 package records.data.unit;
 
+import annotation.identifier.qual.UnitIdentifier;
 import org.apache.commons.io.IOUtils;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,6 +18,7 @@ import records.grammar.UnitParser.TimesByContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.grammar.UnitParser.UnitDeclarationContext;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
 
@@ -80,7 +82,7 @@ public class UnitManager
 
     private UnitDeclaration loadDeclaration(UnitDeclarationContext decl) throws UserException
     {
-        String defined = decl.singleUnit().getText();
+        @UnitIdentifier String defined = IdentifierUtility.fromParsed(decl.singleUnit());
         String description = decl.STRING() != null ? decl.STRING().getText() : "";
         String suffix = "";
         String prefix = "";

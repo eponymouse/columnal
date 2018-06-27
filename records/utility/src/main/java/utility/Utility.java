@@ -394,7 +394,7 @@ public class Utility
 
     public static <R, PARSER extends Parser> R parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException
     {
-        ANTLRInputStream inputStream = new ANTLRInputStream(input);
+        CodePointCharStream inputStream = CharStreams.fromString(input);
         // Could try speeding things up with: https://github.com/antlr/antlr4/issues/192
         DescriptiveErrorListener del = new DescriptiveErrorListener();
         Lexer lexer = makeLexer.apply(inputStream);
@@ -1740,7 +1740,7 @@ public class Utility
     
     public static boolean lexesAs(String src, Function<CharStream, Lexer> makeLexer, int tokenType)
     {
-        ANTLRInputStream inputStream = new ANTLRInputStream(src);
+        CodePointCharStream inputStream = CharStreams.fromString(src);
         Lexer lexer = makeLexer.apply(inputStream);
         Token token = lexer.nextToken();
         return token.getType() == tokenType && token.getText().equals(src);
