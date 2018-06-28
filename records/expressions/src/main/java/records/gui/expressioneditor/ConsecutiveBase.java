@@ -260,6 +260,24 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             child.flushFocusRequest();
         }
     }
+    
+    public static enum BracketBalanceType
+    {
+        ROUND, SQUARE;
+    }
+
+    public boolean balancedBrackets(BracketBalanceType  bracketBalanceType)
+    {
+        int open = 0;
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            if (child.opensBracket(bracketBalanceType))
+                open++;
+            else if (child.closesBracket(bracketBalanceType))
+                open--;
+        }
+        return open != 0;
+    }
 
 
     public static enum OperatorOutcome { KEEP, BLANK }

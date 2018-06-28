@@ -5,6 +5,7 @@ import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
@@ -123,6 +124,18 @@ public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable & Repla
 
     @Override
     public boolean deleteFirst()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean opensBracket(BracketBalanceType bracketBalanceType)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean closesBracket(BracketBalanceType bracketBalanceType)
     {
         return false;
     }

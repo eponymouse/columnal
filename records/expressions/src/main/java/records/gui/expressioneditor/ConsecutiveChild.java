@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
@@ -61,4 +62,8 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     
     // Execute any pending focus request.
     void flushFocusRequest();
+
+    boolean opensBracket(BracketBalanceType bracketBalanceType);
+
+    boolean closesBracket(BracketBalanceType bracketBalanceType);
 }

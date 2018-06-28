@@ -41,6 +41,7 @@ import utility.gui.FXUtility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -270,6 +271,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             clearAllErrors();
             Expression expression = save();
             Log.debug("Saved as: " + expression);
+            Log.debug("  From:\n    " + children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n    ")));
             if (onChange != null)
             {
                 onChange.consume(expression);

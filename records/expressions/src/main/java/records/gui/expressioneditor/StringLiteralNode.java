@@ -9,6 +9,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.EndCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
@@ -197,5 +198,17 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionSaver> im
         {
             return character != '\"';
         }
+    }
+
+    @Override
+    public boolean opensBracket(BracketBalanceType bracketBalanceType)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean closesBracket(BracketBalanceType bracketBalanceType)
+    {
+        return false;
     }
 }

@@ -6,6 +6,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
@@ -185,5 +186,17 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     {
         textField.setText(initialContent);
         textField.positionCaret(textField.getLength());
+    }
+
+    @Override
+    public boolean opensBracket(BracketBalanceType bracketBalanceType)
+    {
+        return (bracketBalanceType == BracketBalanceType.ROUND && textField.getText().equals("(")) || (bracketBalanceType == BracketBalanceType.SQUARE && textField.getText().equals("["));
+    }
+
+    @Override
+    public boolean closesBracket(BracketBalanceType bracketBalanceType)
+    {
+        return (bracketBalanceType == BracketBalanceType.ROUND && textField.getText().equals(")")) || (bracketBalanceType == BracketBalanceType.SQUARE && textField.getText().equals("]"));
     }
 }

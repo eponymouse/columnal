@@ -29,6 +29,7 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionSaver.Context;
 import records.jellytype.JellyType;
 import records.transformations.expression.*;
@@ -594,7 +595,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c instanceof KeywordCompletion)
             {
-                newText = ((KeywordCompletion) c).keyword.getContent();
+
+                String content = ((KeywordCompletion) c).keyword.getContent();
+                if ((content.equals(")") && parent.balancedBrackets(BracketBalanceType.ROUND)) || (content.equals("]") && parent.balancedBrackets(BracketBalanceType.SQUARE)))
+                {
+                    newText = "";
+                }
+                else
+                {
+                    newText = content;
+                }
             }
             else if (c instanceof OperatorCompletion)
             {
