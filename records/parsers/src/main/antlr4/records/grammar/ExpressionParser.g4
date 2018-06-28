@@ -47,7 +47,7 @@ anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUAL
 stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression;
 
-invalidOpItem : INVALIDEXP STRING | expression;
+invalidOpItem : expression;
 invalidOpExpression : INVALIDOPS OPEN_BRACKET invalidOpItem* CLOSE_BRACKET;
 
 constructor : CONSTRUCTOR typeName COLON constructorName;

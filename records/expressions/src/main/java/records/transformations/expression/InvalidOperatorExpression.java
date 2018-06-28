@@ -30,9 +30,9 @@ import java.util.stream.Stream;
  */
 public class InvalidOperatorExpression extends NonOperatorExpression
 {
-    private final ImmutableList<Either<String, @Recorded Expression>> items;
+    private final ImmutableList<@Recorded Expression> items;
 
-    public InvalidOperatorExpression(ImmutableList<Either<String, @Recorded Expression>> operands)
+    public InvalidOperatorExpression(ImmutableList<@Recorded Expression> operands)
     {
         this.items = operands;
     }
@@ -43,8 +43,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
         StreamTreeBuilder<SingleLoader<Expression, ExpressionSaver>> r = new StreamTreeBuilder<>();
         for (int i = 0; i < items.size(); i++)
         {
-            items.get(i).either_(s -> r.add(GeneralExpressionEntry.load(s)),
-                e -> r.addAll(e.loadAsConsecutive(BracketedStatus.MISC)));
+            r.addAll(items.get(i).loadAsConsecutive(BracketedStatus.MISC));
         }
         return r.stream();
     }
@@ -65,13 +64,13 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     public Stream<ColumnReference> allColumnReferences()
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of(), e -> e.allColumnReferences()));
+        return items.stream().flatMap(x -> x.allColumnReferences());
     }
 
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@invalidops(" + items.stream().map(x -> x.either(s -> "@invalidexp \"" + GrammarUtility.escapeChars(s) + "\"", e -> e.save(BracketedStatus.MISC, renames))).collect(Collectors.joining(" "))+ ")";
+        return "@invalidops(" + items.stream().map(x -> x.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(" "))+ ")";
     }
 
     @Override
@@ -115,6 +114,6 @@ public class InvalidOperatorExpression extends NonOperatorExpression
         if (this == toReplace)
             return replaceWith;
         else
-            return new InvalidOperatorExpression(Utility.mapListI(items, e -> e.map(u -> u.replaceSubExpression(toReplace, replaceWith))));
+            return new InvalidOperatorExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
     }
 }

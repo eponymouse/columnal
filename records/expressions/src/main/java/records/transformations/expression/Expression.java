@@ -589,8 +589,8 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         @Override
         public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
         {
-            return new InvalidOperatorExpression(Utility.<InvalidOpItemContext, Either<String, Expression>>mapListI(ctx.invalidOpItem(), 
-                c -> c.expression() != null ? Either.<String, Expression>right(visitExpression(c.expression())) : Either.<String, Expression>left(c.STRING().getText())));
+            return new InvalidOperatorExpression(Utility.<InvalidOpItemContext, Expression>mapListI(ctx.invalidOpItem(), 
+                c -> visitExpression(c.expression())));
         }
 
         public Expression visitChildren(RuleNode node) {
