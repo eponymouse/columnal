@@ -385,6 +385,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
                 ConsecutiveChild<EXPRESSION, SAVER> end = keywordErrorDisplayer;
                 end.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT> thisSaver = Utility.later(SaverBase.this);
+                currentScopesFinal.peek().items.add(Either.left(makeContent.apply(new BracketAndNodes<>(BracketedStatus.MISC, start, end))));
                 currentScopesFinal.peek().items.add(Either.left(thisSaver.record(start, end, thisSaver.keywordToInvalid(terminator))));
             }
         }));
