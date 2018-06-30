@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * An expression with a unit expression inside.
  */
-public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, ExpressionSaver>
+public class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, ExpressionSaver>
 {
     private final UnitCompoundBase unit;
     

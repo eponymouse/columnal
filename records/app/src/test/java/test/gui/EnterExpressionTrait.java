@@ -168,7 +168,8 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
             enterExpression(ite._test_getThen(), false, r);
             write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), DELAY);
             enterExpression(ite._test_getElse(), false, r);
-            write(")");
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDIF), DELAY);
+            
         }
         else if (NaryOpExpression.class.isAssignableFrom(c))
         {
@@ -181,7 +182,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
                 if (i < n.getChildren().size() - 1)
                 {
                     write(n._test_getOperatorEntry(i));
-                    if (n._test_getOperatorEntry(i).equals("-") || r.nextBoolean())
+                    if (n._test_getOperatorEntry(i).equals("-") || n._test_getOperatorEntry(i).equals("+") || r.nextBoolean())
                         write(" ");
                 }
             }
@@ -195,7 +196,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
                 write("(");
             enterExpression(b.getLHS(), true, r);
             write(b._test_getOperatorEntry());
-            if (b._test_getOperatorEntry().equals("-") || r.nextBoolean())
+            if (b._test_getOperatorEntry().equals("-") || b._test_getOperatorEntry().equals("+") || r.nextBoolean())
                 write(" ");
             enterExpression(b.getRHS(), true, r);
             if (needsBrackets)

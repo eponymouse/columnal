@@ -11,6 +11,8 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeUtility.StringView;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionSaver;
+import records.gui.expressioneditor.TemporalLiteralNode;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Either;
@@ -18,6 +20,7 @@ import utility.Pair;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public class TemporalLiteral extends Literal
 {
@@ -52,6 +55,11 @@ public class TemporalLiteral extends Literal
         return content;
     }
 
+    @Override
+    public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
+    {
+        return Stream.of(p -> new TemporalLiteralNode(p, literalType, editString()));
+    }
     
     
     @Override

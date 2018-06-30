@@ -230,6 +230,11 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     {
         testSimple("1-2");
     }
+    @Test
+    public void testMinus2b() throws Exception
+    {
+        testSimple("1 - 2");
+    }
 
     @Test
     public void testMinus3() throws Exception
@@ -246,5 +251,17 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     public void testMinus5() throws Exception
     {
         testSimple("1*(-2+3)");
+    }
+    
+    @Test
+    public void testBracket() throws Exception
+    {
+        testSimple("1+(1.5+@call @function abs(2+(3*4)+6))-7");
+    }
+    
+    @Test
+    public void testDateLiteral() throws Exception
+    {
+        testSimple("date{2001-04-05}");
     }
 }

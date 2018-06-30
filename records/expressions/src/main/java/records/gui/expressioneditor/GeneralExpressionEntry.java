@@ -14,6 +14,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -94,11 +96,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * Completion for declaring a new variable
      */
     private final VarDeclCompletion varDeclCompletion;
-    
-    /**
-     * Completion for fixed-type expressions
-     */
-    private final Completion typeLiteralCompletion;
 
     /** Flag used to monitor when the initial content is set */
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
@@ -111,7 +108,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         //Log.logStackTrace("Made new GEE with [[" + initialValue + "]]");
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
-        typeLiteralCompletion = new NestedLiteralCompletion("type{");
         varDeclCompletion = new VarDeclCompletion();
         updateNodes();
 
@@ -158,7 +154,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return Stream.of(container);
     }
 
-    @RequiresNonNull({"unitCompletion", "stringCompletion", "typeLiteralCompletion", "varDeclCompletion", "parent"})
+    @RequiresNonNull({"unitCompletion", "stringCompletion", "varDeclCompletion", "parent"})
     private Stream<Completion> getSuggestions(@UnknownInitialization(EntryNode.class) GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
@@ -170,7 +166,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             r.add(new OperatorCompletion(op));
         }
-        r.add(typeLiteralCompletion);
+        r.add(new NestedLiteralCompletion("type{", () -> new TypeLiteralNode(parent, null)));
+        r.add(new NestedLiteralCompletion("date{", () -> new TemporalLiteralNode(parent, DateTimeType.YEARMONTHDAY, null)));
+        r.add(new NestedLiteralCompletion("time{", () -> new TemporalLiteralNode(parent, DateTimeType.TIMEOFDAY, null)));
+        r.add(new NestedLiteralCompletion("datetime{", () -> new TemporalLiteralNode(parent, DateTimeType.DATETIME, null)));
+        r.add(new NestedLiteralCompletion("datetimezoned{", () -> new TemporalLiteralNode(parent, DateTimeType.DATETIMEZONED, null)));
         
         addAllFunctions(r);
         r.add(new SimpleCompletion("true", null));
@@ -442,11 +442,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private static class NestedLiteralCompletion extends SimpleCompletion
     {
         private final String opener;
+        private final Supplier<ConsecutiveChild<Expression, ExpressionSaver>> makeEmptyLiteral;
         
-        private NestedLiteralCompletion(String opener)
+        private NestedLiteralCompletion(String opener, Supplier<ConsecutiveChild<Expression, ExpressionSaver>> makeEmptyLiteral)
         {
             super(opener, null);
             this.opener = opener;
+            this.makeEmptyLiteral = makeEmptyLiteral;
         }
 
         @Override
@@ -567,6 +569,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             savePrefix = null;
             prefix.setText("");
+            completing = true;
             
             final String newText;
             
@@ -579,9 +582,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 }
                 return textField.getText();
             }
-            else if (c == typeLiteralCompletion)
+            else if (c instanceof NestedLiteralCompletion)
             {
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TypeLiteralNode(parent, null)));
+                NestedLiteralCompletion nestedLiteralCompletion = (NestedLiteralCompletion)c; 
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(nestedLiteralCompletion.makeEmptyLiteral.get()));
                 return textField.getText();
             }
             else if (Objects.equals(c, unitCompletion))
@@ -600,6 +604,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 if ((content.equals(")") && parent.balancedBrackets(BracketBalanceType.ROUND)) || (content.equals("]") && parent.balancedBrackets(BracketBalanceType.SQUARE)))
                 {
                     newText = "";
+                    moveFocus = true;
+                    completing = false;
                 }
                 else
                 {
@@ -668,7 +674,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 return textField.getText();
             }
 
-            completing = true;
             // Must do this while completing so that we're not marked as blank:
             if (moveFocus)
             {

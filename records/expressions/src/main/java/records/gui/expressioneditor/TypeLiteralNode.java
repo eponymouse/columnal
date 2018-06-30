@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * An Expression with a type expression inside.
  */
-public class TypeLiteralNode extends OtherLiteralNode<Expression, ExpressionSaver>
+public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver>
 {
     private final Consecutive<TypeExpression, TypeSaver> type;
     

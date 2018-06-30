@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 /**
  * A TypeExpression with a unit expression inside.
  */
-public class UnitLiteralTypeNode extends OtherLiteralNode<TypeExpression, TypeSaver>
+public class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, TypeSaver>
 {
     private final UnitCompoundBase unit;
     

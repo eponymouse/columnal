@@ -370,7 +370,10 @@ public class AutoComplete<C extends Completion> extends PopupControl
                 String originalChangeText = change.getText();
                 String withoutWhitespace = originalChangeText.replaceAll("\\s", "");
                 change.setText(withoutWhitespace);
-                change.setCaretPosition(change.getCaretPosition() - (originalChangeText.length() - withoutWhitespace.length()));
+                Log.debug("Change pos: " + change.getCaretPosition() + " orig: \"" + originalChangeText + "\" [" + originalChangeText.length() + "] without white: \"" + withoutWhitespace + "\" [" + withoutWhitespace.length() + "]");
+                int prospectivePos = change.getCaretPosition() - (originalChangeText.length() - withoutWhitespace.length());
+                if (prospectivePos >= 0 && prospectivePos <= change.getControlNewText().length())
+                    change.setCaretPosition(prospectivePos);
                 return change;
             }
             

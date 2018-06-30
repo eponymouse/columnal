@@ -13,11 +13,11 @@ import styled.StyledShowable;
 import java.util.stream.Stream;
 
 // Super-class of TypeLiteralNode/UnitLiteralExpressionNode with all the shared functionality
-public abstract class OtherLiteralNode<EXPRESSION extends StyledShowable & Replaceable<EXPRESSION>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replaceable<EXPRESSION>, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
 {
     protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> consecParent;
 
-    protected OtherLiteralNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> consecParent)
+    protected TreeLiteralNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> consecParent)
     {
         this.consecParent = consecParent;
     }

@@ -59,7 +59,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         this.operations = operations;
         this.style = style;
-        children = FXCollections.observableArrayList();
+        children = FXCollections.observableArrayList(makeBlankChild());
 
         this.prefixNode = prefixNode;
         this.suffixNode = suffixNode;
