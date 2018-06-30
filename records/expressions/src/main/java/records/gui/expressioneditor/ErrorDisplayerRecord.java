@@ -176,4 +176,10 @@ public class ErrorDisplayerRecord
     {
         return expressionDisplayers.get(expression);
     }
+
+    @SuppressWarnings("nullness")
+    public Span<TypeExpression, TypeSaver> recorderFor(@Recorded TypeExpression expression)
+    {
+        return typeDisplayers.get(expression);
+    }
 }

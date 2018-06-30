@@ -22,9 +22,9 @@ import java.util.stream.Stream;
 
 public class InvalidOpTypeExpression extends TypeExpression
 {
-    private final ImmutableList<Either<String, TypeExpression>> items;
+    private final ImmutableList<TypeExpression> items;
 
-    public InvalidOpTypeExpression(ImmutableList<Either<String, TypeExpression>> items)
+    public InvalidOpTypeExpression(ImmutableList<TypeExpression> items)
     {
         this.items = items;
     }
@@ -32,14 +32,14 @@ public class InvalidOpTypeExpression extends TypeExpression
     @Override
     public @OnThread(Tag.FXPlatform) Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<TypeExpression, TypeSaver>)(p -> new TypeEntry(p, s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
+        return items.stream().flatMap(x -> x.loadAsConsecutive(BracketedStatus.MISC));
     }
 
     @Override
     public String save(TableAndColumnRenames renames)
     {
         return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INVALIDOPS) + " (" +
-            items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(renames))).collect(Collectors.joining(" ")) 
+            items.stream().map(item -> item.save(renames)).collect(Collectors.joining(", ")) 
             + ")";
     }
 
@@ -61,7 +61,7 @@ public class InvalidOpTypeExpression extends TypeExpression
         return StyledString.s("Invalid"); // TODO
     }
 
-    public ImmutableList<Either<String, TypeExpression>> _test_getItems()
+    public ImmutableList<TypeExpression> _test_getItems()
     {
         return items;
     }
@@ -87,6 +87,6 @@ public class InvalidOpTypeExpression extends TypeExpression
         if (this == toReplace)
             return replaceWith;
         else
-            return new InvalidOpTypeExpression(Utility.mapListI(items, e -> e.map(u -> u.replaceSubExpression(toReplace, replaceWith))));
+            return new InvalidOpTypeExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
     }
 }

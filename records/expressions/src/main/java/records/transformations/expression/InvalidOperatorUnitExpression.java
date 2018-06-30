@@ -21,9 +21,9 @@ import java.util.stream.Stream;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
 {
-    private final ImmutableList<Either<String, UnitExpression>> items;
+    private final ImmutableList<UnitExpression> items;
 
-    public InvalidOperatorUnitExpression(ImmutableList<Either<String, UnitExpression>> items)
+    public InvalidOperatorUnitExpression(ImmutableList<UnitExpression> items)
     {
         this.items = items;
     }
@@ -38,7 +38,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     public String save(boolean topLevel)
     {
         return "@INVALIDOPS (" + 
-            items.stream().map(item -> item.<String>either(q -> "\"" + GrammarUtility.escapeChars(q) + "\"", x -> x.save(false))).collect(Collectors.joining(" "))
+            items.stream().map(item -> item.save(false)).collect(Collectors.joining(", "))
             + ")";
     }
 
@@ -74,7 +74,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     @Override
     public @OnThread(Tag.FXPlatform) Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return items.stream().flatMap(x -> x.either(s -> Stream.of((SingleLoader<UnitExpression, UnitSaver>)(UnitEntry.load(s))), e -> e.loadAsConsecutive(BracketedStatus.MISC)));
+        return items.stream().flatMap(x -> x.loadAsConsecutive(BracketedStatus.MISC));
     }
 
     @Override
@@ -83,6 +83,6 @@ public class InvalidOperatorUnitExpression extends UnitExpression
         if (this == toReplace)
             return replaceWith;
         else
-            return new InvalidOperatorUnitExpression(Utility.mapListI(items, e -> e.map(u -> u.replaceSubExpression(toReplace, replaceWith))));
+            return new InvalidOperatorUnitExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
     }
 }

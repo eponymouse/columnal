@@ -8,15 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitSaver.Context;
-import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.InvalidOperatorUnitExpression;
-import records.transformations.expression.SingleUnitExpression;
-import records.transformations.expression.UnitDivideExpression;
-import records.transformations.expression.UnitExpression;
-import records.transformations.expression.UnitExpressionIntLiteral;
-import records.transformations.expression.UnitRaiseExpression;
-import records.transformations.expression.UnitTimesExpression;
+import records.transformations.expression.*;
 import styled.StyledString;
 import utility.Either;
 import utility.FXPlatformConsumer;
@@ -63,7 +55,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
         else
             return new InvalidOperatorUnitExpression(ImmutableList.of(
-                    Either.right(lhs), Either.left("^"), Either.right(rhs)
+                    lhs, new InvalidSingleUnitExpression("^"), rhs
             ));
     };
 
@@ -113,13 +105,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
 
         }
 
-        return new InvalidOperatorUnitExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.mapBoth(o -> o.getContent(), x -> x)));
+        return new InvalidOperatorUnitExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new InvalidSingleUnitExpression(o.getContent()), x -> x)));
     }
 
     @Override
     protected UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<UnitOp, @Recorded UnitExpression>> items)
     {
-        return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.mapBoth(op -> op.getContent(), y -> y))));
+        return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.either(op -> new InvalidSingleUnitExpression(op.getContent()), y -> y))));
     }
 
     private static Pair<UnitOp, @Localized String> opD(UnitOp op, @LocalizableKey String key)
@@ -147,11 +139,11 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         // Error!
                         keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
-                        ImmutableList.Builder<Either<String, UnitExpression>> items = ImmutableList.builder();
-                        items.add(Either.left(bracket.getContent()));
-                        items.add(Either.right(makeContent.fetchContent(brackets)));
+                        ImmutableList.Builder<UnitExpression> items = ImmutableList.builder();
+                        items.add(new InvalidSingleUnitExpression(bracket.getContent()));
+                        items.add(makeContent.fetchContent(brackets));
                         if (terminator != null)
-                            items.add(Either.left(terminator.getContent()));
+                            items.add(new InvalidSingleUnitExpression(terminator.getContent()));
                         InvalidOperatorUnitExpression invalid = new InvalidOperatorUnitExpression(items.build());
                         currentScopes.peek().items.add(Either.left(invalid));
                     }
@@ -172,7 +164,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     @Override
     protected UnitExpression keywordToInvalid(UnitBracket unitBracket)
     {
-        return new InvalidOperatorUnitExpression(ImmutableList.of(Either.left(unitBracket.getContent())));
+        return new InvalidSingleUnitExpression(unitBracket.getContent());
     }
 
     @Override

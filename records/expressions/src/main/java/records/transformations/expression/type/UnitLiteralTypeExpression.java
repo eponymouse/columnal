@@ -73,4 +73,9 @@ public class UnitLiteralTypeExpression extends TypeExpression
     {
         return Objects.hash(unitExpression);
     }
+
+    public UnitExpression getUnitExpression()
+    {
+        return unitExpression;
+    }
 }

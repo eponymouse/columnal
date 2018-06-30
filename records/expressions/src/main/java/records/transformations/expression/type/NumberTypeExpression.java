@@ -90,4 +90,9 @@ public class NumberTypeExpression extends TypeExpression
     {
         return this == toReplace ? replaceWith : this;
     }
+
+    public boolean hasUnit()
+    {
+        return unitExpression != null;
+    }
 }

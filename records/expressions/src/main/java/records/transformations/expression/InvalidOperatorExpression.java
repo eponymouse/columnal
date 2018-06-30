@@ -70,7 +70,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@invalidops(" + items.stream().map(x -> x.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(" "))+ ")";
+        return "@invalidops(" + items.stream().map(x -> x.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(", "))+ ")";
     }
 
     @Override

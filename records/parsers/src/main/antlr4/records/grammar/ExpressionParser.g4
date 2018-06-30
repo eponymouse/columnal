@@ -48,7 +48,7 @@ stringConcatExpression : expression (STRING_CONCAT expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | plusMinusPattern | ifThenElseExpression | stringConcatExpression;
 
 invalidOpItem : expression;
-invalidOpExpression : INVALIDOPS OPEN_BRACKET invalidOpItem* CLOSE_BRACKET;
+invalidOpExpression : INVALIDOPS OPEN_BRACKET (invalidOpItem (COMMA invalidOpItem)*)? CLOSE_BRACKET;
 
 constructor : CONSTRUCTOR typeName COLON constructorName;
 

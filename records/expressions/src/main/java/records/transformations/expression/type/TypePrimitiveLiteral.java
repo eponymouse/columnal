@@ -15,7 +15,7 @@ import styled.StyledString;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-// For a named, fully-formed type (not a tagged type name)
+// For a named, fully-formed type (not a tagged type name), not including numeric types
 public class TypePrimitiveLiteral extends TypeExpression
 {
     private final DataType dataType;

@@ -12,7 +12,9 @@ import records.gui.expressioneditor.SaverBase;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeSaver.Context;
+import records.typeExp.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -22,6 +24,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 @OnThread(Tag.FXPlatform)
 public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, Context>
@@ -37,12 +40,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             return new TupleTypeExpression(typeExpressions);
         } else
         {
-            Builder<Either<String, TypeExpression>> items = ImmutableList.builderWithExpectedSize(typeExpressions.size() + operators.size());
+            Builder<TypeExpression> items = ImmutableList.builderWithExpectedSize(typeExpressions.size() + operators.size());
             for (int i = 0; i < typeExpressions.size(); i++)
             {
-                items.add(Either.right(typeExpressions.get(i)));
+                items.add(typeExpressions.get(i));
                 if (i < operators.size())
-                    items.add(Either.left(operators.get(i).getContent()));
+                    items.add(new UnfinishedTypeExpression(operators.get(i).getContent()));
             }
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
                 return new ListTypeExpression(new InvalidOpTypeExpression(items.build()));
@@ -64,9 +67,30 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
+    public void saveOperand(TypeExpression singleItem, ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, FXPlatformConsumer<Context> withContext)
+    {
+        if (singleItem instanceof UnitLiteralTypeExpression)
+        {
+            ArrayList<Either<@Recorded TypeExpression, OpAndNode>> curItems = currentScopes.peek().items;
+            Either<@Recorded TypeExpression, OpAndNode> last = curItems.get(curItems.size() - 1);
+            if (last.either(t -> {
+                if (t instanceof NumberTypeExpression && !((NumberTypeExpression)t).hasUnit())
+                {
+                    curItems.remove(curItems.size() - 1);
+                    super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression)singleItem).getUnitExpression()), errorDisplayerRecord.recorderFor(t).start, end, withContext);
+                    return true;
+                }
+                return false;
+            }, o -> false))
+                return;
+        }
+        super.saveOperand(singleItem, start, end, withContext);
+    }
+
+    @Override
     protected TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<Operator, @Recorded TypeExpression>> items)
     {
-        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.mapBoth(u -> ",", y -> y))));
+        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.either(u -> new UnfinishedTypeExpression(","), y -> y))));
     }
 
     @Override
@@ -78,7 +102,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @Override
     protected TypeExpression keywordToInvalid(Keyword keyword)
     {
-        return new InvalidOpTypeExpression(ImmutableList.of(Either.left(keyword.getContent())));
+        return new UnfinishedTypeExpression(keyword.getContent());
     }
 
     @Override
@@ -109,7 +133,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
         }
 
-        return new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.mapBoth(o -> o.getContent(), x -> x)));
+        return new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new UnfinishedTypeExpression(o.getContent()), x -> x)));
     }
     
 }

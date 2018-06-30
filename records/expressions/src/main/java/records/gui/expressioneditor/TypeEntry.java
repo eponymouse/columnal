@@ -20,6 +20,7 @@ import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TaggedTypeNameExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
@@ -221,7 +222,10 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         {
             if (content.equals(primitiveType.toString()))
             {
-                typeSaver.saveOperand(new TypePrimitiveLiteral(primitiveType), this, this, c -> {});
+                if (primitiveType.equals(DataType.NUMBER))
+                    typeSaver.saveOperand(new NumberTypeExpression(null), this, this, c -> {});
+                else
+                    typeSaver.saveOperand(new TypePrimitiveLiteral(primitiveType), this, this, c -> {});
                 return;
             }
         }
