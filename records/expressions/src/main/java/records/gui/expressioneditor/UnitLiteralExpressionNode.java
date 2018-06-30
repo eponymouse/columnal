@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
+import log.Log;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
@@ -12,6 +14,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -38,7 +41,12 @@ public class UnitLiteralExpressionNode extends OtherLiteralNode<Expression, Expr
     @Override
     public void save(ExpressionSaver saver)
     {
-        saver.saveOperand(new UnitLiteralExpression(unit.save()), this, this, c -> {});
+        @Recorded UnitExpression unitExpression = unit.save();
+
+        Log.debug("Saved as: " + unitExpression);
+        Log.debug("  From:\n      " + unit.children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n      ")));
+        
+        saver.saveOperand(new UnitLiteralExpression(unitExpression), this, this, c -> {});
     }
 
     @Override

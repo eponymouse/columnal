@@ -15,11 +15,13 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
+import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
+import utility.Either;
 import utility.ExBiFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -32,8 +34,6 @@ import java.util.stream.Stream;
 // Like GeneralExpressionEntry but for units only
 public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> implements ErrorDisplayer<UnitExpression, UnitSaver>
 {
-    private final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("autocomplete.brackets", '(');
-
     private final Completion endCompletion = new EndCompletion("}"); //"autocomplete.end");
 
     /** Flag used to monitor when the initial content is set */
@@ -52,12 +52,19 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     private Stream<Completion> getSuggestions(String current, CompletionQuery completionQuery)
     {
         ArrayList<Completion> r = new ArrayList<>();
-        r.add(bracketedCompletion);
         r.add(endCompletion);
         r.add(new NumericLiteralCompletion());
         for (SingleUnit unit : getUnitManager().getAllDeclared())
         {
             r.add(new KnownUnitCompletion(unit.getName()));
+        }
+        for (UnitOp unitOp : UnitOp.values())
+        {
+            r.add(new RigidCompletion(unitOp));
+        }
+        for (UnitBracket unitBracket : UnitBracket.values())
+        {
+            r.add(new RigidCompletion(unitBracket));
         }
         r.removeIf(c -> c.shouldShow(current) == ShowStatus.NO_MATCH);
         return r.stream();
@@ -167,6 +174,19 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
                 return "";
             }
             
+            if (c instanceof RigidCompletion)
+            {
+                String content = ((RigidCompletion) c).getContent();
+                if ((content.equals(")") && parent.balancedBrackets(BracketBalanceType.ROUND)) || (content.equals("]") && parent.balancedBrackets(BracketBalanceType.SQUARE)))
+                {
+                    newText = "";
+                }
+                else
+                {
+                    newText = content;
+                }
+            }
+            
             /*
             if (c == bracketedCompletion)
             {
@@ -225,6 +245,39 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         public KnownUnitCompletion(String name)
         {
             super(name, null);
+        }
+    }
+
+    private static class RigidCompletion extends SimpleCompletion
+    {
+        private final Either<UnitBracket, UnitOp> item;
+
+        private RigidCompletion(UnitBracket bracket)
+        {
+            super(bracket.getContent(), null);
+            this.item = Either.left(bracket);
+        }
+
+        private RigidCompletion(UnitOp op)
+        {
+            super(op.getContent(), null);
+            this.item = Either.right(op);
+        }
+
+        @Override
+        public boolean completesWhenSingleDirect()
+        {
+            return true;
+        }
+
+        public Stream<SingleLoader<UnitExpression, UnitSaver>> load()
+        {
+            return Stream.of(UnitEntry.load(getContent()));
+        }
+
+        public String getContent()
+        {
+            return item.<String>either(b -> b.getContent(), o -> o.getContent());
         }
     }
     

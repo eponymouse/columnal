@@ -325,6 +325,19 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
     }
 
+    @Override
+    protected void updateDisplay()
+    {
+        super.updateDisplay();
+        // Flush focus requests of children.
+        // Must use list copy in case this causes blank to be defocused and removed:
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : new ArrayList<>(children))
+        {
+            if (children.contains(child))
+                child.flushFocusRequest();
+        }
+    }
+
     // Only really exists for testing purposes:
     public class TopLevelEditorFlowPane extends FlowPane
     {

@@ -276,7 +276,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             else if (child.closesBracket(bracketBalanceType))
                 open--;
         }
-        return open != 0;
+        return open == 0;
     }
 
 
@@ -805,17 +805,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void cleanup()
     {
         children.forEach(EEDisplayNode::cleanup);
-    }
-
-    @Override
-    protected void updateDisplay()
-    {
-        super.updateDisplay();
-        // Flush focus requests of children:
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
-        {
-            child.flushFocusRequest();
-        }
     }
 
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();

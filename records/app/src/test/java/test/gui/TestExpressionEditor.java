@@ -180,4 +180,40 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     {
         testSimple("(1, 2)");
     }
+
+    @Test
+    public void testCall() throws Exception
+    {
+        testSimple("@call @function first(1, 2)");
+    }
+
+    @Test
+    public void testCall2() throws Exception
+    {
+        testSimple("@call @function first(1,(2+3))");
+    }
+
+    @Test
+    public void testCall3() throws Exception
+    {
+        testSimple("@call @function first(1,(2/3))");
+    }
+
+    @Test
+    public void testCall4() throws Exception
+    {
+        testSimple("@call @function abs(2/3)");
+    }
+    
+    @Test
+    public void testUnit() throws Exception
+    {
+        testSimple("35{m/s}");
+    }
+    
+    @Test
+    public void testUnit2() throws Exception
+    {
+        testSimple("35{m/(s*s)}");
+    }
 }

@@ -134,14 +134,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             currentScopes.push(new Scope(errorDisplayer, new Terminator()
             {
                 @Override
-                public void terminate(Function<BracketAndNodes<UnitExpression, UnitSaver>, @Recorded UnitExpression> makeContent, UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+                public void terminate(FetchContent<UnitExpression, UnitSaver> makeContent, @Nullable UnitBracket terminator, ConsecutiveChild<UnitExpression, UnitSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
                 {
                     BracketAndNodes<UnitExpression, UnitSaver> brackets = new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, keywordErrorDisplayer);
                     if (terminator == UnitBracket.CLOSE_ROUND)
                     {
                         // All is well:
-
-                        UnitExpression result = makeContent.apply(brackets);
+                        UnitExpression result = makeContent.fetchContent(brackets);
                         currentScopes.peek().items.add(Either.left(result));
                     } else
                     {
@@ -149,8 +148,10 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
                         ImmutableList.Builder<Either<String, UnitExpression>> items = ImmutableList.builder();
-                        items.add(Either.right(makeContent.apply(brackets)));
-                        items.add(Either.left(terminator.getContent()));
+                        items.add(Either.left(bracket.getContent()));
+                        items.add(Either.right(makeContent.fetchContent(brackets)));
+                        if (terminator != null)
+                            items.add(Either.left(terminator.getContent()));
                         InvalidOperatorUnitExpression invalid = new InvalidOperatorUnitExpression(items.build());
                         currentScopes.peek().items.add(Either.left(invalid));
                     }

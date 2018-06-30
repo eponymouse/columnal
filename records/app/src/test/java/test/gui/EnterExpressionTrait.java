@@ -106,8 +106,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         {
             CallExpression call = (CallExpression) expression;
             enterExpression(call.getFunction(), false, r);
-            // Brackets are added automatically by the code completion:
-            //write("(");
+            write("(");
             enterExpression(call.getParam(), false, r);
             write(")");
         }

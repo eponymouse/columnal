@@ -294,11 +294,37 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
         }
     }
 
-    // Ends a mini-expression
+    /**
+     * A function to give back the content of a scope being ended.
+     */
+    public static interface FetchContent<EXPRESSION extends StyledShowable, SAVER>
+    {
+        /**
+         * 
+         * @param bracketInfo The bracket context for the scope being ended.
+         * @return The expression for the scope being ended.
+         */
+        @Recorded EXPRESSION fetchContent(BracketAndNodes<EXPRESSION, SAVER> bracketInfo);
+    }
+
+    /**
+     * A lamba-interface like class with a method to call when you encounter
+     * a keyword that should terminate the current scope.
+     * 
+     * Cannot be an interface because it's not static because
+     * it uses many type variables from the outer SaverBase.
+     */
     protected abstract class Terminator
     {
-        // Pass BracketedStatus and last item of span:
-        public abstract void terminate(Function<BracketAndNodes<EXPRESSION, SAVER>, @Recorded EXPRESSION> makeContent, KEYWORD terminator, ConsecutiveChild<EXPRESSION, SAVER> keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext);
+        /**
+         * 
+         * @param makeContent A function which, given a BracketedStatus wrapped with error displayers,
+         *                    will give you the expression content of the just-finished scope. 
+         * @param terminator The keyword which is terminating the current scope.
+         * @param keywordErrorDisplayer The error displayer for the keyword.
+         * @param keywordContext The callback with the context for the keyword.
+         */
+        public abstract void terminate(FetchContent<EXPRESSION, SAVER> makeContent, @Nullable KEYWORD terminator, ConsecutiveChild<EXPRESSION, SAVER> keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext);
     }
     
     // Op is typically an enum so we can't identity-hash-map it to a node, hence this wrapper
@@ -328,6 +354,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
         }
     }
 
+    /**
+     * BracketedStatus, paired with start and end for error recording purposes only.
+     * @param <EXPRESSION>
+     * @param <SAVER>
+     */
     public static class BracketAndNodes<EXPRESSION extends StyledShowable, SAVER>
     {
         public final BracketedStatus bracketedStatus;
@@ -379,14 +410,15 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
         currentScopesFinal.push(new Scope(parent.getAllChildren().get(0), new Terminator()
         {
             @Override
-            public void terminate(Function<BracketAndNodes<EXPRESSION, SAVER>, @Recorded EXPRESSION> makeContent, KEYWORD terminator, ConsecutiveChild<EXPRESSION, SAVER> keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
+            public void terminate(FetchContent<EXPRESSION, SAVER> makeContent, @Nullable KEYWORD terminator, ConsecutiveChild<EXPRESSION, SAVER> keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
             {
                 ConsecutiveChild<EXPRESSION, SAVER> start = parent.getAllChildren().get(0);
                 ConsecutiveChild<EXPRESSION, SAVER> end = keywordErrorDisplayer;
                 end.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT> thisSaver = Utility.later(SaverBase.this);
-                currentScopesFinal.peek().items.add(Either.left(makeContent.apply(new BracketAndNodes<>(BracketedStatus.MISC, start, end))));
-                currentScopesFinal.peek().items.add(Either.left(thisSaver.record(start, end, thisSaver.keywordToInvalid(terminator))));
+                currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(new BracketAndNodes<>(BracketedStatus.MISC, start, end))));
+                if (terminator != null)
+                    currentScopesFinal.peek().items.add(Either.left(thisSaver.record(start, end, thisSaver.keywordToInvalid(terminator))));
             }
         }));
     }
@@ -403,7 +435,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
         {
             // TODO give some sort of error.... somewhere?  On the opening item?
             Scope closed = currentScopes.pop();
-            currentScopes.peek().items.add(Either.left(makeInvalidOp(closed.openingNode, errorDisplayer, closed.items.stream().map(e -> e.map(x -> x.op)).map(Either::swap).collect(ImmutableList.toImmutableList()))));
+            closed.terminator.terminate(brackets -> makeExpression(closed.openingNode, brackets.end, closed.items, brackets), null, closed.openingNode, c -> {});
         }
 
         Scope closed = currentScopes.pop();

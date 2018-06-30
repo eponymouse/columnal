@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context> implements ErrorAndTypeRecorder
@@ -49,6 +50,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     // Note: if we are copying to clipboard, callback will not be called
     public void saveKeyword(Keyword keyword, ConsecutiveChild<Expression, ExpressionSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
+        Supplier<ImmutableList<Expression>> prefixKeyword = () -> ImmutableList.of(new InvalidIdentExpression(keyword.getContent()));
+        
         if (keyword == Keyword.ANYTHING)
         {
             saveOperand(new MatchAnythingExpression(), errorDisplayer, errorDisplayer, withContext);
@@ -72,21 +75,27 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     }
                 }
                 return Either.left(errorDisplayerRecord.record(errorDisplayer, bracketEnd, bracketed));
-            })));
+            }, prefixKeyword)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e))));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
         }
         else if (keyword == Keyword.IF)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.THEN, miscBrackets(errorDisplayer), (condition, conditionEnd) ->
-                Either.right(expect(Keyword.ELSE, miscBrackets(conditionEnd), (thenPart, thenEnd) -> 
-                    Either.right(expect(Keyword.ENDIF, miscBrackets(thenEnd), (elsePart, elseEnd) -> {
+            ImmutableList.Builder<Expression> invalid = ImmutableList.builder();
+            invalid.add(new InvalidIdentExpression(keyword.getContent()));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.THEN, miscBrackets(errorDisplayer), (condition, conditionEnd) -> {
+                invalid.add(condition);
+                invalid.add(new InvalidIdentExpression(Keyword.THEN.getContent()));
+                return Either.right(expect(Keyword.ELSE, miscBrackets(conditionEnd), (thenPart, thenEnd) -> {
+                    invalid.add(thenPart);
+                    invalid.add(new InvalidIdentExpression(Keyword.ELSE.getContent()));
+                    return Either.right(expect(Keyword.ENDIF, miscBrackets(thenEnd), (elsePart, elseEnd) -> {
                         return Either.left(errorDisplayerRecord.record(errorDisplayer, elseEnd, new IfThenElseExpression(condition, thenPart, elsePart)));
-                    })
-                )    
-            )))));
+                    }, invalid::build));
+                }, invalid::build));
+            }, invalid::build)));
         }
         else if (keyword == Keyword.MATCH)
         {            
@@ -163,16 +172,16 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
     // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(Keyword expected, Function<ConsecutiveChild<Expression, ExpressionSaver>, BracketAndNodes<Expression, ExpressionSaver>> makeBrackets, BiFunction<@Recorded Expression, ConsecutiveChild<Expression, ExpressionSaver>, Either<@Recorded Expression, Terminator>> onClose)
+    public Terminator expect(Keyword expected, Function<ConsecutiveChild<Expression, ExpressionSaver>, BracketAndNodes<Expression, ExpressionSaver>> makeBrackets, BiFunction<@Recorded Expression, ConsecutiveChild<Expression, ExpressionSaver>, Either<@Recorded Expression, Terminator>> onSuccessfulClose, Supplier<ImmutableList<Expression>> prefixItemsOnFailedClose)
     {
         return new Terminator() {
         @Override
-        public void terminate(Function<BracketAndNodes<Expression, ExpressionSaver>, @Recorded Expression> makeContent, Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+        public void terminate(FetchContent<Expression, ExpressionSaver> makeContent, @Nullable Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
         {
             if (terminator == expected)
             {
                 // All is well:
-                Either<@Recorded Expression, Terminator> result = onClose.apply(makeContent.apply(makeBrackets.apply(keywordErrorDisplayer)), keywordErrorDisplayer);
+                Either<@Recorded Expression, Terminator> result = onSuccessfulClose.apply(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)), keywordErrorDisplayer);
                 result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
             }
             else
@@ -182,8 +191,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Nullable ConsecutiveChild<Expression, ExpressionSaver> start = currentScopes.peek().openingNode;
                 // Important to call makeContent before adding to scope on the next line:
                 ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
-                items.add(makeContent.apply(makeBrackets.apply(keywordErrorDisplayer)));
-                items.add(new InvalidIdentExpression(terminator.getContent()));
+                items.addAll(prefixItemsOnFailedClose.get());
+                items.add(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)));
+                if (terminator != null)
+                    items.add(new InvalidIdentExpression(terminator.getContent()));
                 @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
                 currentScopes.peek().items.add(Either.left(invalid));
             }
@@ -376,7 +387,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new Terminator()
         {
         @Override
-        public void terminate(Function<BracketAndNodes<Expression, ExpressionSaver>, @Recorded Expression> makeContent, Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
+        public void terminate(FetchContent<Expression, ExpressionSaver> makeContent, @Nullable Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
         {
             BracketAndNodes<Expression, ExpressionSaver> brackets = miscBrackets(start, keywordErrorDisplayer);
             
@@ -385,7 +396,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 if (choice.keyword.equals(terminator))
                 {
                     // All is well:
-                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(makeContent.apply(brackets), keywordErrorDisplayer);
+                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(makeContent.fetchContent(brackets), keywordErrorDisplayer);
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
                     return;
                 }
@@ -395,8 +406,10 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
-            items.add(makeContent.apply(brackets));
-            items.add(new InvalidIdentExpression(terminator.getContent()));
+            // TODO prefix with leftover bits if invalid
+            items.add(makeContent.fetchContent(brackets));
+            if (terminator != null)
+                items.add(new InvalidIdentExpression(terminator.getContent()));
             @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
             currentScopes.peek().items.add(Either.left(invalid));
         }};

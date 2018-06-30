@@ -85,9 +85,9 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     }
 
     @Override
-    public boolean isBlank()
+    public boolean isBlank(@UnknownInitialization(Object.class) GeneralOperandEntry<EXPRESSION, SEMANTIC_PARENT> this)
     {
-        return textField.getText().trim().isEmpty() && !completing;
+        return textField == null || (textField.getText().trim().isEmpty() && !completing);
     }
 
     @Override
