@@ -1,6 +1,7 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -11,13 +12,20 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import log.Log;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.KnownLengthRecordSet;
 import records.data.Transformation;
+import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionParser;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.View;
 import records.gui.grid.RectangleBounds;
@@ -25,6 +33,7 @@ import records.importers.ClipboardUtils;
 import records.transformations.Calculate;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.*;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -33,6 +42,7 @@ import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 import java.util.Optional;
@@ -105,13 +115,11 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             push(KeyCode.TAB);
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
             enterExpression(expressionValue.expression, false, r);
-            // Hide any code completion (also: check it doesn't dismiss dialog)
-            push(KeyCode.ESCAPE);
-            push(KeyCode.ESCAPE);
-            //Shouldn't need the delay, but test flaky without it:
+            
             moveTo(".ok-button");
-            TestUtil.sleep(2000);
-            clickOn(".ok-button");
+            // Get rid of popups:
+            clickOn(MouseButton.MIDDLE);
+            clickOn(MouseButton.PRIMARY);
             // Now close dialog, and check for equality;
             View view = lookup(".view").query();
             if (view == null)
@@ -153,4 +161,23 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     }
 
     // TODO test that nonsense is preserved after load (which will change it all to invalid) -> save -> load (which should load invalid version)
+    
+    private void testSimple(String expressionSrc) throws Exception
+    {
+        Expression expression = Expression.parse(null, expressionSrc, DummyManager.INSTANCE.getTypeManager());
+        
+        testEntry(new ExpressionValue(
+            DataType.BOOLEAN, // Type is unused here
+            ImmutableList.of(),
+            DummyManager.INSTANCE.getTypeManager(),
+            new KnownLengthRecordSet(ImmutableList.of(), 0),
+            expression
+        ), new Random(0));
+    }
+    
+    @Test
+    public void testTuple() throws Exception
+    {
+        testSimple("(1, 2)");
+    }
 }

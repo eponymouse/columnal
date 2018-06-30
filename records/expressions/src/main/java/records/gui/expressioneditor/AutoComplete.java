@@ -388,7 +388,6 @@ public class AutoComplete<C extends Completion> extends PopupControl
             {
                 hide();
                 instruction.hide();
-                e.consume();
             }
             final int PAGE = 9;
             int oldSel = completions.getSelectionModel().getSelectedIndex();
