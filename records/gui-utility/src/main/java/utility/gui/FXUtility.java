@@ -21,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -655,6 +656,28 @@ public class FXUtility
     public static boolean hasPseudoclass(Node node, String className)
     {
         return node.getPseudoClassStates().stream().anyMatch(p -> p.getPseudoClassName().equals(className));
+    }
+
+    public static Rectangle2D boundsToRect(Bounds bounds)
+    {
+        return new Rectangle2D(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight());
+    }
+
+    public static Rectangle2D intersectRect(Rectangle2D a, Rectangle2D b)
+    {
+        double x = Math.max(a.getMinX(), b.getMinX());
+        double y = Math.max(a.getMinY(), b.getMinY());
+        return new Rectangle2D(
+            x, y,
+            Math.min(a.getMaxX(), b.getMaxX()) - x,
+                Math.min(a.getMaxY(), b.getMaxY()) - y
+        );
+    }
+
+    @OnThread(Tag.Any)
+    public static Point2D getCentre(Rectangle2D rectangle2D)
+    {
+        return new Point2D(rectangle2D.getMinX() + rectangle2D.getWidth()*0.5, rectangle2D.getMinY() + rectangle2D.getHeight()*0.5);
     }
 
     public static interface DragHandler

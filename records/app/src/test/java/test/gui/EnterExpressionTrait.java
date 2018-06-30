@@ -181,6 +181,8 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
                 if (i < n.getChildren().size() - 1)
                 {
                     write(n._test_getOperatorEntry(i));
+                    if (n._test_getOperatorEntry(i).equals("-") || r.nextBoolean())
+                        write(" ");
                 }
             }
             if (needsBrackets)
@@ -193,6 +195,8 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
                 write("(");
             enterExpression(b.getLHS(), true, r);
             write(b._test_getOperatorEntry());
+            if (b._test_getOperatorEntry().equals("-") || r.nextBoolean())
+                write(" ");
             enterExpression(b.getRHS(), true, r);
             if (needsBrackets)
                 write(")");

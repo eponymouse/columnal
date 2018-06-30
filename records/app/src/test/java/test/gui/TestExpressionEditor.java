@@ -100,8 +100,10 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         try
         {
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
-            CellPosition targetPos = new CellPosition(CellPosition.row(6), CellPosition.col(3));
-            for (int i = 0; i < 2; i++)
+            CellPosition targetPos = new CellPosition(CellPosition.row(3), CellPosition.col(3 + expressionValue.recordSet.getColumns().size()));
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
+            // Only need to click once as already selected by keyboard:
+            for (int i = 0; i < 1; i++)
                 clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
@@ -215,5 +217,34 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     public void testUnit2() throws Exception
     {
         testSimple("35{m/(s*s)}");
+    }
+    
+    @Test
+    public void testMinus() throws Exception
+    {
+        testSimple("-2");
+    }
+
+    @Test
+    public void testMinus2() throws Exception
+    {
+        testSimple("1-2");
+    }
+
+    @Test
+    public void testMinus3() throws Exception
+    {
+        testSimple("1*-2");
+    }
+    @Test
+    public void testMinus4() throws Exception
+    {
+        testSimple("1--2");
+    }
+
+    @Test
+    public void testMinus5() throws Exception
+    {
+        testSimple("1*(-2+3)");
     }
 }

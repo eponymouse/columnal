@@ -205,9 +205,9 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
             return !Character.isLetter(newCodepoint);
         }   
         // Numeric literal starting with +/-, don't compare to first character: 
-        if ((current.startsWith("+") || current.startsWith("-")) && current.codePoints().anyMatch(Character::isDigit))
+        if ((current.startsWith("+") || current.startsWith("-")) && (current.length() == 1 || current.codePoints().anyMatch(Character::isDigit)))
         {
-            return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), current.substring(1), newCodepoint);
+            return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), "0" + current.substring(1), newCodepoint);
         }
         
         return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), current, newCodepoint);

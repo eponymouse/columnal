@@ -491,7 +491,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean completesWhenSingleDirect()
         {
-            return true;
+            return operator != Op.ADD && operator != Op.SUBTRACT;
         }
 
         public Stream<SingleLoader<Expression, ExpressionSaver>> load()
