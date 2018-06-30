@@ -282,31 +282,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public static enum OperatorOutcome { KEEP, BLANK }
     
-    public OperatorOutcome addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> rightOf, String initialContent, boolean focus)
+    public void addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> rightOf, String initialContent)
     {
-        // Must add operand and operator
-        int index = Utility.indexOfRef(children, rightOf);
-        
-        if (index + 1 < children.size())
-        {
-            if (focus)
-                children.get(index + 1).focus(Focus.LEFT);
-            return OperatorOutcome.KEEP;
-        }
-        
-        if (index != -1)
-        {
-            atomicEdit.set(true);
-            EntryNode<EXPRESSION, SEMANTIC_PARENT> operandNode = operations.makeGeneral(this, "");
-            children.add(index+1, operandNode);
-            atomicEdit.set(false);
-            if (focus)
-                operandNode.focus(Focus.LEFT);
-            operandNode.setText(initialContent);
-            return OperatorOutcome.KEEP;
-        }
-        // If we can't find it, I guess blank:
-        return OperatorOutcome.BLANK;
+        // if coming from blank, must create blank
+        withChildIndex(rightOf, index -> {
+            @NonNull final EntryNode<EXPRESSION, SEMANTIC_PARENT> child;
+            children.add(index + 1, focusWhenShown(child = makeBlankChild()));
+            // Set content after, in case it triggers
+            // completion and moves slot:
+            child.setText(initialContent);
+        });
     }
 
     private int getOperandIndex(@UnknownInitialization ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> operand)
@@ -426,15 +411,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     
     // If item is a child of us, run the given lambda and return true.  If not, just return false.
     @SuppressWarnings("unchecked") // It's not actually unchecked...
-    private boolean withChildIndex(EEDisplayNode child, FXPlatformConsumer<Integer> withIndex)
+    private void withChildIndex(@UnknownInitialization EEDisplayNode child, FXPlatformConsumer<Integer> withIndex)
     {
-        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (@UnknownInitialization ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
         {
             int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
             withIndex.consume(index);
-            return true;
         }
-        return false;
     }
 
     @Override

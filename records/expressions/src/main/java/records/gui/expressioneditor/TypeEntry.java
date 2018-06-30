@@ -134,7 +134,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                     if (rest.isEmpty())
                         parent.focusRightOf(TypeEntry.this, Focus.LEFT);
                     else
-                        parent.addOperandToRight(TypeEntry.this, rest, true);
+                        parent.addOperandToRight(TypeEntry.this, rest);
                 }
                 
                 return keep;

@@ -675,7 +675,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 if (rest.isEmpty())
                     parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
                 else
-                    parent.addOperandToRight(GeneralExpressionEntry.this, rest, true);
+                    parent.addOperandToRight(GeneralExpressionEntry.this, rest);
             }
             return newText;
         }

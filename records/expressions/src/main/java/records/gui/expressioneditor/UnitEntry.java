@@ -196,7 +196,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
                 if (rest.isEmpty())
                     parent.focusRightOf(UnitEntry.this, Focus.LEFT);
                 else
-                    parent.addOperandToRight(UnitEntry.this, rest, true);
+                    parent.addOperandToRight(UnitEntry.this, rest);
             }
             return newText;
         }

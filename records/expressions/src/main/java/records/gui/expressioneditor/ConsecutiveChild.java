@@ -47,7 +47,7 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     
     void setHoverDropLeft(boolean on);
 
-    default boolean isBlank(/*@UnknownInitialization(Object.class) ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> this*/) { return false; }
+    default boolean isBlank(@UnknownInitialization(Object.class) ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> this) { return false; }
 
     void focusChanged();
 
