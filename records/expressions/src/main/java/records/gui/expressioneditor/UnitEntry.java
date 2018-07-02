@@ -46,6 +46,10 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         ExBiFunction<String, CompletionQuery, Stream<Completion>> getSuggestions = this::getSuggestions;
         this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, UnitExpressionOps::differentAlphabet);
         updateNodes();
+        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
+            completing = false;
+            parent.changed(this);
+        });
         textField.setText(initialContent);
     }
 
@@ -209,7 +213,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
                 newText = ((KnownUnitCompletion)c).completion;
             }
 
-            completing = true;
+            completing = newText != null;
             // Must do this while completing so that we're not marked as blank:
             if (moveFocus)
             {

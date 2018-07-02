@@ -75,6 +75,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
 
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
+            completing = false;
             parent.changed(this);
         });
         textField.setText(initialContent);
@@ -92,7 +93,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             @Override
             protected @Nullable String selected(String currentText, @Nullable Completion typeCompletion, String rest, boolean moveFocus)
             {
-                completing = true;
                 @Nullable String keep = null;
 
                 if (typeCompletion == endCompletion)
@@ -131,6 +131,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                     }
                     else
                     {
+                        completing = true;
                         keep = typeCompletion == endBracketCompletion ? ")" : "]";
                     } 
                 }
@@ -143,6 +144,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 */
                 else if (typeCompletion != null && typeCompletion instanceof TypeCompletion)
                 {
+                    completing = true;
                     keep = ((TypeCompletion)typeCompletion).completion;
                 }
                 else
@@ -158,7 +160,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                     else
                         parent.addOperandToRight(TypeEntry.this, rest);
                 }
-                
                 return keep;
             }
 
@@ -235,6 +236,15 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             if (content.equals(keyword.getContent()))
             {
                 typeSaver.saveKeyword(keyword, this, c -> {});
+                return;
+            }
+        }
+
+        for (Operator operator : Operator.values())
+        {
+            if (content.equals(operator.getContent()))
+            {
+                typeSaver.saveOperator(operator, this, c -> {});
                 return;
             }
         }

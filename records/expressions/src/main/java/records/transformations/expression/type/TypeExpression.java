@@ -331,4 +331,11 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             builder.add(TypeEntry.load(")"));
         }
     }
+
+    // Useful for debugging:
+    @Override
+    public String toString()
+    {
+        return save(TableAndColumnRenames.EMPTY);
+    }
 }

@@ -66,4 +66,6 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     boolean opensBracket(BracketBalanceType bracketBalanceType);
 
     boolean closesBracket(BracketBalanceType bracketBalanceType);
+
+    default void removeNestedBlanks() {};
 }

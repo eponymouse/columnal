@@ -119,8 +119,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
     }
 
-    private void removeBlanks()
+    public void removeBlanks()
     {
+        Log.debug("Remove blanks from: " + this);
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            child.removeNestedBlanks();
+        }
+        
         Predicate<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> isRemovable = c -> c.isBlank() && !c.isFocused() && !c.isFocusPending();
         
         // If we don't need to remove blanks, don't trigger the listeners for a no-op change:

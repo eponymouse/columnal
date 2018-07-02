@@ -39,6 +39,12 @@ public class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, Expre
     }
 
     @Override
+    public void removeNestedBlanks()
+    {
+        unit.removeBlanks();
+    }
+
+    @Override
     public void save(ExpressionSaver saver)
     {
         @Recorded UnitExpression unitExpression = unit.save();

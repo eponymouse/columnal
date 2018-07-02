@@ -35,7 +35,13 @@ public class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, TypeSav
     {
         return unit;
     }
-    
+
+    @Override
+    public void removeNestedBlanks()
+    {
+        unit.removeBlanks();
+    }
+
     @Override
     public void save(TypeSaver saver)
     {

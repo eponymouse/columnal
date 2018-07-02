@@ -169,37 +169,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     {
         return new InvalidIdentExpression(keyword.getContent());
     }
-
-    // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
-    // terminator for a new scope, compiled using the scope content and given bracketed status
-    public Terminator expect(Keyword expected, Function<ConsecutiveChild<Expression, ExpressionSaver>, BracketAndNodes<Expression, ExpressionSaver>> makeBrackets, BiFunction<@Recorded Expression, ConsecutiveChild<Expression, ExpressionSaver>, Either<@Recorded Expression, Terminator>> onSuccessfulClose, Supplier<ImmutableList<Expression>> prefixItemsOnFailedClose)
-    {
-        return new Terminator() {
-        @Override
-        public void terminate(FetchContent<Expression, ExpressionSaver> makeContent, @Nullable Keyword terminator, ConsecutiveChild<Expression, ExpressionSaver> keywordErrorDisplayer, FXPlatformConsumer<Context> keywordContext)
-        {
-            if (terminator == expected)
-            {
-                // All is well:
-                Either<@Recorded Expression, Terminator> result = onSuccessfulClose.apply(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)), keywordErrorDisplayer);
-                result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
-            }
-            else
-            {
-                // Error!
-                keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
-                @Nullable ConsecutiveChild<Expression, ExpressionSaver> start = currentScopes.peek().openingNode;
-                // Important to call makeContent before adding to scope on the next line:
-                ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
-                items.addAll(prefixItemsOnFailedClose.get());
-                items.add(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)));
-                if (terminator != null)
-                    items.add(new InvalidIdentExpression(terminator.getContent()));
-                @Recorded InvalidOperatorExpression invalid = errorDisplayerRecord.record(start, keywordErrorDisplayer, new InvalidOperatorExpression(items.build()));
-                currentScopes.peek().items.add(Either.left(invalid));
-            }
-        }};
-    }
     
     // Looks for a keyword, then takes the expression before the keyword and gives next step.
     private abstract class Choice
@@ -433,8 +402,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         
         super.saveOperand(singleItem, start, end, withContext);
     }
-    
-    
+
+    @Override
+    protected Expression makeSingleInvalid(Keyword terminator)
+    {
+        return new InvalidIdentExpression(terminator.getContent());
+    }
+
+
     /**
      * Get likely types and completions for given child.  For example,
      * if the expression is column Name = _ (where the RHS

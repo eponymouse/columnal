@@ -682,6 +682,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 else
                     parent.addOperandToRight(GeneralExpressionEntry.this, rest);
             }
+            if (newText == null)
+                completing = false;
             return newText;
         }
 

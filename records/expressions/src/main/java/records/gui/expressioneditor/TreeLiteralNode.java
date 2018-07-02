@@ -139,4 +139,7 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     {
         return false;
     }
+
+    @Override
+    public abstract void removeNestedBlanks();
 }

@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -24,7 +25,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * 
@@ -697,4 +700,36 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
         return invalidOpExpression;
     }
 
+    // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
+    // terminator for a new scope, compiled using the scope content and given bracketed status
+    public Terminator expect(KEYWORD expected, Function<ConsecutiveChild<EXPRESSION, SAVER>, BracketAndNodes<EXPRESSION, SAVER>> makeBrackets, BiFunction<@Recorded EXPRESSION, ConsecutiveChild<EXPRESSION, SAVER>, Either<@Recorded EXPRESSION, Terminator>> onSuccessfulClose, Supplier<ImmutableList<EXPRESSION>> prefixItemsOnFailedClose)
+    {
+        return new Terminator() {
+            @Override
+            public void terminate(FetchContent<EXPRESSION, SAVER> makeContent, @Nullable KEYWORD terminator, ConsecutiveChild<EXPRESSION, SAVER> keywordErrorDisplayer, FXPlatformConsumer<CONTEXT> keywordContext)
+            {
+                if (Objects.equal(expected, terminator))
+                {
+                    // All is well:
+                    Either<@Recorded EXPRESSION, Terminator> result = onSuccessfulClose.apply(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer)), keywordErrorDisplayer);
+                    result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
+                }
+                else
+                {
+                    // Error!
+                    keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
+                    @Nullable ConsecutiveChild<EXPRESSION, SAVER> start = currentScopes.peek().openingNode;
+                    // Important to call makeContent before adding to scope on the next line:
+                    ImmutableList.Builder<Either<OP, @Recorded EXPRESSION>> items = ImmutableList.builder();
+                    items.addAll(Utility.mapListI(prefixItemsOnFailedClose.get(), Either::right));
+                    items.add(Either.right(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer))));
+                    if (terminator != null)
+                        items.add(Either.right(makeSingleInvalid(terminator)));
+                    @Recorded EXPRESSION invalid = makeInvalidOp(start, keywordErrorDisplayer, items.build());
+                    currentScopes.peek().items.add(Either.left(invalid));
+                }
+            }};
+    }
+
+    protected abstract EXPRESSION makeSingleInvalid(KEYWORD terminator);
 }

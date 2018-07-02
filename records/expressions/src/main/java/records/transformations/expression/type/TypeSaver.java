@@ -25,6 +25,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
 public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, Context>
@@ -38,7 +39,8 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
         {
             return new TupleTypeExpression(typeExpressions);
-        } else
+        }
+        else
         {
             Builder<TypeExpression> items = ImmutableList.builderWithExpectedSize(typeExpressions.size() + operators.size());
             for (int i = 0; i < typeExpressions.size(); i++)
@@ -63,7 +65,22 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
     public void saveKeyword(Keyword keyword, ConsecutiveChild<TypeExpression, TypeSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
-        // TODO
+        Supplier<ImmutableList<TypeExpression>> prefixKeyword = () -> ImmutableList.of(new UnfinishedTypeExpression(keyword.getContent()));
+        
+        if (keyword == Keyword.OPEN_ROUND)
+        {
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
+        }
+        else
+        {
+            // Should be a terminator:
+            Scope cur = currentScopes.pop();
+            if (currentScopes.size() == 0)
+            {
+                addTopLevelScope(errorDisplayer.getParent());
+            }
+            cur.terminator.terminate(brackets -> makeExpression(cur.openingNode, brackets.end, cur.items, brackets), keyword, errorDisplayer, withContext);
+        }
     }
 
     @Override
@@ -85,6 +102,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 return;
         }
         super.saveOperand(singleItem, start, end, withContext);
+    }
+
+    @Override
+    protected TypeExpression makeSingleInvalid(Keyword terminator)
+    {
+        return new UnfinishedTypeExpression(terminator.getContent());
     }
 
     @Override

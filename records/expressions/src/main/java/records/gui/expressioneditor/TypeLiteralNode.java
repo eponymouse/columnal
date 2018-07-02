@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
@@ -15,6 +16,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -62,6 +64,12 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     }
 
     @Override
+    public void removeNestedBlanks()
+    {
+        type.removeBlanks();
+    }
+
+    @Override
     public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionSaver>> quickFixes)
     {
     }
@@ -103,6 +111,9 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     @Override
     public void save(ExpressionSaver saver)
     {
+        Log.debug("Saved as: " + type);
+        Log.debug("  From:\n      " + type.children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n      ")));
+        
         saver.saveOperand(new TypeLiteralExpression(type.save()), this, this, c -> {});
     }
 
