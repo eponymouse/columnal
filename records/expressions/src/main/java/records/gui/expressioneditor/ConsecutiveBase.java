@@ -263,7 +263,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void flushFocusRequest()
     {
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        // Take a copy in case focus causes blank removal:
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : new ArrayList<>(children))
         {
             child.flushFocusRequest();
         }

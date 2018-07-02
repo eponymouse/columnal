@@ -270,6 +270,18 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     {
         testSimple("@call @function asType(type{(Number, Boolean)}, @call @function from text(\"(1, true)\"))");
     }
+
+    @Test
+    public void testNestedTupleType() throws Exception
+    {
+        testSimple("@call @function asType(type{((Number, Boolean), Text)}, @call @function from text(\"((1, true), ^qhi^q)\"))");
+    }
+    
+    @Test
+    public void testTupleAndListType() throws Exception
+    {
+        testSimple("@call @function asType(type{[[(Number, [Boolean])]]}, @call @function from text(\"[]\"))");
+    }
     
     @Test
     public void testPrevFailure1() throws Exception

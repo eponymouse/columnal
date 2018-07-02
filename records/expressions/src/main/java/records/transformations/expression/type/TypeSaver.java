@@ -71,6 +71,10 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         {
             currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
         }
+        else if (keyword == Keyword.OPEN_SQUARE)
+        {
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_SQUARE, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_SQUARE_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
+        }
         else
         {
             // Should be a terminator:

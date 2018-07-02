@@ -47,12 +47,12 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))
         //DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))
     );
-    private final TypeCompletion bracketCompletion = new TypeCompletion("(", 0);
-    private final TypeCompletion listCompletion = new TypeCompletion("[", 0);
+    private final TypeCompletion bracketCompletion = new BracketCompletion("(");
+    private final TypeCompletion listCompletion = new BracketCompletion("[");
     private final TypeCompletion unitBracketCompletion = new UnitCompletion();
-    private final Completion endCompletion = new EndCompletion("}"); //"autocomplete.end");
-    private final Completion endBracketCompletion = new EndCompletion(")"); //"autocomplete.end");
-    private final Completion endListCompletion = new EndCompletion("]"); //"autocomplete.end");
+    private final Completion endCompletion = new BracketCompletion("}"); //"autocomplete.end");
+    private final Completion endBracketCompletion = new BracketCompletion(")"); //"autocomplete.end");
+    private final Completion endListCompletion = new BracketCompletion("]"); //"autocomplete.end");
     private final ImmutableList<Completion> allCompletions;
 
     /**
@@ -123,6 +123,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 }
                 else if (typeCompletion == endBracketCompletion || typeCompletion == endListCompletion)
                 {
+                    // TODO check operator to right is actually a bracket
                     if ((typeCompletion == endBracketCompletion && parent.balancedBrackets(BracketBalanceType.ROUND)) || (typeCompletion == endListCompletion && parent.balancedBrackets(BracketBalanceType.SQUARE)))
                     {
                         keep = "";
@@ -352,7 +353,23 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     {
         return load(value.getContent());
     }
-    
+
+    @Override
+    public boolean availableForFocus()
+    {
+        for (Keyword keyword : Keyword.values())
+        {
+            if (keyword.getContent().equals(textField.getText()))
+                return false;
+        }
+        for (Operator operator : Operator.values())
+        {
+            if (operator.getContent().equals(textField.getText()))
+                return false;
+        }
+        return true;
+    }
+
     public static enum Keyword
     {
         OPEN_ROUND("("), CLOSE_ROUND(")"), OPEN_SQUARE("["), CLOSE_SQUARE("]");
@@ -384,6 +401,20 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         public String getContent()
         {
             return op;
+        }
+    }
+
+    private class BracketCompletion extends TypeCompletion
+    {
+        public BracketCompletion(String s)
+        {
+            super(s, 0);
+        }
+
+        @Override
+        public boolean completesWhenSingleDirect()
+        {
+            return true;
         }
     }
 }
