@@ -33,6 +33,8 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
         {
             atomicEdit.set(true);
             children.addAll(content.map(f -> f.load(this)).collect(Collectors.toList()));
+            if (children.isEmpty())
+                children.add(makeBlankChild());
             atomicEdit.set(false);
             // Get rid of anything which would go if you got focus and lost it again:
             focusChanged();

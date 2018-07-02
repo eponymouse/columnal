@@ -59,8 +59,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         this.operations = operations;
         this.style = style;
-        children = FXCollections.observableArrayList(makeBlankChild());
-
+        children = FXCollections.observableArrayList();
+        
         this.prefixNode = prefixNode;
         this.suffixNode = suffixNode;
         listenToNodeRelevantList(children);
@@ -124,7 +124,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         Predicate<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> isRemovable = c -> c.isBlank() && !c.isFocused() && !c.isFocusPending();
         
         // If we don't need to remove blanks, don't trigger the listeners for a no-op change:
-        if (children.stream().noneMatch(isRemovable))
+        if (children.stream().noneMatch(isRemovable) || children.size() == 1)
             return;
         
         removingBlanks = true;
@@ -210,9 +210,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
         if (index != -1)
         {
+            atomicEdit.set(true);
             //Utility.logStackTrace("Removing " + oldNode + " from " + this);
             children.remove(index).cleanup();
             children.addAll(index, items.map(l -> l.load(this)).collect(Collectors.toList()));
+            atomicEdit.set(false);
         }
     }
 

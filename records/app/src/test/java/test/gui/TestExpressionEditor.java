@@ -264,4 +264,16 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     {
         testSimple("date{2001-04-05}");
     }
+    
+    @Test
+    public void testTupleType() throws Exception
+    {
+        testSimple("@call @function asType(type{(Number, Boolean)}, @call @function from text(\"(1, true)\"))");
+    }
+    
+    @Test
+    public void testPrevFailure1() throws Exception
+    {
+        testSimple("[@call @function asType(type{(Number, (Text, Number))}, @column GEV Col 0), (((32767{s} - @column GEV Col 1 - @column GEV Col 2 + 0{s} - 61815{s}) * (32767{kg} - @column GEV Col 3) * @call @function asType(type{Number {1/(kg*s)}}, @column GEV Col 4)), ((@call @function asType(type{Text}, @column GEV Col 5) ; @column GEV Col 6 ; (\"=cMm\" ; \"prrrZ\" ; \"l'z*\uDB89\uDE8AB!?k^a\" ; @column GEV Col 7)), ((@if (@column GEV Col 9 = 0{1}) @then -7{1} @else (@column GEV Col 8 / @column GEV Col 9) @endif) - @call @function asType(type{Number}, @column GEV Col 10) + (@column GEV Col 11 * @column GEV Col 12) + 2147483648{1} - (3{1} - @column GEV Col 13 + @column GEV Col 14 - -32767{1} + @column GEV Col 15 + 25383101276006{1})))), @column GEV Col 16, @column GEV Col 17, @call @function asType(type{(Number, (Text, Number))}, @column GEV Col 18), @column GEV Col 19]");
+    }
 }
