@@ -40,6 +40,10 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         {
             return new TupleTypeExpression(typeExpressions);
         }
+        else if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && typeExpressions.size() == 1 && operators.isEmpty())
+        {
+            return new ListTypeExpression(typeExpressions.get(0));
+        }
         else
         {
             Builder<TypeExpression> items = ImmutableList.builderWithExpectedSize(typeExpressions.size() + operators.size());
@@ -49,7 +53,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                 if (i < operators.size())
                     items.add(new UnfinishedTypeExpression(operators.get(i).getContent()));
             }
-            if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
+            if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
                 return new ListTypeExpression(new InvalidOpTypeExpression(items.build()));
             else
                 return new InvalidOpTypeExpression(items.build());
@@ -147,7 +151,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
-                return validOperands.get(0);
+            {
+                if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+                    return new ListTypeExpression(validOperands.get(0));
+                else
+                    return validOperands.get(0);
+            }
             
             // Now we need to check the operators can work together as one group:
             @Nullable TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, arg ->

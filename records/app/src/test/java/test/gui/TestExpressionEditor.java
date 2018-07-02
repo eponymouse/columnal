@@ -282,6 +282,18 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     {
         testSimple("@call @function asType(type{[[(Number, [Boolean])]]}, @call @function from text(\"[]\"))");
     }
+
+    @Test
+    public void testList() throws Exception
+    {
+        testSimple("[1, 2, 3]");
+    }
+    
+    @Test
+    public void testTempExtract() throws Exception
+    {
+        testSimple("(((32767{s} - @column GEV Col 1 - @column GEV Col 2 + 0{s} - 61815{s}) * (32767{kg} - @column GEV Col 3) * @call @function asType(type{Number {1/(kg*s)}}, @column GEV Col 4)), (@call @function asType(type{Text}, @column GEV Col 5) ; @column GEV Col 6 ; (\"=cMm\" ; \"prrrZ\" ; \"l'z*\uDB89\uDE8AB!?k^a\" ; @column GEV Col 7)))");
+    }
     
     @Test
     public void testPrevFailure1() throws Exception
