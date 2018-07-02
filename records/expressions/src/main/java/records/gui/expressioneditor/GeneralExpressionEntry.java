@@ -344,6 +344,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
 
         @Override
+        public String getDisplaySortKey(String text)
+        {
+            return function.getName();
+        }
+
+        @Override
         public ShowStatus shouldShow(String input)
         {
             if (input.equals(function.getName() + "("))

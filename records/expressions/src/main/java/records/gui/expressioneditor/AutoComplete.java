@@ -475,7 +475,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
         try
         {
             List<C> calculated = calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY)
-                .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplay(new ReadOnlyStringWrapper(text)).completion.get()))    
+                .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplaySortKey(text)))    
                 .collect(Collectors.toList());
             this.completions.getItems().setAll(calculated);
         }
@@ -536,6 +536,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
 
     public abstract static @Interned class Completion
     {
+
         protected final class CompletionContent
         {
             private final ObservableStringValue completion;
@@ -565,6 +566,14 @@ public class AutoComplete<C extends Completion> extends PopupControl
          * should we show for the item?
          */
         public abstract CompletionContent getDisplay(ObservableStringValue currentText);
+
+        /**
+         * How should we sort this item?  For functions, leave off brackets.
+         */
+        public String getDisplaySortKey(String text)
+        {
+            return getDisplay(new ReadOnlyStringWrapper(text)).completion.get();
+        }
 
         public static enum ShowStatus
         {
