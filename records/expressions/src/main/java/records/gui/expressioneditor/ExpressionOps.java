@@ -209,6 +209,11 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
         {
             return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), "0" + current.substring(1), newCodepoint);
         }
+        // Identifiers can have numbers after first char:
+        if (current.codePoints().limit(1).anyMatch(ExpressionAlphabet.WORD::test) && Character.isDigit(newCodepoint))
+        {
+            return false;
+        }
         
         return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), current, newCodepoint);
     }
