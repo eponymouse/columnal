@@ -100,7 +100,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == ColumnReference.class)
         {
             write(((ColumnReference)expression).getColumnId().getRaw(), DELAY);
-            push(KeyCode.ENTER);
+            //push(KeyCode.ENTER);
         }
         else if (c == CallExpression.class)
         {

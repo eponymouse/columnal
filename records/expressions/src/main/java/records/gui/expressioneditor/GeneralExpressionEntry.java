@@ -66,6 +66,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
     
+
     private static enum GeneralPseudoclass
     {
         STANDARD("ps-standard"),
@@ -101,6 +102,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
     private @Nullable Pair<String, Function<String, Expression>> savePrefix;
+    
+    private final ArrayList<ColumnReference> availableColumns = new ArrayList<>();
+    
     
     GeneralExpressionEntry(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
@@ -177,6 +181,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         r.add(new SimpleCompletion("false", null));
         for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))
         {
+            availableColumns.add(column);
             r.add(new ColumnCompletion(column));
         }
         for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
@@ -573,6 +578,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         protected String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
         {
+            Log.normalStackTrace("Selected " + currentText, 4);
             savePrefix = null;
             prefix.setText("");
             completing = true;
@@ -1004,6 +1010,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 if (!textField.isFocused())
                     textField.setEditable(false);
                 setPseudoClass(GeneralPseudoclass.KEYWORD);
+                return;
+            }
+        }
+
+        for (ColumnReference availableColumn : availableColumns)
+        {
+            if (availableColumn.getColumnId().getRaw().equals(text) && availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+            {
+                saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
                 return;
             }
         }

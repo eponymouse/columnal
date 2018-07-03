@@ -61,6 +61,11 @@ public class ColumnReference extends NonOperatorExpression
         this(null, columnName, type);
     }
 
+    public ColumnReference(ColumnReference toCopy)
+    {
+        this(toCopy.tableName, toCopy.columnName, toCopy.referenceType);
+    }
+
     @Override
     public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {

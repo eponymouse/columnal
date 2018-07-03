@@ -121,7 +121,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void removeBlanks()
     {
-        Log.debug("Remove blanks from: " + this);
+        //Log.debug("Remove blanks from: " + this);
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
         {
             child.removeNestedBlanks();

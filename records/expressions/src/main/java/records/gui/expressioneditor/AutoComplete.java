@@ -331,7 +331,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
             for (C completion : available)
             {
                 ShowStatus completionAction = completion.shouldShow(text);
-                Log.debug("Completion for \"" + text + "\": " + completionAction);
+                //Log.debug("Completion for \"" + text + "\": " + completionAction);
                 // TODO check if we are actually a single completion
                 if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly && completion.completesWhenSingleDirect())
                 {

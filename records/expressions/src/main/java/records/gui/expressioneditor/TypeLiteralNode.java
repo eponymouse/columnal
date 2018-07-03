@@ -111,8 +111,8 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     @Override
     public void save(ExpressionSaver saver)
     {
-        Log.debug("Saved as: " + type);
-        Log.debug("  From:\n      " + type.children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n      ")));
+        //Log.debug("Saved as: " + type);
+        //Log.debug("  From:\n      " + type.children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n      ")));
         
         saver.saveOperand(new TypeLiteralExpression(type.save()), this, this, c -> {});
     }
