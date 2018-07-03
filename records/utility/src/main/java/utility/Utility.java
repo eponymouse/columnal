@@ -1198,6 +1198,11 @@ public class Utility
         return builder.build();
     }
 
+    public static <T> Stream<T> appendStream(Stream<T> stream, T appendItem)
+    {
+        return Stream.concat(stream, Stream.of(appendItem));
+    }
+
     public interface WrappedCharSequence extends CharSequence
     {
         public int translateWrappedToOriginalPos(int position);

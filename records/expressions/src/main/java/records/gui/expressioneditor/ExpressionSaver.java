@@ -32,6 +32,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, Keyword, Context> implements ErrorAndTypeRecorder
 {
@@ -99,7 +100,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         else if (keyword == Keyword.MATCH)
         {            
-            currentScopes.push(new Scope(errorDisplayer, expectOneOf(errorDisplayer, ImmutableList.of(new Case(errorDisplayer)))));
+            currentScopes.push(new Scope(errorDisplayer, expectOneOf(errorDisplayer, ImmutableList.of(new Case(errorDisplayer)), Stream.of(new InvalidIdentExpression(keyword.getContent())))));
         }
         else
         {
@@ -180,7 +181,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             this.keyword = keyword;
         }
 
-        public abstract Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node);
+        public abstract Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid);
     }
     
     // Looks for @case
@@ -212,7 +213,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid)
         {
             final @Recorded Expression m;
             final ImmutableList<Function<MatchExpression, MatchClause>> newClauses;
@@ -233,7 +234,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 new Then(matchKeyword, m, newClauses, ImmutableList.of(), Keyword.CASE),
                 new Given(matchKeyword, m, newClauses, ImmutableList.of()),
                 new OrCase(matchKeyword, m, newClauses, ImmutableList.of(), null)
-            )));
+            ), prefixIfInvalid));
         }
     }
     
@@ -255,13 +256,13 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid)
         {
             // Expression here is the pattern, which comes before the guard:
             return Either.right(expectOneOf(node, ImmutableList.of(
                 new OrCase(matchKeyword, matchFrom, previousClauses, previousCases, expressionBefore),
                 new Then(matchKeyword, matchFrom, previousClauses, Utility.appendToList(previousCases, new Pattern(expressionBefore, null)), Keyword.GIVEN)
-            )));
+            ), prefixIfInvalid));
         }
     }
     
@@ -285,7 +286,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid)
         {
             ImmutableList<Pattern> newCases = Utility.appendToList(previousCases, curMatch == null ?
                 // We are the pattern:
@@ -297,7 +298,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 new Given(matchKeyword, matchFrom, previousClauses, newCases),
                 new OrCase(matchKeyword, matchFrom, previousClauses, newCases, null),
                 new Then(matchKeyword, matchFrom, previousClauses, newCases, Keyword.ORCASE)
-            )));
+            ), prefixIfInvalid));
         }
     }
     
@@ -323,7 +324,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
 
         @Override
-        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node)
+        public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression expressionBefore, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid)
         {
             final ImmutableList<Pattern> newPatterns;
             if (precedingKeyword == Keyword.GIVEN)
@@ -340,18 +341,18 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 new Case(matchKeywordNode, matchFrom, previousClauses, newPatterns),
                 new Choice(Keyword.ENDMATCH) {
                     @Override
-                    public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, ConsecutiveChild<Expression, ExpressionSaver> node)
+                    public Either<@Recorded Expression, Terminator> foundKeyword(@Recorded Expression lastExpression, ConsecutiveChild<Expression, ExpressionSaver> node, Stream<Expression> prefixIfInvalid)
                     {
                         MatchExpression matchExpression = new MatchExpression(matchFrom, Utility.appendToList(previousClauses, me -> me.new MatchClause(newPatterns, lastExpression)));
                         return Either.left(errorDisplayerRecord.record(matchKeywordNode, node, matchExpression));
                     }
                 }
-            )));
+            ), prefixIfInvalid));
         }
     }
     
 
-    public Terminator expectOneOf(ConsecutiveChild<Expression, ExpressionSaver> start, ImmutableList<Choice> choices)
+    public Terminator expectOneOf(ConsecutiveChild<Expression, ExpressionSaver> start, ImmutableList<Choice> choices, Stream<Expression> prefixIfInvalid)
     {
         return new Terminator()
         {
@@ -365,7 +366,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 if (choice.keyword.equals(terminator))
                 {
                     // All is well:
-                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(makeContent.fetchContent(brackets), keywordErrorDisplayer);
+                    @Recorded Expression expressionBefore = makeContent.fetchContent(brackets);
+                    Either<@Recorded Expression, Terminator> result = choice.foundKeyword(expressionBefore, keywordErrorDisplayer, Stream.concat(prefixIfInvalid, Stream.of(expressionBefore, new InvalidIdentExpression(choice.keyword.getContent()))));
                     result.either_(e -> currentScopes.peek().items.add(Either.left(e)), t -> currentScopes.push(new Scope(keywordErrorDisplayer, t)));
                     return;
                 }
@@ -375,7 +377,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
-            // TODO prefix with leftover bits if invalid
+            items.addAll(prefixIfInvalid.collect(Collectors.toList()));
             items.add(makeContent.fetchContent(brackets));
             if (terminator != null)
                 items.add(new InvalidIdentExpression(terminator.getContent()));

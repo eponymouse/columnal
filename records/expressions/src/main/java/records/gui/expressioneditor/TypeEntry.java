@@ -78,7 +78,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             completing = false;
             parent.changed(this);
         });
-        textField.setText(initialContent);
+        autoComplete.setContentDirect(initialContent);
     }
 
     private Stream<Completion> calculateCompletions(String s, CompletionQuery completionQuery)

@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
@@ -31,7 +32,7 @@ public class StringLiteralNode extends SimpleLiteralNode
     @Override
     public void save(ExpressionSaver saver)
     {
-        saver.saveOperand(new records.transformations.expression.StringLiteral(textField.getText()), this, this, c -> {});
+        saver.saveOperand(new records.transformations.expression.StringLiteral(GrammarUtility.processEscapes(textField.getText(), false)), this, this, c -> {});
     }
 
     @Override

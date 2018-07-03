@@ -662,7 +662,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c == varDeclCompletion)
             {
-                newText = varDeclCompletion.getVarName(currentText);
+                newText = currentText;
             }
             else if (c instanceof NumericLiteralCompletion)
             {
@@ -949,9 +949,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      */
     public static enum Keyword
     {
-        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING("@anything"), QUEST("?"),
-        IF("@if"), THEN("@then"), ELSE("@else"), ENDIF("@endif"),
-        MATCH("@match"), CASE("@case"), ORCASE("@orcase"), GIVEN("@given"), ENDMATCH("@endmatch");
+        OPEN_SQUARE("["), CLOSE_SQUARE("]"), OPEN_ROUND("("), CLOSE_ROUND(")"), ANYTHING(ExpressionLexer.ANY), QUEST("?"),
+        IF(ExpressionLexer.IF), THEN(ExpressionLexer.THEN), ELSE(ExpressionLexer.ELSE), ENDIF(ExpressionLexer.ENDIF),
+        MATCH(ExpressionLexer.MATCH),
+        CASE(ExpressionLexer.CASE),
+        ORCASE(ExpressionLexer.ORCASE),
+        GIVEN(ExpressionLexer.CASEGUARD),
+        ENDMATCH(ExpressionLexer.ENDMATCH);
 
         private final String keyword;
 
@@ -960,6 +964,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             this.keyword = keyword;
         }
 
+        private Keyword(int token)
+        {
+            this.keyword = Utility.literal(ExpressionLexer.VOCABULARY, token);
+        }
+        
         public String getContent()
         {
             return keyword;

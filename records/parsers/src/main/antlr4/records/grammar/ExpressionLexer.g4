@@ -28,7 +28,7 @@ MATCH : '@match';
 ENDMATCH : '@endmatch';
 CASE : '@case';
 COLON: ':';
-ORCASE : '@or';
+ORCASE : '@orcase';
 IF : '@if';
 THEN : '@then';
 ELSE : '@else';

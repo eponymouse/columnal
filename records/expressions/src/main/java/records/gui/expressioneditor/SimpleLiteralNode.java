@@ -178,7 +178,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             if (input.endsWith(ending))
                 return ShowStatus.DIRECT_MATCH;
             else
-                return ShowStatus.START_DIRECT_MATCH;
+                return ShowStatus.PHANTOM;
         }
 
         @Override

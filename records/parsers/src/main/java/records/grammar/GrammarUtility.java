@@ -5,45 +5,62 @@ package records.grammar;
  */
 public class GrammarUtility
 {
-    // Processes out all the escapes in a string:
+    // Processes out all the escapes in a quoted string:
+    
     public static String processEscapes(String quotedAndEscaped)
     {
+        return processEscapes(quotedAndEscaped, true);
+    }
+
+    // Processes out all the escapes in a string:
+    public static String processEscapes(String escaped, boolean beginsAndEndsWithQuotes)
+    {
         // Removing escapes always shortens so longest length is original - 2 (the quotes):
-        char[] result = new char[quotedAndEscaped.length() - 2];
+        char[] result = new char[escaped.length() - (beginsAndEndsWithQuotes ? 2 : 0)];
         int resultIndex = 0;
         // Don't process first and last because they are quotes
-        for (int i = 1; i < quotedAndEscaped.length() - 1; i++)
+        int end = escaped.length() - (beginsAndEndsWithQuotes ? 1 : 0);
+        for (int i = beginsAndEndsWithQuotes ? 1 : 0; i < end; i++)
         {
             // We can do it using chars not codepoints because non-^ characters
             // will be perfectly preserved:
-            char c = quotedAndEscaped.charAt(i);
+            char c = escaped.charAt(i);
             if (c == '^')
             {
-                switch (quotedAndEscaped.charAt(i+1))
+                if (i + 1 < end)
                 {
-                    case 'r':
-                        c = '\r';
-                        break;
-                    case 'n':
-                        c = '\n';
-                        break;
-                    case 'q':
-                        c = '\"';
-                        break;
-                    case 'c':
-                        c = '^';
-                        break;
-                    case 'a':
-                        c = '@';
-                        break;
-                    case 't':
-                        c = '\t';
-                        break;
-                    default:
-                        // Invalid escape, probably came from user edit.  Best bet
-                        // is just to preserve it:
-                        c = quotedAndEscaped.charAt(i+1);
-                        break;
+
+                    switch (escaped.charAt(i + 1))
+                    {
+                        case 'r':
+                            c = '\r';
+                            break;
+                        case 'n':
+                            c = '\n';
+                            break;
+                        case 'q':
+                            c = '\"';
+                            break;
+                        case 'c':
+                            c = '^';
+                            break;
+                        case 'a':
+                            c = '@';
+                            break;
+                        case 't':
+                            c = '\t';
+                            break;
+                        default:
+                            // Invalid escape, probably came from user edit.  Best bet
+                            // is just to preserve it:
+                            c = escaped.charAt(i + 1);
+                            break;
+                    }
+                }
+                else
+                {
+                    // Invalid, but retain it:
+                    c = '^';
                 }
                 i += 1;
             }

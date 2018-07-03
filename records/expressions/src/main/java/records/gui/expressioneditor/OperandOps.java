@@ -228,8 +228,8 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     
     public static boolean alphabetDiffers(List<Alphabet> alphabets, String current, int nextCodepoint)
     {
-        @Nullable Alphabet curAlphabet = alphabets.stream().filter(a -> a.test(current.codePointAt(0))).findFirst().orElse(null);
+        @Nullable Alphabet curAlphabet = alphabets.stream().filter(a -> !current.isEmpty() && a.test(current.codePointAt(0))).findFirst().orElse(null);
         @Nullable Alphabet nextAlphabet = alphabets.stream().filter(a -> a.test(nextCodepoint)).findFirst().orElse(null);
-        return !Objects.equals(curAlphabet, nextAlphabet);
+        return !current.isEmpty() && !Objects.equals(curAlphabet, nextAlphabet);
     }
 }

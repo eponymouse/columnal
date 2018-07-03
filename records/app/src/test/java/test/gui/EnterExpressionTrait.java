@@ -6,24 +6,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
 import records.grammar.ExpressionLexer;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.BinaryOpExpression;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
-import records.transformations.expression.ConstructorExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.TypeLiteralExpression;
-import records.transformations.expression.IfThenElseExpression;
-import records.transformations.expression.Literal;
-import records.transformations.expression.MatchExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.NaryOpExpression;
-import records.transformations.expression.StandardFunction;
-import records.transformations.expression.StringLiteral;
-import records.transformations.expression.TupleExpression;
-import records.transformations.expression.VarDeclExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -72,6 +57,8 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         else if (c == StringLiteral.class)
         {
             write('"');
+            write(((StringLiteral)expression).editString().replaceAll("\"", "^q"));
+            /*
             int extraChars = 0;
             for (char singleChar : ((StringLiteral) expression).getRawString().toCharArray())
             {
@@ -91,6 +78,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
             {
                 push(KeyCode.DELETE);
             }
+            */
             write('"');
         }
         else if (Literal.class.isAssignableFrom(c))
@@ -157,7 +145,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
                 enterExpression(matchClause.getOutcome(), false, r);
             }
             // To finish whole match expression:
-            write(")");
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ENDMATCH), DELAY);
         }
         else if (c == IfThenElseExpression.class)
         {
@@ -204,7 +192,7 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         }
         else if (c == VarDeclExpression.class)
         {
-            write(((VarDeclExpression)expression).getName(), DELAY);
+            write("$" + ((VarDeclExpression)expression).getName(), DELAY);
             // Have to manually move on because it won't auto-complete:
             push(KeyCode.ENTER); // TODO make sure we've scrolled to new-var in cases of overlap
         }
@@ -219,6 +207,10 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
             TypeLiteralExpression f = (TypeLiteralExpression)expression; 
             enterType(f.getType(), r);
             write("}");
+        }
+        else if (c == MatchAnythingExpression.class)
+        {
+            write("@anything", DELAY);
         }
         else
         {

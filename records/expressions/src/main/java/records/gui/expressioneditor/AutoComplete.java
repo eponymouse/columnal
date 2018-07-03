@@ -141,7 +141,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
         this.webView.prefHeightProperty().bind(webViewHeightBinding);
         
         FXUtility.listen(completions.getItems(), change -> {
-            updateHeight(completions);
+            FXUtility.runAfter(() -> updateHeight(completions));
         });
 
         textField.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
@@ -294,7 +294,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
             Log.debug("Checking alphabet: [[" + text + "]]");
-            if (codepoints.length >= 2 && inNextAlphabet.differentAlphabet(new String(codepoints, 0, codepoints.length - 1), codepoints[codepoints.length - 1]))
+            if (codepoints.length >= 1 && inNextAlphabet.differentAlphabet(new String(codepoints, 0, codepoints.length - 1), codepoints[codepoints.length - 1]))
             {
                 int last = codepoints[codepoints.length - 1];
                 String withoutLast = new String(codepoints, 0, codepoints.length - 1);
