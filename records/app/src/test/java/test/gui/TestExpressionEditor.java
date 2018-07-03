@@ -268,7 +268,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     @Test
     public void testEmpties() throws Exception
     {
-        testSimple("\"\"=[]");
+        testSimple("(\"\"=\"\") & ([] <> [])");
     }
     
     @Test
@@ -299,11 +299,5 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     public void testMarch() throws Exception
     {
         testSimple("@match @call @function from text to(type{DateTime}, \"2047-12-23 10:50:09.094335028\") @case @call @function from text to(type{DateTime}, \"2024-06-09 13:26:01.165156525\") @given true @orcase @call @function datetime(date{8848-10-02}, time{14:57:00}) @given (true = @call @function from text to(type{Boolean}, \"true\") = true = @call @function from text to(type{Boolean}, \"true\")) @then @call @function from text to(type{(Number, Number)}, \"(7,242784)\") @case @anything @given true @orcase @call @function from text to(type{DateTime}, @call @function from text to(type{Text}, \"^q2914-03-04 09:00:00.753695607^q\")) @orcase @call @function from text to(type{DateTime}, \"\") @given true @orcase @newvar var11 @given (var11 = @call @function second(@call @function second(@call @function from text to(type{(Number {(USD*m)/s^2}, (DateTime, DateTime), [Text], Number)}, \"(-2147483649,(2047-09-04 22:11:00,2047-12-23 10:50:09.094335028),[^qUNITS^q,^qknr90rr9rra^q,^qX^q],1609257947333)\")))) @then (3, 4) @endmatch");
-    }
-    
-    @Test
-    public void testPrevFailure1() throws Exception
-    {
-        testSimple("[@call @function asType(type{(Number, (Text, Number))}, @column GEV Col 0), (((32767{s} - @column GEV Col 1 - @column GEV Col 2 + 0{s} - 61815{s}) * (32767{kg} - @column GEV Col 3) * @call @function asType(type{Number {1/(kg*s)}}, @column GEV Col 4)), ((@call @function asType(type{Text}, @column GEV Col 5) ; @column GEV Col 6 ; (\"=cMm\" ; \"prrrZ\" ; \"l'z*\uDB89\uDE8AB!?k^a\" ; @column GEV Col 7)), ((@if (@column GEV Col 9 = 0{1}) @then -7{1} @else (@column GEV Col 8 / @column GEV Col 9) @endif) - @call @function asType(type{Number}, @column GEV Col 10) + (@column GEV Col 11 * @column GEV Col 12) + 2147483648{1} - (3{1} - @column GEV Col 13 + @column GEV Col 14 - -32767{1} + @column GEV Col 15 + 25383101276006{1})))), @column GEV Col 16, @column GEV Col 17, @call @function asType(type{(Number, (Text, Number))}, @column GEV Col 18), @column GEV Col 19]");
     }
 }
