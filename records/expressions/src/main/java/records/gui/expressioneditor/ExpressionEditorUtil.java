@@ -78,7 +78,7 @@ public class ExpressionEditorUtil
         }
 
         @OnThread(Tag.FXPlatform)
-        private void bindErrorMasking(BooleanExpression errorMasking)
+        void bindErrorMasking(BooleanExpression errorMasking)
         {
             maskErrors = errorMasking.get();
             FXUtility.addChangeListenerPlatformNN(errorMasking, maskErrors -> {
@@ -95,13 +95,6 @@ public class ExpressionEditorUtil
         {
             return "ErrorTop " + topLabel.getText() + ": " + (getChildren().size() > 1 ? getChildren().get(1) : "<empty>");
         }
-    }
-    
-    public static ExpressionInfoDisplay installErrorShower(ErrorTop vBox, Label topLabel, TextField textField)
-    {
-        ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField);
-        vBox.bindErrorMasking(expressionInfoDisplay.maskingErrors());
-        return expressionInfoDisplay;
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)

@@ -311,15 +311,9 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
                 Log.debug("Focusing target field: " + lhsFinal);
                 moveTo(lhs);
                 // Get rid of any popups in the way:
-                clickOn(lhs, MouseButton.MIDDLE);
-                TestUtil.sleep(200);
-                clickOn(lhs, MouseButton.MIDDLE);
-                clickOn(lhs);
-                // Move mouse to avoid showing hover popup by accident:
-                moveTo(0, 0);                
-                // We don't test lhs for focus here, because it may not be able to receive focus
-                // For fix purposes, focusing the blank next to it should have the right effect.
-                TestUtil.sleep(2500);                
+                clickOn(MouseButton.MIDDLE);
+                clickOn(MouseButton.MIDDLE);
+                clickOn();
             }
             List<Window> windows = listWindows();
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);

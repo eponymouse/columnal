@@ -85,7 +85,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         ExpressionEditorUtil.enableSelection(typeLabel, this);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
         container = new ErrorTop(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
-        this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
+        this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
 
         updateNodes();

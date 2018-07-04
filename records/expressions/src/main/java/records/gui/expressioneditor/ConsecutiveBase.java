@@ -781,7 +781,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void addErrorAndFixes(@Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, @Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end, StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
     {
-        //Log.logStackTrace("\n\n\n" + this + " showing " + error.toPlain() + " " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
+        Log.debug("Showing " + error.toPlain() + " from " + start + " to " + end + "; " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
         boolean inSpan = start == null;
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
         {

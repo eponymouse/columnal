@@ -65,7 +65,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         prefix = new Label();
         container = new ErrorTop(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
-        this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
+        this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
         
         GeneralOperandEntry us = FXUtility.mouse(this);

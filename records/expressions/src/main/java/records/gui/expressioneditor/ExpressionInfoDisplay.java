@@ -61,12 +61,7 @@ public class ExpressionInfoDisplay
     private final VBox expressionNode;
     // Only currently used for debugging:
     private final TextField textField;
-    private @Nullable ErrorMessagePopup popup = null;
-    private boolean focused = false;
-    private boolean hoveringAttached = false;
-    private boolean hoveringTopOfAttached = false;
-    private boolean hoveringPopup = false;
-    private @Nullable Animation hidingAnimation;
+    private final TopLevelEditor.ErrorMessageDisplayer popup;
     private final SimpleBooleanProperty maskingErrors = new SimpleBooleanProperty();
     
     
@@ -77,14 +72,15 @@ public class ExpressionInfoDisplay
         this.textField = textField;
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
         FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> {
-            hoveringAttached = b;
-            mouseHoverStatusChanged();
+            mouseHoverNode = b ? expressionNode : null;
+            popup.setMouseError(expressionNode, b ? makeError() : null);
         });
         FXUtility.addChangeListenerPlatformNN(topLabel.hoverProperty(), b -> {
-            hoveringTopOfAttached = b;
-            mouseHoverStatusChanged();
+            popup.setMouseError(topLabel, b ? makeError() : null);
         });
-        FXUtility.addChangeListenerPlatformNN(errorMessage, s -> updateShowHide(true));
+        FXUtility.addChangeListenerPlatformNN(errorMessage, s -> {
+            popup.updateMouseError()
+        });
         textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             OptionalInt fKey = FXUtility.FKeyNumber(e.getCode());
             if (e.isShiftDown() && fKey.isPresent() && popup != null)
@@ -126,110 +122,8 @@ public class ExpressionInfoDisplay
         maskingErrors.set(false);
     }
 
-    private class ErrorMessagePopup extends PopOver
-    {
-        private final FixList fixList;
 
-        public ErrorMessagePopup()
-        {
-            setDetachable(true);
-            getStyleClass().add("expression-info-popup");
-            setArrowLocation(ArrowLocation.BOTTOM_CENTER);
-            // If we let the position vary to fit on screen, we end up with the popup bouncing in and out
-            // as the mouse hovers on item then on popup then hides.  Better to let the item be off-screen
-            // and let the user realise they need to move things about a bit:
-            setAutoFix(false);
-            // It's the skin that binds the height, so we must unbind after the skin is set:
-            FXUtility.onceNotNull(skinProperty(), skin -> {
-                // By default, the min width and height are the same, to allow for arrow + corners.
-                // But we know arrow is on bottom, so we don't need such a large min height:
-                getRoot().minHeightProperty().unbind();
-                getRoot().setMinHeight(20.0);
-            });
-            
-            //Log.debug("Showing error [initial]: \"" + errorMessage.get().toPlain() + "\"");
-            TextFlow errorLabel = new TextFlow(errorMessage.get().toGUI().toArray(new Node[0]));
-            errorLabel.getStyleClass().add("expression-info-error");
-            errorLabel.setVisible(!errorMessage.get().toPlain().isEmpty());
-            FXUtility.addChangeListenerPlatformNN(errorMessage, err -> {
-                errorLabel.getChildren().setAll(err.toGUI());
-                errorLabel.setVisible(!err.toPlain().isEmpty());
-                updateShowHide(true);
-            });
-            errorLabel.managedProperty().bind(errorLabel.visibleProperty());
-
-            fixList = new FixList(ImmutableList.of());
-            fixList.setFixes(fixes.get());
-            
-            Label typeLabel = new Label();
-            typeLabel.getStyleClass().add("expression-info-type");
-            typeLabel.textProperty().bind(type);
-            BorderPane container = new BorderPane(errorLabel, typeLabel, null, fixList, null);
-
-            setContentNode(container);
-            FXUtility.addChangeListenerPlatformNN(getRoot().hoverProperty(), b -> {
-                hoveringPopup = b;
-                mouseHoverStatusChanged();
-            });
-            FXUtility.addChangeListenerPlatformNN(detachedProperty(), b -> updateShowHide(false));
-            container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-                if (e.getButton() == MouseButton.MIDDLE)
-                {
-                    hideImmediately();
-                    e.consume();
-                }
-            });
-        }
-    }
-
-    private void show()
-    {
-        // Shouldn't be non-null already, but just in case:
-        if (popup != null)
-        {
-            hide(true);
-        }
-        if (expressionNode.getScene() != null)
-        {
-            popup = new ErrorMessagePopup();
-            //Log.logStackTrace(" # Showing: " + popup);
-            popup.show(expressionNode);
-        }
-    }
-
-    @RequiresNonNull("popup")
-    // Can't have an ensuresnull check
-    private void hide(boolean immediately)
-    {
-        //Log.logStackTrace("# Hiding " + popup);
-        @NonNull PopOver popupFinal = popup;
-        // Whether we hide immediately or not, stop any current animation:
-        cancelHideAnimation();
-
-        if (immediately)
-        {
-            //Log.debug("#####\n# Hiding " + popupFinal + "\n#####");
-            popupFinal.hide(Duration.ZERO);
-            popup = null;
-        }
-        else
-        {
-            
-            hidingAnimation = new Timeline(
-                new KeyFrame(Duration.ZERO, new KeyValue(popupFinal.opacityProperty(), 1.0)),
-                new KeyFrame(Duration.millis(2000), new KeyValue(popupFinal.opacityProperty(), 0.0))
-            );
-            hidingAnimation.setOnFinished(e -> {
-                if (popup != null)
-                {
-                    Log.debug("#####\n# Hiding (slowly) " + popup + "\n#####");
-                    popup.hide(Duration.ZERO);
-                    popup = null;
-                }
-            });
-            hidingAnimation.playFromStart();
-        }
-    }
+    
 
     private void mouseHoverStatusChanged()
     {
@@ -248,51 +142,14 @@ public class ExpressionInfoDisplay
     }
 
 
-    private void updateShowHide(boolean hideImmediately)
-    {
-        //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
-        if (hoveringPopup || hoveringTopOfAttached || ((hoveringAttached || focused) && !errorMessage.get().toPlain().isEmpty()) || (popup != null && popup.isDetached()))
-        {
-            if (!maskingErrors.get() || textField.getText().isEmpty())
-            {
-                if (popup == null)
-                {
-                    show();
-                }
-                else
-                {
-                    // Make sure to cancel any hide animation:
-                    cancelHideAnimation();
-                }
-            }
-        }
-        else
-        {
-            if (popup != null)
-                hide(hideImmediately);
-        }
-    }
-
-    //@EnsuresNull("hidingAnimation")
-    private void cancelHideAnimation()
-    {        
-        if (hidingAnimation != null)
-        {
-            hidingAnimation.stop();
-            hidingAnimation = null;
-        }
-        if (popup != null)
-        {
-            popup.setOpacity(1.0);
-        }
-    }
+    
     
     public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> editor)
     {
         // The listener on this property should make the popup every time:
         errorMessage.set(StyledString.concat(errorMessage.get(), msg));
         this.fixes.set(Utility.concatI(this.fixes.get(), fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
-            //Log.debug("Clicked fix: " + q.getTitle());
+            Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
                 hide(true);
             try
@@ -323,4 +180,6 @@ public class ExpressionInfoDisplay
     {
         this.type.set(type);
     }
+    
+    
 }

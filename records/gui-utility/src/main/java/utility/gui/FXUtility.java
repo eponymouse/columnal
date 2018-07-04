@@ -19,6 +19,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -678,6 +679,11 @@ public class FXUtility
     public static Point2D getCentre(Rectangle2D rectangle2D)
     {
         return new Point2D(rectangle2D.getMinX() + rectangle2D.getWidth()*0.5, rectangle2D.getMinY() + rectangle2D.getHeight()*0.5);
+    }
+
+    public static BoundingBox getWindowBounds(Window w)
+    {
+        return new BoundingBox(w.getX(), w.getY(), w.getWidth(), w.getHeight());
     }
 
     public static interface DragHandler
