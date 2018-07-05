@@ -136,7 +136,6 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     @Override
     public void cleanup()
     {
-        expressionInfoDisplay.hideImmediately();
     }
 
     @Override

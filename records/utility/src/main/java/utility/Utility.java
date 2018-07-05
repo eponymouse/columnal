@@ -753,6 +753,7 @@ public class Utility
         return -1;
     }
 
+    @Pure
     public static <T> boolean containsRef(List<? extends T> list, @UnknownInitialization T item)
     {
         return indexOfRef(list, item) != -1;

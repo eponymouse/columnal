@@ -8,13 +8,10 @@ import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
-import records.gui.expressioneditor.GeneralExpressionEntry;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.Pair;
 import utility.StreamTreeBuilder;
 import utility.Utility;
@@ -115,5 +112,10 @@ public class InvalidOperatorExpression extends NonOperatorExpression
             return replaceWith;
         else
             return new InvalidOperatorExpression(Utility.mapListI(items, e -> e.replaceSubExpression(toReplace, replaceWith)));
+    }
+
+    public ImmutableList<@Recorded Expression> _test_getItems()
+    {
+        return items;
     }
 }

@@ -28,6 +28,8 @@ import org.controlsfx.control.PopOver;
 import records.error.InternalException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
+import records.gui.expressioneditor.TopLevelEditor.ErrorMessageDisplayer;
 import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
@@ -66,33 +68,39 @@ public class ExpressionInfoDisplay
     
     
     @SuppressWarnings("initialization")
-    public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField)
+    public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField, ErrorMessageDisplayer popup)
     {
         this.expressionNode = expressionNode;
         this.textField = textField;
+        this.popup = popup;
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
         FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> {
-            mouseHoverNode = b ? expressionNode : null;
-            popup.setMouseError(expressionNode, b ? makeError() : null);
+            if (b)
+                popup.mouseHoverBegan(makeError(), expressionNode);
+            else
+                popup.mouseHoverEnded(expressionNode);
         });
         FXUtility.addChangeListenerPlatformNN(topLabel.hoverProperty(), b -> {
-            popup.setMouseError(topLabel, b ? makeError() : null);
+            if (b)
+                popup.mouseHoverBegan(makeError(), topLabel);
+            else
+                popup.mouseHoverEnded(topLabel);
         });
         FXUtility.addChangeListenerPlatformNN(errorMessage, s -> {
-            popup.updateMouseError()
+            popup.updateError(makeError(), textField, expressionNode, topLabel);
         });
         textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             OptionalInt fKey = FXUtility.FKeyNumber(e.getCode());
             if (e.isShiftDown() && fKey.isPresent() && popup != null)
             {
                 e.consume();
-                hide(true);
+                popup.hidePopup(true);
                 // 1 is F1, but should trigger fix zero:
                 fixes.get().get(fKey.getAsInt() - 1).executeFix.run();
             }
             if (e.getCode() == KeyCode.ESCAPE)
             {
-                hideImmediately();
+                popup.hidePopup(true);
             }
         });
 
@@ -100,10 +108,15 @@ public class ExpressionInfoDisplay
         maskingErrors.set(true);
     }
 
-    public void hideImmediately()
+    // Returns null if there isn't currently any error to display
+    private @Nullable ErrorInfo makeError()
     {
-        if (popup != null)
-            hide(true);
+        if (maskingErrors.get())
+            return null;
+        if (errorMessage.get().toPlain().isEmpty())
+            return null;
+        
+        return new ErrorInfo(errorMessage.get(), fixes.get());
     }
 
     public void clearError()
@@ -121,24 +134,18 @@ public class ExpressionInfoDisplay
     {
         maskingErrors.set(false);
     }
-
-
     
-
-    private void mouseHoverStatusChanged()
+    private void textFieldFocusChanged(boolean focused)
     {
-        updateShowHide(false);
-    }
-
-    private void textFieldFocusChanged(boolean newFocused)
-    {
-        this.focused = newFocused;
         if (!focused)
         {
             // Lost focus, show errors:
             maskingErrors.set(false);
         }
-        updateShowHide(true);
+        if (focused)
+            popup.keyboardFocusEntered(makeError(), textField);
+        else
+            popup.keyboardFocusExited(makeError(), textField);
     }
 
 
@@ -146,12 +153,10 @@ public class ExpressionInfoDisplay
     
     public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> editor)
     {
-        // The listener on this property should make the popup every time:
-        errorMessage.set(StyledString.concat(errorMessage.get(), msg));
         this.fixes.set(Utility.concatI(this.fixes.get(), fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
             Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
-                hide(true);
+                popup.hidePopup(true);
             try
             {
                 Pair<EXPRESSION, EXPRESSION> replaceWith = q.getReplacement();
@@ -164,10 +169,9 @@ public class ExpressionInfoDisplay
                 FXUtility.showError(e);
             }
         })).collect(ImmutableList.toImmutableList())));
-        if (popup != null)
-        {
-            popup.fixList.setFixes(this.fixes.get());
-        }
+        // The listener on this property should make the popup every time and set the fixes too, hence we 
+        // must set errorMessage after setting fixes:
+        errorMessage.set(StyledString.concat(errorMessage.get(), msg));
         //Log.debug("Message and fixes on [[" + textField.getText() + "]]: " + this.errorMessage + " " + this.fixes.get().size() + " " + this.fixes.get().stream().map(f -> f._debug_getName()).collect(Collectors.joining(", ")));
     }
     

@@ -160,7 +160,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testBracketFix3()
     {
-        testSimpleFix("1 + 2 = 3 - 4", "-", "@invalidops 1 \"+\" 2 \"=\" (3 - 4)");
+        testSimpleFix("1 + 2 = 3 - 4", "-", "@invalidops(1, @unfinished \"+\", 2, @unfinished \"=\", (3 - 4))");
     }
     
     @Test
@@ -173,7 +173,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     public void testBracketFix5()
     {
         // Tuples must be bracketed:
-        testSimpleFix("1 , 2", ",", "(1, 2)");
+        testSimpleFix("1, 2", ",", "(1, 2)");
     }
     
     @Test
@@ -263,7 +263,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
 
     /**
      * 
-     * @param original Original expression
+     * @param original Original expression, as typed (NOT as parsed)
      * @param fixFieldContent Content of the field to focus on when looking for fix
      * @param fixId The CSS selector to use to look for the particular fix row
      * @param result The expected outcome expression after applying the fix
@@ -298,7 +298,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             // Focus expression editor:
             push(KeyCode.TAB);
             // Enter content:
-            write(original, 50);
+            write(original, DELAY);
             // Move field so that errors show up (cancel masking on new fields):
             push(KeyCode.HOME);
             
@@ -337,8 +337,9 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
             assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
             moveTo(".ok-button");
-            TestUtil.sleep(3000);
-            clickOn(".ok-button");
+            clickOn(MouseButton.MIDDLE);
+            clickOn(MouseButton.MIDDLE);
+            clickOn();
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();
             @Nullable Calculate calculate = Utility.filterClass(tableManager.getAllTables().stream(), Calculate.class).findFirst().orElse(null);

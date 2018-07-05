@@ -374,6 +374,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
             this.start = start;
             this.end = end;
         }
+
+        public BracketAndNodes<EXPRESSION, SAVER> withStatus(BracketedStatus status)
+        {
+            return new BracketAndNodes<>(status, start, end);
+        }
     }
         
     public BracketAndNodes<EXPRESSION, SAVER> miscBrackets(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
@@ -582,12 +587,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
                 return single;
 
             // Maybe with the possibility of different brackets?
-            if (brackets.bracketedStatus == BracketedStatus.MISC)
+            if (brackets.bracketedStatus == BracketedStatus.MISC || brackets.bracketedStatus == BracketedStatus.TOP_LEVEL)
             {
                 List<EXPRESSION> possibles = new ArrayList<>();
                 for (BracketedStatus status : Arrays.asList(BracketedStatus.DIRECT_ROUND_BRACKETED, BracketedStatus.DIRECT_SQUARE_BRACKETED))
                 {
-                    @Nullable EXPRESSION possible = operatorSections.get(0).makeExpression(expressionExps, brackets);
+                    @Nullable EXPRESSION possible = operatorSections.get(0).makeExpression(expressionExps, brackets.withStatus(status));
                     if (possible != null)
                         possibles.add(possible);
                 }

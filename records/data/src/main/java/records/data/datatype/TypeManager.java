@@ -40,16 +40,10 @@ import utility.Utility;
 import utility.ValueFunction;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static records.data.datatype.DataType.BOOLEAN;
 import static records.data.datatype.DataType.TEXT;
@@ -79,6 +73,7 @@ public class TypeManager
         maybeMissing = new TaggedValue(0, null);
         knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
         voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
+        knownTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
         typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
         knownTypes.put(new TypeId("Type"), typeGADT);
@@ -315,8 +310,11 @@ public class TypeManager
     @OnThread(Tag.Simulation)
     public String save() throws InternalException, UserException
     {
+        List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
+        List<TaggedTypeDefinition> typesToSave = knownTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.toList());
+        
         Map<@NonNull TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
-        for (TaggedTypeDefinition taggedTypeDefinition : knownTypes.values())
+        for (TaggedTypeDefinition taggedTypeDefinition : typesToSave)
         {
             for (TagType<JellyType> tagType : taggedTypeDefinition.getTags())
             {
@@ -325,13 +323,13 @@ public class TypeManager
 
                 tagType.getInner().forNestedTagged(typeName -> {
                     @Nullable TaggedTypeDefinition referencedType = knownTypes.get(typeName);
-                    if (referencedType != null)
+                    if (referencedType != null && !Utility.containsRef(ignoreTypes, referencedType))
                         incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<>()).add(taggedTypeDefinition);
                 });
             }
         }
 
-        List<TaggedTypeDefinition> typeDefinitions = new ArrayList<>(knownTypes.values());
+        List<TaggedTypeDefinition> typeDefinitions = new ArrayList<>(typesToSave);
         // Sort by name by default:
         Collections.sort(typeDefinitions, Comparator.comparing(t -> t.getTaggedTypeName().getRaw()));
         
@@ -357,7 +355,12 @@ public class TypeManager
 
     public void _test_copyTaggedTypesFrom(TypeManager typeManager)
     {
-        knownTypes.putAll(typeManager.knownTypes);
+        for (TaggedTypeDefinition taggedTypeDefinition : typeManager.knownTypes.values())
+        {
+            if (!knownTypes.containsKey(taggedTypeDefinition.getTaggedTypeName()))
+                knownTypes.put(taggedTypeDefinition.getTaggedTypeName(), taggedTypeDefinition);
+        }
+        
     }
 
     public Either<String, TagInfo> lookupTag(String typeName, String constructorName)

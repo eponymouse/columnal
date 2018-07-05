@@ -140,7 +140,6 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         {
             autoComplete.hide();
         }
-        expressionInfoDisplay.hideImmediately();
     }
 
     @Override

@@ -34,11 +34,13 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,12 +56,14 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     private @Nullable SelectionInfo<?, ?> selection;
     private @Nullable ConsecutiveChild<?, ?> curHoverDropTarget;
     private boolean selectionLocked;
+    private final ErrorMessagePopup errorMessagePopup;
 
     public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TableManager tableManager, String... styleClasses)
     {
         super(operations, null, null, "");
         this.container = new TopLevelEditorFlowPane();
-        scrollPane = new ScrollPaneFill(container) {
+        this.errorMessagePopup = new ErrorMessagePopup();
+        this.scrollPane = new ScrollPaneFill(container) {
             @Override
             @OnThread(Tag.FX)
             public void requestFocus()
@@ -358,9 +362,16 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
     public ExpressionInfoDisplay installErrorShower(ErrorTop vBox, Label topLabel, TextField textField)
     {
-        ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField);
+        ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField, errorMessagePopup);
         vBox.bindErrorMasking(expressionInfoDisplay.maskingErrors());
         return expressionInfoDisplay;
+    }
+
+    @Override
+    public void cleanup()
+    {
+        super.cleanup();
+        errorMessagePopup.hidePopup(true);
     }
 
     // Only really exists for testing purposes:
@@ -375,9 +386,32 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
     // Interface to access a singleton-per-editor error-displayer.
     // Lets us hide the other functionality from people using the class
+    @OnThread(Tag.FXPlatform)
     public static interface ErrorMessageDisplayer
     {
+        void mouseHoverEnded(Node hoverEndedOn);
 
+        void mouseHoverBegan(@Nullable ErrorInfo errorInfo, Node hoverBeganOn);
+
+        void updateError(@Nullable ErrorInfo errorInfo, TextField keyboardFocus, Node... possibleHoverNodes);
+
+        void hidePopup(boolean immediate);
+
+        void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, TextField textField);
+
+        void keyboardFocusExited(@Nullable ErrorInfo errorInfo, TextField textField);
+    }
+
+    public static class ErrorInfo
+    {
+        private final StyledString errorMessage;
+        private final ImmutableList<FixInfo> fixes;
+
+        public ErrorInfo(StyledString errorMessage, ImmutableList<FixInfo> fixes)
+        {
+            this.errorMessage = errorMessage;
+            this.fixes = fixes;
+        }
     }
 
     /**
@@ -393,28 +427,9 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
      */
     @OnThread(Tag.FXPlatform)
     private class ErrorMessagePopup extends PopOver implements ErrorMessageDisplayer
-    {
-        private class ErrorInfo
-        {
-            private final StyledString errorMessage;
-            private final ImmutableList<FixInfo> fixes;
-
-            private ErrorInfo(StyledString errorMessage, ImmutableList<FixInfo> fixes)
-            {
-                this.errorMessage = errorMessage;
-                this.fixes = fixes;
-            }
-
-            private void show()
-            {
-                errorLabel.getChildren().setAll(errorMessage.toGUI().toArray(new Node[0]));
-                errorLabel.setVisible(!errorMessage.toPlain().isEmpty());
-                fixList.setFixes(fixes);
-            }
-        }
-        
-        private @Nullable ErrorInfo keyboardErrorInfo;
-        private @Nullable ErrorInfo mouseErrorInfo;
+    {        
+        private @Nullable Pair<ErrorInfo, TextField> keyboardErrorInfo;
+        private @Nullable Pair<ErrorInfo, Node> mouseErrorInfo;
         
         private final TextFlow errorLabel;
         private final FixList fixList;
@@ -466,7 +481,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
 
         // Can't have an ensuresnull check
-        private void hidePopup(boolean immediately)
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void hidePopup(boolean immediately)
         {
             // Whether we hide immediately or not, stop any current animation:
             cancelHideAnimation();
@@ -516,16 +532,82 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         private void updateShowHide(boolean hideImmediately)
         {
             //Log.logStackTrace("updateShowHide focus " + focused + " mask " + maskingErrors.get());
-            if (keyboardErrorInfo != null || mouseErrorInfo != null)
+            @Nullable ErrorInfo errorInfo = null;
+            if (keyboardErrorInfo != null)
+                errorInfo = keyboardErrorInfo.getFirst();
+            else if (mouseErrorInfo != null)
+                errorInfo = mouseErrorInfo.getFirst();
+            
+            if (errorInfo != null)
             {
                 // Make sure to cancel any hide animation:
                 cancelHideAnimation();
+                show(errorInfo);
                 showPopup();
             }
             else
             {
                 hidePopup(hideImmediately);
             }
+        }
+
+        private void show(ErrorInfo errorInfo)
+        {
+            errorLabel.getChildren().setAll(errorInfo.errorMessage.toGUI().toArray(new Node[0]));
+            errorLabel.setVisible(!errorInfo.errorMessage.toPlain().isEmpty());
+            fixList.setFixes(errorInfo.fixes);
+        }
+
+        @Override
+        public void updateError(@Nullable ErrorInfo errorInfo, TextField keyboardFocus, Node... possibleHoverNodes)
+        {
+            if (this.keyboardErrorInfo != null && this.keyboardErrorInfo.getSecond() == keyboardFocus)
+            {
+                // Update keyboard error
+                this.keyboardErrorInfo = errorInfo == null ? null : this.keyboardErrorInfo.replaceFirst(errorInfo);
+            }
+            
+            // Not else; both may happen:
+            List<Node> hoverNodes = Arrays.asList(possibleHoverNodes);
+            if (this.mouseErrorInfo != null && Utility.containsRef(hoverNodes, this.mouseErrorInfo.getSecond()))
+            {
+                // Update mouse error
+                this.mouseErrorInfo = errorInfo == null ? null : this.mouseErrorInfo.replaceFirst(errorInfo);
+            }
+            
+            updateShowHide(true);
+        }
+
+        @Override
+        public void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, TextField textField)
+        {
+            keyboardErrorInfo = errorInfo == null ? null : new Pair<>(errorInfo, textField);
+            
+            updateShowHide(true);
+        }
+
+        @Override
+        public void keyboardFocusExited(@Nullable ErrorInfo errorInfo, TextField textField)
+        {
+            keyboardErrorInfo = null;
+
+            updateShowHide(true);
+        }
+
+        @Override
+        public void mouseHoverBegan(@Nullable ErrorInfo errorInfo, Node hoverBeganOn)
+        {
+            mouseErrorInfo = errorInfo == null ? null : new Pair<>(errorInfo, hoverBeganOn);
+
+            updateShowHide(true);
+        }
+
+        @Override
+        public void mouseHoverEnded(Node hoverEndedOn)
+        {
+            mouseErrorInfo = null;
+
+            updateShowHide(true);
         }
     }
 }

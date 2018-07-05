@@ -212,6 +212,19 @@ public interface EnterExpressionTrait extends FxRobotInterface, EnterTypeTrait
         {
             write("@anything", DELAY);
         }
+        else if (c == InvalidOperatorExpression.class)
+        {
+            InvalidOperatorExpression invalid = (InvalidOperatorExpression) expression;
+            for (Expression e : invalid._test_getItems())
+            {
+                enterExpression(e, false, r);
+            }
+        }
+        else if (c == InvalidIdentExpression.class)
+        {
+            InvalidIdentExpression invalid = (InvalidIdentExpression) expression;
+            write(invalid.getText(), DELAY);
+        }
         else
         {
             fail("Not yet supported: " + c);
