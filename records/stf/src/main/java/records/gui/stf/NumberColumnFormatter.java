@@ -1,4 +1,4 @@
-package records.gui;
+package records.gui.stf;
 
 import annotation.qual.Value;
 import javafx.beans.binding.BooleanBinding;
@@ -29,6 +29,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.EditorKitCache.VisibleDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -50,7 +51,7 @@ import java.util.OptionalInt;
  */
 @OnThread(Tag.FXPlatform)
 // package-visible
-class NumberDisplay
+class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
 {
     /*
     private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
@@ -68,7 +69,7 @@ class NumberDisplay
     private boolean displayDotVisible;
 
     @OnThread(Tag.FXPlatform)
-    public NumberDisplay(int rowIndex, Number n, GetValue<@Value Number> g, @Nullable NumberDisplayInfo ndi, Column column, FXPlatformConsumer<OptionalInt> formatVisible)
+    public NumberColumnFormatter(int rowIndex, Number n, GetValue<@Value Number> g, @Nullable NumberDisplayInfo ndi, Column column, FXPlatformConsumer<OptionalInt> formatVisible)
     {
         currentEditValue = n;
         textArea = new StyleClassedTextArea(false) // plain undo manager
@@ -153,14 +154,14 @@ class NumberDisplay
     }
 
     @EnsuresNonNull({"fullIntegerPart", "fullFracPart"})
-    public void extractFullParts(@UnderInitialization(Object.class) NumberDisplay this, Number n)
+    public void extractFullParts(@UnderInitialization(Object.class) NumberColumnFormatter this, Number n)
     {
         fullIntegerPart = Utility.getIntegerPart(n).toString();
         fullFracPart = Utility.getFracPartAsString(n, 0, -1);
     }
 
     @SuppressWarnings("initialization") // Due to use of various fields
-    private void updateDisplay(@UnknownInitialization(Object.class) NumberDisplay this)
+    private void updateDisplay(@UnknownInitialization(Object.class) NumberColumnFormatter this)
     {
         List<String> dotStyle = new ArrayList<>();
         dotStyle.add("number-display-dot");
@@ -187,7 +188,7 @@ class NumberDisplay
     }
 
     @RequiresNonNull("textArea")
-    public void shrinkToNormalAfterEditing(@UnderInitialization(Object.class) NumberDisplay this)
+    public void shrinkToNormalAfterEditing(@UnderInitialization(Object.class) NumberColumnFormatter this)
     {
         textArea.setMinWidth(0);
     }
@@ -219,7 +220,7 @@ class NumberDisplay
     }
 
 
-    public static void formatColumn(@Nullable NumberDisplayInfo displayInfo, EditorKitCache<Number, NumberDisplay>.VisibleDetails vis)
+    public static void formatColumn(@Nullable NumberDisplayInfo displayInfo, EditorKitCache<Number, NumberColumnFormatter>.VisibleDetails vis)
     {
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
         int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
@@ -240,7 +241,7 @@ class NumberDisplay
         // Still not enough room for everything?  Just set it all to ellipsis if so:
         boolean onlyEllipsis = rightToLeft(maxRightLength, pixelWidth) < maxLeftLength;
 
-        for (NumberDisplay display : vis.visibleCells)
+        for (NumberColumnFormatter display : vis.visibleCells)
         {
             if (display != null)
             {
@@ -277,23 +278,23 @@ class NumberDisplay
         }
     }
 
-    public static EditorKitCache<@Value Number, NumberDisplay> makeDisplayCache(GetValue<@Value Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
+    public static EditorKitCache<@Value Number, NumberColumnFormatter> makeDisplayCache(GetValue<@Value Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
     {
-        return new EditorKitCache<@Value Number, NumberDisplay>(g, vis -> formatColumn(displayInfo, vis), n -> n.textArea) {
+        return new EditorKitCache<@Value Number, NumberColumnFormatter>(g, vis -> formatColumn(displayInfo, vis), n -> n.textArea) {
 
             @Override
-            protected NumberDisplay makeGraphical(int rowIndex, @Value Number value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException
+            protected NumberColumnFormatter makeGraphical(int rowIndex, @Value Number value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException
             {
-                return new NumberDisplay(rowIndex, value, g, displayInfo, column, this::formatVisible);
+                return new NumberColumnFormatter(rowIndex, value, g, displayInfo, column, this::formatVisible);
             }
 
             @Override
             public void edit(int rowIndex, @Nullable Point2D scenePoint)
             {
-                @Nullable NumberDisplay rowIfShowing = getRowIfShowing(rowIndex);
+                @Nullable NumberColumnFormatter rowIfShowing = getRowIfShowing(rowIndex);
                 if (rowIfShowing != null)
                 {
-                    @NonNull NumberDisplay numberDisplay = rowIfShowing;
+                    @NonNull NumberColumnFormatter numberDisplay = rowIfShowing;
                     @NonNull StyleClassedTextArea textArea = numberDisplay.textArea;
                     if (scenePoint != null)
                     {
@@ -331,7 +332,7 @@ class NumberDisplay
             @Override
             public boolean editHasFocus(int rowIndex)
             {
-                @Nullable NumberDisplay rowIfShowing = getRowIfShowing(rowIndex);
+                @Nullable NumberColumnFormatter rowIfShowing = getRowIfShowing(rowIndex);
                 if (rowIfShowing != null)
                 {
                     return rowIfShowing.textArea.isFocused();

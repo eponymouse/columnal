@@ -6,9 +6,12 @@ import records.data.CellPosition;
 import records.data.RecordSet.RecordSetListener;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+
+import java.util.Collection;
 
 @OnThread(Tag.FXPlatform)
 public interface ColumnHandler extends RecordSetListener
@@ -40,4 +43,6 @@ public interface ColumnHandler extends RecordSetListener
     // Used for doing a copy-to-clipboard of table content:
     @OnThread(Tag.Simulation)
     public @Value Object getValue(int index) throws InternalException, UserException;
+
+    void styleTogether(Collection<StructuredTextField> cellsInColumn);
 }

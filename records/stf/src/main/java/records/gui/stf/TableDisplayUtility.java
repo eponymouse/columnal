@@ -35,6 +35,7 @@ import records.error.UserException;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
+import records.gui.stable.EditorKitCache.VisibleDetails;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stable.ColumnDetails;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -50,11 +51,8 @@ import utility.gui.GUI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -134,6 +132,11 @@ public class TableDisplayUtility
                         {
                             throw new UserException("No values");
                         }
+
+                        @Override
+                        public void styleTogether(Collection<StructuredTextField> cellsInColumn)
+                        {
+                        }
                     });
                 }
                 r.add(item);
@@ -170,7 +173,7 @@ public class TableDisplayUtility
             @OnThread(Tag.FXPlatform)
             public ColumnHandler number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                return NumberDisplay.makeDisplayCache(g, displayInfo.getDisplayInfo(), column);
+                return NumberColumnFormatter.makeDisplayCache(g, displayInfo.getDisplayInfo(), column);
             }
 
             @Override
@@ -342,12 +345,20 @@ public class TableDisplayUtility
     {
         public final GetValue<@Value T> g;
         public final ComponentMaker<@Value T> makeComponent;
+        private final @Nullable FXPlatformConsumer<VisibleDetails> formatter;
 
         @OnThread(Tag.Any)
         public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent)
         {
+            this(g, makeComponent, null);
+        }
+
+        @OnThread(Tag.Any)
+        public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent, @Nullable FXPlatformConsumer<VisibleDetails> formatter)
+        {
             this.g = g;
             this.makeComponent = makeComponent;
+            this.formatter = formatter;
         }
         
         @OnThread(Tag.Any)
@@ -366,7 +377,10 @@ public class TableDisplayUtility
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
                 return new EditorKit<@Value T>(makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
             };
-            return new EditorKitCache<@Value T>(columnIndex, g, vis -> {}, makeEditorKit);
+            return new EditorKitCache<@Value T>(columnIndex, g, vis -> {
+                if (formatter != null)
+                    formatter.consume(vis);
+            }, makeEditorKit);
         }
     }
 
@@ -434,7 +448,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@Value Number>(g, NumberEntry::new);
+                return new GetValueAndComponent<@Value Number>(g, NumberEntry::new, new NumberColumnFormatter());
             }
 
             @Override

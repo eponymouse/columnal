@@ -6,6 +6,7 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -73,6 +74,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A DataDisplay is a GridArea that can be used to display some table data.  Crucially, it does
@@ -306,6 +309,21 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             public ObjectExpression<? extends Collection<CellStyle>> styleForAllCells()
             {
                 return cellStyles;
+            }
+
+            @Override
+            public void styleTogether(Collection<Pair<GridAreaCellPosition, VersionedSTF>> cells)
+            {
+                ImmutableListMultimap<Integer, VersionedSTF> cellsByColumn = cells.stream().collect(
+                        ImmutableListMultimap.<Pair<GridAreaCellPosition, VersionedSTF>, Integer, VersionedSTF>flatteningToImmutableListMultimap(c -> c.getFirst().columnIndex, c -> Stream.of(c.getSecond()))
+                );
+                
+                cellsByColumn.asMap().forEach((columnIndexWithinTable, cellsInColumn) -> {
+                    if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
+                    {
+                        displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn);
+                    }
+                });
             }
         };
     }

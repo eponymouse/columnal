@@ -20,6 +20,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stf.EditorKitSimpleLabel;
+import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -32,6 +33,7 @@ import utility.Workers.Worker;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.TreeMap;
@@ -151,6 +153,13 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     public @OnThread(Tag.Simulation) @Value Object getValue(int index) throws InternalException, UserException
     {
         return getValue.getWithProgress(index, null);
+    }
+
+    @Override
+    public void styleTogether(Collection<StructuredTextField> cellsInColumn)
+    {
+        if (formatVisibleCells != null)
+            formatVisibleCells.consume(new VisibleDetails());
     }
 
     @Override

@@ -183,13 +183,16 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
             hideItem(spareCell);
         }
         
-        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, T>flatteningToImmutableListMultimap(d -> d.originator.getSecond(), d -> Stream.of(d.node))).asMap());
+        styleTogether(visibleItems.values().stream().collect(ImmutableListMultimap.<ItemDetails<T>, GRID_AREA_INFO, Pair<GridAreaCellPosition, T>>flatteningToImmutableListMultimap(d -> d.originator.getSecond(), d -> Stream.of(new Pair<>(d.gridAreaCellPosition, d.node)))).asMap());
         
         //Log.debug("Visible item count: " + visibleItems.size() + " spare: " + spareItems.size() + " for " + this);
     }
 
-    protected void styleTogether(ImmutableMap<GRID_AREA_INFO, Collection<T>> visibleNodes)
+    protected void styleTogether(ImmutableMap<GRID_AREA_INFO, Collection<Pair<GridAreaCellPosition, T>>> visibleNodes)
     {
+        visibleNodes.forEach((grid, cells) -> {
+            grid.styleTogether(cells);
+        });
     }
 
     private Pair<T, StyleUpdater> withStyle(T t, ObjectExpression<? extends Collection<S>> enumSetObjectExpression)
@@ -258,6 +261,11 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
         // position is up-to-date.  It might not be, for example, if
         // the table has changed bounds or column layout
         public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, T cellFirst);
+
+        // Styles a set of visible cells together.
+        default void styleTogether(Collection<Pair<GridAreaCellPosition, T>> cells)
+        {
+        }
     }
 
     private class StyleUpdater implements ChangeListener<Collection<S>>

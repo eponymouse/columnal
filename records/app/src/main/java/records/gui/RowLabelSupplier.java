@@ -21,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.gui.RowLabelSupplier.LabelPane;
@@ -40,6 +41,7 @@ import utility.gui.ResizableRectangle;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, Visible, RowLabelSupplier.TableInfo>
 {
@@ -71,9 +73,10 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
     }
 
     @Override
-    protected void styleTogether(ImmutableMap<TableInfo, Collection<LabelPane>> visibleNodesByTable)
+    protected void styleTogether(ImmutableMap<TableInfo, Collection<Pair<GridAreaCellPosition, LabelPane>>> visibleNodesByTable)
     {
-        visibleNodesByTable.forEach((table, visibleNodes) -> {
+        visibleNodesByTable.forEach((table, visibleNodesAndPos) -> {
+            ImmutableList<LabelPane> visibleNodes = visibleNodesAndPos.stream().map(p -> p.getSecond()).collect(ImmutableList.toImmutableList());
             // Find highest row number:
             int highestRow = visibleNodes.stream().mapToInt(p -> p.row).max().orElse(1);
             // Find number of digits, min 2:

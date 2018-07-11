@@ -37,6 +37,7 @@ import records.data.TableOperations;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier;
+import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.DataDisplay;
 import records.gui.RowLabelSupplier;
 import records.gui.grid.GridArea;
@@ -64,6 +65,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
@@ -306,6 +308,11 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
 
         @OnThread(Tag.FXPlatform)
         protected void numRowsChanged()
+        {
+        }
+
+        @Override
+        protected void styleTogether(Collection<VersionedSTF> cells)
         {
         }
 
