@@ -5,6 +5,7 @@ import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -22,6 +23,7 @@ import records.error.UserException;
 import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
+import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -33,7 +35,9 @@ import utility.Workers.Worker;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.TreeMap;
@@ -63,16 +67,18 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
 
     @OnThread(Tag.Any)
     private final GetValue<@Value V> getValue;
+    private final GetDataPosition getDataPosition;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
     private final MakeEditorKit<@Value V> makeEditorKit;
     private final @TableDataColIndex int columnIndex;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public EditorKitCache(@TableDataColIndex int columnIndex, GetValue<@Value V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, MakeEditorKit<@Value V> makeEditorKit)
+    public EditorKitCache(@TableDataColIndex int columnIndex, GetValue<@Value V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, GetDataPosition getDataPosition, MakeEditorKit<@Value V> makeEditorKit)
     {
         this.columnIndex = columnIndex;
         this.getValue = getValue;
+        this.getDataPosition = getDataPosition;
         this.formatVisibleCells = formatVisibleCells;
         this.makeEditorKit = makeEditorKit;
         displayCacheItems = CacheBuilder.newBuilder()
@@ -96,9 +102,9 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
      */
     public class VisibleDetails
     {
-        /*
         public final int firstVisibleRowIndex;
-        public final List<@Nullable G> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
+        // We use ArrayList for this because ImmutableList can't contain null.  But don't alter it!
+        public final List<@Nullable EditorKit<@Value V>> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
         public final OptionalInt newVisibleIndex; // Index into visibleCells, not a row number, which is the cause for this update
         public final double width;
 
@@ -113,14 +119,13 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
             for (int i = firstVisibleRowIndexIncl; i <= lastVisibleRowIndexIncl; i++)
             {
                 @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(i);
-                @Nullable Either<Pair<V, G>, @Localized String> loadedItemOrError = item == null ? null : item.loadedItemOrError;
+                @Nullable Either<Pair<@Value V, EditorKit<@Value V>>, @Localized String> loadedItemOrError = item == null ? null : item.loadedItemOrError;
                 if (loadedItemOrError != null)
-                    visibleCells.add(loadedItemOrError.<@Nullable G>either(p -> p.getSecond(), s -> (@Nullable G)null));
+                    visibleCells.add(loadedItemOrError.<@Nullable EditorKit<@Value V>>either(p -> p.getSecond(), s -> (@Nullable EditorKit<@Value V>)null));
                 else
                     visibleCells.add(null);
             }
         }
-        */
     }
 
     @OnThread(Tag.FXPlatform)
@@ -158,8 +163,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     @Override
     public void styleTogether(Collection<StructuredTextField> cellsInColumn)
     {
-        if (formatVisibleCells != null)
-            formatVisibleCells.consume(new VisibleDetails());
+        formatVisible(OptionalInt.empty());
     }
 
     @Override
@@ -189,10 +193,11 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
 
     protected final void formatVisible(OptionalInt rowIndexUpdated)
     {
-        /* TODO
+        @TableDataRowIndex int firstVisibleRowIndexIncl = getDataPosition.getFirstVisibleRowIncl();
+        @TableDataRowIndex int lastVisibleRowIndexIncl = getDataPosition.getLastVisibleRowIncl();
+        
         if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
             formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
-        */
     }
 
     @Override

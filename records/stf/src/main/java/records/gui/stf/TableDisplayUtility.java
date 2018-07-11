@@ -32,6 +32,7 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.grid.RectangleBounds;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
@@ -334,11 +335,20 @@ public class TableDisplayUtility
         @OnThread(Tag.FXPlatform)
         public Component<T> makeComponent(ImmutableList<Component<?>> parents, T value) throws InternalException, UserException;
     }
-    
+
+    /**
+     * Interface for getting position of cell on grid, and getting visible bounds of table
+     */
     public interface GetDataPosition
     {
         @OnThread(Tag.FXPlatform)
         public CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex);
+        
+        @OnThread(Tag.FXPlatform)
+        public @TableDataRowIndex int getFirstVisibleRowIncl();
+
+        @OnThread(Tag.FXPlatform)
+        public @TableDataRowIndex int getLastVisibleRowIncl();
     }
     
     public static class GetValueAndComponent<@Value T>
@@ -380,7 +390,7 @@ public class TableDisplayUtility
             return new EditorKitCache<@Value T>(columnIndex, g, vis -> {
                 if (formatter != null)
                     formatter.consume(vis);
-            }, makeEditorKit);
+            }, getDataPosition, makeEditorKit);
         }
     }
 

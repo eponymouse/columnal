@@ -53,6 +53,64 @@ import java.util.OptionalInt;
 // package-visible
 class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
 {
+    @Override
+    public @OnThread(Tag.FXPlatform) void consume(VisibleDetails vis)
+    {
+        // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
+        int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
+        int maxRightLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fullFracPart.length()).max().orElse(0);
+        double pixelWidth = vis.width - 8; // Allow some padding
+
+        // We truncate the right side if needed, to a minimum of minimumDP, at which point we truncate the left side
+        // to what remains
+        int minimumDP = displayInfo == null ? 0 : displayInfo.getMinimumDP();
+        while (rightToLeft(maxRightLength, pixelWidth) < maxLeftLength && maxRightLength > minimumDP && maxRightLength > 1) // can be zero only if already zero
+        {
+            maxRightLength -= 1;
+        }
+        while (rightToLeft(maxRightLength, pixelWidth) < maxLeftLength && maxLeftLength > 1)
+        {
+            maxLeftLength -= 1;
+        }
+        // Still not enough room for everything?  Just set it all to ellipsis if so:
+        boolean onlyEllipsis = rightToLeft(maxRightLength, pixelWidth) < maxLeftLength;
+
+        for (NumberColumnFormatter display : vis.visibleCells)
+        {
+            if (display != null)
+            {
+                display.textArea.setMaxWidth(vis.width);
+                if (onlyEllipsis)
+                {
+                    display.displayIntegerPart = ELLIPSIS;
+                    display.displayDot = "";
+                    display.displayFracPart = "";
+                }
+                else
+                {
+                    display.displayIntegerPart = display.fullIntegerPart;
+                    display.displayFracPart = display.fullFracPart;
+                    display.displayDot = NUMBER_DOT;
+
+                    while (display.displayFracPart.length() < maxRightLength)
+                        display.displayFracPart += displayInfo == null ? " " : displayInfo.getPaddingChar();
+
+                    if (display.displayFracPart.length() > maxRightLength)
+                    {
+                        display.displayFracPart = display.displayFracPart.substring(0, Math.max(0, maxRightLength - 1)) + ELLIPSIS;
+                    }
+                    if (display.displayIntegerPart.length() > maxLeftLength)
+                    {
+                        display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
+                    }
+
+                    display.displayDotVisible = !display.fullFracPart.isEmpty();
+
+                    display.updateDisplay();
+                }
+            }
+        }
+    }
     /*
     private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
@@ -341,7 +399,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
             }
         };
     }
-
+*/
 
     private static class DigitSizes
     {
@@ -394,5 +452,4 @@ class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
 
         return left * SIZES.LEFT_DIGIT_WIDTH + (right == 0 ? 0 : (SIZES.DOT_WIDTH + SIZES.RIGHT_DIGIT_WIDTH * right));
     }
-*/
 }
