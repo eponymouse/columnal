@@ -204,8 +204,8 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     @Test
     public void testBracketFix8() throws UserException, InternalException
     {
-        // Test that inner square brackets are preserved:
-        testFix("@if true @then abs(-5 - -6 * -7) @else 8", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then abs(-5 - (-6 * -7)) @else 8");
+        // Test minuses:
+        testFix("@if true @then abs(-5 - -6 * -7) @else 8 @endif", "*", dotCssClassFor("-5 - (-6 * -7)"), "@if true @then @call @function abs(-5 - (-6 * -7)) @else 8 @endif");
     }
     
     @Test
@@ -213,7 +213,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2)", "sum", "", "sum([2])");
+        testFix("sum(2)", "2", "", "@call @function sum([2])");
     }
 
     @Test
@@ -221,7 +221,7 @@ public class TestQuickFix extends ApplicationTest implements EnterExpressionTrai
     {
         // If a function takes a list, and the user passes either one item (which is not of list type)
         // or a tuple, offer to switch to list brackets:
-        testFix("sum(2, 3, 4)", "sum", dotCssClassFor("sum([2, 3, 4])"), "sum([2, 3, 4])");
+        testFix("sum(2, 3, 4)", "2", dotCssClassFor("@call @function sum([2, 3, 4])"), "@call @function sum([2, 3, 4])");
     }
     
     @Test

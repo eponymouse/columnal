@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,6 +118,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     @Override
     protected @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
     {
+        UnaryOperator<@Recorded Expression> wrap;
+        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+            wrap = e -> errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(e)));
+        else
+            wrap = e -> e;
+        
         if (content.isEmpty())
         {
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
@@ -135,9 +142,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                e = validOperands.get(0);
-                if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                    e = errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.<@Recorded Expression>of(e)));
+                e = wrap.apply(validOperands.get(0));
             }
             else
             {
@@ -154,9 +159,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             
         }
         
-        return errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(
+        return wrap.apply(errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(
             Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new InvalidIdentExpression(o.getContent()), x -> x))
-        ));
+        )));
     }
 
     @Override

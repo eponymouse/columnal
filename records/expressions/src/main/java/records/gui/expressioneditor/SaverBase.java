@@ -702,7 +702,15 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
                 }
             }
         }
-        return invalidOpExpression;
+
+        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+        {
+            return makeSingletonList.apply(invalidOpExpression);
+        }
+        else
+        {
+            return invalidOpExpression;
+        }
     }
 
     // Expects a keyword matching closer.  If so, call the function with the current scope's expression, and you'll get back a final expression or a
