@@ -2,6 +2,7 @@ package test.gui;
 
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -53,6 +54,7 @@ import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import test.TestUtil;
 import test.gen.*;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
@@ -73,10 +75,8 @@ import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -272,7 +272,7 @@ public class TestStructuredTextField extends ApplicationTest
             {
                 @SuppressWarnings("units")
                 @TableDataColIndex int col = 0;
-                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, (r, c) -> CellPosition.ORIGIN, () -> {});
+                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, makeGetDataPosition(), () -> {});
                 dataDisplay.setColumns(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
                 //stableView.loadColumnWidths(new double[]{600.0});
             }
@@ -297,6 +297,32 @@ public class TestStructuredTextField extends ApplicationTest
             TestUtil.delay(200);
         }
         throw new RuntimeException("Couldn't find STF");
+    }
+
+    private GetDataPosition makeGetDataPosition()
+    {
+        return new GetDataPosition()
+        {
+            @Override
+            public @OnThread(Tag.FXPlatform) CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+            {
+                return CellPosition.ORIGIN;
+            }
+
+            @SuppressWarnings("units")
+            @Override
+            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getFirstVisibleRowIncl()
+            {
+                return -1;
+            }
+
+            @SuppressWarnings("units")
+            @Override
+            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getLastVisibleRowIncl()
+            {
+                return -1;
+            }
+        };
     }
 
     /**
@@ -1241,7 +1267,7 @@ public class TestStructuredTextField extends ApplicationTest
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
             EditorKit<?> ed = f.get().getEditorKit();
             @SuppressWarnings("value")
-            @Value Object value = ed._test_getLastCompletedValue();
+            @Value Object value = ed.getLastCompletedValue();
             @SuppressWarnings("value")
             @Value Object eeco = endEditAndCompareTo;
             Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {

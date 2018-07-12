@@ -72,6 +72,7 @@ import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
+import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -83,6 +84,7 @@ import records.gui.stable.ColumnDetails;
 import records.gui.stable.SimpleColumnOperation;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import records.importers.ClipboardUtils;
 import records.importers.ClipboardUtils.RowRange;
 import records.transformations.Check;
@@ -236,6 +238,43 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         return getPosition().offsetByRowCols(getDataDisplayTopLeftIncl().rowIndex + rowIndex, getDataDisplayTopLeftIncl().columnIndex + columnIndex);
     }
+    
+    private TableDisplayUtility.GetDataPosition makeGetDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    {
+        return new GetDataPosition()
+        {
+            @SuppressWarnings("units")
+            private final @TableDataRowIndex int invalid = -1;
+            
+            @Override
+            public @OnThread(Tag.FXPlatform) CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+            {
+                return TableDisplay.this.getDataPosition(rowIndex, columnIndex);
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getFirstVisibleRowIncl()
+            {
+                Optional<VisibleBounds> bounds = withParent(g -> g.getVisibleBounds());
+                if (!bounds.isPresent())
+                    return invalid;
+                @SuppressWarnings("units")
+                @GridAreaRowIndex int gridAreaRow = bounds.get().firstRowIncl - getPosition().rowIndex;
+                return TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getLastVisibleRowIncl()
+            {
+                Optional<VisibleBounds> bounds = withParent(g -> g.getVisibleBounds());
+                if (!bounds.isPresent())
+                    return invalid;
+                @SuppressWarnings("units")
+                @GridAreaRowIndex int gridAreaRow = bounds.get().lastRowIncl - getPosition().rowIndex;
+                return TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+            }
+        };
+    }
 
     @Override
     @OnThread(Tag.FXPlatform)
@@ -262,14 +301,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
         if (recordSet != null)
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
     }
 
     @Override
     public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
     {
         if (recordSet != null) 
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify), table.getOperations(), c -> getColumnActions(parent.getManager(), getTable(), c));
     }
 
     //TODO @Override
@@ -469,7 +508,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @RequiresNonNull("onModify")
     private void setupWithRecordSet(@UnknownInitialization(DataDisplay.class) TableDisplay this, TableManager tableManager, Table table, RecordSet recordSet)
     {
-        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, this::getDataPosition, onModify);
+        ImmutableList<ColumnDetails> displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), c -> null, makeGetDataPosition(), onModify);
         setColumns(displayColumns, table.getOperations(), c -> getColumnActions(tableManager, table, c));
         //TODO restore editability on/off
         //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -500,7 +539,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
 
         FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> null, this::getDataPosition, onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), c -> null, makeGetDataPosition(), onModify), table.getOperations(), c -> getColumnActions(tableManager, table, c));
         });
 
         // Should be done last:

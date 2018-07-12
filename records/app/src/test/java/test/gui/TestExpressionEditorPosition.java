@@ -64,6 +64,11 @@ public class TestExpressionEditorPosition extends ApplicationTest implements Scr
         testCaretPositions("1+2");
     }
 
+    @Test
+    public void testPosition3()
+    {
+        testCaretPositions("@iftrue@thensum(3+\"az\")@elsefalse");
+    }
 
 
     // Tests that you can get back to the caret positions 

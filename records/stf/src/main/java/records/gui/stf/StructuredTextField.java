@@ -105,7 +105,11 @@ public class StructuredTextField extends StyleClassedTextArea
 
             StructuredTextField usFocused = FXUtility.focused(this);
             usFocused.updateAutoComplete(getSelection());
-            if (!focused)
+            if (focused)
+            {
+                usFocused.focusGained(editorKit);
+            }
+            else
             {
                 usFocused.focusLost(editorKit);
             }
@@ -148,11 +152,17 @@ public class StructuredTextField extends StyleClassedTextArea
         ));
     }
 
+    private <T> void focusGained(EditorKit<T> editorKit)
+    {
+        editorKit.focusChanged(true);
+    }
+    
     private <T> void focusLost(EditorKit<T> editorKit)
     {
         // Deselect when focus is lost:
         deselect();
         endEdit(editorKit).either_(x -> showFixPopup(x), v -> editorKit.storeValue(v, this));
+        editorKit.focusChanged(false);
     }
 
     public StructuredTextField(EditorKit<?> editorKit)
@@ -957,6 +967,7 @@ public class StructuredTextField extends StyleClassedTextArea
         private final @Nullable FXPlatformConsumer<Pair<String, T>> store;
         private @Nullable State<T> lastValidValue;
         public final ImmutableList<String> stfStyles;
+        private @Nullable StructuredTextField curField;
 
         public EditorKit(Component<T> contentComponent, @Nullable FXPlatformConsumer<Pair<String, T>> store, FXPlatformRunnable relinquishFocus, ImmutableList<String> stfStyles)
         {
@@ -983,6 +994,7 @@ public class StructuredTextField extends StyleClassedTextArea
             if (store != null)
                 store.consume(new Pair<>(stf.getText(), v));
             lastValidValue = captureState(stf.curValue, stf.getDocument());
+            curField = stf;
         }
 
         public void relinquishFocus()
@@ -990,9 +1002,30 @@ public class StructuredTextField extends StyleClassedTextArea
             relinquishFocus.run();
         }
 
-        public @Nullable T _test_getLastCompletedValue()
+        public @Nullable T getLastCompletedValue()
         {
             return completedValue;
+        }
+
+        public @Nullable StructuredTextField getCurField()
+        {
+            return curField;
+        }
+
+        /**
+         * If the top-level component belongs to the given class, return it, else return null.
+         */
+        public <C extends Component<?>> @Nullable C getComponent(Class<C> targetClass)
+        {
+            if (targetClass.isInstance(contentComponent))
+                return targetClass.cast(contentComponent);
+            else
+                return null;
+        }
+
+        public void focusChanged(boolean focused)
+        {
+            contentComponent.focusChanged(focused);
         }
     }
 }

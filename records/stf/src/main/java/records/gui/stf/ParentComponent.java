@@ -90,4 +90,13 @@ public abstract class ParentComponent<T> extends Component<T>
         }
         return r.build();
     }
+
+    @Override
+    public void focusChanged(boolean focused)
+    {
+        for (Component<?> c : getChildComponents())
+        {
+            c.focusChanged(focused);
+        }
+    }
 }

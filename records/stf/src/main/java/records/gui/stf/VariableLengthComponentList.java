@@ -343,6 +343,15 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         return false;
     }
 
+    @Override
+    public void focusChanged(boolean focused)
+    {
+        for (Component<?> c : allComponents)
+        {
+            c.focusChanged(focused);
+        }
+    }
+
     private class EmptyListComponent extends TerminalComponent<Void>
     {
         public EmptyListComponent(ImmutableList<Component<?>> componentParents)

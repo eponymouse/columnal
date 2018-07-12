@@ -100,11 +100,12 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
      * Details about the cells which are currently visible.  Used to format columns, if a column is adjusted
      * based on what is on screen (e.g. aligning the decimal point in a numeric column)
      */
+    @OnThread(Tag.FXPlatform)
     public class VisibleDetails
     {
         public final int firstVisibleRowIndex;
         // We use ArrayList for this because ImmutableList can't contain null.  But don't alter it!
-        public final List<@Nullable EditorKit<@Value V>> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
+        public final List<@Nullable Pair<StructuredTextField, EditorKit<@Value V>>> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
         public final OptionalInt newVisibleIndex; // Index into visibleCells, not a row number, which is the cause for this update
         public final double width;
 
@@ -121,7 +122,13 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(i);
                 @Nullable Either<Pair<@Value V, EditorKit<@Value V>>, @Localized String> loadedItemOrError = item == null ? null : item.loadedItemOrError;
                 if (loadedItemOrError != null)
-                    visibleCells.add(loadedItemOrError.<@Nullable EditorKit<@Value V>>either(p -> p.getSecond(), s -> (@Nullable EditorKit<@Value V>)null));
+                    visibleCells.add(loadedItemOrError.<@Nullable Pair<StructuredTextField, EditorKit<@Value V>>>either(p -> {
+                        @Nullable StructuredTextField field = p.getSecond().getCurField();
+                        if (field != null)
+                            return new Pair<>(field, p.getSecond());
+                        else
+                            return null;
+                    }, s -> null));
                 else
                     visibleCells.add(null);
             }
@@ -161,7 +168,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     }
 
     @Override
-    public void styleTogether(Collection<StructuredTextField> cellsInColumn)
+    public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn)
     {
         formatVisible(OptionalInt.empty());
     }

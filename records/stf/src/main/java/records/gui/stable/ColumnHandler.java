@@ -44,5 +44,5 @@ public interface ColumnHandler extends RecordSetListener
     @OnThread(Tag.Simulation)
     public @Value Object getValue(int index) throws InternalException, UserException;
 
-    void styleTogether(Collection<StructuredTextField> cellsInColumn);
+    void styleTogether(Collection<? extends StructuredTextField> cellsInColumn);
 }

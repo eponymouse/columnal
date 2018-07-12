@@ -3,6 +3,7 @@ package records.importers.gui;
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaRowIndex;
+import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
@@ -50,7 +51,9 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.ColumnDetails;
 import records.gui.stable.ColumnOperation;
 import records.gui.stable.ScrollGroup.ScrollLock;
+import records.gui.stf.StructuredTextField;
 import records.gui.stf.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.GuessFormat.TrimChoice;
@@ -154,7 +157,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             }
                             // Because we are in a runLater, constructor will have finished by then:
                             Utility.later(this).updateDestPreview();
-                            srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(loadedSrc.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                            srcDataDisplay.setColumns(TableDisplayUtility.makeStableViewColumns(loadedSrc.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null), null, null);
                         });
                     }
                     catch (InternalException | UserException e)
@@ -213,6 +216,34 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         });
     }
 
+    private GetDataPosition makeGetDataPosition(@UnknownInitialization(Object.class) ImportChoicesDialog<SRC_FORMAT, FORMAT> this)
+    {
+        return new GetDataPosition()
+        {
+            @Override
+            public @OnThread(Tag.FXPlatform) CellPosition getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+            {
+                return CellPosition.ORIGIN;
+            }
+
+            @SuppressWarnings("units")
+            @Override
+            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getFirstVisibleRowIncl()
+            {
+                // TODO return proper value
+                return -1;
+            }
+
+            @SuppressWarnings("units")
+            @Override
+            public @OnThread(Tag.FXPlatform) @TableDataRowIndex int getLastVisibleRowIncl()
+            {
+                // TODO return proper value
+                return -1;
+            }
+        };
+    }
+
     @OnThread(Tag.FXPlatform)
     public void updateDestPreview()
     {
@@ -232,7 +263,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 Platform.runLater(() -> {
                     destRecordSet.set(loadedDest.getSecond());
                     destFormat = loadedDest.getFirst();
-                    destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, (r, c) -> CellPosition.ORIGIN, null), null, null);
+                    destData.setColumns(TableDisplayUtility.makeStableViewColumns(loadedDest.getSecond(), new Pair<>(Display.ALL, c -> true), c -> null, makeGetDataPosition(), null), null, null);
                 });
             }
             catch (InternalException | UserException e)
@@ -308,11 +339,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
 
         @OnThread(Tag.FXPlatform)
         protected void numRowsChanged()
-        {
-        }
-
-        @Override
-        protected void styleTogether(Collection<VersionedSTF> cells)
         {
         }
 

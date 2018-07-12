@@ -21,13 +21,32 @@ import java.util.List;
  */
 public class NumberEntry extends TerminalComponent<@Value Number>
 {
+    private final Item integerComponent;
+    private final Item dotComponent;
+    private final Item fracComponent;
+    // NumberEntry can have overrides while it is not focused for editing:
+    private String actualIntegerPart;
+    private String actualFracPart;
+
+    private String displayIntegerPart;
+    private String displayFracPart;
+    
+    private boolean focused;
+
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString()), ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int"));
-        String fracPart = initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE);
-        items.add(new Item(getItemParents(), fracPart.isEmpty() ? "" : ".", ItemVariant.NUMBER_DOT, "").withStyleClasses("stf-number-dot"));
-        items.add(new Item(getItemParents(), fracPart, ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac"));
+        actualIntegerPart = initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString());
+        integerComponent = new Item(getItemParents(), actualIntegerPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int");
+        items.add(integerComponent);
+        actualFracPart = initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE);
+        dotComponent = new Item(getItemParents(), actualFracPart.isEmpty() ? "" : ".", ItemVariant.NUMBER_DOT, "").withStyleClasses("stf-number-dot");
+        items.add(dotComponent);
+        fracComponent = new Item(getItemParents(), actualFracPart, ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac");
+        items.add(fracComponent);
+
+        displayIntegerPart = actualIntegerPart;
+        displayFracPart = actualFracPart;
     }
 
     @Override
@@ -41,5 +60,31 @@ public class NumberEntry extends TerminalComponent<@Value Number>
         {
             return Either.left(Collections.emptyList());
         }
+    }
+
+    public void setDisplay(String displayIntegerPart, String displayFracPart)
+    {
+        this.displayIntegerPart = displayIntegerPart;
+        this.displayFracPart = displayFracPart;
+        updateComponentContent();
+    }
+
+    @Override
+    public void focusChanged(boolean focused)
+    {
+        this.focused = focused;
+        updateComponentContent();
+    }
+
+    private void updateComponentContent()
+    {
+        ImmutableList<Item> prospectiveContent = ImmutableList.of(
+            integerComponent.replaceContent(focused ? displayIntegerPart : actualIntegerPart),
+            dotComponent,
+            fracComponent.replaceContent(focused ? displayFracPart : actualFracPart)
+        );
+        
+        // Should we avoid setting content if no change?
+        items.setAll(prospectiveContent);
     }
 }

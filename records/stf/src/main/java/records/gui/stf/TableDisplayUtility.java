@@ -135,7 +135,7 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public void styleTogether(Collection<StructuredTextField> cellsInColumn)
+                        public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn)
                         {
                         }
                     });
@@ -355,7 +355,7 @@ public class TableDisplayUtility
     {
         public final GetValue<@Value T> g;
         public final ComponentMaker<@Value T> makeComponent;
-        private final @Nullable FXPlatformConsumer<VisibleDetails> formatter;
+        private final @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter;
 
         @OnThread(Tag.Any)
         public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent)
@@ -364,7 +364,7 @@ public class TableDisplayUtility
         }
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent, @Nullable FXPlatformConsumer<VisibleDetails> formatter)
+        public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
         {
             this.g = g;
             this.makeComponent = makeComponent;

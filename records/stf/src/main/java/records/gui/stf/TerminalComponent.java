@@ -137,4 +137,9 @@ public abstract class TerminalComponent<T> extends Component<T>
 
         return new InsertState(lenSoFar, cursorPos, codepoints);
     }
+
+    @Override
+    public void focusChanged(boolean focused)
+    {
+    }
 }

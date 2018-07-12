@@ -59,6 +59,8 @@ public abstract class Component<T>
     // Essentially, could it be removed if it's the only item in a list and focus leaves the list?
     public abstract boolean hasNoData();
 
+    public abstract void focusChanged(boolean focused);
+
     public static class DeleteState
     {
         // An amount that the start position of the deleted region has moved:

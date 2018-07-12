@@ -1,69 +1,67 @@
 package records.gui.stf;
 
 import annotation.qual.Value;
-import javafx.beans.binding.BooleanBinding;
-import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
-import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.StyleClassedTextArea;
-import org.fxmisc.richtext.model.StyledText;
-import org.fxmisc.undo.UndoManagerFactory;
-import org.fxmisc.wellbehaved.event.*;
-import records.data.Column;
-import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.data.datatype.NumberDisplayInfo;
-import records.error.InternalException;
-import records.error.UserException;
-import records.gui.stable.EditorKitCache.VisibleDetails;
+import records.gui.stable.EditorKitCache;
+import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
-import utility.SimulationRunnable;
 import utility.Utility;
-import utility.Workers;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.OptionalInt;
 
 /**
- * Created by neil on 24/05/2017.
+ * One per column.
  */
 @OnThread(Tag.FXPlatform)
 // package-visible
-class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
+class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value Number>.VisibleDetails>
 {
+    private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
+    private static final String ELLIPSIS = "\u2026";//"\u22EF";
+
+    private final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
+    
     @Override
-    public @OnThread(Tag.FXPlatform) void consume(VisibleDetails vis)
+    public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
     {
+        visibleItems.clear();
+        for (@Nullable Pair<StructuredTextField, EditorKit<@Value Number>> visibleCell : vis.visibleCells)
+        {
+            if (visibleCell != null)
+            {
+                EditorKit<?> editorKit = visibleCell.getFirst().getEditorKit();
+                if (editorKit != null)
+                {
+                    NumberEntry numberEntry = editorKit.getComponent(NumberEntry.class);
+                    @Value @Nullable Number value = visibleCell.getSecond().getLastCompletedValue();
+                    if (numberEntry != null && value != null)
+                    {
+                        visibleItems.add(new NumberDetails(numberEntry, value));
+                    }
+                }
+            }
+        }
+        
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
-        int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
-        int maxRightLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fullFracPart.length()).max().orElse(0);
+        int maxLeftLength = visibleItems.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
+        int maxRightLength = visibleItems.stream().mapToInt(d -> d == null ? 0 : d.fullFracPart.length()).max().orElse(0);
         double pixelWidth = vis.width - 8; // Allow some padding
 
         // We truncate the right side if needed, to a minimum of minimumDP, at which point we truncate the left side
         // to what remains
-        int minimumDP = displayInfo == null ? 0 : displayInfo.getMinimumDP();
+        int minimumDP = 0; //displayInfo == null ? 0 : displayInfo.getMinimumDP();
         while (rightToLeft(maxRightLength, pixelWidth) < maxLeftLength && maxRightLength > minimumDP && maxRightLength > 1) // can be zero only if already zero
         {
             maxRightLength -= 1;
@@ -75,11 +73,10 @@ class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
         // Still not enough room for everything?  Just set it all to ellipsis if so:
         boolean onlyEllipsis = rightToLeft(maxRightLength, pixelWidth) < maxLeftLength;
 
-        for (NumberColumnFormatter display : vis.visibleCells)
+        for (NumberDetails display : visibleItems)
         {
             if (display != null)
             {
-                display.textArea.setMaxWidth(vis.width);
                 if (onlyEllipsis)
                 {
                     display.displayIntegerPart = ELLIPSIS;
@@ -93,7 +90,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
                     display.displayDot = NUMBER_DOT;
 
                     while (display.displayFracPart.length() < maxRightLength)
-                        display.displayFracPart += displayInfo == null ? " " : displayInfo.getPaddingChar();
+                        display.displayFracPart += " "; //displayInfo == null ? " " : displayInfo.getPaddingChar();
 
                     if (display.displayFracPart.length() > maxRightLength)
                     {
@@ -111,20 +108,52 @@ class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
             }
         }
     }
-    /*
-    private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
-    private static final String ELLIPSIS = "\u2026";//"\u22EF";
+    
+    private class NumberDetails
+    {
+        private final String fullFracPart;
+        private final String fullIntegerPart;
+        private String displayFracPart;
+        private String displayIntegerPart;
+        private String displayDot;
+        private boolean displayDotVisible;
+        private final NumberEntry numberEntry;
 
-    private final @NonNull StyleClassedTextArea textArea;
+        public NumberDetails(NumberEntry numberEntry, Number n)
+        {
+            this.numberEntry = numberEntry;
+            fullIntegerPart = Utility.getIntegerPart(n).toString();
+            fullFracPart = Utility.getFracPartAsString(n, 0, -1);
+            // TODO should these be taken from NumberEntry?
+            displayIntegerPart = fullIntegerPart;
+            displayFracPart = fullFracPart;
+            displayDot = ".";
+            displayDotVisible = true;
+        }
+
+        private void updateDisplay()
+        {
+            numberEntry.setDisplay(displayIntegerPart, displayFracPart);
+            /*
+            List<String> dotStyle = new ArrayList<>();
+            dotStyle.add("number-display-dot");
+            if (!displayDotVisible)
+                dotStyle.add("number-display-dot-invisible");
+            textArea.replace(TableDisplayUtility.docFromSegments(
+                    new StyledText<>(displayIntegerPart, Arrays.asList("number-display-int")),
+                    new StyledText<>(displayDot, dotStyle),
+                    new StyledText<>(displayFracPart, Arrays.asList("number-display-frac"))
+            ));
+            */
+        }
+    }
+    
+    /*
+    
     private final BooleanBinding notFocused;
     private @Nullable FXPlatformRunnable endEdit;
-    private String fullFracPart;
-    private String fullIntegerPart;
     private @Nullable Number currentEditValue = null;
-    private String displayFracPart;
-    private String displayIntegerPart;
-    private String displayDot;
-    private boolean displayDotVisible;
+    
 
     @OnThread(Tag.FXPlatform)
     public NumberColumnFormatter(int rowIndex, Number n, GetValue<@Value Number> g, @Nullable NumberDisplayInfo ndi, Column column, FXPlatformConsumer<OptionalInt> formatVisible)
@@ -211,26 +240,6 @@ class NumberColumnFormatter implements FXPlatformConsumer<VisibleDetails>
         textArea.mouseTransparentProperty().bind(notFocused);
     }
 
-    @EnsuresNonNull({"fullIntegerPart", "fullFracPart"})
-    public void extractFullParts(@UnderInitialization(Object.class) NumberColumnFormatter this, Number n)
-    {
-        fullIntegerPart = Utility.getIntegerPart(n).toString();
-        fullFracPart = Utility.getFracPartAsString(n, 0, -1);
-    }
-
-    @SuppressWarnings("initialization") // Due to use of various fields
-    private void updateDisplay(@UnknownInitialization(Object.class) NumberColumnFormatter this)
-    {
-        List<String> dotStyle = new ArrayList<>();
-        dotStyle.add("number-display-dot");
-        if (!displayDotVisible)
-            dotStyle.add("number-display-dot-invisible");
-        textArea.replace(TableDisplayUtility.docFromSegments(
-            new StyledText<>(displayIntegerPart, Arrays.asList("number-display-int")),
-            new StyledText<>(displayDot, dotStyle),
-            new StyledText<>(displayFracPart, Arrays.asList("number-display-frac"))
-        ));
-    }
 
     public void expandToFullDisplayForEditing()
     {
