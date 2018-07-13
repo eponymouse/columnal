@@ -260,7 +260,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     return invalid;
                 @SuppressWarnings("units")
                 @GridAreaRowIndex int gridAreaRow = bounds.get().firstRowIncl - getPosition().rowIndex;
-                return TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+                @TableDataRowIndex int rowIndexWithinTable = TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+                @SuppressWarnings("units")
+                @TableDataRowIndex int zero = 0;
+                if (rowIndexWithinTable < zero)
+                    return zero;
+                else
+                    return rowIndexWithinTable;
             }
 
             @Override
@@ -271,7 +277,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     return invalid;
                 @SuppressWarnings("units")
                 @GridAreaRowIndex int gridAreaRow = bounds.get().lastRowIncl - getPosition().rowIndex;
-                return TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+                @TableDataRowIndex int rowIndexWithinTable = TableDisplay.this.getRowIndexWithinTable(gridAreaRow);
+                if (rowIndexWithinTable >= currentKnownRows)
+                {
+                    @SuppressWarnings("units")
+                    @TableDataRowIndex int lastRow = currentKnownRows - 1;
+                    return lastRow;
+                }
+                else
+                    return rowIndexWithinTable;
             }
         };
     }

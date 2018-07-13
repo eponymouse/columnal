@@ -777,7 +777,7 @@ public final class VirtualGrid implements ScrollBindable
         return total;
     }
 
-    private double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
+    public double getColumnWidth(@UnknownInitialization(Object.class) VirtualGrid this, int columnIndex)
     {
         return customisedColumnWidths.getOrDefault(columnIndex, defaultColumnWidth);
     }

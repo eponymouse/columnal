@@ -321,7 +321,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 cellsByColumn.asMap().forEach((columnIndexWithinTable, cellsInColumn) -> {
                     if (displayColumns != null && columnIndexWithinTable < displayColumns.size())
                     {
-                        displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn);
+                        displayColumns.get(columnIndexWithinTable).getColumnHandler().styleTogether(cellsInColumn, withParent(g -> g.getColumnWidth(columnIndexWithinTable + getPosition().columnIndex)).orElse(-1.0));
                     }
                 });
             }

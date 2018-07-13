@@ -29,6 +29,7 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
@@ -121,9 +122,11 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
             {
                 @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(i);
                 @Nullable Either<Pair<@Value V, EditorKit<@Value V>>, @Localized String> loadedItemOrError = item == null ? null : item.loadedItemOrError;
+                Log.debug("  Item: " + loadedItemOrError);
                 if (loadedItemOrError != null)
                     visibleCells.add(loadedItemOrError.<@Nullable Pair<StructuredTextField, EditorKit<@Value V>>>either(p -> {
                         @Nullable StructuredTextField field = p.getSecond().getCurField();
+                        Log.debug("  Field: " + field);
                         if (field != null)
                             return new Pair<>(field, p.getSecond());
                         else
@@ -132,6 +135,8 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 else
                     visibleCells.add(null);
             }
+            
+            Log.debug("visibleCells: " + Utility.listToString(visibleCells));
         }
     }
 
@@ -168,8 +173,9 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     }
 
     @Override
-    public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn)
+    public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn, double columnSize)
     {
+        latestWidth = columnSize;
         formatVisible(OptionalInt.empty());
     }
 
@@ -203,6 +209,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         @TableDataRowIndex int firstVisibleRowIndexIncl = getDataPosition.getFirstVisibleRowIncl();
         @TableDataRowIndex int lastVisibleRowIndexIncl = getDataPosition.getLastVisibleRowIncl();
         
+        //Log.debug("formatVisible: " + formatVisibleCells + " " + firstVisibleRowIndexIncl + " " + lastVisibleRowIndexIncl + " " + latestWidth);
         if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
             formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
     }

@@ -2,6 +2,7 @@ package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
@@ -36,6 +37,7 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
+        Log.debug("### Made new NumberEntry");
         actualIntegerPart = initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString());
         integerComponent = new Item(getItemParents(), actualIntegerPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int");
         items.add(integerComponent);
@@ -79,9 +81,9 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     private void updateComponentContent()
     {
         ImmutableList<Item> prospectiveContent = ImmutableList.of(
-            integerComponent.replaceContent(focused ? displayIntegerPart : actualIntegerPart),
+            integerComponent.replaceContent(!focused ? displayIntegerPart : actualIntegerPart),
             dotComponent,
-            fracComponent.replaceContent(focused ? displayFracPart : actualFracPart)
+            fracComponent.replaceContent(!focused ? displayFracPart : actualFracPart)
         );
         
         // Should we avoid setting content if no change?

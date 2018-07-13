@@ -127,11 +127,7 @@
 .stf-number-int, .stf-number-dot, .stf-number-frac {
     /*-fx-font-family: "Droid Sans Mono";*/
 }
-.stf-number-frac {
-    -fx-font-size: 85%;
-}
-
-.number-display {
+.stf-cell-number {
     /* -fx-spacing: 2; */
     -fx-alignment: baseline-right;
     -fx-font-family: "Droid Sans Mono";
@@ -141,10 +137,10 @@
         -fx-text-alignment: right;
     }
 }
-.number-display-frac {
+.stf-number-frac {
     -fx-font-size: 85%;
 }
-.number-display-dot {
+.stf-number-dot {
     -fx-font-family: $font-main;
     -fx-font-size: 85%;
 }

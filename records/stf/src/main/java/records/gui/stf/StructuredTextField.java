@@ -168,10 +168,11 @@ public class StructuredTextField extends StyleClassedTextArea
     public StructuredTextField(EditorKit<?> editorKit)
     {
         this();
-        resetContent(editorKit);
+        // It clearly must be initialised because we called inner constructor!
+        Utility.later(this).resetContent(editorKit);
     }
 
-    public <T> void resetContent(@UnknownInitialization(StructuredTextField.class) StructuredTextField this, EditorKit<T> editorKit)
+    public <T> void resetContent(EditorKit<T> editorKit)
     {
         if (this.editorKit != null)
         {
@@ -179,6 +180,7 @@ public class StructuredTextField extends StyleClassedTextArea
         }
         
         this.editorKit = editorKit;
+        this.editorKit.setField(this);
         getStyleClass().addAll(editorKit.stfStyles);
         List<Item> initialItems = editorKit.contentComponent.getItems();
         curValue.addAll(initialItems);
@@ -460,6 +462,12 @@ public class StructuredTextField extends StyleClassedTextArea
             sb.append(curValue.get(i).content);
         }
         return sb.toString();
+    }
+
+    public void updateFromEditorKit()
+    {
+        if (this.editorKit != null)
+            updateDocument(this.editorKit);
     }
 
     private static class State<T>
@@ -776,7 +784,7 @@ public class StructuredTextField extends StyleClassedTextArea
 
         public Item replaceContent(String newContent)
         {
-            return new Item(parent, newContent, itemVariant, prompt);
+            return new Item(parent, newContent, itemVariant, prompt).withStyleClasses(this.styleClasses.toArray(new String[0]));
         }
 
         public Item withStyleClasses(String... styleClasses)
@@ -1026,6 +1034,11 @@ public class StructuredTextField extends StyleClassedTextArea
         public void focusChanged(boolean focused)
         {
             contentComponent.focusChanged(focused);
+        }
+
+        public void setField(StructuredTextField structuredTextField)
+        {
+            curField = structuredTextField;
         }
     }
 }

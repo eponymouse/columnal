@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -48,10 +49,12 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                     @Value @Nullable Number value = visibleCell.getSecond().getLastCompletedValue();
                     if (numberEntry != null && value != null)
                     {
-                        visibleItems.add(new NumberDetails(numberEntry, value));
+                        visibleItems.add(new NumberDetails(visibleCell.getFirst(), numberEntry, value));
                     }
                 }
             }
+            
+            
         }
         
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
@@ -111,6 +114,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     
     private class NumberDetails
     {
+        private final StructuredTextField structuredTextField;
         private final String fullFracPart;
         private final String fullIntegerPart;
         private String displayFracPart;
@@ -119,8 +123,9 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private boolean displayDotVisible;
         private final NumberEntry numberEntry;
 
-        public NumberDetails(NumberEntry numberEntry, Number n)
+        public NumberDetails(StructuredTextField structuredTextField, NumberEntry numberEntry, Number n)
         {
+            this.structuredTextField = structuredTextField;
             this.numberEntry = numberEntry;
             fullIntegerPart = Utility.getIntegerPart(n).toString();
             fullFracPart = Utility.getFracPartAsString(n, 0, -1);
@@ -133,7 +138,9 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
 
         private void updateDisplay()
         {
+            Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
             numberEntry.setDisplay(displayIntegerPart, displayFracPart);
+            structuredTextField.updateFromEditorKit();
             /*
             List<String> dotStyle = new ArrayList<>();
             dotStyle.add("number-display-dot");
@@ -421,19 +428,19 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         {
             Text t = new Text();
             Group root = new Group(t);
-            root.getStyleClass().add("number-display");
+            root.getStyleClass().add("stf-cell-number");
             Scene scene = new Scene(root);
             scene.getStylesheets().addAll(FXUtility.getSceneStylesheets());
             t.setText("0000000000");
-            t.getStyleClass().setAll("number-display-int");
+            t.getStyleClass().setAll("stf-number-int");
             t.applyCss();
             LEFT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
             t.setText("0000000000");
-            t.getStyleClass().setAll("number-display-frac");
+            t.getStyleClass().setAll("stf-number-frac");
             t.applyCss();
             RIGHT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
             t.setText("...........");
-            t.getStyleClass().setAll("number-display-dot");
+            t.getStyleClass().setAll("stf-number-dot");
             DOT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
         }
     }

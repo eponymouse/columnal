@@ -135,7 +135,7 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn)
+                        public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn, double columnSize)
                         {
                         }
                     });
@@ -387,10 +387,7 @@ public class TableDisplayUtility
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
                 return new EditorKit<@Value T>(makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
             };
-            return new EditorKitCache<@Value T>(columnIndex, g, vis -> {
-                if (formatter != null)
-                    formatter.consume(vis);
-            }, getDataPosition, makeEditorKit);
+            return new EditorKitCache<@Value T>(columnIndex, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
         }
     }
 
