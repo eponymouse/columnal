@@ -84,6 +84,6 @@ public class TestNumberColumnDisplay extends ApplicationTest
     @Test
     public void testSomeTruncated() throws Exception
     {
-        testNumbers(of("0.112233445566778899", "1.112233445", "2.1122334400", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344", "3.11223344"));
+        testNumbers(of("0.112233445566778899", "1.112233445", "2.1122334400", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344 ", "3.11223344 "));
     }
 }

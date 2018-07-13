@@ -137,7 +137,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         // Ok, last try: big decimal (and rethrow if not)
         try
         {
-            addBigDecimal(OptionalInt.empty(), new BigDecimal(number, MathContext.DECIMAL128));
+            addBigDecimal(OptionalInt.empty(), new BigDecimal(number, MathContext.DECIMAL128).stripTrailingZeros());
         }
         catch (NumberFormatException e)
         {

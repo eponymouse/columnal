@@ -477,7 +477,7 @@ public class Utility
         // Last try: big decimal (and re-throw if not)
         try
         {
-            return Optional.of(new BigDecimal(number, MathContext.DECIMAL128));
+            return Optional.of(new BigDecimal(number, MathContext.DECIMAL128).stripTrailingZeros());
         }
         catch (NumberFormatException e)
         {
