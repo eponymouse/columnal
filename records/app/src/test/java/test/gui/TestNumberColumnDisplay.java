@@ -66,6 +66,8 @@ public class TestNumberColumnDisplay extends ApplicationTest
             });
             assertEquals("Row " + i, expectedGUI.get(i), cellText);
         }
+        
+        // TODO also check what happens when you click into number to edit.
     }
     
     @Test
@@ -85,5 +87,23 @@ public class TestNumberColumnDisplay extends ApplicationTest
     public void testSomeTruncated() throws Exception
     {
         testNumbers(of("0.112233445566778899", "1.112233445", "2.1122334400", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344 ", "3.11223344 "));
+    }
+    
+    @Test
+    public void testAllAbbreviated() throws Exception
+    {
+        testNumbers(of("1234567890", "2234567890", "3234567890"), of("\u202634567890", "\u202634567890", "\u202634567890"));
+    }
+
+    @Test
+    public void testSomeAbbreviated() throws Exception
+    {
+        testNumbers(of("1234567890", "234567890", "34567890"), of("\u202634567890", "234567890", "34567890"));
+    }
+
+    @Test
+    public void testMixedUnaltered() throws Exception
+    {
+        testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2.    ", "0.3456"));
     }
 }
