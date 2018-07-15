@@ -54,8 +54,9 @@ public class TestNumberColumnDisplay extends ApplicationTest
         ), actualValues.size()));
         
         // Bit of a hack, but font rendering seems different by OS:
-        if (SystemUtils.IS_OS_WINDOWS)
-            TestUtil.fx_(() -> mwa._test_getVirtualGrid()._test_setColumnWidth(0, 90));
+        // Not necessary any more?
+        //if (SystemUtils.IS_OS_WINDOWS)
+            //TestUtil.fx_(() -> mwa._test_getVirtualGrid()._test_setColumnWidth(0, 100));
         
         TestUtil.sleep(2000);
 
@@ -116,7 +117,7 @@ public class TestNumberColumnDisplay extends ApplicationTest
     @Test
     public void testSomeTruncated() throws Exception
     {
-        testNumbers(of("0.112233445566778899", "1.112233445", "2.1122334400", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344 ", "3.11223344 "));
+        testNumbers(of("0.112233445566778899", "1.112233445", "2.11223344", "3.11223344"), of("0.11223344\u2026", "1.112233445", "2.11223344 ", "3.11223344 "));
     }
     
     @Test
@@ -134,12 +135,12 @@ public class TestNumberColumnDisplay extends ApplicationTest
     @Test
     public void testMixedUnaltered() throws Exception
     {
-        testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2.    ", "0.3456"));
+        testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2    ", "0.3456"));
     }
 
     @Test
     public void testBothEnds() throws Exception
     {
-        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u202667890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u202667890  "));
+        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u2026567890  "));
     }
 }
