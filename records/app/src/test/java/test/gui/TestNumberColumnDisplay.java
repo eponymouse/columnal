@@ -2,6 +2,7 @@ package test.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
@@ -52,6 +53,10 @@ public class TestNumberColumnDisplay extends ApplicationTest
             new MemoryNumericColumn(rs, new ColumnId("C"), new NumberInfo(Unit.SCALAR), actualValues.stream())
         ), actualValues.size()));
         
+        // Bit of a hack, but font rendering seems different by OS:
+        if (SystemUtils.IS_OS_WINDOWS)
+            TestUtil.fx_(() -> mwa._test_getVirtualGrid()._test_setColumnWidth(0, 90));
+        
         TestUtil.sleep(2000);
 
         for (int i = 0; i < expectedGUI.size(); i++)
@@ -67,7 +72,32 @@ public class TestNumberColumnDisplay extends ApplicationTest
             assertEquals("Row " + i, expectedGUI.get(i), cellText);
         }
         
-        // TODO also check what happens when you click into number to edit.
+        // Check what happens when you click into number to edit:
+
+        for (int i = 0; i < expectedGUI.size(); i++)
+        {
+            final int iFinal = i;
+            @Nullable VersionedSTF cell = TestUtil.<@Nullable VersionedSTF>fx(() ->
+                mwa._test_getDataCell(new CellPosition(CellPosition.row(3 + iFinal), CellPosition.col(0)))
+            );
+            
+            final @Nullable String cellText;
+            if (cell != null)
+            {
+                // Click twice to edit:
+                clickOn(cell);
+                TestUtil.sleep(400);
+                clickOn(cell);
+                VersionedSTF cellFinal = cell;
+                cellText = TestUtil.fx(() -> cellFinal.getText());
+            }
+            else
+                cellText = null;
+            assertEquals("Row " + i, actualValues.get(i), cellText);
+        }
+        
+        // TODO check for click at different cursor positions
+        
     }
     
     @Test
@@ -105,5 +135,12 @@ public class TestNumberColumnDisplay extends ApplicationTest
     public void testMixedUnaltered() throws Exception
     {
         testNumbers(of("123.456", "2", "0.3456"), of("123.456 ", "2.    ", "0.3456"));
+    }
+
+    @Test
+    public void testBothEnds() throws Exception
+    {
+        // Dot will be invisible
+        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.4\u2026", "\u2026567890. "));
     }
 }
