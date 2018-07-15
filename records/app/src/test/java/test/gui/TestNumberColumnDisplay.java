@@ -140,7 +140,6 @@ public class TestNumberColumnDisplay extends ApplicationTest
     @Test
     public void testBothEnds() throws Exception
     {
-        // Dot will be invisible
-        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.4\u2026", "\u2026567890. "));
+        testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u202667890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u202667890  "));
     }
 }

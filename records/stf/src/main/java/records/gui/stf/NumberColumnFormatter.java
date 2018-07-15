@@ -64,7 +64,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
 
         // We truncate the right side if needed, to a minimum of minimumDP, at which point we truncate the left side
         // to what remains
-        int minimumDP = 0; //displayInfo == null ? 0 : displayInfo.getMinimumDP();
+        int minimumDP = Math.min(2, maxRightLength); //displayInfo == null ? 0 : displayInfo.getMinimumDP();
         while (rightToLeft(maxRightLength, pixelWidth) < maxLeftLength && maxRightLength > minimumDP && maxRightLength > 1) // can be zero only if already zero
         {
             maxRightLength -= 1;
