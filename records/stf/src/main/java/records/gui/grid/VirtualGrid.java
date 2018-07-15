@@ -1006,6 +1006,7 @@ public final class VirtualGrid implements ScrollBindable
     public void _test_setColumnWidth(int columnIndex, double width)
     {
         customisedColumnWidths.put(CellPosition.col(columnIndex), width);
+        container.redoLayout();
     }
 
     public Optional<CellSelection> _test_getSelection()
