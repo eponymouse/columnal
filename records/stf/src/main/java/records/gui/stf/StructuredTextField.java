@@ -26,7 +26,6 @@ import org.fxmisc.richtext.model.*;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import records.error.InternalException;
 import records.gui.stf.Component.InsertState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -52,6 +51,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A StructuredTextField, for the entry of (known a priori) statically-typed data values.  The field
@@ -103,6 +103,9 @@ public class StructuredTextField extends StyleClassedTextArea
         FXUtility.addChangeListenerPlatformNN(textProperty(), t -> {
             Log.normalStackTrace("Edited text to " + t, 50);
         });
+        FXUtility.addChangeListenerPlatformNN(caretPositionProperty(), n -> {
+            Log.normalStackTrace("Caret moved to " + n, 50);
+        });
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             if (editorKit == null || editorKit.store == null)
@@ -112,7 +115,11 @@ public class StructuredTextField extends StyleClassedTextArea
             usFocused.updateAutoComplete(getSelection());
             if (focused)
             {
-                usFocused.focusGained(editorKit);
+                @Nullable CaretPositionMapper mapper = usFocused.focusGained(editorKit);
+                int oldPos = getCaretPosition();
+                updateDocument(editorKit);
+                if (mapper != null)
+                    moveTo(mapper.mapCaretPosition(oldPos));
             }
             else
             {
@@ -157,9 +164,9 @@ public class StructuredTextField extends StyleClassedTextArea
         ));
     }
 
-    private <T> void focusGained(EditorKit<T> editorKit)
+    private <T> @Nullable CaretPositionMapper focusGained(EditorKit<T> editorKit)
     {
-        editorKit.focusChanged(true);
+        return editorKit.focusChanged(true);
     }
     
     private <T> void focusLost(EditorKit<T> editorKit)
@@ -389,7 +396,7 @@ public class StructuredTextField extends StyleClassedTextArea
         updateAutoComplete(getSelection());
     }
 
-    private <T> void updateDocument(EditorKit<T> editorKit)
+    private <T> void updateDocument(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField this, EditorKit<T> editorKit)
     {
         curValue.clear();
         curValue.addAll(editorKit.contentComponent.getItems());
@@ -1036,9 +1043,9 @@ public class StructuredTextField extends StyleClassedTextArea
                 return null;
         }
 
-        public void focusChanged(boolean focused)
+        public @Nullable CaretPositionMapper focusChanged(boolean focused)
         {
-            contentComponent.focusChanged(focused);
+            return contentComponent.focusChanged(focused);
         }
 
         public void setField(StructuredTextField structuredTextField)
@@ -1046,4 +1053,5 @@ public class StructuredTextField extends StyleClassedTextArea
             curField = structuredTextField;
         }
     }
+
 }

@@ -66,24 +66,40 @@ public class NumberEntry extends TerminalComponent<@Value Number>
 
     /**
      * Sets the display integer and fractional parts (for when the field is NOT focused).
-     * Returns the new caret position 
-     * @param displayIntegerPart
-     * @param displayFracPart
-     * @return
+     * Returns true if this was a change from before
      */
-    public int setDisplay(String displayIntegerPart, String displayFracPart)
+    public boolean setDisplay(String displayIntegerPart, String displayFracPart)
     {
+        if (this.displayIntegerPart.equals(displayIntegerPart) && this.displayFracPart.equals(displayFracPart))
+            return false;
         this.displayIntegerPart = displayIntegerPart;
         this.displayFracPart = displayFracPart;
         updateComponentContent();
-        return -1;
+        return true;
     }
 
     @Override
-    public void focusChanged(boolean focused)
+    public @Nullable CaretPositionMapper focusChanged(boolean focused)
     {
         this.focused = focused;
+        // We have to work out whereabouts the caret currently lies.
+        CaretPositionMapper mapper;
+        int prevInt = integerComponent.getLength();
+        int prevDot = dotComponent.getLength();
         updateComponentContent();
+        if (focused)
+        {
+            return n -> {
+                if (n <= prevInt)
+                    // Right-align the position:
+                    return integerComponent.getLength() - (prevInt - n);
+                else
+                    // Left-align the position:
+                    return integerComponent.getLength() + dotComponent.getLength() + (n - (prevInt + prevDot));
+            };
+        }
+        else
+            return null;
     }
 
     private void updateComponentContent()

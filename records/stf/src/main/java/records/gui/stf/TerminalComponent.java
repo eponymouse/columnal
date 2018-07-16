@@ -4,12 +4,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
+import utility.FXPlatformRunnable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A parent class for Component subclasses that have no sub-components, just a plain list of items
@@ -139,7 +142,8 @@ public abstract class TerminalComponent<T> extends Component<T>
     }
 
     @Override
-    public void focusChanged(boolean focused)
+    public @Nullable CaretPositionMapper focusChanged(boolean focused)
     {
+        return null;
     }
 }

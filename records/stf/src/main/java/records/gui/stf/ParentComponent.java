@@ -1,12 +1,16 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.Suggestion;
+import utility.FXPlatformRunnable;
+import utility.StreamTreeBuilder;
 import utility.Utility;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 08/07/2017.
@@ -92,11 +96,12 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
-    public void focusChanged(boolean focused)
+    public @Nullable CaretPositionMapper focusChanged(boolean focused)
     {
         for (Component<?> c : getChildComponents())
         {
             c.focusChanged(focused);
         }
+        return null;
     }
 }

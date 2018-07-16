@@ -94,7 +94,6 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
         @Nullable StructuredTextField stf = getItemAt(cellPosition);
         if (stf != null)
         {
-            stf.requestFocus();
             if (screenPosition != null)
             {
                 Point2D localPos = stf.screenToLocal(screenPosition);
@@ -105,6 +104,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
             {
                 stf.selectRange(0, 0);
             }
+            stf.requestFocus();
         }
     }
     

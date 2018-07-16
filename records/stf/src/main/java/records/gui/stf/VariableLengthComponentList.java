@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -15,6 +16,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunctionIntUser;
+import utility.FXPlatformRunnable;
+import utility.StreamTreeBuilder;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -23,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 28/06/2017.
@@ -344,12 +348,13 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     }
 
     @Override
-    public void focusChanged(boolean focused)
+    public @Nullable CaretPositionMapper focusChanged(boolean focused)
     {
         for (Component<?> c : allComponents)
         {
             c.focusChanged(focused);
         }
+        return null;
     }
 
     private class EmptyListComponent extends TerminalComponent<Void>

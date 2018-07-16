@@ -41,6 +41,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -1074,6 +1075,8 @@ public final class VirtualGrid implements ScrollBindable
             
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc @UnknownIfIdentifier MouseEvent> clickHandler = mouseEvent -> {
 
+                Log.debug("Processing: " + mouseEvent);
+                
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 

@@ -2,6 +2,7 @@ package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -59,7 +60,9 @@ public abstract class Component<T>
     // Essentially, could it be removed if it's the only item in a list and focus leaves the list?
     public abstract boolean hasNoData();
 
-    public abstract void focusChanged(boolean focused);
+    // Returns runnable items to run after the layout has been redone.
+    // (used for when focusing changes content)
+    public abstract @Nullable CaretPositionMapper focusChanged(boolean focused);
 
     public static class DeleteState
     {
