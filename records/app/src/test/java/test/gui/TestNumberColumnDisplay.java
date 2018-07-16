@@ -33,6 +33,8 @@ import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.of;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 @OnThread(Tag.Simulation)
@@ -127,7 +129,7 @@ public class TestNumberColumnDisplay extends ApplicationTest
                     clickOn(cell);
                     TestUtil.sleep(400);
                     String gui = expectedGUI.get(i);
-                    String guiMinusEllipsis = gui.replaceAll("\u2026", "");
+                    String guiMinusEllipsis = gui.replaceAll("\u2026", "").trim();
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
                         Optional<Bounds> b = Optional.empty();
@@ -153,17 +155,27 @@ public class TestNumberColumnDisplay extends ApplicationTest
                     // Second click needs to be at target position:
                     final Point2D clickOnScreenPos;
                     final int afterIndex;
+                    int nonEllipsisPos = actual.indexOf(guiMinusEllipsis);
+                    assertNotEquals("Should be able to find minus ellipsis string: \"" + guiMinusEllipsis + "\" in \"" + actual + "\"", -1, nonEllipsisPos);
                     switch (target)
                     {
+                        case FAR_LEFT:
+                            clickOnScreenPos = posOfCaret.apply(0);
+                            afterIndex = nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
+                            break;
+                        case INSIDE_LEFT:
+                            clickOnScreenPos = posOfCaret.apply(1);
+                            afterIndex = nonEllipsisPos + (gui.startsWith("\u2026") ? 0 : 1);
+                            break;
                         default: // MIDDLE
                             int targetPos = gui.length() / 2;
                             clickOnScreenPos = posOfCaret.apply(targetPos);
-                            afterIndex = targetPos + actual.indexOf(guiMinusEllipsis) + (gui.startsWith("\u2026") ? 1 : 0);
+                            afterIndex = targetPos + nonEllipsisPos + (gui.startsWith("\u2026") ? 1 : 0);
                             break;
                     }
                     clickOn(clickOnScreenPos);
                     
-                    assertEquals("Before: \"" + gui + "\" after: " + actual, afterIndex, 
+                    assertEquals("Clicking " + target + " before: \"" + gui + "\" after: " + actual, afterIndex, 
                         (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
                     );
                     // Double-check cellText while we're here:
@@ -172,6 +184,15 @@ public class TestNumberColumnDisplay extends ApplicationTest
                 } else
                     cellText = null;
                 assertEquals("Row " + i, actual, cellText);
+                
+                // Now click cell before us to make sure text goes back:
+                @Nullable VersionedSTF cellBefore = cells.get((i + cells.size() - 1) % cells.size());
+                assertNotNull(cellBefore);
+                if (cellBefore != null)
+                {
+                    clickOn(cellBefore);
+                    assertEquals("Row " + i, expectedGUI.get(i), TestUtil.<@Nullable String>fx(() -> cell == null ? null : cell.getText()));
+                }
             }
         }
 
