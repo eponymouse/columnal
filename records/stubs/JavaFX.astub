@@ -353,6 +353,7 @@ class StyleClassedTextArea
     ObjectProperty<IndexRange> selectionProperty(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
     void selectRange(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this, int a, int b);
     IndexRange getSelection(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
+    ObservableValue<String> textProperty(@UnknownInitialization(org.fxmisc.richtext.StyleClassedTextArea.class) StyleClassedTextArea this);
 }
 class GenericStyledArea<PS, SEG, S>
 {

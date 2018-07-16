@@ -64,11 +64,19 @@ public class NumberEntry extends TerminalComponent<@Value Number>
         }
     }
 
-    public void setDisplay(String displayIntegerPart, String displayFracPart)
+    /**
+     * Sets the display integer and fractional parts (for when the field is NOT focused).
+     * Returns the new caret position 
+     * @param displayIntegerPart
+     * @param displayFracPart
+     * @return
+     */
+    public int setDisplay(String displayIntegerPart, String displayFracPart)
     {
         this.displayIntegerPart = displayIntegerPart;
         this.displayFracPart = displayFracPart;
         updateComponentContent();
+        return -1;
     }
 
     @Override

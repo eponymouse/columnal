@@ -1,8 +1,11 @@
 package test.gui;
 
 import com.google.common.collect.ImmutableList;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
@@ -24,8 +27,13 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
 
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.function.Function;
+
 import static com.google.common.collect.ImmutableList.of;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @OnThread(Tag.Simulation)
 public class TestNumberColumnDisplay extends ApplicationTest
@@ -41,6 +49,9 @@ public class TestNumberColumnDisplay extends ApplicationTest
         this.windowToUse = stage;
         FXUtility._test_setTestingMode();
     }
+
+    @OnThread(Tag.Any)
+    private static enum Target { FAR_LEFT, INSIDE_LEFT, MIDDLE, INSIDE_RIGHT, FAR_RIGHT }
     
     /**
      * Given a list of numbers (as strings), displays them in GUI and checks that:
@@ -60,11 +71,17 @@ public class TestNumberColumnDisplay extends ApplicationTest
         
         TestUtil.sleep(2000);
 
+        ArrayList<@Nullable VersionedSTF> cells = new ArrayList<>(expectedGUI.size());
+
         for (int i = 0; i < expectedGUI.size(); i++)
         {
             final int iFinal = i;
             @Nullable String cellText = TestUtil.<@Nullable String>fx(() -> {
                 @Nullable VersionedSTF cell = mwa._test_getDataCell(new CellPosition(CellPosition.row(3 + iFinal), CellPosition.col(0)));
+                synchronized (this)
+                {
+                    cells.add(cell);
+                }
                 if (cell != null)
                     return cell.getText();
                 else
@@ -77,11 +94,7 @@ public class TestNumberColumnDisplay extends ApplicationTest
 
         for (int i = 0; i < expectedGUI.size(); i++)
         {
-            final int iFinal = i;
-            @Nullable VersionedSTF cell = TestUtil.<@Nullable VersionedSTF>fx(() ->
-                mwa._test_getDataCell(new CellPosition(CellPosition.row(3 + iFinal), CellPosition.col(0)))
-            );
-            
+            @Nullable VersionedSTF cell = cells.get(i);            
             final @Nullable String cellText;
             if (cell != null)
             {
@@ -97,8 +110,71 @@ public class TestNumberColumnDisplay extends ApplicationTest
             assertEquals("Row " + i, actualValues.get(i), cellText);
         }
         
-        // TODO check for click at different cursor positions
-        
+        // Clicking away from the edges is obvious.  For far sides of ellipsis, we do basic thing: click lands
+        // on the far side of the digit that the ellipsis directly replaced.
+
+        for (Target target : Target.values())
+        {
+            for (int i = 0; i < expectedGUI.size(); i++)
+            {
+                @Nullable VersionedSTF cell = cells.get(i);
+                final @Nullable String cellText;
+                String actual = actualValues.get(i);
+                if (cell != null)
+                {
+                    @NonNull VersionedSTF cellFinal = cell;
+                    // Click twice to edit:
+                    clickOn(cell);
+                    TestUtil.sleep(400);
+                    String gui = expectedGUI.get(i);
+                    String guiMinusEllipsis = gui.replaceAll("\u2026", "");
+                    
+                    Function<Integer, Point2D> posOfCaret = n -> {
+                        Optional<Bounds> b = Optional.empty();
+                        String curText = TestUtil.fx(() -> cellFinal.getText());
+                        if (n < curText.length())
+                        {
+                            b = TestUtil.fx(() -> cellFinal.getCharacterBoundsOnScreen(n, n + 1));
+                            if (b.isPresent())
+                                return new Point2D(b.get().getMinX(), b.get().getMinY() + b.get().getHeight() * 0.5);
+                        }
+                        else if (n == curText.length())
+                        {
+                            b = TestUtil.fx(() -> cellFinal.getCharacterBoundsOnScreen(n - 1, n));
+                            if (b.isPresent())
+                                return new Point2D(b.get().getMaxX(), b.get().getMinY() + b.get().getHeight() * 0.5);
+                        }
+                        
+                        fail("Character not on screen: " + n);
+                        // Not needed:
+                        return new Point2D(0, 0);
+                    };
+                    
+                    // Second click needs to be at target position:
+                    final Point2D clickOnScreenPos;
+                    final int afterIndex;
+                    switch (target)
+                    {
+                        default: // MIDDLE
+                            int targetPos = gui.length() / 2;
+                            clickOnScreenPos = posOfCaret.apply(targetPos);
+                            afterIndex = targetPos + actual.indexOf(guiMinusEllipsis) + (gui.startsWith("\u2026") ? 1 : 0);
+                            break;
+                    }
+                    clickOn(clickOnScreenPos);
+                    
+                    assertEquals("Before: \"" + gui + "\" after: " + actual, afterIndex, 
+                        (int)TestUtil.<Integer>fx(() -> cellFinal.getCaretPosition())
+                    );
+                    // Double-check cellText while we're here:
+                    
+                    cellText = TestUtil.fx(() -> cellFinal.getText());
+                } else
+                    cellText = null;
+                assertEquals("Row " + i, actual, cellText);
+            }
+        }
+
     }
     
     @Test

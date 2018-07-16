@@ -98,6 +98,11 @@ public class StructuredTextField extends StyleClassedTextArea
         getStyleClass().add("structured-text-field");
 
         setPrefHeight(FXUtility.measureNotoSansHeight());
+        
+        // TEMP:
+        FXUtility.addChangeListenerPlatformNN(textProperty(), t -> {
+            Log.normalStackTrace("Edited text to " + t, 50);
+        });
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             if (editorKit == null || editorKit.store == null)
