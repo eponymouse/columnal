@@ -4,6 +4,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -25,8 +26,8 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTransform>>
 {
-    private static final double WIDTH = 360;
-    private static final double HEIGHT = 200;
+    private static final double WIDTH = 380;
+    private static final double HEIGHT = 260;
 
     public DataOrTransformChoice(Window parent, boolean transformIsValid)
     {
@@ -60,7 +61,11 @@ public class DataOrTransformChoice extends LightDialog<Pair<Point2D, DataOrTrans
             close();
         });
         
-        BorderPane content = new BorderPane(null, null, GUI.vbox("new-button-list", transformButton, checkButton), null, GUI.vbox("new-button-list", immediateDataButton, importFromFile, importFromLink));
+        Label explanation = new Label("Tables are either plain data (left) or transformations of other tables (right)");
+        explanation.getStyleClass().add("new-explanation");
+        explanation.setWrapText(true);
+        
+        BorderPane content = new BorderPane(null, explanation, GUI.vbox("new-button-list", transformButton, checkButton), null, GUI.vbox("new-button-list", immediateDataButton, importFromFile, importFromLink));
         FXUtility.forcePrefSize(content);
         content.setPrefWidth(WIDTH);
         content.setPrefHeight(HEIGHT);
