@@ -117,6 +117,7 @@ public final class VirtualGrid implements ScrollBindable
     private final int rowsToBottom;
     private final List<VirtualGridSupplier<? extends Node>> nodeSuppliers = new ArrayList<>();
     private final List<GridArea> gridAreas = new ArrayList<>();
+    private final @Nullable CreateTableButtonSupplier createTableButtonSupplier;
     
     private final Container container;
     private static final int MAX_EXTRA_ROW_COLS = 12;
@@ -223,7 +224,14 @@ public final class VirtualGrid implements ScrollBindable
         //});
         currentColumns.set(CellPosition.col(columnsToRight));
         if (createTable != null)
-            nodeSuppliers.add(new CreateTableButtonSupplier(createTable));
+        {
+            this.createTableButtonSupplier = new CreateTableButtonSupplier(createTable);
+            nodeSuppliers.add(createTableButtonSupplier);
+        }
+        else
+        {
+            this.createTableButtonSupplier = null;
+        }
         nodeSuppliers.add(supplierFloating);
         this.hBar = new ScrollBar();
         hBar.setOrientation(Orientation.HORIZONTAL);
@@ -1621,6 +1629,12 @@ public final class VirtualGrid implements ScrollBindable
         container.setEffect(effect);
     }
 
+    public void addNewButtonVisibleListener(FXPlatformConsumer<Boolean> newButtonVisibleListener)
+    {
+        if (createTableButtonSupplier != null)
+            createTableButtonSupplier.addButtonVisibleListener(newButtonVisibleListener);
+    }
+    
     /**
      * For the given gridArea, find the graphical bounds (in relative coords to that grid area)
      * of all the other grid areas which touch it.
@@ -1657,6 +1671,7 @@ public final class VirtualGrid implements ScrollBindable
         private @Nullable CellPosition buttonPosition;
         // Button position, last mouse position on screen:
         private final CreateTable createTable;
+        private @Nullable FXPlatformConsumer<Boolean> pendingButtonVisibleListener;
 
         private CreateTableButtonSupplier(CreateTable createTable)
         {
@@ -1682,6 +1697,8 @@ public final class VirtualGrid implements ScrollBindable
                     lastMousePos[0] = new Point2D(e.getScreenX(), e.getScreenY());
                 });
                 containerChildren.add(button, ViewOrder.STANDARD_CELLS);
+                if (pendingButtonVisibleListener != null)
+                    addButtonVisibleListener(pendingButtonVisibleListener);
             }
 
             @Nullable CellSelection curSel = selection.get();
@@ -1710,6 +1727,15 @@ public final class VirtualGrid implements ScrollBindable
         protected @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return cellPosition.equals(buttonPosition) ? ItemState.DIRECTLY_CLICKABLE : null;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public void addButtonVisibleListener(FXPlatformConsumer<Boolean> newButtonVisibleListener)
+        {
+            if (button != null)
+                FXUtility.addChangeListenerPlatformNN(button.visibleProperty(), newButtonVisibleListener);
+            else
+                pendingButtonVisibleListener = newButtonVisibleListener;
         }
     }
     

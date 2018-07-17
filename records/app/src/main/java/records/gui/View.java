@@ -97,8 +97,7 @@ public class View extends StackPane
     // Cancels a delayed save operation:
     private @Nullable FXPlatformRunnable cancelDelayedSave;
 
-    // Pass true when empty
-    private final FXPlatformConsumer<Boolean> emptyListener;
+    private final FXPlatformConsumer<ContentState> emptyListener;
 
     // We start in readOnly mode, and enable writing later if everything goes well:
     private boolean readOnly = true;
@@ -214,7 +213,7 @@ public class View extends StackPane
                 // This goes last because it will redo layout:
                 mainPane.removeGridArea(display);
             }
-            emptyListener.consume(remainingCount == 0);
+            emptyListener.consume(remainingCount == 0 ? ContentState.EMPTY_NO_SEL : ContentState.NON_EMPTY);
         });
     }
 
@@ -497,10 +496,17 @@ public class View extends StackPane
         }
     }
     */
+    
+    public static enum ContentState
+    {
+        EMPTY_NO_SEL,
+        EMPTY_SEL,
+        NON_EMPTY;
+    }
 
     // The type of the listener really throws off the checkers so suppress them all:
     @SuppressWarnings({"keyfor", "interning", "userindex", "valuetype", "helpfile"})
-    public View(File location, FXPlatformConsumer<Boolean> emptyListener) throws InternalException, UserException
+    public View(File location, FXPlatformConsumer<ContentState> emptyListener) throws InternalException, UserException
     {
         this.emptyListener = emptyListener;
         diskFile = new SimpleObjectProperty<>(location);
@@ -520,7 +526,7 @@ public class View extends StackPane
             public void addSource(DataSource dataSource)
             {
                 FXUtility.runFX(() -> {
-                    thisView.emptyListener.consume(false);
+                    thisView.emptyListener.consume(ContentState.NON_EMPTY);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource));
                     thisView.save();
@@ -532,7 +538,7 @@ public class View extends StackPane
             {
                 FXUtility.runFX(() ->
                 {
-                    thisView.emptyListener.consume(false);
+                    thisView.emptyListener.consume(ContentState.NON_EMPTY);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     TableDisplay tableDisplay = new TableDisplay(thisView, floatingSupplier, transformation);
                     thisView.addDisplay(tableDisplay);
@@ -563,6 +569,12 @@ public class View extends StackPane
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
         mainPane.addNodeSupplier(rowLabelSupplier);
+        mainPane.addNewButtonVisibleListener(vis -> {
+            emptyListener.consume(tableManager.getAllTables().isEmpty() ?
+                (vis ? ContentState.EMPTY_SEL : ContentState.EMPTY_NO_SEL)
+                : ContentState.NON_EMPTY
+            );
+        });
         overlayPane = new Pane();
         overlayPane.setPickOnBounds(false);
         snapGuidePane = new Pane();
