@@ -3,6 +3,7 @@ package test.gui;
 import com.google.common.collect.ImmutableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -103,7 +104,7 @@ public class TestNumberColumnDisplay extends ApplicationTest
                 // Click twice to edit:
                 clickOn(cell);
                 TestUtil.sleep(400);
-                clickOn(cell);
+                push(KeyCode.ENTER);
                 VersionedSTF cellFinal = cell;
                 cellText = TestUtil.fx(() -> cellFinal.getText());
             }
@@ -167,10 +168,18 @@ public class TestNumberColumnDisplay extends ApplicationTest
                             clickOnScreenPos = posOfCaret.apply(1);
                             afterIndex = nonEllipsisPos + (gui.startsWith("\u2026") ? 0 : 1);
                             break;
+                        case INSIDE_RIGHT:
+                            clickOnScreenPos = posOfCaret.apply(gui.trim().length() - 1);
+                            afterIndex = nonEllipsisPos + guiMinusEllipsis.length() + (gui.endsWith("\u2026") ? 0 : -1); 
+                            break;
+                        case FAR_RIGHT:
+                            clickOnScreenPos = posOfCaret.apply(gui.trim().length());
+                            afterIndex = nonEllipsisPos + guiMinusEllipsis.length() + (gui.endsWith("\u2026") ? 1 : 0);
+                            break;
                         default: // MIDDLE
-                            int targetPos = gui.length() / 2;
+                            int targetPos = gui.trim().length() / 2;
                             clickOnScreenPos = posOfCaret.apply(targetPos);
-                            afterIndex = targetPos + nonEllipsisPos + (gui.startsWith("\u2026") ? 1 : 0);
+                            afterIndex = targetPos + nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
                             break;
                     }
                     clickOn(clickOnScreenPos);

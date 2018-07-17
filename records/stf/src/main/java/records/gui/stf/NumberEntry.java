@@ -22,9 +22,9 @@ import java.util.List;
  */
 public class NumberEntry extends TerminalComponent<@Value Number>
 {
-    private final Item integerComponent;
-    private final Item dotComponent;
-    private final Item fracComponent;
+    private Item integerComponent;
+    private Item dotComponent;
+    private Item fracComponent;
     // NumberEntry can have overrides while it is not focused for editing:
     private String actualIntegerPart;
     private String actualFracPart;
@@ -105,9 +105,9 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     private void updateComponentContent()
     {
         ImmutableList<Item> prospectiveContent = ImmutableList.of(
-            integerComponent.replaceContent(!focused ? displayIntegerPart : actualIntegerPart),
+            integerComponent = integerComponent.replaceContent(!focused ? displayIntegerPart : actualIntegerPart),
             dotComponent,
-            fracComponent.replaceContent(!focused ? displayFracPart : actualFracPart)
+            fracComponent = fracComponent.replaceContent(!focused ? displayFracPart : actualFracPart)
         );
         
         // Should we avoid setting content if no change?

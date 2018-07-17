@@ -100,12 +100,14 @@ public class StructuredTextField extends StyleClassedTextArea
         setPrefHeight(FXUtility.measureNotoSansHeight());
         
         // TEMP:
+        /*
         FXUtility.addChangeListenerPlatformNN(textProperty(), t -> {
             Log.normalStackTrace("Edited text to " + t, 50);
         });
         FXUtility.addChangeListenerPlatformNN(caretPositionProperty(), n -> {
             Log.normalStackTrace("Caret moved to " + n, 50);
         });
+        */
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             if (editorKit == null || editorKit.store == null)
@@ -124,6 +126,7 @@ public class StructuredTextField extends StyleClassedTextArea
             else
             {
                 usFocused.focusLost(editorKit);
+                updateDocument(editorKit);
             }
         });
 
