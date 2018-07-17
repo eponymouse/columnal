@@ -69,6 +69,7 @@ public class MainWindow
         emptyMessage.getStyleClass().add("main-empty-hint");
         emptyMessage.setWrapText(true);
         emptyMessage.setMaxWidth(400.0);
+        emptyMessage.setMouseTransparent(true);
 
         EnumMap<ContentState, @Localized String> emptyMessages = new EnumMap<ContentState, String>(ImmutableMap.of(
             ContentState.EMPTY_NO_SEL, TranslationUtility.getString("main.emptyHint"),
