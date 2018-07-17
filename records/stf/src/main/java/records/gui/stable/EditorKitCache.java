@@ -136,7 +136,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                     visibleCells.add(null);
             }
             
-            Log.debug("visibleCells: " + Utility.listToString(visibleCells));
+            //Log.debug("visibleCells: " + Utility.listToString(visibleCells));
         }
     }
 

@@ -138,7 +138,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
 
         private void updateDisplay()
         {
-            Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
+            //Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
             if (numberEntry.setDisplay(displayIntegerPart, displayFracPart))
                 structuredTextField.updateFromEditorKit();
             /*
