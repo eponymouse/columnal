@@ -158,11 +158,15 @@ public class ImporterManager
         public ImportURLDialog()
         {
             linkField = new ErrorableTextField<>(ImporterManager::checkURL);
+            linkField.getStyleClass().add("import-link-field");
             Node linkPane = GUI.labelled("importer.link", linkField.getNode());
             pickImporterPane = new PickImporterPane("html");
             getDialogPane().setContent(new VBox(linkPane, pickImporterPane, getErrorLabel()));
             setResizable(true);
             getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
+            getDialogPane().getStylesheets().add(
+                FXUtility.getStylesheet("dialogs.css")
+            );
             
             setOnShowing(e -> {
                 Object content = Clipboard.getSystemClipboard().getContent(DataFormat.PLAIN_TEXT);
@@ -179,6 +183,10 @@ public class ImporterManager
                         // Not a URL; never mind.
                     }
                 }
+            });
+            setOnShown(e -> {
+                // runAfter to defeat FX's focus behaviour:
+                FXUtility.runAfter(() -> linkField.requestFocusWhenInScene());
             });
         }
 

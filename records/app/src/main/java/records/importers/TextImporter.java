@@ -71,7 +71,7 @@ public class TextImporter implements Importer
     @Override
     public ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
     {
-        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("data.import.type.text"), ImmutableList.of("*.txt", "*.csv")));
+        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("importer.text.files"), ImmutableList.of("*.txt", "*.csv")));
     }
 
     @Override
