@@ -19,6 +19,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -68,6 +69,7 @@ import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -184,7 +186,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         StackPane.setMargin(destGrid.getNode(), insets);
         
         SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), new StackPane(destGrid.getNode()));
-        Pane content = new BorderPane(splitPane, choices, null, null, null);
+        BorderPane splitPanePlusHeader = GUI.borderTopCenter(GUI.borderLeftRight(GUI.label("import.src.grid.label"), GUI.label("import.dest.grid.label"), "import-split-labels"), splitPane, "import-split-and-labels");
+        Pane content = new BorderPane(splitPanePlusHeader, choices, null, null, null);
         content.getStyleClass().add("guess-format-content");
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
         getDialogPane().setContent(content);
@@ -208,8 +211,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
 
 
         setOnShown(e -> {
-            initModality(Modality.NONE); // For scenic view
-            org.scenicview.ScenicView.show(getDialogPane().getScene());
+            //initModality(Modality.NONE); // For scenic view
+            //org.scenicview.ScenicView.show(getDialogPane().getScene());
             currentlyShowing = Utility.later(this);
         });
         setOnHidden(e -> {

@@ -162,6 +162,26 @@ public class GUI
     }
 
     /**
+     * Makes a BorderPane with given top and center, other items left null.
+     */
+    public static BorderPane borderTopCenter(Node top, Node center, String... styleClasses)
+    {
+        BorderPane borderPane = new BorderPane(center, top, null, null, null);
+        borderPane.getStyleClass().addAll(styleClasses);
+        return borderPane;
+    }
+
+    /**
+     * Makes a BorderPane with given left and right, other items left null.
+     */
+    public static BorderPane borderLeftRight(Node left, Node right, String... styleClasses)
+    {
+        BorderPane borderPane = new BorderPane(null, null, right, null, left);
+        borderPane.getStyleClass().addAll(styleClasses);
+        return borderPane;
+    }
+
+    /**
      * Like label but the text is permitted to wrap (by using a TextFlow)
      */
     public static Label labelWrap(@LocalizableKey String contentKey, String... styleClasses)
