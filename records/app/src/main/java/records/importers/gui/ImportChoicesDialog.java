@@ -24,6 +24,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -178,7 +179,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         });
 
         // Crucial that these use the same margins, to get the scrolling to line up:
-        Insets insets = new Insets(SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET, SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET);
+        Insets insets = new Insets(SrcDataDisplay.VERT_INSET, 0, SrcDataDisplay.VERT_INSET, SrcDataDisplay.HORIZ_INSET);
         StackPane.setMargin(srcGrid.getNode(), insets);
         StackPane.setMargin(destGrid.getNode(), insets);
         
@@ -207,8 +208,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
 
 
         setOnShown(e -> {
-            //initModality(Modality.NONE); // For scenic view
-            //org.scenicview.ScenicView.show(getDialogPane().getScene());
+            initModality(Modality.NONE); // For scenic view
+            org.scenicview.ScenicView.show(getDialogPane().getScene());
             currentlyShowing = Utility.later(this);
         });
         setOnHidden(e -> {
