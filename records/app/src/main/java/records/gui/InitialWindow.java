@@ -48,8 +48,8 @@ public class InitialWindow
                     stage.hide();
                 }),
                 GUI.menuItem("menu.project.open", () -> {
-                    chooseAndOpenProject(stage);
-                    stage.hide();
+                    if (chooseAndOpenProject(stage))
+                        stage.hide();
                 }),
                 GUI.menuItem("menu.exit", () -> {
                     MainWindow.closeAll();
@@ -63,8 +63,8 @@ public class InitialWindow
             stage.hide();
         });
         Button openButton = GUI.button("initial.open", () -> {
-            chooseAndOpenProject(stage);
-            stage.hide();
+            if (chooseAndOpenProject(stage))
+                stage.hide();
         });
         ListView<File> mruListView = new ListView<>();
         mruListView.setPrefHeight(200.0);
@@ -128,16 +128,19 @@ public class InitialWindow
         return GUI.vbox(style, all);
     }
 
-    public static void chooseAndOpenProject(Stage parent)
+    // Returns true if successfully opened a project
+    public static boolean chooseAndOpenProject(Stage parent)
     {
         File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter());
         if (src != null)
         {
-            openProject(parent, src);
+            return openProject(parent, src);
         }
+        return false;
     }
 
-    private static void openProject(Stage parent, File src)
+    // Returns true if successfully opened a project
+    private static boolean openProject(Stage parent, File src)
     {
         try
         {
@@ -145,10 +148,12 @@ public class InitialWindow
             Utility.usedFile(src);
             // Only hide us if the load and show completed successfully:
             parent.hide();
+            return true;
         }
         catch (IOException | InternalException | UserException ex)
         {
             FXUtility.logAndShowError("error.readingfile", ex);
+            return false;
         }
     }
 
