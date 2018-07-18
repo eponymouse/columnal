@@ -1635,6 +1635,11 @@ public final class VirtualGrid implements ScrollBindable
             createTableButtonSupplier.addButtonVisibleListener(newButtonVisibleListener);
     }
     
+    public void addMousePane(Pane mousePane)
+    {
+        stackPane.getChildren().add(mousePane);
+    }
+    
     /**
      * For the given gridArea, find the graphical bounds (in relative coords to that grid area)
      * of all the other grid areas which touch it.

@@ -191,7 +191,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         StackPane.setMargin(srcGrid.getNode(), insets);
         StackPane.setMargin(destGrid.getNode(), insets);
         
-        SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), new StackPane(destGrid.getNode()));
+        srcGrid.addMousePane(srcDataDisplay.getMousePane());
+        SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode()), new StackPane(destGrid.getNode()));
         BorderPane splitPanePlusHeader = GUI.borderTopCenter(GUI.borderLeftRight(GUI.label("import.src.grid.label"), GUI.label("import.dest.grid.label"), "import-split-labels"), splitPane, "import-split-and-labels");
         this.curSelectionDescription = new Label();
         Button undoChangeSelectionButton = GUI.button("undo.import.selection.change", FXUtility.mouse(this)::undoSelectionChange);
@@ -575,7 +576,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             withParent_(p -> p.getFloatingSupplier().removeItem(selectionRectangle));
         }
 
-        public Node getMousePane()
+        public Pane getMousePane()
         {
             return mousePane;
         }
