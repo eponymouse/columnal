@@ -22,10 +22,10 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Modality;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -40,7 +40,6 @@ import records.data.TableOperations;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DataCellSupplier;
-import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.DataDisplay;
 import records.gui.RowLabelSupplier;
 import records.gui.grid.GridArea;
@@ -51,9 +50,7 @@ import records.gui.grid.VirtualGridSupplier.ViewOrder;
 import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.stable.ColumnDetails;
-import records.gui.stable.ColumnOperation;
 import records.gui.stable.ScrollGroup.ScrollLock;
-import records.gui.stf.StructuredTextField;
 import records.gui.stf.TableDisplayUtility;
 import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import records.importers.GuessFormat.Import;
@@ -71,7 +68,8 @@ import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
-import java.util.Collection;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Optional;
 
 @OnThread(Tag.FXPlatform)
@@ -80,7 +78,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     // Just for testing:
     private static @Nullable ImportChoicesDialog<?, ?> currentlyShowing;
     
-
 
     public static @Nullable ImportChoicesDialog<?, ?> _test_getCurrentlyShowing()
     {
@@ -92,6 +89,10 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     private final SimpleObjectProperty<@Nullable RecordSet> destRecordSet;
     private @Nullable FORMAT destFormat;
     private final Import<SRC_FORMAT, FORMAT> importer;
+    private final Label curSelectionDescription;
+    // Does not include the current trim.  New items are added as last:
+    private final Deque<TrimChoice> mostRecentTrimSelections = new ArrayDeque<>(32);
+    private @Nullable TrimChoice curGuessTrim;
     
     // These two are only stored as fields for testing purposes:
     @OnThread(Tag.Any)
@@ -134,6 +135,9 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         //SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
         //choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
 
+        Button resetSelectionButton = GUI.button("reset.import.selection", FXUtility.mouse(this)::resetSelectionChange);
+        resetSelectionButton.setDisable(true);
+        
         Node choices = this.importer.getGUI();
         
         //SimpleObjectProperty<@Nullable FORMAT> destFormatProperty = new SimpleObjectProperty<>(null);
@@ -148,15 +152,17 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                     
                         Platform.runLater(() -> {
                             int oldColumns = srcRecordSet.get() == null ? 0 : srcRecordSet.get().getColumns().size();
+                            curGuessTrim = loadedSrc.getFirst();
+                            resetSelectionButton.setDisable(false);
                             srcRecordSet.set(loadedSrc.getSecond());
                             // We use trim guess if size has changed from before:
                             if (oldColumns != loadedSrc.getSecond().getColumns().size())
                             {
-                                srcDataDisplay.setTrim(loadedSrc.getFirst());
+                                srcDataDisplay.setTrim(loadedSrc.getFirst(), true);
                             }
                             else
                             {
-                                srcDataDisplay.setTrim(srcDataDisplay.getTrim());
+                                srcDataDisplay.setTrim(srcDataDisplay.getTrim(), true);
                             }
                             // Because we are in a runLater, constructor will have finished by then:
                             Utility.later(this).updateDestPreview();
@@ -187,7 +193,10 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         
         SplitPane splitPane = new SplitPane(new StackPane(srcGrid.getNode(), srcDataDisplay.getMousePane()), new StackPane(destGrid.getNode()));
         BorderPane splitPanePlusHeader = GUI.borderTopCenter(GUI.borderLeftRight(GUI.label("import.src.grid.label"), GUI.label("import.dest.grid.label"), "import-split-labels"), splitPane, "import-split-and-labels");
-        Pane content = new BorderPane(splitPanePlusHeader, choices, null, null, null);
+        this.curSelectionDescription = new Label();
+        Button undoChangeSelectionButton = GUI.button("undo.import.selection.change", FXUtility.mouse(this)::undoSelectionChange);
+        HBox undoResetButtons = GUI.hbox("import-undo-reset-buttons", undoChangeSelectionButton, resetSelectionButton, curSelectionDescription);
+        Pane content = new BorderPane(splitPanePlusHeader, choices, null, undoResetButtons, null);
         content.getStyleClass().add("guess-format-content");
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
         getDialogPane().setContent(content);
@@ -218,6 +227,20 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         setOnHidden(e -> {
             currentlyShowing = null;
         });
+    }
+
+    private void undoSelectionChange()
+    {
+        // Poll removes last item, but gives null if empty:
+        TrimChoice recent = mostRecentTrimSelections.pollLast();
+        if (recent != null)
+            srcDataDisplay.setTrim(recent, false);
+    }
+
+    private void resetSelectionChange()
+    {
+        if (curGuessTrim != null)
+            srcDataDisplay.setTrim(curGuessTrim, true);
     }
 
     private GetDataPosition makeGetDataPosition(@UnknownInitialization(Object.class) ImportChoicesDialog<SRC_FORMAT, FORMAT> this)
@@ -419,8 +442,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
                 if (pendingTrim[0] != null)
                 {
-                    trim = pendingTrim[0];
-                    destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
+                    FXUtility.mouse(this).setTrim(pendingTrim[0], true);
                     updateDestPreview();
                 }
                 e.consume();
@@ -433,11 +455,11 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
-                Log.debug("Mouse dragged while cursor: " + c);
+                //Log.debug("Mouse dragged while cursor: " + c);
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
-                    Log.debug("We have bounds");
+                    //Log.debug("We have bounds");
                     @Nullable CellPosition pos = visibleBounds.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP).orElse(null);
-                    Log.debug("Nearest pos: " + pos);
+                    //Log.debug("Nearest pos: " + pos);
                     boolean resizingTop = FXUtility.isResizingTop(c);
                     boolean resizingBottom = FXUtility.isResizingBottom(c);
                     boolean resizingLeft = FXUtility.isResizingLeft(c);
@@ -565,13 +587,35 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
         
         @OnThread(Tag.FXPlatform)
-        public void setTrim(TrimChoice trim)
+        public void setTrim(TrimChoice trim, boolean addToUndoChain)
         {
-            this.trim = trim;
+            // Add old trim:
+            if (addToUndoChain && !this.trim.equals(mostRecentTrimSelections.peekLast()))
+            {
+                while (mostRecentTrimSelections.size() + 1 >= 32)
+                    mostRecentTrimSelections.removeFirst();
+                mostRecentTrimSelections.addLast(this.trim);
+            }
+            this.trim = trim;            
             curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1 + trim.trimFromTop, trim.trimFromLeft),
                 getBottomRightIncl().offsetByRowCols(-trim.trimFromBottom, -trim.trimFromRight));
             destData.setPosition(curSelectionBounds.topLeftIncl.offsetByRowCols(-2, 0));
             withParent_(p -> p.positionOrAreaChanged());
+            updateDescription(curSelectionBounds);
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private void updateDescription(RectangleBounds selectionBounds)
+        {
+            // Update description:
+            StringBuilder sel = new StringBuilder();
+            // Rows take account of +1 for one-based indexes, but -2 for header rows.
+            sel.append("\u2195 Rows ").append(-1 + selectionBounds.topLeftIncl.rowIndex).append("-").append(-1 + selectionBounds.bottomRightIncl.rowIndex)
+                .append(" of ").append(srcDataDisplay.currentKnownRows).append(".  ");
+            sel.append("\u2194 Columns ").append(1 + selectionBounds.topLeftIncl.columnIndex).append("-").append(1 + selectionBounds.bottomRightIncl.columnIndex)
+                .append(" of ").append(srcDataDisplay.displayColumns.size()).append(".");
+
+            curSelectionDescription.setText(sel.toString());
         }
 
         @Override
@@ -579,7 +623,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         protected void numRowsChanged()
         {
             // Update the trim:
-            setTrim(trim);
+            setTrim(trim, true);
             updateDestPreview();
         }
 
