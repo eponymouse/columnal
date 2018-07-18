@@ -446,6 +446,11 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                     FXUtility.mouse(this).setTrim(pendingTrim[0], true);
                     updateDestPreview();
                 }
+                else
+                {
+                    // Will set rectangle back:
+                    FXUtility.mouse(this).setTrim(trim, true);
+                }
                 e.consume();
             });
             mousePane.setOnMousePressed(e -> {
@@ -509,6 +514,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                             curSelectionBounds.topLeftIncl.columnIndex,
                             getBottomRightIncl().columnIndex - curSelectionBounds.bottomRightIncl.columnIndex
                     );
+                    FXUtility.mouse(this).updateDescription(curSelectionBounds);
                 });
             });
             mousePane.setOnScroll(e -> {
