@@ -264,7 +264,7 @@ public class TextImporter implements Importer
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(textFile), charset)))
             {
                 String line;
-                while ((line = br.readLine()) != null && initialLines.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE)
+                while ((line = br.readLine()) != null/* && initialLines.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE*/)
                 {
                     initialLines.add(line);
                 }
