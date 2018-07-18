@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
@@ -16,7 +17,9 @@ import javafx.stage.Window;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.CellPosition;
 import records.data.DataSource;
 import records.data.TableManager;
@@ -151,22 +154,27 @@ public class ImporterManager
     
     private class ImportURLDialog extends ErrorableDialog<URLImportDetails>
     {
-        private final ErrorableTextField<URL> linkField;
+        private final TextField linkField;
         private final PickImporterPane pickImporterPane;
 
         @OnThread(Tag.FXPlatform)
         public ImportURLDialog()
         {
-            linkField = new ErrorableTextField<>(ImporterManager::checkURL);
+            linkField = new TextField();
             linkField.getStyleClass().add("import-link-field");
-            Node linkPane = GUI.labelled("importer.link", linkField.getNode());
+            Node linkPane = GUI.labelled("importer.link", linkField);
             pickImporterPane = new PickImporterPane("html");
-            getDialogPane().setContent(new VBox(linkPane, pickImporterPane, getErrorLabel()));
+            getDialogPane().setContent(GUI.vbox("import-link-contents", linkPane, GUI.label("importer.importer"), pickImporterPane, getErrorLabel()));
             setResizable(true);
             getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
             getDialogPane().getStylesheets().add(
                 FXUtility.getStylesheet("dialogs.css")
             );
+            
+            FXUtility.addChangeListenerPlatformNN(linkField.textProperty(), link -> {
+                // Will only set it if definitely recognised, otherwise will leave as-is:
+                pickImporterPane.guessImporterFromFileExtension(FilenameUtils.getExtension(link));
+            });
             
             setOnShowing(e -> {
                 Object content = Clipboard.getSystemClipboard().getContent(DataFormat.PLAIN_TEXT);
@@ -186,7 +194,7 @@ public class ImporterManager
             });
             setOnShown(e -> {
                 // runAfter to defeat FX's focus behaviour:
-                FXUtility.runAfter(() -> linkField.requestFocusWhenInScene());
+                FXUtility.runAfter(() -> linkField.requestFocus());
             });
         }
 
@@ -194,38 +202,34 @@ public class ImporterManager
         @OnThread(Tag.FXPlatform)
         protected Either<@Localized String, URLImportDetails> calculateResult()
         {
-            @Nullable URL url = linkField.valueProperty().get();
-            if (url == null)
-                return Either.left(TranslationUtility.getString("importer.link.invalid"));
+            return checkURL(linkField.getText()).flatMap(url -> {
+                @Nullable Importer importer = pickImporterPane.get();
+                if (importer == null)
+                    return Either.left(TranslationUtility.getString("importer.noimporter"));
 
-            @Nullable Importer importer = pickImporterPane.get();
-            if (importer == null)
-                return Either.left(TranslationUtility.getString("importer.noimporter"));
-
-            try
-            {
-                // TODO show progress while downloading
-                return Either.right(new URLImportDetails(download(url), url, importer));
-            }
-            catch (Exception e)
-            {
-                return Either.left(TranslationUtility.getString("importer.download.error", e.getLocalizedMessage()));
-            }
-
-
+                try
+                {
+                    // TODO show progress while downloading
+                    return Either.right(new URLImportDetails(download(url), url, importer));
+                }
+                catch (Exception e)
+                {
+                    return Either.left(TranslationUtility.getString("importer.download.error", e.getLocalizedMessage()));
+                }
+            });
         }
     }
 
 
-    private static ConversionResult<URL> checkURL(String src)
+    private static Either<@Localized String, URL> checkURL(String src)
     {
         if (src.isEmpty())
-            return ConversionResult.error(TranslationUtility.getString("importer.error.url.blank"));
+            return Either.left(TranslationUtility.getString("importer.error.url.blank"));
 
         Exception originalException = null;
         try
         {
-            return ConversionResult.success(new URL(src));
+            return Either.right(new URL(src));
         }
         catch (Exception e)
         {
@@ -237,7 +241,7 @@ public class ImporterManager
             URL file = new URL("file://" + src);
             if (new File(file.toURI()).exists())
             {
-                return ConversionResult.success(file);
+                return Either.right(file);
             }
         }
         catch (Exception e)
@@ -247,14 +251,14 @@ public class ImporterManager
         // Most likely issue is that it needs http:// on the front:
         try
         {
-            return ConversionResult.success(new URL("http://" + src));
+            return Either.right(new URL("http://" + src));
         }
         catch (Exception e)
         {
         }
 
         // Return first exception:
-        return ConversionResult.error(originalException.getLocalizedMessage());
+        return Either.left(originalException.getLocalizedMessage());
     }
 
     private class PickImporterPane extends BorderPane
@@ -279,13 +283,17 @@ public class ImporterManager
             });
             importerList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
             importerList.getSelectionModel().selectFirst();
-            if (fileExtensionWithoutDot != null)
-            {
-                Importer importer = registeredImporters.stream().filter(imp -> imp.getSupportedFileTypes().stream().anyMatch(p -> p.getSecond().contains(("*." + fileExtensionWithoutDot).toLowerCase()))).findFirst().orElse(null);
-                if (importer != null)
-                    importerList.getSelectionModel().select(importer);
-            }
             setCenter(importerList);
+            if (fileExtensionWithoutDot != null)
+                guessImporterFromFileExtension(fileExtensionWithoutDot);
+        }
+
+        @RequiresNonNull("importerList")
+        protected void guessImporterFromFileExtension(@UnknownInitialization(BorderPane.class) PickImporterPane this, String fileExtensionWithoutDot)
+        {
+            Importer importer = registeredImporters.stream().filter(imp -> imp.getSupportedFileTypes().stream().anyMatch(p -> p.getSecond().contains(("*." + fileExtensionWithoutDot).toLowerCase()))).findFirst().orElse(null);
+            if (importer != null)
+                importerList.getSelectionModel().select(importer);
         }
 
         public @Nullable Importer get()
