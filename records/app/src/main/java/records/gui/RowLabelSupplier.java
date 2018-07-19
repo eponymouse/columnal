@@ -18,6 +18,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -131,6 +132,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         // Zero based row
         private @TableDataRowIndex int row;
         private final Label label = new Label();
+        private final Tooltip tooltip;
         private @MonotonicNonNull DataDisplay tableDisplay;
         private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
         private int curMinDigits = 1;
@@ -160,6 +162,8 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             FXUtility.addChangeListenerPlatformNN(leftMostColumn, leftMost -> {
                 Utility.later(this).updateClipAndTranslate();
             });
+            this.tooltip = new Tooltip();
+            Tooltip.install(this, tooltip);
         }
 
         public boolean isTableRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
@@ -173,6 +177,7 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
             this.row = row;
             // User rows begin with 1:
             label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
+            this.tooltip.setText(Integer.toString(row + 1));
             slideOutProportion.bind(tableDisplay.slideOutProperty());
         }
         

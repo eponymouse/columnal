@@ -219,6 +219,10 @@ class MenuItem
     StringProperty textProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
     ReadOnlyObjectProperty parentMenuProperty(@UnknownInitialization(javafx.scene.control.MenuItem.class) MenuItem this);
 }
+class Tooltip
+{
+    public static void install(@UnknownInitialization(javafx.scene.Node.class) Node node, Tooltip t);
+}
 
 package javafx.scene.effect;
 class DropShadow
