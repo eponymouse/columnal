@@ -1323,7 +1323,7 @@ public final class VirtualGrid implements ScrollBindable
                 @OnThread(Tag.FXPlatform)
                 public Optional<CellPosition> getNearestTopLeftToScreenPos(Point2D screenPos, HPos horizBias, VPos verticalBias)
                 {
-                    Point2D localCoord = container.screenToLocal(screenPos);
+                    Point2D localCoord = container.screenToLocal(screenPos).add(extraRenderXPixelsBefore, extraRenderYPixelsBefore);
                     double x = firstRenderColumnOffset;
                     // Math.round will find us the nearest row:
                     double rowFloat = (localCoord.getY() - (firstRenderRowOffset)) / rowHeight;
