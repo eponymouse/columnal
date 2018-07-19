@@ -1433,14 +1433,6 @@ public class Utility
         return total;
     }
 
-    public static double variance(Collection<? extends Number> src)
-    {
-        if (src.isEmpty())
-            return 0;
-        double mean = src.stream().<Number>mapToDouble(Number::doubleValue).summaryStatistics().getAverage();
-        return src.stream().<Number>mapToDouble(Number::doubleValue).map(x -> (x - mean) * (x - mean)).sum();
-    }
-
     public static ReadState skipFirstNRows(File src, Charset charset, final int headerRows) throws IOException
     {
         return new ReadState(src, charset, headerRows);

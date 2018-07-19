@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
+import com.google.common.math.Stats;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -36,15 +37,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.gui.ImportChoicesDialog;
 import records.importers.gui.ImporterGUI;
-import records.transformations.function.ToDate;
-import records.transformations.function.ToTime;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationConsumer;
-import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -76,7 +74,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 20/10/2016.
@@ -581,7 +578,7 @@ public class GuessFormat
                     }
                 }
 
-                if (counts.elementSet().equals(ImmutableSet.of(1)))
+                if (counts.isEmpty() || counts.elementSet().equals(ImmutableSet.of(1)))
                 {
                     // All columns size one; totally rubbish, don't bother remembering
                 }
@@ -592,8 +589,9 @@ public class GuessFormat
                 }
                 else
                 {
-                    // Higher is better choice so negate:
-                    double score = -Utility.variance(counts);
+                    // Higher score is better choice so negate variance:
+                    // Also add mean to bias towards more columns if similar variance
+                    double score = (Stats.meanOf(counts) / 10.0) - Stats.of(counts).sampleVariance();
                     if (score > bestScore)
                     {
                         bestScore = score;
