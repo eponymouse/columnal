@@ -37,7 +37,6 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        Log.debug("### Made new NumberEntry");
         actualIntegerPart = initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString());
         integerComponent = new Item(getItemParents(), actualIntegerPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int");
         items.add(integerComponent);
