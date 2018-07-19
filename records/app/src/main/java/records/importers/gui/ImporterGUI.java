@@ -69,7 +69,7 @@ public class ImporterGUI
             final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(quickAndOther));
             GUI.addIdClass(combo, choiceDetails.getLabelKey());
             @Nullable C choice = currentChoice.get();
-            if (choice == null || !combo.getItems().contains(choice))
+            if (choice == null || !combo.getItems().contains(new PickOrOther<>(choice)))
                 combo.getSelectionModel().selectFirst();
             else
                 combo.getSelectionModel().select(new PickOrOther<>(choice));
