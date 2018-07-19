@@ -196,7 +196,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         BorderPane splitPanePlusHeader = GUI.borderTopCenter(GUI.borderLeftRight(GUI.label("import.src.grid.label"), GUI.label("import.dest.grid.label"), "import-split-labels"), splitPane, "import-split-and-labels");
         this.curSelectionDescription = new Label();
         Button undoChangeSelectionButton = GUI.button("undo.import.selection.change", FXUtility.mouse(this)::undoSelectionChange);
-        HBox undoResetButtons = GUI.hbox("import-undo-reset-buttons", undoChangeSelectionButton, resetSelectionButton, curSelectionDescription);
+        HBox undoResetButtons = GUI.hbox("import-undo-reset-panel", undoChangeSelectionButton, resetSelectionButton, curSelectionDescription);
         Pane content = new BorderPane(splitPanePlusHeader, choices, null, undoResetButtons, null);
         content.getStyleClass().add("guess-format-content");
         getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
@@ -620,9 +620,9 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             // Update description:
             StringBuilder sel = new StringBuilder();
             // Rows take account of +1 for one-based indexes, but -2 for header rows.
-            sel.append("\u2195 Rows ").append(-1 + selectionBounds.topLeftIncl.rowIndex).append("-").append(-1 + selectionBounds.bottomRightIncl.rowIndex)
+            sel.append("Rows \u2195 ").append(-1 + selectionBounds.topLeftIncl.rowIndex).append("-").append(-1 + selectionBounds.bottomRightIncl.rowIndex)
                 .append(" of ").append(srcDataDisplay.currentKnownRows).append(".  ");
-            sel.append("\u2194 Columns ").append(1 + selectionBounds.topLeftIncl.columnIndex).append("-").append(1 + selectionBounds.bottomRightIncl.columnIndex)
+            sel.append("Columns \u2194 ").append(1 + selectionBounds.topLeftIncl.columnIndex).append("-").append(1 + selectionBounds.bottomRightIncl.columnIndex)
                 .append(" of ").append(srcDataDisplay.displayColumns.size()).append(".");
 
             curSelectionDescription.setText(sel.toString());
