@@ -457,6 +457,9 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 pendingTrim[0] = null;
                 withParent(p -> p.getVisibleBounds())
                     .flatMap(v -> v.getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.LEFT, VPos.TOP))
+                    .map(pos -> {
+                        return new CellPosition(Utility.maxRow(CellPosition.row(2), pos.rowIndex), pos.columnIndex);
+                    })
                     .ifPresent(pos -> mousePressed = pos);
             });
             mousePane.setOnMouseDragged(e -> {
@@ -492,7 +495,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                                 newRight = pos.columnIndex - CellPosition.col(1);
                         }
                         // Restrict to valid bounds:
-                        newTop = Utility.maxRow(CellPosition.row(1), newTop);
+                        newTop = Utility.maxRow(CellPosition.row(2), newTop);
                         newBottom = Utility.maxRow(newTop, newBottom);
                         newRight = Utility.maxCol(newLeft, newRight);
                     }
@@ -501,8 +504,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                         if (pos == null)
                             return;
                         // Drag from the original position where they pressed:
-                        newTop = Utility.minRow(pos.rowIndex, mousePressed.rowIndex);
-                        newBottom = Utility.maxRow(pos.rowIndex, mousePressed.rowIndex);
+                        newTop = Utility.maxRow(CellPosition.row(2), Utility.minRow(pos.rowIndex, mousePressed.rowIndex));
+                        newBottom = Utility.maxRow(CellPosition.row(2), Utility.maxRow(pos.rowIndex, mousePressed.rowIndex));
                         newLeft = Utility.minCol(pos.columnIndex, mousePressed.columnIndex);
                         newRight = Utility.maxCol(pos.columnIndex, mousePressed.columnIndex);
                     }
