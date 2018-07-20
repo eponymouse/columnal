@@ -652,7 +652,7 @@ public class View extends StackPane
             switch (choice.get().getSecond())
             {
                 case DATA:
-                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(window, thisView.getManager(), new ColumnId("A")).showAndWait();
+                    Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(window, thisView.getManager(), new ColumnId("A"), true).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
                             FXUtility.alertOnError_(() -> {

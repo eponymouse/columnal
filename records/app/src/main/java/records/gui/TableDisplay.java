@@ -858,7 +858,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
     {
-        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName()).showAndWait();
+        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName(), false).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
             FXUtility.alertOnError_(() ->
                 ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))

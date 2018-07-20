@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Window;
 import log.Log;
@@ -29,9 +30,11 @@ import records.transformations.expression.type.UnfinishedTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LightDialog;
+import utility.gui.TranslationUtility;
 
 /**
  * Edits an immediate column, which has a name, type, and default value
@@ -58,7 +61,7 @@ public class EditImmediateColumnDialog extends LightDialog<ColumnDetails>
     private @Nullable @Value Object defaultValue;
     
     @OnThread(Tag.FXPlatform)
-    public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial)
+    public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial, boolean creatingNewTable)
     {
         super(parent);
         
@@ -98,8 +101,16 @@ public class EditImmediateColumnDialog extends LightDialog<ColumnDetails>
                 updateType(structuredTextField, null);
             }
         });
+
+        Label explanation = new Label(
+            (creatingNewTable ? TranslationUtility.getString("newcolumn.newTableExplanation") : Utility.universal(""))
+                + TranslationUtility.getString("newcolumn.newColumnExplanation")
+        );
+        explanation.setWrapText(true);
         
         getDialogPane().setContent(GUI.vbox("",
+            explanation,
+            new Separator(),
             new Label("Column name"),
             columnNameTextField.getNode(),
             new Label("Type"),
