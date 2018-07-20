@@ -1,7 +1,11 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
+import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -30,15 +34,11 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     protected void selfChanged()
     {
         super.selfChanged();
-        ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
-        ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
         clearAllErrors();
-        /*
-        @UnknownIfRecorded TypeExpression typeExpression = saveUnrecorded(errorDisplayers, recorder);
-        @Nullable DataType dataType = errorDisplayers.recordType(this, typeExpression).toDataType(getTypeManager());
+        @UnknownIfRecorded TypeExpression typeExpression = save();
+        @Nullable DataType dataType = typeExpression.toDataType(getTypeManager());
         Log.debug("Latest type: " + dataType + " from expression: " + typeExpression.save(new TableAndColumnRenames(ImmutableMap.of())));
         onChange.consume(dataType);
-        */
     }
 
     @Override
@@ -48,10 +48,11 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     }
 
     @Override
-    @SuppressWarnings("recorded") // TODO implement this method and remove this
     public @Recorded TypeExpression save()
     {
-        return new UnfinishedTypeExpression("TODO");
+        TypeSaver saver = new TypeSaver(this);
+        save(saver);
+        return saver.finish(children.get(children.size() - 1));
     }
 
     @Override
