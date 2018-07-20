@@ -12,6 +12,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Window;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -29,10 +30,13 @@ import records.gui.stf.TableDisplayUtility;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.ErrorableLightDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 import utility.gui.TranslationUtility;
 
@@ -40,9 +44,10 @@ import utility.gui.TranslationUtility;
  * Edits an immediate column, which has a name, type, and default value
  */
 @OnThread(Tag.FXPlatform)
-public class EditImmediateColumnDialog extends LightDialog<ColumnDetails>
+public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetails>
 {
     private @Nullable DataType customDataType = null;
+    private final ColumnNameTextField columnNameTextField;
 
     public static class ColumnDetails
     {
@@ -64,46 +69,26 @@ public class EditImmediateColumnDialog extends LightDialog<ColumnDetails>
     public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial, boolean creatingNewTable)
     {
         super(parent);
+
+        LabelledGrid content = new LabelledGrid();
+
+        columnNameTextField = new ColumnNameTextField(initial);
+        content.addRow(GUI.labelledGridRow("edit.column.name", "column-name", columnNameTextField.getNode()));
         
-        ColumnNameTextField columnNameTextField = new ColumnNameTextField(initial);
-        ToggleGroup toggleGroup = new ToggleGroup();
-        RadioButton radioNumber = GUI.radioButton(toggleGroup, "type.number.plain", "radio-type-number");
-        RadioButton radioText = GUI.radioButton(toggleGroup, "type.text", "radio-type-text");
-        RadioButton radioCustom = GUI.radioButton(toggleGroup, "type.custom", "radio-type-custom");
-        StructuredTextField structuredTextField = new StructuredTextField();
-        structuredTextField.getStyleClass().add("default-value");
+        StructuredTextField defaultValueField = new StructuredTextField();
+        defaultValueField.getStyleClass().add("default-value");
         TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
             customDataType = t;
-            if (!radioCustom.isSelected())
-                radioCustom.setSelected(true); // This will call listener below anyway
-            else
-                updateType(structuredTextField, t);
-
+            updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();
             if (scene != null && scene.getWindow() != null)
                 scene.getWindow().sizeToScene();
         });
-        FXUtility.addChangeListenerPlatform(toggleGroup.selectedToggleProperty(), sel -> {
-            if (sel == radioNumber)
-            {
-                updateType(structuredTextField, DataType.NUMBER);
-            }
-            else if (sel == radioText)
-            {
-                updateType(structuredTextField, DataType.TEXT);
-            }
-            else if (sel == radioCustom)
-            {
-                updateType(structuredTextField, customDataType);
-            }
-            else
-            {
-                updateType(structuredTextField, null);
-            }
-        });
-
+        content.addRow(GUI.labelledGridRow("edit.column.type", "column-type", typeEditor.getContainer()));
+        content.addRow(GUI.labelledGridRow("edit.column.defaultValue", "column-defaultValue", defaultValueField));
+        
         Label explanation = new Label(
-            (creatingNewTable ? TranslationUtility.getString("newcolumn.newTableExplanation") : Utility.universal(""))
+            (creatingNewTable ? (TranslationUtility.getString("newcolumn.newTableExplanation") + "  ") : Utility.universal(""))
                 + TranslationUtility.getString("newcolumn.newColumnExplanation")
         );
         explanation.setWrapText(true);
@@ -111,58 +96,41 @@ public class EditImmediateColumnDialog extends LightDialog<ColumnDetails>
         getDialogPane().setContent(GUI.vbox("",
             explanation,
             new Separator(),
-            new Label("Column name"),
-            columnNameTextField.getNode(),
-            new Label("Type"),
-            radioNumber,
-            radioText,
-            GUI.hbox("", radioCustom, typeEditor.getContainer()),
-            structuredTextField
+            content,
+            getErrorLabel()
         ));
-        getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        final Button btOk = (Button) getDialogPane().lookupButton(ButtonType.OK);
-        btOk.getStyleClass().add("ok-button");
-        getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
-        // From https://stackoverflow.com/questions/38696053/prevent-javafx-dialog-from-closing
-        btOk.addEventFilter(
-            ActionEvent.ACTION,
-            event -> {
-                setResult(null);
-                // Check whether some conditions are fulfilled
-                DataType dataType;
-                if (radioNumber.isSelected())
-                    dataType = DataType.NUMBER;
-                else if (radioText.isSelected())
-                    dataType = DataType.TEXT;
-                else
-                    dataType = customDataType;
-
-                @Nullable ColumnId columnId = columnNameTextField.valueProperty().getValue();
-                Log.debug("Col: " + columnId + " type: " + dataType + " default: " + defaultValue);
-                if (columnId != null && dataType != null && defaultValue != null)
-                    setResult(new ColumnDetails(columnId, dataType, defaultValue));
-                if (getResult() == null)
-                    event.consume();
-            }
-        );
-        setResultConverter(bt -> {
-            if (bt == ButtonType.OK && getResult() != null)
-                return getResult();
-            return null;
-        });
-
+        
         FXUtility.preventCloseOnEscape(getDialogPane());
 
         setOnShown(e -> {
-            radioNumber.setSelected(true);
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
             FXUtility.runAfter(columnNameTextField::requestFocusWhenInScene);
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }
 
+    @Override
+    protected @OnThread(Tag.FXPlatform) Either<@Localized String, ColumnDetails> calculateResult()
+    {
+        // Check whether some conditions are fulfilled
+        DataType dataType = customDataType;
+
+        @Nullable ColumnId columnId = columnNameTextField.valueProperty().getValue();
+        
+        //Log.debug("Col: " + columnId + " type: " + dataType + " default: " + defaultValue);
+        
+        if (columnId == null)
+            return Either.left(TranslationUtility.getString("edit.column.invalid.column.name"));
+        if (dataType == null)
+            return Either.left(TranslationUtility.getString("edit.column.invalid.column.type"));
+        if (defaultValue == null)
+            return Either.left(TranslationUtility.getString("edit.column.invalid.column.defaultValue"));
+        
+        return Either.right(new ColumnDetails(columnId, dataType, defaultValue));
+    }
+
     @OnThread(Tag.FXPlatform)
-    private  void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, StructuredTextField structuredTextField, @Nullable DataType t)
+    private void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, StructuredTextField structuredTextField, @Nullable DataType t)
     {
         if (t == null)
             structuredTextField.setDisable(true);
