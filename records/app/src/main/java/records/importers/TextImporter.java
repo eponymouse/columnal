@@ -154,7 +154,7 @@ public class TextImporter implements Importer
             // Must be one per column:
             ReadState reader = Utility.skipFirstNRows(textFile, charset, 0);
             int iFinal = i;
-            columns.add(rs -> TextFileColumn.stringColumn(rs, reader, separator, new ColumnId("Column " + (iFinal + 1)), iFinal, totalColumns));
+            columns.add(rs -> TextFileColumn.stringColumn(rs, reader, separator, quote, new ColumnId("Column " + (iFinal + 1)), iFinal, totalColumns));
         }
 
         return new KnownLengthRecordSet(columns, Utility.countLines(textFile, charset));
@@ -177,7 +177,7 @@ public class TextImporter implements Importer
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
+                    return TextFileColumn.numericColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, new NumberInfo(numericColumnType.unit), numericColumnType::removePrefixAndSuffix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)
@@ -189,7 +189,7 @@ public class TextImporter implements Importer
                     DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit));
                     DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(numberType)), typeManager);
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, numberOrBlank.getTaggedTypeName(), ImmutableList.of(Either.right(numberType)), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return new TaggedValue(1, null);
@@ -206,14 +206,14 @@ public class TextImporter implements Importer
             }
             else if (columnInfo.type instanceof TextColumnType || columnInfo.type instanceof BlankColumnType)
             {
-                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns));
+                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns));
             }
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return TextFileColumn.dateColumn(rs, reader, format.initialTextFormat.separator, columnInfo.title, columnIndexInSrc, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return TextFileColumn.dateColumn(rs, reader, format.initialTextFormat.separator, format.initialTextFormat.quote, columnInfo.title, columnIndexInSrc, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
             else

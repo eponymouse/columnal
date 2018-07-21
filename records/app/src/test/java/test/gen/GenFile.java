@@ -74,7 +74,16 @@ public class GenFile extends Generator<GeneratedTextFile>
                 for (int column = 0; column < columnTypes.length; column++)
                 {
                     @Value Object value = columnTypes[column].makeValue();
-                    String string = DataTypeUtility.valueToString(columnTypes[column].getType(), value, null);
+                    // We don't want quoting and escaping of strings, so treat them different
+                    String string;
+                    if (columnTypes[column].getType().isText())
+                    {
+                        string = (String)value;
+                    }
+                    else
+                    {
+                        string = DataTypeUtility.valueToString(columnTypes[column].getType(), value, null);
+                    }
 
                     boolean quote = string.contains(sep) || string.contains(quot) || rnd.nextInt(3) == 1;
 

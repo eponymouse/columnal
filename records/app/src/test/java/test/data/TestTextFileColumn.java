@@ -60,19 +60,19 @@ public class TestTextFileColumn
                 @Override
                 public TextFileColumn number(NumberInfo numberInfo) throws InternalException, UserException
                 {
-                    return TextFileColumn.numericColumn(rs, readState, f.getSeparator(), columnName, index, f.getColumnCount(), numberInfo, s -> s);
+                    return TextFileColumn.numericColumn(rs, readState, f.getSeparator(), f.getQuote(), columnName, index, f.getColumnCount(), numberInfo, s -> s);
                 }
 
                 @Override
                 public TextFileColumn text() throws InternalException, UserException
                 {
-                    return TextFileColumn.stringColumn(rs, readState, f.getSeparator(), columnName, index, f.getColumnCount());
+                    return TextFileColumn.stringColumn(rs, readState, f.getSeparator(), f.getQuote(), columnName, index, f.getColumnCount());
                 }
 
                 @Override
                 public TextFileColumn date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
-                    return TextFileColumn.dateColumn(rs, readState, f.getSeparator(), columnName, index, f.getColumnCount(), dateTimeInfo, dateTimeInfo.getStrictFormatter(), t -> {
+                    return TextFileColumn.dateColumn(rs, readState, f.getSeparator(), f.getQuote(), columnName, index, f.getColumnCount(), dateTimeInfo, dateTimeInfo.getStrictFormatter(), t -> {
                         try
                         {
                             return dateTimeInfo.fromParsed(t);

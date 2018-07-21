@@ -1382,7 +1382,7 @@ public class Utility
         }
     }
 
-    public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, int columnIndex, ArrayList<String> fill) throws IOException
+    public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, @Nullable String quote, int columnIndex, ArrayList<String> fill) throws IOException
     {
         loopOverLines: for (int lineRead = 0; lineRead < 20; lineRead++)
         {
@@ -1398,25 +1398,60 @@ public class Utility
             {
                 int currentCol = 0;
                 int currentColStart = 0;
+                boolean inQuote = false;
+                // If null, unused for this column:
+                @Nullable StringBuilder withoutQuotes = null;
                 for (int i = 0; i < line.length(); i++)
                 {
-                    if (line.regionMatches(i, delimiter, 0, delimiter.length()))
+                    if (!inQuote && line.regionMatches(i, delimiter, 0, delimiter.length()))
                     {
                         if (currentCol == columnIndex)
                         {
-                            fill.add(line.substring(currentColStart, i));
+                            fill.add(withoutQuotes != null ? withoutQuotes.toString() : line.substring(currentColStart, i));
                             // No point going further in this line as we've found our column:
                             continue loopOverLines;
                         }
                         currentCol += 1;
                         currentColStart = i + delimiter.length();
+                        // 1 will be added by loop:
+                        i += delimiter.length() - 1;
                         // TODO this doesn't handle the last column (should fail test)
+                        withoutQuotes = null;
+                    }
+                    else if (quote != null && line.regionMatches(i, quote, 0, quote.length()))
+                    {
+                        if (!inQuote)
+                        {
+                            inQuote = true;
+                            if (currentCol == columnIndex)
+                                withoutQuotes = new StringBuilder();
+                        }
+                        else
+                        {
+                            if (line.regionMatches(i + quote.length(), quote, 0, quote.length()))
+                            {
+                                // Escaped quote, no problem
+                                i += quote.length();
+                                if (withoutQuotes != null)
+                                    withoutQuotes.append(quote);
+                            }
+                            else
+                            {
+                                inQuote = false;
+                            }
+                        }
+                        // 1 will be added by loop:
+                        i += quote.length() - 1;
+                    }
+                    else if (withoutQuotes != null)
+                    {
+                        withoutQuotes.append(line.charAt(i));
                     }
                 }
                 // Might be the last column we want:
                 if (currentCol == columnIndex)
                 {
-                    fill.add(line.substring(currentColStart));
+                    fill.add(withoutQuotes != null ? withoutQuotes.toString() : line.substring(currentColStart));
                 }
             }
         }
