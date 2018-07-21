@@ -1,4 +1,4 @@
-package test;
+package test.data;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 public class PropFiles
 {
     @Property
-    public void testLineCount(@From(GenFile.class) TestTextFile input) throws IOException
+    public void testLineCount(@From(GenFile.class) GeneratedTextFile input) throws IOException
     {
         assertEqualsMsg("Counting lines for " + input.getCharset(), input.getLineCount(), Utility.countLines(input.getFile(), input.getCharset()));
     }

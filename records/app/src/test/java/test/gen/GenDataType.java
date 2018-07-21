@@ -44,7 +44,9 @@ public class GenDataType extends Generator<DataTypeAndManager>
             throw new RuntimeException(e);
         }
     }
-    
+
+    private final boolean onlyNumTextTemporal;
+
     public static class DataTypeAndManager
     {
         public final TypeManager typeManager;
@@ -56,10 +58,16 @@ public class GenDataType extends Generator<DataTypeAndManager>
             this.dataType = dataType;
         }
     }
-
+    
     public GenDataType()
     {
+        this(false);
+    }
+
+    public GenDataType(boolean onlyNumTextTemporal)
+    {
         super(DataTypeAndManager.class);
+        this.onlyNumTextTemporal = onlyNumTextTemporal;
     }
 
     @Override
@@ -79,18 +87,22 @@ public class GenDataType extends Generator<DataTypeAndManager>
     private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
     {
         List<ExSupplier<DataType>> options = new ArrayList<>(Arrays.asList(
-            () -> DataType.BOOLEAN,
             () -> DataType.TEXT,
             () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs))),
             () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
         ));
-        if (maxDepth > 1)
+        if (!onlyNumTextTemporal)
         {
-            options.addAll(Arrays.asList(
-                () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs))),
-                () -> DataType.array(genDepth(r, maxDepth - 1, gs)),
-                () -> genTagged(r, maxDepth, gs)
-            ));
+            options.add(() -> DataType.BOOLEAN);
+
+            if (maxDepth > 1)
+            {
+                options.addAll(Arrays.asList(
+                        () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs))),
+                        () -> DataType.array(genDepth(r, maxDepth - 1, gs)),
+                        () -> genTagged(r, maxDepth, gs)
+                ));
+            }
         }
         return r.<ExSupplier<DataType>>choose(options).get();
     }

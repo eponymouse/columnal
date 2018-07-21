@@ -15,6 +15,8 @@ import test.gen.GenTypeAndValueGen.TypeAndValueGen;
  */
 public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
 {
+    private final boolean onlyNumTextTemporal;
+
     public class TypeAndValueGen
     {
         private final DataType type;
@@ -44,14 +46,21 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
 
     public GenTypeAndValueGen()
     {
+        this(false);
+    }
+
+    // If false, can be any type
+    public GenTypeAndValueGen(boolean onlyNumTextTemporal)
+    {
         super(TypeAndValueGen.class);
+        this.onlyNumTextTemporal = onlyNumTextTemporal;
     }
 
 
     @Override
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        GenDataType genDataType = typeGenerator();
+        GenDataType genDataType = new GenDataType(onlyNumTextTemporal);
         DataTypeAndManager generated = genDataType.generate(sourceOfRandomness, generationStatus);
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
@@ -59,8 +68,4 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
         return new TypeAndValueGen(generated.dataType, generated.typeManager);
     }
 
-    public GenDataType typeGenerator()
-    {
-        return new GenDataType();
-    }
 }
