@@ -68,7 +68,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     @OnThread(Tag.FXPlatform)
     public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial, boolean creatingNewTable)
     {
-        super(parent);
+        super(parent, true);
 
         LabelledGrid content = new LabelledGrid();
 

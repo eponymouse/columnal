@@ -25,9 +25,9 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
     private @Nullable R result;
 
     @SuppressWarnings("initialization") // For the OK event filter.  Can't click until dialog shows!
-    public ErrorableLightDialog(Window parent)
+    public ErrorableLightDialog(Window parent, boolean buttonsToSide)
     {
-        super(parent);
+        super(parent, buttonsToSide ? new DialogPaneWithSideButtons() : null);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
