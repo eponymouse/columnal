@@ -35,7 +35,7 @@ public class TestTextFileColumn
 {
     @Property(trials=10)
     @OnThread(Tag.Simulation)
-    public void testTextFileColumn(@When(seed=1L) @From(GenFile.class) GeneratedTextFile generatedTextFile) throws UserException, InternalException
+    public void testTextFileColumn(@From(GenFile.class) GeneratedTextFile generatedTextFile) throws UserException, InternalException
     {
         KnownLengthRecordSet recordSet = new KnownLengthRecordSet(
                 Utility.mapListExI_Index(generatedTextFile.getColumnTypes(), (i, t) -> makeColumn(generatedTextFile, i, t)), generatedTextFile.getLineCount());

@@ -41,20 +41,22 @@ public class GenFile extends Generator<GeneratedTextFile>
     {
         try
         {
-            Charset charset = rnd.<@NonNull Charset>choose(Charset.availableCharsets().values().stream().filter(c ->
-                    !c.displayName().contains("JIS") &&
-                            !c.displayName().contains("2022") &&
-                            !c.displayName().contains("IBM") &&
-                            !c.displayName().contains("COMPOUND_TEXT")
-            ).collect(Collectors.<Charset>toList()));
             File file = File.createTempFile("aaa", "bbb");
             file.deleteOnExit();
-
-            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
 
             // We include a multibyte delimiter to stress test:
             String sep = rnd.choose(Arrays.asList(",", ";", "\t", new String(new int[] {0x1F806}, 0, 1)));
             String quot = rnd.choose(Arrays.asList("\"", "\'", new String(new int[] {0x1F962}, 0, 1)));
+            
+            Charset charset = rnd.<@NonNull Charset>choose(Charset.availableCharsets().values().stream().filter(c ->
+                !c.displayName().contains("JIS") &&
+                !c.displayName().contains("2022") &&
+                !c.displayName().contains("IBM") &&
+                !c.displayName().contains("COMPOUND_TEXT") &&
+                c.newEncoder().canEncode(sep) && c.newEncoder().canEncode(quot)
+            ).collect(Collectors.<Charset>toList()));
+
+            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
 
             int columnCount = rnd.nextInt(1, 6);
             int lineCount = rnd.nextInt(0, 10000);
@@ -79,6 +81,12 @@ public class GenFile extends Generator<GeneratedTextFile>
                     if (columnTypes[column].getType().isText())
                     {
                         string = (String)value;
+
+                        if (!charset.newEncoder().canEncode(string))
+                        {
+                            string = "" + rnd.nextDouble();
+                            value = DataTypeUtility.value(string); 
+                        }
                     }
                     else
                     {
