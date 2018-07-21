@@ -1453,6 +1453,11 @@ public class Utility
                 {
                     fill.add(withoutQuotes != null ? withoutQuotes.toString() : line.substring(currentColStart));
                 }
+                else if (currentCol < columnIndex)
+                {
+                    // Blank:
+                    fill.add("");
+                }
             }
         }
         return readState;
