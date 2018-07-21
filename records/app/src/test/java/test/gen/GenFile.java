@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -55,6 +56,10 @@ public class GenFile extends Generator<GeneratedTextFile>
                 !c.displayName().contains("COMPOUND_TEXT") &&
                 c.newEncoder().canEncode(sep) && c.newEncoder().canEncode(quot)
             ).collect(Collectors.<Charset>toList()));
+            
+            // Make most common case more likely to come up:
+            if (rnd.nextInt(5) == 1)
+                charset = StandardCharsets.UTF_8;
 
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
 
