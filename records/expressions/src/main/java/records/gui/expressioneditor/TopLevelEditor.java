@@ -101,7 +101,11 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY)
             {
                 FXUtility.mouse(this).focus(Focus.RIGHT);
+                e.consume();
             }
+        });
+        container.addEventHandler(MouseEvent.ANY, e -> {
+            e.consume();
         });
 
         //FXUtility.onceNotNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
