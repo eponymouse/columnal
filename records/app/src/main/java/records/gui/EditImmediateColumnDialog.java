@@ -73,7 +73,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         LabelledGrid content = new LabelledGrid();
 
         columnNameTextField = new ColumnNameTextField(initial);
-        content.addRow(GUI.labelledGridRow("edit.column.name", "column-name", columnNameTextField.getNode()));
+        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
         StructuredTextField defaultValueField = new StructuredTextField();
         defaultValueField.getStyleClass().add("default-value");
@@ -84,8 +84,8 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
             if (scene != null && scene.getWindow() != null)
                 scene.getWindow().sizeToScene();
         });
-        content.addRow(GUI.labelledGridRow("edit.column.type", "column-type", typeEditor.getContainer()));
-        content.addRow(GUI.labelledGridRow("edit.column.defaultValue", "column-defaultValue", defaultValueField));
+        content.addRow(GUI.labelledGridRow("edit.column.type", "edit-column/column-type", typeEditor.getContainer()));
+        content.addRow(GUI.labelledGridRow("edit.column.defaultValue", "edit-column/column-defaultValue", defaultValueField));
         
         Label explanation = new Label(
             (creatingNewTable ? (TranslationUtility.getString("newcolumn.newTableExplanation") + "  ") : Utility.universal(""))

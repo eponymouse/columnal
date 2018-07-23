@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="edit-column" title="Edit Column Details" >
+    <help id="column-name" title="Column Name">
+        <short>The name used to refer to the column.</short>
+        <full>
+            <p>Every column must have a name, and you cannot have duplicate column names within a single table.</p>
+            <p>Column names must start with a letter, optionally followed by a succession
+            of numbers, letters and spaces.  You cannot have adjacent spaces, nor spaces at the beginning and end.</p>
+        </full>
+    </help>
+    <help id="column-type" title="Column Type">
+        <short>The type (e.g. number, text, date) of the values in the column.</short>
+        <full>
+            <p>All the values in a column must have the same type, such as number, text or date.</p>
+            <p>Having all the values be of the same type avoids many errors in transformations, such as trying to multiple two text items together.</p>
+            <p>If you need a column to have multiple types, use a tagged type.</p>
+        </full>
+    </help>
+    <help id="column-defaultValue" title="Default Value">
+        <short>The default value in the column when a new row is added.</short>
+        <full>
+            <p>Values in columns cannot be absent, so a default value is required for when a new row is added.</p>
+            <p>If you want to have a "blank" value for a column, use a tagged type with a Blank tag.</p>
+        </full>
+    </help>
+</dialog>
