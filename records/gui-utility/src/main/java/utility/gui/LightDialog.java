@@ -7,6 +7,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.effect.DropShadow;
@@ -16,6 +17,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import log.Log;
@@ -25,6 +27,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Optional;
 
@@ -57,6 +60,11 @@ public abstract class LightDialog<R> extends Dialog<R>
                 content.getStyleClass().add("light-dialog-pane-content");
             }
         });
+        
+        dialogPane.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            dialogPane.lookupButton(ButtonType.OK).requestFocus();
+        });
+        
         Scene scene = dialogPane.getScene();
         // Scene should always be set by call to setDialogPane above, but satisfy null checker:
         if (scene != null)
@@ -184,8 +192,21 @@ public abstract class LightDialog<R> extends Dialog<R>
     protected Optional<R> showAndWaitCentredOn(Point2D mouseScreenPos, double contentWidth, double contentHeight)
     {
         // 40 pixels for display padding for drop shadow, and rough guess of 40 more for button bar  
-        setX(mouseScreenPos.getX() - (contentWidth + 40) *0.5);
-        setY(mouseScreenPos.getY() - (contentHeight + 40 + 40) *0.5);
+        double idealLeftX = mouseScreenPos.getX() - (contentWidth + 40) * 0.5;
+        double idealTopY = mouseScreenPos.getY() - (contentHeight + 40 + 40) * 0.5;
+        @Nullable Screen screen = Screen.getScreens().stream().filter(s -> s.getBounds().contains(mouseScreenPos)).findFirst().orElse(null);
+        if (screen == null)
+        {
+            // Weird, but I guess just put the dialog where we think it should go:
+            setX(idealLeftX);
+            setY(idealTopY);
+        }
+        else
+        {
+            double SPACE = 20;
+            setX(Utility.clampIncl(screen.getBounds().getMinX() + SPACE, idealLeftX, screen.getBounds().getMaxX() - contentWidth - SPACE));
+            setY(Utility.clampIncl(screen.getBounds().getMinY() + SPACE, idealTopY, screen.getBounds().getMaxY() - contentHeight - SPACE));
+        }
         return showAndWait();
     }
 
