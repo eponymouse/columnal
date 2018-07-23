@@ -15,8 +15,17 @@
     -fx-padding: 20;
     -fx-background-radius: 5;
     -fx-background-insets: 20, 21;
-    -fx-background-color: grey(40%), $table-cell;
+    -fx-background-color: grey(40%), $light-dialog-background;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,.2), 5.0, 0.3, 5.0, 5.0) !important;
+}
+
+.side-button-bar {
+    -fx-spacing: 20;
+    -fx-padding: 20;
+}
+.edit-column-content {
+    -fx-spacing: 10;
+    -fx-fill-width: true;
 }
 
 
@@ -173,4 +182,20 @@
 }
 .import-link-field {
     -fx-min-width: 450px;
+}
+
+.default-value {
+    -fx-padding: 3px;
+    -fx-background-insets: 0, 1;
+    -fx-background-color: grey, white;
+    -fx-background-radius: 2, 2; 
+}
+
+.edit-column-content .top-level-editor-scroll-pane {
+    -fx-min-height: 60px;
+}
+.edit-column-content .edit-column-details {
+    -fx-background-insets: 0, 1;
+    -fx-background-color: grey(70%), $light-dialog-background-dark;
+    -fx-padding: 10px;
 }

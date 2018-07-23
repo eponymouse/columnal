@@ -2,14 +2,9 @@ package records.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import javafx.event.ActionEvent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Separator;
-import javafx.scene.control.ToggleGroup;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -48,6 +43,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 {
     private @Nullable DataType customDataType = null;
     private final ColumnNameTextField columnNameTextField;
+    private final TypeEditor typeEditor;
 
     public static class ColumnDetails
     {
@@ -71,13 +67,14 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         super(parent, true);
 
         LabelledGrid content = new LabelledGrid();
+        content.getStyleClass().add("edit-column-details");
 
         columnNameTextField = new ColumnNameTextField(initial);
         content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
         StructuredTextField defaultValueField = new StructuredTextField();
         defaultValueField.getStyleClass().add("default-value");
-        TypeEditor typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
+        typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
             customDataType = t;
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();
@@ -93,9 +90,8 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         );
         explanation.setWrapText(true);
         
-        getDialogPane().setContent(GUI.vbox("",
+        getDialogPane().setContent(GUI.vbox("edit-column-content",
             explanation,
-            new Separator(),
             content,
             getErrorLabel()
         ));

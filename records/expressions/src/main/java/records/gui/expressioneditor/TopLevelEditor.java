@@ -70,7 +70,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             {
             }
         };
-        scrollPane.setMinHeight(200.0);
+        scrollPane.getStyleClass().add("top-level-editor-scroll-pane");
         this.tableManager = tableManager;
 
         container.getStyleClass().add("top-level-editor");

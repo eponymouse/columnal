@@ -24,6 +24,11 @@ $default-color: rgb(250, 250, 250);
         -fx-border-style: solid outside;
     }
 }
+.top-level-editor-scroll-pane {
+    -fx-min-height: 200px;
+}
+
+
 .mapsto {
     -fx-font-size: 140%;
     -fx-text-fill: #808080;

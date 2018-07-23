@@ -1,6 +1,7 @@
 package utility.gui;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -9,6 +10,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -16,10 +18,18 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
 
+/**
+ * A DialogPane replacement that puts the buttons to the side rather than
+ * at the bottom like default.
+ * 
+ * Useful when you don't want the auto-complete popups to hide the OK/cancel buttons.
+ */
 @OnThread(Tag.FXPlatform)
 public class DialogPaneWithSideButtons extends DialogPane
 {
@@ -46,6 +56,7 @@ public class DialogPaneWithSideButtons extends DialogPane
     protected Node createButtonBar(@UnknownInitialization(DialogPane.class) DialogPaneWithSideButtons this)
     {
         buttonBar = new VBox();
+        buttonBar.getStyleClass().add("side-button-bar");
         buttonBar.setMaxHeight(Double.MAX_VALUE);
         buttonBar.setFillWidth(true);
         return buttonBar;
@@ -61,7 +72,7 @@ public class DialogPaneWithSideButtons extends DialogPane
             buttonNodes = new WeakHashMap<>();
         
         boolean hasDefault = false;
-        for (ButtonType cmd : getButtonTypes())
+        for (ButtonType cmd : sortButtons(getButtonTypes()))
         {
             Node genButton = lookupButton(cmd);
             
@@ -79,6 +90,21 @@ public class DialogPaneWithSideButtons extends DialogPane
             }
             buttonBar.getChildren().add(genButton);
         }
+    }
+
+    private static List<ButtonType> sortButtons(ObservableList<ButtonType> buttonTypes)
+    {
+        final String buttonOrder;
+        if (SystemUtils.IS_OS_WINDOWS)
+            buttonOrder = ButtonBar.BUTTON_ORDER_WINDOWS;
+        else if (SystemUtils.IS_OS_MAC)
+            buttonOrder = ButtonBar.BUTTON_ORDER_MAC_OS;
+        else
+            buttonOrder = ButtonBar.BUTTON_ORDER_LINUX;
+        
+        return buttonTypes.sorted(Comparator.comparingInt(bt ->
+            buttonOrder.indexOf(bt.getButtonData().getTypeCode())
+        ));
     }
 
     @Override
