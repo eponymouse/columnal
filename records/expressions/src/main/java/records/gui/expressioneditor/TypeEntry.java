@@ -2,6 +2,8 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -28,31 +30,39 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.TypeSaver;
 import records.transformations.expression.type.UnfinishedTypeExpression;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.stream.Stream;
 
 public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
-    private static final ImmutableList<DataType> PRIMITIVE_TYPES = ImmutableList.of(
-        DataType.BOOLEAN,
-        DataType.TEXT,
-        DataType.NUMBER,
-        DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-        DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)),
-        DataType.date(new DateTimeInfo(DateTimeType.DATETIME)),
-        DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),
-        DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))
+    private static final ImmutableList<Pair<DataType, @LocalizableKey String>> PRIMITIVE_TYPES = ImmutableList.of(
+        _t(DataType.BOOLEAN, "type.entry.boolean.short"),
+        _t(DataType.TEXT, "type.entry.text.short"),
+        _t(DataType.NUMBER,"type.entry.number.short"),
+        _t(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), "type.entry.ymd.short"),
+        _t(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), "type.entry.ym.short"),
+        _t(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "type.entry.datetime.short"),
+        _t(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "type.entry.datetimezoned.short"),
+        _t(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), "type.entry.time.short")
         //DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))
     );
-    private final TypeCompletion bracketCompletion = new BracketCompletion("(");
-    private final TypeCompletion listCompletion = new BracketCompletion("[");
+    private static Pair<DataType, @LocalizableKey String> _t(DataType dataType, @LocalizableKey String key)
+    {
+        return new Pair<>(dataType, key);
+    }
+    
+    
+    private final TypeCompletion bracketCompletion = new BracketCompletion("(", "type.entry.tuple.short");
+    private final TypeCompletion listCompletion = new BracketCompletion("[", "type.entry.list.short");
     private final TypeCompletion unitBracketCompletion = new UnitCompletion();
-    private final Completion endCompletion = new BracketCompletion("}"); //"autocomplete.end");
-    private final Completion endBracketCompletion = new BracketCompletion(")"); //"autocomplete.end");
-    private final Completion endListCompletion = new BracketCompletion("]"); //"autocomplete.end");
+    private final Completion endCompletion = new BracketCompletion("}", "TODO remove this when not type literal"); //"autocomplete.end");
+    private final Completion endBracketCompletion = new BracketCompletion(")", "type.entry.tuple.end.short"); //"autocomplete.end");
+    private final Completion endListCompletion = new BracketCompletion("]", "type.entry.list.end.short"); //"autocomplete.end");
     private final ImmutableList<Completion> allCompletions;
 
     /**
@@ -66,8 +76,11 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         super(TypeExpression.class, parent);
         this.allCompletions = Utility.concatStreams(
             Stream.of(listCompletion, bracketCompletion, unitBracketCompletion, endBracketCompletion, endListCompletion, endCompletion),
-            PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.toString(), 0)),
-            parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream().map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), t.getTypeArguments().size()))
+            PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.getFirst().toString(), d.getSecond(), d.getFirst().equals(DataType.NUMBER) || d.getFirst().equals(DataType.TEXT))),
+            parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream()
+                // Don't show phantom types like Void, Unit:
+                .filter(t -> !t.getTags().isEmpty())
+                .map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), "TODO"))
         ).collect(ImmutableList.toImmutableList());
         
         FXUtility.sizeToFit(textField, 30.0, 30.0);
@@ -212,12 +225,24 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
 
     private class TypeCompletion extends SimpleCompletion
     {
-        private final int numTypeParams;
+        private final boolean showAtTop;
 
-        protected TypeCompletion(String completion, int numTypeParams)
+        protected TypeCompletion(String completion, @LocalizableKey String shortKey, boolean showAtTop)
         {
-            super(completion, null);
-            this.numTypeParams = numTypeParams;
+            super(completion, TranslationUtility.getString(shortKey));
+            this.showAtTop = showAtTop;
+        }
+
+        protected TypeCompletion(String completion, @LocalizableKey String shortKey)
+        {
+            this(completion, TranslationUtility.getString(shortKey), false);
+        }
+
+        @Override
+        public String getDisplaySortKey(String text)
+        {
+            // Leading space will make it sort to top:
+            return (showAtTop ? " " : "") + super.getDisplaySortKey(text);
         }
     }
 
@@ -250,8 +275,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             }
         }
 
-        for (DataType primitiveType : PRIMITIVE_TYPES)
+        for (Pair<DataType, @LocalizableKey String> pair : PRIMITIVE_TYPES)
         {
+            DataType primitiveType = pair.getFirst();
             if (content.equals(primitiveType.toString()))
             {
                 if (primitiveType.equals(DataType.NUMBER))
@@ -329,7 +355,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     {
         public UnitCompletion()
         {
-            super("{", 0);
+            super("{", "type.entry.unit.short");
         }
         
         @Override
@@ -406,9 +432,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
 
     private class BracketCompletion extends TypeCompletion
     {
-        public BracketCompletion(String s)
+        public BracketCompletion(String s, @LocalizableKey String shortKey)
         {
-            super(s, 0);
+            super(s, shortKey);
         }
 
         @Override

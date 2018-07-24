@@ -569,6 +569,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
 
         /**
          * How should we sort this item?  For functions, leave off brackets.
+         * 
+         * @param text The current user-entered text (independent of this item)
          */
         public String getDisplaySortKey(String text)
         {
