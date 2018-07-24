@@ -9,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import log.Log;
@@ -165,6 +166,8 @@ public class StructuredTextField extends StyleClassedTextArea
                 e.consume();
             })
         ));
+        
+        Nodes.addFallbackInputMap(FXUtility.mouse(this), InputMap.consume(MouseEvent.ANY));
     }
 
     private <T> @Nullable CaretPositionMapper focusGained(EditorKit<T> editorKit)

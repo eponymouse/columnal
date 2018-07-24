@@ -89,6 +89,7 @@ class HelpBox extends StackPane
                 if (wasPinned)
                     popOver.hide();
             }
+            e.consume();
         });
     }
 

@@ -62,7 +62,8 @@ public abstract class LightDialog<R> extends Dialog<R>
         });
         
         dialogPane.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
-            dialogPane.lookupButton(ButtonType.OK).requestFocus();
+            if (e.isStillSincePress())
+                dialogPane.lookupButton(ButtonType.OK).requestFocus();
         });
         
         Scene scene = dialogPane.getScene();
