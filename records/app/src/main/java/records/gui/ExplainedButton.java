@@ -2,6 +2,7 @@ package records.gui;
 
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -121,5 +122,12 @@ class ExplainedButton extends Button
             Bounds bounds = localToScreen(getBoundsInLocal());
             return new Point2D((bounds.getMinX() + bounds.getMaxX()) / 2.0, (bounds.getMinY() + bounds.getMaxY()) / 2.0);
         }
+    }
+
+    @Override
+    @OnThread(Tag.FX)
+    public Orientation getContentBias()
+    {
+        return Orientation.HORIZONTAL;
     }
 }

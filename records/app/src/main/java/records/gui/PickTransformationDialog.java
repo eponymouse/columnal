@@ -25,41 +25,42 @@ import java.util.Optional;
 public class PickTransformationDialog extends LightDialog<Pair<Point2D, TransformationInfo>>
 {
     private static final int BUTTON_WIDTH = 140;
+    private static final int BUTTON_HEIGHT = 140;
     private static final double WIDTH = BUTTON_WIDTH * 4 + 3 * 10;
-    private static final double HEIGHT = 180;
+    private static final double HEIGHT = BUTTON_HEIGHT * 2 + 3 * 10;
 
     public PickTransformationDialog(Window parent)
     {
         super(parent);
         setResizable(true);
         
-        TilePane tilePane = new TilePane();
-        tilePane.getStyleClass().add("pick-transformation-tile-pane");
+        GridPane gridPane = new GridPane();
+        gridPane.getStyleClass().add("pick-transformation-tile-pane");
+
+        makeTransformationButtons(gridPane);
         
-        makeTransformationButtons(tilePane);
-        
-        FXUtility.forcePrefSize(tilePane);
-        tilePane.setPrefWidth(WIDTH);
-        tilePane.setPrefHeight(HEIGHT);
-        getDialogPane().setContent(new BorderPane(tilePane));
+        FXUtility.forcePrefSize(gridPane);
+        getDialogPane().setContent(new BorderPane(gridPane));
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
         setResultConverter(bt -> null);
         centreDialogButtons();
-        //org.scenicview.ScenicView.show(getDialogPane().getScene());
+        org.scenicview.ScenicView.show(getDialogPane().getScene());
     }
 
-    private void makeTransformationButtons(@UnknownInitialization(LightDialog.class) PickTransformationDialog this, TilePane tilePane)
+    private void makeTransformationButtons(@UnknownInitialization(LightDialog.class) PickTransformationDialog this, GridPane gridPane)
     {
-        tilePane.setPrefColumns(3);
-        tilePane.setPrefRows(2);
-
+        int column = 0;
+        int row = 0;
         for (TransformationInfo transformationInfo : TransformationManager.getInstance().getTransformations())
         {
             Button button = new ExplainedButton(transformationInfo.getDisplayNameKey(), transformationInfo.getExplanationKey(), transformationInfo.getImageFileName(), BUTTON_WIDTH, p -> {
                 FXUtility.mouse(this).setResult(new Pair<>(p, transformationInfo));
                 close();
             });
-            tilePane.getChildren().add(button);
+            gridPane.add(button, column, row);
+            column = (column + 1) % 3;
+            if (column == 0)
+                row += 1;
         }
     }
 
