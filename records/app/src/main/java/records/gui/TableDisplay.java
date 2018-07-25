@@ -104,6 +104,7 @@ import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledString;
+import styled.StyledString.Builder;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -1241,6 +1242,35 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         parent.getManager().edit(check.getId(), () -> new Check(parent.getManager(), table.getDetailsForCopy(), check.getSource(), e), null)
                     )
                 );
+            }
+            else if (table instanceof Calculate)
+            {
+                Calculate calc = (Calculate)table;
+                StyledString.Builder builder = new Builder();
+                builder.append("From ");
+                builder.append(editSourceLink(calc, calc.getSource(), newSource -> 
+                    parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(),
+                        table.getDetailsForCopy(), newSource, calc.getCalculatedColumns()), null)));
+                builder.append("Calculate ");
+                if (calc.getCalculatedColumns().isEmpty())
+                {
+                    builder.append("<none>");
+                }
+                else
+                {
+                    // Mention max three columns
+                }
+                builder.append(StyledString.s("(add column)").withStyle(new Clickable() {
+                    @Override
+                    protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        if (mouseButton == MouseButton.PRIMARY)
+                        {
+                            addColumnBefore_Calc(calc, null);
+                        }
+                    }
+                }));
+                content = builder.build();
             }
             else
             {

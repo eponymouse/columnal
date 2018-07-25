@@ -44,7 +44,7 @@ public class PickTransformationDialog extends LightDialog<Pair<Point2D, Transfor
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
         setResultConverter(bt -> null);
         centreDialogButtons();
-        org.scenicview.ScenicView.show(getDialogPane().getScene());
+        //org.scenicview.ScenicView.show(getDialogPane().getScene());
     }
 
     private void makeTransformationButtons(@UnknownInitialization(LightDialog.class) PickTransformationDialog this, GridPane gridPane)
