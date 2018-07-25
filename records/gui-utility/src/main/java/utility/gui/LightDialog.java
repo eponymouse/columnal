@@ -66,7 +66,7 @@ public abstract class LightDialog<R> extends Dialog<R>
         dialogPane.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             if (e.isStillSincePress())
             {
-                @Nullable Node button = ImmutableList.of(ButtonType.OK, ButtonType.CANCEL, ButtonType.CLOSE).stream().map(dialogPane::lookupButton).findFirst().orElse(null);
+                @Nullable Node button = ImmutableList.of(ButtonType.OK, ButtonType.CANCEL, ButtonType.CLOSE).stream().flatMap(b -> Utility.streamNullable(dialogPane.lookupButton(b))).findFirst().orElse(null);
                 if (button != null)
                     button.requestFocus();
             }
