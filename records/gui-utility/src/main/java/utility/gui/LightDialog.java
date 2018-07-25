@@ -1,10 +1,12 @@
 package utility.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -63,7 +65,11 @@ public abstract class LightDialog<R> extends Dialog<R>
         
         dialogPane.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             if (e.isStillSincePress())
-                dialogPane.lookupButton(ButtonType.OK).requestFocus();
+            {
+                @Nullable Node button = ImmutableList.of(ButtonType.OK, ButtonType.CANCEL, ButtonType.CLOSE).stream().map(dialogPane::lookupButton).findFirst().orElse(null);
+                if (button != null)
+                    button.requestFocus();
+            }
         });
         
         Scene scene = dialogPane.getScene();
