@@ -10,6 +10,12 @@
     &.transformation-table-title {
         -fx-background-color: $table-header-transformation-background-color;
     }
+    &.transformation-table-title .text-field {
+        -fx-background-color: $table-header-transformation-background-color, $table-header-transformation-background-color;
+        &:focused, &:hover {
+            -fx-background-color: grey(85%), $table-header-transformation-background-color;
+        }
+    }
     
     &:table-selected {
         -fx-cursor: move;
@@ -17,7 +23,7 @@
         .text-field {
             -fx-background-color: $table-header-background-color-selected, $table-header-background-color-selected;
             &:focused, &:hover {
-                -fx-background-color: grey(65%), $table-header-background-color-selected;
+                -fx-background-color: grey(85%), $table-header-background-color-selected;
             }
         }
     }
@@ -25,7 +31,7 @@
         -fx-text-fill: $table-header-text-color;
         -fx-background-color: $table-header-background-color, $table-header-background-color;
         &:focused, &:hover {
-            -fx-background-color: grey(65%), $table-header-background-color;
+            -fx-background-color: grey(85%), $table-header-background-color;
         }
         -fx-background-insets: 0, 1;
         -fx-padding: -1 1 -1 1;
