@@ -187,8 +187,11 @@
 .default-value {
     -fx-padding: 3px;
     -fx-background-insets: 0, 1;
-    -fx-background-color: grey, white;
+    -fx-background-color: grey(80%), white;
     -fx-background-radius: 2, 2; 
+}
+.default-value:disabled {
+    -fx-background-color: grey(80%), grey(88%);
 }
 
 .edit-column-content .top-level-editor-scroll-pane {
