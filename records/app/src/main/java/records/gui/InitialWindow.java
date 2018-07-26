@@ -9,6 +9,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -79,6 +81,17 @@ public class InitialWindow
                 }
             }
         });
+        mruListView.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.SPACE)
+            {
+                @Nullable File selected = mruListView.getSelectionModel().getSelectedItem();
+                if (selected != null)
+                {
+                    openProject(stage, selected);
+                }
+            }
+        });
+        
         mruListView.getItems().setAll(Utility.readRecentFilesList());
         Label titleLabel = GUI.label("us", "initial-title");
         ImageView logo = TranslationUtility.makeImageView("logo.png");
