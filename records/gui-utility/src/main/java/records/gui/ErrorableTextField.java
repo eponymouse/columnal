@@ -9,8 +9,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.PopupWindow.AnchorLocation;
 import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -53,14 +56,34 @@ public class ErrorableTextField<T>
     private final ObjectProperty<ConversionResult<T>> converted;
     private final ObjectProperty<@Nullable T> value;
     private final PopOver popOver = new PopOver();
+    
+    // Default is to suppress errors if blank and never been unfocused.
+    private boolean suppressingErrors = true;
 
     @SuppressWarnings("initialization") // Due to updateState
     public ErrorableTextField(FXPlatformFunction<String, ConversionResult<T>> converter, ObservableValue... conversionDependencies)
     {
         field.getStyleClass().add("errorable-text-field");
         popOver.getStyleClass().add("errorable-text-field-popup");
+        popOver.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+        popOver.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+            if (e.getButton() == MouseButton.MIDDLE)
+            {
+                popOver.hide(Duration.ZERO);
+            }
+        });
+        FXUtility.onceNotNull(popOver.skinProperty(), skin -> {
+            // Override default skin behaviour:
+            popOver.getRoot().minHeightProperty().unbind();
+            popOver.getRoot().setMinHeight(10);
+        });
+        
         this.converted = new SimpleObjectProperty<>(converter.apply(""));
-        FXUtility.addChangeListenerPlatformNN(field.textProperty(), s -> converted.setValue(converter.apply(s)));
+        FXUtility.addChangeListenerPlatformNN(field.textProperty(), s -> {
+            // Once changed from blank, stop suppressing:
+            suppressingErrors = false;
+            converted.setValue(converter.apply(s));
+        });
         for (ObservableValue<?> dependency : conversionDependencies)
         {
             FXUtility.addChangeListenerPlatform(dependency, o -> converted.setValue(converter.apply(field.getText())));
@@ -71,14 +94,19 @@ public class ErrorableTextField<T>
             value.setValue(conv.getValue());
             updateState();
         });
-        FXUtility.addChangeListenerPlatformNN(field.focusedProperty(), b -> updateState());
+        FXUtility.addChangeListenerPlatformNN(field.focusedProperty(), focused -> {
+            // Once unfocused, stop suppressing errors;
+            if (!focused)
+                suppressingErrors = false;
+            updateState();
+        });
     }
 
     private void updateState()
     {
         ConversionResult<T> result = converted.get();
-        boolean hasError = result.getError() != null;
-        boolean hasWarnings = !result.getWarnings().isEmpty();
+        boolean hasError = result.getError() != null && !suppressingErrors;
+        boolean hasWarnings = !result.getWarnings().isEmpty() && !suppressingErrors;
         FXUtility.setPseudoclass(field, "has-error", hasError);
         FXUtility.setPseudoclass(field, "has-warnings", hasWarnings);
 
@@ -86,7 +114,7 @@ public class ErrorableTextField<T>
         if (shouldShow)
         {
             popOver.setTitle(TranslationUtility.getString(hasError ? "error.popup.title.error" : "error.popup.title.warnings"));
-            popOver.setHeaderAlwaysVisible(true);
+            //popOver.setHeaderAlwaysVisible(true);
             popOver.setContentNode(GUI.vbox("popup-error-pane", new TextFlow(Stream.concat(
                 Utility.streamNullable(result.getError()),
                 result.getWarnings().stream()
