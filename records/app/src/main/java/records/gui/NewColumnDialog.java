@@ -139,7 +139,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     {
         if (name.getText().trim().isEmpty())
         {
-            return Either.left(TranslationUtility.getString("column.name.required"));
+            return Either.left(TranslationUtility.getString("column.name.error.missing"));
         }
 
         // Should getSelectedType return an Either, too?
