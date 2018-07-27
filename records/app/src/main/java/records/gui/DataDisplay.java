@@ -73,6 +73,7 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -618,6 +619,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             {
                 @NonNull FXPlatformConsumer<TableId> renameTableFinal = renameTable;
                 tableNameField.addOnFocusLoss(newTableId -> {
+                    if (Objects.equals(newTableId, curTableId))
+                        return; // Ignore if hasn't actually changed
+                    
                     if (newTableId != null)
                         renameTableFinal.consume(newTableId);
 
