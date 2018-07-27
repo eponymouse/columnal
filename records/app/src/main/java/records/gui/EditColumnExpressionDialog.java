@@ -21,6 +21,8 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
+import utility.gui.LabelledGrid;
 import utility.gui.LightDialog;
 
 import java.util.Optional;
@@ -58,8 +60,17 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
                 e.consume();
             }
         });
+        
+        LabelledGrid content = new LabelledGrid();
+        content.getStyleClass().add("edit-column-expression-content");
 
-        getDialogPane().setContent(new BorderPane(expressionEditor.getContainer(), field.getNode(), null, null, null));
+        content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", field.getNode()));
+        
+        content.addRow(GUI.labelledGridRow("edit.column.expression",
+                "edit-column/column-expression", expressionEditor.getContainer()));
+        
+        getDialogPane().setContent(content);
+
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
