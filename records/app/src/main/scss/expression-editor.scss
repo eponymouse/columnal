@@ -156,15 +156,16 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-text-fill: black;
 }
 
+.expression-info-popup.popover > .border {
+    -fx-stroke: red;
+    -fx-stroke-width: 2;
+}
+
 .expression-info-error {
-    -fx-background-color: darkred;
-    -fx-background-radius: 7px;
-    -fx-border-color: white;
-    -fx-border-width: 2px;
-    -fx-border-radius: 5px;
-    -fx-text-fill: white;
-    -fx-label-padding: 3px;
-    -fx-effect: dropshadow(two-pass-box, #404040, 8px, 0.4, 2, 2);
+    -fx-text-fill: black;
+}
+.expression-info-content {
+    -fx-padding: 0.5em 1em 0.5em 1em;
 }
 
 .function-info {
