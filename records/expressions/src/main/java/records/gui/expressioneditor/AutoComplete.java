@@ -114,6 +114,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
      */
     public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
     {
+        // Disable autofix so that the popup doesn't get moved to cover up text field:
+        setAutoFix(false);
         this.textField = textField;
         this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
         this.completions = new ListView<C>() {
@@ -189,7 +191,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                 updateCompletions(calculateCompletions, textField.getText());
                 if (!isShowing() && pos != null)
                 {
-                    Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
+                    //Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
                     // TODO see if we can find a useful place to show this:
                     //instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
                     show(textField, pos.getFirst(), pos.getSecond());
