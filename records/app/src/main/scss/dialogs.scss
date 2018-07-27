@@ -194,7 +194,8 @@
     -fx-background-color: grey(80%), grey(88%);
 }
 
-.edit-column-content .top-level-editor-scroll-pane {
+.edit-column-content .top-level-editor-scroll-pane,
+  .edit-column-expression-content .top-level-editor-scroll-pane {
     -fx-min-height: 60px;
 }
 .edit-column-content .edit-column-details {
