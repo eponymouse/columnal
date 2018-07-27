@@ -61,7 +61,7 @@ public class EntireTableSelection implements CellSelection
                 if (byColumns <= 0)
                     return Either.left(selected.getPosition().offsetByRowCols(byRows, byColumns));
                 else
-                    return Either.left(selected.getPosition().offsetByRowCols(byRows, byColumns + selected.getDataDisplayBottomRightIncl().columnIndex));
+                    return Either.left(selected.getPosition().offsetByRowCols(byRows, byColumns + selected.getBottomRightIncl().columnIndex - selected.getPosition().columnIndex));
             }
         }
         return Either.right(this);
