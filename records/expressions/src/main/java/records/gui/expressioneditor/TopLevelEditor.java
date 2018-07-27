@@ -76,6 +76,10 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         container.getStyleClass().add("top-level-editor");
         container.getStyleClass().addAll(styleClasses);
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
+        // To allow popup to take on styles:
+        FXUtility.onceNotNull(container.sceneProperty(), scene -> {
+            scene.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
+        });
 
         container.getChildren().setAll(nodes());
         FXUtility.listen(nodes(), c -> {
@@ -465,10 +469,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
             fixList = new FixList(ImmutableList.of());
 
-            Label typeLabel = new Label();
-            typeLabel.getStyleClass().add("expression-info-type");
-            //typeLabel.textProperty().bind(type);
-            BorderPane container = new BorderPane(errorLabel, typeLabel, null, fixList, null);
+            BorderPane container = new BorderPane(errorLabel, null, null, fixList, null);
+            container.getStyleClass().add("expression-info-content");
 
             setContentNode(container);
             //FXUtility.addChangeListenerPlatformNN(detachedProperty(), b -> updateShowHide(false));
@@ -519,6 +521,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             if (!isShowing())
             {
                 show(scrollPane);
+                //org.scenicview.ScenicView.show(getScene());
             }
         }
 

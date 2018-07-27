@@ -345,6 +345,7 @@ class PopOver
     void setArrowLocation(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, ArrowLocation location);
     StackPane getRoot(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
     void setContentNode(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this, Node content);
+    ReadOnlyObjectProperty<Scene> sceneProperty(@UnknownInitialization(org.controlsfx.control.PopOver.class) PopOver this);
 }
 package org.fxmisc.richtext;
 class StyleClassedTextArea
