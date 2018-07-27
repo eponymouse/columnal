@@ -46,7 +46,9 @@ public class InvalidIdentExpression extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, StyledString.s("Invalid identifier: \"" + text + "\""));
+        onError.recordError(this, StyledString.s(
+            text.isEmpty() ? "Expression cannot be blank" :
+            "Invalid identifier: \"" + text + "\""));
         return null;
     }
 
