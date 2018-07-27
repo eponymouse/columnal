@@ -88,7 +88,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     @Override
     public void focusWhenShown()
     {
-        Log.debug("### Focusing when shown: " + textField);
+        //Log.debug("### Focusing when shown: " + textField);
         focusPending = true;
         FXUtility.onceNotNull(textField.sceneProperty(), s -> FXUtility.runAfter(() -> {
             flushFocusRequest();
@@ -117,7 +117,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     @Override
     public void focus(Focus side)
     {
-        Log.debug("### Focusing now: " + textField + " Editable: " + textField.isEditable() + " Scene: " + textField.getScene());
+        //Log.debug("### Focusing now: " + textField + " Editable: " + textField.isEditable() + " Scene: " + textField.getScene());
         textField.requestFocus();
         Log.debug("  Focused? " + textField.isFocused());
         if (side == Focus.LEFT)
