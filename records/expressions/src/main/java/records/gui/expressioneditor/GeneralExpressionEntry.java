@@ -406,7 +406,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             // To allow "+", "-", or "1.", we add zero at the end before parsing:
             try
             {
-                return Utility.parseAsOne(input + "0", ExpressionLexer::new, ExpressionParser::new, p -> p.numericLiteral())
+                return !input.isEmpty() && Utility.parseAsOne(input + "0", ExpressionLexer::new, ExpressionParser::new, p -> p.numericLiteral())
                     != null ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
             }
             catch (InternalException | UserException e)
