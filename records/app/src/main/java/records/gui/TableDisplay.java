@@ -1250,7 +1250,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 builder.append(editSourceLink(calc, calc.getSource(), newSource -> 
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(),
                         table.getDetailsForCopy(), newSource, calc.getCalculatedColumns()), null)));
-                builder.append("Calculate ");
+                builder.append(" calculate ");
                 if (calc.getCalculatedColumns().isEmpty())
                 {
                     builder.append("<none>");
@@ -1258,8 +1258,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 else
                 {
                     // Mention max three columns
+                    Stream<StyledString> threeEditLinks = calc.getCalculatedColumns().keySet().stream().limit(3).map(c -> c.toStyledString().withStyle(new Clickable()
+                    {
+                        @Override
+                        protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
+                        {
+                            FXUtility.alertOnErrorFX_(() -> editColumn_Calc(calc, c));
+                        }
+                    }));
+                    if (calc.getCalculatedColumns().keySet().size() > 3)
+                        threeEditLinks = Stream.concat(threeEditLinks, Stream.of(StyledString.s("...")));
+                    builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.toList())));
                 }
-                builder.append(StyledString.s("(add column)").withStyle(new Clickable() {
+                builder.append(" ");
+                builder.append(StyledString.s("(add new)").withStyle(new Clickable() {
                     @Override
                     protected @OnThread(Tag.FXPlatform) void onClick(MouseButton mouseButton, Point2D screenPoint)
                     {
