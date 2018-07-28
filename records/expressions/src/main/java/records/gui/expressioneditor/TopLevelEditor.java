@@ -154,14 +154,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         */
     }
 
-
-    @SuppressWarnings("initialization") // Because we pass ourselves as this
-    protected void loadContent(@UnknownInitialization(TopLevelEditor.class) TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> this, LoadableExpression<EXPRESSION, SEMANTIC_PARENT> startingValue)
+    protected void loadContent(LoadableExpression<EXPRESSION, SEMANTIC_PARENT> startingValue, boolean unmaskErrors)
     {
         atomicEdit.set(true);
         children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
         atomicEdit.set(false);
-        unmaskErrors();
+        if (unmaskErrors)
+            unmaskErrors();
     }
 
 

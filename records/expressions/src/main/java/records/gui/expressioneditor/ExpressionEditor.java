@@ -28,6 +28,7 @@ import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.IdentExpression;
+import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
 import records.typeExp.TypeExp;
@@ -37,6 +38,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Collections;
@@ -117,10 +119,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         return allowsSameRow;
     }
 
-    
-
-    @SuppressWarnings("initialization")
-    public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS, tableManager, "expression-editor");
         this.allowsSameRow = allowsSameRow;
@@ -154,7 +153,8 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         });
         */
 
-        loadContent(startingValue);
+        // Safe because at end of constructor:
+        Utility.later(this).loadContent(startingValue != null ? startingValue : new InvalidIdentExpression(""), startingValue != null);
     }
 
     private @Nullable ConsecutiveChild<? extends StyledShowable, ?> findSmallestContainer(Point2D pointInScene)

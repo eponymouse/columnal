@@ -691,7 +691,7 @@ public class View extends StackPane
                     break;
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
-                        new EditExpressionDialog(thisView, srcTable, new InvalidIdentExpression(""), false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
+                        new EditExpressionDialog(thisView, srcTable, null, false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
                             Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                 tableManager.record(check);

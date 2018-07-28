@@ -23,13 +23,13 @@ public class EditExpressionDialog extends LightDialog<Expression>
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditExpressionDialog(View parent, @Nullable Table srcTable, Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
+    public EditExpressionDialog(View parent, @Nullable Table srcTable, @Nullable Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
     {
         super(parent.getWindow(), new DialogPaneWithSideButtons());
         setResizable(true);
-        curValue = initialExpression;
 
         expressionEditor = new ExpressionEditor(initialExpression, new ReadOnlyObjectWrapper<@Nullable Table>(srcTable), perRow, new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType), parent.getManager(), e -> {curValue = e;});
+        curValue = expressionEditor.save();
         
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);

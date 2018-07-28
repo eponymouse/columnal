@@ -34,11 +34,10 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
     private final ExpressionEditor expressionEditor;
     private Expression curValue;
 
-    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
+    public EditColumnExpressionDialog(View parent, @Nullable Table srcTable, ColumnId initialName, @Nullable Expression initialExpression, boolean perRow, @Nullable DataType expectedType)
     {
         super(parent.getWindow(), new DialogPaneWithSideButtons());
         setResizable(true);
-        curValue = initialExpression;
 
         ColumnNameTextField field = new ColumnNameTextField(initialName);
         ReadOnlyObjectWrapper<@Nullable Table> srcTableWrapper = new ReadOnlyObjectWrapper<@Nullable Table>(srcTable);
@@ -52,6 +51,7 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
                     button.requestFocus();
             }
         };
+        curValue = expressionEditor.save();
         // Tab doesn't seem to work right by itself:
         field.getNode().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.TAB)

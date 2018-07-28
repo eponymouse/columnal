@@ -13,6 +13,7 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.FXPlatformConsumer;
+import utility.Utility;
 
 import java.util.stream.Stream;
 
@@ -27,7 +28,8 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
         this.onChange = onChange;
         onChange.consume(null);
         
-        loadContent(startingValue);
+        // Safe because at end of constructor:
+        Utility.later(this).loadContent(startingValue, true);
     }
 
     @Override
