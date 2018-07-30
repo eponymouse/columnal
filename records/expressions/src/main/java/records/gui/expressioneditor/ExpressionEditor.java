@@ -226,7 +226,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
                 List<Column> columns = t.getData().getColumns();
                 Stream<ColumnReference> wholeColumns = columns.stream().map(c -> new ColumnReference(t.getId(), c.getName(), ColumnReferenceType.WHOLE_COLUMN));
                 // Use reference equality, as tables may share names if we compare them:
-                if (t == srcTable)
+                if (t == srcTable && allowsSameRow)
                 {
                     return Stream.concat(wholeColumns, columns.stream().map(c -> new ColumnReference(c.getName(), ColumnReferenceType.CORRESPONDING_ROW)));
                 }
