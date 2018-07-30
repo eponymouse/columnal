@@ -97,8 +97,8 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     @Override
     protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition)
     {
-        @Nullable StructuredTextField stf = getItemAt(cellPosition);
-        if (stf != null)
+        @Nullable VersionedSTF stf = getItemAt(cellPosition);
+        if (stf != null && stf.isEditable())
         {
             if (screenPosition != null)
             {

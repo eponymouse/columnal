@@ -209,6 +209,8 @@ public class StructuredTextField extends StyleClassedTextArea
         editorKit.completedValue = val;
         editorKit.lastValidValue = editorKit.captureState(curValue, getDocument());
         suggestions = editorKit.contentComponent.getSuggestions();
+        
+        setEditable(this.editorKit.isEditable());
     }
 
     private void updateAutoComplete(javafx.scene.control.IndexRange selection)
@@ -1036,6 +1038,11 @@ public class StructuredTextField extends StyleClassedTextArea
         public @Nullable StructuredTextField getCurField()
         {
             return curField;
+        }
+        
+        public boolean isEditable()
+        {
+            return store != null;
         }
 
         /**
