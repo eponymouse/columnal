@@ -345,6 +345,11 @@ public class TestVirtualGridLayout extends ApplicationTest
         {
             return null;
         }
+
+        @Override
+        protected void keyboardActivate(CellPosition cellPosition)
+        {
+        }
     }
 
     private static class SimpleCellSupplier extends VirtualGridSupplierIndividual<Label, String, GridCellInfo<Label, String>>
@@ -372,6 +377,11 @@ public class TestVirtualGridLayout extends ApplicationTest
         protected ItemState getItemState(Label item, Point2D screenPos)
         {
             return ItemState.NOT_CLICKABLE;
+        }
+
+        @Override
+        protected void keyboardActivate(CellPosition cellPosition)
+        {
         }
     }
 

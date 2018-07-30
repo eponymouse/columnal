@@ -180,4 +180,12 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             }
         });
     }
+
+    @Override
+    protected void keyboardActivate(CellPosition cellPosition)
+    {
+        Button button = getItemAt(cellPosition);
+        if (button != null)
+            button.fire();
+    }
 }

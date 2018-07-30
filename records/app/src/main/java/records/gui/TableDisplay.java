@@ -1323,6 +1323,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
             return null;
         }
+
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+            // Hat can't be triggered via keyboard
+            // (Though maybe we should allow this somehow?s
+        }
     }
 
     /**
@@ -1457,6 +1464,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             updateClip();
         }
 
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+            // Not applicable
+        }
+
         public void updateClip(@UnknownInitialization(FloatingItem.class) TableRowLabelBorder this)
         {
             ResizableRectangle cur = getNode();
@@ -1540,6 +1553,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 return null;
             Bounds screenBounds = container.localToScreen(container.getBoundsInLocal());
             return screenBounds.contains(screenPos) ? ItemState.DIRECTLY_CLICKABLE : null;
+        }
+
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+            // Nothing to activate
         }
     }
 }

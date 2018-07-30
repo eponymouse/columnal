@@ -681,6 +681,13 @@ public class FXUtility
         return new Point2D(rectangle2D.getMinX() + rectangle2D.getWidth()*0.5, rectangle2D.getMinY() + rectangle2D.getHeight()*0.5);
     }
 
+    // Just uses the bounds limits like a rectangle.
+    @OnThread(Tag.Any)
+    public static Point2D getCentre(Bounds bounds)
+    {
+        return new Point2D(bounds.getMinX() + bounds.getWidth()*0.5, bounds.getMinY() + bounds.getHeight()*0.5);
+    }
+
     public static BoundingBox getWindowBounds(Window w)
     {
         return new BoundingBox(w.getX(), w.getY(), w.getWidth(), w.getHeight());

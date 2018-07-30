@@ -1,12 +1,10 @@
 package test.gui;
 
-import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.input.MouseButton;
-import javafx.scene.shape.Rectangle;
 import log.Log;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.service.query.NodeQuery;
@@ -25,7 +23,7 @@ public interface ClickTableLocationTrait extends FxRobotInterface
     @OnThread(Tag.Simulation)
     public default void clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
-        Bounds box = TestUtil.fx(() -> virtualGrid._test_getRectangleBoundsScreen(rectangleBounds));
+        Bounds box = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
         Log.debug("Bounds for " + rectangleBounds + " on screen are " + box);
         
         Node target = nodeQuery.lookup((Predicate<Node>)(node -> {

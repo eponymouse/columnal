@@ -60,6 +60,8 @@ public abstract class VirtualGridSupplier<T extends Node>
      */
     protected abstract @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPosition);
 
+    protected abstract void keyboardActivate(CellPosition cellPosition);
+    
     /**
      * Start editing that cell, if possible
      */

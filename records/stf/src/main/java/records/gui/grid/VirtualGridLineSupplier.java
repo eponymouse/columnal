@@ -95,6 +95,12 @@ public class VirtualGridLineSupplier extends VirtualGridSupplier<Line>
         return null;
     }
 
+    @Override
+    protected void keyboardActivate(CellPosition cellPosition)
+    {
+        // Not applicable
+    }
+
     public Collection<Line> _test_getColumnDividers()
     {
         return xLinesInUse.values();

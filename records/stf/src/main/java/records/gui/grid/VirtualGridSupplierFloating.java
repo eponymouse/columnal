@@ -85,6 +85,15 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
     }
 
+    @Override
+    protected void keyboardActivate(CellPosition cellPosition)
+    {
+        for (FloatingItem<?> item : items)
+        {
+            item.keyboardActivate(cellPosition);
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
     public static abstract class FloatingItem<T extends Node>
     {
@@ -155,5 +164,8 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
         {
         }
+
+        // Activate cell at the given point if something is displayed there
+        public abstract void keyboardActivate(CellPosition cellPosition);
     }
 }

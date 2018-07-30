@@ -142,7 +142,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         // Different ways of exiting:
 
         // Click on right-hand end of table header:
-        Bounds headerBox = TestUtil.fx(() -> virtualGrid._test_getRectangleBoundsScreen(rectangleBounds));
+        Bounds headerBox = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
         clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
 
         // Renaming involves thread hopping, so wait for a bit:
@@ -168,7 +168,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         // Different ways of exiting:
 
         // Click on right-hand end of table header:
-        Bounds headerBox = TestUtil.fx(() -> virtualGrid._test_getRectangleBoundsScreen(rectangleBounds));
+        Bounds headerBox = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
         clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
 
         // Renaming involves thread hopping, so wait for a bit:

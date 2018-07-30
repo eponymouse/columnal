@@ -80,7 +80,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
@@ -933,7 +932,7 @@ public final class VirtualGrid implements ScrollBindable
         });
     }
 
-    public Bounds _test_getRectangleBoundsScreen(RectangleBounds rectangleBounds)
+    public Bounds getRectangleBoundsScreen(RectangleBounds rectangleBounds)
     {
         return container.localToScreen(getRectangleBoundsInContainer(rectangleBounds));
     }
@@ -1196,15 +1195,7 @@ public final class VirtualGrid implements ScrollBindable
                             focusedCellPosition.doCopy();
                         e.consume();
                     }),
-                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                        @Nullable CellSelection sel = selection.get();
-                        if (sel != null)
-                        {
-                            activateCell(sel.getActivateTarget());
-                        }
-                        e.consume();
-                    }),
-                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.SPACE), e -> {
+                    InputMap.<Event, KeyEvent>consume(EventPattern.anyOf(EventPattern.keyPressed(KeyCode.ENTER), EventPattern.keyPressed(KeyCode.SPACE)), e -> {
                         @Nullable CellSelection sel = selection.get();
                         if (sel != null)
                         {
@@ -1557,7 +1548,7 @@ public final class VirtualGrid implements ScrollBindable
     {
         for (VirtualGridSupplier<? extends Node> nodeSupplier : nodeSuppliers)
         {
-            nodeSupplier.startEditing(null, cellPosition);
+            nodeSupplier.keyboardActivate(cellPosition);
         }
     }
 
@@ -1741,6 +1732,17 @@ public final class VirtualGrid implements ScrollBindable
                 FXUtility.addChangeListenerPlatformNN(button.visibleProperty(), newButtonVisibleListener);
             else
                 pendingButtonVisibleListener = newButtonVisibleListener;
+        }
+
+        @Override
+        protected void keyboardActivate(CellPosition cellPosition)
+        {
+            if (cellPosition.equals(buttonPosition))
+            {
+                // Offer to create a table at that location, but we need to ask data or transform, if it's not the first table:
+                Bounds bounds = getRectangleBoundsScreen(new RectangleBounds(cellPosition, cellPosition));
+                createTable.createTable(cellPosition, FXUtility.getCentre(bounds), FXUtility.mouse(VirtualGrid.this));
+            }
         }
     }
     

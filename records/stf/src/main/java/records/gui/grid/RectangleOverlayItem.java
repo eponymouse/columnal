@@ -70,4 +70,9 @@ public abstract class RectangleOverlayItem extends FloatingItem<ResizableRectang
         return null;
     }
 
+    @Override
+    public void keyboardActivate(CellPosition cellPosition)
+    {
+        // Do nothing -- we're only an overlay
+    }
 }

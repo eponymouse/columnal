@@ -89,6 +89,12 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     }
 
     @Override
+    protected void keyboardActivate(CellPosition cellPosition)
+    {
+        startEditing(null, cellPosition);
+    }
+
+    @Override
     protected void startEditing(@Nullable Point2D screenPosition, CellPosition cellPosition)
     {
         @Nullable StructuredTextField stf = getItemAt(cellPosition);

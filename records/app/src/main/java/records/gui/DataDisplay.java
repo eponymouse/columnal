@@ -18,6 +18,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -567,6 +568,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         private @Nullable final FXPlatformConsumer<TableId> renameTable;
         private final VirtualGridSupplierFloating floatingItems;
         private @MonotonicNonNull ErrorableTextField<TableId> tableNameField;
+        private @MonotonicNonNull BorderPane borderPane;
 
         public TableHeaderItem(@Nullable TableManager tableManager, TableId initialTableName, @Nullable FXPlatformConsumer<TableId> renameTable, VirtualGridSupplierFloating floatingItems)
         {
@@ -631,6 +633,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 });
             }
             final BorderPane borderPane = new BorderPane(tableNameField.getNode());
+            this.borderPane = borderPane;
             borderPane.getStyleClass().add("table-display-table-title");
             borderPane.getStyleClass().addAll(getExtraTitleStyleClasses());
             BorderPane.setAlignment(tableNameField.getNode(), Pos.CENTER_LEFT);
@@ -690,6 +693,20 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                     contextMenu.show(borderPane, e.getScreenX(), e.getScreenY());
             });
             return borderPane;
+        }
+
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+            boolean correctRow = getPosition().rowIndex == cellPosition.rowIndex;
+            boolean correctColumn = getPosition().columnIndex <= cellPosition.columnIndex && cellPosition.columnIndex <= getBottomRightIncl().columnIndex;
+            
+            if (correctRow && correctColumn)
+            {
+                @Nullable ContextMenu contextMenu = FXUtility.mouse(DataDisplay.this).getTableHeaderContextMenu();
+                if (contextMenu != null && borderPane != null)
+                    contextMenu.show(borderPane, Side.BOTTOM, 0, 0);
+            }
         }
 
         @OnThread(Tag.FXPlatform)
@@ -820,6 +837,15 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+            if (getFloatingPosition().equals(cellPosition) && columnActions != null && columnActions.getPrimaryEditOperation() != null)
+            {
+                columnActions.getPrimaryEditOperation().run();
+            }
+        }
+
+        @Override
         public void adjustForContainerTranslation(Pane node, Pair<DoubleExpression, DoubleExpression> translateXY)
         {
             FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
@@ -895,6 +921,13 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 });
             }
             return typeLabel;
+        }
+
+        @Override
+        public void keyboardActivate(CellPosition cellPosition)
+        {
+            if (getFloatingPosition().equals(cellPosition) && editOp != null)
+                editOp.run();
         }
     }
 }

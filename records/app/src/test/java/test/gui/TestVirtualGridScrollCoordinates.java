@@ -129,6 +129,11 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
             {
                 return null;
             }
+
+            @Override
+            public void keyboardActivate(CellPosition cellPosition)
+            {
+            }
         });
 
         topLeft = new Label("topLeft");
@@ -157,6 +162,11 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
             public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
             {
                 return null;
+            }
+
+            @Override
+            public void keyboardActivate(CellPosition cellPosition)
+            {
             }
         });
     }

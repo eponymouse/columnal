@@ -124,6 +124,12 @@ public class RowLabelSupplier extends VirtualGridSupplierIndividual<LabelPane, V
         });
     }
 
+    @Override
+    protected void keyboardActivate(CellPosition cellPosition)
+    {
+        // We float so no keyboard activation
+    }
+
     public static enum Visible { VISIBLE }
     
     @OnThread(Tag.FXPlatform)
