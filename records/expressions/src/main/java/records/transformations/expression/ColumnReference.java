@@ -22,6 +22,7 @@ import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility.ListEx;
 
@@ -121,8 +122,13 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public String save(BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entirecolumn " : "@column ")
-            + OutputBuilder.quotedIfNecessary(renames.columnId(tableName, columnName).getOutput());
+        String ideal = renames.columnId(tableName, columnName).getOutput();
+        // Sanity check to avoid saving something we can't load:
+        String ident = IdentifierUtility.asExpressionIdentifier(ideal);
+        if (ident != null)
+            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entirecolumn " : "@column ") + ident;
+        else
+            return "@unfinished " + OutputBuilder.quoted(ideal);
     }
 
     @Override
