@@ -658,7 +658,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 ColumnCompletion cc = (ColumnCompletion)c;
                 setPrefixColumn(cc.columnReference);
-                newText = cc.columnReference.getColumnId().getRaw();
+                newText = cc.fullText;
             }
             else if (c == varDeclCompletion)
             {
