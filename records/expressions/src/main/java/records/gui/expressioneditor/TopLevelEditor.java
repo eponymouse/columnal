@@ -50,7 +50,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     private final FlowPane container;
     private final ScrollPaneFill scrollPane;
     private final List<FXPlatformConsumer<Node>> focusListeners = new ArrayList<>();
-    protected final TableManager tableManager;
+    private final TypeManager typeManager;
     
     // Selections take place within one consecutive and go from one operand to another (inclusive):
     private @Nullable SelectionInfo<?, ?> selection;
@@ -58,7 +58,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     private boolean selectionLocked;
     private final ErrorMessagePopup errorMessagePopup;
 
-    public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TableManager tableManager, String... styleClasses)
+    public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TypeManager typeManager, String... styleClasses)
     {
         super(operations, null, null, "");
         this.container = new TopLevelEditorFlowPane();
@@ -71,7 +71,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             }
         };
         scrollPane.getStyleClass().add("top-level-editor-scroll-pane");
-        this.tableManager = tableManager;
+        this.typeManager = typeManager;
 
         container.getStyleClass().add("top-level-editor");
         container.getStyleClass().addAll(styleClasses);
@@ -163,15 +163,9 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             unmaskErrors();
     }
 
-
-    public TableManager getTableManager()
-    {
-        return tableManager;
-    }
-
     public TypeManager getTypeManager()
     {
-        return tableManager.getTypeManager();
+        return typeManager;
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
@@ -21,9 +22,9 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
 {
     private final FXPlatformConsumer<@Nullable DataType> onChange;
 
-    public TypeEditor(TableManager tableManager, TypeExpression startingValue, FXPlatformConsumer<@Nullable DataType> onChange)
+    public TypeEditor(TypeManager typeManager, TypeExpression startingValue, FXPlatformConsumer<@Nullable DataType> onChange)
     {
-        super(new TypeExpressionOps(), tableManager, "type-editor");
+        super(new TypeExpressionOps(), typeManager, "type-editor");
         
         this.onChange = onChange;
         onChange.consume(null);

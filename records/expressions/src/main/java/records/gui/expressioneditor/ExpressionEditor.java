@@ -56,8 +56,9 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     private final FXPlatformConsumer<@NonNull Expression> onChange;
     // Does it allow use of same-row column references?  Thinks like Transform, Sort, do -- but Aggregate does not.
     private final boolean allowsSameRow;
+    private final TableManager tableManager;
 
-    
+
     private ObjectProperty<@Nullable DataType> latestType = new SimpleObjectProperty<>(null);
 
     public ObjectExpression<@Nullable DataType> typeProperty()
@@ -121,7 +122,8 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
 
     public ExpressionEditor(@Nullable Expression startingValue, ObjectExpression<@Nullable Table> srcTable, boolean allowsSameRow, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(EXPRESSION_OPS, tableManager, "expression-editor");
+        super(EXPRESSION_OPS, tableManager.getTypeManager(), "expression-editor");
+        this.tableManager = tableManager;
         this.allowsSameRow = allowsSameRow;
         
         
