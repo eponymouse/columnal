@@ -3,7 +3,9 @@ package utility.gui;
 import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.layout.GridPane;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -21,31 +23,44 @@ public class LabelledGrid extends GridPane
 
     public static class Row
     {
-        private final Label label;
+        private final Node lhs;
         private final @Nullable HelpBox helpBox;
-        private final Node item;
+        private final @Nullable Node item;
 
         public Row(Label label, @Nullable HelpBox helpBox, Node item)
         {
-            this.label = label;
+            setHalignment(label, HPos.RIGHT);
+            this.lhs = label;
             this.helpBox = helpBox;
             this.item = item;
         }
+        
+        public Row(RadioButton radio, @Nullable HelpBox helpBox)
+        {
+            setHalignment(radio, HPos.LEFT);
+            this.lhs = radio;
+            this.helpBox = helpBox;
+            this.item = null;
+        }
     }
 
-    public LabelledGrid()
+    public LabelledGrid(Row... rows)
     {
         getStyleClass().add("labelled-grid");
+        for (Row row : rows)
+        {
+            addRow(row);
+        }
     }
 
-    public int addRow(Row row)
+    public int addRow(@UnknownInitialization(GridPane.class) LabelledGrid this, Row row)
     {
         int col = 0;
-        add(row.label, col++, rows);
-        setHalignment(row.label, HPos.RIGHT);
+        add(row.lhs, col++, rows);
         if (row.helpBox != null)
             add(row.helpBox, col++, rows);
-        add(row.item, col++, rows);
+        if (row.item != null)
+            add(row.item, col++, rows);
         return rows++;
     }
     

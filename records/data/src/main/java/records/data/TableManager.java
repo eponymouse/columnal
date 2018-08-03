@@ -125,7 +125,7 @@ public class TableManager
     public List<Table> loadAll(String completeSrc) throws UserException, InternalException
     {
         FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
-        // TODO load units
+        unitManager.loadUserUnits(file.units());
         typeManager.loadTypeDecls(file.types());
         List<Table> loaded = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>();

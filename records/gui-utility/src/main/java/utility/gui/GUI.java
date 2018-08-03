@@ -8,6 +8,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
@@ -172,6 +173,16 @@ public class GUI
     }
 
     /**
+     * Makes a BorderPane with given top, center and bottom, other items left null.
+     */
+    public static BorderPane borderTopCenterBottom(Node top, Node center, Node bottom, String... styleClasses)
+    {
+        BorderPane borderPane = new BorderPane(center, top, null, bottom, null);
+        borderPane.getStyleClass().addAll(styleClasses);
+        return borderPane;
+    }
+
+    /**
      * Makes a BorderPane with given left and right, other items left null.
      */
     public static BorderPane borderLeftRight(Node left, Node right, String... styleClasses)
@@ -181,6 +192,17 @@ public class GUI
         return borderPane;
     }
 
+    /**
+     * Makes a BorderPane with given left and right, other items left null.
+     */
+    public static BorderPane borderLeftCenterRight(Node left, Node center, Node right, String... styleClasses)
+    {
+        BorderPane borderPane = new BorderPane(center, null, right, null, left);
+        borderPane.getStyleClass().addAll(styleClasses);
+        return borderPane;
+    }
+    
+    
     /**
      * Like label but the text is permitted to wrap (by using a TextFlow)
      */
@@ -224,9 +246,16 @@ public class GUI
         return borderPane;
     }
 
-    public static LabelledGrid.Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
+    public static LabelledGrid.Row radioGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, ToggleGroup toggleGroup)
     {
-        return new LabelledGrid.Row(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
+        RadioButton radioButton = new RadioButton(TranslationUtility.getString(labelKey));
+        radioButton.setToggleGroup(toggleGroup);
+        return new LabelledGrid.Row(radioButton, helpBox(helpId, radioButton));
+    }
+
+    public static LabelledGrid.Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node)
+    {
+        return new LabelledGrid.Row(label(labelKey), helpBox(helpId, node), node);
     }
 
     private static HelpBox helpBox(@HelpKey String helpId, @Nullable Node relevantNode)
@@ -398,5 +427,13 @@ public class GUI
         FXUtility.addChangeListenerPlatformNN(label.prefWidthProperty(), w -> update.run());
         FXUtility.addChangeListenerPlatformNN(label.widthProperty(), w -> update.run());
         FXUtility.addChangeListenerPlatformNN(label.textProperty(), w -> update.run());
+    }
+
+    public static Node splitPaneVert(Node top, Node bottom, String... styleClasses)
+    {
+        SplitPane splitPane = new SplitPane(top, bottom);
+        splitPane.setOrientation(Orientation.VERTICAL);
+        splitPane.getStyleClass().addAll(styleClasses);
+        return splitPane;
     }
 }

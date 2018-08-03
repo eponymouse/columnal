@@ -44,6 +44,7 @@ public class TestUnit
         mgr = new UnitManager();
     }
 
+    @SuppressWarnings("identifier")
     @Test
     public void unitToString() throws InternalException
     {
@@ -63,6 +64,7 @@ public class TestUnit
         assertEquals("m/(USD*s^2)", Unit._test_make(m, 1, d, -1, s, -2).toString());
     }
 
+    @SuppressWarnings("identifier")
     @Test
     public void parse() throws InternalException, UserException
     {
@@ -97,6 +99,7 @@ public class TestUnit
         assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g * l * g^2*s * s)"));
     }
 
+    @SuppressWarnings("identifier")
     @Test
     public void testCanon() throws InternalException, UserException
     {

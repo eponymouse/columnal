@@ -35,6 +35,11 @@ public class SingleUnit implements Comparable<SingleUnit>
         return suffix;
     }
 
+    public String getDescription()
+    {
+        return description;
+    }
+
     @Override
     public boolean equals(@Nullable Object o)
     {

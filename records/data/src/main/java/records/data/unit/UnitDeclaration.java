@@ -1,6 +1,8 @@
 package records.data.unit;
 
+import annotation.identifier.qual.UnitIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import utility.Pair;
 
@@ -13,7 +15,6 @@ import java.util.List;
 public class UnitDeclaration
 {
     private final SingleUnit definedUnit;
-    private final List<String> otherNames = new ArrayList<>();
     private final @Nullable Pair<Rational, Unit> equivalentTo;
     private final Unit cachedSingleUnit;
 
@@ -34,11 +35,7 @@ public class UnitDeclaration
         return cachedSingleUnit;
     }
 
-    public void addAlias(String newName)
-    {
-        otherNames.add(newName);
-    }
-
+    @Pure
     public @Nullable Pair<Rational, Unit> getEquivalentTo()
     {
         return equivalentTo;

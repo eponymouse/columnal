@@ -166,9 +166,10 @@ class ComboBox<T>
 {
     ObjectProperty<@Nullable T> valueProperty();
 }
-class TableView<T>
+class TableView<S>
 {
-    //@UnderInitialization(TableView.class) List getItems();
+    ObsverableList<S> getItems(@UnknownInitialization(javafx.scene.control.TableView.class) TableView<S> this);
+    ObservableList<TableColumn<S,?>> getColumns(@UnknownInitialization(javafx.scene.control.TableView.class) TableView<S> this);
 }
 class ListView<T>
 {
@@ -257,7 +258,8 @@ class BorderPane
 }
 class GridPane
 {
-    //@UnknownInitialization ObservableList<String> getStyleClass();
+    //ObservableList<String> getStyleClass(@UnknownInitialization(javafx.scene.layout.GridPane.class) GridPane this);
+    public void add(@UnknownInitialization(javafx.scene.layout.GridPane.class) GridPane this, Node child, int columnIndex, int rowIndex);
 }
 class StackPane
 {

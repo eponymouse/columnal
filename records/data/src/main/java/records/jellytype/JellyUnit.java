@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.identifier.qual.UnitIdentifier;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -217,13 +218,15 @@ public class JellyUnit
     private static JellyUnit load(SingleUnitContext ctx, UnitManager mgr) throws InternalException
     {
         JellyUnit u = new JellyUnit();
+        @SuppressWarnings("identifier")
+        @UnitIdentifier String unitName = ctx.IDENT().getText();
         if (ctx.UNITVAR() != null)
         {
-            u.units.put(ComparableEither.left(ctx.IDENT().getText()), 1);
+            u.units.put(ComparableEither.left(unitName), 1);
         }
         else
         {
-            u.units.put(ComparableEither.right(mgr.getDeclared(ctx.IDENT().getText())), 1);
+            u.units.put(ComparableEither.right(mgr.getDeclared(unitName)), 1);
         }
         return u;
     }
