@@ -28,9 +28,9 @@ UNIT mg "Milligrams" = 10^-3 g
 
 
 UNIT USD "US Dollars" PREFIX "$"
-ALIAS $ = USD
+// ALIAS $ = USD
 UNIT GBP "Great British Pounds" PREFIX "£"
-ALIAS £ = GBP
+// ALIAS £ = GBP
 UNIT EUR "Euros" PREFIX "€"
 ALIAS € = EUR
 
