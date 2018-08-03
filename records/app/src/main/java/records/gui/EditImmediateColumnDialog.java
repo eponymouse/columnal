@@ -74,7 +74,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         
         StructuredTextField defaultValueField = new StructuredTextField();
         defaultValueField.getStyleClass().add("default-value");
-        typeEditor = new TypeEditor(tableManager, new UnfinishedTypeExpression(""), t -> {
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), new UnfinishedTypeExpression(""), t -> {
             customDataType = t;
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();
