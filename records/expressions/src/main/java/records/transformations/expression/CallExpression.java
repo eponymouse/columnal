@@ -109,8 +109,11 @@ public class CallExpression extends Expression
                     ColumnReference colRef = (ColumnReference)param;
                     // Offer to turn a this-row column reference into whole column:
                     onError.recordQuickFixes(this, Collections.singletonList(
-                        new QuickFix<>("fix.wholeColumn", this, () ->
-                            new CallExpression(function, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN))
+                        new QuickFix<>("fix.wholeColumn", this, () -> {
+                            @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                            CallExpression newCall = new CallExpression(function, new ColumnReference(colRef.getTableId(), colRef.getColumnId(), ColumnReferenceType.WHOLE_COLUMN));
+                            return newCall;
+                        }
                         )
                     ));
                 }
@@ -119,7 +122,11 @@ public class CallExpression extends Expression
                     // Offer to turn tuple into a list:
                     Expression replacementParam = new ArrayExpression(((TupleExpression)param).getMembers());
                     onError.recordQuickFixes(this, Collections.singletonList(
-                            new QuickFix<>("fix.squareBracketAs", this, () -> new CallExpression(function, replacementParam))
+                            new QuickFix<>("fix.squareBracketAs", this, () -> {
+                                @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                                CallExpression newCall = new CallExpression(function, replacementParam);
+                                return newCall;
+                            })
                     ));
                 }
                 // Although we may want to pass a tuple as a single-item list, it's much less likely
@@ -130,7 +137,11 @@ public class CallExpression extends Expression
                     @SuppressWarnings("recorded")
                     Expression replacementParam = new ArrayExpression(ImmutableList.of(param));
                     onError.recordQuickFixes(this, Collections.singletonList(
-                        new QuickFix<>("fix.singleItemList", this, () -> new CallExpression(function, replacementParam))
+                        new QuickFix<>("fix.singleItemList", this, () -> {
+                            @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                            CallExpression newCall = new CallExpression(function, replacementParam);
+                            return newCall;
+                        })
                     ));
                 }
                 
@@ -261,6 +272,7 @@ public class CallExpression extends Expression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         if (this == toReplace)

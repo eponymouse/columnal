@@ -121,6 +121,7 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable @Recorded Expression replaceLHS, @Nullable @Recorded Expression replaceRHS);
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         if (this == toReplace)

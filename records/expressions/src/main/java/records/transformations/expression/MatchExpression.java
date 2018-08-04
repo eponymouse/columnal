@@ -166,6 +166,7 @@ public class MatchExpression extends NonOperatorExpression
             return r.stream();
         }
 
+        @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
         public Function<MatchExpression, MatchClause> replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
             return me -> me.new MatchClause(Utility.mapList(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
@@ -283,6 +284,7 @@ public class MatchExpression extends NonOperatorExpression
             return guard;
         }
 
+        @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
         public Pattern replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
             return new Pattern(pattern.replaceSubExpression(toReplace, replaceWith), guard == null ? null : guard.replaceSubExpression(toReplace, replaceWith));
@@ -459,6 +461,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         if (toReplace == this)

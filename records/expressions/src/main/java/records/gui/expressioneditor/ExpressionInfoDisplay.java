@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -159,6 +160,7 @@ public class ExpressionInfoDisplay
                 popup.hidePopup(true);
             try
             {
+                @SuppressWarnings("recorded")
                 Pair<EXPRESSION, EXPRESSION> replaceWith = q.getReplacement();
                 editor.replaceSubExpression(replaceWith.getFirst(), replaceWith.getSecond());
             }

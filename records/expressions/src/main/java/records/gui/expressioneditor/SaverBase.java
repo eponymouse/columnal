@@ -431,7 +431,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
         }));
     }
 
-    protected abstract EXPRESSION record(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, EXPRESSION expression);
+    protected abstract @Recorded EXPRESSION record(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, EXPRESSION expression);
 
     protected abstract EXPRESSION keywordToInvalid(KEYWORD keyword);
 
@@ -474,12 +474,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
             return valid;
         }
 
-        public ArrayList<Either<OP, EXPRESSION>> getInvalid()
+        public ArrayList<Either<OP, @Recorded EXPRESSION>> getInvalid()
         {
             return invalid;
         }
 
-        public ArrayList<EXPRESSION> getValidOperands()
+        public ArrayList<@Recorded EXPRESSION> getValidOperands()
         {
             return validOperands;
         }
@@ -600,7 +600,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
                 {
                     @Recorded EXPRESSION invalidOpExpression = makeInvalidOpExpression.apply(interleave(expressionExps, ops));
                     errorDisplayerRecord.getRecorder().recordError(invalidOpExpression, StyledString.s("Surrounding brackets required"));
-                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> e)));
+                    errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Utility.mapList(possibles, e -> new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> {
+                        @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                        @Recorded EXPRESSION r = e;
+                        return r;
+                    })));
                     return invalidOpExpression;
                 }
             }
@@ -630,7 +634,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
 
                 if (replacement != null)
                 {
-                    @NonNull EXPRESSION replacementFinal = replacement;
+                    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                    @NonNull @Recorded EXPRESSION replacementFinal = replacement;
                     errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
                         new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> replacementFinal)
                     ));
@@ -697,7 +702,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
                 if (replacement != null)
                 {
                     errorDisplayerRecord.getRecorder().recordQuickFixes(invalidOpExpression, Collections.singletonList(
-                        new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> replacement)
+                        new QuickFix<>("fix.bracketAs", invalidOpExpression, () -> {
+                            @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
+                            @Recorded EXPRESSION r = replacement;
+                            return r;
+                        })
                     ));
                 }
             }
@@ -737,7 +746,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
                     items.addAll(Utility.mapListI(prefixItemsOnFailedClose.get(), Either::right));
                     items.add(Either.right(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer))));
                     if (terminator != null)
-                        items.add(Either.right(makeSingleInvalid(terminator)));
+                        items.add(Either.right(record(keywordErrorDisplayer, keywordErrorDisplayer, makeSingleInvalid(terminator))));
                     @Recorded EXPRESSION invalid = makeInvalidOp(start, keywordErrorDisplayer, items.build());
                     currentScopes.peek().items.add(Either.left(invalid));
                 }

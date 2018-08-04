@@ -136,7 +136,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         
         if (collectedItems.isValid())
         {
-            ArrayList<Expression> validOperands = collectedItems.getValidOperands();
+            ArrayList<@Recorded Expression> validOperands = collectedItems.getValidOperands();
             ArrayList<Op> validOperators = collectedItems.getValidOperators();
             @Nullable @Recorded Expression e;
             // Single expression?

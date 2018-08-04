@@ -175,6 +175,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         if (this == toReplace)

@@ -107,6 +107,7 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         if (this == toReplace)

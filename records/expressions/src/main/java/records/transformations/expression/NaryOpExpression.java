@@ -90,6 +90,7 @@ public abstract class NaryOpExpression extends Expression
     public abstract NaryOpExpression copyNoNull(List<@Recorded Expression> replacements);
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public Expression replaceSubExpression(Expression toReplace, Expression replaceWith)
     {
         if (this == toReplace)

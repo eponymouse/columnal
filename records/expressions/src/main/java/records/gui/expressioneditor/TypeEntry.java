@@ -235,7 +235,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
 
         protected TypeCompletion(String completion, @LocalizableKey String shortKey)
         {
-            this(completion, TranslationUtility.getString(shortKey), false);
+            this(completion, shortKey, false);
         }
 
         @Override

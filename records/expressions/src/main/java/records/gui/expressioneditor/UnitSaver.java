@@ -64,7 +64,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     class Context {}
     
     @Override
-    protected UnitExpression makeExpression(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver> brackets)
+    protected @Recorded UnitExpression makeExpression(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver> brackets)
     {
         if (content.isEmpty())
             return new InvalidOperatorUnitExpression(ImmutableList.of());
@@ -73,7 +73,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
 
         if (collectedItems.isValid())
         {
-            ArrayList<UnitExpression> validOperands = collectedItems.getValidOperands();
+            ArrayList<@Recorded UnitExpression> validOperands = collectedItems.getValidOperands();
             ArrayList<UnitOp> validOperators = collectedItems.getValidOperators();
             
             // Single expression?
@@ -115,7 +115,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<UnitOp, @Recorded UnitExpression>> items)
+    protected @Recorded UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<UnitOp, @Recorded UnitExpression>> items)
     {
         return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.either(op -> new InvalidSingleUnitExpression(op.getContent()), y -> y))));
     }
@@ -138,9 +138,10 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     if (terminator == UnitBracket.CLOSE_ROUND)
                     {
                         // All is well:
-                        UnitExpression result = makeContent.fetchContent(brackets);
+                        @Recorded UnitExpression result = makeContent.fetchContent(brackets);
                         currentScopes.peek().items.add(Either.left(result));
-                    } else
+                    } 
+                    else
                     {
                         // Error!
                         keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
@@ -150,7 +151,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         items.add(makeContent.fetchContent(brackets));
                         if (terminator != null)
                             items.add(new InvalidSingleUnitExpression(terminator.getContent()));
-                        InvalidOperatorUnitExpression invalid = new InvalidOperatorUnitExpression(items.build());
+                        @Recorded UnitExpression invalid = record(brackets.start, keywordErrorDisplayer, new InvalidOperatorUnitExpression(items.build()));
                         currentScopes.peek().items.add(Either.left(invalid));
                     }
                 }
@@ -174,7 +175,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected UnitExpression record(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, UnitExpression unitExpression)
+    protected @Recorded UnitExpression record(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, UnitExpression unitExpression)
     {
         return errorDisplayerRecord.recordUnit(start, end, unitExpression);
     }

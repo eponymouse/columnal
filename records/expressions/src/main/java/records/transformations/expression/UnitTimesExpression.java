@@ -102,6 +102,7 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
     {
         if (this == toReplace)
