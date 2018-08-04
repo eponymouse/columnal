@@ -23,6 +23,7 @@ import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -168,7 +169,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             // Item for column name:
             if (headerRows.showingColumnNameRow)
             {
-                FloatingItem<Pane> columnNameItem = new ColumnNameItem(columnIndex, column, ops);
+                FloatingItem<Label> columnNameItem = new ColumnNameItem(columnIndex, column, ops);
                 columnHeaderItems.add(columnNameItem);
                 floatingItems.addItem(columnNameItem);
             }
@@ -740,7 +741,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         public @Nullable FXPlatformRunnable getPrimaryEditOperation(); 
     }
 
-    private class ColumnNameItem extends FloatingItem<Pane>
+    private class ColumnNameItem extends FloatingItem<Label>
     {
         private final int columnIndex;
         private final ColumnDetails column;
@@ -794,14 +795,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane makeCell(VisibleBounds visibleBounds)
+        public Label makeCell(VisibleBounds visibleBounds)
         {
             Label columnName = new Label(column.getColumnId().getRaw());
             columnName.getStyleClass().add("column-title");
             if (columnActions != null && columnActions.getPrimaryEditOperation() != null)
             {
                 @NonNull FXPlatformRunnable primaryEditOp = columnActions.getPrimaryEditOperation();
-                columnName.getStyleClass().add("column-title-edit");
+                addEditableStyling(columnName);
                 columnName.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
                     {
@@ -810,14 +811,14 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                     }
                 });
             }
-            final BorderPane borderPane = new BorderPane(columnName);
-            borderPane.getStyleClass().add("table-display-column-title");
-            BorderPane.setAlignment(columnName, Pos.CENTER_LEFT);
-            BorderPane.setMargin(columnName, new Insets(0, 0, 0, 2));
+            
+            columnName.getStyleClass().add("table-display-column-title");
+            //BorderPane.setAlignment(columnName, Pos.CENTER_LEFT);
+            //BorderPane.setMargin(columnName, new Insets(0, 0, 0, 2));
             FXUtility.addChangeListenerPlatformNN(cellStyles, cellStyles -> {
                 for (CellStyle style : CellStyle.values())
                 {
-                    style.applyStyle(borderPane, cellStyles.contains(style));
+                    style.applyStyle(columnName, cellStyles.contains(style));
                 }
             });
 
@@ -830,10 +831,10 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 menuItem.setDisable(true);
                 contextMenu.getItems().setAll(menuItem);
             }
-            borderPane.setOnContextMenuRequested(e -> contextMenu.show(borderPane, e.getScreenX(), e.getScreenY()));
+            columnName.setOnContextMenuRequested(e -> contextMenu.show(columnName, e.getScreenX(), e.getScreenY()));
             columnName.setContextMenu(contextMenu);
             
-            return borderPane;
+            return columnName;
         }
 
         @Override
@@ -846,7 +847,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        public void adjustForContainerTranslation(Pane node, Pair<DoubleExpression, DoubleExpression> translateXY)
+        public void adjustForContainerTranslation(Label node, Pair<DoubleExpression, DoubleExpression> translateXY)
         {
             FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
                 containerTranslateY = ty.doubleValue();
@@ -855,12 +856,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @OnThread(Tag.FX)
-        private void updateTranslate(@Nullable Pane borderPane)
+        private void updateTranslate(@Nullable Label label)
         {
-            if (borderPane != null)
+            if (label != null)
             {
                 // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
-                borderPane.setTranslateY(Utility.clampIncl(0.0, - (borderPane.getLayoutY() + containerTranslateY), maxTranslateY));
+                label.setTranslateY(Utility.clampIncl(0.0, - (label.getLayoutY() + containerTranslateY), maxTranslateY));
             }
         }
     }
@@ -911,7 +912,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             if (editOp != null)
             {
                 @NonNull FXPlatformRunnable editOpFinal = editOp;
-                typeLabel.getStyleClass().add("column-title-edit");
+                addEditableStyling(typeLabel);
                 typeLabel.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getButton() == MouseButton.PRIMARY)
                     {
@@ -929,5 +930,11 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             if (getFloatingPosition().equals(cellPosition) && editOp != null)
                 editOp.run();
         }
+    }
+
+    protected static void addEditableStyling(Label editable)
+    {
+        editable.getStyleClass().add("column-title-edit");
+        Tooltip.install(editable, new Tooltip(TranslationUtility.getString("click.to.change")));
     }
 }
