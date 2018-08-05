@@ -77,7 +77,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             {
                 return SimpleLiteralNode.this.isFocused();
             }
-        }, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> Utility.containsCodepoint(ending, next));
+        }, () -> true, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> Utility.containsCodepoint(ending, next));
         
         // We don't put anything in the type label, because it's clearly a String:
         Label typeLabel = new Label();

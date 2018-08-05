@@ -38,6 +38,7 @@ import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -104,6 +105,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
      * @param onSelect The action to take when a completion is selected.
      *                 Should not set the text
      *                 for the text field, but instead return the new text to be set.
+     * @param showOnFocus Should we show as soon as we get focused?  If false, we show when
+     *                    a character has been typed.
      * @param inNextAlphabet The alphabet of a slot is the set of characters *usually*
      *                       featured.  E.g. for operators it's any characters that
      *                       feature in an operator. For general entry it's the inverse
@@ -112,7 +115,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, CompletionListener<C> onSelect, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
+    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
     {
         // Disable autofix so that the popup doesn't get moved to cover up text field:
         setAutoFix(false);
@@ -187,18 +190,25 @@ public class AutoComplete<C extends Completion> extends PopupControl
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focused -> {
             if (focused)
             {
-                Pair<Double, Double> pos = calculatePosition();
+                
                 updateCompletions(calculateCompletions, textField.getText());
-                if (!isShowing() && pos != null)
-                {
-                    //Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
-                    // TODO see if we can find a useful place to show this:
-                    //instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
-                    show(textField, pos.getFirst(), pos.getSecond());
-                }
+                // We use runAfter because completing previous field can focus us before it has its text
+                // in place, so the showOnFocus call returns the wrong value.  The user won't notice
+                // big difference if auto complete appears a fraction later, so we don't lose anything:
+                FXUtility.runAfter(() -> {
+                    Pair<Double, Double> pos = calculatePosition();
+                    if (!isShowing() && pos != null && showOnFocus.get())
+                    {
+                        //Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
+                        // TODO see if we can find a useful place to show this:
+                        //instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
+                        show(textField, pos.getFirst(), pos.getSecond());
+                    }
+                });
             }
             else
             {
+                // Focus leaving and we are showing:
                 if (isShowing())
                 {
                     // Update completions in case it was recently changed
@@ -289,6 +299,14 @@ public class AutoComplete<C extends Completion> extends PopupControl
             int[] codepoints = text.codePoints().toArray();
             updatePosition(); // Just in case
             List<C> available = updateCompletions(calculateCompletions, text.trim());
+
+            // Show if not already showing:
+            Pair<Double, Double> pos = calculatePosition();
+            if (!isShowing() && pos != null)
+            {
+                show(textField, pos.getFirst(), pos.getSecond());
+            }
+            
             // If they type an operator or non-operator char, and there is
             // no completion containing such a char, finish with current and move
             // to next (e.g. user types "true&"; as long as there's no current completion

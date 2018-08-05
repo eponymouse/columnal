@@ -10,6 +10,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -315,5 +316,16 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     public Stream<String> getParentStyles()
     {
         return Stream.empty();
+    }
+
+    @Override
+    public boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<Expression, ExpressionSaver> child)
+    {
+        // We show immediately if we are preceded by an operator:
+        int index = Utility.indexOfRef(this.children, child);
+        if (index == 0)
+            return this.children.size() == 1; // Show if otherwise empty
+        ConsecutiveChild<Expression, ExpressionSaver> before = this.children.get(index - 1);
+        return (before instanceof GeneralExpressionEntry && ((GeneralExpressionEntry)before).isOperator());
     }
 }

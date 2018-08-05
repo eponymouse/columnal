@@ -816,6 +816,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         children.forEach(EEDisplayNode::cleanup);
     }
 
+    /**
+     * Should we show autocomplete window for given child (which has just been focused), or not?
+     * General rule is don't show if expression is currently complete, show if they need to type something.
+     */
+    public abstract boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child);
+
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitSaver> UNIT_OPS = new UnitExpressionOps();
     public static final OperandOps<TypeExpression, TypeSaver> TYPE_OPS = new TypeExpressionOps();

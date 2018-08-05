@@ -4,6 +4,7 @@ import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.TableManager;
@@ -74,5 +75,15 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     public Stream<String> getParentStyles()
     {
         return Stream.empty();
+    }
+
+    @Override
+    public boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<TypeExpression, TypeSaver> child)
+    {
+        // We show if the current type is at all incomplete.  Slight hack for complex types
+        // (will show after [] when issue is between brackets) but works fine for simple types.
+        
+        // TODO this should be toJellyType, once we add type variable usage to the editor
+        return mostRecentSave == null || mostRecentSave.toDataType(getTypeManager()) == null;
     }
 }

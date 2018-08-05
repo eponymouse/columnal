@@ -4,6 +4,7 @@ import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableMap;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.TableManager;
@@ -76,4 +77,16 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
     {
         return Stream.empty();
     }
+
+    @Override
+    public boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<UnitExpression, UnitSaver> child)
+    {
+        // We show immediately if we are preceded by an operator:
+        int index = Utility.indexOfRef(this.children, child);
+        if (index == 0)
+            return this.children.size() == 1; // Show if otherwise empty
+        ConsecutiveChild<UnitExpression, UnitSaver> before = this.children.get(index - 1);
+        return (before instanceof UnitEntry && ((UnitEntry)before).isOperator());
+    }
+
 }

@@ -193,7 +193,7 @@ public class EditSortDialog extends LightDialog<ImmutableList<Pair<ColumnId, Dir
                         return Stream.empty();
                     }
                 }).filter(c -> c.getName().getOutput().contains(s)).map(ColumnCompletion::new),
-                getListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
+                getListener(), () -> true, WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, (cur, next) -> false);
             FXUtility.addChangeListenerPlatformNN(columnField.focusedProperty(), focus -> {
                 // Update whether focus is arriving or leaving:
                 lastEditTimeMillis = System.currentTimeMillis();

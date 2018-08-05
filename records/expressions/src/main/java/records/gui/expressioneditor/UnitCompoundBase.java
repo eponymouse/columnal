@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.Expression;
@@ -49,5 +50,12 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
             child.save(unitSaver);
         }
         return unitSaver.finish(children.get(children.size() - 1));
+    }
+
+    @Override
+    public boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<UnitExpression, UnitSaver> child)
+    {
+        // They'll need to enter the '}' to close anyway:
+        return true;
     }
 }

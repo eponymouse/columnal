@@ -46,6 +46,7 @@ import utility.gui.TranslationUtility;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -115,7 +116,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         varDeclCompletion = new VarDeclCompletion();
         updateNodes();
 
-        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::differentAlphabet);
+        this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::differentAlphabet);
 
         updateGraphics();
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
@@ -1053,5 +1054,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 saver.saveOperand(InvalidIdentExpression.identOrUnfinished(text), this, this, this::afterSave);
         }
         
+    }
+
+    public boolean isOperator()
+    {
+        String text = textField.getText().trim();
+        return Arrays.stream(Op.values()).anyMatch(op -> op.getContent().equals(text));
     }
 }

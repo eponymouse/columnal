@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
@@ -50,6 +51,13 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
             public boolean isFocused()
             {
                 return childIsFocused();
+            }
+
+            @Override
+            public boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<TypeExpression, TypeSaver> child)
+            {
+                // Even if the type is complete, they'll need to write the '}' to come back out, so show always:
+                return true;
             }
         };
         updateNodes();

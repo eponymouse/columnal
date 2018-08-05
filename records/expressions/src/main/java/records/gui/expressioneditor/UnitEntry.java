@@ -27,6 +27,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
@@ -44,7 +45,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         super(UnitExpression.class, parent);
         @SuppressWarnings("initialization") // Suppressing warning about the self method reference:
         ExBiFunction<String, CompletionQuery, Stream<Completion>> getSuggestions = this::getSuggestions;
-        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), WhitespacePolicy.DISALLOW, UnitExpressionOps::differentAlphabet);
+        this.autoComplete = new AutoComplete<Completion>(textField, getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.DISALLOW, UnitExpressionOps::differentAlphabet);
         updateNodes();
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
             completing = false;
@@ -356,5 +357,11 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
             saver.saveOperand(new UnitExpressionIntLiteral(num.getAsInt()), this, this, c -> {});
         else
             saver.saveOperand(InvalidSingleUnitExpression.identOrUnfinished(text), this, this, c -> {});
+    }
+    
+    public boolean isOperator()
+    {
+        String text = textField.getText().trim();
+        return Arrays.stream(UnitOp.values()).anyMatch(op -> op.getContent().equals(text));
     }
 }
