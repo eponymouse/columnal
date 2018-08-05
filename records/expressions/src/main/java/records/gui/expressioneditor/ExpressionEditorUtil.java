@@ -2,12 +2,23 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Polyline;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -51,16 +62,45 @@ public class ExpressionEditorUtil
     // A VBox that has an error at the top.  Main reason this
     // is its own class not just VBox is to retain information which
     // we dig out for testing purposes
+    @OnThread(Tag.FXPlatform)
     public static class ErrorTop extends VBox
     {
         private final Label topLabel;
+        private final Pane errorPane;
         private boolean hasError;
         private boolean maskErrors = false;
+        public static final WritableImage SQUIGGLE = new WritableImage(4, 4);
+        static {
+            SQUIGGLE.getPixelWriter().setColor(0, 0, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(0, 1, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(1, 1, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(1, 2, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(2, 2, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(2, 3, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(3, 1, Color.RED);
+            SQUIGGLE.getPixelWriter().setColor(3, 2, Color.RED);
+        }
 
         public ErrorTop(Label topLabel, Node content)
         {
-            super(topLabel, content);
             this.topLabel = topLabel;
+            this.errorPane = new Pane();
+            getChildren().setAll(topLabel, content, errorPane);
+            setFillWidth(true);
+            errorPane.setMinHeight(5);            
+            this.errorPane.setBackground(new Background(new BackgroundImage(
+                SQUIGGLE, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT,
+                new BackgroundPosition(Side.LEFT, 0, false, Side.TOP, 0, false), 
+                BackgroundSize.DEFAULT)));            
+            // Correct the offset so that the squiggles line up on adjacent items:
+            FXUtility.addChangeListenerPlatformNN(errorPane.localToSceneTransformProperty(), l2s -> {
+                double sceneX = errorPane.localToScene(0, 0).getX();
+                // Since Background is Immutable, we have to recreate the whole thing with new offset:
+                this.errorPane.setBackground(new Background(new BackgroundImage(
+                    SQUIGGLE, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT,
+                    new BackgroundPosition(Side.LEFT, 4 - (sceneX % 4), false, Side.TOP, 0, false), 
+                    BackgroundSize.DEFAULT)));
+            });
         }
  
         @OnThread(Tag.FXPlatform)
@@ -73,7 +113,8 @@ public class ExpressionEditorUtil
         public void setError(boolean error)
         {
             this.hasError = error;
-            FXUtility.setPseudoclass(this, "exp-error", hasError && !maskErrors);
+            //FXUtility.setPseudoclass(this, "exp-error", hasError && !maskErrors);
+            errorPane.setVisible(hasError && !maskErrors);
             //Log.logStackTrace("Error state: " + hasError + " && " + !maskErrors);
         }
 

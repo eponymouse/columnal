@@ -265,6 +265,10 @@ class StackPane
 {
     //@UnknownInitialization ObservableList<String> getStyleClass();
 }
+class VBox
+{
+    void setFillWidth(@UnknownInitialization(javafx.scene.layout.VBox.class) VBpx this, boolean on);
+}
 class Pane
 {
     ObservableList<Node> getChildren(@UnknownInitialization(javafx.scene.layout.Pane.class) Pane this);
