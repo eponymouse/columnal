@@ -359,6 +359,11 @@ public class View extends StackPane
         return new Pair<>(left.get(), right.get());
     }
 
+    public File getSaveFile()
+    {
+        return diskFile.get();
+    }
+
     /* TODO
     private boolean overlapsAnyExcept(List<TableDisplay> except, double x, double y)
     {

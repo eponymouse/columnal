@@ -42,6 +42,13 @@ public class LabelledGrid extends GridPane
             this.helpBox = helpBox;
             this.item = null;
         }
+        
+        public Row(Node fullWidthNode)
+        {
+            this.lhs = fullWidthNode;
+            this.helpBox = null;
+            this.item = null;
+        }
     }
 
     public LabelledGrid(Row... rows)

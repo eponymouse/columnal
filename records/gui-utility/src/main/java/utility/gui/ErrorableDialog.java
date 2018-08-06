@@ -23,6 +23,11 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
     private final ErrorLabel errorLabel = new ErrorLabel();
     private @Nullable R result;
 
+    /**
+     * Note: this constructor sets the buttons to Ok/cancel.  It's important that
+     * you do not set the buttons again afterwards as it destroys the
+     * listeners set here.
+     */
     @SuppressWarnings("initialization") // For the OK event filter.  Can't click until dialog shows!
     public ErrorableDialog()
     {

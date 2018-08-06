@@ -60,6 +60,10 @@ public class MainWindow
 
         @OnThread(Tag.FXPlatform)
         public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position);
+        
+        // What file are we saving to in this main window?
+        @OnThread(Tag.FXPlatform)
+        public File _test_getCurFile();
     }
 
     // If src is null, make new
@@ -98,13 +102,6 @@ public class MainWindow
                 GUI.menuItem("menu.project.close", () -> {stage.hide();}),
                 GUI.menuItem("menu.exit", () -> {closeAll();})
             ),
-            /*
-            GUI.menu("menu.data",
-                GUI.menuItem("menu.data.new", () -> newTable(v)),
-                GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage)),
-                GUI.menuItem("menu.data.import.link", () -> chooseAndImportURL(v, stage))
-            ),
-            */
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
                 GUI.menuItem("menu.view.types", () -> new TypesDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait()),
@@ -193,6 +190,13 @@ public class MainWindow
             public DataCellSupplier.@Nullable VersionedSTF _test_getDataCell(CellPosition position)
             {
                 return v._test_getDataCellSupplier()._test_getCellAt(position);
+            }
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public File _test_getCurFile()
+            {
+                return v.getSaveFile();
             }
         };
     }

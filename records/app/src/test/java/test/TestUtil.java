@@ -465,7 +465,7 @@ public class TestUtil
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^2"))),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^3/s^3"))),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"))),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($*m)/s^2"))),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("(USD*m)/s^2"))),
                 a,
                 b,
                 c,
@@ -884,7 +884,7 @@ public class TestUtil
                 sleep(1000);
                 count += 1;
             }
-            while (fx(() -> windowToUse.getScene().lookup(".table-display-table-title")) == null && count < 30);
+            while (fx(() -> windowToUse.getScene().lookup(".virt-grid-line")) == null && count < 30);
             if (count >= 30)
                 throw new RuntimeException("Could not load table data");
             return tableManagerAtomicReference.get();

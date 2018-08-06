@@ -11,8 +11,7 @@ public class SingleUnit implements Comparable<SingleUnit>
     private final String prefix;
     private final String suffix;
 
-    // package-private
-    SingleUnit(@UnitIdentifier String unitName, String description, String prefix, String suffix)
+    public SingleUnit(@UnitIdentifier String unitName, String description, String prefix, String suffix)
     {
         this.unitName = unitName;
         this.description = description;

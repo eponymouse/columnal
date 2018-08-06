@@ -18,6 +18,7 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.AliasDeclarationContext;
 import records.grammar.UnitParser.DeclarationContext;
 import records.grammar.UnitParser.DisplayContext;
+import records.grammar.UnitParser.ScaleContext;
 import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.TimesByContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
@@ -118,18 +119,25 @@ public class UnitManager
         }
         if (decl.unit() != null)
         {
-            Rational scale;
-            if (decl.scale() == null)
-                scale = Rational.ONE;
-            else
-            {
-                scale = Utility.parseRational(decl.scale().NUMBER(0).getText());
-                if (decl.scale().NUMBER().size() > 1)
-                    scale = Utility.rationalToPower(scale, Integer.parseInt(decl.scale().NUMBER(1).toString()));
-            }
+            ScaleContext scaleContext = decl.scale();
+            Rational scale = loadScale(scaleContext);
             equiv = new Pair<>(scale, loadUnit(decl.unit()));
         }
         return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
+    }
+
+    public static Rational loadScale(ScaleContext scaleContext)
+    {
+        Rational scale;
+        if (scaleContext == null)
+            scale = Rational.ONE;
+        else
+        {
+            scale = Utility.parseRational(scaleContext.NUMBER(0).getText());
+            if (scaleContext.NUMBER().size() > 1)
+                scale = Utility.rationalToPower(scale, Integer.parseInt(scaleContext.NUMBER(1).toString()));
+        }
+        return scale;
     }
 
     // Like loadUse, but any UserException is treated as an InternalException
