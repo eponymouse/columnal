@@ -54,7 +54,7 @@ public class TestUnitEdit extends ApplicationTest
     
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNewUnit(@When(seed=1L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetails) throws Exception
+    public void testNewUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetails) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
         TestUtil.sleep(1000);
