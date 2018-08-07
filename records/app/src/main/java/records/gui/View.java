@@ -30,7 +30,6 @@ import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.Table.InitialLoadDetails;
-import records.data.TableAndColumnRenames;
 import records.data.Table;
 import records.data.Table.FullSaver;
 import records.data.TableId;
@@ -50,8 +49,6 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.importers.manager.ImporterManager;
 import records.transformations.Check;
 import records.transformations.TransformationManager;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.InvalidIdentExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -108,69 +105,21 @@ public class View extends StackPane
             return;
         
         File dest = diskFile.get();
-        class Fetcher extends FullSaver
-        {
-            private final Iterator<Table> it;
-
-            public Fetcher(List<Table> allTables)
-            {
-                it = allTables.iterator();
-            }
-
-            @Override
-            @OnThread(Tag.Simulation)
-            public void saveTable(String s)
-            {
-                super.saveTable(s);
-                getNext();
-            }
-
-            @OnThread(Tag.Simulation)
-            private void getNext()
-            {
-                if (it.hasNext())
-                {
-                    it.next().save(dest, this, TableAndColumnRenames.EMPTY);
-                }
-                else
-                {
-                    String completeFile = getCompleteFile();
-                    try
-                    {
-                        FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
-                        Instant now = Instant.now();
-                        Platform.runLater(() -> lastSaveTime.setValue(now));
-                    }
-                    catch (IOException ex)
-                    {
-                        FXUtility.logAndShowError("save.error", ex);
-                    }
-                }
-            }
-        };
-        //Exception e = new Exception();
         Workers.onWorkerThread("Saving", Priority.SAVE_TO_DISK, () ->
         {
-            List<Table> allTablesUnordered = getAllTables();
-
-            Map<TableId, Table> getById = new HashMap<>();
-            Map<TableId, Collection<TableId>> edges = new HashMap<>();
-            HashSet<TableId> allIds = new HashSet<>();
-            for (Table t : allTablesUnordered)
+            FullSaver fetcher = new FullSaver();
+            tableManager.save(dest, fetcher);
+            String completeFile = fetcher.getCompleteFile();
+            try
             {
-                allIds.add(t.getId());
-                getById.put(t.getId(), t);
-                if (t instanceof Transformation)
-                {
-                    edges.put(t.getId(), ((Transformation)t).getSources());
-                }
+                FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
+                Instant now = Instant.now();
+                Platform.runLater(() -> lastSaveTime.setValue(now));
             }
-            List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, Collections.emptyList());
-
-            @SuppressWarnings("nullness")
-            List<@NonNull Table> linearTables = Utility.mapList(linearised, id -> getById.get(id));
-            new Fetcher(linearTables).getNext();
-
+            catch (IOException ex)
+            {
+                FXUtility.logAndShowError("save.error", ex);
+            }
         });
     }
 
