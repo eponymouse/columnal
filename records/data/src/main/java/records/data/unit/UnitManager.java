@@ -24,6 +24,7 @@ import records.grammar.UnitParser.TimesByContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.grammar.UnitParser.UnitDeclarationContext;
+import records.loadsave.OutputBuilder;
 import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
@@ -379,5 +380,36 @@ public class UnitManager
     {
         userUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
         knownUnits.putIfAbsent(unit.getFirst(), unit.getSecond());
+    }
+
+    public String save()
+    {
+    return userUnits.entrySet().stream().map((Entry<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> e) -> e.getValue().either(alias -> {
+            OutputBuilder b = new OutputBuilder();
+            b.t(UnitParser.ALIAS, UnitParser.VOCABULARY);
+            b.raw(e.getKey());
+            b.t(UnitParser.EQUALS, UnitParser.VOCABULARY);
+            b.raw(alias);
+            return b.toString();
+        }, decl -> {
+            OutputBuilder b = new OutputBuilder();
+            b.t(UnitParser.UNIT, UnitParser.VOCABULARY);
+            b.raw(e.getKey());
+            b.s(decl.getDefined().getDescription());
+            @Nullable Pair<Rational, Unit> equiv = decl.getEquivalentTo();
+            if (equiv != null)
+            {
+                b.t(UnitParser.EQUALS, UnitParser.VOCABULARY);
+                if (!equiv.getFirst().equals(Rational.of(1)))
+                {
+                    // TODO save string source, not just canonical rational:
+                    b.raw(equiv.getFirst().toString());
+                    b.t(UnitParser.TIMES, UnitParser.VOCABULARY);
+                }
+                
+                b.raw(equiv.getSecond().toString());
+            }
+            return b.toString();
+        })).collect(Collectors.joining("\n"));
     }
 }

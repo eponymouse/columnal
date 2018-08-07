@@ -181,9 +181,9 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    public void save(@Nullable File destination, Saver saver) throws InternalException, UserException
+    public void save(@Nullable File destination, Saver saver) //throws InternalException, UserException
     {
-        // TODO save units
+        saver.saveUnit(unitManager.save());
         saver.saveType(typeManager.save());
         Map<TableId, TablesWithSameId> values = new HashMap<>();
         // Deep copy:
