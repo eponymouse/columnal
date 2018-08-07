@@ -47,7 +47,7 @@ public class JellyTypeTuple extends JellyType
     }
 
     @Override
-    public void save(OutputBuilder output) throws InternalException
+    public void save(OutputBuilder output)
     {
         output.raw("(");
         for (int i = 0; i < types.size(); i++)

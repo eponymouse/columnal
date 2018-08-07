@@ -51,7 +51,7 @@ class JellyTypeArray extends JellyType
     }
 
     @Override
-    public void save(OutputBuilder output) throws InternalException
+    public void save(OutputBuilder output)
     {
         output.raw("[");
         inner.save(output);

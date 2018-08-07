@@ -15,15 +15,7 @@ import records.grammar.GrammarUtility;
 import records.grammar.MainParser.UnitsContext;
 import records.grammar.UnitLexer;
 import records.grammar.UnitParser;
-import records.grammar.UnitParser.AliasDeclarationContext;
-import records.grammar.UnitParser.DeclarationContext;
-import records.grammar.UnitParser.DisplayContext;
-import records.grammar.UnitParser.ScaleContext;
-import records.grammar.UnitParser.SingleContext;
-import records.grammar.UnitParser.TimesByContext;
-import records.grammar.UnitParser.UnbracketedUnitContext;
-import records.grammar.UnitParser.UnitContext;
-import records.grammar.UnitParser.UnitDeclarationContext;
+import records.grammar.UnitParser.*;
 import records.loadsave.OutputBuilder;
 import utility.Either;
 import utility.IdentifierUtility;
@@ -118,11 +110,11 @@ public class UnitManager
             else
                 suffix = displayContext.STRING().getText();
         }
-        if (decl.unit() != null)
+        if (decl.unbracketedUnit() != null)
         {
             ScaleContext scaleContext = decl.scale();
             Rational scale = loadScale(scaleContext);
-            equiv = new Pair<>(scale, loadUnit(decl.unit()));
+            equiv = new Pair<>(scale, loadUnbracketedUnit(decl.unbracketedUnit()));
         }
         return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
     }
@@ -134,11 +126,20 @@ public class UnitManager
             scale = Rational.ONE;
         else
         {
-            scale = Utility.parseRational(scaleContext.NUMBER(0).getText());
-            if (scaleContext.NUMBER().size() > 1)
-                scale = Utility.rationalToPower(scale, Integer.parseInt(scaleContext.NUMBER(1).toString()));
+            ScalePowerContext scalePowerContext = scaleContext.scalePower(0);
+            scale = loadScalePower(scalePowerContext);
+            if (scaleContext.scalePower().size() > 1)
+                scale = scale.divides(loadScalePower(scaleContext.scalePower(1)));
         }
         return scale;
+    }
+
+    public static Rational loadScalePower(ScalePowerContext scalePowerContext)
+    {
+        Rational rational = Utility.parseRational(scalePowerContext.NUMBER(0).getText());
+        if (scalePowerContext.NUMBER().size() > 1)
+            rational = Utility.rationalToPower(rational, Integer.parseInt(scalePowerContext.NUMBER(1).toString()));
+        return rational;
     }
 
     // Like loadUse, but any UserException is treated as an InternalException

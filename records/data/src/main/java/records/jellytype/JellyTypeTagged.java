@@ -57,14 +57,14 @@ public class JellyTypeTagged extends JellyType
     }
 
     @Override
-    public void save(OutputBuilder output) throws InternalException
+    public void save(OutputBuilder output)
     {
         output.t(FormatParser.TAGGED, FormatParser.VOCABULARY);
         output.quote(new TypeId(typeName));
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
             output.raw("(");
-            typeParam.eitherInt(u -> {u.save(output); return UnitType.UNIT;},t -> {t.save(output); return UnitType.UNIT;});
+            typeParam.either(u -> {u.save(output); return UnitType.UNIT;},t -> {t.save(output); return UnitType.UNIT;});
             output.raw(")");
         }
     }

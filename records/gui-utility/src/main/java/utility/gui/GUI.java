@@ -258,6 +258,12 @@ public class GUI
         return new LabelledGrid.Row(label(labelKey), helpBox(helpId, node), node);
     }
 
+    public static Pair<CheckBox, LabelledGrid.Row> tickGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node node)
+    {
+        CheckBox checkBox = new CheckBox(TranslationUtility.getString(labelKey));
+        return new Pair<>(checkBox, new LabelledGrid.Row(checkBox, helpBox(helpId, node), node));
+    }
+
     private static HelpBox helpBox(@HelpKey String helpId, @Nullable Node relevantNode)
     {
         List<Node> nodes = new ArrayList<>();

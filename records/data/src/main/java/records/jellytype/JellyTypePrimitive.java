@@ -2,6 +2,7 @@ package records.jellytype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -59,9 +60,18 @@ class JellyTypePrimitive extends JellyType
     }
 
     @Override
-    public void save(OutputBuilder output) throws InternalException
+    public void save(OutputBuilder output)
     {
-        dataType.save(output);
+        try
+        {
+            dataType.save(output);
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            // Not sure what more we can do here: write rest and
+            // hope user can fix it later, I guess.
+        }
     }
 
     @Override

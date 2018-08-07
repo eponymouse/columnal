@@ -37,6 +37,7 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
             calculateResult().either_(err -> {
                 result = null;
                 errorLabel.setText(err);
+                Log.debug("Error: " + err);
                 e.consume(); // Prevent OK doing anything
             }, r -> {result = r;});
         });

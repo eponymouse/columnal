@@ -61,7 +61,7 @@ public abstract class JellyType
 
     public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException;
 
-    public abstract void save(OutputBuilder output) throws InternalException;
+    public abstract void save(OutputBuilder output);
 
     public abstract boolean equals(@Nullable Object o);
 

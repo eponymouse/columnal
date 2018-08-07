@@ -308,7 +308,7 @@ public class TypeManager
     }
 
     @OnThread(Tag.Simulation)
-    public String save() throws InternalException, UserException
+    public String save()
     {
         List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
         List<TaggedTypeDefinition> typesToSave = knownTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.toList());

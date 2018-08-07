@@ -233,7 +233,7 @@ public class UnitsDialog extends Dialog<Void>
                 
                 try
                 {
-                    scaleContext = Utility.parseAsOne(scale.getText().trim(), UnitLexer::new, UnitParser::new, p -> p.scale());
+                    scaleContext = Utility.parseAsOne(scale.getText().trim(), UnitLexer::new, UnitParser::new, p -> p.fullScale().scale());
                 }
                 catch (InternalException | UserException e)
                 {

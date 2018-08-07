@@ -53,7 +53,7 @@ class JellyTypeNumberWithUnit extends JellyType
     }
 
     @Override
-    public void save(OutputBuilder output) throws InternalException
+    public void save(OutputBuilder output)
     {
         output.t(FormatParser.NUMBER, FormatParser.VOCABULARY);
         if (!unit.isScalar())

@@ -110,7 +110,7 @@ public class JellyUnit
         return u;
     }
     
-    public void save(OutputBuilder output) throws InternalException
+    public void save(OutputBuilder output)
     {
         if (units.isEmpty())
         {
@@ -126,7 +126,7 @@ public class JellyUnit
                 output.raw("*");
             }
             first = false;
-            e.getKey().eitherInt(name -> output.t(UnitParser.UNITVAR, UnitParser.VOCABULARY).raw(name),
+            e.getKey().either(name -> output.t(UnitParser.UNITVAR, UnitParser.VOCABULARY).raw(name),
                 u -> output.raw(u.getName()));
             if (e.getValue() != 1)
             {

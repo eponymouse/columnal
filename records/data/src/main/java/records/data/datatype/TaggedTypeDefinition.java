@@ -93,7 +93,7 @@ public class TaggedTypeDefinition
         return name;
     }
 
-    public void save(OutputBuilder b) throws InternalException
+    public void save(OutputBuilder b)
     {
         b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
         for (Pair<TypeVariableKind, String> typeVariable : typeVariables)

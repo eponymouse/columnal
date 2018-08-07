@@ -174,4 +174,10 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     public abstract boolean isEmpty();
 
     public abstract boolean isScalar();
+
+    @Override
+    public String toString()
+    {
+        return save(true);
+    }
 }

@@ -3,7 +3,6 @@ parser grammar UnitParser;
 options { tokenVocab = UnitLexer; }
 
 singleUnit : IDENT | UNITVAR WS IDENT;
-scale : NUMBER (POWER NUMBER)?;
 single : singleUnit (POWER NUMBER)? | ({_input.LT(1).getText().equals("1")}? NUMBER);
 divideBy : (WS? DIVIDE WS? unit);
 timesBy : WS? TIMES WS? unit;
@@ -16,7 +15,14 @@ aliasDeclaration : ALIAS WS singleUnit WS? EQUALS WS? singleUnit NEWLINE;
 
 display : (PREFIX | SUFFIX) WS? STRING;
 
-unitDeclaration : UNIT WS singleUnit WS STRING WS? display* (EQUALS WS? (scale WS? TIMES WS?)? unit WS?)? NEWLINE;
+// n ^ m
+scalePower : NUMBER (WS? POWER WS? NUMBER)?;
+// scalePower with optional divide by scalePower 
+scale : scalePower (WS? DIVIDE WS? scalePower)?;
+
+fullScale: scale EOF;
+
+unitDeclaration : UNIT WS singleUnit WS STRING WS? display* (EQUALS WS? (scale WS? TIMES WS?)? unbracketedUnit WS?)? NEWLINE;
 
 declaration : aliasDeclaration | unitDeclaration;
 

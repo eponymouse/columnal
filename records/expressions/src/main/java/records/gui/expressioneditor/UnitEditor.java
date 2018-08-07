@@ -11,6 +11,7 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
@@ -31,8 +32,8 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
         onChange.consume(null);
 
         // Safe because at end of constructor:
-        if (startingValue != null)
-            Utility.later(this).loadContent(startingValue, true);
+        Utility.later(this).loadContent(
+            startingValue != null ? startingValue : new InvalidSingleUnitExpression(""), true);
     }
 
     @Override
@@ -57,7 +58,9 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
     {
         UnitSaver saver = new UnitSaver(this);
         save(saver);
-        return saver.finish(children.get(children.size() - 1));
+        @Recorded UnitExpression unitExpression = saver.finish(children.get(children.size() - 1));
+        Log.debug("Saved as: " + unitExpression);
+        return unitExpression;
     }
 
     @Override
