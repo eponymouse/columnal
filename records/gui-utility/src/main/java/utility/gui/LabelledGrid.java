@@ -3,6 +3,7 @@ package utility.gui;
 import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.RadioButton;
 import javafx.scene.layout.GridPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -27,7 +28,7 @@ public class LabelledGrid extends GridPane
         private final @Nullable HelpBox helpBox;
         private final @Nullable Node item;
 
-        public Row(Label label, @Nullable HelpBox helpBox, Node item)
+        public Row(Labeled label, @Nullable HelpBox helpBox, Node item)
         {
             setHalignment(label, HPos.RIGHT);
             this.lhs = label;

@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -63,19 +64,19 @@ public class TestUnitEdit extends ApplicationTest
         clickOn(".id-units-userDeclared-add");
         TestUtil.delay(200);
         write(unitDetails.name);
-        // Focus the alias radio:
+        // Focus the full radio:
         push(KeyCode.TAB);
         if (unitDetails.aliasOrDeclaration.isLeft())
         {
             // Select and move to alias field:
+            push(KeyCode.DOWN);
             push(KeyCode.SPACE);
             push(KeyCode.TAB);
             write(unitDetails.aliasOrDeclaration.getLeft(""));
         }
         else
         {
-            // Move to other radio, select, and then move to units:
-            push(KeyCode.TAB);
+            // Select and move to units:
             push(KeyCode.SPACE);
             push(KeyCode.TAB);
             UnitDeclaration declaration = unitDetails.aliasOrDeclaration.getRight("");
@@ -83,16 +84,24 @@ public class TestUnitEdit extends ApplicationTest
             push(KeyCode.TAB);
             @Nullable Pair<Rational, Unit> equiv = declaration.getEquivalentTo();
             if (equiv != null)
+            {
+                // Tick the box:
+                push(KeyCode.SPACE);
+                push(KeyCode.TAB);
                 write(equiv.getFirst().toString());
-            push(KeyCode.TAB);
-            if (equiv != null)
+                push(KeyCode.TAB);
                 write(equiv.getSecond().toString());
+            };
         }
         clickOn(".ok-button");
         TestUtil.sleep(500);
+        clickOn(".close-button");
+        TestUtil.sleep(500);
 
         // Check that saved units in file match our new unit:
-        FileContext file = Utility.parseAsOne(FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8"), MainLexer::new, MainParser::new, p -> p.file());
+        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        Log.debug("Saved:\n" + fileContent);
+        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
         UnitManager tmpUnits = new UnitManager();
         tmpUnits.loadUserUnits(file.units());
         assertEquals(ImmutableMap.of(unitDetails.name, unitDetails.aliasOrDeclaration), tmpUnits.getAllUserDeclared());

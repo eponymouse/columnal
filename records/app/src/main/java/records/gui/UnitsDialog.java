@@ -7,6 +7,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -115,6 +116,7 @@ public class UnitsDialog extends Dialog<Void>
             "units-dialog-content"));
         
         getDialogPane().getButtonTypes().setAll(ButtonType.CLOSE);
+        getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
     }
     
     private class UnitList extends TableView<Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>
@@ -171,23 +173,32 @@ public class UnitsDialog extends Dialog<Void>
         private final TextField descriptionField;
         private final UnitEditor definition;
         private final TextField scale;
+        private final CheckBox equivalentTickBox;
 
         public EditUnitDialog(@Nullable Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> initialValue)
         {
             unitNameField = new TextField(initialValue == null ? "" : initialValue.getFirst());
             Row nameRow = GUI.labelledGridRow("unit.name", "edit-unit/name", unitNameField);
             toggleGroup = new ToggleGroup();
-            Row aliasRadio = GUI.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
-            aliasTargetField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(s -> s, d -> ""));
-            Row aliasTarget = GUI.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
+            
             Row fullRadio = GUI.radioGridRow("unit.full", "edit-unit/full", toggleGroup);
             descriptionField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(a -> "", d -> d.getDefined().getDescription()));
             Row fullDescription = GUI.labelledGridRow("unit.full.description", "edit-unit/description", descriptionField);
             scale = new TextField();
             definition = new UnitEditor(typeManager, initialValue == null ? null : initialValue.getSecond().<@Nullable UnitExpression>either(a -> null, d -> d.getEquivalentTo() == null ? null : UnitExpression.load(d.getEquivalentTo().getSecond())), u -> {});
-            Row fullDefinition = GUI.labelledGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
+            Pair<CheckBox, Row> fullDefinition = GUI.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
+            fullDefinition.getFirst().setSelected(false);
+            this.equivalentTickBox = fullDefinition.getFirst();
+
+            Row aliasRadio = GUI.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
+            aliasTargetField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(s -> s, d -> ""));
+            Row aliasTarget = GUI.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
             
-            getDialogPane().setContent(new LabelledGrid(nameRow, aliasRadio, aliasTarget, fullRadio, fullDescription, fullDefinition, new Row(getErrorLabel())));
+            // TODO add listeners and disable controls accordingly
+            
+            toggleGroup.selectToggle(toggleGroup.getToggles().get(0));
+            
+            getDialogPane().setContent(new LabelledGrid(nameRow, fullRadio, fullDescription, fullDefinition.getSecond(), aliasRadio, aliasTarget, new Row(getErrorLabel())));
             
             setOnShown(e -> {
                 FXUtility.runAfter(() -> unitNameField.requestFocus());
@@ -201,7 +212,7 @@ public class UnitsDialog extends Dialog<Void>
             if (name == null)
                 return Either.left("Invalid name.  Names must be only letters, optionally with single underscores in the middle.");
             
-            if (toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(0))
+            if (toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(1))
             {
                 @UnitIdentifier String aliasTarget = IdentifierUtility.asUnitIdentifier(aliasTargetField.getText().trim());
                 if (aliasTarget == null)
@@ -213,6 +224,11 @@ public class UnitsDialog extends Dialog<Void>
             {
                 SingleUnit singleUnit = new SingleUnit(name, descriptionField.getText().trim(), "", "");
 
+                if (this.equivalentTickBox.isSelected() == false)
+                {
+                    return Either.right(new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(name, Either.right(new UnitDeclaration(singleUnit, null))));
+                }
+                
                 ScaleContext scaleContext;
                 
                 try
