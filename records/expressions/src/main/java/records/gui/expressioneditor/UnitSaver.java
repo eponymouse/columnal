@@ -85,7 +85,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             {
                 if (validOperators.get(i).equals(UnitOp.RAISE))
                 {
-                    if (validOperands.get(i) instanceof SingleUnitExpression && validOperands.get(i + 1) instanceof UnitExpressionIntLiteral)
+                    if (validOperands.get(i) instanceof SingleUnitExpression && i + 1 < validOperands.size() && validOperands.get(i + 1) instanceof UnitExpressionIntLiteral)
                     {
                         validOperators.remove(i);
                         UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);

@@ -334,6 +334,10 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     public void save(UnitSaver saver)
     {
         String text = textField.getText().trim();
+
+        if (text.isEmpty())
+            return; // Don't save blanks
+        
         for (UnitOp unitOp : UnitOp.values())
         {
             if (unitOp.getContent().equals(text))
