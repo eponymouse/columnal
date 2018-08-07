@@ -104,8 +104,14 @@ public class MainWindow
             ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
-                GUI.menuItem("menu.view.types", () -> new TypesDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait()),
-                GUI.menuItem("menu.view.units", () -> new UnitsDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait()),
+                GUI.menuItem("menu.view.types", () -> {
+                    new TypesDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait();
+                    v.modified();
+                }),
+                GUI.menuItem("menu.view.units", () -> {
+                    new UnitsDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait();
+                    v.modified();
+                }),
                 GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
             )
         );
