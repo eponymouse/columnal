@@ -70,6 +70,7 @@ public class UnitsDialog extends Dialog<Void>
         );
 
         UnitList userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared());
+        userDeclaredUnitList.getStyleClass().add("user-unit-list");
         Button addButton = GUI.button("units.userDeclared.add", () -> {
             Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> newUnit = new EditUnitDialog(null).showAndWait().orElse(null);
             if (newUnit != null)
@@ -81,10 +82,11 @@ public class UnitsDialog extends Dialog<Void>
         Button editButton = GUI.button("units.userDeclared.edit", () -> {
             if (userDeclaredUnitList.getSelectionModel().getSelectedItems().size() == 1)
             {
-                Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0)).showAndWait().orElse(null);
+                Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> prevValue = userDeclaredUnitList.getSelectionModel().getSelectedItems().get(0);
+                Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> edited = new EditUnitDialog(prevValue).showAndWait().orElse(null);
                 if (edited != null)
                 {
-                    unitManager.removeUserUnit(edited.getFirst());
+                    unitManager.removeUserUnit(prevValue.getFirst());
                     unitManager.addUserUnit(edited);
 
                     userDeclaredUnitList.setUnits(unitManager.getAllUserDeclared());

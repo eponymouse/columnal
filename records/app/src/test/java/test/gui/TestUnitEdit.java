@@ -39,7 +39,7 @@ import java.nio.file.Files;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestUnitEdit extends ApplicationTest
+public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
@@ -63,36 +63,7 @@ public class TestUnitEdit extends ApplicationTest
         TestUtil.delay(200);
         clickOn(".id-units-userDeclared-add");
         TestUtil.delay(200);
-        write(unitDetails.name);
-        // Focus the full radio:
-        push(KeyCode.TAB);
-        if (unitDetails.aliasOrDeclaration.isLeft())
-        {
-            // Select and move to alias field:
-            push(KeyCode.DOWN);
-            push(KeyCode.SPACE);
-            push(KeyCode.TAB);
-            write(unitDetails.aliasOrDeclaration.getLeft(""));
-        }
-        else
-        {
-            // Select and move to units:
-            push(KeyCode.SPACE);
-            push(KeyCode.TAB);
-            UnitDeclaration declaration = unitDetails.aliasOrDeclaration.getRight("");
-            write(declaration.getDefined().getDescription());
-            push(KeyCode.TAB);
-            @Nullable Pair<Rational, Unit> equiv = declaration.getEquivalentTo();
-            if (equiv != null)
-            {
-                // Tick the box:
-                push(KeyCode.SPACE);
-                push(KeyCode.TAB);
-                write(equiv.getFirst().toString());
-                push(KeyCode.TAB);
-                write(equiv.getSecond().toString());
-            };
-        }
+        enterUnitDetails(unitDetails);
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");
@@ -105,5 +76,77 @@ public class TestUnitEdit extends ApplicationTest
         UnitManager tmpUnits = new UnitManager();
         tmpUnits.loadUserUnits(file.units());
         assertEquals(ImmutableMap.of(unitDetails.name, unitDetails.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+    }
+
+    @OnThread(Tag.Simulation)
+    private void enterUnitDetails(GenUnitDefinition.UnitDetails unitDetails) throws InternalException
+    {
+        selectAllCurrentTextField();
+        write(unitDetails.name);
+        // Focus the full radio:
+        push(KeyCode.TAB);
+        if (unitDetails.aliasOrDeclaration.isLeft())
+        {
+            // Select and move to alias field:
+            push(KeyCode.DOWN);
+            push(KeyCode.SPACE);
+            push(KeyCode.TAB);
+            selectAllCurrentTextField();
+            write(unitDetails.aliasOrDeclaration.getLeft(""));
+        }
+        else
+        {
+            // Select and move to units:
+            push(KeyCode.SPACE);
+            push(KeyCode.TAB);
+            UnitDeclaration declaration = unitDetails.aliasOrDeclaration.getRight("");
+            selectAllCurrentTextField();
+            write(declaration.getDefined().getDescription());
+            push(KeyCode.TAB);
+            @Nullable Pair<Rational, Unit> equiv = declaration.getEquivalentTo();
+            if (equiv != null)
+            {
+                // Tick the box:
+                push(KeyCode.SPACE);
+                push(KeyCode.TAB);
+                selectAllCurrentTextField();
+                write(equiv.getFirst().toString());
+                push(KeyCode.TAB);
+                // TODO need to delete existing content
+                write(equiv.getSecond().toString());
+            };
+        }
+    }
+
+    @Property(trials = 5)
+    @OnThread(Tag.Simulation)
+    public void testEditUnit(@When(seed=1L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
+    {
+        DummyManager prevManager = new DummyManager();
+        prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        TestUtil.sleep(1000);
+
+        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        TestUtil.delay(200);
+        clickOn(".user-unit-list");
+        push(KeyCode.HOME);
+        clickOn(".id-units-userDeclared-edit");
+        TestUtil.delay(500);
+
+        enterUnitDetails(after);
+
+        clickOn(".ok-button");
+        TestUtil.sleep(500);
+        clickOn(".close-button");
+        TestUtil.sleep(500);
+
+        // Check that saved units in file match our new unit:
+        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        Log.debug("Saved:\n" + fileContent);
+        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+        UnitManager tmpUnits = new UnitManager();
+        tmpUnits.loadUserUnits(file.units());
+        assertEquals(ImmutableMap.of(after.name, after.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
 }
