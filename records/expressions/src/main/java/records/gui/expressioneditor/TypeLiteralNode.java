@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import javafx.beans.binding.BooleanExpression;
 import javafx.scene.control.Label;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -153,5 +154,11 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     public void clearAllErrors()
     {
         type.clearAllErrors();
+    }
+
+    @Override
+    public void bindDisable(BooleanExpression disabledProperty)
+    {
+        type.bindDisable(disabledProperty);
     }
 }

@@ -435,7 +435,7 @@ public class GUI
         FXUtility.addChangeListenerPlatformNN(label.textProperty(), w -> update.run());
     }
 
-    public static Node splitPaneVert(Node top, Node bottom, String... styleClasses)
+    public static SplitPane splitPaneVert(Node top, Node bottom, String... styleClasses)
     {
         SplitPane splitPane = new SplitPane(top, bottom);
         splitPane.setOrientation(Orientation.VERTICAL);

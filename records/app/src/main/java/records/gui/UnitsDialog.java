@@ -4,22 +4,17 @@ import annotation.identifier.qual.UnitIdentifier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.CellDataFeatures;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
@@ -43,11 +38,13 @@ import utility.Either;
 import utility.IdentifierUtility;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.DialogPaneWithSideButtons;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
+import utility.gui.TranslationUtility;
 
 import java.util.Comparator;
 import java.util.List;
@@ -67,6 +64,10 @@ public class UnitsDialog extends Dialog<Void>
         initModality(Modality.WINDOW_MODAL);
         initOwner(owner);
         setResizable(true);
+        getDialogPane().getStylesheets().addAll(
+            FXUtility.getStylesheet("general.css"),
+            FXUtility.getStylesheet("dialogs.css")
+        );
 
         UnitList userDeclaredUnitList = new UnitList(unitManager.getAllUserDeclared());
         Button addButton = GUI.button("units.userDeclared.add", () -> {
@@ -101,19 +102,30 @@ public class UnitsDialog extends Dialog<Void>
             editButton.setDisable(c.getList().size() != 1);
             removeButton.setDisable(c.getList().isEmpty());
         });
-        
-        
-        BorderPane userDeclaredUnitPane = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), userDeclaredUnitList, GUI.borderLeftCenterRight(addButton, editButton, removeButton));
+
+
+        BorderPane buttons = GUI.borderLeftCenterRight(addButton, editButton, removeButton);
+        BorderPane userDeclaredUnitPane = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), userDeclaredUnitList, buttons, "units-dialog-user-defined");
         
         
         UnitList builtInUnitList = new UnitList(unitManager.getAllBuiltIn());
         builtInUnitList.setEditable(false);
-        BorderPane builtInUnitPane = GUI.borderTopCenter(GUI.label("units.builtIn"), builtInUnitList);
+        Label builtInLabel = GUI.label("units.builtIn");
+        BorderPane builtInUnitPane = GUI.borderTopCenter(builtInLabel, builtInUnitList, "units-dialog-built-in");
+        BorderPane.setMargin(builtInUnitList, new Insets(10, 0, 10, 0));
+        BorderPane.setMargin(userDeclaredUnitList, new Insets(10, 0, 10, 0));
+        BorderPane.setMargin(buttons, new Insets(0, 0, 10, 0));
+        BorderPane.setMargin(builtInLabel, new Insets(10, 0, 0, 0));
+
+        SplitPane content = GUI.splitPaneVert(
+                userDeclaredUnitPane,
+                builtInUnitPane,
+                "units-dialog-content");
         
-        getDialogPane().setContent(GUI.splitPaneVert(
-            userDeclaredUnitPane,
-            builtInUnitPane, 
-            "units-dialog-content"));
+        content.setPrefWidth(400.0);
+        content.setPrefHeight(700.0);
+        
+        getDialogPane().setContent(content);
         
         getDialogPane().getButtonTypes().setAll(ButtonType.CLOSE);
         getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
@@ -177,32 +189,68 @@ public class UnitsDialog extends Dialog<Void>
 
         public EditUnitDialog(@Nullable Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>> initialValue)
         {
+            super(new DialogPaneWithSideButtons());
+            Scene parentScene = UnitsDialog.this.getDialogPane().getScene();
+            if (parentScene != null && parentScene.getWindow() != null)
+                initOwner(parentScene.getWindow());
+            initModality(Modality.WINDOW_MODAL);
+            getDialogPane().getStylesheets().addAll(
+                    FXUtility.getStylesheet("general.css"),
+                    FXUtility.getStylesheet("dialogs.css")
+            );
+            
             unitNameField = new TextField(initialValue == null ? "" : initialValue.getFirst());
+            unitNameField.setPromptText(TranslationUtility.getString("unit.name.prompt"));
             Row nameRow = GUI.labelledGridRow("unit.name", "edit-unit/name", unitNameField);
             toggleGroup = new ToggleGroup();
             
             Row fullRadio = GUI.radioGridRow("unit.full", "edit-unit/full", toggleGroup);
             descriptionField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(a -> "", d -> d.getDefined().getDescription()));
+            descriptionField.setPromptText(TranslationUtility.getString("unit.full.description.prompt"));
             Row fullDescription = GUI.labelledGridRow("unit.full.description", "edit-unit/description", descriptionField);
             scale = new TextField();
+            scale.setPromptText(TranslationUtility.getString("unit.scale.prompt"));
             definition = new UnitEditor(typeManager, initialValue == null ? null : initialValue.getSecond().<@Nullable UnitExpression>either(a -> null, d -> d.getEquivalentTo() == null ? null : UnitExpression.load(d.getEquivalentTo().getSecond())), u -> {});
+            definition.setPromptText(TranslationUtility.getString("unit.base.prompt"));
             Pair<CheckBox, Row> fullDefinition = GUI.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
             fullDefinition.getFirst().setSelected(false);
             this.equivalentTickBox = fullDefinition.getFirst();
 
             Row aliasRadio = GUI.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
             aliasTargetField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(s -> s, d -> ""));
+            aliasTargetField.setPromptText(TranslationUtility.getString("unit.alias.target.prompt"));
             Row aliasTarget = GUI.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
-            
-            // TODO add listeners and disable controls accordingly
             
             toggleGroup.selectToggle(toggleGroup.getToggles().get(0));
             
             getDialogPane().setContent(new LabelledGrid(nameRow, fullRadio, fullDescription, fullDefinition.getSecond(), aliasRadio, aliasTarget, new Row(getErrorLabel())));
+
+            FXUtility.addChangeListenerPlatformNN(toggleGroup.selectedToggleProperty(), t -> {
+                updateEnabledState();
+            });
+            FXUtility.addChangeListenerPlatformNN(equivalentTickBox.selectedProperty(), s -> {
+                updateEnabledState();
+            });
+            
+            // Okay because it's the end of the constructor:
+            updateEnabledState();
             
             setOnShown(e -> {
                 FXUtility.runAfter(() -> unitNameField.requestFocus());
             });
+        }
+
+        private void updateEnabledState(@UnknownInitialization(EditUnitDialog.class) EditUnitDialog this)
+        {
+            boolean fullEnabled = toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(0);
+            boolean aliasEnabled = !fullEnabled;
+            boolean definedAsEnabled = equivalentTickBox.isSelected() && fullEnabled;
+            
+            descriptionField.setDisable(!fullEnabled);
+            equivalentTickBox.setDisable(!fullEnabled);
+            scale.setDisable(!definedAsEnabled);
+            definition.setDisable(!definedAsEnabled);
+            aliasTargetField.setDisable(!aliasEnabled);
         }
 
         @Override

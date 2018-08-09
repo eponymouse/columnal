@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import javafx.beans.binding.BooleanExpression;
 import log.Log;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
@@ -113,5 +114,11 @@ public class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, Expre
     public void visitLocatable(LocatableVisitor visitor)
     {
         unit.visitLocatable(visitor);
+    }
+
+    @Override
+    public void bindDisable(BooleanExpression disabledProperty)
+    {
+        unit.bindDisable(disabledProperty);
     }
 }

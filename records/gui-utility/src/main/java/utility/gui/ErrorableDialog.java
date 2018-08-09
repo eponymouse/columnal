@@ -5,6 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -28,13 +29,14 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
      * you do not set the buttons again afterwards as it destroys the
      * listeners set here.
      */
-    @SuppressWarnings("initialization") // For the OK event filter.  Can't click until dialog shows!
-    public ErrorableDialog()
+    public ErrorableDialog(@Nullable DialogPane customDialogPane)
     {
+        if (customDialogPane != null)
+            setDialogPane(customDialogPane);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
-            calculateResult().either_(err -> {
+            FXUtility.mouse(this).calculateResult().either_(err -> {
                 result = null;
                 errorLabel.setText(err);
                 Log.debug("Error: " + err);
@@ -42,7 +44,7 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
             }, r -> {result = r;});
         });
         //We bind so that if subclass mistakenly tries to set, it will get an error:
-        resultConverterProperty().bind(new ReadOnlyObjectWrapper<>(bt -> {
+        resultConverterProperty().bind(new ReadOnlyObjectWrapper<javafx.util.Callback<ButtonType, @Nullable R>>(bt -> {
             if (bt == ButtonType.OK)
             {
                 if (result != null)
@@ -56,6 +58,11 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
             }
             return null;
         }));
+    }
+    
+    public ErrorableDialog()
+    {
+        this(null);
     }
 
     // Given back as Node because it's only meant for adding to GUI.  Subclasses don't set

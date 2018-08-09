@@ -169,7 +169,7 @@
     -fx-background-color: $table-row-label-border-color, $table-row-label-background-color;
 }
 .table-hat-text-flow {
-    -fx-font-size: 80%;
+    -fx-font-size: 90%;
     .styled-text {
         /* Without this the font rendering on text is awful at small size on Mac: */
         -fx-font-smoothing-type: lcd;

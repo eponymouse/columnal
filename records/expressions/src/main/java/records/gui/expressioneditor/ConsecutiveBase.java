@@ -2,6 +2,9 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -51,6 +54,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
     private boolean removingBlanks;
+
+    private BooleanProperty disabledProperty = new SimpleBooleanProperty(false);
     
     protected @MonotonicNonNull EXPRESSION mostRecentSave;
 
@@ -103,10 +108,24 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return operations.makeGeneral(this, null);
     }
 
+    public void setDisable(boolean disabled)
+    {
+        this.disabledProperty.set(disabled);
+    }
+
+    public void bindDisable(BooleanExpression bindTo)
+    {
+        this.disabledProperty.bind(bindTo);
+    }
+
     // Make sure to call if you override
     protected void selfChanged()
     {
         removeBlanksLater();
+        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        {
+            child.bindDisable(disabledProperty);
+        }
     }
 
     private void removeBlanksLater()
@@ -143,6 +162,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
         //Log.debug("  Now size " + children.size());
         removingBlanks = false;
+        
+        updatePrompts();
+    }
+
+    // Overridden by TopLevelEditor 
+    protected void updatePrompts()
+    {
     }
 
     @Override

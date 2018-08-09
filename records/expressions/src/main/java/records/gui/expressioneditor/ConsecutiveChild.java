@@ -2,8 +2,11 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -68,4 +71,8 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     boolean closesBracket(BracketBalanceType bracketBalanceType);
 
     default void removeNestedBlanks() {};
+    
+    void setPrompt(@Localized String prompt);
+
+    void bindDisable(BooleanExpression disabledProperty);
 }

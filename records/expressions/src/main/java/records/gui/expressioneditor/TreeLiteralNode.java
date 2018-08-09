@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Node;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
@@ -142,4 +143,10 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
 
     @Override
     public abstract void removeNestedBlanks();
+
+    @Override
+    public void setPrompt(@Localized String prompt)
+    {
+        // We are rich node so we don't set prompts
+    }
 }

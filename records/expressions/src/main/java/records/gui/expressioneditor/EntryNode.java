@@ -1,11 +1,13 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.binding.BooleanExpression;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -55,8 +57,8 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
         return parent;
     }
 
-    // Although we don't extend OperandNode, this deliberately implements a method from OperandNode:
-    public void prompt(String prompt)
+    @Override
+    public void setPrompt(@Localized String prompt)
     {
         textField.setPromptText(prompt);
     }
@@ -144,4 +146,10 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
 
     // Should also trigger completions if applicable
     public abstract void setText(String initialContent);
+
+    @Override
+    public void bindDisable(BooleanExpression disabledProperty)
+    {
+        textField.disableProperty().bind(disabledProperty);
+    }
 }

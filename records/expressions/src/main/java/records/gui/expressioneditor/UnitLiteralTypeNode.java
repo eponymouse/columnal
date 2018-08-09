@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.binding.BooleanExpression;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
@@ -106,5 +107,11 @@ public class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, TypeSav
     public void visitLocatable(LocatableVisitor visitor)
     {
         unit.visitLocatable(visitor);
+    }
+
+    @Override
+    public void bindDisable(BooleanExpression disabledProperty)
+    {
+        unit.bindDisable(disabledProperty);
     }
 }

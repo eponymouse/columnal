@@ -5,6 +5,8 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -16,11 +18,13 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
+import records.data.NumericColumnStorage;
 import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.gui.FixList;
@@ -57,6 +61,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     private @Nullable ConsecutiveChild<?, ?> curHoverDropTarget;
     private boolean selectionLocked;
     private final ErrorMessagePopup errorMessagePopup;
+    private @Localized @Nullable String prompt = null;
 
     public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TypeManager typeManager, String... styleClasses)
     {
@@ -374,6 +379,28 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     {
         super.cleanup();
         errorMessagePopup.hidePopup(true);
+    }
+    
+    public void setPromptText(@Localized String prompt)
+    {
+        this.prompt = prompt;
+        updatePrompts();
+    }
+
+    @Override
+    protected void updatePrompts()
+    {
+        if (children.size() == 1 && prompt != null)
+        {
+            children.get(0).setPrompt(prompt);
+        }
+        else
+        {
+            for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+            {
+                child.setPrompt("");
+            }
+        }
     }
 
     // Only really exists for testing purposes:
