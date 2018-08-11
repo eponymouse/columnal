@@ -210,13 +210,14 @@ public class UnitsDialog extends Dialog<Void>
             descriptionField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(a -> "", d -> d.getDefined().getDescription()));
             descriptionField.setPromptText(TranslationUtility.getString("unit.full.description.prompt"));
             Row fullDescription = GUI.labelledGridRow("unit.full.description", "edit-unit/description", descriptionField);
-            scale = new TextField();
+            @Nullable Pair<Rational, Unit> equiv = initialValue == null ? null : initialValue.getSecond().<@Nullable Pair<Rational, Unit>>either(a -> null, d -> d.getEquivalentTo());
+            scale = new TextField(equiv == null ? "" : equiv.getFirst().toString());
             scale.setPromptText(TranslationUtility.getString("unit.scale.prompt"));
-            definition = new UnitEditor(typeManager, initialValue == null ? null : initialValue.getSecond().<@Nullable UnitExpression>either(a -> null, d -> d.getEquivalentTo() == null ? null : UnitExpression.load(d.getEquivalentTo().getSecond())), u -> {});
+            definition = new UnitEditor(typeManager, equiv == null ? null : UnitExpression.load(equiv.getSecond()), u -> {});
             definition.setPromptText(TranslationUtility.getString("unit.base.prompt"));
             Pair<CheckBox, Row> fullDefinition = GUI.tickGridRow("unit.full.definition", "edit-unit/definition", new HBox(scale, new Label(" * "), definition.getContainer()));
-            fullDefinition.getFirst().setSelected(false);
             this.equivalentTickBox = fullDefinition.getFirst();
+            equivalentTickBox.setSelected(equiv != null);
 
             Row aliasRadio = GUI.radioGridRow("unit.alias", "edit-unit/alias", toggleGroup);
             aliasTargetField = new TextField(initialValue == null ? "" : initialValue.getSecond().either(s -> s, d -> ""));

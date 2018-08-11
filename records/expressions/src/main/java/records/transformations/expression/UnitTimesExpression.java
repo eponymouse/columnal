@@ -95,9 +95,12 @@ public class UnitTimesExpression extends UnitExpression
     public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<UnitExpression, UnitSaver>> r = new StreamTreeBuilder<>();
-        r.add(UnitEntry.load(UnitBracket.OPEN_ROUND.getContent()));
+        boolean needsBrackets = bracketedStatus != BracketedStatus.DIRECT_ROUND_BRACKETED && bracketedStatus != BracketedStatus.TOP_LEVEL;
+        if (needsBrackets)
+            r.add(UnitEntry.load(UnitBracket.OPEN_ROUND.getContent()));
         r.addAll(Utility.<Stream<SingleLoader<UnitExpression, UnitSaver>>>intercalateStreamM(operands.stream().map(o -> o.loadAsConsecutive(BracketedStatus.MISC)), () -> Stream.of(UnitEntry.load(UnitOp.MULTIPLY))).flatMap(s -> s));
-        r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND.getContent()));
+        if (needsBrackets)
+            r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND.getContent()));
         return r.stream();
     }
 

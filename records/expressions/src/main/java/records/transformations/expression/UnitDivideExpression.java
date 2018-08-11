@@ -3,6 +3,7 @@ package records.transformations.expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
+import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitSaver;
 import records.typeExp.units.UnitExp;
@@ -90,9 +91,14 @@ public class UnitDivideExpression extends UnitExpression
     public Stream<SingleLoader<UnitExpression, UnitSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<UnitExpression, UnitSaver>> r = new StreamTreeBuilder<>();
+        boolean needsBrackets = bracketedStatus != BracketedStatus.DIRECT_ROUND_BRACKETED && bracketedStatus != BracketedStatus.TOP_LEVEL;
+        if (needsBrackets)
+            r.add(UnitEntry.load(UnitBracket.OPEN_ROUND.getContent()));
         r.addAll(numerator.loadAsConsecutive(BracketedStatus.MISC));
         r.add(UnitEntry.load(UnitOp.DIVIDE));
         r.addAll(denominator.loadAsConsecutive(BracketedStatus.MISC));
+        if (needsBrackets)
+            r.add(UnitEntry.load(UnitBracket.CLOSE_ROUND.getContent()));
         return r.stream();
     }
 
