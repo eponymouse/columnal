@@ -224,7 +224,7 @@ public class UnitsDialog extends Dialog<Void>
             aliasTargetField.setPromptText(TranslationUtility.getString("unit.alias.target.prompt"));
             Row aliasTarget = GUI.labelledGridRow("unit.alias.target", "edit-unit/alias-target", aliasTargetField);
             
-            toggleGroup.selectToggle(toggleGroup.getToggles().get(0));
+            toggleGroup.selectToggle(toggleGroup.getToggles().get(initialValue == null || initialValue.getSecond().isRight() ? 0 : 1));
             
             getDialogPane().setContent(new LabelledGrid(nameRow, fullRadio, fullDescription, fullDefinition.getSecond(), aliasRadio, aliasTarget, new Row(getErrorLabel())));
 

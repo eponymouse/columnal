@@ -120,7 +120,7 @@ public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNoOpEditUnit(@When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails details) throws Exception
+    public void testNoOpEditUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails details) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(details.name, details.aliasOrDeclaration));
