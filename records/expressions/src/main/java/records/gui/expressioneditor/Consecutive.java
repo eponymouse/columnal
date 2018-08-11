@@ -54,9 +54,9 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     }
 
     @Override
-    protected void parentFocusRightOfThis(Focus side)
+    protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
     {
-        parent.focusRightOf(this, side);
+        parent.focusRightOf(this, side, becauseOfTab);
     }
 
     @Override

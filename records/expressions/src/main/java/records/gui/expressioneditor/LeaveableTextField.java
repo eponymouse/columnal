@@ -31,7 +31,7 @@ public class LeaveableTextField extends TextField
         if (getCaretPosition() == getLength())
         {
             leavingByCursor = true;
-            parent.focusRightOf(us, Focus.LEFT);
+            parent.focusRightOf(us, Focus.LEFT, false);
             leavingByCursor = false;
         }
         else

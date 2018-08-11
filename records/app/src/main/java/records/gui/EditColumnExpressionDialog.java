@@ -44,10 +44,10 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
         ReadOnlyObjectWrapper<@Nullable DataType> expectedTypeWrapper = new ReadOnlyObjectWrapper<@Nullable DataType>(expectedType);
         expressionEditor = new ExpressionEditor(initialExpression, srcTableWrapper, perRow, expectedTypeWrapper, parent.getManager(), e -> {curValue = e;}) {
             @Override
-            protected void parentFocusRightOfThis(Focus side)
+            protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
             {
                 @Nullable Node button = getDialogPane().lookupButton(ButtonType.OK);
-                if (button != null)
+                if (button != null && becauseOfTab)
                     button.requestFocus();
             }
         };

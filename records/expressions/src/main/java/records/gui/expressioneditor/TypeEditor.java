@@ -60,7 +60,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     }
 
     @Override
-    protected void parentFocusRightOfThis(Focus side)
+    protected void parentFocusRightOfThis(Focus side, boolean becauseOfTab)
     {
 
     }

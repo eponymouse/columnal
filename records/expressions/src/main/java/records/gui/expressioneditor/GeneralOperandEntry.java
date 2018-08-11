@@ -78,7 +78,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
                 }
                 else
                 {
-                    parent.focusRightOf(us, Focus.LEFT);
+                    parent.focusRightOf(us, Focus.LEFT, false);
                 }
             }
         });

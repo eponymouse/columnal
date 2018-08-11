@@ -70,9 +70,9 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side, boolean becauseOfTab)
     {
-        consecParent.focusRightOf(this, side);
+        consecParent.focusRightOf(this, side, becauseOfTab);
     }
 
     @Override

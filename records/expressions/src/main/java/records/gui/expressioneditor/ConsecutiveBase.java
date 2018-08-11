@@ -349,7 +349,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     @SuppressWarnings("unchecked")
     @Override
-    public void focusRightOf(EEDisplayNode child, Focus side)
+    public void focusRightOf(EEDisplayNode child, Focus side, boolean becauseOfTab)
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
@@ -371,14 +371,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             else
             {
                 if (leavingBlank)
-                    parentFocusRightOfThis(side);
+                    parentFocusRightOfThis(side, becauseOfTab);
                 else
                     children.add(index + 1, focusWhenShown(makeBlankChild()));
             }
         });
     }
 
-    protected abstract void parentFocusRightOfThis(Focus side);
+    protected abstract void parentFocusRightOfThis(Focus side, boolean becauseOfTab);
 
     protected static <T extends EEDisplayNode> T focusWhenShown(T node)
     {

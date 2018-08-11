@@ -175,7 +175,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
             @Nullable String newText = null;
             if (c == endCompletion)
             {
-                parent.parentFocusRightOfThis(Focus.LEFT);
+                parent.parentFocusRightOfThis(Focus.LEFT, false);
                 return "";
             }
             
@@ -219,7 +219,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
             if (moveFocus)
             {
                 if (rest.isEmpty())
-                    parent.focusRightOf(UnitEntry.this, Focus.LEFT);
+                    parent.focusRightOf(UnitEntry.this, Focus.LEFT, false);
                 else
                     parent.addOperandToRight(UnitEntry.this, rest);
             }
@@ -235,7 +235,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
         @Override
         public void tabPressed()
         {
-            parent.focusRightOf(UnitEntry.this, Focus.LEFT);
+            parent.focusRightOf(UnitEntry.this, Focus.LEFT, true);
         }
 
         @Override

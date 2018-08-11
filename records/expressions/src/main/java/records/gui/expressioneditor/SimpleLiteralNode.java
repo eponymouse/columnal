@@ -42,7 +42,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             public String exactCompletion(String currentText, EndCompletion selectedItem)
             {
                 super.exactCompletion(currentText, selectedItem);
-                parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT);
+                parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT, false);
                 if (currentText.endsWith(ending))
                     return currentText.substring(0, currentText.length() - 1);
                 else
@@ -53,7 +53,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             protected String selected(String currentText, @Nullable EndCompletion c, String rest, boolean moveFocus)
             {
                 if (moveFocus)
-                    parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT);
+                    parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT, false);
                 return currentText;
             }
 
@@ -69,7 +69,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             @Override
             public void tabPressed()
             {
-                parent.focusRightOf(FXUtility.keyboard(SimpleLiteralNode.this), Focus.LEFT);
+                parent.focusRightOf(FXUtility.keyboard(SimpleLiteralNode.this), Focus.LEFT, true);
             }
 
             @Override

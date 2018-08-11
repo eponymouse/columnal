@@ -112,7 +112,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 {
                     if (moveFocus)
                     {
-                        parent.parentFocusRightOfThis(Focus.LEFT);
+                        parent.parentFocusRightOfThis(Focus.LEFT, false);
                         // Don't move focus again:
                         moveFocus = false;
                     }
@@ -170,7 +170,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 if (moveFocus)
                 {
                     if (rest.isEmpty())
-                        parent.focusRightOf(TypeEntry.this, Focus.LEFT);
+                        parent.focusRightOf(TypeEntry.this, Focus.LEFT, false);
                     else
                         parent.addOperandToRight(TypeEntry.this, rest);
                 }
@@ -186,7 +186,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
             @Override
             public void tabPressed()
             {
-                parent.focusRightOf(TypeEntry.this, Focus.LEFT);
+                parent.focusRightOf(TypeEntry.this, Focus.LEFT, true);
             }
 
             @Override
@@ -198,10 +198,10 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side, boolean becauseOfTab)
     {
         // Child is bound to be units:
-        parent.focusRightOf(this, side);
+        parent.focusRightOf(this, side, becauseOfTab);
     }
 
     @Override

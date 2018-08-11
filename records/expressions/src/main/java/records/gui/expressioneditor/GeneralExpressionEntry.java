@@ -649,7 +649,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 else
                 {
                     if (moveFocus)
-                        parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                        parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT, false);
                 }
                 completing = true;
                 setPrefixTag(tc.tagInfo.getTypeName());
@@ -691,7 +691,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (moveFocus)
             {
                 if (rest.isEmpty())
-                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT, false);
                 else
                     parent.addOperandToRight(GeneralExpressionEntry.this, rest);
             }
@@ -713,7 +713,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public void tabPressed()
         {
-            parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+            parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT, true);
         }
 
         @Override

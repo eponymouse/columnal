@@ -25,7 +25,7 @@ public interface EEDisplayNodeParent
     /**
      * Focus the child to the right of the given child.
      */
-    void focusRightOf(EEDisplayNode child, Focus side);
+    void focusRightOf(EEDisplayNode child, Focus side, boolean becauseOfTab);
 
     /**
      * Focus the child to the left of the given child.
