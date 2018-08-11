@@ -120,7 +120,41 @@ public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testEditUnit(@When(seed=1L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
+    public void testNoOpEditUnit(@When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails details) throws Exception
+    {
+        DummyManager prevManager = new DummyManager();
+        prevManager.getUnitManager().addUserUnit(new Pair<>(details.name, details.aliasOrDeclaration));
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        TestUtil.sleep(1000);
+
+        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        TestUtil.delay(200);
+        clickOn(".user-unit-list");
+        push(KeyCode.HOME);
+        clickOn(".id-units-userDeclared-edit");
+        TestUtil.delay(500);
+        
+        // No edit
+        
+        clickOn(".ok-button");
+        TestUtil.sleep(500);
+        clickOn(".close-button");
+        TestUtil.sleep(500);
+
+        // Check that saved units in file match our new unit:
+        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        Log.debug("Saved:\n" + fileContent);
+        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+        UnitManager tmpUnits = new UnitManager();
+        tmpUnits.loadUserUnits(file.units());
+        assertEquals(ImmutableMap.of(details.name, details.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+    }
+
+
+
+    @Property(trials = 5)
+    @OnThread(Tag.Simulation)
+    public void testEditUnit(@When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));
