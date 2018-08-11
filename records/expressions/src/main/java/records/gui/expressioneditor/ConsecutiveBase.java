@@ -537,11 +537,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return ImmutableList.copyOf(children);
     }
 
-    public void markSelection(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> from, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> to, boolean selected)
+    /**
+     * Change the selection state of all children in range from/to
+     * (inclusive) to the given boolean, and select the given
+     * optional item
+     */
+    public final void markSelection(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> from, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> to, boolean selected, @Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> focus)
     {
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> n : getChildrenFromTo(from, to))
         {
-            n.setSelected(selected);
+            n.setSelected(selected, n == focus);
         }
     }
 
@@ -684,6 +689,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
     }
 
+    /*
     public void setSelected(boolean selected)
     {
         if (prefixNode != null)
@@ -695,6 +701,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             consecutiveChild.setSelected(selected);
         }
     }
+    */
 
     /**
      * Focuses a blank slot on the left of the expression, either an existing

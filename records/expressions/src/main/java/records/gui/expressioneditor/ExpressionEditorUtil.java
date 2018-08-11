@@ -8,6 +8,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
@@ -26,6 +28,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
+import records.gui.expressioneditor.TopLevelEditor.SelectionTarget;
 import records.jellytype.JellyType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
@@ -248,9 +252,29 @@ public class ExpressionEditorUtil
                 return;
 
             if (e.isShiftDown())
-                node.getParent().getEditor().extendSelectionTo(node);
+                node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.AS_IS);
             else
                 node.getParent().getEditor().selectOnly(node);
+            e.consume();
+        });
+        
+        typeLabel.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.LEFT && e.isShiftDown())
+            {
+                node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.LEFT);
+            }
+            else if (e.getCode() == KeyCode.RIGHT && e.isShiftDown())
+            {
+                node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.RIGHT);
+            }
+            else if (e.getCode() == KeyCode.HOME && e.isShiftDown())
+            {
+                node.getParent().getEditor().selectExtremity(node, SelectExtremityTarget.HOME);
+            }
+            else if (e.getCode() == KeyCode.END && e.isShiftDown())
+            {
+                node.getParent().getEditor().selectExtremity(node, SelectExtremityTarget.END);
+            }
             e.consume();
         });
     }

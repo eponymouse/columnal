@@ -25,6 +25,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     protected final AutoComplete autoComplete;
     protected final ErrorTop container;
     protected final ExpressionInfoDisplay expressionInfoDisplay;
+    private final Label typeLabel;
 
     public SimpleLiteralNode(ConsecutiveBase<Expression, ExpressionSaver> parent, Class<Expression> expressionClass, String ending)
     {
@@ -80,7 +81,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         }, () -> true, WhitespacePolicy.ALLOW_ANYWHERE, (cur, next) -> Utility.containsCodepoint(ending, next));
         
         // We don't put anything in the type label, because it's clearly a String:
-        Label typeLabel = new Label();
+        typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditorUtil.enableSelection(typeLabel, this);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
@@ -136,6 +137,14 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     @Override
     public void cleanup()
     {
+    }
+
+    @Override
+    public final void setSelected(boolean selected, boolean focus)
+    {
+        FXUtility.setPseudoclass(container, "exp-selected", selected);
+        if (focus)
+            typeLabel.requestFocus();
     }
 
     @Override

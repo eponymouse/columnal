@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.scene.control.TextField;
 import log.Log;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
+import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -14,11 +15,11 @@ import threadchecker.Tag;
  */
 public class LeaveableTextField extends TextField
 {
-    private final EEDisplayNode us;
+    private final ConsecutiveChild<?, ?> us;
     private final EEDisplayNodeParent parent;
     private boolean leavingByCursor = false;
 
-    public LeaveableTextField(EEDisplayNode us, EEDisplayNodeParent parent)
+    public LeaveableTextField(ConsecutiveChild<?, ?> us, EEDisplayNodeParent parent)
     {
         this.us = us;
         this.parent = parent;
@@ -51,6 +52,20 @@ public class LeaveableTextField extends TextField
         }
         else
             super.backward();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void selectHome()
+    {
+        parent.getEditor().selectExtremity(us, SelectExtremityTarget.HOME);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void selectEnd()
+    {
+        parent.getEditor().selectExtremity(us, SelectExtremityTarget.END);
     }
 
     @Override

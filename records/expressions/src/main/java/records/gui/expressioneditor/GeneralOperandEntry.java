@@ -91,9 +91,11 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     }
 
     @Override
-    public void setSelected(boolean selected)
+    public final void setSelected(boolean selected, boolean focus)
     {
         FXUtility.setPseudoclass(container, "exp-selected", selected);
+        if (focus)
+            typeLabel.requestFocus();
     }
 
     public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)

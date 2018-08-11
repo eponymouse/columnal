@@ -46,6 +46,7 @@ import utility.gui.ScrollPaneFill;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -228,12 +229,14 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
         private final ConsecutiveChild<E, P> end;
+        private final @Nullable ConsecutiveChild<E, P> focus;
 
-        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end)
+        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end, @Nullable ConsecutiveChild<E, P> focus)
         {
             this.parent = parent;
             this.start = start;
             this.end = end;
+            this.focus = focus;
         }
 
         public boolean contains(ConsecutiveChild<?, ?> item)
@@ -253,7 +256,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
         public void markSelection(boolean selected)
         {
-            parent.markSelection(start, end, selected);
+            parent.markSelection(start, end, selected, focus);
         }
     }
 
@@ -278,7 +281,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             clearSelection();
         }
 
-        selection = new SelectionInfo<E, P>(src.getParent(), src, src);
+        selection = new SelectionInfo<E, P>(src.getParent(), src, src, src);
         selection.markSelection(true);
     }
 
@@ -300,11 +303,72 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         clearSelection();
         ensureSelectionIncludes(src);
     }
+    
+    // Exact item given, or its left or its right?
+    public static enum SelectionTarget
+    {
+        LEFT, AS_IS, RIGHT;
+        
+        public <E extends StyledShowable, P> ConsecutiveChild<E, P> apply(ConsecutiveChild<E, P> original)
+        {
+            ImmutableList<ConsecutiveChild<E, P>> allChildren = original.getParent().getAllChildren();
+            int ourIndex = Utility.indexOfRef(allChildren, original);
+            if (ourIndex == -1)
+            {
+                Log.normalStackTrace("Could not find node in its parent's children", 100);
+                return original;
+            }
+            switch (this)
+            {
+                case LEFT:
+                    if (ourIndex > 0)
+                        return allChildren.get(ourIndex - 1); 
+                    break;
+                case RIGHT:
+                    if (ourIndex + 1 < allChildren.size())
+                        return allChildren.get(ourIndex + 1);
+                    break;
+            }
+            return original;
+        }
+    }
+    
+    public static enum SelectExtremityTarget
+    {
+        HOME, END;
 
-    public <E extends StyledShowable, P> void extendSelectionTo(ConsecutiveChild<E, P> node)
+        public <E extends StyledShowable, P> ConsecutiveChild<E, P> apply(ConsecutiveChild<E, P> original)
+        {
+            ImmutableList<ConsecutiveChild<E, P>> allChildren = original.getParent().getAllChildren();
+            int ourIndex = Utility.indexOfRef(allChildren, original);
+            if (allChildren.isEmpty())
+            {
+                Log.normalStackTrace("Could not find node in its parent's children", 100);
+                return original;
+            }
+            switch (this)
+            {
+                case HOME:
+                    return allChildren.get(0);
+                case END:
+                    return allChildren.get(allChildren.size() - 1);
+            }
+            return original;
+        }
+    }
+    
+    public <E extends StyledShowable, P> void selectExtremity(ConsecutiveChild<E, P> node, SelectExtremityTarget selectExtremityTarget)
+    {
+        node = selectExtremityTarget.apply(node);
+        extendSelectionTo(node, SelectionTarget.AS_IS);
+    }
+
+    public <E extends StyledShowable, P> void extendSelectionTo(ConsecutiveChild<E, P> node, SelectionTarget selectionTarget)
     {
         if (selectionLocked)
             return;
+
+        node = selectionTarget.apply(node);
 
         if (selection != null && node.getParent() == selection.parent)
         {
@@ -322,13 +386,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             if (!startToTarget.isEmpty())
             {
                 clearSelection();
-                selection = new SelectionInfo<E, P>(node.getParent(), oldSelStart, node);
+                selection = new SelectionInfo<E, P>(node.getParent(), oldSelStart, node, node);
                 selection.markSelection(true);
             }
             else
             {
                 clearSelection();
-                selection = new SelectionInfo<E, P>(node.getParent(), node, oldSelEnd);
+                selection = new SelectionInfo<E, P>(node.getParent(), node, oldSelEnd, node);
                 selection.markSelection(true);
             }
         }

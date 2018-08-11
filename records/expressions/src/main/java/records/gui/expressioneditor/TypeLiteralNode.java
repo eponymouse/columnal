@@ -94,12 +94,6 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     */
 
     @Override
-    public void setSelected(boolean selected)
-    {
-        // TODO
-    }
-
-    @Override
     public void setHoverDropLeft(boolean on)
     {
 

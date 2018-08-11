@@ -70,12 +70,6 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     }
 
     @Override
-    public void setSelected(boolean selected)
-    {
-        // TODO
-    }
-
-    @Override
     public void setHoverDropLeft(boolean on)
     {
         FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);

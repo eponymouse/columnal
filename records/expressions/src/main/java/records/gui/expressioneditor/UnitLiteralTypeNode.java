@@ -66,13 +66,7 @@ public class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, TypeSav
     {
         unit.flushFocusRequest();
     }
-
-    @Override
-    public void setSelected(boolean selected)
-    {
-        // TODO
-    }
-
+    
     @Override
     public void setHoverDropLeft(boolean on)
     {

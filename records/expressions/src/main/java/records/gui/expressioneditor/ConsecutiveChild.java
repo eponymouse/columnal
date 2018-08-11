@@ -35,8 +35,14 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     
     // Delete from the beginning, delete pressed before us.  Return true if handled, false if not.
     boolean deleteFirst();
-    
-    void setSelected(boolean selected);
+
+    /**
+     * Sets the selected status of the child.  If focus is true,
+     * focus the top header.
+     * @param selected Selected or not?
+     * @param focus Focus the top header?
+     */
+    void setSelected(boolean selected, boolean focus);
 
     // Ideally this would be protected access:
     @SuppressWarnings("unchecked")

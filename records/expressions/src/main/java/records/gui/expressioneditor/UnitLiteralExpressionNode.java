@@ -73,13 +73,7 @@ public class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, Expre
     {
         unit.flushFocusRequest();
     }
-
-    @Override
-    public void setSelected(boolean selected)
-    {
-        // TODO
-    }
-
+    
     @Override
     public void setHoverDropLeft(boolean on)
     {
