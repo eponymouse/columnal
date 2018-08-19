@@ -6,10 +6,12 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.scene.control.CheckBox;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
@@ -103,18 +105,28 @@ public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
             selectAllCurrentTextField();
             write(declaration.getDefined().getDescription());
             push(KeyCode.TAB);
+            CheckBox equivCheck = getFocusOwner(CheckBox.class);
             @Nullable Pair<Rational, Unit> equiv = declaration.getEquivalentTo();
             if (equiv != null)
             {
                 // Tick the box:
-                push(KeyCode.SPACE);
+                if (!TestUtil.fx(() -> equivCheck.isSelected()))
+                    push(KeyCode.SPACE);
                 push(KeyCode.TAB);
                 selectAllCurrentTextField();
                 write(equiv.getFirst().toString());
                 push(KeyCode.TAB);
-                // TODO need to delete existing content
+                // Command-A doesn't work via robot:
+                push(KeyCode.F9);
+                push(KeyCode.BACK_SPACE);
                 write(equiv.getSecond().toString());
-            };
+            }
+            else
+            {
+                // Untick the box:
+                if (TestUtil.fx(() -> equivCheck.isSelected()))
+                    push(KeyCode.SPACE);
+            }
         }
     }
 

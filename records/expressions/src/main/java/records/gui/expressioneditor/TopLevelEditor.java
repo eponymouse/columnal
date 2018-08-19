@@ -303,6 +303,18 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         clearSelection();
         ensureSelectionIncludes(src);
     }
+
+    public <E extends StyledShowable, P> void selectAllSiblings(ConsecutiveChild<E, P> src)
+    {
+        if (selectionLocked)
+            return;
+
+        clearSelection();
+        ImmutableList<ConsecutiveChild<@NonNull E, P>> siblings = src.getParent().getAllChildren();
+        ConsecutiveChild<@NonNull E, P> end = siblings.get(siblings.size() - 1);
+        selection = new SelectionInfo<>(src.getParent(), siblings.get(0), end, end);
+        selection.markSelection(true);
+    }
     
     // Exact item given, or its left or its right?
     public static enum SelectionTarget
@@ -357,7 +369,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
     }
     
-    public <E extends StyledShowable, P> void selectExtremity(ConsecutiveChild<E, P> node, SelectExtremityTarget selectExtremityTarget)
+    public <E extends StyledShowable, P> void extendSelectionToExtremity(ConsecutiveChild<E, P> node, SelectExtremityTarget selectExtremityTarget)
     {
         node = selectExtremityTarget.apply(node);
         extendSelectionTo(node, SelectionTarget.AS_IS);
@@ -395,6 +407,14 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
                 selection = new SelectionInfo<E, P>(node.getParent(), node, oldSelEnd, node);
                 selection.markSelection(true);
             }
+        }
+    }
+    
+    public void deleteSelection()
+    {
+        if (selection != null)
+        {
+            selection.parent.deleteRangeIncl(selection.start, selection.end);
         }
     }
 

@@ -33,6 +33,7 @@ import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -295,7 +296,27 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             child.flushFocusRequest();
         }
     }
-    
+
+    protected void deleteRangeIncl(ConsecutiveChild<?, ?> start, ConsecutiveChild<?, ?> end)
+    {
+        boolean inRange = false;
+        atomicEdit.set(true);
+        for (Iterator<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> iterator = children.iterator(); iterator.hasNext(); )
+        {
+            ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child = iterator.next();
+            // Ordering important here: we remove begin/end inclusive:
+            if (child == start)
+                inRange = true;
+            if (inRange)
+                iterator.remove();
+            if (child == end)
+                inRange = false;
+        }
+        if (children.isEmpty())
+            children.add(focusWhenShown(makeBlankChild()));
+        atomicEdit.set(false);
+    }
+
     public static enum BracketBalanceType
     {
         ROUND, SQUARE;

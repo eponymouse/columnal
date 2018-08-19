@@ -94,7 +94,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     @Override
     protected Stream<Node> calculateNodes()
     {
-        return Stream.of(textField);
+        return Stream.of(container);
     }
 
     /*

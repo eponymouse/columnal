@@ -19,8 +19,6 @@ import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Polyline;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -245,7 +243,7 @@ public class ExpressionEditorUtil
     }
 
     @SuppressWarnings("initialization")
-    public static <E extends StyledShowable, P> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E, P> node)
+    public static <E extends StyledShowable, P> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E, P> node, TextField textField)
     {
         typeLabel.setOnMouseClicked(e -> {
             if (!e.isStillSincePress())
@@ -269,13 +267,26 @@ public class ExpressionEditorUtil
             }
             else if (e.getCode() == KeyCode.HOME && e.isShiftDown())
             {
-                node.getParent().getEditor().selectExtremity(node, SelectExtremityTarget.HOME);
+                node.getParent().getEditor().extendSelectionToExtremity(node, SelectExtremityTarget.HOME);
             }
             else if (e.getCode() == KeyCode.END && e.isShiftDown())
             {
-                node.getParent().getEditor().selectExtremity(node, SelectExtremityTarget.END);
+                node.getParent().getEditor().extendSelectionToExtremity(node, SelectExtremityTarget.END);
+            }
+            else if (e.getCode() == KeyCode.BACK_SPACE || e.getCode() == KeyCode.DELETE)
+            {
+                node.getParent().getEditor().deleteSelection();
             }
             e.consume();
+        });
+        
+        textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            if ((e.isShortcutDown() && e.getCode() == KeyCode.A) || e.getCode() == KeyCode.F9)
+            {
+                node.getParent().getEditor().selectAllSiblings(node);
+                e.consume();
+            }
+            // Important not to consume by default!
         });
     }
 }

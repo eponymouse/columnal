@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.control.TextField;
-import log.Log;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
 import threadchecker.OnThread;
@@ -58,14 +57,14 @@ public class LeaveableTextField extends TextField
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void selectHome()
     {
-        parent.getEditor().selectExtremity(us, SelectExtremityTarget.HOME);
+        parent.getEditor().extendSelectionToExtremity(us, SelectExtremityTarget.HOME);
     }
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void selectEnd()
     {
-        parent.getEditor().selectExtremity(us, SelectExtremityTarget.END);
+        parent.getEditor().extendSelectionToExtremity(us, SelectExtremityTarget.END);
     }
 
     @Override

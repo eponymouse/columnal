@@ -83,7 +83,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         // We don't put anything in the type label, because it's clearly a String:
         typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
-        ExpressionEditorUtil.enableSelection(typeLabel, this);
+        ExpressionEditorUtil.enableSelection(typeLabel, this, textField);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
         container = new ErrorTop(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
         this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField);
