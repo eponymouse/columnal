@@ -102,5 +102,15 @@ public class GenUnitDefinition extends Generator<UnitDetails>
             this.name = name;
             this.aliasOrDeclaration = aliasOrDeclaration;
         }
+
+        // For debugging:
+        @Override
+        public String toString()
+        {
+            return "UnitDetails{" +
+                    "name='" + name + '\'' +
+                    ", aliasOrDeclaration=" + aliasOrDeclaration +
+                    '}';
+        }
     }
 }

@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.TableCell;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
@@ -35,10 +36,12 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
@@ -195,4 +198,51 @@ public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
         tmpUnits.loadUserUnits(file.units());
         assertEquals(ImmutableMap.of(after.name, after.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
     }
+
+    @Property(trials = 5)
+    @OnThread(Tag.Simulation)
+    public void testDeleteUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsA, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsB, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsC, int whichToDelete) throws Exception
+    {
+        DummyManager prevManager = new DummyManager();
+        prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsA.name, unitDetailsA.aliasOrDeclaration));
+        prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsB.name, unitDetailsB.aliasOrDeclaration));
+        prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsC.name, unitDetailsC.aliasOrDeclaration));
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        TestUtil.sleep(1000);
+
+        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        TestUtil.delay(200);
+        clickOn(".user-unit-list");
+        push(KeyCode.HOME);
+        int count = 0;
+        while (!existsSelectedCell(unitDetailsA.name) && count++ < 3)
+            push(KeyCode.DOWN);
+        assertTrue(unitDetailsA.name, existsSelectedCell(unitDetailsA.name));
+        clickOn(".id-units-userDeclared-remove");
+        TestUtil.sleep(500);
+        clickOn(".close-button");
+        TestUtil.sleep(500);
+
+        // Check that saved units in file match our new unit:
+        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+        Log.debug("Saved:\n" + fileContent);
+        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+        UnitManager tmpUnits = new UnitManager();
+        tmpUnits.loadUserUnits(file.units());
+        assertEquals(ImmutableMap.of(unitDetailsB.name, unitDetailsB.aliasOrDeclaration, unitDetailsC.name, unitDetailsC.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+    }
+
+    @OnThread(Tag.Simulation)
+    private boolean existsSelectedCell(String content)
+    {
+        return lookup(".table-cell").match(t -> {
+            if (t instanceof TableCell)
+            {
+                TableCell tableCell = (TableCell) t;
+                return TestUtil.fx(() -> tableCell.getTableRow().isSelected() && content.equals(tableCell.getText()));
+            }
+            return false;
+        }).tryQuery().isPresent();
+    }
+
 }
