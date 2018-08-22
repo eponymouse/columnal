@@ -2,7 +2,7 @@ package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
@@ -22,9 +22,6 @@ import java.util.List;
  */
 public class NumberEntry extends TerminalComponent<@Value Number>
 {
-    private Item integerComponent;
-    private Item dotComponent;
-    private Item fracComponent;
     // NumberEntry can have overrides while it is not focused for editing:
     private String actualIntegerPart;
     private String actualFracPart;
@@ -38,16 +35,31 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     {
         super(parents);
         actualIntegerPart = initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString());
-        integerComponent = new Item(getItemParents(), actualIntegerPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int");
+        Item integerComponent = makeIntegerComponent(actualIntegerPart);
         items.add(integerComponent);
         actualFracPart = initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE);
-        dotComponent = new Item(getItemParents(), actualFracPart.isEmpty() ? "" : ".", ItemVariant.NUMBER_DOT, "").withStyleClasses("stf-number-dot");
+        Item dotComponent = makeDotComponent(actualFracPart.isEmpty() ? "" : ".");
         items.add(dotComponent);
-        fracComponent = new Item(getItemParents(), actualFracPart, ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac");
+        Item fracComponent = makeFracComponent(actualFracPart);
         items.add(fracComponent);
 
         displayIntegerPart = actualIntegerPart;
         displayFracPart = actualFracPart;
+    }
+
+    private Item makeFracComponent(@UnknownInitialization(TerminalComponent.class) NumberEntry this, String fracPart)
+    {
+        return new Item(getItemParents(), fracPart, ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac");
+    }
+
+    public Item makeDotComponent(@UnknownInitialization(TerminalComponent.class) NumberEntry this, String dot)
+    {
+        return new Item(getItemParents(), dot, ItemVariant.NUMBER_DOT, "").withStyleClasses("stf-number-dot");
+    }
+
+    public Item makeIntegerComponent(@UnknownInitialization(TerminalComponent.class) NumberEntry this, String intPart)
+    {
+        return new Item(getItemParents(), intPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int");
     }
 
     @Override
@@ -55,7 +67,9 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     {
         try
         {
-            return Either.right(DataTypeUtility.value(Utility.parseNumber(getItem(ItemVariant.EDITABLE_NUMBER_INT) + "." + getItem(ItemVariant.EDITABLE_NUMBER_FRAC))));
+            actualIntegerPart = getItem(ItemVariant.EDITABLE_NUMBER_INT);
+            actualFracPart = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
+            return Either.right(DataTypeUtility.value(Utility.parseNumber(actualIntegerPart + "." + actualFracPart)));
         }
         catch (UserException e)
         {
@@ -83,18 +97,21 @@ public class NumberEntry extends TerminalComponent<@Value Number>
         this.focused = focused;
         // We have to work out whereabouts the caret currently lies.
         CaretPositionMapper mapper;
-        int prevInt = integerComponent.getLength();
-        int prevDot = dotComponent.getLength();
+        String integerComponent = getItem(ItemVariant.EDITABLE_NUMBER_INT);
+        String dotComponent = getItem(ItemVariant.NUMBER_DOT);
+        String fracComponent = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
+        int prevInt = integerComponent.length();
+        int prevDot = dotComponent.length();
         updateComponentContent();
         if (focused)
         {
             return n -> {
                 if (n <= prevInt)
                     // Right-align the position:
-                    return integerComponent.getLength() - (prevInt - n);
+                    return integerComponent.length() - (prevInt - n);
                 else
                     // Left-align the position:
-                    return integerComponent.getLength() + dotComponent.getLength() + (n - (prevInt + prevDot));
+                    return integerComponent.length() + dotComponent.length() + (n - (prevInt + prevDot));
             };
         }
         else
@@ -104,9 +121,9 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     private void updateComponentContent()
     {
         ImmutableList<Item> prospectiveContent = ImmutableList.of(
-            integerComponent = integerComponent.replaceContent(!focused ? displayIntegerPart : actualIntegerPart),
-            dotComponent,
-            fracComponent = fracComponent.replaceContent(!focused ? displayFracPart : actualFracPart)
+            makeIntegerComponent(!focused ? displayIntegerPart : actualIntegerPart),
+            makeDotComponent(actualFracPart.isEmpty() ? "" : "."),
+            makeFracComponent(!focused ? displayFracPart : actualFracPart)
         );
         
         // Should we avoid setting content if no change?
