@@ -1,6 +1,9 @@
 package test.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.input.KeyCode;
@@ -8,7 +11,9 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
 import records.data.ColumnId;
@@ -24,21 +29,26 @@ import records.gui.DataCellSupplier.VersionedSTF;
 import records.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
 import test.TestUtil;
+import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @OnThread(Tag.Simulation)
+@RunWith(JUnitQuickcheck.class)
 public class TestNumberColumnDisplay extends ApplicationTest
 {
     @OnThread(Tag.Any)
@@ -248,5 +258,56 @@ public class TestNumberColumnDisplay extends ApplicationTest
     public void testBothEnds() throws Exception
     {
         testNumbers(of("1234567890.112233445566778899", "2.3", "3.45", "4.567", "1234567890"), of("\u2026567890.1\u2026", "2.3 ", "3.45", "4.5\u2026", "\u2026567890  "));
+    }
+    
+    @Property(trials = 1)
+    public void testScrollUpDown(@From(GenRandom.class) Random r) throws Exception
+    {
+        // Make some columns of ascending numbers and text,
+        // then scroll up and down and check relation.
+        
+        List<String> values = new AbstractList<String>() {
+
+            @Override
+            public int size()
+            {
+                return 1000;
+            }
+
+            @Override
+            public String get(int index)
+            {
+                return Integer.toString(index);
+            }
+        };
+
+        MainWindowActions mwa = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of((RecordSet rs) ->
+                new MemoryNumericColumn(rs, new ColumnId("C"), new NumberInfo(Unit.SCALAR), values.stream())
+        ), values.size()));
+        
+        Supplier<List<String>> getCurShowing = () ->
+                IntStream.range(0, 1000).mapToObj(i -> Utility.streamNullable(TestUtil.fx(() -> mwa._test_getDataCell(new CellPosition(CellPosition.row(i), CellPosition.col(0)))))).flatMap(s -> s).map(s -> TestUtil.fx(() -> s.getText())).collect(ImmutableList.toImmutableList());
+        
+        checkNumericSorted(getCurShowing.get());
+
+        for (int i = 0; i < 15; i++)
+        {
+            int iFinal = i;
+            TestUtil.fx_(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
+            TestUtil.sleep(1000);
+            checkNumericSorted(getCurShowing.get());
+        }
+        
+    }
+
+    @SuppressWarnings("deprecation")
+    private void checkNumericSorted(List<String> numbers)
+    {
+        for (int i = 1; i < numbers.size(); i++)
+        {
+            int prev = Integer.valueOf(numbers.get(i - 1));
+            int cur = Integer.valueOf(numbers.get(i));
+            assertThat(prev, Matchers.lessThan(cur));
+        }
     }
 }
