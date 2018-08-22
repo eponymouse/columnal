@@ -32,12 +32,10 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
 
-    private final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
-    
     @Override
     public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
     {
-        visibleItems.clear();
+        final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
         for (@Nullable Pair<StructuredTextField, EditorKit<@Value Number>> visibleCell : vis.visibleCells)
         {
             if (visibleCell != null)
