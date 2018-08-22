@@ -195,12 +195,14 @@ public class StructuredTextField extends StyleClassedTextArea
         if (this.editorKit != null)
         {
             getStyleClass().removeAll(this.editorKit.stfStyles);
+            this.editorKit.setField(null);
         }
         
         this.editorKit = editorKit;
         this.editorKit.setField(this);
         getStyleClass().addAll(editorKit.stfStyles);
         List<Item> initialItems = editorKit.contentComponent.getItems();
+        curValue.clear();
         curValue.addAll(initialItems);
         
         @SuppressWarnings("initialization")
@@ -1061,7 +1063,7 @@ public class StructuredTextField extends StyleClassedTextArea
             return contentComponent.focusChanged(focused);
         }
 
-        public void setField(StructuredTextField structuredTextField)
+        public void setField(@Nullable StructuredTextField structuredTextField)
         {
             curField = structuredTextField;
         }
