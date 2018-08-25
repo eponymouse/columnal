@@ -18,8 +18,8 @@ tagRef : TAGGED ident tagRefParam*; // First ident is name, rest are type params
 typeVar : TYPEVAR ident;
 
 // Type names are valid as idents, especially for cases like: MaybeNumber : Nothing | Number(Number)
-ident : UNQUOTED_NAME | STRING | NUMBER | date | BOOLEAN | TEXT;
-tagItem : ident (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
+ident : STRING | NUMBER | date | BOOLEAN | TEXT | UNQUOTED_NAME;
+tagItem : UNQUOTED_NAME (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
 
 defaultValue: DEFAULT VALUE VALUE_END;
 

@@ -2,6 +2,7 @@ package test.gui;
 
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
 import org.apache.commons.lang3.SystemUtils;
@@ -14,12 +15,12 @@ import threadchecker.Tag;
 public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
 {
     @OnThread(Tag.Any)
-    public default TextField selectAllCurrentTextField()
+    public default TextInputControl selectAllCurrentTextField()
     {
         Node focusOwner = getFocusOwner();
-        if (!(focusOwner instanceof TextField))
+        if (!(focusOwner instanceof TextInputControl))
             throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
-        TextField textField = (TextField) focusOwner;
+        TextInputControl textField = (TextInputControl) focusOwner;
 
         // Some sort of bug on OS X prevents Cmd-A working in TestFX:
         if (SystemUtils.IS_OS_MAC_OSX)

@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.unit.UnitManager;
@@ -9,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.UnitLiteralExpressionNode;
+import records.jellytype.JellyUnit;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -39,9 +41,9 @@ public class UnitLiteralExpression extends NonOperatorExpression
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
-        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> saved = unitExpression.asUnit(typeState.getUnitManager());
+        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> saved = unitExpression.asUnit(typeState.getUnitManager());
         return saved.<@Nullable CheckedExp>eitherInt(error -> {onError.recordError(this, error.getFirst()); return null;}, unit -> 
-            onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit)), ExpressionKind.EXPRESSION, typeState));
+            onError.recordTypeAndError(this, Either.right(TypeExp.unitExpToUnitGADT(this, unit.makeUnitExp(ImmutableMap.of()))), ExpressionKind.EXPRESSION, typeState));
     }
 
     @Override

@@ -101,4 +101,14 @@ public class JellyTypeTagged extends JellyType
     {
         return visitor.tagged(new TypeId(typeName), typeParams);
     }
+
+    public String getName()
+    {
+        return typeName;
+    }
+    
+    public ImmutableList<Either<JellyUnit, JellyType>> getTypeParams()
+    {
+        return typeParams;
+    }
 }

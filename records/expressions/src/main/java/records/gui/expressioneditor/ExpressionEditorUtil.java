@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.BooleanExpression;
 import javafx.geometry.Side;
 import javafx.scene.Node;
@@ -26,6 +27,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.error.InternalException;
 import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
 import records.gui.expressioneditor.TopLevelEditor.SelectionTarget;
 import records.jellytype.JellyType;
@@ -180,7 +182,17 @@ public class ExpressionEditorUtil
                 if (unitExpression == null)
                     unit = Unit.SCALAR;
                 else
-                    unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> u.toConcreteUnit());
+                    unit = unitExpression.asUnit(state.getUnitManager()).<@Nullable Unit>either(_err -> null, u -> {
+                        try
+                        {
+                            return u.makeUnit(ImmutableMap.of());
+                        }
+                        catch (InternalException e)
+                        {
+                            Log.log(e);
+                            return null;
+                        }
+                    });
                 literals.add(new Pair<NumericLiteral, @Nullable Unit>(n, unit));
             }
             else

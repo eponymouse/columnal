@@ -5,9 +5,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.TypeEntry;
+import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
@@ -47,6 +50,12 @@ public class InvalidOpTypeExpression extends TypeExpression
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
         return null;
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    {
+        throw new UserException("Invalid type expression");
     }
 
     @Override

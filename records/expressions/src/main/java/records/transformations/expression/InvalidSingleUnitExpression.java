@@ -9,6 +9,7 @@ import records.error.UserException;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitSaver;
+import records.jellytype.JellyUnit;
 import records.loadsave.OutputBuilder;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -31,7 +32,7 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
         return Either.left(new Pair<>(StyledString.s("Invalid unit name"), ImmutableList.of()));
     }

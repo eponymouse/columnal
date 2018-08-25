@@ -116,6 +116,22 @@ public class Either<A, B>
         return Either.right(r);
     }
 
+    // Maps the items to Either, but stops at the first Left and returns it.  If no Lefts, returns all the Rights as list.
+    @SuppressWarnings("nullness")
+    public static <E, R, T> Either<E, List<R>> mapM(List<T> xs, Function<? super T, Either<E, R>> applyOne)
+    {
+        List<R> r = new ArrayList<>(xs.size());
+        for (T x : xs)
+        {
+            Either<E, R> y = applyOne.apply(x);
+            if (y.a != null)
+                return Either.left(y.a);
+            else
+                r.add(y.b);
+        }
+        return Either.right(r);
+    }
+
     // Equivalent to either(Either::left, Either.right . applyRight)
     @SuppressWarnings("nullness")
     public <R> Either<A, R> map(Function<? super B, R> applyRight)

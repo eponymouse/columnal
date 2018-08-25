@@ -25,9 +25,12 @@ import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
+import styled.StyledString;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -57,6 +60,11 @@ public abstract class JellyType
         return JellyTypePrimitive.text();
     }
 
+    public static JellyType number(JellyUnit unit)
+    {
+        return new JellyTypeNumberWithUnit(unit);
+    }
+
     public abstract TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException;
 
     public abstract DataType makeDataType(ImmutableMap<String, Either<Unit, DataType>> typeVariables, TypeManager mgr) throws InternalException, UserException;
@@ -80,9 +88,9 @@ public abstract class JellyType
         return new JellyTypeTuple(members, true);
     }
 
-    public static JellyType tagged(String name, ImmutableList<JellyType> params)
+    public static JellyType tagged(String name, ImmutableList<Either<JellyUnit, JellyType>> params)
     {
-        return new JellyTypeTagged(name, Utility.mapListI(params, p -> Either.right(p)));
+        return new JellyTypeTagged(name, params);
     }
     
     public static JellyType list(JellyType inner)

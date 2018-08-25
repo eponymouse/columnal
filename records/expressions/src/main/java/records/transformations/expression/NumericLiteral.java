@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
@@ -14,6 +15,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.UnitLiteralExpressionNode;
+import records.jellytype.JellyUnit;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import records.typeExp.units.UnitExp;
@@ -47,8 +49,8 @@ public class NumericLiteral extends Literal
         if (unit == null)
             return Either.right(TypeExp.plainNumber(this));
 
-        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<Either<StyledString, TypeExp>>either(err -> {
+        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
+        return errOrUnit.<Either<StyledString, TypeExp>>eitherInt(err -> {
             /*
             onError.recordQuickFixes(this, Utility.mapList(err.getSecond(), u -> {
                 @SuppressWarnings("recorded")
@@ -57,7 +59,7 @@ public class NumericLiteral extends Literal
             }));
             */
             return Either.left(err.getFirst());
-        }, u -> Either.right(new NumTypeExp(this, u)));
+        }, u -> Either.right(new NumTypeExp(this, u.makeUnitExp(ImmutableMap.of()))));
     }
 
     @Override

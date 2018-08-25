@@ -54,7 +54,8 @@ import static records.data.datatype.DataType.TEXT;
 public class TypeManager
 {
     private final UnitManager unitManager;
-    private final HashMap<TypeId, TaggedTypeDefinition> knownTypes = new HashMap<>();
+    private final HashMap<TypeId, TaggedTypeDefinition> userTypes = new HashMap<>();
+    private final HashMap<TypeId, TaggedTypeDefinition> allKnownTypes = new HashMap<>();
     private final TaggedTypeDefinition voidType;
     private final TaggedTypeDefinition maybeType;
     // Only need one value for Missing:
@@ -71,15 +72,15 @@ public class TypeManager
             new TagType<>("Present", JellyType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
-        knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
+        allKnownTypes.put(maybeType.getTaggedTypeName(), maybeType);
         voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
-        knownTypes.put(voidType.getTaggedTypeName(), voidType);
+        allKnownTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
         typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
-        knownTypes.put(new TypeId("Type"), typeGADT);
+        allKnownTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
         unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
-        knownTypes.put(new TypeId("Unit"), unitGADT);
+        allKnownTypes.put(new TypeId("Unit"), unitGADT);
     }
     
     public TaggedValue maybeMissing()
@@ -101,9 +102,9 @@ public class TypeManager
             throw new InternalException("Tagged type cannot have zero tags");
 
         TypeId idealTypeId = new TypeId(idealTypeName);
-        if (knownTypes.containsKey(idealTypeId))
+        if (allKnownTypes.containsKey(idealTypeId))
         {
-            TaggedTypeDefinition existingType = knownTypes.get(idealTypeId);
+            TaggedTypeDefinition existingType = allKnownTypes.get(idealTypeId);
             // Check if it's the same:
             if (tagTypes.equals(existingType.getTags()))
             {
@@ -120,7 +121,8 @@ public class TypeManager
         {
             // TODO run sanity check for duplicate tag type names
             TaggedTypeDefinition newType = new TaggedTypeDefinition(idealTypeId, typeVariables, tagTypes);
-            knownTypes.put(idealTypeId, newType);
+            allKnownTypes.put(idealTypeId, newType);
+            userTypes.put(idealTypeId, newType);
             return newType;
         }
     }
@@ -159,8 +161,10 @@ public class TypeManager
             else
                 tags.add(new TagType<JellyType>(tagName, null));
         }
-        
-        knownTypes.put(typeName, new TaggedTypeDefinition(typeName, typeParams, ImmutableList.copyOf(tags)));
+
+        TaggedTypeDefinition typeDefinition = new TaggedTypeDefinition(typeName, typeParams, ImmutableList.copyOf(tags));
+        userTypes.put(typeName, typeDefinition);
+        allKnownTypes.put(typeName, typeDefinition);
     }
 
     public DataType loadTypeUse(String type) throws InternalException, UserException
@@ -287,7 +291,7 @@ public class TypeManager
 
     public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, UserException
     {
-        TaggedTypeDefinition taggedTypeDefinition = knownTypes.get(typeId);
+        TaggedTypeDefinition taggedTypeDefinition = allKnownTypes.get(typeId);
         if (taggedTypeDefinition == null)
             return null;
         else
@@ -300,18 +304,26 @@ public class TypeManager
     }
 
     /**
-     * Gets all the known (tagged) types.
+     * Gets all the known (tagged) types, including built-in.
      */
     public Map<TypeId, TaggedTypeDefinition> getKnownTaggedTypes()
     {
-        return Collections.unmodifiableMap(knownTypes);
+        return Collections.unmodifiableMap(allKnownTypes);
+    }
+
+    /**
+     * Gets all the user-defined tagged types for this file (excl built-in).
+     */
+    public Map<TypeId, TaggedTypeDefinition> getUserTaggedTypes()
+    {
+        return Collections.unmodifiableMap(userTypes);
     }
 
     @OnThread(Tag.Simulation)
     public String save()
     {
         List<TaggedTypeDefinition> ignoreTypes = Arrays.asList(voidType, maybeType, unitGADT, typeGADT);
-        List<TaggedTypeDefinition> typesToSave = knownTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.toList());
+        List<TaggedTypeDefinition> typesToSave = userTypes.values().stream().filter(t -> !Utility.containsRef(ignoreTypes, t)).collect(Collectors.toList());
         
         Map<@NonNull TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
         for (TaggedTypeDefinition taggedTypeDefinition : typesToSave)
@@ -322,7 +334,7 @@ public class TypeManager
                     continue;
 
                 tagType.getInner().forNestedTagged(typeName -> {
-                    @Nullable TaggedTypeDefinition referencedType = knownTypes.get(typeName);
+                    @Nullable TaggedTypeDefinition referencedType = userTypes.get(typeName);
                     if (referencedType != null && !Utility.containsRef(ignoreTypes, referencedType))
                         incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<>()).add(taggedTypeDefinition);
                 });
@@ -355,17 +367,20 @@ public class TypeManager
 
     public void _test_copyTaggedTypesFrom(TypeManager typeManager)
     {
-        for (TaggedTypeDefinition taggedTypeDefinition : typeManager.knownTypes.values())
+        for (TaggedTypeDefinition taggedTypeDefinition : typeManager.userTypes.values())
         {
-            if (!knownTypes.containsKey(taggedTypeDefinition.getTaggedTypeName()))
-                knownTypes.put(taggedTypeDefinition.getTaggedTypeName(), taggedTypeDefinition);
+            if (!userTypes.containsKey(taggedTypeDefinition.getTaggedTypeName()))
+            {
+                userTypes.put(taggedTypeDefinition.getTaggedTypeName(), taggedTypeDefinition);
+                allKnownTypes.put(taggedTypeDefinition.getTaggedTypeName(), taggedTypeDefinition);
+            }
         }
         
     }
 
     public Either<String, TagInfo> lookupTag(String typeName, String constructorName)
     {
-        @Nullable TaggedTypeDefinition type = knownTypes.get(new TypeId(typeName));
+        @Nullable TaggedTypeDefinition type = allKnownTypes.get(new TypeId(typeName));
         if (type == null)
             return Either.left(constructorName);
 

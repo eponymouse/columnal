@@ -79,12 +79,12 @@ public class JellyUnit
         return u;
     }
 
-    protected JellyUnit divideBy(JellyUnit rhs)
+    public JellyUnit divideBy(JellyUnit rhs)
     {
         return times(raiseBy(-1));
     }
     
-    protected JellyUnit times(JellyUnit rhs)
+    public JellyUnit times(JellyUnit rhs)
     {
         JellyUnit u = new JellyUnit();
         u.units.putAll(units);
@@ -100,7 +100,7 @@ public class JellyUnit
         return u;
     }
 
-    protected JellyUnit raiseBy(int power)
+    public JellyUnit raiseBy(int power)
     {
         if (power == 0)
             return new JellyUnit();

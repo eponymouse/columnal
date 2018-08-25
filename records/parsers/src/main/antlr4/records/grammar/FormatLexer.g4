@@ -29,7 +29,6 @@ COLUMN : 'COLUMN';
 
 TUPLE_MORE : '_';
 CONS: ':';
-UNQUOTED_NAME : ~[ \t\r\n:(),[\]|"\-{}@]+;
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 COMMA: ',';
@@ -45,6 +44,10 @@ INVALIDOPS : '@invalidtypeops';
 
 
 NEWLINE : '\r'? '\n' ;
+
+// Needs to be last to favour built-in type names:
+// Important that this is the same as in ExpressionLexer:
+UNQUOTED_NAME : [\p{Alpha}\p{General_Category=Other_Letter}] (('_' | ' ')? [\p{Alpha}\p{Digit}\p{General_Category=Other_Letter}])*;
 
 mode VALUE_MODE;
 VALUE_END: NEWLINE -> popMode;

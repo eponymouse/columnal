@@ -21,14 +21,14 @@ import java.util.stream.Stream;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
 {
-    private final FXPlatformConsumer<@Nullable DataType> onChange;
+    private final FXPlatformConsumer<TypeExpression> onChange;
 
-    public TypeEditor(TypeManager typeManager, TypeExpression startingValue, FXPlatformConsumer<@Nullable DataType> onChange)
+    public TypeEditor(TypeManager typeManager, TypeExpression startingValue, FXPlatformConsumer<TypeExpression> onChange)
     {
         super(new TypeExpressionOps(), typeManager, "type-editor");
         
         this.onChange = onChange;
-        onChange.consume(null);
+        onChange.consume(startingValue);
         
         // Safe because at end of constructor:
         Utility.later(this).loadContent(startingValue, true);
@@ -42,7 +42,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
         @UnknownIfRecorded TypeExpression typeExpression = save();
         @Nullable DataType dataType = typeExpression.toDataType(getTypeManager());
         Log.debug("Latest type: " + dataType + " from expression: " + typeExpression.save(new TableAndColumnRenames(ImmutableMap.of())));
-        onChange.consume(dataType);
+        onChange.consume(typeExpression);
     }
 
     @Override

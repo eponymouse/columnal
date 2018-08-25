@@ -5,6 +5,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
+import records.jellytype.JellyType;
 import records.transformations.expression.BracketedStatus;
 import records.gui.expressioneditor.TypeEntry;
 import styled.StyledString;
@@ -63,6 +66,12 @@ public class TupleTypeExpression extends TypeExpression
             memberTypes.add(memberType);
         }
         return DataType.tuple(memberTypes.build());
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    {
+        return JellyType.tuple(Utility.mapListExI(members, m -> m.toJellyType(typeManager)));
     }
 
     @Override

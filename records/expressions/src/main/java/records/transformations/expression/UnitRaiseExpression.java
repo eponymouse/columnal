@@ -5,6 +5,7 @@ import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitSaver;
+import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
@@ -26,11 +27,11 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> lhs = unit.asUnit(unitManager);
+        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> lhs = unit.asUnit(unitManager);
 
-        return lhs.map(u -> u.raisedTo(power));
+        return lhs.map(u -> u.raiseBy(power));
     }
 
     @Override

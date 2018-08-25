@@ -155,8 +155,8 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     }
 
     // Either gives back an error + (maybe empty) list of quick fixes, or a successful unit
-    public abstract Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager);
-
+    public abstract Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager);
+    
     public abstract String save(boolean topLevel);
 
     @Override

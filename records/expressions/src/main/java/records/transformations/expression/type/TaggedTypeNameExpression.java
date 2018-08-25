@@ -11,6 +11,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
+import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
@@ -68,6 +69,12 @@ public class TaggedTypeNameExpression extends TypeExpression
         // If needs type arguments then by itself, not a valid type.
         // We rely on the type-application operator to spot us before calling us.
         return null;
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException
+    {
+        return JellyType.tagged(typeName.getRaw(), ImmutableList.of());
     }
 
     @Override

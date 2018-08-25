@@ -4,7 +4,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
+import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
@@ -46,6 +49,12 @@ public class UnfinishedTypeExpression extends TypeExpression
     }
 
     @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    {
+        throw new UserException("Invalid type expression: \"" + value + "\"");
+    }
+
+    @Override
     public boolean isEmpty()
     {
         return value.isEmpty();
@@ -68,7 +77,6 @@ public class UnfinishedTypeExpression extends TypeExpression
     @Override
     public int hashCode()
     {
-
         return Objects.hash(value);
     }
 

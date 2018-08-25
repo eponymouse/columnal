@@ -1,12 +1,17 @@
 package records.transformations.expression.type;
 
+import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
+import records.jellytype.JellyType;
+import records.jellytype.JellyUnit;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
@@ -36,10 +41,26 @@ public class NumberTypeExpression extends TypeExpression
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
         return unitExpression == null ? DataType.NUMBER : unitExpression.asUnit(typeManager.getUnitManager())
-            .<@Nullable DataType>either(err -> null, unitExp -> {
-                @Nullable Unit unit = unitExp.toConcreteUnit();
-                return unit == null ? null : DataType.number(new NumberInfo(unit));
+            .<@Nullable DataType>either(err -> null, jellyUnit -> {
+                try
+                {
+                    return DataType.number(new NumberInfo(jellyUnit.makeUnit(ImmutableMap.of())));
+                }
+                catch (InternalException e)
+                {
+                    return null;
+                }
             });
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    {
+        if (unitExpression == null)
+            return JellyType.number(JellyUnit.fromConcrete(Unit.SCALAR));
+        
+        return unitExpression.asUnit(typeManager.getUnitManager())
+            .eitherEx(p -> {throw new UserException(p.getFirst().toPlain());}, JellyType::number);
     }
 
     @Override

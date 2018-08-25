@@ -11,6 +11,7 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.error.InternalException;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
@@ -42,7 +43,17 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
         super.selfChanged();
         clearAllErrors();
         @UnknownIfRecorded UnitExpression unitExpression = save();
-        @Nullable Unit unit = unitExpression.asUnit(getTypeManager().getUnitManager()).<@Nullable Unit>either(p -> null, u -> u.toConcreteUnit());
+        @Nullable Unit unit = unitExpression.asUnit(getTypeManager().getUnitManager()).<@Nullable Unit>either(p -> null, u -> {
+            try
+            {
+                return u.makeUnit(ImmutableMap.of());
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+                return null;
+            }
+        });
         //Log.debug("Latest type: " + dataType + " from expression: " + typeExpression.save(new TableAndColumnRenames(ImmutableMap.of())));
         onChange.consume(unit);
     }

@@ -1,6 +1,8 @@
 package records.transformations.expression.type;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -10,6 +12,9 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.UnitLiteralTypeNode;
+import records.jellytype.JellyType;
+import records.jellytype.JellyTypeTagged;
+import records.jellytype.JellyUnit;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
@@ -70,7 +75,17 @@ public class TypeApplyExpression extends TypeExpression
             // Start at one:
             for (int i = 1; i < arguments.size(); i++)
             {
-                @Nullable Either<Unit, DataType> type = Either.surfaceNull(arguments.get(i).<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> u2.toConcreteUnit()), t -> t.toDataType(typeManager)));
+                @Nullable Either<Unit, DataType> type = Either.surfaceNull(arguments.get(i).<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> {
+                    try
+                    {
+                        return u2.makeUnit(ImmutableMap.of());
+                    }
+                    catch (InternalException e)
+                    {
+                        Log.log(e);
+                        return null;
+                    }
+                }), t -> t.toDataType(typeManager)));
                 if (type == null)
                     return null;
                 typeArgs.add(type);
@@ -86,6 +101,32 @@ public class TypeApplyExpression extends TypeExpression
         }
         // TODO issue an error about invalid expression
         return null;
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    {
+        if (arguments.isEmpty())
+            throw new InternalException("Empty type-apply expression");
+        
+        JellyTypeTagged lhs = arguments.get(0).eitherEx(
+            u -> {throw new UserException("Cannot apply type arguments to a unit expression."); },
+            t -> {
+                JellyType jt = t.toJellyType(typeManager);
+                if (jt instanceof JellyTypeTagged)
+                    return (JellyTypeTagged)jt;
+                else
+                    throw new UserException("Cannot apply type arguments to a type expression other than a tagged type.");
+            }
+        );
+
+        ImmutableList<Either<JellyUnit, JellyType>> addingArgs =
+            Utility.mapListExI(
+                arguments.subList(1, arguments.size()),
+                arg -> arg.mapBothEx(u -> u.asUnit(typeManager.getUnitManager()).eitherEx(p -> {throw new UserException(p.getFirst().toPlain());}, ju -> ju), t -> t.toJellyType(typeManager))
+            );
+        
+        return JellyType.tagged(lhs.getName(), Utility.concatI(lhs.getTypeParams(), addingArgs));
     }
 
     @Override

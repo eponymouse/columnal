@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.datatype.DataType;
@@ -8,6 +9,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenDataType.DataTypeAndManager;
+import test.gen.GenDataType.TypeKinds;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 
 /**
@@ -60,7 +62,7 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
     @Override
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        GenDataType genDataType = new GenDataType(onlyNumTextTemporal);
+        GenDataType genDataType = onlyNumTextTemporal ? new GenDataType(ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL)) : new GenDataType();
         DataTypeAndManager generated = genDataType.generate(sourceOfRandomness, generationStatus);
         this.r = sourceOfRandomness;
         this.gs = generationStatus;

@@ -6,6 +6,7 @@ import records.data.unit.UnitManager;
 import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitSaver;
+import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -29,7 +30,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
         return Either.left(new Pair<>(StyledString.s("Invalid operator combination"), Collections.emptyList()));
     }

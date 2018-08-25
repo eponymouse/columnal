@@ -2,6 +2,7 @@ package records.transformations.expression.type;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -187,6 +188,8 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
     public abstract String save(TableAndColumnRenames renames);
 
     public abstract @Nullable DataType toDataType(TypeManager typeManager);
+
+    public abstract JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException;
 
     public static TypeExpression parseTypeExpression(TypeManager typeManager, String src) throws UserException, InternalException
     {

@@ -13,6 +13,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -29,6 +30,7 @@ import records.grammar.UnitLexer;
 import records.grammar.UnitParser;
 import records.grammar.UnitParser.ScaleContext;
 import records.gui.expressioneditor.UnitEditor;
+import records.jellytype.JellyUnit;
 import records.transformations.expression.UnitExpression;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
@@ -291,12 +293,21 @@ public class UnitsDialog extends Dialog<Void>
                     return Either.left("Invalid scale: " + e.getLocalizedMessage());
                 }
 
-                Either<Pair<StyledString, List<UnitExpression>>, UnitExp> unitExpOrError = definition.save().asUnit(unitManager);
+                Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
                 @NonNull @UnitIdentifier String nameFinal = name;
                 return unitExpOrError.<Either<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>>either(err -> {
                     return Either.left(err.getFirst().toPlain());
-                }, unitExp -> {
-                    @Nullable Unit concreteUnit = unitExp.toConcreteUnit();
+                }, jellyUnit -> {
+                    @Nullable Unit concreteUnit = null;
+                    try
+                    {
+                        concreteUnit = jellyUnit.makeUnit(ImmutableMap.of());
+                    }
+                    catch (InternalException e)
+                    {
+                        Log.log(e);
+                        return Either.left(e.getLocalizedMessage());
+                    }
                     if (concreteUnit == null)
                         return Either.left("Invalid unit (cannot contain unit variables)");
                     

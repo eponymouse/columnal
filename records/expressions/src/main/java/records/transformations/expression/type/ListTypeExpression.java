@@ -4,7 +4,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
+import records.jellytype.JellyType;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
 import utility.Utility;
@@ -51,6 +54,12 @@ public class ListTypeExpression extends TypeExpression
         if (inner != null)
             return DataType.array(inner);
         return null;
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException, UserException
+    {
+        return JellyType.list(innerType.toJellyType(typeManager));
     }
 
     @Override

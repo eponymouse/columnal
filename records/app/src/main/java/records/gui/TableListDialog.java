@@ -2,37 +2,23 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import javafx.stage.Modality;
-import javafx.stage.Window;
-import log.Log;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.TableId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformSupplier;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
-import utility.gui.GUI;
-import utility.gui.InsertableReorderableDeletableListView;
 import utility.gui.LightDialog;
-
-import java.util.List;
-import java.util.Optional;
 
 // Shows an editable list of table ids
 @OnThread(Tag.FXPlatform)

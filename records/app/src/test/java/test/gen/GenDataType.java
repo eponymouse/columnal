@@ -1,6 +1,7 @@
 package test.gen;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -25,6 +26,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -44,8 +46,15 @@ public class GenDataType extends Generator<DataTypeAndManager>
             throw new RuntimeException(e);
         }
     }
+    
+    public static enum TypeKinds {
+        NUM_TEXT_TEMPORAL,
+        BOOLEAN_TUPLE_LIST,
+        BUILTIN_TAGGED,
+        NEW_TAGGED
+    }
 
-    private final boolean onlyNumTextTemporal;
+    private final ImmutableSet<TypeKinds> typeKinds;
 
     public static class DataTypeAndManager
     {
@@ -61,13 +70,13 @@ public class GenDataType extends Generator<DataTypeAndManager>
     
     public GenDataType()
     {
-        this(false);
+        this(ImmutableSet.copyOf(TypeKinds.values()));
     }
 
-    public GenDataType(boolean onlyNumTextTemporal)
+    public GenDataType(ImmutableSet<TypeKinds> typeKinds)
     {
         super(DataTypeAndManager.class);
-        this.onlyNumTextTemporal = onlyNumTextTemporal;
+        this.typeKinds = typeKinds;
     }
 
     @Override
@@ -86,12 +95,16 @@ public class GenDataType extends Generator<DataTypeAndManager>
 
     private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
     {
-        List<ExSupplier<DataType>> options = new ArrayList<>(Arrays.asList(
-            () -> DataType.TEXT,
-            () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs))),
-            () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
-        ));
-        if (!onlyNumTextTemporal)
+        List<ExSupplier<DataType>> options = new ArrayList<>();
+        if (typeKinds.contains(TypeKinds.NUM_TEXT_TEMPORAL))
+        {
+            options.addAll(Arrays.asList(
+                () -> DataType.TEXT,
+                () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs))),
+                () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
+            ));
+        }
+        if (typeKinds.contains(TypeKinds.BOOLEAN_TUPLE_LIST))
         {
             options.add(() -> DataType.BOOLEAN);
 
@@ -99,11 +112,12 @@ public class GenDataType extends Generator<DataTypeAndManager>
             {
                 options.addAll(Arrays.asList(
                         () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs))),
-                        () -> DataType.array(genDepth(r, maxDepth - 1, gs)),
-                        () -> genTagged(r, maxDepth, gs)
+                        () -> DataType.array(genDepth(r, maxDepth - 1, gs))
                 ));
             }
         }
+        if ((typeKinds.contains(TypeKinds.BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED)) && maxDepth > 1)
+            options.add(() -> genTagged(r, maxDepth, gs));
         return r.<ExSupplier<DataType>>choose(options).get();
     }
 
@@ -133,7 +147,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
 
         // Limit it to 100 types:
         int typeIndex = r.nextInt(100);
-        if (typeIndex > typeManager.getKnownTaggedTypes().size())
+        if (typeIndex > typeManager.getKnownTaggedTypes().size() && typeKinds.contains(TypeKinds.NEW_TAGGED))
         {
             // Don't need to add N more, just add one for now:
 

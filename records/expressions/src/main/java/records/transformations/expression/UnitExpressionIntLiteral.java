@@ -1,9 +1,11 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitSaver;
+import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
@@ -23,10 +25,10 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
         if (number == 1)
-            return Either.right(UnitExp.SCALAR);
+            return Either.right(JellyUnit.fromConcrete(Unit.SCALAR));
         else
             return Either.left(new Pair<>(StyledString.s("Expected unit not number"), Collections.emptyList()));
     }

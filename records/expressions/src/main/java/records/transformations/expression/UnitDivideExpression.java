@@ -6,6 +6,7 @@ import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitSaver;
+import records.jellytype.JellyUnit;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
@@ -27,10 +28,10 @@ public class UnitDivideExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<StyledString, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
+    public Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager)
     {
-        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> num = numerator.asUnit(unitManager);
-        Either<Pair<StyledString, List<UnitExpression>>, UnitExp> den = denominator.asUnit(unitManager);
+        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> num = numerator.asUnit(unitManager);
+        Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> den = denominator.asUnit(unitManager);
 
         return num.flatMap(n -> den.map(d -> n.divideBy(d)));
     }

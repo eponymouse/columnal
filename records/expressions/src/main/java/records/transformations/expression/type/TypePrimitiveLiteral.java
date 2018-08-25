@@ -8,6 +8,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
+import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import styled.StyledString;
@@ -68,6 +69,12 @@ public class TypePrimitiveLiteral extends TypeExpression
     public @Nullable DataType toDataType(TypeManager typeManager)
     {
         return dataType;
+    }
+
+    @Override
+    public JellyType toJellyType(TypeManager typeManager) throws InternalException
+    {
+        return JellyType.fromConcrete(dataType);
     }
 
     @Override
