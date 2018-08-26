@@ -197,7 +197,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                 // big difference if auto complete appears a fraction later, so we don't lose anything:
                 FXUtility.runAfter(() -> {
                     Pair<Double, Double> pos = calculatePosition();
-                    if (!isShowing() && pos != null && showOnFocus.get())
+                    if (textField.isFocused() && !isShowing() && pos != null && showOnFocus.get())
                     {
                         //Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
                         // TODO see if we can find a useful place to show this:
