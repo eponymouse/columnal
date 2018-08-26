@@ -5,27 +5,37 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.geometry.Orientation;
+import javafx.geometry.VerticalDirection;
+import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.NodeQueryUtils;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitDeclaration;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.FileContext;
 import records.gui.MainWindow.MainWindowActions;
+import records.jellytype.JellyType;
+import records.transformations.expression.type.TypeExpression;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenDataType.GenTaggedType;
@@ -37,6 +47,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -44,7 +55,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTypeEdit extends ApplicationTest implements TextFieldTrait
+public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, EnterTypeTrait
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
@@ -68,7 +79,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait
         TestUtil.delay(200);
         clickOn(".id-types-add");
         TestUtil.delay(200);
-        enterTypeDetails(typeDefinition, random);
+        enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");
@@ -84,7 +95,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait
     }
 
     @OnThread(Tag.Simulation)
-    private void enterTypeDetails(TaggedTypeDefinition typeDefinition, Random r) throws InternalException
+    private void enterTypeDetails(TaggedTypeDefinition typeDefinition, Random r, TypeManager typeManager) throws InternalException, UserException
     {
         selectAllCurrentTextField();
         write(typeDefinition.getTaggedTypeName().getRaw());
@@ -102,6 +113,26 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait
         else
         {
             clickOn(".type-entry-tab-standard");
+            for (TagType<JellyType> tagType : typeDefinition.getTags())
+            {
+                Optional<Node> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
+                if (visibleScroll.isPresent())
+                {
+                    moveTo(visibleScroll.get());
+                    for (int i = 0; i < 10; i++)
+                        scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
+                }
+                clickOn(".id-fancylist-add");
+                write(tagType.getName(), 1);
+                @Nullable JellyType inner = tagType.getInner();
+                if (inner != null)
+                {
+                    push(KeyCode.TAB);
+                    enterType(TypeExpression.fromJellyType(inner, typeManager), r);
+                    // Cancel auto-complete:
+                    push(KeyCode.ESCAPE);
+                }
+            }
         }
     }
 

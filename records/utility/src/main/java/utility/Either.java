@@ -1,5 +1,6 @@
 package utility;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.Covariant;
@@ -118,9 +119,9 @@ public class Either<A, B>
 
     // Maps the items to Either, but stops at the first Left and returns it.  If no Lefts, returns all the Rights as list.
     @SuppressWarnings("nullness")
-    public static <E, R, T> Either<E, List<R>> mapM(List<T> xs, Function<? super T, Either<E, R>> applyOne)
+    public static <E, R, T> Either<E, ImmutableList<R>> mapM(List<T> xs, Function<? super T, Either<E, R>> applyOne)
     {
-        List<R> r = new ArrayList<>(xs.size());
+        ImmutableList.Builder<R> r = ImmutableList.builderWithExpectedSize(xs.size());
         for (T x : xs)
         {
             Either<E, R> y = applyOne.apply(x);
@@ -129,7 +130,7 @@ public class Either<A, B>
             else
                 r.add(y.b);
         }
-        return Either.right(r);
+        return Either.right(r.build());
     }
 
     // Equivalent to either(Either::left, Either.right . applyRight)

@@ -95,6 +95,7 @@ public class TypesDialog extends Dialog<Void>
         private final Tab innerValuesTab;
         private final TabPane tabPane;
         private final TextField typeName;
+        private final FancyList<Either<String, TagType<JellyType>>, TagValueEdit> innerValueTagList;
 
         public EditTypeDialog(@Nullable TaggedTypeDefinition existing)
         {
@@ -119,7 +120,7 @@ public class TypesDialog extends Dialog<Void>
             ));
             plainTab.getStyleClass().add("type-entry-tab-plain");
 
-            FancyList<Either<String, TagType<JellyType>>, TagValueEdit> innerValueTagList = new FancyList<Either<String, TagType<JellyType>>, TagValueEdit>(existing == null ? ImmutableList.of() : Utility.mapListI(existing.getTags(), Either::right), true, true, true)
+            innerValueTagList = new FancyList<Either<String, TagType<JellyType>>, TagValueEdit>(existing == null ? ImmutableList.of() : Utility.mapListI(existing.getTags(), Either::right), true, true, true)
             {
                 @Override
                 protected @OnThread(Tag.FXPlatform) Pair<TagValueEdit, ObjectExpression<Either<String, TagType<JellyType>>>> makeCellContent(@Nullable Either<String, TagType<JellyType>> initialContent, boolean editImmediately)
@@ -152,13 +153,17 @@ public class TypesDialog extends Dialog<Void>
                 
                 if (typeIdentifier == null)
                     return Either.left("Not valid type identifier: " + typeName.getText().trim());
-                String typeIdentifierFinal = typeIdentifier;
+                TypeId typeIdentifierFinal = new TypeId(typeIdentifier);
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
                     String[] tags = plainTagList.getText().split("\\w*\\|\\w*");
-                    Either<@Localized String, List<String>> tagNames = Either.mapM(Arrays.asList(tags), this::parseTagName);
-                    return tagNames.mapInt(ts -> new TaggedTypeDefinition(new TypeId(typeIdentifierFinal), ImmutableList.of(), Utility.mapListI(ts, t -> new TagType<>(t, null))));
+                    Either<@Localized String, ImmutableList<String>> tagNames = Either.mapM(Arrays.asList(tags), this::parseTagName);
+                    return tagNames.mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, t -> new TagType<>(t, null))));
+                }
+                else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
+                {
+                    return Either.mapM(innerValueTagList.getItems(), e -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), ts));
                 }
                 
                 // Shouldn't happen:
@@ -194,6 +199,9 @@ public class TypesDialog extends Dialog<Void>
                     initialContent == null ? null : initialContent.getInner() 
                 )));
                 this.tagName = new TextField();
+                FXUtility.addChangeListenerPlatformNN(tagName.textProperty(), name -> {
+                    currentValue.set(currentValue.getValue().map(tt -> new TagType<>(name, tt.getInner())));
+                });
                 TypeExpression startingExpression = null;
                 try
                 {

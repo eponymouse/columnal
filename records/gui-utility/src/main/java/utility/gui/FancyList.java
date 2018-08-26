@@ -14,6 +14,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
@@ -56,6 +57,8 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         this.allowDeleting = allowDeleting;
         this.allowReordering = allowReordering;
+        scrollPane.getStyleClass().add("fancy-list");
+        scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
         children.setFillWidth(true);
         children.setOnKeyPressed(e -> {
             if (allowDeleting && (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE))
