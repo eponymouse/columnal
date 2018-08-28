@@ -146,7 +146,7 @@ public class TypeManager
         List<TagType<JellyType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
-            String tagName = item.ident().getText();
+            String tagName = item.UNQUOTED_NAME().getText();
 
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
