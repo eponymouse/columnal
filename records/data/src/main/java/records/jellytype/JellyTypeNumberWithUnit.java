@@ -76,7 +76,15 @@ class JellyTypeNumberWithUnit extends JellyType
     @Override
     public int hashCode()
     {
-
         return Objects.hash(unit);
+    }
+
+    // For debugging
+    @Override
+    public String toString()
+    {
+        return "JellyTypeNumberWithUnit{" +
+                "unit=" + unit +
+                '}';
     }
 }

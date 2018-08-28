@@ -70,7 +70,6 @@ class JellyTypeArray extends JellyType
     @Override
     public int hashCode()
     {
-
         return Objects.hash(inner);
     }
 }

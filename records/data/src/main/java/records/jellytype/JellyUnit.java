@@ -81,7 +81,7 @@ public class JellyUnit
 
     public JellyUnit divideBy(JellyUnit rhs)
     {
-        return times(raiseBy(-1));
+        return times(rhs.raiseBy(-1));
     }
     
     public JellyUnit times(JellyUnit rhs)
@@ -239,5 +239,14 @@ public class JellyUnit
     public boolean isScalar()
     {
         return units.isEmpty();
+    }
+
+    // For debugging
+    @Override
+    public String toString()
+    {
+        return "JellyUnit{" +
+                "units=" + units +
+                '}';
     }
 }
