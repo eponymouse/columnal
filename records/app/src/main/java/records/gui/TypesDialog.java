@@ -21,9 +21,11 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
@@ -96,6 +98,7 @@ public class TypesDialog extends Dialog<Void>
         private final TabPane tabPane;
         private final TextField typeName;
         private final FancyList<Either<String, TagType<JellyType>>, TagValueEdit> innerValueTagList;
+        private final TextField innerValueTypeArgs;
 
         public EditTypeDialog(@Nullable TaggedTypeDefinition existing)
         {
@@ -129,11 +132,18 @@ public class TypesDialog extends Dialog<Void>
                     return new Pair<>(tagValueEdit, tagValueEdit.currentValue);
                 }
             };
+            innerValueTagList.getNode().setMinHeight(300);
             
+            innerValueTypeArgs = new TextField();
+            innerValueTypeArgs.getStyleClass().add("type-entry-inner-type-args");
             innerValuesTab = new Tab("Inner Values", new VBox(
+                GUI.labelled("type.entry.type.args", innerValueTypeArgs),
                 innerValueTagList.getNode()
             ));
             innerValuesTab.getStyleClass().add("type-entry-tab-standard");
+            FXUtility.addChangeListenerPlatformNN(innerValuesTab.selectedProperty(), sel -> {
+                innerValueTagList.getNode().requestLayout();
+            });
 
             tabPane = new TabPane(plainTab, innerValuesTab);
             
@@ -157,13 +167,20 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    String[] tags = plainTagList.getText().split("\\w*\\|\\w*");
-                    Either<@Localized String, ImmutableList<String>> tagNames = Either.mapM(Arrays.asList(tags), this::parseTagName);
+                    String[] tags = plainTagList.getText().trim().split("\\w*\\|\\w*");
+                    Either<@Localized String, ImmutableList<String>> tagNames = Either.right(ImmutableList.of());
+                    if (!Arrays.equals(tags, new String[]{""}))
+                        tagNames = Either.mapM(Arrays.asList(tags), t -> parseTagName("Invalid tag name: ", t));
                     return tagNames.mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, t -> new TagType<>(t, null))));
                 }
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
                 {
-                    return Either.mapM(innerValueTagList.getItems(), e -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), ts));
+                    String[] typeArgs = innerValueTypeArgs.getText().trim().split("\\w*,\\w*");
+                    Either<@Localized String, ImmutableList<String>> typeArgsOrErr = Either.right(ImmutableList.of());
+                    if (!Arrays.equals(typeArgs, new String[]{""}))
+                        typeArgsOrErr = Either.mapM(Arrays.asList(typeArgs), t -> parseTagName("Invalid type argument: ", t));
+                    
+                    return typeArgsOrErr.flatMapInt(args -> Either.mapM(innerValueTagList.getItems(), e -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, Utility.mapListI(args, a -> new Pair<>(TypeVariableKind.TYPE, a)), ts)));
                 }
                 
                 // Shouldn't happen:
@@ -176,11 +193,11 @@ public class TypesDialog extends Dialog<Void>
             }
         }
         
-        private Either<@Localized String, @ExpressionIdentifier String> parseTagName(String src)
+        private Either<@Localized String, @ExpressionIdentifier String> parseTagName(String errorPrefix, String src)
         {
             @Nullable @ExpressionIdentifier String identifier = IdentifierUtility.asExpressionIdentifier(src.trim());
             if (identifier == null)
-                return Either.left("Invalid tag name: " + src.trim());
+                return Either.left(errorPrefix + src.trim());
             else
                 return Either.right(identifier);
         }
@@ -222,7 +239,8 @@ public class TypesDialog extends Dialog<Void>
                     }
                     catch (InternalException | UserException e)
                     {
-                        Log.log(e);
+                        if (e instanceof InternalException)
+                            Log.log(e);
                         currentValue.set(Either.left(e.getLocalizedMessage()));
                     }
                 });

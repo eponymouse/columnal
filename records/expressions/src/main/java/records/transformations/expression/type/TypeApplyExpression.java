@@ -157,7 +157,7 @@ public class TypeApplyExpression extends TypeExpression
         return arguments.stream().map(e -> e.either(UnitExpression::toStyledString, TypeExpression::toStyledString)).collect(StyledString.joining("-"));
     }
 
-    public ImmutableList<Either<UnitExpression, TypeExpression>> _test_getOperands()
+    public ImmutableList<Either<UnitExpression, TypeExpression>> getOperands()
     {
         return arguments;
     }

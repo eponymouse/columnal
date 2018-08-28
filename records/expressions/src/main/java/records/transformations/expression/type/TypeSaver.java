@@ -6,15 +6,12 @@ import com.google.common.collect.ImmutableList.Builder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveChild;
-import records.gui.expressioneditor.ErrorDisplayerRecord;
-import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.SaverBase;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeSaver.Context;
-import records.typeExp.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -24,7 +21,6 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
@@ -73,7 +69,22 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         
         if (keyword == Keyword.OPEN_ROUND)
         {
-            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, close), (e, c) -> Either.left(e), prefixKeyword)));
+            currentScopes.push(new Scope(errorDisplayer, expect(Keyword.CLOSE_ROUND, close -> new BracketAndNodes<TypeExpression, TypeSaver>(BracketedStatus.DIRECT_ROUND_BRACKETED, errorDisplayer, close),
+                    (bracketed, bracketEnd) -> {
+                        ArrayList<Either<@Recorded TypeExpression, OpAndNode>> precedingItems = currentScopes.peek().items;
+                        // Type applications are a special case:
+                        if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(e -> e instanceof TaggedTypeNameExpression || e instanceof TypeApplyExpression, op -> false))
+                        {
+                            @Nullable @Recorded TypeExpression callTarget = precedingItems.remove(precedingItems.size() - 1).<@Nullable @Recorded TypeExpression>either(e -> e, op -> null);
+                            // Shouldn't ever be null:
+                            if (callTarget != null)
+                            {
+                                ImmutableList<Either<UnitExpression, TypeExpression>> prevItems = callTarget instanceof TypeApplyExpression ? ((TypeApplyExpression) callTarget).getOperands() : ImmutableList.of(Either.right(callTarget));
+                                return Either.left(errorDisplayerRecord.recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new TypeApplyExpression(prevItems)));
+                            }
+                        }
+                        return Either.left(errorDisplayerRecord.recordType(errorDisplayer, bracketEnd, bracketed));
+            }, prefixKeyword)));
         }
         else if (keyword == Keyword.OPEN_SQUARE)
         {

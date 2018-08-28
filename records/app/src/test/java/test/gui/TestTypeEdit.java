@@ -100,7 +100,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         selectAllCurrentTextField();
         write(typeDefinition.getTaggedTypeName().getRaw());
         
-        boolean canUsePlainEntry = typeDefinition.getTags().stream().allMatch(t -> t.getInner() == null);
+        boolean canUsePlainEntry = typeDefinition.getTags().stream().allMatch(t -> t.getInner() == null) && typeDefinition.getTypeArguments().isEmpty();
         
         if (canUsePlainEntry && r.nextInt(3) != 1)
         {
@@ -113,16 +113,21 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         else
         {
             clickOn(".type-entry-tab-standard");
+            clickOn(".type-entry-inner-type-args");
+            write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
             for (TagType<JellyType> tagType : typeDefinition.getTags())
             {
-                Optional<Node> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
+                Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
                 if (visibleScroll.isPresent())
                 {
                     moveTo(visibleScroll.get());
-                    for (int i = 0; i < 10; i++)
+                    while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99)
                         scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
                 }
+                TestUtil.delay(200);
+                Log.debug("Entering: " + tagType.getName());
                 clickOn(".id-fancylist-add");
+                TestUtil.delay(500);
                 write(tagType.getName(), 1);
                 @Nullable JellyType inner = tagType.getInner();
                 if (inner != null)

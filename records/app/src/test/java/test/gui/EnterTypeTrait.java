@@ -1,10 +1,8 @@
 package test.gui;
 
-import com.google.common.collect.ImmutableList;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
 import records.transformations.expression.UnitExpression;
-import records.transformations.expression.type.InvalidOpTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
 import records.transformations.expression.type.TaggedTypeNameExpression;
@@ -13,7 +11,6 @@ import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnfinishedTypeExpression;
-import test.DataEntryUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -39,12 +36,14 @@ public interface EnterTypeTrait extends FxRobotInterface
         else if (typeExpression instanceof TypeApplyExpression)
         {
             TypeApplyExpression appl = (TypeApplyExpression) typeExpression;
-            for (int i = 0; i < appl._test_getOperands().size(); i++)
+            for (int i = 0; i < appl.getOperands().size(); i++)
             {
-                TypeExpression item = appl._test_getOperands().get(i).getRight("");
+                TypeExpression item = appl.getOperands().get(i).getRight("");
+                if (i > 0)
+                    write("(");
                 enterType(item, r);
-                if (i < appl._test_getOperands().size() - 1)
-                    write(r.nextBoolean() ? "-" : " - ", DELAY);
+                if (i > 0)
+                    write(")");
             }
         }
         else if (typeExpression instanceof TupleTypeExpression)
@@ -88,7 +87,7 @@ public interface EnterTypeTrait extends FxRobotInterface
         else if (typeExpression instanceof InvalidOpTypeExpression)
         {
             InvalidOpTypeExpression e = (InvalidOpTypeExpression)typeExpression;
-            ImmutableList<TypeExpression> operands = e._test_getOperands();
+            ImmutableList<TypeExpression> operands = e.getOperands();
             ImmutableList<String> operators = e._test_getOperators();
             for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
             {
