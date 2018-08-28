@@ -257,6 +257,10 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     public void save(TypeSaver typeSaver)
     {
         String content = textField.getText().trim();
+
+        if (content.isEmpty())
+            return; // Don't save blanks
+        
         for (Keyword keyword : Keyword.values())
         {
             if (content.equals(keyword.getContent()))
