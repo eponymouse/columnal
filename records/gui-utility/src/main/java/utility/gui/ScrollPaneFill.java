@@ -1,7 +1,10 @@
 package utility.gui;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.ScrollPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -25,7 +28,20 @@ public class ScrollPaneFill extends ScrollPane
     {
         getStyleClass().add("scroll-pane-fill");
         FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> fillViewport(b));
-        FXUtility.addChangeListenerPlatform(contentProperty(), c -> fillViewport());
+        final ChangeListener<Bounds> boundListener = new ViewportFillListener();
+        contentProperty().addListener(new ChangeListener<Node>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends Node> prop, Node prev, Node now)
+            {
+                fillViewport();
+                if (prev != null)
+                    prev.boundsInLocalProperty().removeListener(boundListener);
+                if (now != null)
+                    now.boundsInLocalProperty().addListener(boundListener);
+            }
+        });
     }
 
     public ScrollPaneFill(Node content)
@@ -42,6 +58,9 @@ public class ScrollPaneFill extends ScrollPane
             Node content = getContent();
             setFitToWidth(content.prefWidth(-1) < viewportBounds.getWidth());
             setFitToHeight(content.prefHeight(-1) < viewportBounds.getHeight());
+            requestLayout();
+            if (content instanceof Parent)
+                ((Parent)content).requestLayout();
         }
     }
 
@@ -50,5 +69,15 @@ public class ScrollPaneFill extends ScrollPane
     public void fillViewport(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this)
     {
         fillViewport(getViewportBounds());
+    }
+
+    private class ViewportFillListener implements ChangeListener<Bounds>
+    {
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void changed(ObservableValue<? extends Bounds> a, Bounds b, Bounds c)
+        {
+            fillViewport();
+        }
     }
 }
