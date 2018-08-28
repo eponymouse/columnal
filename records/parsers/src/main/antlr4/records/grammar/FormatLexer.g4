@@ -21,14 +21,13 @@ TYPEVAR : '@typevar';
 UNITVAR : '@unitvar';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
-DEFAULT : 'DEFAULT' -> pushMode(VALUE_MODE);
+DEFAULT : '@DEFAULT' -> pushMode(VALUE_MODE);
 
 WS : ( ' ' | '\t' )+ -> skip;
 
-COLUMN : 'COLUMN';
+COLUMN : 'COLUMN:';
 
 TUPLE_MORE : '_';
-CONS: ':';
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 COMMA: ',';
