@@ -88,7 +88,7 @@ public abstract class JellyType
         return new JellyTypeTuple(members, true);
     }
 
-    public static JellyType tagged(String name, ImmutableList<Either<JellyUnit, JellyType>> params)
+    public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, JellyType>> params)
     {
         return new JellyTypeTagged(name, params);
     }
@@ -142,7 +142,7 @@ public abstract class JellyType
         }
         else if (ctx.tagRef() != null)
         {
-            return new JellyTypeTagged(ctx.tagRef().ident().getText(), Utility.mapListExI(ctx.tagRef().tagRefParam(), param -> load(param, mgr)));
+            return new JellyTypeTagged(new TypeId(ctx.tagRef().ident().getText()), Utility.mapListExI(ctx.tagRef().tagRefParam(), param -> load(param, mgr)));
         }
         else if (ctx.array() != null)
         {
@@ -238,7 +238,7 @@ public abstract class JellyType
             @Override
             public JellyType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new JellyTypeTagged(typeName.getRaw(), Utility.mapListInt(typeVars, e -> 
+                return new JellyTypeTagged(typeName, Utility.mapListInt(typeVars, e -> 
                     e.mapBothInt(u -> JellyUnit.fromConcrete(u), t -> fromConcrete(t))
                 ));
             }

@@ -149,7 +149,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 args.add(Either.right(taggedTypeNameExpression));
                 for (Either<JellyUnit, JellyType> typeVar : typeVars)
                 {
-                    args.add(typeVar.<UnitExpression, TypeExpression>mapBothEx(u -> {throw new UnimplementedException();}, t -> fromJellyType(t, mgr)));
+                    args.add(typeVar.<UnitExpression, TypeExpression>mapBothEx(u -> UnitExpression.load(u), t -> fromJellyType(t, mgr)));
                 }
                 return new TypeApplyExpression(args.build());
             }

@@ -9,7 +9,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenDataType.DataTypeAndManager;
-import test.gen.GenDataType.TypeKinds;
+import test.gen.GenJellyType.TypeKinds;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 
 /**

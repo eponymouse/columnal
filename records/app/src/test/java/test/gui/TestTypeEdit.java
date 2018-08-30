@@ -38,7 +38,6 @@ import records.jellytype.JellyType;
 import records.transformations.expression.type.TypeExpression;
 import test.DummyManager;
 import test.TestUtil;
-import test.gen.GenDataType.GenTaggedType;
 import test.gen.GenRandom;
 import test.gen.GenTaggedTypeDefinition;
 import test.gen.GenUnitDefinition;

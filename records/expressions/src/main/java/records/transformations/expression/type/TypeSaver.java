@@ -108,17 +108,22 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         if (singleItem instanceof UnitLiteralTypeExpression)
         {
             ArrayList<Either<@Recorded TypeExpression, OpAndNode>> curItems = currentScopes.peek().items;
-            Either<@Recorded TypeExpression, OpAndNode> last = curItems.get(curItems.size() - 1);
-            if (last.either(t -> {
-                if (t instanceof NumberTypeExpression && !((NumberTypeExpression)t).hasUnit())
+            if (curItems.size() > 0)
+            {
+                Either<@Recorded TypeExpression, OpAndNode> last = curItems.get(curItems.size() - 1);
+                if (last.either(t -> {
+                    if (t instanceof NumberTypeExpression && !((NumberTypeExpression) t).hasUnit())
+                    {
+                        curItems.remove(curItems.size() - 1);
+                        super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression) singleItem).getUnitExpression()), errorDisplayerRecord.recorderFor(t).start, end, withContext);
+                        return true;
+                    }
+                    return false;
+                }, o -> false))
                 {
-                    curItems.remove(curItems.size() - 1);
-                    super.saveOperand(new NumberTypeExpression(((UnitLiteralTypeExpression)singleItem).getUnitExpression()), errorDisplayerRecord.recorderFor(t).start, end, withContext);
-                    return true;
+                    return;
                 }
-                return false;
-            }, o -> false))
-                return;
+            }
         }
         super.saveOperand(singleItem, start, end, withContext);
     }

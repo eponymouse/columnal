@@ -28,10 +28,10 @@ import static records.typeExp.TypeExp.ALL_TYPE_CLASSES;
 
 public class JellyTypeTagged extends JellyType
 {
-    private final String typeName;
+    private final TypeId typeName;
     private final ImmutableList<Either<JellyUnit, JellyType>> typeParams;
 
-    public JellyTypeTagged(String typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams)
+    public JellyTypeTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams)
     {
         this.typeName = typeName;
         this.typeParams = typeParams;
@@ -40,7 +40,7 @@ public class JellyTypeTagged extends JellyType
     @Override
     public TypeExp makeTypeExp(ImmutableMap<String, Either<MutUnitVar, MutVar>> typeVariables) throws InternalException
     {
-        return new TypeCons(null, typeName, Utility.mapListInt(typeParams, p ->
+        return new TypeCons(null, typeName.getRaw(), Utility.mapListInt(typeParams, p ->
             p.mapBothInt(u -> u.makeUnitExp(typeVariables), t -> t.makeTypeExp(typeVariables))
         ), ALL_TYPE_CLASSES);
     }
@@ -50,7 +50,7 @@ public class JellyTypeTagged extends JellyType
     {
         ImmutableList<Either<Unit, DataType>> typeParamConcrete = Utility.mapListExI(typeParams, p -> p.mapBothEx(u -> u.makeUnit(typeVariables), t -> t.makeDataType(typeVariables, mgr)));
         
-        DataType dataType = mgr.lookupType(new TypeId(typeName), typeParamConcrete);
+        DataType dataType = mgr.lookupType(typeName, typeParamConcrete);
         if (dataType != null)
             return dataType;
         throw new UserException("Could not find data type: " + typeName);
@@ -60,7 +60,7 @@ public class JellyTypeTagged extends JellyType
     public void save(OutputBuilder output)
     {
         output.t(FormatParser.TAGGED, FormatParser.VOCABULARY);
-        output.quote(new TypeId(typeName));
+        output.quote(typeName);
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
             output.raw("(");
@@ -82,14 +82,13 @@ public class JellyTypeTagged extends JellyType
     @Override
     public int hashCode()
     {
-
         return Objects.hash(typeName, typeParams);
     }
 
     @Override
     public void forNestedTagged(Consumer<TypeId> nestedTagged)
     {
-        nestedTagged.accept(new TypeId(typeName));
+        nestedTagged.accept(typeName);
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
             typeParam.ifRight(t -> t.forNestedTagged(nestedTagged));
@@ -99,10 +98,10 @@ public class JellyTypeTagged extends JellyType
     @Override
     public <R, E extends Throwable> R apply(JellyTypeVisitorEx<R, E> visitor) throws InternalException, E
     {
-        return visitor.tagged(new TypeId(typeName), typeParams);
+        return visitor.tagged(typeName, typeParams);
     }
 
-    public String getName()
+    public TypeId getName()
     {
         return typeName;
     }

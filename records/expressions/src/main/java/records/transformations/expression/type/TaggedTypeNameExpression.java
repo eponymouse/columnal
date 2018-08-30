@@ -74,7 +74,7 @@ public class TaggedTypeNameExpression extends TypeExpression
     @Override
     public JellyType toJellyType(TypeManager typeManager) throws InternalException
     {
-        return JellyType.tagged(typeName.getRaw(), ImmutableList.of());
+        return JellyType.tagged(typeName, ImmutableList.of());
     }
 
     @Override

@@ -1,5 +1,7 @@
 package test.gen;
 
+import com.pholser.junit.quickcheck.generator.Generator;
+import test.gen.GenDataType.DataTypeAndManager;
 import test.gen.GenDataType.GenTaggedType;
 
 /**
@@ -7,7 +9,7 @@ import test.gen.GenDataType.GenTaggedType;
  */
 public class GenTaggedTypeAndValueGen extends GenTypeAndValueGen
 {
-    public GenDataType typeGenerator()
+    public Generator<DataTypeAndManager> typeGenerator()
     {
         return new GenTaggedType();
     }

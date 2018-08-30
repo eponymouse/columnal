@@ -1,6 +1,7 @@
 package test.gen;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -18,6 +19,11 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
+
+import static test.gen.GenJellyType.TypeKinds.BOOLEAN_TUPLE_LIST;
+import static test.gen.GenJellyType.TypeKinds.BUILTIN_TAGGED;
+import static test.gen.GenJellyType.TypeKinds.NUM_TEXT_TEMPORAL;
 
 public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
 {
@@ -31,7 +37,6 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
     {
         try
         {
-            GenDataType genDataType = new GenDataType();
             final ImmutableList<Pair<TypeVariableKind, String>> typeVars;
             if (r.nextBoolean())
             {
@@ -42,15 +47,19 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             {
                 typeVars = ImmutableList.of();
             }
+            GenJellyType genDataType = new GenJellyType(ImmutableSet.of(NUM_TEXT_TEMPORAL,
+                    BOOLEAN_TUPLE_LIST,
+                    BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()));
+            
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;
-            ArrayList<@Nullable DataType> types = noInner ? new ArrayList<@Nullable DataType>() : new ArrayList<@Nullable DataType>(TestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).dataType));
+            ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(TestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).jellyType));
             int extraNulls = r.nextInt(5);
             for (int i = 0; i < extraNulls; i++)
             {
                 types.add(r.nextInt(types.size() + 1), null);
             }
-            return new TaggedTypeDefinition(new TypeId("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z')), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t == null ? null : JellyType.fromConcrete(t))));
+            return new TaggedTypeDefinition(new TypeId("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z')), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
         }
         catch (InternalException | UserException e)
         {

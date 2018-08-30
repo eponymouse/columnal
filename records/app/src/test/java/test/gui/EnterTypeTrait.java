@@ -13,6 +13,7 @@ import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.UnfinishedTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.UnitType;
 
 import java.util.Random;
 
@@ -38,10 +39,17 @@ public interface EnterTypeTrait extends FxRobotInterface
             TypeApplyExpression appl = (TypeApplyExpression) typeExpression;
             for (int i = 0; i < appl.getOperands().size(); i++)
             {
-                TypeExpression item = appl.getOperands().get(i).getRight("");
                 if (i > 0)
                     write("(");
-                enterType(item, r);
+                appl.getOperands().get(i).eitherInt(unit -> {
+                    write("{");
+                    write(unit.toString());
+                    write("}");
+                    return UnitType.UNIT;
+                }, type -> {
+                    enterType(type, r);
+                    return UnitType.UNIT;
+                });
                 if (i > 0)
                     write(")");
             }

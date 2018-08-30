@@ -1,6 +1,7 @@
 package test.gen;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -17,8 +18,13 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
+import records.jellytype.JellyTypeTagged;
+import records.transformations.expression.type.UnfinishedTypeExpression;
 import test.TestUtil;
 import test.gen.GenDataType.DataTypeAndManager;
+import test.gen.GenJellyType.GenTaggedType;
+import test.gen.GenJellyType.JellyTypeAndManager;
+import test.gen.GenJellyType.TypeKinds;
 import utility.Either;
 import utility.ExSupplier;
 import utility.Pair;
@@ -34,27 +40,7 @@ import java.util.List;
  */
 public class GenDataType extends Generator<DataTypeAndManager>
 {
-    // This isn't ideal because it makes tests inter-dependent:
-    protected static final TypeManager typeManager;
-    static {
-        try
-        {
-            typeManager = new TypeManager(new UnitManager());
-        }
-        catch (InternalException | UserException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-    
-    public static enum TypeKinds {
-        NUM_TEXT_TEMPORAL,
-        BOOLEAN_TUPLE_LIST,
-        BUILTIN_TAGGED,
-        NEW_TAGGED
-    }
-
-    private final ImmutableSet<TypeKinds> typeKinds;
+    private final GenJellyType genJellyType;
 
     public static class DataTypeAndManager
     {
@@ -70,115 +56,52 @@ public class GenDataType extends Generator<DataTypeAndManager>
     
     public GenDataType()
     {
+        // All kinds:
         this(ImmutableSet.copyOf(TypeKinds.values()));
     }
 
     public GenDataType(ImmutableSet<TypeKinds> typeKinds)
     {
         super(DataTypeAndManager.class);
-        this.typeKinds = typeKinds;
+        genJellyType = new GenJellyType(typeKinds, ImmutableSet.of());
     }
-
+    
     @Override
     public DataTypeAndManager generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        // Use depth system to prevent infinite generation:
+        JellyTypeAndManager jellyTypeAndManager = genJellyType.generate(r, generationStatus);
         try
         {
-            return new DataTypeAndManager(typeManager, genDepth(r, 3, generationStatus));
+            return new DataTypeAndManager(jellyTypeAndManager.typeManager, jellyTypeAndManager.jellyType.makeDataType(ImmutableMap.of(), jellyTypeAndManager.typeManager));
         }
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
         }
     }
-
-    private DataType genDepth(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws UserException, InternalException
-    {
-        List<ExSupplier<DataType>> options = new ArrayList<>();
-        if (typeKinds.contains(TypeKinds.NUM_TEXT_TEMPORAL))
-        {
-            options.addAll(Arrays.asList(
-                () -> DataType.TEXT,
-                () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs))),
-                () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
-            ));
-        }
-        if (typeKinds.contains(TypeKinds.BOOLEAN_TUPLE_LIST))
-        {
-            options.add(() -> DataType.BOOLEAN);
-
-            if (maxDepth > 1)
-            {
-                options.addAll(Arrays.asList(
-                        () -> DataType.tuple(TestUtil.makeList(r, 2, 5, () -> genDepth(r, maxDepth - 1, gs))),
-                        () -> DataType.array(genDepth(r, maxDepth - 1, gs))
-                ));
-            }
-        }
-        if ((typeKinds.contains(TypeKinds.BUILTIN_TAGGED) || typeKinds.contains(TypeKinds.NEW_TAGGED)) && maxDepth > 1)
-            options.add(() -> genTagged(r, maxDepth, gs));
-        return r.<ExSupplier<DataType>>choose(options).get();
-    }
-
-    public static class GenTaggedType extends GenDataType
+    
+    public static class GenTaggedType extends Generator<DataTypeAndManager>
     {
         public GenTaggedType()
         {
+            super(DataTypeAndManager.class);
         }
 
         @Override
-        public DataTypeAndManager generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+        public DataTypeAndManager generate(SourceOfRandomness random, GenerationStatus status)
         {
+            GenJellyType.GenTaggedType genJellyTagged = new GenJellyType.GenTaggedType();
+            
+            JellyTypeAndManager jellyTypeAndManager = genJellyTagged.generate(random, status);
+            
             try
             {
-                return new DataTypeAndManager(typeManager, genTagged(sourceOfRandomness, 3, generationStatus));
+                return new DataTypeAndManager(jellyTypeAndManager.typeManager, jellyTypeAndManager.jellyType.makeDataType(ImmutableMap.of(), jellyTypeAndManager.typeManager));
             }
             catch (InternalException | UserException e)
             {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    protected DataType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
-    {
-        TaggedTypeDefinition typeDefinition;
-
-        // Limit it to 100 types:
-        int typeIndex = r.nextInt(100);
-        if (typeIndex > typeManager.getKnownTaggedTypes().size() && typeKinds.contains(TypeKinds.NEW_TAGGED))
-        {
-            // Don't need to add N more, just add one for now:
-
-            final ImmutableList<Pair<TypeVariableKind, String>> typeVars;
-            if (r.nextBoolean())
-            {
-                // Must use distinct to make sure no duplicates:
-                typeVars = TestUtil.makeList(r, 1, 4, () -> new Pair<>(TypeVariableKind.TYPE, "" + r.nextChar('a', 'z'))).stream().distinct().collect(ImmutableList.toImmutableList());
-            }
-            else
-            {
-                typeVars = ImmutableList.of();
-            }
-            // Outside type variables are not visible in a new tagged type:
-            ArrayList<@Nullable DataType> types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
-            int extraNulls = r.nextInt(5);
-            for (int i = 0; i < extraNulls; i++)
-            {
-                types.add(r.nextInt(types.size() + 1), null);
-            }
-            typeDefinition = typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t == null ? null : JellyType.fromConcrete(t))));
-        }
-        else
-        {
-            typeDefinition = r.choose(typeManager.getKnownTaggedTypes().values());
-        }
-        return typeDefinition.instantiate(Utility.mapListExI(typeDefinition.getTypeArguments(), arg -> {
-            if (arg.getFirst() == TypeVariableKind.TYPE)
-                return Either.right(genDepth(r, maxDepth - 1, gs));
-            else
-                return Either.left(new GenUnit().generate(r, gs));
-        }), typeManager);
     }
 }
