@@ -7,13 +7,10 @@ import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
-import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
-import records.transformations.expression.type.UnfinishedTypeExpression;
 import utility.FXPlatformConsumer;
 import utility.Utility;
 

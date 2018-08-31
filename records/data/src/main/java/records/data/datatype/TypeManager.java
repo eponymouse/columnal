@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -67,22 +68,28 @@ public class TypeManager
     public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
-        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
+        maybeType = new TaggedTypeDefinition(builtInType("Maybe"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
             new TagType<>("Missing", null),
             new TagType<>("Present", JellyType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
         allKnownTypes.put(maybeType.getTaggedTypeName(), maybeType);
-        voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
+        voidType = new TaggedTypeDefinition(builtInType("Void"), ImmutableList.of(), ImmutableList.of());
         allKnownTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
-        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
-        allKnownTypes.put(new TypeId("Type"), typeGADT);
+        typeGADT = new TaggedTypeDefinition(builtInType("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
+        allKnownTypes.put(builtInType("Type"), typeGADT);
         // TODO make this into a GADT:
-        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
-        allKnownTypes.put(new TypeId("Unit"), unitGADT);
+        unitGADT = new TaggedTypeDefinition(builtInType("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
+        allKnownTypes.put(builtInType("Unit"), unitGADT);
     }
-    
+
+    @SuppressWarnings("identifier")
+    private static TypeId builtInType(String name)
+    {
+        return new TypeId(name);
+    }
+
     public TaggedValue maybeMissing()
     {
         return maybeMissing;
@@ -93,15 +100,23 @@ public class TypeManager
         return new TaggedValue(1, content);
     }
     
+    public void unregisterTaggedType(TypeId typeName)
+    {
+        TaggedTypeDefinition typeDefinition = userTypes.remove(typeName);
+        // Only remove from all types if it is the user type.  Don't remove
+        // built-in types if they are there under this name:
+        if (typeDefinition != null)
+            allKnownTypes.remove(typeName, typeDefinition);
+    }
     
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
-    public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tagTypes) throws InternalException
+    public @Nullable TaggedTypeDefinition registerTaggedType(@ExpressionIdentifier String typeName, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tagTypes) throws InternalException
     {
         if (tagTypes.isEmpty())
             throw new InternalException("Tagged type cannot have zero tags");
 
-        TypeId idealTypeId = new TypeId(idealTypeName);
+        TypeId idealTypeId = new TypeId(typeName);
         if (allKnownTypes.containsKey(idealTypeId))
         {
             TaggedTypeDefinition existingType = allKnownTypes.get(idealTypeId);
@@ -113,8 +128,7 @@ public class TypeManager
             }
             else
             {
-                // Keep trying new names:
-                return registerTaggedType(increaseNumber(idealTypeName), typeVariables, tagTypes);
+                return null;
             }
         }
         else
@@ -139,6 +153,7 @@ public class TypeManager
 
     private void loadTypeDecl(TypeDeclContext typeDeclContext) throws UserException, InternalException
     {
+        @SuppressWarnings("identifier")
         TypeId typeName = new TypeId(typeDeclContext.typeName().getText());
         ImmutableList<Pair<TypeVariableKind, String>> typeParams = Utility.mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
             return new Pair<>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, var.ident().getText());
@@ -253,6 +268,7 @@ public class TypeManager
                 else
                     return Either.right(loadTypeUse(t.bracketedType()));
             });
+            @SuppressWarnings("identifier")
             DataType taggedType = lookupType(new TypeId(type.tagRef().ident().getText()), typeParams);
             if (taggedType == null)
                 throw new UserException("Undeclared tagged type: \"" + type.tagRef().ident().getText() + "\"");
@@ -268,25 +284,6 @@ public class TypeManager
         }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
-    }
-
-    private static String increaseNumber(String str)
-    {
-        if (str.length() <= 1)
-            return str + "0";
-        // Don't alter first char even if digit:
-        int i;
-        for (i = str.length() - 1; i >= 0; i--)
-        {
-            if (str.charAt(i) < '0' || str.charAt(i) > '9')
-            {
-                i = i + 1;
-                break;
-            }
-        }
-        String numberPart = str.substring(i);
-        BigInteger num = numberPart.isEmpty() ? BigInteger.ZERO : new BigInteger(numberPart);
-        return str.substring(0, i) + num.add(BigInteger.ONE).toString();
     }
 
     public @Nullable DataType lookupType(TypeId typeId, ImmutableList<Either<Unit, DataType>> typeVariableSubs) throws InternalException, UserException
@@ -378,7 +375,7 @@ public class TypeManager
         
     }
 
-    public Either<String, TagInfo> lookupTag(String typeName, String constructorName)
+    public Either<String, TagInfo> lookupTag(@ExpressionIdentifier String typeName, String constructorName)
     {
         @Nullable TaggedTypeDefinition type = allKnownTypes.get(new TypeId(typeName));
         if (type == null)

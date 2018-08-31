@@ -14,8 +14,9 @@ import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.TypeLiteralNode;
 import records.jellytype.JellyType;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.UnfinishedTypeExpression;
+import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.TypeExp;
@@ -54,7 +55,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
             // If we have a user exception, we are trying to fix to a non-existent type.
             // Probably means we fucked up, but just use blank type:
             Log.log(e);
-            return fixType(typeManager, new UnfinishedTypeExpression(""), expression);
+            return fixType(typeManager, new InvalidIdentTypeExpression(""), expression);
         }
     }
     

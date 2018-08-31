@@ -3,16 +3,17 @@ package test.gui;
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.IdentTypeExpression;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.ListTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
-import records.transformations.expression.type.TaggedTypeNameExpression;
 import records.transformations.expression.type.TupleTypeExpression;
 import records.transformations.expression.type.TypeApplyExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
-import records.transformations.expression.type.UnfinishedTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.UnitType;
 
 import java.util.Random;
@@ -29,19 +30,24 @@ public interface EnterTypeTrait extends FxRobotInterface
             TypePrimitiveLiteral lit = (TypePrimitiveLiteral) typeExpression;
             write(lit._test_getType().toString(), DELAY);
         }
-        else if (typeExpression instanceof UnfinishedTypeExpression)
+        else if (typeExpression instanceof IdentTypeExpression)
         {
-            UnfinishedTypeExpression un = (UnfinishedTypeExpression) typeExpression;
+            IdentTypeExpression un = (IdentTypeExpression) typeExpression;
+            write(un.getIdent(), DELAY);
+        }
+        else if (typeExpression instanceof InvalidIdentTypeExpression)
+        {
+            InvalidIdentTypeExpression un = (InvalidIdentTypeExpression) typeExpression;
             write(un._test_getContent(), DELAY);
         }
         else if (typeExpression instanceof TypeApplyExpression)
         {
             TypeApplyExpression appl = (TypeApplyExpression) typeExpression;
-            for (int i = 0; i < appl.getOperands().size(); i++)
+            write(appl.getTypeName(), 1);
+            for (Either<UnitExpression, TypeExpression> arg : appl.getArgumentsOnly())
             {
-                if (i > 0)
-                    write("(");
-                appl.getOperands().get(i).eitherInt(unit -> {
+                write("(");
+                arg.eitherInt(unit -> {
                     write("{");
                     write(unit.toString());
                     write("}");
@@ -50,8 +56,7 @@ public interface EnterTypeTrait extends FxRobotInterface
                     enterType(type, r);
                     return UnitType.UNIT;
                 });
-                if (i > 0)
-                    write(")");
+                write(")");
             }
         }
         else if (typeExpression instanceof TupleTypeExpression)
@@ -85,11 +90,6 @@ public interface EnterTypeTrait extends FxRobotInterface
                 write(units.save(true), DELAY);
                 write("}");
             }
-        }
-        else if (typeExpression instanceof TaggedTypeNameExpression)
-        {
-            TaggedTypeNameExpression tag = (TaggedTypeNameExpression) typeExpression;
-            write(tag.getTypeName().getRaw(), DELAY);
         }
         /*
         else if (typeExpression instanceof InvalidOpTypeExpression)

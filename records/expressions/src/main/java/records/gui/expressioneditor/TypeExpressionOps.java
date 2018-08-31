@@ -41,7 +41,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
     @Override
     public TypeExpression makeUnfinished(String s)
     {
-        return new UnfinishedTypeExpression(s);
+        return new IdentTypeExpression(s);
     }
 
     @Override

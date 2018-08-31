@@ -13,7 +13,7 @@ unbracketedType : BOOLEAN | number | TEXT | date | tagRef | array | typeVar;
 taggedDecl : TAGGED tagDeclParam* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
 tagDeclParam : TYPEVAR ident | UNITVAR ident;
 bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple | functionType;
-tagRefParam : bracketedType | UNIT | OPEN_BRACKET UNITVAR ident CLOSE_BRACKET;
+tagRefParam : bracketedType | UNIT | OPEN_BRACKET UNIT CLOSE_BRACKET | OPEN_BRACKET UNITVAR ident CLOSE_BRACKET;
 tagRef : TAGGED ident tagRefParam*; // First ident is name, rest are type params
 typeVar : TYPEVAR ident;
 
@@ -34,11 +34,11 @@ typeDecls : NEWLINE* (typeDecl NEWLINE*)*;
 completeType : type EOF;
 
 // Version for editing.  Number is treated as terminal here because UNIT is self-contained:
-typeExpressionTerminal : number | date | BOOLEAN | TEXT | INCOMPLETE STRING;
-taggedTypeExpression : TAGGED ident roundTypeExpression*;
+typeExpressionTerminal : number | date | BOOLEAN | TEXT | ident | INCOMPLETE STRING;
+applyTypeExpression : APPLY ident roundTypeExpression+;
 arrayTypeExpression : OPEN_SQUARE typeExpression CLOSE_SQUARE;
 roundTypeExpression : OPEN_BRACKET typeExpression (ARROW typeExpression | (COMMA typeExpression)+)? CLOSE_BRACKET;
-typeExpression : typeExpressionTerminal | arrayTypeExpression | roundTypeExpression | invalidOpsTypeExpression | taggedTypeExpression;
+typeExpression : typeExpressionTerminal | arrayTypeExpression | roundTypeExpression | invalidOpsTypeExpression | applyTypeExpression;
 invalidOpsTypeExpression : INVALIDOPS OPEN_BRACKET (STRING | typeExpression)* CLOSE_BRACKET;
 
 completeTypeExpression : typeExpression EOF;

@@ -154,4 +154,12 @@ class JellyTypePrimitive extends JellyType
             }
         });
     }
+
+    @Override
+    public String toString()
+    {
+        return "JellyTypePrimitive{" +
+                "dataType=" + dataType +
+                '}';
+    }
 }

@@ -3,7 +3,6 @@ package records.gui.expressioneditor;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -14,22 +13,20 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
-import records.gui.expressioneditor.AutoComplete.EndCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.InvalidOperatorUnitExpression;
 import records.transformations.expression.InvalidSingleUnitExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.NumberTypeExpression;
-import records.transformations.expression.type.TaggedTypeNameExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypePrimitiveLiteral;
 import records.transformations.expression.type.TypeSaver;
-import records.transformations.expression.type.UnfinishedTypeExpression;
+import records.transformations.expression.type.IdentTypeExpression;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -291,18 +288,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 return;
             }
         }
-
-        for (TypeId typeId : parent.getEditor().getTypeManager().getKnownTaggedTypes().keySet())
-        {
-            if (typeId.getRaw().equals(content))
-            {
-                typeSaver.saveOperand(new TaggedTypeNameExpression(typeId), this, this, c -> {});
-                return;
-            }
-        }
         
         // Fallback:
-        typeSaver.saveOperand(new UnfinishedTypeExpression(content), this, this, c -> {});
+        typeSaver.saveOperand(InvalidIdentTypeExpression.identOrUnfinished(content), this, this, c -> {});
     }
 
     @Override

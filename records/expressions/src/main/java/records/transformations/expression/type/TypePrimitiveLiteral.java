@@ -61,7 +61,7 @@ public class TypePrimitiveLiteral extends TypeExpression
         catch (InternalException e)
         {
             Log.log(e);
-            return new UnfinishedTypeExpression("").save(renames);
+            return new InvalidIdentTypeExpression("").save(renames);
         }
     }
 

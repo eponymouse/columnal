@@ -1,7 +1,6 @@
 package test.gen;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -10,7 +9,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeManager;
@@ -19,7 +17,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
-import records.transformations.expression.type.UnfinishedTypeExpression;
 import test.TestUtil;
 import test.gen.GenJellyType.JellyTypeAndManager;
 import utility.Either;

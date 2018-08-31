@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import com.google.common.collect.ImmutableMap;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
@@ -10,11 +11,13 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
+import records.gui.expressioneditor.UnitLiteralTypeNode;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
+import utility.Utility;
 
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -72,8 +75,14 @@ public class NumberTypeExpression extends TypeExpression
     @Override
     public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        // TODO include the unit
-        return Stream.of(p -> new TypeEntry(p, "Number"));
+        SingleLoader<TypeExpression, TypeSaver> loadNumber = p -> new TypeEntry(p, "Number");
+        if (unitExpression == null)
+            return Stream.of(loadNumber);
+        else
+        {
+            @NonNull UnitExpression unitExpressionFinal = unitExpression;
+            return Stream.of(loadNumber, p -> new UnitLiteralTypeNode(p, unitExpressionFinal));
+        }
     }
 
     @Override

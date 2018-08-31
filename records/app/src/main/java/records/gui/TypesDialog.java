@@ -21,8 +21,10 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
@@ -32,8 +34,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.TypeEditor;
 import records.jellytype.JellyType;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.UnfinishedTypeExpression;
+import records.transformations.expression.type.IdentTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -47,7 +50,7 @@ import utility.gui.FancyList;
 import utility.gui.GUI;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
 public class TypesDialog extends Dialog<Void>
@@ -66,6 +69,8 @@ public class TypesDialog extends Dialog<Void>
         );
 
         ListView<TaggedTypeDefinition> types = new ListView<>();
+        updateTypesList(types);
+        types.getStyleClass().add("types-list");
 
         Button addButton = GUI.button("types.add", () -> {
             TaggedTypeDefinition newType = new EditTypeDialog(null).showAndWait().orElse(null);
@@ -73,10 +78,27 @@ public class TypesDialog extends Dialog<Void>
             {
                 TaggedTypeDefinition newTypeFinal = newType;
                 FXUtility.alertOnErrorFX_(() -> typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags()));
+                updateTypesList(types);
             }
         });
         
-        Button editButton = new Button();
+        Button editButton = GUI.button("types.edit", () -> {
+            @Nullable TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
+            if (typeDefinition != null)
+            {
+                @Nullable TaggedTypeDefinition newType = new EditTypeDialog(typeDefinition).showAndWait().orElse(null);
+                if (newType != null)
+                {
+                    TypeId oldTypeName = typeDefinition.getTaggedTypeName();
+                    @NonNull TaggedTypeDefinition newTypeFinal = newType;
+                    FXUtility.alertOnErrorFX_(() -> {
+                        typeManager.unregisterTaggedType(oldTypeName);
+                        typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags());
+                    });
+                    updateTypesList(types);
+                }
+            }
+        });
         Button removeButton = new Button();
 
         BorderPane buttons = GUI.borderLeftCenterRight(addButton, editButton, removeButton);
@@ -86,6 +108,12 @@ public class TypesDialog extends Dialog<Void>
 
         getDialogPane().getButtonTypes().setAll(ButtonType.CLOSE);
         getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
+    }
+    
+    @RequiresNonNull("typeManager")
+    private void updateTypesList(@UnknownInitialization(Dialog.class) TypesDialog this, ListView<TaggedTypeDefinition> types)
+    {
+        types.getItems().setAll(typeManager.getUserTaggedTypes().values());
     }
 
     @OnThread(Tag.FXPlatform)
@@ -152,6 +180,24 @@ public class TypesDialog extends Dialog<Void>
             setOnShown(e -> {
                 FXUtility.runAfter(() -> typeName.requestFocus());
             });
+            
+            if (existing != null)
+            {
+                typeName.setText(existing.getTaggedTypeName().getRaw());
+                plainTagList.setText(existing.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(" | ")));
+                innerValueTypeArgs.setText(existing.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")));
+                // tag list done above
+                
+                if (existing.getTypeArguments().isEmpty() && 
+                    existing.getTags().stream().allMatch(t -> t.getInner() == null))
+                {
+                    tabPane.getSelectionModel().select(plainTab);
+                }
+                else
+                {
+                    tabPane.getSelectionModel().select(innerValuesTab);
+                }
+            }
         }
 
         @Override
@@ -159,7 +205,7 @@ public class TypesDialog extends Dialog<Void>
         {
             try
             {
-                String typeIdentifier = IdentifierUtility.asExpressionIdentifier(typeName.getText().trim());
+                @ExpressionIdentifier String typeIdentifier = IdentifierUtility.asExpressionIdentifier(typeName.getText().trim());
                 
                 if (typeIdentifier == null)
                     return Either.left("Not valid type identifier: " + typeName.getText().trim());
@@ -167,7 +213,7 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    String[] tags = plainTagList.getText().trim().split("\\w*\\|\\w*");
+                    String[] tags = plainTagList.getText().trim().split("\\s*\\|\\s*");
                     Either<@Localized String, ImmutableList<String>> tagNames = Either.right(ImmutableList.of());
                     if (!Arrays.equals(tags, new String[]{""}))
                         tagNames = Either.mapM(Arrays.asList(tags), t -> parseTagName("Invalid tag name: ", t));
@@ -175,7 +221,7 @@ public class TypesDialog extends Dialog<Void>
                 }
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
                 {
-                    String[] typeArgs = innerValueTypeArgs.getText().trim().split("\\w*,\\w*");
+                    String[] typeArgs = innerValueTypeArgs.getText().trim().split("\\s*,\\s*");
                     Either<@Localized String, ImmutableList<String>> typeArgsOrErr = Either.right(ImmutableList.of());
                     if (!Arrays.equals(typeArgs, new String[]{""}))
                         typeArgsOrErr = Either.mapM(Arrays.asList(typeArgs), t -> parseTagName("Invalid type argument: ", t));
@@ -197,7 +243,7 @@ public class TypesDialog extends Dialog<Void>
         {
             @Nullable @ExpressionIdentifier String identifier = IdentifierUtility.asExpressionIdentifier(src.trim());
             if (identifier == null)
-                return Either.left(errorPrefix + src.trim());
+                return Either.left(errorPrefix + "\"" + src.trim() + "\"");
             else
                 return Either.right(identifier);
         }
@@ -215,7 +261,7 @@ public class TypesDialog extends Dialog<Void>
                     initialContent == null ? "" : initialContent.getName(),
                     initialContent == null ? null : initialContent.getInner() 
                 )));
-                this.tagName = new TextField();
+                this.tagName = new TextField(initialContent == null ? "" : initialContent.getName());
                 FXUtility.addChangeListenerPlatformNN(tagName.textProperty(), name -> {
                     currentValue.set(currentValue.getValue().map(tt -> new TagType<>(name, tt.getInner())));
                 });
@@ -229,7 +275,7 @@ public class TypesDialog extends Dialog<Void>
                     Log.log(e);
                 }
                 if (startingExpression == null)
-                    startingExpression = new UnfinishedTypeExpression("");
+                    startingExpression = new InvalidIdentTypeExpression("");
                 this.innerType = new TypeEditor(typeManager, startingExpression, latest -> {
                     try
                     {

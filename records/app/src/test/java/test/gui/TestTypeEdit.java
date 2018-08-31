@@ -67,7 +67,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         this.windowToUse = stage;
     }
     
-    @Property(trials = 5)
+    //@Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testNewType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
     {
@@ -120,7 +120,8 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
                 if (visibleScroll.isPresent())
                 {
                     moveTo(visibleScroll.get());
-                    while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99)
+                    int count = 0;
+                    while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
                         scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
                 }
                 TestUtil.delay(200);
@@ -140,41 +141,39 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         }
     }
 
-    /*
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNoOpEditUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails details) throws Exception
+    public void testNoOpEditType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
     {
-        DummyManager prevManager = new DummyManager();
-        prevManager.getUnitManager().addUserUnit(new Pair<>(details.name, details.aliasOrDeclaration));
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        DummyManager initial = new DummyManager();
+        initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
         TestUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
         TestUtil.delay(200);
-        clickOn(".user-unit-list");
+        clickOn(".types-list");
+        push(KeyCode.DOWN);
         push(KeyCode.HOME);
-        clickOn(".id-units-userDeclared-edit");
+        clickOn(".id-types-edit");
         TestUtil.delay(500);
-        
-        // No edit
-        
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");
         TestUtil.sleep(500);
 
-        // Check that saved units in file match our new unit:
+        // Check that saved types in file match our new unit:
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
-        assertEquals(ImmutableMap.of(details.name, details.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+        TypeManager  tmpTypes = new TypeManager(new UnitManager());
+        tmpTypes.loadTypeDecls(file.types());
+        assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
     }
 
 
 
+    /*
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testEditUnit(@When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception

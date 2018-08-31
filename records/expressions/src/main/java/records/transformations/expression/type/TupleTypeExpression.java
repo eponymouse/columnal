@@ -31,13 +31,15 @@ public class TupleTypeExpression extends TypeExpression
     public Stream<SingleLoader<TypeExpression, TypeSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         StreamTreeBuilder<SingleLoader<TypeExpression, TypeSaver>> items = new StreamTreeBuilder<>();
-        for (int i = 0; i < members.size(); i++)
-        {
-            items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
-            // Now we must add the comma:
-            if (i < members.size() - 1)
-                items.add(p -> new TypeEntry(p, ","));
-        }
+        roundBracket(BracketedStatus.MISC, items, () -> {
+            for (int i = 0; i < members.size(); i++)
+            {
+                items.addAll(members.get(i).loadAsConsecutive(members.size() == 1 ? BracketedStatus.DIRECT_ROUND_BRACKETED : BracketedStatus.MISC));
+                // Now we must add the comma:
+                if (i < members.size() - 1)
+                    items.add(p -> new TypeEntry(p, ","));
+            }
+        });
 
         return items.stream();
     }

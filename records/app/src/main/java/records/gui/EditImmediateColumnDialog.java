@@ -22,7 +22,8 @@ import records.gui.stf.Component;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
-import records.transformations.expression.type.UnfinishedTypeExpression;
+import records.transformations.expression.type.IdentTypeExpression;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -74,7 +75,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         
         StructuredTextField defaultValueField = new StructuredTextField();
         defaultValueField.getStyleClass().add("default-value");
-        typeEditor = new TypeEditor(tableManager.getTypeManager(), new UnfinishedTypeExpression(""), t -> {
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), new InvalidIdentTypeExpression(""), t -> {
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();

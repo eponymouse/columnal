@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -47,7 +48,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             {
                 items.add(typeExpressions.get(i));
                 if (i < operators.size())
-                    items.add(new UnfinishedTypeExpression(operators.get(i).getContent()));
+                    items.add(InvalidIdentTypeExpression.identOrUnfinished(operators.get(i).getContent()));
             }
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
                 return new ListTypeExpression(new InvalidOpTypeExpression(items.build()));
@@ -65,7 +66,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
     public void saveKeyword(Keyword keyword, ConsecutiveChild<TypeExpression, TypeSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
-        Supplier<ImmutableList<TypeExpression>> prefixKeyword = () -> ImmutableList.of(new UnfinishedTypeExpression(keyword.getContent()));
+        Supplier<ImmutableList<TypeExpression>> prefixKeyword = () -> ImmutableList.of(new InvalidIdentTypeExpression(keyword.getContent()));
         
         if (keyword == Keyword.OPEN_ROUND)
         {
@@ -73,14 +74,27 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
                     (bracketed, bracketEnd) -> {
                         ArrayList<Either<@Recorded TypeExpression, OpAndNode>> precedingItems = currentScopes.peek().items;
                         // Type applications are a special case:
-                        if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(e -> e instanceof TaggedTypeNameExpression || e instanceof TypeApplyExpression, op -> false))
+                        if (precedingItems.size() >= 1 && precedingItems.get(precedingItems.size() - 1).either(e -> e instanceof IdentTypeExpression || e instanceof TypeApplyExpression, op -> false))
                         {
                             @Nullable @Recorded TypeExpression callTarget = precedingItems.remove(precedingItems.size() - 1).<@Nullable @Recorded TypeExpression>either(e -> e, op -> null);
                             // Shouldn't ever be null:
                             if (callTarget != null)
                             {
-                                ImmutableList<Either<UnitExpression, TypeExpression>> prevItems = callTarget instanceof TypeApplyExpression ? ((TypeApplyExpression) callTarget).getOperands() : ImmutableList.of(Either.right(callTarget));
-                                return Either.left(errorDisplayerRecord.recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, new TypeApplyExpression(prevItems)));
+                                Either<UnitExpression, TypeExpression> newArg = bracketed instanceof  UnitLiteralTypeExpression ? Either.left(((UnitLiteralTypeExpression)bracketed).getUnitExpression()) : Either.right(bracketed);
+                                
+                                TypeApplyExpression typeExpression;
+                                if (callTarget instanceof TypeApplyExpression)
+                                {
+                                    TypeApplyExpression applyExpression = (TypeApplyExpression) callTarget;
+                                    
+                                    typeExpression = new TypeApplyExpression(applyExpression.getTypeName(), Utility.concatI(applyExpression.getArgumentsOnly(), ImmutableList.of(newArg)));
+                                }
+                                else
+                                {
+                                    IdentTypeExpression identTypeExpression = (IdentTypeExpression) callTarget; 
+                                    typeExpression = new TypeApplyExpression(identTypeExpression.getIdent(), ImmutableList.of(newArg));
+                                }
+                                return Either.left(errorDisplayerRecord.recordType(errorDisplayerRecord.recorderFor(callTarget).start, bracketEnd, typeExpression));
                             }
                         }
                         return Either.left(errorDisplayerRecord.recordType(errorDisplayer, bracketEnd, bracketed));
@@ -131,13 +145,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @Override
     protected TypeExpression makeSingleInvalid(Keyword terminator)
     {
-        return new UnfinishedTypeExpression(terminator.getContent());
+        return new InvalidIdentTypeExpression(terminator.getContent());
     }
 
     @Override
     protected TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<Operator, @Recorded TypeExpression>> items)
     {
-        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.either(u -> new UnfinishedTypeExpression(","), y -> y))));
+        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.either(u -> new InvalidIdentTypeExpression(","), y -> y))));
     }
 
     @Override
@@ -149,7 +163,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @Override
     protected TypeExpression keywordToInvalid(Keyword keyword)
     {
-        return new UnfinishedTypeExpression(keyword.getContent());
+        return new InvalidIdentTypeExpression(keyword.getContent());
     }
 
     @Override
@@ -185,7 +199,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
         }
 
-        return new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new UnfinishedTypeExpression(o.getContent()), x -> x)));
+        return new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> InvalidIdentTypeExpression.identOrUnfinished(o.getContent()), x -> x)));
     }
     
 }

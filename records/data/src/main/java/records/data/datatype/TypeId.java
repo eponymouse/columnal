@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -11,9 +12,9 @@ import threadchecker.Tag;
 @OnThread(Tag.Any)
 public class TypeId
 {
-    private final String typeId;
+    private final @ExpressionIdentifier String typeId;
 
-    public TypeId(String typeId)
+    public TypeId(@ExpressionIdentifier String typeId)
     {
         this.typeId = typeId;
     }
@@ -48,7 +49,7 @@ public class TypeId
     }
 
     @SuppressWarnings("i18n")
-    public @Localized String getRaw()
+    public @Localized @ExpressionIdentifier String getRaw()
     {
         return typeId;
     }

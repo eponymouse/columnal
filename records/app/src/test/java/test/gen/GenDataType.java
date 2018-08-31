@@ -1,39 +1,17 @@
 package test.gen;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.NumberInfo;
-import records.data.datatype.TaggedTypeDefinition;
-import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeManager;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.jellytype.JellyType;
-import records.jellytype.JellyTypeTagged;
-import records.transformations.expression.type.UnfinishedTypeExpression;
-import test.TestUtil;
 import test.gen.GenDataType.DataTypeAndManager;
-import test.gen.GenJellyType.GenTaggedType;
 import test.gen.GenJellyType.JellyTypeAndManager;
 import test.gen.GenJellyType.TypeKinds;
-import utility.Either;
-import utility.ExSupplier;
-import utility.Pair;
-import utility.Utility;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
 
 /**
  * Created by neil on 13/01/2017.

@@ -11,6 +11,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
@@ -59,12 +60,17 @@ public class JellyTypeTagged extends JellyType
     @Override
     public void save(OutputBuilder output)
     {
-        output.t(FormatParser.TAGGED, FormatParser.VOCABULARY);
+        output.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
         output.quote(typeName);
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
             output.raw("(");
-            typeParam.either(u -> {u.save(output); return UnitType.UNIT;},t -> {t.save(output); return UnitType.UNIT;});
+            typeParam.either(u -> {
+                output.raw("{");
+                u.save(output);
+                output.raw("}");
+                return UnitType.UNIT;
+            },t -> {t.save(output); return UnitType.UNIT;});
             output.raw(")");
         }
     }

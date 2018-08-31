@@ -142,7 +142,9 @@ public abstract class JellyType
         }
         else if (ctx.tagRef() != null)
         {
-            return new JellyTypeTagged(new TypeId(ctx.tagRef().ident().getText()), Utility.mapListExI(ctx.tagRef().tagRefParam(), param -> load(param, mgr)));
+            @SuppressWarnings("identifier")
+            TypeId typeId = new TypeId(ctx.tagRef().ident().getText());
+            return new JellyTypeTagged(typeId, Utility.mapListExI(ctx.tagRef().tagRefParam(), param -> load(param, mgr)));
         }
         else if (ctx.array() != null)
         {
@@ -160,7 +162,8 @@ public abstract class JellyType
         if (param.bracketedType() != null)
             return Either.right(load(param.bracketedType(), mgr));
         else if (param.UNIT() != null)
-            return Either.left(JellyUnit.load(param.UNIT().getText(), mgr.getUnitManager()));
+            // Strip curly brackets:
+            return Either.left(JellyUnit.load(param.UNIT().getText().substring(1, param.UNIT().getText().length() - 1), mgr.getUnitManager()));
         else if (param.UNITVAR() != null)
             return Either.left(JellyUnit.unitVariable(param.ident().getText()));
         throw new InternalException("Unrecognised case: " + param);

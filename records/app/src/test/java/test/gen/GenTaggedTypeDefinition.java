@@ -59,7 +59,9 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             {
                 types.add(r.nextInt(types.size() + 1), null);
             }
-            return new TaggedTypeDefinition(new TypeId("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z')), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
+            @SuppressWarnings("identifier")
+            TypeId typeId = new TypeId("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'));
+            return new TaggedTypeDefinition(typeId, typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
         }
         catch (InternalException | UserException e)
         {

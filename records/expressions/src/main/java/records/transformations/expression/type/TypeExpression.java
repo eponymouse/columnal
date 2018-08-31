@@ -1,8 +1,8 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,10 +20,10 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
+import records.grammar.FormatParser.ApplyTypeExpressionContext;
 import records.grammar.FormatParser.ArrayTypeExpressionContext;
 import records.grammar.FormatParser.InvalidOpsTypeExpressionContext;
 import records.grammar.FormatParser.RoundTypeExpressionContext;
-import records.grammar.FormatParser.TaggedTypeExpressionContext;
 import records.grammar.FormatParser.TypeExpressionTerminalContext;
 import records.grammar.FormatParserBaseVisitor;
 import records.gui.expressioneditor.TypeEntry;
@@ -76,18 +76,14 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(typeName);
                 if (typeVars.isEmpty())
-                    return taggedTypeNameExpression;
-                ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(typeVars.size() + 1);
-                if (typeVars.isEmpty())
-                    return taggedTypeNameExpression;
-                args.add(Either.right(taggedTypeNameExpression));
+                    return new IdentTypeExpression(typeName.getRaw());
+                ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(typeVars.size());
                 for (Either<Unit, DataType> typeVar : typeVars)
                 {
                     args.add(typeVar.<UnitExpression, TypeExpression>mapBothInt(u -> UnitExpression.load(u), t -> fromDataType(t)));
                 }
-                return new TypeApplyExpression(args.build());
+                return new TypeApplyExpression(typeName.getRaw(), args.build());
             }
 
             @Override
@@ -104,7 +100,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new ListTypeExpression(inner == null ? new UnfinishedTypeExpression("") : fromDataType(inner));
+                return new ListTypeExpression(inner == null ? new InvalidIdentTypeExpression("") : fromDataType(inner));
             }
         });
     }
@@ -140,18 +136,14 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression tagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeVars) throws InternalException, UserException
             {
-                TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(typeName);
                 if (typeVars.isEmpty())
-                    return taggedTypeNameExpression;
-                ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(typeVars.size() + 1);
-                if (typeVars.isEmpty())
-                    return taggedTypeNameExpression;
-                args.add(Either.right(taggedTypeNameExpression));
+                    return new IdentTypeExpression(typeName.getRaw());
+                ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(typeVars.size());
                 for (Either<JellyUnit, JellyType> typeVar : typeVars)
                 {
                     args.add(typeVar.<UnitExpression, TypeExpression>mapBothEx(u -> UnitExpression.load(u), t -> fromJellyType(t, mgr)));
                 }
-                return new TypeApplyExpression(args.build());
+                return new TypeApplyExpression(typeName.getRaw(), args.build());
             }
 
             @Override
@@ -180,7 +172,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             @Override
             public TypeExpression typeVariable(String name) throws InternalException, InternalException
             {
-                throw new UnimplementedException();
+                return InvalidIdentTypeExpression.identOrUnfinished(name);
             }
         });
     }
@@ -222,7 +214,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 {
                     if (ctx.INCOMPLETE() != null)
                     {
-                        return new UnfinishedTypeExpression(ctx.STRING().getText());
+                        return new IdentTypeExpression(ctx.STRING().getText());
                     }
                     else
                     {
@@ -268,18 +260,17 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 }
 
                 @Override
-                public TypeExpression visitTaggedTypeExpression(TaggedTypeExpressionContext ctx)
+                public TypeExpression visitApplyTypeExpression(ApplyTypeExpressionContext ctx)
                 {
-                    ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builder();
-                    TaggedTypeNameExpression taggedTypeNameExpression = new TaggedTypeNameExpression(new TypeId(ctx.ident().getText()));
-                    if (ctx.roundTypeExpression().isEmpty())
-                        return taggedTypeNameExpression;
-                    args.add(Either.right(taggedTypeNameExpression));
+                    @SuppressWarnings("identifier")
+                    @ExpressionIdentifier String typeName = ctx.ident().getText();
+
+                    ImmutableList.Builder<Either<UnitExpression, TypeExpression>> args = ImmutableList.builderWithExpectedSize(ctx.roundTypeExpression().size());
                     for (RoundTypeExpressionContext roundTypeExpressionContext : ctx.roundTypeExpression())
                     {
                         args.add(Either.right(visitRoundTypeExpression(roundTypeExpressionContext)));
                     }
-                    return new TypeApplyExpression(args.build());
+                    return new TypeApplyExpression(typeName, args.build());
                 }
 
                 public TypeExpression visitChildren(RuleNode node) {

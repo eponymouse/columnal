@@ -36,8 +36,9 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.UnfinishedTypeExpression;
+import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.typeExp.ExpressionBase;
@@ -48,7 +49,6 @@ import styled.StyledString;
 import styled.StyledString.Style;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformRunnable;
 import utility.IdentifierUtility;
@@ -447,7 +447,8 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             }
             ImmutableList<Lit<?>> loaders = ImmutableList.of(
                 new Lit<UnitExpression>("unit{", UnitLiteralExpression::new, UnitExpression::load, InvalidSingleUnitExpression::identOrUnfinished),
-                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), UnfinishedTypeExpression::new),
+                new Lit<TypeExpression>("type{", TypeLiteralExpression::new, t -> TypeExpression.parseTypeExpression(typeManager, t), InvalidIdentTypeExpression::identOrUnfinished
+                ),
                 new Lit<String>("date{", s -> new TemporalLiteral(DateTimeType.YEARMONTHDAY, s), s -> s, s -> s),
                 new Lit<String>("dateym{", s -> new TemporalLiteral(DateTimeType.YEARMONTH, s), s -> s, s -> s),
                 new Lit<String>("time{", s -> new TemporalLiteral(DateTimeType.TIMEOFDAY, s), s -> s, s -> s),

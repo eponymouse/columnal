@@ -1,25 +1,29 @@
 package records.transformations.expression.type;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.FormatLexer;
 import records.gui.expressioneditor.TypeEntry;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledString;
+import utility.IdentifierUtility;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class UnfinishedTypeExpression extends TypeExpression
+public class InvalidIdentTypeExpression extends TypeExpression
 {
     private final String value;
-
-    public UnfinishedTypeExpression(String value)
+    
+    public InvalidIdentTypeExpression(String value)
     {
         this.value = value;
     }
@@ -33,13 +37,13 @@ public class UnfinishedTypeExpression extends TypeExpression
     @Override
     public StyledString toStyledString()
     {
-        return StyledString.s("Unfinished: \"" + value + "\"");
+        return StyledString.s("Invalid: \"" + value + "\"");
     }
 
     @Override
     public String save(TableAndColumnRenames renames)
     {
-        return "@INCOMPLETE " + OutputBuilder.quoted(value);
+        return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INCOMPLETE) + " " + OutputBuilder.quoted(value);
     }
 
     @Override
@@ -70,7 +74,7 @@ public class UnfinishedTypeExpression extends TypeExpression
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UnfinishedTypeExpression that = (UnfinishedTypeExpression) o;
+        InvalidIdentTypeExpression that = (InvalidIdentTypeExpression) o;
         return Objects.equals(value, that.value);
     }
 
@@ -84,5 +88,15 @@ public class UnfinishedTypeExpression extends TypeExpression
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {
         return this == toReplace ? replaceWith : this;
+    }
+
+    // IdentExpression if possible, otherwise InvalidIdentExpression
+    public static TypeExpression identOrUnfinished(String src)
+    {
+        @ExpressionIdentifier String valid = IdentifierUtility.asExpressionIdentifier(src);
+        if (valid != null)
+            return new IdentTypeExpression(valid);
+        else
+            return new InvalidIdentTypeExpression(src);
     }
 }

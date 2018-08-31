@@ -38,8 +38,9 @@ import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeLiteralExpression;
 import records.transformations.expression.TypeState;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.type.IdentTypeExpression;
+import records.transformations.expression.type.InvalidIdentTypeExpression;
 import records.transformations.expression.type.TypeExpression;
-import records.transformations.expression.type.UnfinishedTypeExpression;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -153,7 +154,7 @@ public class ExpressionEditorUtil
     {
         List<QuickFix<Expression,ExpressionSaver>> quickFixes = new ArrayList<>();
         FXPlatformSupplierInt<Expression> makeTypeFix = () -> {
-            return TypeLiteralExpression.fixType(typeManager, fix == null ? new UnfinishedTypeExpression("") : TypeExpression.fromDataType(fix), src);
+            return TypeLiteralExpression.fixType(typeManager, fix == null ? new InvalidIdentTypeExpression("") : TypeExpression.fromDataType(fix), src);
         };
         quickFixes.add(new QuickFix<Expression, ExpressionSaver>(StyledString.s(TranslationUtility.getString("fix.setType")), ImmutableList.<String>of(), src, makeTypeFix));
         if (fix != null)
