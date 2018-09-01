@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -69,6 +70,20 @@ public class TypesDialog extends Dialog<Void>
         );
 
         ListView<TaggedTypeDefinition> types = new ListView<>();
+        types.setEditable(false);
+        types.setCellFactory(lv -> {
+            ListCell<TaggedTypeDefinition> cell = new ListCell<TaggedTypeDefinition>()
+            {
+                @Override
+                protected void updateItem(@Nullable TaggedTypeDefinition item, boolean empty)
+                {
+                    super.updateItem(item, empty);
+                    if (!empty && item != null)
+                        setText(item.getTaggedTypeName().getRaw() + item.getTypeArguments().stream().map(t -> "(" + t.getSecond() + ")").collect(Collectors.joining("")));
+                }
+            };
+            return cell;
+        });
         updateTypesList(types);
         types.getStyleClass().add("types-list");
 
@@ -99,7 +114,14 @@ public class TypesDialog extends Dialog<Void>
                 }
             }
         });
-        Button removeButton = new Button();
+        Button removeButton = GUI.button("types.remove", () -> {
+            @Nullable TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
+            if (typeDefinition != null)
+            {
+                typeManager.unregisterTaggedType(typeDefinition.getTaggedTypeName());
+                updateTypesList(types);
+            }
+        });
 
         BorderPane buttons = GUI.borderLeftCenterRight(addButton, editButton, removeButton);
         BorderPane content = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), types, buttons, "units-dialog-user-defined");

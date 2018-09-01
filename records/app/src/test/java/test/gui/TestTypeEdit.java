@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -9,6 +10,7 @@ import javafx.geometry.Orientation;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.input.KeyCode;
@@ -16,6 +18,8 @@ import javafx.stage.Stage;
 import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.assertj.core.internal.bytebuddy.description.type.TypeDefinition;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
@@ -24,6 +28,7 @@ import org.testfx.util.NodeQueryUtils;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitDeclaration;
@@ -46,6 +51,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -54,7 +60,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, EnterTypeTrait
+public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
@@ -67,6 +73,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         this.windowToUse = stage;
     }
     
+    // TODO restore
     //@Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testNewType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
@@ -96,6 +103,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
     @OnThread(Tag.Simulation)
     private void enterTypeDetails(TaggedTypeDefinition typeDefinition, Random r, TypeManager typeManager) throws InternalException, UserException
     {
+        checkWindowWithinScreen();
         selectAllCurrentTextField();
         write(typeDefinition.getTaggedTypeName().getRaw());
         
@@ -113,14 +121,27 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         {
             clickOn(".type-entry-tab-standard");
             clickOn(".type-entry-inner-type-args");
+            selectAllCurrentTextField();
             write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
+            int count = 0;
+            while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
+            {
+                Node node = lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>query();
+                if (node != null)
+                {
+                    clickOn(node);
+                    TestUtil.sleep(800);
+                }
+            }
+            assertTrue(!lookup(".small-delete").tryQuery().isPresent());
+            
             for (TagType<JellyType> tagType : typeDefinition.getTags())
             {
                 Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
                 if (visibleScroll.isPresent())
                 {
                     moveTo(visibleScroll.get());
-                    int count = 0;
+                    count = 0;
                     while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
                         scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
                 }
@@ -141,7 +162,8 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         }
     }
 
-    @Property(trials = 5)
+    // TODO restore
+    //@Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testNoOpEditType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
     {
@@ -171,61 +193,66 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
     }
 
-
-
-    /*
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testEditUnit(@When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
+    public void testEditType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition before, @When(seed=3L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition after, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
     {
-        DummyManager prevManager = new DummyManager();
-        prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+        DummyManager initial = new DummyManager();
+        initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
         TestUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
         TestUtil.delay(200);
-        clickOn(".user-unit-list");
+        clickOn(".types-list");
+        push(KeyCode.DOWN);
         push(KeyCode.HOME);
-        clickOn(".id-units-userDeclared-edit");
+        clickOn(".id-types-edit");
+        enterTypeDetails(after, random, mainWindowActions._test_getTableManager().getTypeManager());
         TestUtil.delay(500);
-
-        enterUnitDetails(after);
-
         clickOn(".ok-button");
         TestUtil.sleep(500);
         clickOn(".close-button");
         TestUtil.sleep(500);
 
-        // Check that saved units in file match our new unit:
+        // Check that saved types in file match our new unit:
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
-        assertEquals(ImmutableMap.of(after.name, after.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+        TypeManager  tmpTypes = new TypeManager(new UnitManager());
+        tmpTypes.loadTypeDecls(file.types());
+        assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
     }
 
-    @Property(trials = 5)
+    //@Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testDeleteUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsA, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsB, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetailsC, int whichToDelete) throws Exception
+    public void testDeleteType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @When(seed=3L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @When(seed=4L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
         DummyManager prevManager = new DummyManager();
-        prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsA.name, unitDetailsA.aliasOrDeclaration));
-        prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsB.name, unitDetailsB.aliasOrDeclaration));
-        prevManager.getUnitManager().addUserUnit(new Pair<>(unitDetailsC.name, unitDetailsC.aliasOrDeclaration));
+        prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
+        prevManager.getTypeManager().registerTaggedType(typeDefinitionB.getTaggedTypeName().getRaw(), typeDefinitionB.getTypeArguments(), typeDefinitionB.getTags());
+        prevManager.getTypeManager().registerTaggedType(typeDefinitionC.getTaggedTypeName().getRaw(), typeDefinitionC.getTypeArguments(), typeDefinitionC.getTags());
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
         TestUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-units");
+        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
         TestUtil.delay(200);
-        clickOn(".user-unit-list");
+        clickOn(".types-list");
+        push(KeyCode.DOWN);
         push(KeyCode.HOME);
+        TaggedTypeDefinition toDelete;
+        if ((whichToDelete % 3) == 0)
+            toDelete = typeDefinitionA;
+        else if ((whichToDelete % 3) == 1)
+            toDelete = typeDefinitionB;
+        else
+            toDelete = typeDefinitionC;
         int count = 0;
-        while (!existsSelectedCell(unitDetailsA.name) && count++ < 3)
+        String toDeleteCellText = toDelete.getTaggedTypeName().getRaw() + toDelete.getTypeArguments().stream().map(t -> "(" + t.getSecond() + ")").collect(Collectors.joining(""));
+        while (!existsSelectedCell(toDeleteCellText) && count++ < 3)
             push(KeyCode.DOWN);
-        assertTrue(unitDetailsA.name, existsSelectedCell(unitDetailsA.name));
-        clickOn(".id-units-userDeclared-remove");
+        assertTrue(toDeleteCellText, existsSelectedCell(toDeleteCellText));
+        clickOn(".id-types-remove");
         TestUtil.sleep(500);
         clickOn(".close-button");
         TestUtil.sleep(500);
@@ -234,22 +261,29 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
         Log.debug("Saved:\n" + fileContent);
         FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        UnitManager tmpUnits = new UnitManager();
-        tmpUnits.loadUserUnits(file.units());
-        assertEquals(ImmutableMap.of(unitDetailsB.name, unitDetailsB.aliasOrDeclaration, unitDetailsC.name, unitDetailsC.aliasOrDeclaration), tmpUnits.getAllUserDeclared());
+        TypeManager  tmpTypes = new TypeManager(new UnitManager());
+        HashMap<TypeId, TaggedTypeDefinition> remaining = new HashMap<>();
+        remaining.put(typeDefinitionA.getTaggedTypeName(), typeDefinitionA);
+        remaining.put(typeDefinitionB.getTaggedTypeName(), typeDefinitionB);
+        remaining.put(typeDefinitionC.getTaggedTypeName(), typeDefinitionC);
+        remaining.remove(toDelete.getTaggedTypeName());
+        tmpTypes.loadTypeDecls(file.types());
+        assertEquals(remaining, tmpTypes.getUserTaggedTypes());
     }
 
     @OnThread(Tag.Simulation)
     private boolean existsSelectedCell(String content)
     {
-        return lookup(".table-cell").match(t -> {
-            if (t instanceof TableCell)
+        return lookup(".list-cell").match(t -> {
+            if (t instanceof ListCell)
             {
-                TableCell tableCell = (TableCell) t;
-                return TestUtil.fx(() -> tableCell.getTableRow().isSelected() && content.equals(tableCell.getText()));
+                ListCell<?> listCell = (ListCell<?>) t;
+                return TestUtil.fx(() -> {
+                    Log.debug("Cell text: \"" + listCell.getText() + "\" sel: " + listCell.isSelected());
+                    return listCell.isSelected() && content.equals(listCell.getText());
+                });
             }
             return false;
         }).tryQuery().isPresent();
     }
-    */
 }
