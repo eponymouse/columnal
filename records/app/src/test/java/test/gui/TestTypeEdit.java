@@ -51,6 +51,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Random;
@@ -126,7 +127,8 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
             int count = 0;
             while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
             {
-                Node node = lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>query();
+                // Click highest one as likely to not be off the screen:
+                Node node = lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(0, 0).getY()))).findFirst().orElse(null);
                 if (node != null)
                 {
                     clickOn(node);

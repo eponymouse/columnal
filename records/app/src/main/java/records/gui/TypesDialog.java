@@ -141,7 +141,6 @@ public class TypesDialog extends Dialog<Void>
     @OnThread(Tag.FXPlatform)
     private class EditTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
     {
-
         private final TextArea plainTagList;
         private final Tab plainTab;
         private final Tab innerValuesTab;
@@ -183,6 +182,7 @@ public class TypesDialog extends Dialog<Void>
                 }
             };
             innerValueTagList.getNode().setMinHeight(300);
+            innerValueTagList.getNode().setPrefHeight(500);
             
             innerValueTypeArgs = new TextField();
             innerValueTypeArgs.getStyleClass().add("type-entry-inner-type-args");

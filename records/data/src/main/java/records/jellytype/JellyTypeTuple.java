@@ -71,7 +71,6 @@ public class JellyTypeTuple extends JellyType
     @Override
     public int hashCode()
     {
-
         return Objects.hash(types);
     }
 
@@ -88,5 +87,14 @@ public class JellyTypeTuple extends JellyType
     public <R, E extends Throwable> R apply(JellyTypeVisitorEx<R, E> visitor) throws InternalException, E
     {
         return visitor.tuple(types);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "JellyTypeTuple{" +
+                "types=" + Utility.listToString(types) +
+                ", complete=" + complete +
+                '}';
     }
 }

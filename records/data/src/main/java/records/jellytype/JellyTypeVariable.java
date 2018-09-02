@@ -74,7 +74,14 @@ class JellyTypeVariable extends JellyType
     @Override
     public int hashCode()
     {
-
         return Objects.hash(name);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "JellyTypeVariable{" +
+                "name='" + name + '\'' +
+                '}';
     }
 }

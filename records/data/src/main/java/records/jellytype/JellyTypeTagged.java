@@ -116,4 +116,13 @@ public class JellyTypeTagged extends JellyType
     {
         return typeParams;
     }
+
+    @Override
+    public String toString()
+    {
+        return "JellyTypeTagged{" +
+                "typeName=" + typeName +
+                ", typeParams=" + Utility.listToString(typeParams) +
+                '}';
+    }
 }
