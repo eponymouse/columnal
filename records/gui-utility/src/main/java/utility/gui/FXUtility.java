@@ -36,6 +36,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -513,13 +514,20 @@ public class FXUtility
         }
         else
         {
-            Log.log(e);
+            Log.log("Showing error:", e);
             // Don't show dialog which would interrupt a JUnit test:
             if (!isJUnitTest())
             {
                 String localizedMessage = errWrap.apply(e.getLocalizedMessage());
-                Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
+                localizedMessage = localizedMessage == null ? "Unknown error" : localizedMessage;
+                Alert alert = new Alert(AlertType.ERROR, localizedMessage, ButtonType.OK);
                 alert.initModality(Modality.APPLICATION_MODAL);
+                if (e.getCause() != null)
+                {
+                    TextArea textArea = new TextArea(e.getCause().getLocalizedMessage());
+                    textArea.setEditable(false);
+                    alert.getDialogPane().setContent(new VBox(new Label(localizedMessage), new TitledPane("More information", textArea)));
+                }
                 showingError = true;
                 alert.showAndWait();
                 showingError = false;
