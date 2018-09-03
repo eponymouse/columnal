@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -123,8 +124,9 @@ public class TypesDialog extends Dialog<Void>
             }
         });
 
-        BorderPane buttons = GUI.borderLeftCenterRight(addButton, editButton, removeButton);
-        BorderPane content = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), types, buttons, "units-dialog-user-defined");
+        BorderPane.setMargin(types, new Insets(10, 0, 10, 0));
+        BorderPane buttons = GUI.borderLeftCenterRight(addButton, editButton, removeButton, "types-dialog-buttons");
+        BorderPane content = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), types, buttons, "types-dialog-content");
 
         getDialogPane().setContent(content);
 
