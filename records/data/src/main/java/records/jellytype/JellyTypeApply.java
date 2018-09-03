@@ -2,8 +2,6 @@ package records.jellytype;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
@@ -12,7 +10,6 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
-import records.grammar.FormatParser;
 import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeCons;
@@ -27,12 +24,12 @@ import java.util.function.Consumer;
 
 import static records.typeExp.TypeExp.ALL_TYPE_CLASSES;
 
-public class JellyTypeTagged extends JellyType
+public class JellyTypeApply extends JellyType
 {
     private final TypeId typeName;
     private final ImmutableList<Either<JellyUnit, JellyType>> typeParams;
 
-    public JellyTypeTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams)
+    public JellyTypeApply(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams)
     {
         this.typeName = typeName;
         this.typeParams = typeParams;
@@ -60,7 +57,7 @@ public class JellyTypeTagged extends JellyType
     @Override
     public void save(OutputBuilder output)
     {
-        output.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
+        output.t(FormatLexer.APPLY, FormatLexer.VOCABULARY);
         output.quote(typeName);
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
@@ -80,7 +77,7 @@ public class JellyTypeTagged extends JellyType
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        JellyTypeTagged that = (JellyTypeTagged) o;
+        JellyTypeApply that = (JellyTypeApply) o;
         return Objects.equals(typeName, that.typeName) &&
             Objects.equals(typeParams, that.typeParams);
     }
@@ -104,7 +101,7 @@ public class JellyTypeTagged extends JellyType
     @Override
     public <R, E extends Throwable> R apply(JellyTypeVisitorEx<R, E> visitor) throws InternalException, E
     {
-        return visitor.tagged(typeName, typeParams);
+        return visitor.applyTagged(typeName, typeParams);
     }
 
     public TypeId getName()
@@ -120,7 +117,7 @@ public class JellyTypeTagged extends JellyType
     @Override
     public String toString()
     {
-        return "JellyTypeTagged{" +
+        return "JellyTypeApply{" +
                 "typeName=" + typeName +
                 ", typeParams=" + Utility.listToString(typeParams) +
                 '}';

@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
@@ -54,7 +55,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
     }
 
     private final ImmutableSet<TypeKinds> typeKinds;
-    private final ImmutableSet<String> availableTypeVars;
+    private final ImmutableSet<@ExpressionIdentifier String> availableTypeVars;
 
     public static class JellyTypeAndManager
     {
@@ -78,7 +79,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         this(typeKinds, ImmutableSet.of());
     }
 
-    public GenJellyType(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<String> availableTypeVars)
+    public GenJellyType(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars)
     {
         super(JellyTypeAndManager.class);
         this.typeKinds = typeKinds;
@@ -153,7 +154,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
 
     protected JellyType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
-        TaggedTypeDefinition typeDefinition;
+        TaggedTypeDefinition typeDefinition = null;
 
         // Limit it to 100 types:
         int typeIndex = r.nextInt(100);
@@ -178,9 +179,12 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
             {
                 types.add(r.nextInt(types.size() + 1), null);
             }
-            typeDefinition = typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
+            @SuppressWarnings("identifier")
+            @ExpressionIdentifier String typeName = "" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z');
+            typeDefinition = typeManager.registerTaggedType(typeName, typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
         }
-        else
+        
+        if (typeDefinition == null)
         {
             typeDefinition = r.choose(typeManager.getKnownTaggedTypes().values());
         }

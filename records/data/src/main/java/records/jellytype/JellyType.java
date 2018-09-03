@@ -1,5 +1,6 @@
 package records.jellytype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -25,12 +26,9 @@ import records.loadsave.OutputBuilder;
 import records.typeExp.MutVar;
 import records.typeExp.TypeExp;
 import records.typeExp.units.MutUnitVar;
-import styled.StyledString;
 import utility.Either;
-import utility.Pair;
 import utility.Utility;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -78,9 +76,9 @@ public abstract class JellyType
     // For every tagged type use anywhere within this type, call back the given function with the name.
     public abstract void forNestedTagged(Consumer<TypeId> nestedTagged);
     
-    public static JellyType typeVariable(String name)
+    public static JellyType typeVariable(@ExpressionIdentifier String name)
     {
-        return new JellyTypeVariable(name);
+        return new JellyTypeIdent(name);
     }
     
     public static JellyType tuple(ImmutableList<JellyType> members)
@@ -90,7 +88,10 @@ public abstract class JellyType
 
     public static JellyType tagged(TypeId name, ImmutableList<Either<JellyUnit, JellyType>> params)
     {
-        return new JellyTypeTagged(name, params);
+        if (params.isEmpty())
+            return new JellyTypeIdent(name.getRaw());
+        else
+            return new JellyTypeApply(name, params);
     }
     
     public static JellyType list(JellyType inner)
@@ -140,19 +141,21 @@ public abstract class JellyType
             if (ctx.date().DATETIMEZONED() != null)
                 return JellyTypePrimitive.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
         }
-        else if (ctx.tagRef() != null)
+        else if (ctx.applyRef() != null)
         {
             @SuppressWarnings("identifier")
-            TypeId typeId = new TypeId(ctx.tagRef().ident().getText());
-            return new JellyTypeTagged(typeId, Utility.mapListExI(ctx.tagRef().tagRefParam(), param -> load(param, mgr)));
+            TypeId typeId = new TypeId(ctx.applyRef().ident().getText());
+            return new JellyTypeApply(typeId, Utility.mapListExI(ctx.applyRef().tagRefParam(), param -> load(param, mgr)));
         }
         else if (ctx.array() != null)
         {
             return new JellyTypeArray(load(ctx.array().type(), mgr));
         }
-        else if (ctx.typeVar() != null)
+        else if (ctx.ident() != null)
         {
-            return new JellyTypeVariable(ctx.typeVar().ident().getText());
+            @SuppressWarnings("identifier")
+            @ExpressionIdentifier String name = ctx.ident().getText();
+            return new JellyTypeIdent(name);
         }
         throw new InternalException("Unrecognised case: " + ctx.getText());
     }
@@ -192,14 +195,14 @@ public abstract class JellyType
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R tagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams) throws InternalException, E;
+        R applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams) throws InternalException, E;
         R tuple(ImmutableList<JellyType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(JellyType inner) throws InternalException, E;
 
         R function(JellyType argType, JellyType resultType) throws InternalException, E;
         
-        R typeVariable(String name) throws InternalException, E;
+        R ident(String name) throws InternalException, E;
     }
 
     public static interface JellyTypeVisitor<R> extends JellyTypeVisitorEx<R, UserException>
@@ -241,7 +244,10 @@ public abstract class JellyType
             @Override
             public JellyType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new JellyTypeTagged(typeName, Utility.mapListInt(typeVars, e -> 
+                if (typeVars.isEmpty())
+                    return new JellyTypeIdent(typeName.getRaw());
+                
+                return new JellyTypeApply(typeName, Utility.mapListInt(typeVars, e -> 
                     e.mapBothInt(u -> JellyUnit.fromConcrete(u), t -> fromConcrete(t))
                 ));
             }

@@ -1,5 +1,6 @@
 package records.typeExp;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -21,7 +22,7 @@ import java.util.Objects;
 
 public class TypeCons extends TypeExp
 {
-    public final String name;
+    public final @ExpressionIdentifier String name;
     // Can be size 0+:
     public final ImmutableList<Either<UnitExp, TypeExp>> operands;
     
@@ -31,7 +32,7 @@ public class TypeCons extends TypeExp
     private final ImmutableSet<String> typeClasses;
 
     // For primitive types
-    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableSet<String> typeClasses)
+    public TypeCons(@Nullable ExpressionBase src, @ExpressionIdentifier String name, ImmutableSet<String> typeClasses)
     {
         super(src);
         this.name = name;
@@ -40,7 +41,7 @@ public class TypeCons extends TypeExp
     }
     
     // For tagged types
-    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<Either<UnitExp, TypeExp>> operands, ImmutableSet<String> derivableTypeClasses)
+    public TypeCons(@Nullable ExpressionBase src, @ExpressionIdentifier String name, ImmutableList<Either<UnitExp, TypeExp>> operands, ImmutableSet<String> derivableTypeClasses)
     {
         super(src);
         this.name = name;

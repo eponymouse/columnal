@@ -16,7 +16,6 @@ import records.error.UserException;
 import records.gui.expressioneditor.TypeEntry;
 import records.gui.expressioneditor.UnitLiteralTypeNode;
 import records.jellytype.JellyType;
-import records.jellytype.JellyTypeTagged;
 import records.jellytype.JellyUnit;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;

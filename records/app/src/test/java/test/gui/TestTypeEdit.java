@@ -123,6 +123,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
             clickOn(".type-entry-tab-standard");
             clickOn(".type-entry-inner-type-args");
             selectAllCurrentTextField();
+            push(KeyCode.DELETE);
             write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
             int count = 0;
             while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)

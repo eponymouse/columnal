@@ -1,5 +1,6 @@
 package records.typeExp;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -115,12 +116,12 @@ public abstract class TypeExp implements StyledShowable
         "Equatable", "Comparable", "Readable", "Showable"
     );
     
-    public static final String CONS_TEXT = "Text";
-    public static final String CONS_BOOLEAN = "Boolean";
-    public static final String CONS_LIST = "List";
-    public static final String CONS_FUNCTION = "->";
-    public static final String CONS_TYPE = "Type";
-    public static final String CONS_UNIT = "Unit";
+    public static final @ExpressionIdentifier String CONS_TEXT = "Text";
+    public static final @ExpressionIdentifier String CONS_BOOLEAN = "Boolean";
+    public static final @ExpressionIdentifier String CONS_LIST = "List";
+    public static final @ExpressionIdentifier String CONS_FUNCTION = "Function";
+    public static final @ExpressionIdentifier String CONS_TYPE = "Type";
+    public static final @ExpressionIdentifier String CONS_UNIT = "Unit";
     // For recording errors:
     protected final @Nullable ExpressionBase src;
     
@@ -292,7 +293,9 @@ public abstract class TypeExp implements StyledShowable
             @Override
             public TypeExp date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
-                return new TypeCons(src, dateTimeInfo.getType().toString(), ALL_TYPE_CLASSES);
+                @SuppressWarnings("identifier")
+                @ExpressionIdentifier String typeName = dateTimeInfo.getType().toString();
+                return new TypeCons(src, typeName, ALL_TYPE_CLASSES);
             }
 
             @Override

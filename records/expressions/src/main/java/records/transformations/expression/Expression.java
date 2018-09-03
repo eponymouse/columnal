@@ -315,6 +315,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
 
         @Override
+        @SuppressWarnings("identifier")
         public Expression visitConstructor(ConstructorContext ctx)
         {
             return new ConstructorExpression(typeManager, ctx.typeName() == null ? null : ctx.typeName().getText(), ctx.constructorName().getText());

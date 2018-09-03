@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Scene;
@@ -41,6 +42,7 @@ import java.util.Optional;
  * The registration of type with the type manager is performed by this class,
  * so there is no need for the caller to worry about that.
  */
+@SuppressWarnings("identifier")
 @OnThread(Tag.FXPlatform)
 public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
 {
@@ -85,7 +87,8 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
     @Override
     protected Either<@Localized String, TaggedTypeDefinition> calculateResult()
     {
-        @Nullable String name = typeName.valueProperty().get();
+        @SuppressWarnings("identifier")
+        @Nullable @ExpressionIdentifier String name = typeName.valueProperty().get();
         if (name == null)
         {
             return Either.left(TranslationUtility.getString("taggedtype.error.name.invalid"));
@@ -112,7 +115,11 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
 
         try
         {
-            return Either.right(typeManager.registerTaggedType(name, ImmutableList.of(), tagTypes.build()));
+            @Nullable TaggedTypeDefinition taggedTypeDefinition = typeManager.registerTaggedType(name, ImmutableList.of(), tagTypes.build());
+            if (taggedTypeDefinition != null)
+                return Either.right(taggedTypeDefinition);
+            else
+                return Either.left("Duplicate type: \"" + name + "\"");
         }
         catch (InternalException e)
         {

@@ -134,7 +134,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             }
 
             @Override
-            public TypeExpression tagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeVars) throws InternalException, UserException
+            public TypeExpression applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeVars) throws InternalException, UserException
             {
                 if (typeVars.isEmpty())
                     return new IdentTypeExpression(typeName.getRaw());
@@ -170,7 +170,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
             }
 
             @Override
-            public TypeExpression typeVariable(String name) throws InternalException, InternalException
+            public TypeExpression ident(String name) throws InternalException, InternalException
             {
                 return InvalidIdentTypeExpression.identOrUnfinished(name);
             }

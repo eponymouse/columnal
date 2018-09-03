@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,7 +37,7 @@ public class ConstructorExpression extends NonOperatorExpression
     // null if type check fails for some reason:
     //private @MonotonicNonNull FunctionTypes type;
 
-    public ConstructorExpression(TypeManager typeManager,  @Nullable String typeName, String tagName)
+    public ConstructorExpression(TypeManager typeManager, @Nullable @ExpressionIdentifier String typeName, String tagName)
     {
         tag = typeName == null ? Either.left(tagName) : typeManager.lookupTag(typeName, tagName);
     }

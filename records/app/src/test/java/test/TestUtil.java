@@ -443,10 +443,13 @@ public class TestUtil
         {
             // TODO add more higher-order types
             TypeManager typeManager = DummyManager.INSTANCE.getTypeManager();
+            @SuppressWarnings("nullness")
             DataType a = typeManager.registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
+            @SuppressWarnings("nullness")
             DataType c = typeManager.registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Blank", null), new TagType<JellyType>("Number", JellyType.fromConcrete(DataType.NUMBER)))).instantiate(ImmutableList.of(), typeManager);
+            @SuppressWarnings("nullness")
             DataType b = typeManager.registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("Single", null))).instantiate(ImmutableList.of(), typeManager);
-            @SuppressWarnings("identifier")
+            @SuppressWarnings({"nullness", "identifier"})
             DataType nested = typeManager.registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<JellyType>("A", JellyType.tagged(new TypeId("A"), ImmutableList.of())), new TagType<JellyType>("C", JellyType.tagged(new TypeId("C"), ImmutableList.of())))).instantiate(ImmutableList.of(), typeManager);
             DataType maybeMaybe = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(
                 typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), typeManager)

@@ -9,13 +9,12 @@ tuple : OPEN_BRACKET type (COMMA type)+ (COMMA TUPLE_MORE)? CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
 functionType : OPEN_BRACKET type ARROW type CLOSE_BRACKET;
 type : unbracketedType | bracketedType;
-unbracketedType : BOOLEAN | number | TEXT | date | tagRef | array | typeVar; 
+unbracketedType : BOOLEAN | number | TEXT | date | applyRef | array | ident; 
 taggedDecl : TAGGED tagDeclParam* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
 tagDeclParam : TYPEVAR ident | UNITVAR ident;
 bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple | functionType;
 tagRefParam : bracketedType | UNIT | OPEN_BRACKET UNIT CLOSE_BRACKET | OPEN_BRACKET UNITVAR ident CLOSE_BRACKET;
-tagRef : TAGGED ident tagRefParam*; // First ident is name, rest are type params
-typeVar : TYPEVAR ident;
+applyRef : APPLY ident tagRefParam+; // First ident is name, rest are type params
 
 // Type names are valid as idents, especially for cases like: MaybeNumber : Nothing | Number(Number)
 ident : STRING | NUMBER | date | BOOLEAN | TEXT | UNQUOTED_NAME;

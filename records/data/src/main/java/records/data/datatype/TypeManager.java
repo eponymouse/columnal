@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
@@ -36,15 +35,11 @@ import utility.Either;
 import utility.GraphUtility;
 import utility.Pair;
 import utility.TaggedValue;
-import utility.UnitType;
 import utility.Utility;
 import utility.ValueFunction;
 
-import java.math.BigInteger;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static records.data.datatype.DataType.BOOLEAN;
 import static records.data.datatype.DataType.TEXT;
@@ -68,26 +63,20 @@ public class TypeManager
     public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
-        maybeType = new TaggedTypeDefinition(builtInType("Maybe"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
+        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
             new TagType<>("Missing", null),
             new TagType<>("Present", JellyType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
         allKnownTypes.put(maybeType.getTaggedTypeName(), maybeType);
-        voidType = new TaggedTypeDefinition(builtInType("Void"), ImmutableList.of(), ImmutableList.of());
+        voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
         allKnownTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
-        typeGADT = new TaggedTypeDefinition(builtInType("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
-        allKnownTypes.put(builtInType("Type"), typeGADT);
+        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
+        allKnownTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
-        unitGADT = new TaggedTypeDefinition(builtInType("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
-        allKnownTypes.put(builtInType("Unit"), unitGADT);
-    }
-
-    @SuppressWarnings("identifier")
-    private static TypeId builtInType(String name)
-    {
-        return new TypeId(name);
+        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
+        allKnownTypes.put(new TypeId("Unit"), unitGADT);
     }
 
     public TaggedValue maybeMissing()
@@ -255,11 +244,11 @@ public class TypeManager
             }
             return DataType.number(new NumberInfo(unit));
         }
-        else if (type.tagRef() != null)
+        else if (type.applyRef() != null)
         {
-            if (type.tagRef().ident() == null)
-                throw new UserException("Missing tag name: " + type.tagRef());
-            ImmutableList<Either<Unit, DataType>> typeParams = Utility.mapListExI(type.tagRef().tagRefParam(), t -> {
+            if (type.applyRef().ident() == null)
+                throw new UserException("Missing tag name: " + type.applyRef());
+            ImmutableList<Either<Unit, DataType>> typeParams = Utility.mapListExI(type.applyRef().tagRefParam(), t -> {
                 if (t.UNIT() != null)
                     return Either.left(unitManager.loadUse(t.UNIT().getText()));
                 // TODO UNITVAR
@@ -269,18 +258,22 @@ public class TypeManager
                     return Either.right(loadTypeUse(t.bracketedType()));
             });
             @SuppressWarnings("identifier")
-            DataType taggedType = lookupType(new TypeId(type.tagRef().ident().getText()), typeParams);
+            DataType taggedType = lookupType(new TypeId(type.applyRef().ident().getText()), typeParams);
             if (taggedType == null)
-                throw new UserException("Undeclared tagged type: \"" + type.tagRef().ident().getText() + "\"");
+                throw new UserException("Undeclared tagged type: \"" + type.applyRef().ident().getText() + "\"");
             return taggedType;
         }
         else if (type.array() != null)
         {
             return DataType.array(loadTypeUse(type.array().type()));
         }
-        else if (type.typeVar() != null)
+        else if (type.ident() != null)
         {
-            throw new UserException("Type variables not supported outside tagged type declarations");
+            @SuppressWarnings("identifier")
+            DataType taggedType = lookupType(new TypeId(type.ident().getText()), ImmutableList.of());
+            if (taggedType == null)
+                throw new UserException("Undeclared tagged type: \"" + type.ident().getText() + "\"");
+            return taggedType;
         }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
