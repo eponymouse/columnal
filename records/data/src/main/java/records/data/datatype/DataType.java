@@ -1523,11 +1523,22 @@ public class DataType implements StyledShowable
             @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
-                b.quote(typeName);
-                for (Either<Unit, DataType> typeVar : typeVars)
+                if (typeVars.isEmpty())
                 {
-                    typeVar.eitherInt(u -> b.unit(u.toString()), t -> {b.raw("("); t.save(b); return b.raw(")");});
+                    b.raw(typeName.getRaw());
+                }
+                else
+                {
+                    b.t(FormatLexer.APPLY, FormatLexer.VOCABULARY);
+                    b.raw(typeName.getRaw());
+                    for (Either<Unit, DataType> typeVar : typeVars)
+                    {
+                        typeVar.eitherInt(u -> b.unit(u.toString()), t -> {
+                            b.raw("(");
+                            t.save(b);
+                            return b.raw(")");
+                        });
+                    }
                 }
                 return UnitType.UNIT;
             }
