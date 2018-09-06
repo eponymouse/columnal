@@ -27,6 +27,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -155,10 +156,15 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
     protected JellyType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition = null;
+        Collection<TaggedTypeDefinition> pool;
+        if (typeKinds.contains(TypeKinds.BUILTIN_TAGGED))
+            pool = typeManager.getKnownTaggedTypes().values();
+        else
+            pool = typeManager.getUserTaggedTypes().values();
 
         // Limit it to 100 types:
         int typeIndex = r.nextInt(100);
-        if (typeIndex > typeManager.getKnownTaggedTypes().size() && typeKinds.contains(TypeKinds.NEW_TAGGED))
+        if (typeIndex >= pool.size() && typeKinds.contains(TypeKinds.NEW_TAGGED))
         {
             // Don't need to add N more, just add one for now:
 
@@ -173,8 +179,14 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
                 typeVars = ImmutableList.of();
             }
             // Outside type variables are not visible in a new tagged type:
-            ArrayList<@Nullable JellyType> types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
-            int extraNulls = r.nextInt(5);
+            ArrayList<@Nullable JellyType> types;
+            // First add the items with inner type:
+            if (r.nextInt(3) == 1)
+                types = new ArrayList<>();
+            else
+                types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
+            // Then those with inner types, making sure we have at least one:
+            int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
             {
                 types.add(r.nextInt(types.size() + 1), null);
@@ -186,7 +198,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         
         if (typeDefinition == null)
         {
-            typeDefinition = r.choose(typeManager.getKnownTaggedTypes().values());
+            typeDefinition = r.choose(pool);
         }
         return JellyType.tagged(typeDefinition.getTaggedTypeName(), Utility.mapListExI(typeDefinition.getTypeArguments(), (Pair<TypeVariableKind, String> arg) -> {
             if (arg.getFirst() == TypeVariableKind.TYPE)

@@ -54,7 +54,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;
             ArrayList<@Nullable JellyType> types = noInner ? new ArrayList<@Nullable JellyType>() : new ArrayList<@Nullable JellyType>(TestUtil.makeList(r, 1, 10, () -> genDataType.generate(r, status).jellyType));
-            int extraNulls = r.nextInt(5);
+            int extraNulls = r.nextInt(5) + (types.isEmpty() ? 1 : 0);
             for (int i = 0; i < extraNulls; i++)
             {
                 types.add(r.nextInt(types.size() + 1), null);
