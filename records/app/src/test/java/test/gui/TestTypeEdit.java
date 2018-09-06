@@ -144,6 +144,18 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         }
         else
         {
+            // If we can start in plain side, then potentially do so:
+            int firstWithInner = Utility.findFirstIndex(typeDefinition.getTags(), t -> t.getInner() != null).orElse(typeDefinition.getTags().size());
+            int alreadyEntered = 0;
+            if (firstWithInner > 0 && r.nextInt(3) == 1)
+            {
+                clickOn(".type-entry-tab-plain");
+                clickOn(".type-entry-plain-tags-textarea");
+                selectAllCurrentTextField();
+                write(typeDefinition.getTags().stream().limit(firstWithInner).map(t -> t.getName()).collect(Collectors.joining(" | ")), 1);
+                alreadyEntered = firstWithInner;
+            }
+            
             clickOn(".type-entry-tab-standard");
             clickOn(".type-entry-inner-type-args");
             selectAllCurrentTextField();
@@ -151,7 +163,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
             write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
             deleteExistingInnerValueTags();
             
-            for (TagType<JellyType> tagType : typeDefinition.getTags())
+            for (TagType<JellyType> tagType : Utility.iterableStream(typeDefinition.getTags().stream().skip(alreadyEntered)))
             {
                 enterNewInnerValueTag(r, typeManager, tagType);
             }
