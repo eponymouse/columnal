@@ -74,10 +74,9 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         this.windowToUse = stage;
     }
     
-    // TODO restore
-    //@Property(trials = 5)
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNewType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
+    public void testNewType(@When(seed=6L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
         TestUtil.sleep(1000);
@@ -112,11 +111,36 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         
         if (canUsePlainEntry && r.nextInt(3) != 1)
         {
-            // Select and move to alias field:
-            clickOn(".type-entry-tab-plain");
-            clickOn(".type-entry-plain-tags-textarea");
-            selectAllCurrentTextField();
-            write(typeDefinition.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(" | ")), 1);
+            int numTags = typeDefinition.getTags().size();
+            // Chance of beginning in the inner-values side:
+            if (numTags >= 2 && r.nextInt(3) == 1)
+            {
+                int split = 1 + r.nextInt(numTags - 1);
+
+                clickOn(".type-entry-tab-standard");
+                clickOn(".type-entry-inner-type-args");
+                selectAllCurrentTextField();
+                push(KeyCode.DELETE);
+                deleteExistingInnerValueTags();
+                
+                for (TagType<JellyType> tagType : Utility.iterableStream(typeDefinition.getTags().stream().limit(split)))
+                {
+                    enterNewInnerValueTag(r, typeManager, tagType);
+                }
+
+                clickOn(".type-entry-tab-plain");
+                clickOn(".type-entry-plain-tags-textarea");
+                push(KeyCode.END);
+                write(typeDefinition.getTags().stream().skip(split).map(t -> " | " + t.getName()).collect(Collectors.joining()), 1);
+            }
+            else
+            {
+                // Select and move to alias field:
+                clickOn(".type-entry-tab-plain");
+                clickOn(".type-entry-plain-tags-textarea");
+                selectAllCurrentTextField();
+                write(typeDefinition.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(" | ")), 1);
+            }
         }
         else
         {
@@ -125,50 +149,61 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
             selectAllCurrentTextField();
             push(KeyCode.DELETE);
             write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
-            int count = 0;
-            while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
-            {
-                // Click highest one as likely to not be off the screen:
-                Node node = lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(0, 0).getY()))).findFirst().orElse(null);
-                if (node != null)
-                {
-                    clickOn(node);
-                    TestUtil.sleep(800);
-                }
-            }
-            assertTrue(!lookup(".small-delete").tryQuery().isPresent());
+            deleteExistingInnerValueTags();
             
             for (TagType<JellyType> tagType : typeDefinition.getTags())
             {
-                Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
-                if (visibleScroll.isPresent())
-                {
-                    moveTo(visibleScroll.get());
-                    count = 0;
-                    while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
-                        scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
-                }
-                TestUtil.delay(200);
-                Log.debug("Entering: " + tagType.getName());
-                clickOn(".id-fancylist-add");
-                TestUtil.delay(500);
-                write(tagType.getName(), 1);
-                @Nullable JellyType inner = tagType.getInner();
-                if (inner != null)
-                {
-                    push(KeyCode.TAB);
-                    enterType(TypeExpression.fromJellyType(inner, typeManager), r);
-                    // Cancel auto-complete:
-                    push(KeyCode.ESCAPE);
-                }
+                enterNewInnerValueTag(r, typeManager, tagType);
             }
         }
     }
 
-    // TODO restore
-    //@Property(trials = 5)
+    @OnThread(Tag.Any)
+    private void deleteExistingInnerValueTags()
+    {
+        int count = 0;
+        while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
+        {
+            // Click highest one as likely to not be off the screen:
+            Node node = lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(0, 0).getY()))).findFirst().orElse(null);
+            if (node != null)
+            {
+                clickOn(node);
+                TestUtil.sleep(800);
+            }
+        }
+        assertTrue(!lookup(".small-delete").tryQuery().isPresent());
+    }
+
+    @OnThread(Tag.Any)
+    private void enterNewInnerValueTag(Random r, TypeManager typeManager, TagType<JellyType> tagType) throws InternalException, UserException
+    {
+        int count;Optional<ScrollBar> visibleScroll = lookup(".fancy-list > .scroll-bar").match(NodeQueryUtils.isVisible()).match((ScrollBar s) -> TestUtil.fx(() -> s.getOrientation()).equals(Orientation.VERTICAL)).tryQuery();
+        if (visibleScroll.isPresent())
+        {
+            moveTo(visibleScroll.get());
+            count = 0;
+            while (TestUtil.fx(() -> visibleScroll.get().getValue()) < 0.99 && ++count < 100)
+                scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
+        }
+        TestUtil.delay(200);
+        Log.debug("Entering: " + tagType.getName());
+        clickOn(".id-fancylist-add");
+        TestUtil.delay(500);
+        write(tagType.getName(), 1);
+        @Nullable JellyType inner = tagType.getInner();
+        if (inner != null)
+        {
+            push(KeyCode.TAB);
+            enterType(TypeExpression.fromJellyType(inner, typeManager), r);
+            // Cancel auto-complete:
+            push(KeyCode.ESCAPE);
+        }
+    }
+
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNoOpEditType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
+    public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
         DummyManager initial = new DummyManager();
         initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
@@ -198,7 +233,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testEditType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition before, @When(seed=3L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition after, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
+    public void testEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition before, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition after, @From(GenRandom.class) Random random) throws Exception
     {
         DummyManager initial = new DummyManager();
         initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
@@ -227,9 +262,9 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
     }
 
-    //@Property(trials = 5)
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testDeleteType(@When(seed=2L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @When(seed=3L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @When(seed=4L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
+    public void testDeleteType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
