@@ -76,28 +76,30 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
     
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNewType(@When(seed=6L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=2L) @From(GenRandom.class) Random random) throws Exception
+    public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
-        TestUtil.sleep(1000);
-        
-        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-        TestUtil.delay(200);
-        clickOn(".id-types-add");
-        TestUtil.delay(200);
-        enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
-        clickOn(".ok-button");
-        TestUtil.sleep(500);
-        clickOn(".close-button");
-        TestUtil.sleep(500);
+        TestUtil.printSeedOnFail(() -> {
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
+            TestUtil.sleep(1000);
 
-        // Check that saved types in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
-        Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        TypeManager  tmpTypes = new TypeManager(new UnitManager());
-        tmpTypes.loadTypeDecls(file.types());
-        assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
+            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            TestUtil.delay(200);
+            clickOn(".id-types-add");
+            TestUtil.delay(200);
+            enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
+            clickOn(".ok-button");
+            TestUtil.sleep(500);
+            clickOn(".close-button");
+            TestUtil.sleep(500);
+
+            // Check that saved types in file match our new unit:
+            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            Log.debug("Saved:\n" + fileContent);
+            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+            TypeManager tmpTypes = new TypeManager(new UnitManager());
+            tmpTypes.loadTypeDecls(file.types());
+            assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
+        });
     }
 
     @OnThread(Tag.Simulation)
@@ -161,7 +163,8 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
             selectAllCurrentTextField();
             push(KeyCode.DELETE);
             write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
-            deleteExistingInnerValueTags();
+            if (alreadyEntered == 0)
+                deleteExistingInnerValueTags();
             
             for (TagType<JellyType> tagType : Utility.iterableStream(typeDefinition.getTags().stream().skip(alreadyEntered)))
             {
@@ -217,108 +220,115 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
     @OnThread(Tag.Simulation)
     public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
-        DummyManager initial = new DummyManager();
-        initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
-        TestUtil.sleep(1000);
+        TestUtil.printSeedOnFail(() -> {
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-        TestUtil.delay(200);
-        clickOn(".types-list");
-        push(KeyCode.DOWN);
-        push(KeyCode.HOME);
-        clickOn(".id-types-edit");
-        TestUtil.delay(500);
-        clickOn(".ok-button");
-        TestUtil.sleep(500);
-        clickOn(".close-button");
-        TestUtil.sleep(500);
+            DummyManager initial = new DummyManager();
+            initial.getTypeManager().registerTaggedType(typeDefinition.getTaggedTypeName().getRaw(), typeDefinition.getTypeArguments(), typeDefinition.getTags());
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
+            TestUtil.sleep(1000);
 
-        // Check that saved types in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
-        Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        TypeManager  tmpTypes = new TypeManager(new UnitManager());
-        tmpTypes.loadTypeDecls(file.types());
-        assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
+            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            TestUtil.delay(200);
+            clickOn(".types-list");
+            push(KeyCode.DOWN);
+            push(KeyCode.HOME);
+            clickOn(".id-types-edit");
+            TestUtil.delay(500);
+            clickOn(".ok-button");
+            TestUtil.sleep(500);
+            clickOn(".close-button");
+            TestUtil.sleep(500);
+
+            // Check that saved types in file match our new unit:
+            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            Log.debug("Saved:\n" + fileContent);
+            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+            TypeManager tmpTypes = new TypeManager(new UnitManager());
+            tmpTypes.loadTypeDecls(file.types());
+            assertEquals(ImmutableMap.of(typeDefinition.getTaggedTypeName(), typeDefinition), tmpTypes.getUserTaggedTypes());
+        });
     }
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition before, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition after, @From(GenRandom.class) Random random) throws Exception
     {
-        DummyManager initial = new DummyManager();
-        initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
-        TestUtil.sleep(1000);
+        TestUtil.printSeedOnFail(() -> {
+            DummyManager initial = new DummyManager();
+            initial.getTypeManager().registerTaggedType(before.getTaggedTypeName().getRaw(), before.getTypeArguments(), before.getTags());
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, initial).get();
+            TestUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-        TestUtil.delay(200);
-        clickOn(".types-list");
-        push(KeyCode.DOWN);
-        push(KeyCode.HOME);
-        clickOn(".id-types-edit");
-        enterTypeDetails(after, random, mainWindowActions._test_getTableManager().getTypeManager());
-        TestUtil.delay(500);
-        clickOn(".ok-button");
-        TestUtil.sleep(500);
-        clickOn(".close-button");
-        TestUtil.sleep(500);
+            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            TestUtil.delay(200);
+            clickOn(".types-list");
+            push(KeyCode.DOWN);
+            push(KeyCode.HOME);
+            clickOn(".id-types-edit");
+            enterTypeDetails(after, random, mainWindowActions._test_getTableManager().getTypeManager());
+            TestUtil.delay(500);
+            clickOn(".ok-button");
+            TestUtil.sleep(500);
+            clickOn(".close-button");
+            TestUtil.sleep(500);
 
-        // Check that saved types in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
-        Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        TypeManager  tmpTypes = new TypeManager(new UnitManager());
-        tmpTypes.loadTypeDecls(file.types());
-        assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
+            // Check that saved types in file match our new unit:
+            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            Log.debug("Saved:\n" + fileContent);
+            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+            TypeManager tmpTypes = new TypeManager(new UnitManager());
+            tmpTypes.loadTypeDecls(file.types());
+            assertEquals(ImmutableMap.of(after.getTaggedTypeName(), after), tmpTypes.getUserTaggedTypes());
+        });
     }
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testDeleteType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionA, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionB, @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinitionC, int whichToDelete) throws Exception
     {
-        DummyManager prevManager = new DummyManager();
-        prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
-        prevManager.getTypeManager().registerTaggedType(typeDefinitionB.getTaggedTypeName().getRaw(), typeDefinitionB.getTypeArguments(), typeDefinitionB.getTags());
-        prevManager.getTypeManager().registerTaggedType(typeDefinitionC.getTaggedTypeName().getRaw(), typeDefinitionC.getTypeArguments(), typeDefinitionC.getTags());
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
-        TestUtil.sleep(1000);
+        TestUtil.printSeedOnFail(() -> {
+            DummyManager prevManager = new DummyManager();
+            prevManager.getTypeManager().registerTaggedType(typeDefinitionA.getTaggedTypeName().getRaw(), typeDefinitionA.getTypeArguments(), typeDefinitionA.getTags());
+            prevManager.getTypeManager().registerTaggedType(typeDefinitionB.getTaggedTypeName().getRaw(), typeDefinitionB.getTypeArguments(), typeDefinitionB.getTags());
+            prevManager.getTypeManager().registerTaggedType(typeDefinitionC.getTaggedTypeName().getRaw(), typeDefinitionC.getTypeArguments(), typeDefinitionC.getTags());
+            MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, prevManager).get();
+            TestUtil.sleep(1000);
 
-        clickOn("#id-menu-view").clickOn(".id-menu-view-types");
-        TestUtil.delay(200);
-        clickOn(".types-list");
-        push(KeyCode.DOWN);
-        push(KeyCode.HOME);
-        TaggedTypeDefinition toDelete;
-        if ((whichToDelete % 3) == 0)
-            toDelete = typeDefinitionA;
-        else if ((whichToDelete % 3) == 1)
-            toDelete = typeDefinitionB;
-        else
-            toDelete = typeDefinitionC;
-        int count = 0;
-        String toDeleteCellText = toDelete.getTaggedTypeName().getRaw() + toDelete.getTypeArguments().stream().map(t -> "(" + t.getSecond() + ")").collect(Collectors.joining(""));
-        while (!existsSelectedCell(toDeleteCellText) && count++ < 3)
+            clickOn("#id-menu-view").clickOn(".id-menu-view-types");
+            TestUtil.delay(200);
+            clickOn(".types-list");
             push(KeyCode.DOWN);
-        assertTrue(toDeleteCellText, existsSelectedCell(toDeleteCellText));
-        clickOn(".id-types-remove");
-        TestUtil.sleep(500);
-        clickOn(".close-button");
-        TestUtil.sleep(500);
+            push(KeyCode.HOME);
+            TaggedTypeDefinition toDelete;
+            if ((whichToDelete % 3) == 0)
+                toDelete = typeDefinitionA;
+            else if ((whichToDelete % 3) == 1)
+                toDelete = typeDefinitionB;
+            else
+                toDelete = typeDefinitionC;
+            int count = 0;
+            String toDeleteCellText = toDelete.getTaggedTypeName().getRaw() + toDelete.getTypeArguments().stream().map(t -> "(" + t.getSecond() + ")").collect(Collectors.joining(""));
+            while (!existsSelectedCell(toDeleteCellText) && count++ < 3)
+                push(KeyCode.DOWN);
+            assertTrue(toDeleteCellText, existsSelectedCell(toDeleteCellText));
+            clickOn(".id-types-remove");
+            TestUtil.sleep(500);
+            clickOn(".close-button");
+            TestUtil.sleep(500);
 
-        // Check that saved units in file match our new unit:
-        String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
-        Log.debug("Saved:\n" + fileContent);
-        FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
-        TypeManager  tmpTypes = new TypeManager(new UnitManager());
-        HashMap<TypeId, TaggedTypeDefinition> remaining = new HashMap<>();
-        remaining.put(typeDefinitionA.getTaggedTypeName(), typeDefinitionA);
-        remaining.put(typeDefinitionB.getTaggedTypeName(), typeDefinitionB);
-        remaining.put(typeDefinitionC.getTaggedTypeName(), typeDefinitionC);
-        remaining.remove(toDelete.getTaggedTypeName());
-        tmpTypes.loadTypeDecls(file.types());
-        assertEquals(remaining, tmpTypes.getUserTaggedTypes());
+            // Check that saved units in file match our new unit:
+            String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
+            Log.debug("Saved:\n" + fileContent);
+            FileContext file = Utility.parseAsOne(fileContent, MainLexer::new, MainParser::new, p -> p.file());
+            TypeManager tmpTypes = new TypeManager(new UnitManager());
+            HashMap<TypeId, TaggedTypeDefinition> remaining = new HashMap<>();
+            remaining.put(typeDefinitionA.getTaggedTypeName(), typeDefinitionA);
+            remaining.put(typeDefinitionB.getTaggedTypeName(), typeDefinitionB);
+            remaining.put(typeDefinitionC.getTaggedTypeName(), typeDefinitionC);
+            remaining.remove(toDelete.getTaggedTypeName());
+            tmpTypes.loadTypeDecls(file.types());
+            assertEquals(remaining, tmpTypes.getUserTaggedTypes());
+        });
     }
 
     @OnThread(Tag.Simulation)
