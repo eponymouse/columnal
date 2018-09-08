@@ -15,6 +15,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TabPane.TabClosingPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -52,6 +53,7 @@ import utility.gui.FancyList;
 import utility.gui.GUI;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @OnThread(Tag.FXPlatform)
@@ -148,8 +150,11 @@ public class TypesDialog extends Dialog<Void>
         private final Tab innerValuesTab;
         private final TabPane tabPane;
         private final TextField typeName;
+        // Error or tag type
         private final FancyList<Either<String, TagType<JellyType>>, TagValueEdit> innerValueTagList;
         private final TextField innerValueTypeArgs;
+        // Avoids re-entrancy when copying one tab to another:
+        private boolean crossSetting = false;
 
         public EditTypeDialog(@Nullable TaggedTypeDefinition existing)
         {
@@ -182,6 +187,10 @@ public class TypesDialog extends Dialog<Void>
                     TagValueEdit tagValueEdit = new TagValueEdit(initialContent == null ? null : initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
                     return new Pair<>(tagValueEdit, tagValueEdit.currentValue);
                 }
+                
+                {
+                    listenForCellChange(c -> innerValueChanged());
+                }
             };
             innerValueTagList.getNode().setMinHeight(300);
             innerValueTagList.getNode().setPrefHeight(500);
@@ -198,15 +207,30 @@ public class TypesDialog extends Dialog<Void>
             });
 
             tabPane = new TabPane(plainTab, innerValuesTab);
+            tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
             
             getDialogPane().setContent(new VBox(name, tabPane, getErrorLabel()));
 
             setOnShown(e -> {
                 FXUtility.runAfter(() -> typeName.requestFocus());
             });
+
+            FXUtility.addChangeListenerPlatformNN(plainTagList.textProperty(), t -> {
+                if (tabPane.getSelectionModel().getSelectedItem() == plainTab && !crossSetting)
+                {
+                    crossSetting = true;
+                    innerValueTypeArgs.setText("");
+                    innerValueTagList.resetItems(Utility.mapList(Arrays.asList(getPlainTags(plainTagList)), plain -> {
+                        return Either.right(new TagType<JellyType>(plain, null));
+                    }));
+                    crossSetting = false;
+                }
+            });
+            FXUtility.addChangeListenerPlatformNN(innerValueTypeArgs.textProperty(), args -> innerValueChanged());
             
             if (existing != null)
             {
+                crossSetting = true;
                 typeName.setText(existing.getTaggedTypeName().getRaw());
                 plainTagList.setText(existing.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(" | ")));
                 innerValueTypeArgs.setText(existing.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")));
@@ -221,6 +245,28 @@ public class TypesDialog extends Dialog<Void>
                 {
                     tabPane.getSelectionModel().select(innerValuesTab);
                 }
+                crossSetting = false;
+            }
+        }
+
+        public void innerValueChanged(@UnknownInitialization(Object.class) EditTypeDialog this)
+        {
+            if (tabPane == null || innerValueTypeArgs == null || innerValueTagList == null || plainTab == null || plainTagList == null)
+                return; // Not initialised yet, just ignores
+            
+            if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab && !crossSetting)
+            {
+                boolean hasTypeArgs = !innerValueTypeArgs.getText().trim().isEmpty();
+                Either<String, ImmutableList<String>> plainTagNames = Either.mapM(innerValueTagList.getItems(), t -> t.flatMap(v -> v.getInner() == null ? Either.<@NonNull String, @NonNull String>right(v.getName()) : Either.<@NonNull String, @NonNull String>left("err")));
+                boolean enablePlain = !hasTypeArgs && plainTagNames.isRight();
+                crossSetting = true;
+                plainTab.setDisable(!enablePlain);
+                if (enablePlain)
+                {
+                    // Should definitely be right:
+                    plainTagNames.ifRight(names -> plainTagList.setText(names.stream().collect(Collectors.joining(" | "))));
+                }
+                crossSetting = false;
             }
         }
 
@@ -237,11 +283,12 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    String[] tags = plainTagList.getText().trim().split("\\s*\\|\\s*");
+                    String[] tags = getPlainTags(plainTagList);
                     Either<@Localized String, ImmutableList<String>> tagNames = Either.right(ImmutableList.of());
                     if (!Arrays.equals(tags, new String[]{""}))
                         tagNames = Either.mapM(Arrays.asList(tags), t -> parseTagName("Invalid tag name: ", t));
-                    return tagNames.mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, t -> new TagType<>(t, null))));
+                    Either<@Localized String, TaggedTypeDefinition> r = tagNames.mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, t -> new TagType<>(t, null))));
+                    return r;
                 }
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
                 {
@@ -262,7 +309,12 @@ public class TypesDialog extends Dialog<Void>
                 return Either.left(e.getLocalizedMessage());
             }
         }
-        
+
+        private String[] getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
+        {
+            return plainTagList.getText().trim().split("\\s*\\|\\s*");
+        }
+
         private Either<@Localized String, @ExpressionIdentifier String> parseTagName(String errorPrefix, String src)
         {
             @Nullable @ExpressionIdentifier String identifier = IdentifierUtility.asExpressionIdentifier(src.trim());
@@ -320,6 +372,10 @@ public class TypesDialog extends Dialog<Void>
 
                 if (editImmediately)
                     FXUtility.onceNotNull(tagName.sceneProperty(), s -> tagName.requestFocus());
+                
+                FXUtility.addChangeListenerPlatformNN(currentValue, v -> {
+                    innerValueChanged();
+                });
             }
         }
     }

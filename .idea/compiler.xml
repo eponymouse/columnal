@@ -147,6 +147,6 @@
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.5.1/jdk8-2.5.1.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200 -AprintErrorStack" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.5.2/jdk8-2.5.2.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200 -AprintErrorStack" />
   </component>
 </project>

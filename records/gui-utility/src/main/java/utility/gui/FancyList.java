@@ -22,6 +22,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import threadchecker.OnThread;
@@ -59,6 +60,8 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
         this.allowReordering = allowReordering;
         scrollPane.getStyleClass().add("fancy-list");
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+        scrollPane.setAlwaysFitToWidth(true);
         children.setFillWidth(true);
         children.setOnKeyPressed(e -> {
             if (allowDeleting && (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE))
@@ -249,6 +252,13 @@ public abstract class FancyList<T, CELL_CONTENT extends Node>
     {
         selection.clear();
         updateSelectionState();
+    }
+
+    public void resetItems(List<@NonNull T> newItems)
+    {
+        cells.clear();
+        cells.addAll(Utility.mapList(newItems, v -> new Cell(v, false)));
+        updateChildren();
     }
 
     /**

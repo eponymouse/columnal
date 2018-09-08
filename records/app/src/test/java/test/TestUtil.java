@@ -1176,6 +1176,30 @@ public class TestUtil
             Log.log(ex);
         }        
     }
+    
+    public static interface TestRunnable
+    {
+        public void run() throws Exception;
+    }
+    
+    public static void printSeedOnFail(TestRunnable r) throws Exception
+    {
+        try
+        {
+            r.run();
+        }
+        catch (AssertionError assertionError)
+        {
+            String message = assertionError.getMessage();
+            message = message == null ? "" :
+                    message.replace("expected:", "should be").replace("but was:", "alas found");
+            Throwable cause = assertionError.getCause();
+            if (cause != null)
+                throw new AssertionError(message, cause);
+            else
+                throw new AssertionError(message);
+        }
+    }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
     {

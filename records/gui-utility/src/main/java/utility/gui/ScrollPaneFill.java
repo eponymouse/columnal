@@ -6,6 +6,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ScrollPane;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
@@ -24,10 +25,12 @@ import threadchecker.Tag;
  */
 public class ScrollPaneFill extends ScrollPane
 {
+    private boolean alwaysFitToWidth = false;
+
     public ScrollPaneFill()
     {
         getStyleClass().add("scroll-pane-fill");
-        FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> fillViewport(b));
+        FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> FXUtility.runAfter(() -> fillViewport(b)));
         final ChangeListener<Bounds> boundListener = new ViewportFillListener();
         contentProperty().addListener(new ChangeListener<Node>()
         {
@@ -40,6 +43,8 @@ public class ScrollPaneFill extends ScrollPane
                     prev.boundsInLocalProperty().removeListener(boundListener);
                 if (now != null)
                     now.boundsInLocalProperty().addListener(boundListener);
+                if (now != null && !now.isResizable())
+                    Log.logStackTrace("Unresizable content in ScrollPaneFill: " + now.getClass());
             }
         });
     }
@@ -49,6 +54,12 @@ public class ScrollPaneFill extends ScrollPane
         this();
         setContent(content);
     }
+    
+    @OnThread(Tag.FXPlatform)
+    public void setAlwaysFitToWidth(boolean alwaysFitToWidth)
+    {
+        this.alwaysFitToWidth = alwaysFitToWidth;
+    }
 
     @OnThread(Tag.FXPlatform)
     private void fillViewport(@UnknownInitialization(ScrollPane.class) ScrollPaneFill this, @Nullable Bounds viewportBounds)
@@ -56,7 +67,7 @@ public class ScrollPaneFill extends ScrollPane
         if (viewportBounds != null)
         {
             Node content = getContent();
-            setFitToWidth(content.prefWidth(-1) < viewportBounds.getWidth());
+            setFitToWidth(alwaysFitToWidth || content.prefWidth(-1) < viewportBounds.getWidth());
             setFitToHeight(content.prefHeight(-1) < viewportBounds.getHeight());
             requestLayout();
             if (content instanceof Parent)
