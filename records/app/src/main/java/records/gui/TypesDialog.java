@@ -241,7 +241,7 @@ public class TypesDialog extends Dialog<Void>
             {
                 crossSetting = true;
                 typeName.setText(existing.getTaggedTypeName().getRaw());
-                plainTagList.setText(existing.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(" | ")));
+                plainTagList.setText(existing.getTags().stream().map(t -> t.getName()).collect(Collectors.joining("\n")));
                 innerValueTypeArgs.setText(existing.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")));
                 // tag list done above
                 
@@ -322,7 +322,7 @@ public class TypesDialog extends Dialog<Void>
         private Stream<String> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
         {
             return Arrays.stream(plainTagList.getText()
-                .split(" *(\\||\n|\r) *"))
+                .split(" *(,|\n|\r) *"))
                 .map(s -> s.trim())
                 .filter(s -> !s.isEmpty());
         }

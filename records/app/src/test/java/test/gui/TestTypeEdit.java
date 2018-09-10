@@ -226,7 +226,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
         }
     }
 
-    @Property(trials = 5)
+    @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
     {
