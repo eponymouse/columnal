@@ -34,6 +34,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -935,6 +936,20 @@ public class FXUtility
         {
             //FXUtility.addChangeListenerPlatformNN(src, listener);
         }
+    }
+    
+    public static <T> void listViewDoubleClick(ListView<T> listView, FXPlatformConsumer<T> onDoubleClick)
+    {
+        listView.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)
+            {
+                @Nullable T selected = listView.getSelectionModel().getSelectedItem();
+                if (selected != null)
+                {
+                    onDoubleClick.consume(selected);
+                }
+            }
+        });
     }
 
     public static interface GenOrError<T>

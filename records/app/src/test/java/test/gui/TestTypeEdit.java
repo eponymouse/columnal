@@ -133,7 +133,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
                 clickOn(".type-entry-tab-plain");
                 clickOn(".type-entry-plain-tags-textarea");
                 push(KeyCode.END);
-                write(typeDefinition.getTags().stream().skip(split).map(t -> " | " + t.getName()).collect(Collectors.joining()), 1);
+                write(typeDefinition.getTags().stream().skip(split).map(t -> tagDivider(r) + t.getName()).collect(Collectors.joining()), 1);
             }
             else
             {
@@ -141,7 +141,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
                 clickOn(".type-entry-tab-plain");
                 clickOn(".type-entry-plain-tags-textarea");
                 selectAllCurrentTextField();
-                write(typeDefinition.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(" | ")), 1);
+                write(typeDefinition.getTags().stream().map(t -> t.getName()).collect(Collectors.joining(tagDivider(r))), 1);
             }
         }
         else
@@ -154,7 +154,7 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
                 clickOn(".type-entry-tab-plain");
                 clickOn(".type-entry-plain-tags-textarea");
                 selectAllCurrentTextField();
-                write(typeDefinition.getTags().stream().limit(firstWithInner).map(t -> t.getName()).collect(Collectors.joining(" | ")), 1);
+                write(typeDefinition.getTags().stream().limit(firstWithInner).map(t -> t.getName()).collect(Collectors.joining(tagDivider(r))), 1);
                 alreadyEntered = firstWithInner;
             }
             
@@ -171,6 +171,16 @@ public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, Ent
                 enterNewInnerValueTag(r, typeManager, tagType);
             }
         }
+    }
+
+    @OnThread(Tag.Any)
+    private String tagDivider(Random r)
+    {
+        // Blank items between dividers should get ignored:
+        if (r.nextInt(5) == 1)
+            return r.nextBoolean() ? " , , " : " \n , \n ";
+        else
+            return r.nextBoolean() ? " , " : " \n ";
     }
 
     @OnThread(Tag.Any)

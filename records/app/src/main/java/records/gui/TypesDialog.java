@@ -51,10 +51,12 @@ import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.FancyList;
 import utility.gui.GUI;
+import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public class TypesDialog extends Dialog<Void>
@@ -66,6 +68,7 @@ public class TypesDialog extends Dialog<Void>
         this.typeManager = typeManager;
         initModality(Modality.WINDOW_MODAL);
         initOwner(owner);
+        setTitle(TranslationUtility.getString("types.title"));
         setResizable(true);
         getDialogPane().getStylesheets().addAll(
                 FXUtility.getStylesheet("general.css"),
@@ -87,7 +90,8 @@ public class TypesDialog extends Dialog<Void>
             };
             return cell;
         });
-        updateTypesList(types);
+        updateTypesList(typeManager, types);
+        FXUtility.listViewDoubleClick(types, t -> editType(typeManager, types, t));
         types.getStyleClass().add("types-list");
 
         Button addButton = GUI.button("types.add", () -> {
@@ -96,7 +100,7 @@ public class TypesDialog extends Dialog<Void>
             {
                 TaggedTypeDefinition newTypeFinal = newType;
                 FXUtility.alertOnErrorFX_(() -> typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags()));
-                updateTypesList(types);
+                updateTypesList(typeManager, types);
             }
         });
         
@@ -104,17 +108,7 @@ public class TypesDialog extends Dialog<Void>
             @Nullable TaggedTypeDefinition typeDefinition = types.getSelectionModel().getSelectedItem();
             if (typeDefinition != null)
             {
-                @Nullable TaggedTypeDefinition newType = new EditTypeDialog(typeDefinition).showAndWait().orElse(null);
-                if (newType != null)
-                {
-                    TypeId oldTypeName = typeDefinition.getTaggedTypeName();
-                    @NonNull TaggedTypeDefinition newTypeFinal = newType;
-                    FXUtility.alertOnErrorFX_(() -> {
-                        typeManager.unregisterTaggedType(oldTypeName);
-                        typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags());
-                    });
-                    updateTypesList(types);
-                }
+                editType(typeManager, types, typeDefinition);
             }
         });
         Button removeButton = GUI.button("types.remove", () -> {
@@ -122,7 +116,7 @@ public class TypesDialog extends Dialog<Void>
             if (typeDefinition != null)
             {
                 typeManager.unregisterTaggedType(typeDefinition.getTaggedTypeName());
-                updateTypesList(types);
+                updateTypesList(typeManager, types);
             }
         });
 
@@ -135,9 +129,23 @@ public class TypesDialog extends Dialog<Void>
         getDialogPane().getButtonTypes().setAll(ButtonType.CLOSE);
         getDialogPane().lookupButton(ButtonType.CLOSE).getStyleClass().add("close-button");
     }
-    
-    @RequiresNonNull("typeManager")
-    private void updateTypesList(@UnknownInitialization(Dialog.class) TypesDialog this, ListView<TaggedTypeDefinition> types)
+
+    public void editType(@UnknownInitialization(Object.class) TypesDialog this, TypeManager typeManager, ListView<TaggedTypeDefinition> types, TaggedTypeDefinition existing)
+    {
+        @Nullable TaggedTypeDefinition changedType = new EditTypeDialog(existing).showAndWait().orElse(null);
+        if (changedType != null)
+        {
+            TypeId oldTypeName = existing.getTaggedTypeName();
+            @NonNull TaggedTypeDefinition newTypeFinal = changedType;
+            FXUtility.alertOnErrorFX_(() -> {
+                typeManager.unregisterTaggedType(oldTypeName);
+                typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags());
+            });
+            updateTypesList(typeManager, types);
+        }
+    }
+
+    private static void updateTypesList(TypeManager typeManager, ListView<TaggedTypeDefinition> types)
     {
         types.getItems().setAll(typeManager.getUserTaggedTypes().values());
     }
@@ -163,6 +171,7 @@ public class TypesDialog extends Dialog<Void>
             if (parentScene != null && parentScene.getWindow() != null)
                 initOwner(parentScene.getWindow());
             initModality(Modality.WINDOW_MODAL);
+            setTitle(TranslationUtility.getString("types.edit.title"));
             getDialogPane().getStylesheets().addAll(
                     FXUtility.getStylesheet("general.css"),
                     FXUtility.getStylesheet("dialogs.css")
@@ -220,9 +229,9 @@ public class TypesDialog extends Dialog<Void>
                 {
                     crossSetting = true;
                     innerValueTypeArgs.setText("");
-                    innerValueTagList.resetItems(Utility.mapList(Arrays.asList(getPlainTags(plainTagList)), plain -> {
-                        return Either.right(new TagType<JellyType>(plain, null));
-                    }));
+                    innerValueTagList.resetItems(getPlainTags(plainTagList).map(plain -> {
+                        return Either.<String, TagType<JellyType>>right(new TagType<JellyType>(plain, null));
+                    }).collect(ImmutableList.toImmutableList()));
                     crossSetting = false;
                 }
             });
@@ -283,7 +292,7 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    String[] tags = getPlainTags(plainTagList);
+                    String[] tags = getPlainTags(plainTagList).toArray(String[]::new);
                     Either<@Localized String, ImmutableList<String>> tagNames = Either.right(ImmutableList.of());
                     if (!Arrays.equals(tags, new String[]{""}))
                         tagNames = Either.mapM(Arrays.asList(tags), t -> parseTagName("Invalid tag name: ", t));
@@ -310,9 +319,12 @@ public class TypesDialog extends Dialog<Void>
             }
         }
 
-        private String[] getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
+        private Stream<String> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
         {
-            return plainTagList.getText().trim().split("\\s*\\|\\s*");
+            return Arrays.stream(plainTagList.getText()
+                .split(" *(\\||\n|\r) *"))
+                .map(s -> s.trim())
+                .filter(s -> !s.isEmpty());
         }
 
         private Either<@Localized String, @ExpressionIdentifier String> parseTagName(String errorPrefix, String src)
