@@ -77,6 +77,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             }
         };
         scrollPane.getStyleClass().add("top-level-editor-scroll-pane");
+        scrollPane.setAlwaysFitToWidth(true);
         this.typeManager = typeManager;
 
         container.getStyleClass().add("top-level-editor");

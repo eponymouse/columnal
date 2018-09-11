@@ -217,3 +217,30 @@
         -fx-min-width: 350px;
     }
 }
+.edit-type-dialog-content {
+    -fx-spacing: 1em;
+    
+    .plain-tags-label {
+        -fx-padding: 1em 0 0.4em 0;
+    }
+    
+    .inner-values-tab-content {
+        .inner-values-type-args-pane {
+            -fx-padding: 1em 0 1em 0;
+        }
+        .inner-values-list-header-pane {
+            -fx-padding: 0 4em 0.4em 2em;
+        }
+    
+        .fancy-list-children {
+            -fx-spacing: 1.5em;
+    
+            .tag-value-edit {
+                .top-level-editor-scroll-pane {
+                    -fx-min-height: 60px;
+                    -fx-hbar-policy: never;
+                }
+            }
+        }
+    }
+}

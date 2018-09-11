@@ -122,7 +122,7 @@ public class TypesDialog extends Dialog<Void>
 
         BorderPane.setMargin(types, new Insets(10, 0, 10, 0));
         BorderPane buttons = GUI.borderLeftCenterRight(addButton, editButton, removeButton, "types-dialog-buttons");
-        BorderPane content = GUI.borderTopCenterBottom(GUI.label("units.userDeclared"), types, buttons, "types-dialog-content");
+        BorderPane content = GUI.borderTopCenterBottom(GUI.label("types.userDeclared"), types, buttons, "types-dialog-content");
 
         getDialogPane().setContent(content);
 
@@ -183,7 +183,7 @@ public class TypesDialog extends Dialog<Void>
             plainTagList = new TextArea();
             plainTagList.getStyleClass().add("type-entry-plain-tags-textarea");
             plainTab = new Tab("Plain", GUI.borderTopCenter(
-                GUI.label("edit.type.plain.tags"),
+                GUI.label("edit.type.plain.tags", "plain-tags-label"),
                 plainTagList
             ));
             plainTab.getStyleClass().add("type-entry-tab-plain");
@@ -201,13 +201,17 @@ public class TypesDialog extends Dialog<Void>
                     listenForCellChange(c -> innerValueChanged());
                 }
             };
-            innerValueTagList.getNode().setMinHeight(300);
-            innerValueTagList.getNode().setPrefHeight(500);
+            innerValueTagList.getNode().setMinHeight(200);
+            innerValueTagList.getNode().setPrefHeight(350);
             
             innerValueTypeArgs = new TextField();
             innerValueTypeArgs.getStyleClass().add("type-entry-inner-type-args");
-            innerValuesTab = new Tab("Inner Values", new VBox(
-                GUI.labelled("type.entry.type.args", innerValueTypeArgs),
+            innerValuesTab = new Tab("Inner Values", GUI.vbox("inner-values-tab-content",
+                GUI.labelled("edit.type.args", innerValueTypeArgs, "inner-values-type-args-pane"),
+                GUI.borderLeftRight(
+                    GUI.label("edit.type.inner.tag"),
+                    GUI.label("edit.type.inner.type")
+                , "inner-values-list-header-pane"),
                 innerValueTagList.getNode()
             ));
             innerValuesTab.getStyleClass().add("type-entry-tab-standard");
@@ -218,7 +222,7 @@ public class TypesDialog extends Dialog<Void>
             tabPane = new TabPane(plainTab, innerValuesTab);
             tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
             
-            getDialogPane().setContent(new VBox(name, tabPane, getErrorLabel()));
+            getDialogPane().setContent(GUI.vbox("edit-type-dialog-content", name, tabPane, getErrorLabel()));
 
             setOnShown(e -> {
                 FXUtility.runAfter(() -> typeName.requestFocus());
@@ -273,7 +277,7 @@ public class TypesDialog extends Dialog<Void>
                 if (enablePlain)
                 {
                     // Should definitely be right:
-                    plainTagNames.ifRight(names -> plainTagList.setText(names.stream().collect(Collectors.joining(" | "))));
+                    plainTagNames.ifRight(names -> plainTagList.setText(names.stream().collect(Collectors.joining("\n"))));
                 }
                 crossSetting = false;
             }
@@ -345,11 +349,13 @@ public class TypesDialog extends Dialog<Void>
 
             public TagValueEdit(@Nullable TagType<JellyType> initialContent, boolean editImmediately)
             {
+                getStyleClass().add("tag-value-edit");
                 this.currentValue = new SimpleObjectProperty<>(Either.right(new TagType<>(
                     initialContent == null ? "" : initialContent.getName(),
                     initialContent == null ? null : initialContent.getInner() 
                 )));
                 this.tagName = new TextField(initialContent == null ? "" : initialContent.getName());
+                tagName.setPromptText(TranslationUtility.getString("edit.type.inner.tag.prompt"));
                 FXUtility.addChangeListenerPlatformNN(tagName.textProperty(), name -> {
                     currentValue.set(currentValue.getValue().map(tt -> new TagType<>(name, tt.getInner())));
                 });
@@ -378,6 +384,7 @@ public class TypesDialog extends Dialog<Void>
                         currentValue.set(Either.left(e.getLocalizedMessage()));
                     }
                 });
+                innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));
                 
                 setLeft(tagName);
                 setCenter(innerType.getContainer());

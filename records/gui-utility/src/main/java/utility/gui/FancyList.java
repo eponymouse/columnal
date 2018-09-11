@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  */
 public abstract class FancyList<T, CELL_CONTENT extends Node>
 {
-    private final VBox children = new VBox();
+    private final VBox children = GUI.vbox("fancy-list-children");
     private final ObservableList<Cell> cells = FXCollections.observableArrayList();
     private final BitSet selection = new BitSet();
     private boolean dragging;
