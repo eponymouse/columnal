@@ -553,7 +553,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
         public ErrorMessagePopup()
         {
-            setDetachable(true);
+            setDetachable(false);
             getStyleClass().add("expression-info-popup");
             setArrowLocation(ArrowLocation.BOTTOM_CENTER);
             // If we let the position vary to fit on screen, we end up with the popup bouncing in and out
@@ -590,6 +590,14 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
                     e.consume();
                 }
             });
+            container.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
+                FXUtility.mouse(this).cancelHideAnimation();
+            });
+            container.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
+                if (keyboardErrorInfo == null)
+                    FXUtility.mouse(this).hidePopup(false);
+            });
+            
         }
 
         // Can't have an ensuresnull check
@@ -720,7 +728,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         {
             mouseErrorInfo = null;
 
-            updateShowHide(true);
+            updateShowHide(false);
         }
     }
 }

@@ -156,9 +156,12 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-text-fill: black;
 }
 
-.expression-info-popup.popover > .border {
-    -fx-stroke: red;
-    -fx-stroke-width: 2;
+.expression-info-popup.popover {
+    -fx-cursor: null;
+    & > .border {
+        -fx-stroke: red;
+        -fx-stroke-width: 2;
+    }
 }
 
 .expression-info-error {
