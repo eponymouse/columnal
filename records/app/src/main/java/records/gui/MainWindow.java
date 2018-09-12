@@ -102,6 +102,9 @@ public class MainWindow
                 GUI.menuItem("menu.project.close", () -> {stage.hide();}),
                 GUI.menuItem("menu.exit", () -> {closeAll();})
             ),
+            GUI.menu("menu.edit",
+                GUI.menuItem("menu.edit.undo", () -> {/*TODO*/})
+            ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
                 GUI.menuItem("menu.view.types", () -> {

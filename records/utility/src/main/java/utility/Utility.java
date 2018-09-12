@@ -1669,6 +1669,17 @@ public class Utility
         return dir;
     }
 
+    public static File getUndoDirectory() throws IOException
+    {
+        File dir = new File(getStorageDirectory(), "undo");
+        dir.mkdirs();
+        if (!dir.exists() || !dir.isDirectory())
+        {
+            throw new IOException("Cannot create undo directory: " + dir.getAbsolutePath());
+        }
+        return dir;
+    }
+
     //package-visible
     static File getStorageDirectory() throws IOException
     {

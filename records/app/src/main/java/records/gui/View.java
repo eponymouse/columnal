@@ -72,6 +72,7 @@ public class View extends StackPane
 {
     private static final double DEFAULT_SPACE = 150.0;
 
+    private final UndoManager undoManager = new UndoManager();
     //private final ObservableMap<Transformation, Overlays> overlays;
     private final TableManager tableManager;
     // The pane which actually holds the TableDisplay items:
@@ -112,8 +113,15 @@ public class View extends StackPane
             String completeFile = fetcher.getCompleteFile();
             try
             {
-                FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
                 Instant now = Instant.now();
+                // This will do backup for undo, but also for
+                // files being replaced, in extreme cases:
+                if (dest.exists())
+                {
+                    undoManager.backupForUndo(dest, now);
+                }
+                FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
+                
                 Platform.runLater(() -> lastSaveTime.setValue(now));
             }
             catch (IOException ex)
