@@ -63,10 +63,10 @@ public class TypeApplyExpression extends TypeExpression
         if (arguments.isEmpty())
             return null;
 
-        TaggedTypeDefinition def = typeManager.getKnownTaggedTypes().get(typeName);
+        TaggedTypeDefinition def = typeManager.getKnownTaggedTypes().get(new TypeId(typeName));
         if (def == null)
             return null;
-        if (def.getTypeArguments().size() != arguments.size() - 1)
+        if (def.getTypeArguments().size() != arguments.size())
         {
             // Wrong number of type arguments
             return null;
@@ -74,10 +74,9 @@ public class TypeApplyExpression extends TypeExpression
         
         // If we're here, right number of arguments!
         List<Either<Unit, DataType>> typeArgs = new ArrayList<>();
-        // Start at one:
-        for (int i = 1; i < arguments.size(); i++)
+        for (Either<UnitExpression, TypeExpression> arg : arguments)
         {
-            @Nullable Either<Unit, DataType> type = Either.surfaceNull(arguments.get(i).<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> {
+            @Nullable Either<Unit, DataType> type = Either.surfaceNull(arg.<@Nullable Unit, @Nullable DataType>mapBoth(u -> u.asUnit(typeManager.getUnitManager()).<@Nullable Unit>either(e -> null, u2 -> {
                 try
                 {
                     return u2.makeUnit(ImmutableMap.of());
