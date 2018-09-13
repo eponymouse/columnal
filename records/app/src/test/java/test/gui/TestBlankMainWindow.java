@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -26,6 +27,7 @@ import org.testfx.robot.Motion;
 import org.testfx.service.query.PointQuery;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
+import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.ConcreteDataTypeVisitor;
@@ -40,13 +42,18 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
+import records.gui.MainWindow.MainWindowActions;
+import records.gui.grid.RectangleBounds;
+import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import test.gen.GenDataType;
+import test.gen.GenDataType.DataTypeAndManager;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -61,17 +68,20 @@ import static org.junit.Assert.*;
  */
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait
+public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait
 {
     @SuppressWarnings("nullness")
     private @NonNull Stage mainWindow;
+    @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
+    private @NonNull MainWindowActions mainWindowActions;
 
     @Override
     public void start(Stage stage) throws Exception
     {
         File dest = File.createTempFile("blank", "rec");
         dest.deleteOnExit();
-        MainWindow.show(stage, dest, null);
+        mainWindowActions = MainWindow.show(stage, dest, null);
         mainWindow = stage;
     }
 
@@ -117,36 +127,79 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     public void testNewEntryTable() throws InternalException, UserException
     {
         testStartState();
+        CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
+        makeNewDataEntryTable(targetPos);
+
+        TestUtil.sleep(1000);
+        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        assertEquals(1, (int)TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
+    }
+
+    @OnThread(Tag.Any)
+    private void makeNewDataEntryTable(CellPosition targetPos)
+    {
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
+        // Only need to click once as already selected by keyboard:
+        clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        clickOn(".id-new-data");
+        push(KeyCode.TAB);
+        write("Text", 1);
+        clickOn(".ok-button");
+    }
+
+    @Test
+    @OnThread(Tag.Any)
+    public void testUndoNewEntryTable() throws InternalException, UserException
+    {
+        testStartState();
         clickOn("#id-menu-data").moveBy(5, 0).clickOn(".id-menu-data-new", Motion.VERTICAL_FIRST);
         TestUtil.sleep(1000);
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
-        assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
+        clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+        TestUtil.sleep(1000);
+        assertEquals(0, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
     }
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@When(seed=-8875669618956742531L) @From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
     {
-        addNewTableWithColumn(dataType, null);
+        TestUtil.printSeedOnFail(() -> {
+            mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(dataTypeAndManager.typeManager);
+            addNewTableWithColumn(dataTypeAndManager.dataType, null);
+        });
     }
 
     @OnThread(Tag.Any)
     private void addNewTableWithColumn(DataType dataType, @Nullable @Value Object value) throws InternalException, UserException
     {
         testNewEntryTable();
-        clickOn(".virt-grid-add-column");
-        String newColName = "Column " + new Random().nextInt();
+        Node expandRight = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right"))).<Node>query();
+        assertNotNull(expandRight);
+        // Won't happen, assertion will fail:
+        if (expandRight == null) return;
+        clickOn(expandRight);
+        String newColName = "Column " + Math.abs(new Random().nextInt());
         write(newColName);
-        clickForDataTypeDialog(rootNode(window(Window::isFocused)), dataType, value);
+        push(KeyCode.TAB);
+        enterType(TypeExpression.fromDataType(dataType), new Random(1));
+        // Dismiss popups:
+        push(KeyCode.ESCAPE);
+        if (value != null)
+        {
+            clickOn(".default-value");
+            enterStructuredValue(dataType, value, new Random(1));
+        }
+        clickOn(".ok-button");
         WaitForAsyncUtils.waitForFxEvents();
         try
         {
             Thread.sleep(2000);
         }
         catch (InterruptedException e) { }
-        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
-        assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
-        assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
+        assertEquals(2, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
+        assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(1).getName().getRaw()));
+        assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(1).getType()));
     }
 
     private void clickOnSub(Node root, String subQuery)
@@ -158,227 +211,36 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             clickOn(sub);
     }
 
-    // Important to use the query here, as we may have nested dialogs with items with the same class
-    @OnThread(Tag.Any)
-    private void clickForDataTypeDialog(Node root, DataType dataType, @Nullable @Value Object initialValue) throws InternalException, UserException
-    {
-        dataType.apply(new ConcreteDataTypeVisitor<Void>()
-        {
-            @SuppressWarnings("nullness") // We'll accept the exception as it will fail the test
-            private void clickOnSubOfDataTypeDialog(String subQuery)
-            {
-                @Nullable Node sub = lookupSubOfDataTypeDialog(subQuery);
-                assertNotNull("Looked up: " + subQuery, sub);
-                clickOn(sub);
-            }
-
-            private @Nullable Node lookupSubOfDataTypeDialog(String subQuery)
-            {
-                return new NodeQueryImpl().from(root).lookup(subQuery).<Node>query();
-            }
-
-            @Override
-            @SuppressWarnings("nullness")
-            public Void number(NumberInfo numberInfo) throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-number");
-                TestUtil.fx_(() -> ((TextField) lookupSubOfDataTypeDialog(".type-number-units")).setText(numberInfo.getUnit().toString()));
-                return null;
-            }
-
-            @Override
-            public Void text() throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-text");
-                return null;
-            }
-
-            @Override
-            public Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-datetime");
-                @SuppressWarnings("unchecked")
-                @Nullable ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-datetime-combo");
-                if (combo != null)
-                    selectGivenComboBoxItem(combo, dataType);
-                return null;
-            }
-
-            @Override
-            public Void bool() throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-boolean");
-                return null;
-            }
-
-            @Override
-            public Void tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-tagged");
-                @SuppressWarnings("unchecked")
-                ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-tagged-combo");
-                if (combo == null)
-                    return null; // Should then fail test
-                @Nullable DataType target = combo.getItems().stream()
-                        .filter(dt ->
-                        {
-                            try
-                            {
-                                return dt.isTagged() && dt.getTagTypes().equals(tags);
-                            }
-                            catch (InternalException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .findFirst().orElse(null);
-                if (target == null)
-                {
-                    clickOnSubOfDataTypeDialog(".id-type-tagged-new");
-                    Node tagDialogRoot = rootNode(window(Window::isFocused));
-                    // Fill in tag types details:
-                    clickOnSub(tagDialogRoot, ".taggedtype-type-name");
-                    write(typeName.getRaw());
-                    // First add all the tags
-                    for (int i = 1; i < tags.size(); i++)
-                    {
-                        clickOnSub(tagDialogRoot, ".id-taggedtype-addTag");
-                    }
-                    // Then go fill them in:
-                    for (int i = 0; i < tags.size(); i++)
-                    {
-                        clickOnSub(tagDialogRoot, ".taggedtype-tag-name-" + i);
-                        write(tags.get(i).getName());
-                        @Nullable DataType inner = tags.get(i).getInner();
-                        if (inner != null)
-                        {
-                            clickOnSub(tagDialogRoot, ".taggedtype-tag-set-subType-" + i);
-                            clickForDataTypeDialog(rootNode(window(Window::isFocused)), inner, null);
-                        }
-                    }
-                    // Click OK in that dialog:
-                    clickOnSub(tagDialogRoot, ".ok-button");
-
-                    target = combo.getItems().stream()
-                        .filter(dt ->
-                        {
-                            try
-                            {
-                                return dt.isTagged() && dt.getTagTypes().equals(tags);
-                            }
-                            catch (InternalException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .findFirst().orElse(null);
-                }
-                if (target != null)
-                {
-                    selectGivenComboBoxItem(combo, target);
-                }
-                return null;
-            }
-
-            @Override
-            public Void tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-tuple");
-                // Should start as pair:
-                assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-0"));
-                assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-1"));
-                assertNull(lookupSubOfDataTypeDialog(".type-tuple-element-2"));
-                for (int i = 2; i < inner.size(); i++)
-                {
-                    clickOnSubOfDataTypeDialog(".id-type-tuple-more");
-                }
-                // TODO check you can't click OK yet
-                for (int i = 0; i < inner.size(); i++)
-                {
-                    assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-" + i));
-                    clickOnSubOfDataTypeDialog(".type-tuple-element-" + i);
-                    WaitForAsyncUtils.waitForFxEvents();
-                    clickForDataTypeDialog(rootNode(window(Window::isFocused)), inner.get(i), null);
-                }
-                return null;
-            }
-
-            @Override
-            public Void array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                clickOnSubOfDataTypeDialog(".id-type-list-of");
-                // TODO check that clicking OK is not valid at this point
-
-                clickOnSubOfDataTypeDialog(".type-list-of-set");
-                WaitForAsyncUtils.waitForFxEvents();
-                //targetWindow(Window::isFocused);
-                if (inner != null)
-                {
-                    clickForDataTypeDialog(rootNode(window(Window::isFocused)), inner, null);
-                }
-                return null;
-            }
-        });
-        if (initialValue != null)
-        {
-            @NonNull @Value Object val = initialValue;
-            // Triple click should select all:
-            @Nullable Node stf_ = new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query();
-            if (stf_ == null)
-            {
-                assertNotNull(stf_);
-                return;
-            }
-            @NonNull Node stf = stf_;
-            // Click in top left to avoid auto complete:
-            PointQuery point = TestUtil.fx(() -> offset(stf, 4 - stf.getBoundsInLocal().getWidth() / 2.0, 4 - stf.getBoundsInLocal().getHeight() / 2.0));
-            clickOn(point);
-            doubleClickOn(point);
-            write(TestUtil.sim(() -> DataTypeUtility.valueToString(dataType, val, null)));
-        }
-
-        // We press OK in this method because if we've recursed, we have one dialog per recursion to dismiss:
-        Window window = window(Window::isFocused);
-        Text errorLabel = new NodeQueryImpl().from(rootNode(window)).lookup(".error-label").<Text>query();
-        Node okButton = new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query();
-        if (okButton != null)
-            clickOn(okButton);
-        if (errorLabel != null)
-        {
-            @NonNull Text errorLabelF = errorLabel;
-            assertEquals("", TestUtil.fx(() -> errorLabelF.getText()));
-        }
-        assertFalse(TestUtil.fx(() -> window.isShowing()));
-    }
-
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void propDefaultValue(@When(seed=8547045604407256801L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
-        @Value Object initialVal = typeAndValueGen.makeValue();
-        addNewTableWithColumn(typeAndValueGen.getType(), initialVal);
-        List<@Value Object> values = new ArrayList<>();
-        for (int i = 0; i < 3; i++)
-        {
-            addNewRow();
-            values.add(initialVal);
-            // Now test for equality:
-            @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
-            DataTypeValue column = recordSet.getColumns().get(0).getType();
-            assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
-            for (int j = 0; j < values.size(); j++)
+        TestUtil.printSeedOnFail(() -> {
+            @Value Object initialVal = typeAndValueGen.makeValue();
+            addNewTableWithColumn(typeAndValueGen.getType(), initialVal);
+            List<@Value Object> values = new ArrayList<>();
+            for (int i = 0; i < 3; i++)
             {
-                int jFinal = j;
-                TestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
+                addNewRow();
+                values.add(initialVal);
+                // Now test for equality:
+                @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+                DataTypeValue column = recordSet.getColumns().get(1).getType();
+                assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
+                for (int j = 0; j < values.size(); j++)
+                {
+                    int jFinal = j;
+                    TestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
+                }
             }
-        }
+        });
     }
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
-        propAddColumnToEntryTable(typeAndValueGen.getType());
+        propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
         List<@Value Object> values = new ArrayList<>();
         for (int i = 0; i < 10;i ++)
@@ -419,7 +281,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         }
         // Now test for equality:
         @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
-        DataTypeValue column = recordSet.getColumns().get(0).getType();
+        DataTypeValue column = recordSet.getColumns().get(1).getType();
         assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
         for (int i = 0; i < values.size(); i++)
         {
@@ -466,18 +328,11 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void addNewRow()
     {
-        // Click button to scroll to end, to ensure append is visible:
-        clickOn(".stable-view-button-bottom");
-        WaitForAsyncUtils.waitForFxEvents();
-        clickOn(".stable-view-row-append-button");
-        try
-        {
-            Thread.sleep(400);
-        }
-        catch (InterruptedException e)
-        {
-
-        }
+        Node expandDown = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))).<Node>query();
+        assertNotNull(expandDown);
+        // Won't happen, assertion will fail:
+        if (expandDown == null) return;
+        clickOn(expandDown);
         WaitForAsyncUtils.waitForFxEvents();
     }
 /*
