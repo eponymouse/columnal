@@ -1182,6 +1182,7 @@ public class TestUtil
         public void run() throws Exception;
     }
     
+    // Needed until IntelliJ bug IDEA-198613 is fixed
     public static void printSeedOnFail(TestRunnable r) throws Exception
     {
         try
@@ -1193,11 +1194,7 @@ public class TestUtil
             String message = assertionError.getMessage();
             message = message == null ? "" :
                     message.replace("expected:", "should be").replace("but was:", "alas found");
-            Throwable cause = assertionError.getCause();
-            if (cause != null)
-                throw new AssertionError(message, cause);
-            else
-                throw new AssertionError(message);
+            throw new AssertionError(message, assertionError);
         }
     }
 
