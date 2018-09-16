@@ -152,7 +152,7 @@ public class MainWindow
         if (src != null)
         {
             @NonNull Pair<File, String> srcFinal = src;
-            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> {
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_("Error loading " + srcFinal.getFirst().getName(), err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> {
                 v.getManager().loadAll(srcFinal.getSecond());
                 Platform.runLater(() -> v.enableWriting());
             }));

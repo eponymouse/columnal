@@ -173,7 +173,7 @@ public class InitialWindow
     @OnThread(Tag.FXPlatform)
     public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent)
     {
-        return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX(() ->
+        return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX("Error creating new file", () ->
         {
             @Nullable File dest;
             try

@@ -195,7 +195,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            Platform.runLater(() -> FXUtility.showError(e));
+            Platform.runLater(() -> FXUtility.showError("Error inserting rows", e));
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -204,7 +204,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException | UserException e2)
                 {
-                    Platform.runLater(() -> FXUtility.showError(e2));
+                    Platform.runLater(() -> FXUtility.showError("Error reversing row insertion", e2));
                 }
             }
             return null;
@@ -241,7 +241,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            Platform.runLater(() -> FXUtility.showError(e));
+            Platform.runLater(() -> FXUtility.showError("Error removing rows", e));
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -250,7 +250,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException | UserException e2)
                 {
-                    Platform.runLater(() -> FXUtility.showError(e2));
+                    Platform.runLater(() -> FXUtility.showError("Error reversing row removal", e2));
                 }
             }
             return null;

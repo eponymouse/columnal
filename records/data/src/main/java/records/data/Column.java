@@ -68,17 +68,6 @@ public abstract class Column
         return name;
     }
 
-    @OnThread(Tag.FXPlatform)
-    public final void withDisplay(FXPlatformConsumer<String> withType)
-    {
-        Workers.onWorkerThread("Fetching display from column " + getName(), Priority.FETCH, () -> {
-            FXUtility.alertOnError_(() -> {
-                String s = getType().getHeaderDisplay();
-                Platform.runLater(() -> withType.consume(s));
-            });
-        });
-    }
-
     @OnThread(Tag.Any)
     public abstract DataTypeValue getType() throws InternalException, UserException;
 

@@ -168,7 +168,7 @@ public class ExpressionInfoDisplay
             {
                 Log.log(e);
                 // User clicked expecting it to work, so better tell them:
-                FXUtility.showError(e);
+                FXUtility.showError("Error applying fix", e);
             }
         })).collect(ImmutableList.toImmutableList())));
         // The listener on this property should make the popup every time and set the fixes too, hence we 

@@ -344,7 +344,7 @@ public class TableManager
         }
 
         savedToReRun.thenAccept(ss -> {
-            FXUtility.alertOnError_(() -> reAddAll(ss));
+            reAddAll(ss);
         });
     }
 
@@ -430,12 +430,12 @@ public class TableManager
      * an order where each item only depends on those before it in the list.
      */
     @OnThread(Tag.Simulation)
-    private void reAddAll(List<String> scripts) throws UserException, InternalException
+    private void reAddAll(List<String> scripts)
     {
         for (String script : scripts)
         {
             Log.debug("Reloading:\n" + script);
-            FXUtility.alertOnError_(() -> {
+            FXUtility.alertOnError_("Error re-running transformations", () -> {
                 loadOneTable(Utility.parseAsOne(script, MainLexer::new, MainParser::new, p -> p.table()));
             });
         }
@@ -464,7 +464,7 @@ public class TableManager
     public RenameTable getRenameTableOperation(Table table)
     {
         return newName -> {
-            FXUtility.alertOnError_(() -> {
+            FXUtility.alertOnError_("Error renaming table", () -> {
                 edit(table.getId(), null, new TableAndColumnRenames(ImmutableMap.of(table.getId(), new Pair<@Nullable TableId, ImmutableMap<ColumnId, ColumnId>>(newName, ImmutableMap.of()))));
             });
         };

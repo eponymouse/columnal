@@ -451,13 +451,13 @@ public class FXUtility
 
 
     @OnThread(Tag.Simulation)
-    public static void alertOnError_(RunOrError r)
+    public static void alertOnError_(String title, RunOrError r)
     {
-        alertOnError_(err -> err, r);
+        alertOnError_(title, err -> err, r);
     }
 
     @OnThread(Tag.Simulation)
-    public static void alertOnError_(Function<@Localized String, @Localized String> errWrap, RunOrError r)
+    public static void alertOnError_(String title, Function<@Localized String, @Localized String> errWrap, RunOrError r)
     {
         try
         {
@@ -467,13 +467,13 @@ public class FXUtility
         {
             Platform.runLater(() ->
             {
-                showError(errWrap, e);
+                showError(title, errWrap, e);
             });
         }
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void alertOnErrorFX_(RunOrErrorFX r)
+    public static void alertOnErrorFX_(String title, RunOrErrorFX r)
     {
         try
         {
@@ -481,12 +481,12 @@ public class FXUtility
         }
         catch (InternalException | UserException e)
         {
-            showError(e);
+            showError(title, e);
         }
     }
 
     @OnThread(Tag.FXPlatform)
-    public static <T> @Nullable T alertOnErrorFX(GenOrErrorFX<T> r)
+    public static <T> @Nullable T alertOnErrorFX(String title, GenOrErrorFX<T> r)
     {
         try
         {
@@ -494,19 +494,19 @@ public class FXUtility
         }
         catch (InternalException | UserException e)
         {
-            showError(e);
+            showError(title, e);
             return null;
         }
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void showError(Exception e)
+    public static void showError(String title, Exception e)
     {
-        showError(x -> x, e);
+        showError(title, x -> x, e);
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void showError(Function<@Localized String, @Localized String> errWrap, Exception e)
+    public static void showError(String title, Function<@Localized String, @Localized String> errWrap, Exception e)
     {
         if (showingError)
         {
@@ -522,13 +522,21 @@ public class FXUtility
                 String localizedMessage = errWrap.apply(e.getLocalizedMessage());
                 localizedMessage = localizedMessage == null ? "Unknown error" : localizedMessage;
                 Alert alert = new Alert(AlertType.ERROR, localizedMessage, ButtonType.OK);
+                alert.getDialogPane().getStylesheets().addAll(
+                    FXUtility.getStylesheet("general.css"), 
+                    FXUtility.getStylesheet("dialogs.css")
+                );
+                alert.setTitle(title);
+                alert.setHeaderText(title);
                 alert.initModality(Modality.APPLICATION_MODAL);
                 if (e.getCause() != null)
                 {
                     TextArea textArea = new TextArea(e.getCause().getLocalizedMessage());
                     textArea.setEditable(false);
-                    alert.getDialogPane().setContent(new VBox(new Label(localizedMessage), new TitledPane("More information", textArea)));
+                    textArea.getStyleClass().add("loading-error-detail");
+                    alert.getDialogPane().setExpandableContent(textArea);
                 }
+                alert.setResizable(true);
                 showingError = true;
                 alert.showAndWait();
                 showingError = false;
@@ -537,7 +545,7 @@ public class FXUtility
     }
 
     @OnThread(Tag.Simulation)
-    public static <T> Optional<T> alertOnError(GenOrError<@Nullable T> r)
+    public static <T> Optional<T> alertOnError(String title, GenOrError<@Nullable T> r)
     {
         try
         {
@@ -551,7 +559,7 @@ public class FXUtility
         {
             Platform.runLater(() ->
             {
-                showError(e);
+                showError(title, e);
             });
             return Optional.empty();
         }
@@ -822,7 +830,7 @@ public class FXUtility
     private static void _logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
         @Localized String actionString = TranslationUtility.getString(actionKey);
-        FXPlatformRunnable runAlert = () -> showError((@Localized String s) -> Utility.universal(actionString + ": " + s), ex);
+        FXPlatformRunnable runAlert = () -> showError(actionString, (@Localized String s) -> Utility.universal(actionString + ": " + s), ex);
         if (Platform.isFxApplicationThread())
             ((Runnable)runAlert::run).run();
         else

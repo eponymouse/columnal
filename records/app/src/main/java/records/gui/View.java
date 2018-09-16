@@ -617,7 +617,7 @@ public class View extends StackPane
                     Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(window, thisView.getManager(), new ColumnId("A"), true).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
-                            FXUtility.alertOnError_(() -> {
+                            FXUtility.alertOnError_("Error creating first column", () -> {
                                 ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
                                 tableManager.record(data);
                             });
@@ -638,7 +638,7 @@ public class View extends StackPane
                         {
                             @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                             Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
-                                FXUtility.alertOnError_(() -> {
+                                FXUtility.alertOnError_("Error creating transformation", () -> {
                                     @OnThread(Tag.Simulation) Transformation transformation = makeTransFinal.get();
                                     tableManager.record(transformation);
                                     Platform.runLater(() -> {
@@ -654,7 +654,7 @@ public class View extends StackPane
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
                         new EditExpressionDialog(thisView, srcTable, null, false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
-                            Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> {
+                            Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error creating check", () -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                 tableManager.record(check);
                             }));

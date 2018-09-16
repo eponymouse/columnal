@@ -58,7 +58,7 @@ public class ClipboardUtils
             }
             catch (UserException e)
             {
-                FXUtility.showError(e);
+                FXUtility.showError("Error copying content", e);
             }
             catch (InternalException e)
             {
@@ -112,21 +112,18 @@ public class ClipboardUtils
             b.end().t(MainLexer.UNITS).nl();
             b.t(MainLexer.TYPES).begin().nl();
             // TODO Utility.alertOnError_(() -> b.raw(unitManager.save()));
-            FXUtility.alertOnError_(() -> b.raw(typeManager.save()).nl());
+            b.raw(typeManager.save()).nl();
             b.end().t(MainLexer.TYPES).nl();
             b.t(MainLexer.FORMAT).begin().nl();
-            FXUtility.alertOnError_(() ->
+            for (Pair<ColumnId, DataTypeValue> c : columns)
             {
-                for (Pair<ColumnId, DataTypeValue> c : columns)
-                {
-                    b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getFirst());
-                    c.getSecond().save(b);
-                    b.nl();
-                }
-            });
+                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getFirst());
+                FXUtility.alertOnError_("Error copying column: " + c.getFirst().getRaw(), () -> c.getSecond().save(b));
+                b.nl();
+            }
             b.end().t(MainLexer.FORMAT).nl();
             StringBuilder plainText = new StringBuilder();
-            FXUtility.alertOnError_(() -> {
+            FXUtility.alertOnError_("Error copying data values", () -> {
                 b.t(MainLexer.VALUES).begin().nl();
                 RowRange rowRange = rowRangeSupplier.get();
                 for (int i = rowRange.startRowIncl; i <= rowRange.endRowIncl; i++)

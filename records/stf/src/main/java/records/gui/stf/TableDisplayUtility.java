@@ -380,7 +380,7 @@ public class TableDisplayUtility
                     @Override
                     public @OnThread(Tag.FXPlatform) void consume(Pair<String, @Value T> p)
                     {
-                        Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
+                        Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, p.getSecond())));
                         onModify.run();
                     }
                 } : null;

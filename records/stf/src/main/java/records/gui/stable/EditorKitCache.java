@@ -299,7 +299,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
 
         public synchronized void update(@Value V loadedItem)
         {
-            FXUtility.alertOnErrorFX_(() -> {
+            FXUtility.alertOnErrorFX_("Error loading value for display", () -> {
                 this.loadedItemOrError = Either.<Pair<@Value V, EditorKit<@Value V>>, @Localized String>left(new Pair<@Value V, EditorKit<@Value V>>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
             updateDisplay();

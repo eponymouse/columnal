@@ -99,7 +99,7 @@ public class TypesDialog extends Dialog<Void>
             if (newType != null)
             {
                 TaggedTypeDefinition newTypeFinal = newType;
-                FXUtility.alertOnErrorFX_(() -> typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags()));
+                FXUtility.alertOnErrorFX_("Error adding new type", () -> typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags()));
                 updateTypesList(typeManager, types);
             }
         });
@@ -137,7 +137,7 @@ public class TypesDialog extends Dialog<Void>
         {
             TypeId oldTypeName = existing.getTaggedTypeName();
             @NonNull TaggedTypeDefinition newTypeFinal = changedType;
-            FXUtility.alertOnErrorFX_(() -> {
+            FXUtility.alertOnErrorFX_("Error saving type change", () -> {
                 typeManager.unregisterTaggedType(oldTypeName);
                 typeManager.registerTaggedType(newTypeFinal.getTaggedTypeName().getRaw(), newTypeFinal.getTypeArguments(), newTypeFinal.getTags());
             });

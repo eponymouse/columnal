@@ -47,7 +47,8 @@ public class ImmediateDataSource extends DataSource
 
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(renames.tableId(getId())).t(MainLexer.FORMAT).begin().nl();
-        FXUtility.alertOnError_(() ->
+        String errorTitle = "Error saving table: " + getId().getRaw();
+        FXUtility.alertOnError_(errorTitle, () ->
         {
             for (Column c : data.getColumns())
             {
@@ -64,7 +65,7 @@ public class ImmediateDataSource extends DataSource
             }
         });
         b.end().t(MainLexer.FORMAT).nl();
-        FXUtility.alertOnError_(() -> {
+        FXUtility.alertOnError_(errorTitle, () -> {
             b.t(MainLexer.VALUES).begin().nl();
             for (int i = 0; data.indexValid(i); i++)
             {
@@ -89,22 +90,17 @@ public class ImmediateDataSource extends DataSource
             @Override
             public @OnThread(Tag.Simulation) void deleteColumn(ColumnId deleteColumnName)
             {
-                FXUtility.alertOnError_(() -> {
-                    data.deleteColumn(deleteColumnName);
-                });
+                data.deleteColumn(deleteColumnName);
             }
         }, appendRowCount -> {
-            FXUtility.alertOnError_(() ->
+            FXUtility.alertOnError_("Error find table length for: " + getId().getRaw(), () ->
             {
                 data.insertRows(data.getLength(), appendRowCount);
             });
         }, (rowIndex, insertRowCount) -> {
-            FXUtility.alertOnError_(() ->
-            {
-                data.insertRows(rowIndex, insertRowCount);
-            });
+            data.insertRows(rowIndex, insertRowCount);
         }, (deleteRowFrom, deleteRowCount) -> {
-            FXUtility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
+            data.removeRows(deleteRowFrom, deleteRowCount);
         });
     }
 
