@@ -145,6 +145,10 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-border-color: transparent;
     -fx-padding: 1 3 1 1;
 }
+.entry-field:focused {
+    -fx-background-insets: 1;
+    -fx-background-color: grey(90%);
+}
 /*
 .entry-field:ps-empty, .entry-field:hover, .entry-field:focused,
   .operator-name:op-empty, .labelled-name:hover, .labelled-name:focused {
