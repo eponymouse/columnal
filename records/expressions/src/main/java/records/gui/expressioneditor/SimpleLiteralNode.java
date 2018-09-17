@@ -42,8 +42,14 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
             @Override
             public String exactCompletion(String currentText, EndCompletion selectedItem)
             {
+                return exact(currentText, selectedItem, true);
+            }
+
+            private String exact(String currentText, EndCompletion selectedItem, boolean moveFocus)
+            {
                 super.exactCompletion(currentText, selectedItem);
-                parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT, false);
+                if (moveFocus)
+                    parent.focusRightOf(FXUtility.mouse(SimpleLiteralNode.this), Focus.LEFT, false);
                 if (currentText.endsWith(ending))
                     return currentText.substring(0, currentText.length() - 1);
                 else
@@ -64,7 +70,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
                 if (selectedItem == null)
                     return currentText;
                 else
-                    return exactCompletion(currentText, selectedItem);
+                    return exact(currentText, selectedItem, false);
             }
 
             @Override
