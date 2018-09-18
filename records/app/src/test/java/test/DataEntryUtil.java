@@ -23,19 +23,22 @@ import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
 import java.util.Random;
 
 public class DataEntryUtil
 {
     private static final int DELAY = 1;
 
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public static void enterValue(FxRobotInterface robot, Random random, DataType dataType, @Value Object value, boolean nested) throws UserException, InternalException
     {
         if (!nested)
         {
-            robot.push(TestUtil.ctrlCmd(), KeyCode.A);
-            robot.push(KeyCode.DELETE);
+            //robot.push(TestUtil.ctrlCmd(), KeyCode.A);
+            //robot.push(KeyCode.DELETE);
             robot.push(KeyCode.HOME);
         }
         dataType.apply(new DataTypeVisitor<UnitType>()
@@ -43,6 +46,9 @@ public class DataEntryUtil
             @Override
             public UnitType number(NumberInfo numberInfo) throws InternalException, UserException
             {
+                // Delete the zero which is a placeholder:
+                robot.push(KeyCode.DELETE);
+                
                 String num = Utility.toBigDecimal(Utility.cast(value, Number.class)).toPlainString();
                 robot.write(num, DELAY);
                 return UnitType.UNIT;
@@ -59,21 +65,58 @@ public class DataEntryUtil
             @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                robot.write(DataTypeUtility.valueToString(dataType, value, null));
+                TemporalAccessor t = (TemporalAccessor)value;
+                if (dateTimeInfo.getType().hasYearMonth())
+                {
+                    delete(4);
+                    robot.write(Integer.toString(t.get(ChronoField.YEAR)) + "-", DELAY);
+                    delete(2);
+                    robot.write(Integer.toString(t.get(ChronoField.MONTH_OF_YEAR)), DELAY);
+                    if (dateTimeInfo.getType().hasDay())
+                    {
+                        robot.write("-");
+                        delete(2);
+                        robot.write(Integer.toString(t.get(ChronoField.DAY_OF_MONTH)));
+                    }
+                    if (dateTimeInfo.getType().hasTime())
+                        robot.write(" ");
+                }
+                if (dateTimeInfo.getType().hasTime())
+                {
+                    delete(2);
+                    robot.write(Integer.toString(t.get(ChronoField.HOUR_OF_DAY)) + ":", DELAY);
+                    delete(2);
+                    robot.write(Integer.toString(t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
+                    delete(2);
+                    robot.write(Integer.toString(t.get(ChronoField.SECOND_OF_MINUTE)) + ".", DELAY);
+                    delete(9);
+                    robot.write(String.format("%09d", t.get(ChronoField.NANO_OF_SECOND)), DELAY);
+                }
+                // TODO zone
                 return UnitType.UNIT;
             }
 
             @Override
             public UnitType bool() throws InternalException, UserException
             {
+                // Delete the false which is a placeholder:
+                delete(5);
+
                 robot.write(Boolean.toString(Utility.cast(value, Boolean.class)), DELAY);
                 return UnitType.UNIT;
             }
-            
+
+            private void delete(int amount)
+            {
+                for (int i = 0; i < amount; i++)
+                    robot.push(KeyCode.DELETE);
+            }
+
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
+                delete(tags.stream().mapToInt(t -> t.getName().length()).max().orElse(0));
                 robot.write(DataTypeUtility.valueToString(dataType, value, null));
                 return UnitType.UNIT;
             }
@@ -124,10 +167,5 @@ public class DataEntryUtil
                 return UnitType.UNIT;
             }
         });
-    }
-
-    public static void selectAll(FxRobotInterface robot)
-    {
-        robot.push(TestUtil.ctrlCmd(), KeyCode.A);
     }
 }
