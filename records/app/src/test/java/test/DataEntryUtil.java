@@ -16,6 +16,7 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -57,7 +58,7 @@ public class DataEntryUtil
             @Override
             public UnitType text() throws InternalException, UserException
             {
-                robot.write("\"" + Utility.cast(value, String.class) + (nested || random.nextBoolean() ? "\"" : ""), DELAY);
+                robot.write("\"" + GrammarUtility.escapeChars(Utility.cast(value, String.class)) + (nested || random.nextBoolean() ? "\"" : ""), DELAY);
                 return UnitType.UNIT;
             }
 
@@ -69,7 +70,7 @@ public class DataEntryUtil
                 if (dateTimeInfo.getType().hasYearMonth())
                 {
                     delete(4);
-                    robot.write(Integer.toString(t.get(ChronoField.YEAR)) + "-", DELAY);
+                    robot.write(String.format("%04d", t.get(ChronoField.YEAR)) + "-", DELAY);
                     delete(2);
                     robot.write(Integer.toString(t.get(ChronoField.MONTH_OF_YEAR)), DELAY);
                     if (dateTimeInfo.getType().hasDay())

@@ -292,6 +292,10 @@ public class DataTypeUtility
             @Value Object[] tuple = (@Value Object[])item;
             return "(" + Arrays.stream(tuple).map(DataTypeUtility::_test_valueToString).collect(Collectors.joining(", ")) + ")";
         }
+        else if (item instanceof String)
+        {
+            return "\"" + GrammarUtility.escapeChars((String)item) + "\"";
+        }
 
         return item.toString();
     }
