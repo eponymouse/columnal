@@ -45,6 +45,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private @Nullable DataType customDataType = null;
     private final ColumnNameTextField columnNameTextField;
     private final TypeEditor typeEditor;
+    private @Nullable DataType latestType;
 
     public static class ColumnDetails
     {
@@ -135,7 +136,11 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         {
             try
             {
-                structuredTextField.resetContent(makeEditorKit(t));
+                if (!t.equals(latestType))
+                {
+                    structuredTextField.resetContent(makeEditorKit(t));
+                    latestType = t;
+                }
                 structuredTextField.setDisable(false);
             }
             catch (InternalException e)
