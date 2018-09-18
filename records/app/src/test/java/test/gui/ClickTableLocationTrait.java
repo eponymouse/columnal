@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 public interface ClickTableLocationTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public default void clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
         Bounds box = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));

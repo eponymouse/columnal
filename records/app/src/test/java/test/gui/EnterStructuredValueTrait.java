@@ -13,7 +13,7 @@ import java.util.Random;
 
 public interface EnterStructuredValueTrait extends FxRobotInterface
 {
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     default public void enterStructuredValue(DataType dataType, @Value Object value, Random r) throws InternalException, UserException
     {
         // Should we inline this there, or vice versa?
