@@ -156,18 +156,38 @@ public class StructuredTextField extends StyleClassedTextArea
                 }
             }),
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
-                if (editorKit != null)
-                    editorKit.relinquishFocus(); // Should move focus away from us
+                FXUtility.keyboard(this).enterPressed();
                 e.consume();
             }),
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ESCAPE), (KeyEvent e) -> {
-                if (editorKit != null)
-                    editorKit.relinquishFocus(); // Should move focus away from us
+                FXUtility.keyboard(this).escapePressed();
                 e.consume();
             })
         ));
         
         Nodes.addFallbackInputMap(FXUtility.mouse(this), InputMap.consume(MouseEvent.ANY));
+    }
+
+    public void escapePressed()
+    {
+        if (autoComplete != null)
+        {
+            autoComplete.hide();
+            autoComplete = null;
+        }
+        else if (editorKit != null)
+            editorKit.relinquishFocus(); // Should move focus away from us
+    }
+
+    public void enterPressed()
+    {
+        if (autoComplete != null)
+        {
+            autoComplete.fireSelected();
+        }
+        boolean atEnd = getCaretPosition() == getLength();
+        if (atEnd && editorKit != null)
+            editorKit.relinquishFocus(); // Should move focus away from us
     }
 
     private <T> @Nullable CaretPositionMapper focusGained(EditorKit<T> editorKit)
@@ -399,6 +419,7 @@ public class StructuredTextField extends StyleClassedTextArea
 */
         updateDocument(editorKit);
         selectRange(insertPos, insertPos);
+        Log.debug("Inserted at " + start + "," + end + " text \"" + replacement.getText() + "\" into \"" + getText() + "\" and got to " + insertPos);
         if (!possibleCaretPositions.get(getCaretPosition()))
         {
             Log.logStackTrace("Caret position invalid");
@@ -801,6 +822,8 @@ public class StructuredTextField extends StyleClassedTextArea
 
         public Item withInsertAt(int insertBefore, String newContent)
         {
+            // Shouldn't be needed, but code defensively:
+            insertBefore = Math.min(insertBefore, content.length());
             return new Item(parent, content.substring(0, insertBefore) + newContent + content.substring(insertBefore), itemVariant, prompt);
         }
 
