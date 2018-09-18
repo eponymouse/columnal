@@ -49,10 +49,12 @@ public class YM extends TerminalComponent<@Value TemporalAccessor/*YearMonth*/>
             initialMonth = "";
             initialYear = "";
         }
+        Item yearItem = new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"));
+        Item monthItem = new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month"));
         items.addAll(Arrays.asList(
-            new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-            new Item(getItemParents(), "/"),
-            new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"))));
+            yearItem,
+            new Item(getItemParents(), "-"),
+            monthItem));
     }
 
     private static int adjustYear2To4(int month, String originalYearText, final int year)
@@ -115,8 +117,8 @@ public class YM extends TerminalComponent<@Value TemporalAccessor/*YearMonth*/>
             if (fixes.size() == standardFixes)
             {
                 int adjYear = adjustYear2To4(month, yearText, year);
-                items.set(0, items.get(0).replaceContent(String.format("%02d", month)));
-                items.set(2, items.get(2).replaceContent(String.format("%04d", adjYear)));
+                items.set(2, items.get(2).replaceContent(String.format("%02d", month)));
+                items.set(0, items.get(0).replaceContent(String.format("%04d", adjYear)));
                 return Either.right(YearMonth.of(adjYear, month));
             }
         } catch (NumberFormatException | DateTimeException e)
