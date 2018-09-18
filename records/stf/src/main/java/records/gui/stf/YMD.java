@@ -53,11 +53,14 @@ public class YMD extends TerminalComponent<@Value TemporalAccessor/*LocalDate*/>
             initialYear = "";
         }
 
-        items.addAll(Arrays.asList(new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
-            new Item(getItemParents(), "/"),
-            new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-            new Item(getItemParents(), "/"),
-            new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"))));
+        Item dayItem = new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day"));
+        Item monthItem = new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month"));
+        Item yearItem = new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"));
+        items.addAll(Arrays.asList(yearItem,
+            new Item(getItemParents(), "-"),
+                monthItem,
+            new Item(getItemParents(), "-"),
+                dayItem));
     }
 
     private static int adjustYear2To4(int day, int month, String originalYearText, final int year)
@@ -156,9 +159,9 @@ public class YMD extends TerminalComponent<@Value TemporalAccessor/*LocalDate*/>
             if (fixes.size() == standardFixes)
             {
                 int adjYear = adjustYear2To4(day, month, yearText, year);
-                items.set(0, items.get(0).replaceContent(String.format("%02d", day)));
+                items.set(4, items.get(4).replaceContent(String.format("%02d", day)));
                 items.set(2, items.get(2).replaceContent(String.format("%02d", month)));
-                items.set(4, items.get(4).replaceContent(String.format("%04d", adjYear)));
+                items.set(0, items.get(0).replaceContent(String.format("%04d", adjYear)));
                 field.lineEnd(SelectionPolicy.CLEAR);
                 return Either.right(LocalDate.of(adjYear, month, day));
             }
