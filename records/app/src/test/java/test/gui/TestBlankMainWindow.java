@@ -1,7 +1,6 @@
 package test.gui;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -10,13 +9,9 @@ import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.After;
@@ -24,21 +19,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.robot.Motion;
-import org.testfx.service.query.PointQuery;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.ConcreteDataTypeVisitor;
-import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.NumberInfo;
-import records.data.datatype.TypeId;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
@@ -52,7 +39,6 @@ import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Either;
 import utility.gui.FXUtility;
 
 import java.io.File;
@@ -70,6 +56,7 @@ import static org.junit.Assert.*;
 @RunWith(JUnitQuickcheck.class)
 public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait
 {
+    public static final CellPosition NEW_TABLE_POS = new CellPosition(CellPosition.row(1), CellPosition.col(1));
     @SuppressWarnings("nullness")
     private @NonNull Stage mainWindow;
     @SuppressWarnings("nullness")
@@ -127,7 +114,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     public void testNewEntryTable() throws InternalException, UserException
     {
         testStartState();
-        CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
+        CellPosition targetPos = NEW_TABLE_POS;
         makeNewDataEntryTable(targetPos);
 
         TestUtil.sleep(1000);
@@ -213,9 +200,10 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@When(seed=8547045604407256801L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
+            mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
             @Value Object initialVal = typeAndValueGen.makeValue();
             addNewTableWithColumn(typeAndValueGen.getType(), initialVal);
             List<@Value Object> values = new ArrayList<>();
@@ -238,7 +226,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
@@ -257,27 +245,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             {
 
             }
-            /*
-            clickOn(new Predicate<Node>()
-            {
-                @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-                public boolean test(Node n)
-                {
-                    return n.getStyleClass().contains("stable-view-row-cell") && actuallyVisible(n);
-                }
-            });
-            try
-            {
-                Thread.sleep(400);
-            }
-            catch (InterruptedException e)
-            {
-
-            }
-            push(KeyCode.END);
-            */
-            setValue(typeAndValueGen.getType(), value);
+            enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), typeAndValueGen.getType(), value, new Random(1));
         }
         // Now test for equality:
         @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
@@ -291,7 +259,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     }
 
     @OnThread(Tag.Any)
-    private void setValue(DataType dataType, @Value Object value) throws UserException, InternalException
+    private void enterValue(CellPosition position, DataType dataType, @Value Object value, Random random) throws UserException, InternalException
     {
         Node row = lookup(new Predicate<Node>()
         {
@@ -310,19 +278,17 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             targetWindow(row);
             clickOn(row);
         }
-        //TODO check colour of focused cell (either check background, or take snapshot)
-        Node prevFocused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
-        // Go to last row:
-        push(KeyCode.END);
-        // Enter to start editing:
-        push(KeyCode.ENTER);
-        WaitForAsyncUtils.waitForFxEvents();
+        for (int i = 0; i < 2; i++)
+            clickOnItemInBounds(lookup(".structured-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
 
         Node focused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
-        write(TestUtil.sim(() -> DataTypeUtility.valueToString(dataType, value, null)));
+        push(KeyCode.HOME);
+        enterStructuredValue(dataType, value, random);
+        push(KeyCode.ENTER);
         // Enter to finish editing:
         push(KeyCode.ENTER);
+        assertNotEquals(focused, TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
     }
 
     @OnThread(Tag.Any)
