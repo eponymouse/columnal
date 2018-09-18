@@ -31,6 +31,7 @@ import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
+import records.gui.stf.StructuredTextField;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import test.gen.GenDataType;
@@ -283,11 +284,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
         Node focused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
+        assertTrue(focused instanceof StructuredTextField);
         push(KeyCode.HOME);
         enterStructuredValue(dataType, value, random);
-        push(KeyCode.ENTER);
-        // Enter to finish editing:
-        push(KeyCode.ENTER);
+        // One to get rid of any code completion:
+        push(KeyCode.ESCAPE);
+        // Escape to finish editing:
+        push(KeyCode.ESCAPE);
         assertNotEquals(focused, TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
     }
 
