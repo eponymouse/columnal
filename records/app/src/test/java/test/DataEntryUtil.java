@@ -3,6 +3,7 @@ package test;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import records.data.datatype.DataType;
@@ -24,6 +25,8 @@ import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalField;
@@ -93,7 +96,15 @@ public class DataEntryUtil
                     delete(9);
                     robot.write(String.format("%09d", t.get(ChronoField.NANO_OF_SECOND)), DELAY);
                 }
-                // TODO zone
+                if (dateTimeInfo.getType().hasZoneId())
+                {
+                    ZoneId zone = ((ZonedDateTime) t).getZone();
+                    Log.debug("Zone: {{{" + zone + "}}} is " + zone.getId());
+                    robot.write(" ");
+                    delete(3);
+                    robot.write(zone.getId(), DELAY);
+                }
+                
                 return UnitType.UNIT;
             }
 

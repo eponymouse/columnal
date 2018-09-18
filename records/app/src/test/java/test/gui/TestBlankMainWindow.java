@@ -150,7 +150,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 5)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@When(seed=-8875669618956742531L) @From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
+    public void propAddColumnToEntryTable(@From(GenDataType.class) GenDataType.DataTypeAndManager dataTypeAndManager) throws UserException, InternalException, Exception
     {
         TestUtil.printSeedOnFail(() -> {
             mainWindowActions._test_getTableManager().getTypeManager()._test_copyTaggedTypesFrom(dataTypeAndManager.typeManager);
@@ -199,7 +199,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             clickOn(sub);
     }
 
-    @Property(trials = 5)
+    @Property(trials = 10)
     @OnThread(Tag.Any)
     public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
@@ -227,7 +227,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
