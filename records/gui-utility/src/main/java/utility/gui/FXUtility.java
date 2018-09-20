@@ -217,9 +217,9 @@ public class FXUtility
                  .collect(Collectors.<String>toList());
     }
 
-    public static ExtensionFilter getProjectExtensionFilter()
+    public static ExtensionFilter getProjectExtensionFilter(String extensionInclDot)
     {
-        return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*.rec");
+        return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*" + extensionInclDot);
     }
 
     @OnThread(Tag.Any)

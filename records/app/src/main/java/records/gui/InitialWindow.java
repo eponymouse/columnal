@@ -144,7 +144,7 @@ public class InitialWindow
     // Returns true if successfully opened a project
     public static boolean chooseAndOpenProject(Stage parent)
     {
-        File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter());
+        File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter(Main.EXTENSION_INCL_DOT));
         if (src != null)
         {
             return openProject(parent, src);

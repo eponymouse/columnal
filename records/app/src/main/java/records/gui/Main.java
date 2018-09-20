@@ -24,6 +24,8 @@ import java.nio.charset.StandardCharsets;
  */
 public class Main extends Application
 {
+    public static final String EXTENSION_INCL_DOT = ".rec";
+
     @Override
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
@@ -57,7 +59,7 @@ public class Main extends Application
             for (String param : parameters.getUnnamed())
             {
                 File paramFile = new File(param);
-                if (param.endsWith(".rec"))
+                if (param.endsWith(EXTENSION_INCL_DOT))
                 {
                     Log.normal("Showing main window, to load file: \"" + paramFile.getAbsolutePath() + "\"");
                     MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, StandardCharsets.UTF_8)));
