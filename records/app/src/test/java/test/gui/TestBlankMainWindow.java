@@ -1,6 +1,7 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -23,6 +24,7 @@ import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -34,9 +36,11 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.stf.StructuredTextField;
 import records.transformations.expression.type.TypeExpression;
+import sun.jvm.hotspot.gc_implementation.shared.ImmutableSpace;
 import test.TestUtil;
 import test.gen.GenDataType;
 import test.gen.GenDataType.DataTypeAndManager;
+import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
@@ -45,9 +49,11 @@ import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -127,10 +133,18 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void makeNewDataEntryTable(CellPosition targetPos)
     {
+        makeNewDataEntryTable(null, targetPos);
+    }
+
+    @OnThread(Tag.Any)
+    private void makeNewDataEntryTable(@Nullable String tableName, CellPosition targetPos)
+    {
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         // Only need to click once as already selected by keyboard:
         clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
         clickOn(".id-new-data");
+        if (tableName != null)
+            write(tableName, DELAY);
         push(KeyCode.TAB);
         write("Text", 1);
         clickOn(".ok-button");
@@ -143,9 +157,62 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         testStartState();
         makeNewDataEntryTable(NEW_TABLE_POS);
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        assertEquals(1, lookup(".table-display-table-title").queryAll().size());
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
         TestUtil.sleep(1000);
         assertEquals(0, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        assertEquals(0, lookup(".table-display-table-title").queryAll().size());
+    }
+
+    @Property(trials = 3)
+    @OnThread(Tag.Any)
+    public void propUndoNewEntryTable(@From(GenRandom.class) Random r) throws InternalException, UserException
+    {
+        // We make new tables and undo them at random, with
+        // slight preference for making.
+        
+        ArrayList<TableId> tableIds = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            if (r.nextInt(5) <= 2 || tableIds.isEmpty())
+            {
+                String name = "Table " + i;
+                makeNewDataEntryTable(name, NEW_TABLE_POS.offsetByRowCols(4 * tableIds.size(), 0));
+                tableIds.add(new TableId(name));
+            }
+            else
+            {
+                clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+                TestUtil.sleep(1000);
+                tableIds.remove(tableIds.size() - 1);
+            }
+            assertEquals(ImmutableSet.copyOf(tableIds), TestUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> t.getId()).collect(ImmutableSet.toImmutableSet())));
+            assertEquals(tableIds.size(), lookup(".table-display-table-title").queryAll().size());
+        }
+    }
+
+    @Test
+    @OnThread(Tag.Simulation)
+    public void testUndoAddRow() throws InternalException, UserException
+    {
+        testStartState();
+        makeNewDataEntryTable(NEW_TABLE_POS);
+        TableManager tableManager = mainWindowActions._test_getTableManager();
+        assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
+        assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
+        CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3, 0);
+        clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
+        assertEquals(1, tableManager.getAllTables().get(0).getData().getLength());
+        assertEquals(1, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(1, lookup(".structured-text-field").queryAll().size());
+        
+        clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+        TestUtil.sleep(1000);
+        assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
+        assertEquals(1, lookup(".table-display-table-title").queryAll().size());
+        assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
+        assertEquals(0, lookup(".structured-text-field").queryAll().size());
     }
 
     @Property(trials = 5)
