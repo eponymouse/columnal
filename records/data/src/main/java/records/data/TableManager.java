@@ -122,11 +122,16 @@ public class TableManager
     }
 
     @OnThread(Tag.Simulation)
-    public List<Table> loadAll(String completeSrc) throws UserException, InternalException
+    public synchronized List<Table> loadAll(String completeSrc) throws UserException, InternalException
     {
         FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
+        unitManager.clearAllUser();
         unitManager.loadUserUnits(file.units());
+        typeManager.clearAllUser();
         typeManager.loadTypeDecls(file.types());
+        usedIds.clear();
+        sources.clear();
+        transformations.clear();
         List<Table> loaded = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>();
         int total = file.table().size();

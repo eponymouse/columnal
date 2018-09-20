@@ -413,4 +413,11 @@ public class UnitManager
             return b.toString();
         })).collect(Collectors.joining("\n"));
     }
+
+    public void clearAllUser()
+    {
+        userUnits.clear();
+        knownUnits.clear();
+        knownUnits.putAll(builtInUnits);
+    }
 }

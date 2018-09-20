@@ -51,6 +51,7 @@ public class TypeManager
 {
     private final UnitManager unitManager;
     private final HashMap<TypeId, TaggedTypeDefinition> userTypes = new HashMap<>();
+    private final HashMap<TypeId, TaggedTypeDefinition> builtInTypes = new HashMap<>();
     private final HashMap<TypeId, TaggedTypeDefinition> allKnownTypes = new HashMap<>();
     private final TaggedTypeDefinition voidType;
     private final TaggedTypeDefinition maybeType;
@@ -68,15 +69,16 @@ public class TypeManager
             new TagType<>("Present", JellyType.typeVariable("a"))
         ));
         maybeMissing = new TaggedValue(0, null);
-        allKnownTypes.put(maybeType.getTaggedTypeName(), maybeType);
+        builtInTypes.put(maybeType.getTaggedTypeName(), maybeType);
         voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
-        allKnownTypes.put(voidType.getTaggedTypeName(), voidType);
+        builtInTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
         typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
-        allKnownTypes.put(new TypeId("Type"), typeGADT);
+        builtInTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
         unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
-        allKnownTypes.put(new TypeId("Unit"), unitGADT);
+        builtInTypes.put(new TypeId("Unit"), unitGADT);
+        allKnownTypes.putAll(builtInTypes);
     }
 
     public TaggedValue maybeMissing()
@@ -410,6 +412,13 @@ public class TypeManager
     public DataType unitGADTFor(Unit unit) throws InternalException, UserException
     {
         return unitGADT.instantiate(ImmutableList.of(Either.left(unit)), this);
+    }
+
+    public void clearAllUser()
+    {
+        userTypes.clear();
+        allKnownTypes.clear();
+        allKnownTypes.putAll(builtInTypes);
     }
 
     public static class TagInfo

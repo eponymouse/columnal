@@ -23,6 +23,7 @@ import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.RecordSet;
+import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -140,8 +141,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     public void testUndoNewEntryTable() throws InternalException, UserException
     {
         testStartState();
-        clickOn("#id-menu-data").moveBy(5, 0).clickOn(".id-menu-data-new", Motion.VERTICAL_FIRST);
-        TestUtil.sleep(1000);
+        makeNewDataEntryTable(NEW_TABLE_POS);
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
         TestUtil.sleep(1000);

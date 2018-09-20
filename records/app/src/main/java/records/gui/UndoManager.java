@@ -69,6 +69,10 @@ public class UndoManager
                     "undo-" + munge(file) + "-" + saveTime.toEpochMilli()
                     );
             
+            // Don't backup empty file:
+            if (!file.exists() || file.length() == 0L)
+                return;
+            
             Files.copy(file, f);
             // Only record once it's copied:
             undoPath = f;

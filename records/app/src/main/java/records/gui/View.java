@@ -1,6 +1,7 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
@@ -8,17 +9,21 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Window;
+import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -55,12 +60,15 @@ import utility.*;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -319,6 +327,52 @@ public class View extends StackPane
     public File getSaveFile()
     {
         return diskFile.get();
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void undo()
+    {
+        File file = diskFile.get();
+        readOnly = true;
+        Workers.onWorkerThread("Undo", Priority.SAVE_TO_DISK, () -> {
+            final String previousVersion = undoManager.undo(file);
+            if (previousVersion == null)
+                return; // Nothing to undo
+            try
+            {
+                getManager().loadAll(previousVersion);
+            }
+            catch (UserException | InternalException e)
+            {
+                Log.log("Problem undoing", e);
+                try
+                {
+                    // Write out the content!
+                    File dir = ((Supplier<File>)this::getHomeDirectory).get();
+                    File dest = new File(dir.exists() ? dir : null, "emergency" + System.currentTimeMillis() + Main.EXTENSION_INCL_DOT);
+                    FileUtils.writeStringToFile(dest, previousVersion, StandardCharsets.UTF_8);
+                    Platform.runLater(() -> {
+                        FXUtility.showError("Problem undoing: content saved to " + dest.getAbsolutePath(), e);
+                    });
+                }
+                catch (IOException ioEx)
+                {
+                    // Last gasp -- copy content to clipboard and tell user
+                    @NonNull String previousVersionNonNull = previousVersion;
+                    Platform.runLater(() -> {
+                        Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, previousVersionNonNull));
+                        FXUtility.showError("Problem undoing: content copied to clipboard", e);
+                    });
+                }
+            }
+            Platform.runLater(() -> {readOnly = false;});
+        });
+    }
+
+    @OnThread(Tag.Swing)
+    public File getHomeDirectory()
+    {
+        return FileSystemView.getFileSystemView().getDefaultDirectory();
     }
 
     /* TODO
