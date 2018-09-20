@@ -129,9 +129,11 @@ public class TableManager
         unitManager.loadUserUnits(file.units());
         typeManager.clearAllUser();
         typeManager.loadTypeDecls(file.types());
-        usedIds.clear();
-        sources.clear();
-        transformations.clear();
+        List<TableId> ids = new ArrayList<>(usedIds.keySet());
+        for (TableId id : ids)
+        {
+            remove(id);
+        }
         List<Table> loaded = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>();
         int total = file.table().size();
@@ -256,9 +258,9 @@ public class TableManager
             .<@Nullable Table>map(t -> getSingleTableOrNull(t)));
     }
 
-    public synchronized List<Table> getAllTables()
+    public synchronized ImmutableList<Table> getAllTables()
     {
-        return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(Collectors.<Table>toList());
+        return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(ImmutableList.toImmutableList());
     }
 
     public static interface TableMaker
