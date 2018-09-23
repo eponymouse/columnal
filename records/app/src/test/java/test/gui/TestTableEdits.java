@@ -194,7 +194,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         clickOnItemInBounds(lookup(".expand-arrow"), virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(row, 0), originalTableTopLeft.offsetByRowCols(row, originalColumns)));
         
         // We borrow n as a seed:
-        ColumnDetails columnDetails = new ColumnDetails(name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
+        ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
         enterColumnDetails(columnDetails, new Random(n + 100));
         
         TestUtil.sleep(500);
@@ -239,7 +239,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
         clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>tryQuery().get());
 
         // We borrow n as a seed:
-        ColumnDetails columnDetails = new ColumnDetails(name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
+        ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
         enterColumnDetails(columnDetails, new Random(positionIndicator + 100));
         TestUtil.sleep(500);
 
