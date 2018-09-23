@@ -367,7 +367,10 @@ public class View extends StackPane
                     });
                 }
             }
-            Platform.runLater(() -> {readOnly = false;});
+            Platform.runLater(() -> {
+                readOnly = false;
+                save();
+            });
         });
     }
 
