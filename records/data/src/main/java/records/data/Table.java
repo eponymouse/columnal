@@ -76,6 +76,11 @@ public abstract class Table
             this.initialPosition = initialPosition;
             this.initialShowColumns = initialShowColumns;
         }
+        
+        public InitialLoadDetails withTableId(TableId tableId)
+        {
+            return new InitialLoadDetails(tableId, this.initialPosition, this.initialShowColumns);
+        }
     }
     
     /**

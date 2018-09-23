@@ -110,6 +110,8 @@ public class View extends StackPane
     
     private void save()
     {
+        //Log.logStackTrace("Save requested, R/O: " + readOnly);
+        
         if (readOnly)
             return;
         
@@ -672,7 +674,7 @@ public class View extends StackPane
                     optInitialDetails.ifPresent(initialDetails -> {
                         Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
                             FXUtility.alertOnError_("Error creating first column", () -> {
-                                ImmediateDataSource data = new ImmediateDataSource(tableManager, initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
+                                ImmediateDataSource data = new ImmediateDataSource(tableManager, initialDetails.tableId != null ? initialLoadDetails.withTableId(initialDetails.tableId) : initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
                                 tableManager.record(data);
                             });
                         });

@@ -20,14 +20,19 @@ import java.util.stream.Collectors;
 public class TableNameTextField extends ErrorableTextField<TableId>
 {    
     @OnThread(Tag.FXPlatform)
-    public TableNameTextField(@Nullable TableManager tableManager, final @Nullable TableId editingId)
+    public TableNameTextField(@Nullable TableManager tableManager, final @Nullable TableId editingId, boolean blankAllowed)
     {
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
         super(s -> {
             s = GrammarUtility.collapseSpaces(s);
             if (s.isEmpty())
-                return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.error.missing"));
+            {
+                if (blankAllowed)
+                    return ConversionResult.success(new TableId(s));
+                else
+                    return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.error.missing"));
+            }
             TableId tableId = new TableId(s);
             //System.err.println("Comparing \"" + s + "\" with " + Utility.listToString(Utility.mapList(tableManager.getAllTables(), t -> "\"" + t.getId().getRaw() + "\"")));
             List<TableId> similar = new ArrayList<>();

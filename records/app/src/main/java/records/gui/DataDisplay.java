@@ -612,7 +612,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         @OnThread(Tag.FXPlatform)
         public Pane makeCell(VisibleBounds visibleBounds)
         {
-            tableNameField = new TableNameTextField(tableManager, initialTableName);
+            tableNameField = new TableNameTextField(tableManager, initialTableName, false);
             tableNameField.sizeToFit(30.0, 30.0);
             if (renameTable == null)
             {

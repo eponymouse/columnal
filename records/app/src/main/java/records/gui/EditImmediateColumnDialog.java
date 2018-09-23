@@ -12,6 +12,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -46,15 +47,19 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private final ColumnNameTextField columnNameTextField;
     private final TypeEditor typeEditor;
     private @Nullable DataType latestType;
+    private final @Nullable TableNameTextField tableNameTextField;
 
     public static class ColumnDetails
     {
+        // Null if not creating table, or if blank
+        public final @Nullable TableId tableId;
         public final ColumnId columnId;
         public final DataType dataType;
         public final @Value Object defaultValue;
 
-        public ColumnDetails(ColumnId columnId, DataType dataType, @Value Object defaultValue)
+        public ColumnDetails(@Nullable TableId tableId, ColumnId columnId, DataType dataType, @Value Object defaultValue)
         {
+            this.tableId = tableId;
             this.columnId = columnId;
             this.dataType = dataType;
             this.defaultValue = defaultValue;
@@ -71,6 +76,17 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         LabelledGrid content = new LabelledGrid();
         content.getStyleClass().add("edit-column-details");
 
+        if (creatingNewTable)
+        {
+            tableNameTextField = new TableNameTextField(tableManager, null, true);
+            tableNameTextField.setPromptText("Automatic");
+            content.addRow(GUI.labelledGridRow("edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
+        }
+        else
+        {
+            tableNameTextField = null;
+        }
+        
         columnNameTextField = new ColumnNameTextField(initial);
         content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
@@ -102,7 +118,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
         setOnShown(e -> {
             // Have to use runAfter to combat ButtonBarSkin grabbing focus:
-            FXUtility.runAfter(columnNameTextField::requestFocusWhenInScene);
+            FXUtility.runAfter(tableNameTextField != null ? tableNameTextField::requestFocusWhenInScene : columnNameTextField::requestFocusWhenInScene);
             //org.scenicview.ScenicView.show(getDialogPane().getScene());
         });
     }
@@ -112,6 +128,15 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     {
         // Check whether some conditions are fulfilled
         DataType dataType = customDataType;
+        
+        @Nullable TableId tableId = null;
+        if (tableNameTextField != null)
+        {
+            tableId = tableNameTextField.valueProperty().get();
+            // Ok to be null if field is blank
+            if (tableId == null)
+                return Either.left(TranslationUtility.getString("edit.column.invalid.table.name"));
+        }
 
         @Nullable ColumnId columnId = columnNameTextField.valueProperty().getValue();
         
@@ -124,7 +149,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         if (defaultValue == null)
             return Either.left(TranslationUtility.getString("edit.column.invalid.column.defaultValue"));
         
-        return Either.right(new ColumnDetails(columnId, dataType, defaultValue));
+        return Either.right(new ColumnDetails(tableId, columnId, dataType, defaultValue));
     }
 
     @OnThread(Tag.FXPlatform)
