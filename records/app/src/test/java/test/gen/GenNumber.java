@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.UserException;
 import utility.Utility;
 
@@ -29,7 +30,7 @@ public class GenNumber extends Generator<Number>
     }
 
     @Override
-    public Number generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public Number generate(SourceOfRandomness sourceOfRandomness, @Nullable GenerationStatus generationStatus)
     {
         Number n;
         try

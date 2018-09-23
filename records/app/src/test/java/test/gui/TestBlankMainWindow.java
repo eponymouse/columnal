@@ -1,10 +1,12 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
+import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -40,11 +42,13 @@ import sun.jvm.hotspot.gc_implementation.shared.ImmutableSpace;
 import test.TestUtil;
 import test.gen.GenDataType;
 import test.gen.GenDataType.DataTypeAndManager;
+import test.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.io.File;
@@ -53,6 +57,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -131,13 +136,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     }
 
     @OnThread(Tag.Any)
-    private void makeNewDataEntryTable(CellPosition targetPos)
+    private void makeNewDataEntryTable(CellPosition targetPos) throws InternalException, UserException
     {
-        makeNewDataEntryTable(null, targetPos);
+        makeNewDataEntryTable(null, targetPos, null);
     }
 
     @OnThread(Tag.Any)
-    private void makeNewDataEntryTable(@Nullable String tableName, CellPosition targetPos)
+    private void makeNewDataEntryTable(@Nullable String tableName, CellPosition targetPos, @Nullable Pair<DataType, @Value Object> dataTypeAndDefault) throws UserException, InternalException
     {
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         // Only need to click once as already selected by keyboard:
@@ -147,7 +152,19 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             write(tableName, DELAY);
         push(KeyCode.TAB);
         push(KeyCode.TAB);
-        write("Text", 1);
+        if (dataTypeAndDefault == null)
+        {
+            write("Text", 1);
+        }
+        else
+        {
+            enterType(TypeExpression.fromDataType(dataTypeAndDefault.getFirst()), new Random(1));
+            push(KeyCode.ESCAPE);
+            push(KeyCode.ESCAPE);
+            push(KeyCode.TAB);
+            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1));
+            defocusSTFAndCheck(() -> push(KeyCode.TAB));
+        }
         clickOn(".ok-button");
     }
 
@@ -180,7 +197,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             {
                 String name = "Table " + i;
                 //System.out.println("###\n# Adding " + name + " " + Instant.now() + "\n###\n");
-                makeNewDataEntryTable(name, NEW_TABLE_POS.offsetByRowCols(4 * tableIds.size(), 0));
+                makeNewDataEntryTable(name, NEW_TABLE_POS.offsetByRowCols(4 * tableIds.size(), 0), null);
                 tableIds.add(new TableId(name));
             }
             else
@@ -216,6 +233,60 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         assertEquals(0, lookup(".structured-text-field").queryAll().size());
+    }
+
+    @Property(trials = 3)
+    @OnThread(Tag.Simulation)
+    public void propUndoAddAndEditData(@When(seed=1L) @From(GenRandom.class) Random r) throws InternalException, UserException
+    {
+        GenNumber gen = new GenNumber();
+        Supplier<@Value Number> makeNumber = () -> DataTypeUtility.value(gen.generate(new SourceOfRandomness(r), null));
+        @Value Number def = makeNumber.get();
+        makeNewDataEntryTable(null, NEW_TABLE_POS, new Pair<>(DataType.NUMBER, def));
+        TableManager tableManager = mainWindowActions._test_getTableManager();
+
+        // We make new rows and edit the data, and undo at random.
+
+        ArrayList<ArrayList<@Value Number>> dataHistory = new ArrayList<ArrayList<@Value Number>>(ImmutableList.of(new ArrayList<@Value Number>()));
+
+        for (int i = 0; i < 10; i++)
+        {
+            ArrayList<@Value Number> latest = new ArrayList<>(dataHistory.get(dataHistory.size() - 1));
+            int choice = r.nextInt(10); //0 - 9
+            if (choice <= 2 || latest.isEmpty()) // 0 - 2
+            {
+                // Add a new row
+                CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3 + latest.size(), 0);
+                latest.add(def);
+                clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
+                
+            }
+            else if (choice <= 5 && dataHistory.size() > 1) // 3 - 5
+            {
+                // Undo
+                latest = dataHistory.get(dataHistory.size() - 2);
+                // Pop twice as our state will get re-added as latest after this if/else:
+                dataHistory.remove(dataHistory.size() - 1);
+                dataHistory.remove(dataHistory.size() - 1);
+                clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+            }
+            else // 6 - 9
+            {
+                // Edit a random row
+                int row = r.nextInt(latest.size());
+                @Value Number newVal = makeNumber.get();
+                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 1), DataType.NUMBER, newVal, new Random(1));
+                latest.set(row, newVal);
+            }
+            RecordSet recordSet = tableManager.getAllTables().get(0).getData();
+            assertEquals(latest.size(), recordSet.getLength());
+            for (int j = 0; j < latest.size(); j++)
+            {
+                TestUtil.assertValueEqual("Index " + j, latest.get(j), recordSet.getColumns().get(0).getType().getCollapsed(j));
+            }
+            
+            dataHistory.add(latest);
+        }
     }
 
     @Property(trials = 5)
@@ -354,7 +425,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
         Node focused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
-        assertTrue(focused instanceof StructuredTextField);
+        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof StructuredTextField);
         push(KeyCode.HOME);
         enterStructuredValue(dataType, value, random);
         // One to get rid of any code completion:

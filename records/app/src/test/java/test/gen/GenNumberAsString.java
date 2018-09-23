@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -31,7 +32,7 @@ public class GenNumberAsString extends Generator<String>
     }
 
     @Override
-    public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public String generate(SourceOfRandomness sourceOfRandomness, @Nullable GenerationStatus generationStatus)
     {
         if (sourceOfRandomness.nextBoolean())
         {
