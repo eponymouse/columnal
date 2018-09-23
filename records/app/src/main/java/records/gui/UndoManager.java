@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @OnThread(Tag.Simulation)
 public class UndoManager
@@ -49,6 +50,24 @@ public class UndoManager
             this.backupFile = backupFile;
             this.instant = instant;
             this.hash = hash;
+        }
+
+        public String _debug_detailsAndContent()
+        {
+            try
+            {
+                String content = FileUtils.readFileToString(backupFile, StandardCharsets.UTF_8);
+                String indented = Arrays.stream(content.split(System.getProperty("line.separator")))
+                        .filter(s -> !s.isEmpty())
+                        .map(s -> "   " + s.trim())
+                        .collect(Collectors.joining("\n"));
+                return "@" + instant + "#" + hash + ":\n" + indented;
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                return "@" + instant + "#" + hash + ": " + e.getLocalizedMessage();
+            }
         }
     }
     
@@ -78,7 +97,7 @@ public class UndoManager
             undoPath = f;
             
             // Hash last as we can survive if it fails:
-            hashCode = Files.asByteSource(file).hash(hashFunction);
+            hashCode = hashContent(file);
         }
         catch (IOException e)
         {
@@ -109,7 +128,18 @@ public class UndoManager
             {
                 details.remove((int)Utility.streamIndexed(details).min(Comparator.comparing(p -> p.getSecond().instant)).map(Pair::getFirst).orElse(0)).backupFile.delete();
             }
+
+            System.out.println("State after saving latest:");
+            for (SaveDetails detail : details)
+            {
+                System.out.println(detail._debug_detailsAndContent());
+            }
         }
+    }
+
+    private HashCode hashContent(File file) throws IOException
+    {
+        return Files.asByteSource(file).hash(hashFunction);
     }
 
     private static String munge(File file)
@@ -127,15 +157,32 @@ public class UndoManager
         ArrayList<SaveDetails> details = backups.get(file);
         if (details != null)
         {
-            SaveDetails latest = details.stream()
-                .min(Comparator.comparing(d -> d.instant))
+            /* // For debugging:
+            try
+            {
+                System.out.println("State at undo, cur #" + hashContent(file) + ":\n" + FileUtils.readFileToString(file, StandardCharsets.UTF_8) + "\n Undo possibilities:\n");
+                for (SaveDetails detail : details)
+                {
+                    System.out.println(detail._debug_detailsAndContent());
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            */
+            
+            Pair<Integer, SaveDetails> latest = Utility.streamIndexed(details)
+                .max(Comparator.comparing(d -> d.getSecond().instant))
                 .orElse(null);
             
             if (latest != null)
             {
                 try
                 {
-                    return FileUtils.readFileToString(latest.backupFile, StandardCharsets.UTF_8);
+                    String content = FileUtils.readFileToString(latest.getSecond().backupFile, StandardCharsets.UTF_8);
+                    details.remove(latest.getFirst());
+                    return content;
                 }
                 catch (IOException e)
                 {
