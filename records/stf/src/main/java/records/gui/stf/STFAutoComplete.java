@@ -135,7 +135,7 @@ public class STFAutoComplete extends PopupControl
                 new Pair<>(new KeyCodeCombination(KeyCode.END), () -> parent.lineEnd(SelectionPolicy.CLEAR)),
                 new Pair<>(new KeyCodeCombination(KeyCode.END, KeyCombination.SHIFT_DOWN), () -> parent.lineEnd(SelectionPolicy.EXTEND)),
                 new Pair<>(new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN), () -> parent.selectAll()),
-                new Pair<>(new KeyCodeCombination(KeyCode.TAB), () -> fireSelected()),
+                new Pair<>(new KeyCodeCombination(KeyCode.TAB), () -> parent.tabPressed()),
                 new Pair<>(new KeyCodeCombination(KeyCode.ESCAPE), () -> parent.escapePressed()),
                 new Pair<>(new KeyCodeCombination(KeyCode.ENTER), () -> parent.enterPressed())
             ).stream().map(k -> InputMap.consume(EventPattern.keyPressed(k.getFirst()), ev -> k.getSecond().run())).toArray(InputMap[]::new)

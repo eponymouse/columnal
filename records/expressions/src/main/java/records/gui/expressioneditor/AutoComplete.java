@@ -457,7 +457,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
             if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
             {
                 C selectedItem = completions.getSelectionModel().getSelectedItem();
-                if (selectedItem != null)
+                if (isShowing() && selectedItem != null)
                 {
                     e.consume();
                     @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);

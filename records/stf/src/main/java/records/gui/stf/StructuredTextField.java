@@ -149,11 +149,8 @@ public class StructuredTextField extends StyleClassedTextArea
 
         Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.TAB), (KeyEvent e) -> {
-                if (autoComplete != null)
-                {
-                    autoComplete.fireSelected();
-                    e.consume();
-                }
+                FXUtility.keyboard(this).tabPressed();
+                e.consume();
             }),
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
                 FXUtility.keyboard(this).enterPressed();
@@ -166,6 +163,18 @@ public class StructuredTextField extends StyleClassedTextArea
         ));
         
         Nodes.addFallbackInputMap(FXUtility.mouse(this), InputMap.consume(MouseEvent.ANY));
+    }
+
+    public void tabPressed()
+    {
+        if (autoComplete != null && autoComplete.isShowing())
+        {
+            autoComplete.fireSelected();
+        }
+        else if (editorKit != null)
+        {
+            editorKit.relinquishFocus();
+        }
     }
 
     public void escapePressed()
