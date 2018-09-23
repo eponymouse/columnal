@@ -146,6 +146,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         if (tableName != null)
             write(tableName, DELAY);
         push(KeyCode.TAB);
+        push(KeyCode.TAB);
         write("Text", 1);
         clickOn(".ok-button");
     }
@@ -178,11 +179,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             if (r.nextInt(5) <= 2 || tableIds.isEmpty())
             {
                 String name = "Table " + i;
+                //System.out.println("###\n# Adding " + name + " " + Instant.now() + "\n###\n");
                 makeNewDataEntryTable(name, NEW_TABLE_POS.offsetByRowCols(4 * tableIds.size(), 0));
                 tableIds.add(new TableId(name));
             }
             else
             {
+                //System.out.println("###\n# Undoing " + Instant.now() + "\n###\n");
                 clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
                 TestUtil.sleep(1000);
                 tableIds.remove(tableIds.size() - 1);
