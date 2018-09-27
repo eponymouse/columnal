@@ -131,6 +131,7 @@ public class View extends StackPane
                 }
                 FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
                 
+                //System.out.println("@NOW:\n" + completeFile);
                 Platform.runLater(() -> lastSaveTime.setValue(now));
             }
             catch (IOException ex)
@@ -336,9 +337,24 @@ public class View extends StackPane
         File file = diskFile.get();
         readOnly = true;
         Workers.onWorkerThread("Undo", Priority.SAVE, () -> {
-            final String previousVersion = undoManager.undo(file);
-            if (previousVersion == null)
+            @Nullable String current = null;
+            try
+            {
+                current = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            }
+            catch (IOException e)
+            {
+                Log.log(e);
+            }
+            @Nullable String prev = undoManager.undo(file);
+            while (current != null && Objects.equals(current, prev))
+                prev = undoManager.undo(file);
+
+            if (prev == null)
                 return; // Nothing to undo
+            
+            final @NonNull String previousVersion = prev;
+            
             try
             {
                 getManager().loadAll(previousVersion);
@@ -359,9 +375,8 @@ public class View extends StackPane
                 catch (IOException ioEx)
                 {
                     // Last gasp -- copy content to clipboard and tell user
-                    @NonNull String previousVersionNonNull = previousVersion;
                     Platform.runLater(() -> {
-                        Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, previousVersionNonNull));
+                        Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, previousVersion));
                         FXUtility.showError("Problem undoing: content copied to clipboard", e);
                     });
                 }

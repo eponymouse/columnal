@@ -130,6 +130,7 @@ public class UndoManager
                 details.remove(0).backupFile.delete();
             }
 
+            //Log.logStackTrace("Saving!");
             System.out.println("State after saving latest:");
             for (SaveDetails detail : details)
             {
