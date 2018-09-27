@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public interface EnterStructuredValueTrait extends FxRobotInterface
+public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerTrait
 {
     @OnThread(Tag.Any)
     default public void enterStructuredValue(DataType dataType, @Value Object value, Random r) throws InternalException, UserException

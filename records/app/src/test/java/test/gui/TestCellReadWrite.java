@@ -42,7 +42,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait
+public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait, FocusOwnerTrait
 {
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")

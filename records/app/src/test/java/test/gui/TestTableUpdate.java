@@ -50,7 +50,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTableUpdate extends ApplicationTest implements ScrollToTrait
+public class TestTableUpdate extends ApplicationTest implements ScrollToTrait, FocusOwnerTrait
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)

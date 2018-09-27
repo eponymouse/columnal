@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.testfx.api.FxRobotInterface;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -18,6 +19,8 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.gui.stf.StructuredTextField;
+import test.gui.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -37,7 +40,7 @@ public class DataEntryUtil
     private static final int DELAY = 1;
 
     @OnThread(Tag.Any)
-    public static void enterValue(FxRobotInterface robot, Random random, DataType dataType, @Value Object value, boolean nested) throws UserException, InternalException
+    public static void enterValue(FocusOwnerTrait robot, Random random, DataType dataType, @Value Object value, boolean nested) throws UserException, InternalException
     {
         if (!nested)
         {
@@ -50,12 +53,39 @@ public class DataEntryUtil
             @Override
             public UnitType number(NumberInfo numberInfo) throws InternalException, UserException
             {
-                // Delete the zero which is a placeholder:
-                robot.push(KeyCode.DELETE);
+                // Delete the current value:
+                deleteWord();
                 
                 String num = Utility.toBigDecimal(Utility.cast(value, Number.class)).toPlainString();
                 robot.write(num, DELAY);
                 return UnitType.UNIT;
+            }
+
+            private void deleteWord()
+            {
+                // Doesn't seem to work:
+                //robot.push(TestUtil.ctrlCmd(), KeyCode.DELETE);
+                // Do it manually instead:                
+                StructuredTextField view = robot.getFocusOwner(StructuredTextField.class);
+                
+                TestUtil.fx_(() -> {
+                    // Taken from StyledTextAreaBehavior.deleteNextWord()
+                    int start = view.getCaretPosition();
+
+                    if (start < view.getLength())
+                    {
+                        view.wordBreaksForwards(2, SelectionPolicy.CLEAR);
+                        int sel = view.getCaretPosition();
+                        if (sel < view.getLength() && view.getText(sel, sel + 1).equals("."))
+                        {
+                            view.wordBreaksForwards(1, SelectionPolicy.EXTEND);
+                            view.wordBreaksForwards(1, SelectionPolicy.EXTEND);
+                        }
+                        int end = view.getCaretPosition();
+                        Log.debug("Deleting {{{" + view.getText(start, end) + "}}} from {{{" + view.getText() + "}}}");
+                        view.replaceText(start, end, "");
+                    }
+                });
             }
 
             @Override

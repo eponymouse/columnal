@@ -15,6 +15,7 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.After;
@@ -49,6 +50,7 @@ import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.File;
@@ -67,7 +69,7 @@ import static org.junit.Assert.*;
  */
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait
+public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait, FocusOwnerTrait
 {
     public static final CellPosition NEW_TABLE_POS = new CellPosition(CellPosition.row(1), CellPosition.col(1));
     @SuppressWarnings("nullness")
@@ -243,7 +245,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         Supplier<@Value Number> makeNumber = () -> DataTypeUtility.value(gen.generate(new SourceOfRandomness(r), null));
         @Value Number def = makeNumber.get();
         makeNewDataEntryTable(null, NEW_TABLE_POS, new Pair<>(DataType.NUMBER, def));
+        TestUtil.sleep(200);
         TableManager tableManager = mainWindowActions._test_getTableManager();
+        assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
 
         // We make new rows and edit the data, and undo at random.
 
@@ -255,27 +259,30 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             int choice = r.nextInt(10); //0 - 9
             if (choice <= 2 || latest.isEmpty()) // 0 - 2
             {
+                Log.debug("@@@ Adding row");
                 // Add a new row
                 CellPosition arrowPos = NEW_TABLE_POS.offsetByRowCols(3 + latest.size(), 0);
                 latest.add(def);
                 clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
-                
             }
             else if (choice <= 5 && dataHistory.size() > 1) // 3 - 5
             {
+                Log.debug("@@@ Undoing " + Utility.listToString(latest) + " to " + dataHistory.get(dataHistory.size() - 2));
                 // Undo
                 latest = dataHistory.get(dataHistory.size() - 2);
                 // Pop twice as our state will get re-added as latest after this if/else:
                 dataHistory.remove(dataHistory.size() - 1);
                 dataHistory.remove(dataHistory.size() - 1);
                 clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
+                TestUtil.sleep(500);
             }
             else // 6 - 9
             {
                 // Edit a random row
                 int row = r.nextInt(latest.size());
                 @Value Number newVal = makeNumber.get();
-                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 1), DataType.NUMBER, newVal, new Random(1));
+                Log.debug("@@@ Editing row " + row + " to be: " + newVal);
+                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), DataType.NUMBER, newVal, new Random(1));
                 latest.set(row, newVal);
             }
             RecordSet recordSet = tableManager.getAllTables().get(0).getData();
@@ -423,8 +430,10 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         for (int i = 0; i < 2; i++)
             clickOnItemInBounds(lookup(".structured-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
 
-        Node focused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
+        Node focused = getFocusOwner();
         assertNotNull(focused);
+        if (focused == null)
+            return; // To satisfy checker
         assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof StructuredTextField);
         push(KeyCode.HOME);
         enterStructuredValue(dataType, value, random);
@@ -432,7 +441,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         push(KeyCode.ESCAPE);
         // Escape to finish editing:
         push(KeyCode.ESCAPE);
-        assertNotEquals(focused, TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+        assertNotEquals(focused, getFocusOwner());
     }
 
     @OnThread(Tag.Any)
