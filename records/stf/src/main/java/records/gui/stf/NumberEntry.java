@@ -69,7 +69,10 @@ public class NumberEntry extends TerminalComponent<@Value Number>
         {
             actualIntegerPart = getItem(ItemVariant.EDITABLE_NUMBER_INT);
             actualFracPart = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
-            return Either.right(DataTypeUtility.value(Utility.parseNumber(actualIntegerPart + "." + actualFracPart)));
+            displayIntegerPart = actualIntegerPart;
+            displayFracPart = actualFracPart;
+            @Value Number value = DataTypeUtility.value(Utility.parseNumber(actualIntegerPart + "." + actualFracPart));
+            return Either.right(value);
         }
         catch (UserException e)
         {
