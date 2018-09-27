@@ -71,6 +71,7 @@ public class UndoManager
         }
     }
     
+    // Lists are held in chronological order:
     private final HashMap<File, ArrayList<SaveDetails>> backups = new HashMap<>();
     
     @OnThread(Tag.Any)
@@ -126,7 +127,7 @@ public class UndoManager
             
             while (details.size() > MAX_DETAILS)
             {
-                details.remove((int)Utility.streamIndexed(details).min(Comparator.comparing(p -> p.getSecond().instant)).map(Pair::getFirst).orElse(0)).backupFile.delete();
+                details.remove(0).backupFile.delete();
             }
 
             System.out.println("State after saving latest:");
@@ -172,9 +173,7 @@ public class UndoManager
             }
             */
             
-            Pair<Integer, SaveDetails> latest = Utility.streamIndexed(details)
-                .max(Comparator.comparing(d -> d.getSecond().instant))
-                .orElse(null);
+            Pair<Integer, SaveDetails> latest = details.isEmpty() ? null : new Pair<>(details.size() - 1, details.get(details.size() - 1));
             
             if (latest != null)
             {
