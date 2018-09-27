@@ -180,7 +180,8 @@ public class UndoManager
                 try
                 {
                     String content = FileUtils.readFileToString(latest.getSecond().backupFile, StandardCharsets.UTF_8);
-                    details.remove(latest.getFirst());
+                    // Important cast, to remove by index, not Integer object:
+                    details.remove((int)latest.getFirst());
                     return content;
                 }
                 catch (IOException e)
