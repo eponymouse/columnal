@@ -234,7 +234,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertEquals(1, (int) TestUtil.fx(() -> tableManager.getAllTables().size()));
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
-        assertEquals(0, lookup(".structured-text-field").queryAll().size());
+        // STF will be retained invisible for re-use, so
+        // must check visibility:s
+        assertEquals(0, lookup(".structured-text-field").match(Node::isVisible).queryAll().size());
     }
 
     @Property(trials = 5)
@@ -373,7 +375,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         });
     }
 
-    @Property(trials = 10)
+    @Property(trials = 3)
     @OnThread(Tag.Any)
     public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
