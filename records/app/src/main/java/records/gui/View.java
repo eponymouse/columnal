@@ -107,7 +107,7 @@ public class View extends StackPane
     // We start in readOnly mode, and enable writing later if everything goes well:
     private boolean readOnly = true;
     
-    private void save()
+    private void save(boolean keepPrevForUndo)
     {
         //Log.logStackTrace("Save requested, R/O: " + readOnly);
         
@@ -125,7 +125,7 @@ public class View extends StackPane
                 Instant now = Instant.now();
                 // This will do backup for undo, but also for
                 // files being replaced, in extreme cases:
-                if (dest.exists())
+                if (dest.exists() && keepPrevForUndo)
                 {
                     undoManager.backupForUndo(dest, now);
                 }
@@ -165,7 +165,7 @@ public class View extends StackPane
     {
         FXUtility.runFX(() ->
         {
-            save();
+            save(true);
             //overlays.remove(t); // Listener removes them from display
             TableDisplay display = (TableDisplay) t.getDisplay();
             if (display != null)
@@ -186,7 +186,7 @@ public class View extends StackPane
     public void setDiskFileAndSave(File newDest)
     {
         diskFile.set(newDest);
-        save();
+        save(true);
         Utility.usedFile(newDest);
     }
 
@@ -204,7 +204,7 @@ public class View extends StackPane
     {
         lastSaveTime.set(null);
         // TODO use a timer rather than saving instantly every time?
-        save();
+        save(true);
     }
 
     @OnThread(Tag.Any)
@@ -368,7 +368,7 @@ public class View extends StackPane
             }
             Platform.runLater(() -> {
                 readOnly = false;
-                save();
+                save(false);
             });
         });
     }
@@ -549,7 +549,7 @@ public class View extends StackPane
                     thisView.emptyListener.consume(ContentState.NON_EMPTY);
                     VirtualGridSupplierFloating floatingSupplier = FXUtility.mouse(View.this).getGrid().getFloatingSupplier();
                     thisView.addDisplay(new TableDisplay(thisView, floatingSupplier, dataSource));
-                    thisView.save();
+                    thisView.save(true);
                 });
             }
 
@@ -575,7 +575,7 @@ public class View extends StackPane
                         View.this.editTransform((TransformationEditable)transformation);
                     }));*/
 
-                    thisView.save();
+                    thisView.save(true);
                 });
             }
         });
@@ -727,7 +727,7 @@ public class View extends StackPane
     public void enableWriting()
     {
         readOnly = false;
-        save();
+        save(true);
     }
 
     @OnThread(Tag.FXPlatform)
