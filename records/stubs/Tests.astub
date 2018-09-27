@@ -6,6 +6,7 @@ class Assert
 {
     public static void assertEquals(String prefix, @Nullable Object expected, @Nullable Object actual);
     public static void assertEquals(@Nullable Object expected, @Nullable Object actual);
+    public static void assertNotEquals(@Nullable Object expected, @Nullable Object actual);
     public static void assertNotNull(String msg, @Nullable Object value);
     public static void assertNotNull(@Nullable Object value);
     public static void assertNull(@Nullable Object value);
