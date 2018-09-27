@@ -32,11 +32,9 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.grid.RectangleBounds;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
-import records.gui.stable.EditorKitCache.VisibleDetails;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stable.ColumnDetails;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -213,7 +211,7 @@ public class TableDisplayUtility
                             if (!focused)
                             {
                                 String value = textArea.getText();
-                                Workers.onWorkerThread("Storing value " + value, Workers.Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> {
+                                Workers.onWorkerThread("Storing value " + value, Workers.Priority.SAVE, () -> Utility.alertOnError_(() -> {
                                         g.set(rowIndex, DataTypeUtility.value(value));
                                         column.modified(rowIndex);
                                 }));
@@ -380,7 +378,7 @@ public class TableDisplayUtility
                     @Override
                     public @OnThread(Tag.FXPlatform) void consume(Pair<String, @Value T> p)
                     {
-                        Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, p.getSecond())));
+                        Workers.onWorkerThread("Saving", Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, p.getSecond())));
                         onModify.run();
                     }
                 } : null;
@@ -779,7 +777,7 @@ public class TableDisplayUtility
         protected StructuredTextField makeGraphical(int rowIndex, V value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException
         {
             StructuredTextField field = makeField.make(value, v -> {
-                Workers.onWorkerThread("Saving " + v, Priority.SAVE_ENTRY, () ->
+                Workers.onWorkerThread("Saving " + v, Priority.SAVE, () ->
                 {
                     Utility.alertOnError_(() -> store(rowIndex, v));
                 });

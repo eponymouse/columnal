@@ -9,7 +9,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
-import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
@@ -116,7 +115,7 @@ public class View extends StackPane
             return;
         
         File dest = diskFile.get();
-        Workers.onWorkerThread("Saving", Priority.SAVE_TO_DISK, () ->
+        Workers.onWorkerThread("Saving", Priority.SAVE, () ->
         {
             FullSaver fetcher = new FullSaver();
             tableManager.save(dest, fetcher);
@@ -336,7 +335,7 @@ public class View extends StackPane
     {
         File file = diskFile.get();
         readOnly = true;
-        Workers.onWorkerThread("Undo", Priority.SAVE_TO_DISK, () -> {
+        Workers.onWorkerThread("Undo", Priority.SAVE, () -> {
             final String previousVersion = undoManager.undo(file);
             if (previousVersion == null)
                 return; // Nothing to undo
@@ -675,7 +674,7 @@ public class View extends StackPane
                 case DATA:
                     Optional<ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(window, thisView.getManager(), new ColumnId("A"), true).showAndWait();
                     optInitialDetails.ifPresent(initialDetails -> {
-                        Workers.onWorkerThread("Creating table", Priority.SAVE_ENTRY, () -> {
+                        Workers.onWorkerThread("Creating table", Priority.SAVE, () -> {
                             FXUtility.alertOnError_("Error creating first column", () -> {
                                 ImmediateDataSource data = new ImmediateDataSource(tableManager, initialDetails.tableId != null ? initialLoadDetails.withTableId(initialDetails.tableId) : initialLoadDetails, EditableRecordSet.newRecordSetSingleColumn(initialDetails.columnId, initialDetails.dataType, initialDetails.defaultValue));
                                 tableManager.record(data);
@@ -696,7 +695,7 @@ public class View extends StackPane
                         if (makeTrans != null)
                         {
                             @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
-                            Workers.onWorkerThread("Creating transformation", Priority.SAVE_ENTRY, () -> {
+                            Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
                                 FXUtility.alertOnError_("Error creating transformation", () -> {
                                     @OnThread(Tag.Simulation) Transformation transformation = makeTransFinal.get();
                                     tableManager.record(transformation);
@@ -713,7 +712,7 @@ public class View extends StackPane
                 case CHECK:
                     new PickTableDialog(thisView, null, mouseScreenPos).showAndWait().ifPresent(srcTable -> {
                         new EditExpressionDialog(thisView, srcTable, null, false, DataType.BOOLEAN).showAndWait().ifPresent(checkExpression -> {
-                            Workers.onWorkerThread("Creating check", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error creating check", () -> {
+                            Workers.onWorkerThread("Creating check", Priority.SAVE, () -> FXUtility.alertOnError_("Error creating check", () -> {
                                 Check check = new Check(thisView.getManager(), new InitialLoadDetails(null, cellPosition, null), srcTable.getId(), checkExpression);
                                 tableManager.record(check);
                             }));

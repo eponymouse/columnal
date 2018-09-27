@@ -13,8 +13,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
 import records.data.DataSource;
-import records.data.EditableRecordSet;
-import records.data.ImmediateDataSource;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -31,7 +29,6 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
-import javax.naming.directory.BasicAttribute;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.EnumMap;
@@ -223,7 +220,7 @@ public class MainWindow
     @OnThread(Tag.Any)
     private static void recordTable(View v, DataSource ds)
     {
-        Workers.onWorkerThread("Registering table", Priority.SAVE_ENTRY, () -> v.getManager().record(ds));
+        Workers.onWorkerThread("Registering table", Priority.SAVE, () -> v.getManager().record(ds));
     }
 
     public static void closeAll()

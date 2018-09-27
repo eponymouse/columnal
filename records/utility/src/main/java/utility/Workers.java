@@ -22,10 +22,21 @@ import java.util.stream.Stream;
 @OnThread(Tag.Simulation)
 public class Workers
 {
+    /**
+     * Task priorities.  Tasks are executed in priority order (earliest is highest priority).
+     * It is useful that saves "jump the queue" ahead of loads,
+     * in the case that the user has a lot of loading going on,
+     * but wants to save the document.  There used to be
+     * two save priorities: save-entry and save-to-disk,
+     * with the latter being higher.  But this meant that
+     * when you edited a column value followed by an auto-save,
+     * the save could jump the queue ahead of saving the value,
+     * which ruins the whole system.
+     */
     public static enum Priority
     {
         // Highest to lowest:
-        SAVE_TO_DISK, SAVE_ENTRY, LOAD_FROM_DISK, FETCH;
+        SAVE, LOAD_FROM_DISK, FETCH;
     }
 
     @FunctionalInterface

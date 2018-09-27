@@ -27,6 +27,6 @@ abstract class RowOperation
     @OnThread(Tag.FXPlatform)
     public MenuItem makeMenuItem()
     {
-        return GUI.menuItem(nameKey, () -> Workers.onWorkerThread(nameKey, Priority.SAVE_ENTRY, this::execute));
+        return GUI.menuItem(nameKey, () -> Workers.onWorkerThread(nameKey, Priority.SAVE, this::execute));
     }
 }

@@ -72,7 +72,6 @@ import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
-import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier.ItemState;
 import records.gui.grid.VirtualGridSupplier.ViewOrder;
@@ -99,8 +98,6 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
-import records.transformations.expression.IdentExpression;
-import records.transformations.expression.InvalidIdentExpression;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
 import styled.StyledString;
@@ -516,7 +513,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             return null;
         @NonNull RenameTable renameTableFinal = renameTable;
         return newName -> {
-            Workers.onWorkerThread("Renaming table", Priority.SAVE_ENTRY, () -> renameTableFinal.renameTable(newName));
+            Workers.onWorkerThread("Renaming table", Priority.SAVE, () -> renameTableFinal.renameTable(newName));
         };
     }
     
@@ -623,11 +620,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 if (file != null)
                 {
                     final File fileNonNull = file;
-                    Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE_TO_DISK, () -> FXUtility.alertOnError_("Error exporting", () -> exportToCSV(table, fileNonNull)));
+                    Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE, () -> FXUtility.alertOnError_("Error exporting", () -> exportToCSV(table, fileNonNull)));
                 }
             }),
             GUI.menuItem("tableDisplay.menu.delete", () -> {
-                Workers.onWorkerThread("Deleting " + table.getId(), Workers.Priority.SAVE_ENTRY, () ->
+                Workers.onWorkerThread("Deleting " + table.getId(), Workers.Priority.SAVE, () ->
                     parent.getManager().remove(table.getId())
                 );
             })
@@ -810,7 +807,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         
         new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), columnId, expression, true, null).showAndWait().ifPresent(newDetails -> {
             ImmutableMap<ColumnId, Expression> newColumns = Utility.appendToMap(calc.getCalculatedColumns(), newDetails.getFirst(), newDetails.getSecond());
-            Workers.onWorkerThread("Editing column", Priority.SAVE_ENTRY, () -> {
+            Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSource(), newColumns), null)
                 );
@@ -847,7 +844,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn)
     {
         new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, true, null).showAndWait().ifPresent(p -> {
-            Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
+            Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                 FXUtility.alertOnError_("Error adding column", () -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
                         calc.getSource(), Utility.appendToMap(calc.getCalculatedColumns(), p.getFirst(), p.getSecond())), null);
@@ -859,7 +856,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
     {
         Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName(), false).showAndWait();
-        optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE_ENTRY, () ->
+        optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
             FXUtility.alertOnError_("Error adding column", () ->
                 ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))
             )
@@ -910,8 +907,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             @SuppressWarnings("units")
             @TableDataRowIndex final int ONE = 1;
             contextMenu.getItems().addAll(
-                GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row, 1))),
-                GUI.menuItem("virtGrid.row.insertAfter", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE_ENTRY, () -> insertRowsFinal.insertRows(row + ONE, 1)))
+                GUI.menuItem("virtGrid.row.insertBefore", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE, () -> insertRowsFinal.insertRows(row, 1))),
+                GUI.menuItem("virtGrid.row.insertAfter", () -> Workers.onWorkerThread("Inserting row", Priority.SAVE, () -> insertRowsFinal.insertRows(row + ONE, 1)))
             );
         }
         @Nullable DeleteRows deleteRows = table.getOperations().deleteRows;
@@ -919,7 +916,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             @NonNull DeleteRows deleteRowsFinal = deleteRows;
             contextMenu.getItems().add(
-                GUI.menuItem("virtGrid.row.delete", () -> Workers.onWorkerThread("Deleting row", Priority.SAVE_ENTRY, () -> deleteRowsFinal.deleteRows(row, 1)))
+                GUI.menuItem("virtGrid.row.delete", () -> Workers.onWorkerThread("Deleting row", Priority.SAVE, () -> deleteRowsFinal.deleteRows(row, 1)))
             );
         }
         return contextMenu;
@@ -1062,7 +1059,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 if (mouseButton == MouseButton.PRIMARY)
                 {
                     new PickTableDialog(parent, destTable, screenPoint).showAndWait().ifPresent(t -> {
-                        Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error editing table", () -> changeSrcTableId.consume(t.getId())));
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing table", () -> changeSrcTableId.consume(t.getId())));
                     });
                 }
                 else if (mouseButton == MouseButton.MIDDLE && srcTable != null)
@@ -1087,7 +1084,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 if (mouseButton == MouseButton.PRIMARY)
                 {
                     new EditExpressionDialog(parent, srcTable, curExpression, perRow, expectedType).showAndWait().ifPresent(newExp -> {
-                        Workers.onWorkerThread("Editing table source", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
+                        Workers.onWorkerThread("Editing table source", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing column", () -> changeExpression.consume(newExp)));
                     });
                 }
             }
@@ -1105,7 +1102,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 {
                     new EditExpressionDialog(parent, fixer.srcTableId == null ? null : parent.getManager().getSingleTableOrNull(fixer.srcTableId), fixer.current, fixer.perRow, fixer.expectedType)
                             .showAndWait().ifPresent(newExp -> {
-                        Workers.onWorkerThread("Editing table", Priority.SAVE_ENTRY, () ->
+                        Workers.onWorkerThread("Editing table", Priority.SAVE, () ->
                                 FXUtility.alertOnError_("Error applying fix", () ->
                                         parent.getManager().edit(table.getId(), () -> fixer.replaceExpression(newExp), null)
                                 )
@@ -1157,7 +1154,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                 parent.getManager().getSingleTableOrNull(sort.getSource()),
                                 sort,
                                 sort.getSortBy()).showAndWait().ifPresent(newSort -> {
-                                    Workers.onWorkerThread("Editing sort", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error editing sort", () -> 
+                                    Workers.onWorkerThread("Editing sort", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing sort", () -> 
                                         parent.getManager().edit(sort.getId(), () -> new Sort(parent.getManager(), sort.getDetailsForCopy(), sort.getSource(), newSort), null)
                                     ));
                             });
@@ -1219,7 +1216,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                                 if (mouseButton == MouseButton.PRIMARY)
                                 {
                                     new TableListDialog(parent, concatenate, concatenate.getPrimarySources().collect(ImmutableList.toImmutableList()), screenPoint).showAndWait().ifPresent(newList -> 
-                                        Workers.onWorkerThread("Editing concatenate", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
+                                        Workers.onWorkerThread("Editing concatenate", Priority.SAVE, () -> FXUtility.alertOnError_("Error editing concatenate", () -> {
                                             parent.getManager().edit(table.getId(), () -> new Concatenate(parent.getManager(), table.getDetailsForCopy(), newList, IncompleteColumnHandling.DEFAULT), null);
                                     })));
                                 }

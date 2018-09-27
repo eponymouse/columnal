@@ -7,10 +7,8 @@ import javafx.scene.control.Tooltip;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
-import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.gui.DataCellSupplier.CellStyle;
-import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
@@ -26,7 +24,6 @@ import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.WeakHashMap;
 
 @OnThread(Tag.FXPlatform)
@@ -155,7 +152,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
                     item.setVisible(true);
                     item.setText(DOWN_ARROW);
                     item.setOnAction(e -> {
-                        Workers.onWorkerThread("Adding row", Priority.SAVE_ENTRY, () -> {
+                        Workers.onWorkerThread("Adding row", Priority.SAVE, () -> {
                             @Nullable AppendRows appendOp = tableDisplay.getTable().getOperations().appendRows;
                             if (appendOp != null)
                                 appendOp.appendRows(1);

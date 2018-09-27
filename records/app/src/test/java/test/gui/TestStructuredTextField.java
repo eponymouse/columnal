@@ -252,7 +252,7 @@ public class TestStructuredTextField extends ApplicationTest
     private StructuredTextField field(DataType dataType, Object value) throws InternalException
     {
         CompletableFuture<DataTypeValue> fut = new CompletableFuture<>();
-        Workers.onWorkerThread("", Priority.SAVE_ENTRY, () ->
+        Workers.onWorkerThread("", Priority.SAVE, () ->
         {
             try
             {
