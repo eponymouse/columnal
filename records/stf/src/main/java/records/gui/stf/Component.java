@@ -15,7 +15,8 @@ import utility.Either;
 import java.util.List;
 
 /**
- * Created by neil on 08/07/2017.
+ * A component in a StructuredTextField.  This is MUTABLE,
+ * it alters to reflect changes in the content.
  */
 @OnThread(Tag.FXPlatform)
 public abstract class Component<T>
