@@ -1,5 +1,6 @@
 package test.gui;
 
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -15,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
 
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -23,15 +25,22 @@ public interface ClickTableLocationTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     public default void clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
     {
-        Bounds box = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
+        Bounds theoretical = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
+        // We shrink by two pixels in each direction to avoid
+        // picking up neighbouring cells, which will exactly
+        // border us:
+        Bounds box = new BoundingBox(theoretical.getMinX() + 2.0, theoretical.getMinY() + 2.0, theoretical.getWidth() - 4.0, theoretical.getHeight() - 4.0);
+        
         Log.debug("Bounds for " + rectangleBounds + " on screen are " + box);
         
-        Node target = nodeQuery.lookup((Predicate<Node>)(node -> {
+        Set<Node> target = nodeQuery.match((Predicate<Node>)(node -> {
             return TestUtil.fx(() -> box.intersects(node.localToScreen(node.getBoundsInLocal())));
-        })).query(); 
-        if (target == null)
+        })).queryAll(); 
+        if (target.isEmpty())
             throw new RuntimeException("Could not find node at given position, looked for " + box + " among " + nodeQuery.queryAll().stream().map(n -> TestUtil.fx(() -> n.localToScreen(n.getBoundsInLocal()))).collect(Collectors.toList()));
-        Node targetNN = target;
+        if (target.size() > 1) 
+            throw new RuntimeException("Found multiple nodes at given position:" + target.stream().map(t -> TestUtil.fx(() -> t.toString() + " " +  t.localToScreen(t.getBoundsInLocal()))).collect(Collectors.joining("\n")));
+        Node targetNN = target.iterator().next();
         Log.debug("Found target " + targetNN + " at " + TestUtil.fx(() -> targetNN.localToScreen(targetNN.getBoundsInLocal())));
         Rectangle2D intersect = TestUtil.fx(() -> FXUtility.intersectRect(FXUtility.boundsToRect(targetNN.localToScreen(targetNN.getBoundsInLocal())), FXUtility.boundsToRect(box)));
         Point2D centre = FXUtility.getCentre(intersect);

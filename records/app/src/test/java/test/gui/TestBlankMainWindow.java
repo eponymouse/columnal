@@ -237,9 +237,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertEquals(0, lookup(".structured-text-field").queryAll().size());
     }
 
-    @Property(trials = 3)
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void propUndoAddAndEditData(@When(seed=1L) @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void propUndoAddAndEditData(@From(GenRandom.class) Random r) throws InternalException, UserException
     {
         GenNumber gen = new GenNumber();
         Supplier<@Value Number> makeNumber = () -> DataTypeUtility.value(gen.generate(new SourceOfRandomness(r), null));
