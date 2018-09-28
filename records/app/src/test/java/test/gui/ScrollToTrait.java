@@ -90,9 +90,15 @@ public interface ScrollToTrait extends FxRobotInterface
     {
         Log.debug("Moving to position " + target);
         
+        int pageHeight = TestUtil.fx(() -> virtualGrid.calcPageHeight());
+        
         push(KeyCode.CONTROL, KeyCode.HOME);
         // First go to correct row:
-        for (int i = 0; i < target.rowIndex; i++)
+        for (int i = 0; i < target.rowIndex / pageHeight; i++)
+        {
+            push(KeyCode.PAGE_DOWN);
+        }
+        for (int i = 0; i < target.rowIndex % pageHeight; i++)
         {
             push(KeyCode.DOWN);
         }

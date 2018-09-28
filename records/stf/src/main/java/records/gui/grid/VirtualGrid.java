@@ -1187,8 +1187,8 @@ public final class VirtualGrid implements ScrollBindable
                     bindS(KeyCode.DOWN, (shift, c) -> c.move(shift, 1, 0)),
                     bindS(KeyCode.LEFT, (shift, c) -> c.move(shift, 0, -1)),
                     bindS(KeyCode.RIGHT, (shift, c) -> c.move(shift, 0, 1)),
-                    bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
-                    bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, (int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
+                    bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -(calcPageHeight()), 0)),
+                    bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, calcPageHeight(), 0)),
                     InputMap.<Event, KeyEvent>consume(EventPattern.<Event, KeyEvent>anyOf(EventPattern.keyPressed(KeyCode.F11), EventPattern.keyPressed(KeyCode.C, KeyCombination.SHORTCUT_DOWN)), e -> {
                         @Nullable CellSelection focusedCellPosition = selection.get();
                         if (focusedCellPosition != null)
@@ -1408,6 +1408,12 @@ public final class VirtualGrid implements ScrollBindable
                 viewOrders.remove(index);
             }
         }
+    }
+
+    // Used internally, but also during testing.
+    public int calcPageHeight()
+    {
+        return (int) Math.floor(container.getHeight() / rowHeight) - 1;
     }
 
     private void updateSizeAndPositions()
