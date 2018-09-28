@@ -209,7 +209,7 @@ public abstract class VirtualGridSupplierIndividual<T extends Node, S, GRID_AREA
     }
 
     // Keep item in children, but make it invisible
-    private void hideItem(T spareCell)
+    protected void hideItem(T spareCell)
     {
         spareCell.relocate(-1000, -1000);
         spareCell.setVisible(false);

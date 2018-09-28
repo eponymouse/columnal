@@ -60,8 +60,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         GETTING, QUEUED;
     }
 
-    private static final int INITIAL_DISPLAY_CACHE_SIZE = 60;
-    private static final int MAX_DISPLAY_CACHE_SIZE = 500;
+    // Remember that these values are *per-column* so will
+    // be multiplied by number of rows:
+    private static final int INITIAL_DISPLAY_CACHE_SIZE = 50;
+    private static final int MAX_DISPLAY_CACHE_SIZE = 100;
     // Maps row index to cached item:
     @OnThread(Tag.FXPlatform)
     private final Cache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;

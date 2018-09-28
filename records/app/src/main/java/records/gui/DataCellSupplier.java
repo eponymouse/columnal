@@ -19,6 +19,7 @@ import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
@@ -149,6 +150,14 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
     protected @OnThread(Tag.FX) void adjustStyle(VersionedSTF item, CellStyle style, boolean on)
     {
         style.applyStyle(item, on);
+    }
+
+    @Override
+    protected void hideItem(VersionedSTF spareCell)
+    {
+        super.hideItem(spareCell);
+        // Clear EditorKit to avoid keeping it around while spare:
+        spareCell.blank(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
     }
 
     @OnThread(Tag.FXPlatform)
