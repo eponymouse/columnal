@@ -125,7 +125,21 @@ public class OutputBuilder
         cur().add(quoted(id.getOutput()));
         return this;
     }
-    
+
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder unquoted(TypeId taggedTypeName)
+    {
+        cur().add(taggedTypeName.getRaw());
+        return this;
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder unquoted(ColumnId columnName)
+    {
+        cur().add(columnName.getRaw());
+        return this;
+    }
+
     public static enum QuoteBehaviour
     {
         ALWAYS_QUOTE, QUOTE_SPACES, DEFAULT;

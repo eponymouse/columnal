@@ -27,4 +27,4 @@ COLLAPSED : 'COLLAPSED';
 
 mode DETAIL;
 DETAIL_END: '@END' -> popMode;
-DETAIL_LINE: (~[\n\r@] (~[\n\r])*)? '\r'? '\n';
+DETAIL_LINE: (~[\n\r])* '\r'? '\n' {!getText().startsWith("@END")}?;

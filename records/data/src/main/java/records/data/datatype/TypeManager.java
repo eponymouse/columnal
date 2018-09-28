@@ -152,7 +152,7 @@ public class TypeManager
         List<TagType<JellyType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
-            String tagName = item.UNQUOTED_NAME().getText();
+            String tagName = item.ident().getText();
 
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
@@ -345,7 +345,7 @@ public class TypeManager
         for (TaggedTypeDefinition taggedTypeDefinition : orderedDataTypes)
         {
             b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
-            b.quote(taggedTypeDefinition.getTaggedTypeName());
+            b.unquoted(taggedTypeDefinition.getTaggedTypeName());
             taggedTypeDefinition.save(b);
             b.nl();
         }

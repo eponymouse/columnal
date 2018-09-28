@@ -52,7 +52,8 @@ public class ImmediateDataSource extends DataSource
         {
             for (Column c : data.getColumns())
             {
-                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(renames.columnId(getId(), c.getName()));
+                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(renames.columnId(getId(), c.getName()));
+                b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
                 c.getType().save(b);
 
                 @Nullable @Value Object defaultValue = c.getDefaultValue();

@@ -16,15 +16,15 @@ bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple | functionType;
 tagRefParam : bracketedType | UNIT | OPEN_BRACKET UNIT CLOSE_BRACKET | OPEN_BRACKET UNITVAR ident CLOSE_BRACKET;
 applyRef : APPLY ident tagRefParam+; // First ident is name, rest are type params
 
-// Type names are valid as idents, especially for cases like: MaybeNumber : Nothing | Number(Number)
-ident : STRING | NUMBER | date | BOOLEAN | TEXT | UNQUOTED_NAME;
-tagItem : UNQUOTED_NAME (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
+// Type names are not valid as idents
+ident : UNQUOTED_NAME;
+tagItem : ident (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
 
 defaultValue: DEFAULT VALUE VALUE_END;
 
 columnName : ident;
 // The defaultValue contains the NEWLINE if that option is picked:
-column : COLUMN columnName type (defaultValue | NEWLINE);
+column : COLUMN columnName TYPE type (defaultValue | NEWLINE);
 
 typeName : ident;
 typeDecl : TYPE typeName taggedDecl NEWLINE;

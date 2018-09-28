@@ -16,7 +16,7 @@ TIMEOFDAYZONED : 'TimeZoned';
 DATETIME : 'DateTime';
 DATETIMEZONED : 'DateTimeZoned';
 TAGGED : '@tagged';
-TYPE : 'TYPE';
+TYPE : '@TYPE';
 TYPEVAR : '@typevar';
 UNITVAR : '@unitvar';
 SPACE_KWD : 'SPACE';
@@ -26,7 +26,7 @@ APPLY: '@apply';
 
 WS : ( ' ' | '\t' )+ -> skip;
 
-COLUMN : 'COLUMN:';
+COLUMN : '@COLUMN';
 
 TUPLE_MORE : '_';
 OPEN_BRACKET : '(';
