@@ -435,12 +435,12 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             };
             srcColumnHeaderSupplier.addItem(this.selectionRectangle);
             mousePane.setOnMouseMoved(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 e.consume();
             });
             @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
             mousePane.setOnMouseReleased(e -> {
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 if (pendingTrim[0] != null)
                 {
                     FXUtility.mouse(this).setTrim(pendingTrim[0], true);
@@ -524,7 +524,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 withParent_(g -> g.getScrollGroup().requestScroll(e));
                 // In case of small slide scroll, need to recalculate cursor:
                 withParent(g -> g.getVisibleBounds()).ifPresent(b -> selectionRectangle.calculatePosition(b));
-                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX() - HORIZ_INSET, e.getY() - VERT_INSET));
+                mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 e.consume();
             });
         }
