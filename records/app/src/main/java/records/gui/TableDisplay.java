@@ -40,6 +40,7 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -1347,6 +1348,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @OnThread(Tag.FXPlatform)
     private class TableBorderOverlay extends RectangleOverlayItem
     {
+        private @MonotonicNonNull VisibleBounds lastVisibleBounds;
+        
         public TableBorderOverlay()
         {
             super(ViewOrder.TABLE_BORDER);
@@ -1366,11 +1369,23 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             r.getStyleClass().add("table-border-overlay");
             calcClip(r, visibleBounds);
+            this.lastVisibleBounds = visibleBounds;
+        }
+
+        @Override
+        public void adjustForContainerTranslation(ResizableRectangle item, Pair<DoubleExpression, DoubleExpression> translateXY)
+        {
+            super.adjustForContainerTranslation(item, translateXY);
+            FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
+                if (lastVisibleBounds != null)
+                    updateClip(lastVisibleBounds);
+            });
         }
 
         @Override
         protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
         {
+            lastVisibleBounds = visibleBounds;
             updateClip(visibleBounds);
         }
 
