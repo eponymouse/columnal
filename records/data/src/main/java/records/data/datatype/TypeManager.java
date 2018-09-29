@@ -269,7 +269,7 @@ public class TypeManager
         {
             return DataType.array(loadTypeUse(type.array().type()));
         }
-        else if (type.ident() != null)
+        else if (type.ident() != null && type.TYPEVAR() == null)
         {
             @SuppressWarnings("identifier")
             DataType taggedType = lookupType(new TypeId(type.ident().getText()), ImmutableList.of());

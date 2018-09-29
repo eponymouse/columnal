@@ -9,7 +9,7 @@ tuple : OPEN_BRACKET type (COMMA type)+ (COMMA TUPLE_MORE)? CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
 functionType : OPEN_BRACKET type ARROW type CLOSE_BRACKET;
 type : unbracketedType | bracketedType;
-unbracketedType : BOOLEAN | number | TEXT | date | applyRef | array | ident; 
+unbracketedType : BOOLEAN | number | TEXT | date | applyRef | array | ident | TYPEVAR ident; 
 taggedDecl : TAGGED tagDeclParam* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
 tagDeclParam : TYPEVAR ident | UNITVAR ident;
 bracketedType : (OPEN_BRACKET type CLOSE_BRACKET) | tuple | functionType;

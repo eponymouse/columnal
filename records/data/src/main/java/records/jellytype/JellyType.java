@@ -153,6 +153,7 @@ public abstract class JellyType
         }
         else if (ctx.ident() != null)
         {
+            // TODO is it right that @typevar comes to same place as plain ident?
             @SuppressWarnings("identifier")
             @ExpressionIdentifier String name = ctx.ident().getText();
             return new JellyTypeIdent(name);
