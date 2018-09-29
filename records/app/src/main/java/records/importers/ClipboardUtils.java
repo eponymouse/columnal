@@ -117,7 +117,7 @@ public class ClipboardUtils
             b.t(MainLexer.FORMAT).begin().nl();
             for (Pair<ColumnId, DataTypeValue> c : columns)
             {
-                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getFirst());
+                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).unquoted(c.getFirst()).t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
                 FXUtility.alertOnError_("Error copying column: " + c.getFirst().getRaw(), () -> c.getSecond().save(b));
                 b.nl();
             }
