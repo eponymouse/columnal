@@ -66,7 +66,7 @@ public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait,
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propCheckDataRead(
-            @When(seed=1L) @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
+            @When(seed=1L) @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
             @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
 
@@ -77,7 +77,7 @@ public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait,
         List<Table> allTables = tableManager.getAllTables();
         
         // Pick some random locations in random tables, scroll there, copy data and check value:
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 5; i++)
         {
             // Random table:
             Table table = pickRandomTable(r, allTables);

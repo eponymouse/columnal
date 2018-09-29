@@ -154,7 +154,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                 if (inner == null)
                     return DataTypeUtility.value(Collections.emptyList());
                 @NonNull DataType innerFinal = inner;
-                return DataTypeUtility.value(TestUtil.<@Value Object>makeList(r, 1, 12, () -> makeValue(innerFinal)));
+                return DataTypeUtility.value(TestUtil.<@Value Object>makeList(r, 1, 4, () -> makeValue(innerFinal)));
             }
 
             @Override
