@@ -862,6 +862,10 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             {
                 // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
                 label.setTranslateY(Utility.clampIncl(0.0, - (label.getLayoutY() + containerTranslateY), maxTranslateY));
+                
+                FXUtility.setPseudoclass(label, "column-header-floating", label.getTranslateY() != 0.0);
+                
+                label.setClip(new Rectangle(0, 0, label.getWidth(), label.getHeight() + 20.0));
             }
         }
     }

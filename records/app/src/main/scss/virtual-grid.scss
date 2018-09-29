@@ -63,6 +63,10 @@
     &.column-title-edit {
         -fx-cursor: hand;
     }
+    
+    &:column-header-floating {
+        -fx-effect: dropshadow(gaussian, grey(70%), 10, 0.4, 0, 3);
+    }
 }
 
 .virt-grid-line {
