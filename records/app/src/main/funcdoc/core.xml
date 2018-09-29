@@ -4,7 +4,7 @@
                        namespace="core">
     <function name="asType">
         <typeArg>t</typeArg>
-        <argType>(@tagged Type(@typevar t), @typevar t)</argType>
+        <argType>(@apply Type(@typevar t), @typevar t)</argType>
         <returnType>@typevar t</returnType>
         <description>
             <p>Clarifies the type of a value.</p>
@@ -22,7 +22,7 @@
     <function name="typeOf">
         <typeArg>t</typeArg>
         <argType>@typevar t</argType>
-        <returnType>@tagged Type(@typevar t)</returnType>
+        <returnType>@apply Type(@typevar t)</returnType>
         <description>
             <p>Gets the type of the given value.</p>
         </description>
@@ -43,7 +43,7 @@
     <function name="asUnit">
         <unitArg>u</unitArg>
         <unitArg>v</unitArg>
-        <argType>(@tagged Unit(@unitvar u), Number{@unitvar v})</argType>
+        <argType>(@apply Unit(@unitvar u), Number{@unitvar v})</argType>
         <returnType>Number{@unitvar u}</returnType>
         <description>
             <p>Converts a number from one unit to another (if possible).</p>
