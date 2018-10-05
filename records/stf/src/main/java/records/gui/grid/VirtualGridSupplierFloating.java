@@ -28,6 +28,9 @@ import java.util.Set;
  * but to float depending on that grid's position on screen.  This might be a column header,
  * a message when the table is empty, or so on.
  * 
+ * There is only a singleton VirtualGridSupplierFloating,
+ * which then references many individual FloatingItem.s 
+ * 
  * Note: we offer a guarantee that items are iterated through in order that they were added;
  * this is made use of by some table overlays.
  */
@@ -94,9 +97,15 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
     }
 
+    /**
+     * A wrapper around a GUI item of type T that handles
+     * various layout operations.
+     * @param <T>
+     */
     @OnThread(Tag.FXPlatform)
     public static abstract class FloatingItem<T extends Node>
     {
+        // null if not created, or has been removed.
         private @Nullable T node;
         private final ViewOrder viewOrder;
 
