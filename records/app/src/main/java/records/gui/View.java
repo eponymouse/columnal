@@ -9,6 +9,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ListView;
@@ -142,15 +143,13 @@ public class View extends StackPane
     }
 
     @OnThread(Tag.Any)
-    @NonNull
-    private synchronized List<Table> getAllTables()
+    private synchronized @NonNull List<Table> getAllTables()
     {
         return tableManager.getAllTables();
     }
 
     @OnThread(Tag.Any)
-    @NonNull
-    private synchronized Stream<Table> streamAllTables()
+    private synchronized @NonNull Stream<Table> streamAllTables()
     {
         return tableManager.streamAllTables();
     }
@@ -648,10 +647,14 @@ public class View extends StackPane
             return (TableDisplay)table.getDisplay();
     }
 
-    @SuppressWarnings("nullness") // Can't be a View without an actual window
+    // Can't be a View without an actual window
     Window getWindow()
     {
-        return getScene().getWindow();
+        @SuppressWarnings("nullness")
+        @NonNull Scene scene = getScene();
+        @SuppressWarnings("nullness")
+        @NonNull Window window = scene.getWindow();
+        return window;
     }
 
     @Override
@@ -712,7 +715,7 @@ public class View extends StackPane
                             @NonNull SimulationSupplier<Transformation> makeTransFinal = makeTrans;
                             Workers.onWorkerThread("Creating transformation", Priority.SAVE, () -> {
                                 FXUtility.alertOnError_("Error creating transformation", () -> {
-                                    @OnThread(Tag.Simulation) Transformation transformation = makeTransFinal.get();
+                                    Transformation transformation = makeTransFinal.get();
                                     tableManager.record(transformation);
                                     Platform.runLater(() -> {
                                         TableDisplay display = (TableDisplay) transformation.getDisplay();
