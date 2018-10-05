@@ -230,6 +230,18 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         return gridRowIndex - getHeaderRowCount();
     }
 
+    @SuppressWarnings("units")
+    public @AbsRowIndex int getAbsRowIndexFromTableRow(@TableDataRowIndex int tableDataRowIndex)
+    {
+        return tableDataRowIndex + getPosition().rowIndex + getHeaderRowCount();
+    }
+
+    @SuppressWarnings("units")
+    public @TableDataRowIndex int getTableRowIndexFromAbsRow(@AbsRowIndex int absIndex)
+    {
+        return absIndex - (getPosition().rowIndex + getHeaderRowCount());
+    }
+
     @Override
     protected CellPosition recalculateBottomRightIncl()
     {
