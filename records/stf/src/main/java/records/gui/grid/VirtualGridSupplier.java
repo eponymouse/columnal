@@ -154,6 +154,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         
         /**
          * Takes a rectangle, and clamps it so that its extents fall within the portion being rendered.
+         * 
+         * Returns empty if none of its extents are visible
          */
         public Optional<RectangleBounds> clampVisible(RectangleBounds rectangleBounds)
         {
