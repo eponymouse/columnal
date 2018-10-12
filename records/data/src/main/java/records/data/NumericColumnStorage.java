@@ -418,7 +418,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
     // Returns numericTag if that item is not a tag
     @Pure
-    public int getInt(int index) throws InternalException
+    public int getInt(int index) throws UserException, InternalException
     {
         checkRange(index);
         // Guessing here to order most likely cases:
@@ -433,10 +433,10 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         throw new InternalException("Int not found in NumericColumnStorage; only longs/decimals");
     }
 
-    private void checkRange(int index) throws InternalException
+    private void checkRange(int index) throws UserException
     {
         if (index < 0 || index >= filled)
-            throw new InternalException("Trying to access element " + index + " but only have "+ filled);
+            throw new UserException("Trying to access element " + index + " but only have "+ filled);
     }
 
     @OnThread(Tag.Any)

@@ -54,7 +54,7 @@ public class StringColumnStorage implements ColumnStorage<String>
         if (beforeGet != null)
             beforeGet.beforeGet(this, index, progressListener);
         if (index < 0 || index >= values.size())
-            throw new InternalException("Attempting to access invalid element: " + index + " of " + values.size());
+            throw new UserException("Attempting to access invalid element: " + index + " of " + values.size());
         return values.get(index);
     }
 

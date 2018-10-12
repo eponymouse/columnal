@@ -62,7 +62,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
         if (beforeGet != null)
             beforeGet.beforeGet(this, index, progressListener);
         if (index < 0 || index >= filled())
-            throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
+            throw new UserException("Attempting to access invalid element: " + index + " of " + filled());
         return values.get(index);
     }
 

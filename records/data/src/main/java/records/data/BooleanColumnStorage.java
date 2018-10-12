@@ -61,7 +61,7 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         if (beforeGet != null)
             beforeGet.beforeGet(this, i, progressListener);
         if (i < 0 || i >= filled())
-            throw new InternalException("Attempting to access invalid element: " + i + " of " + filled());
+            throw new UserException("Attempting to access invalid element: " + i + " of " + filled());
         return DataTypeUtility.value(data.get(i));
     }
 
