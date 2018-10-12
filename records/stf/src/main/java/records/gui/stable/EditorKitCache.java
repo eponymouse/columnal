@@ -372,7 +372,8 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
             }
             catch (UserException | InternalException e)
             {
-                Log.log(e);
+                if (e instanceof InternalException)
+                    Log.log(e);
                 Platform.runLater(new Runnable()
                 {
                     @Override
