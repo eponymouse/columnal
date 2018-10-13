@@ -6,6 +6,7 @@ import annotation.units.TableDataRowIndex;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -21,6 +22,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -91,7 +93,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                     labels.computeIfAbsent(relIndex, _x -> {
                         LabelPane labelPane = new LabelPane();
                         labelPane.setRow(dataDisplay, relIndex);
-                        containerChildren.add(labelPane, ViewOrder.FLOATING);
+                        Pair<DoubleExpression, DoubleExpression> trans = containerChildren.add(labelPane, ViewOrder.FLOATING);
+                        labelPane.adjustForContainerTranslate(trans.getFirst());
                         return labelPane;
                     });
                 }
@@ -101,19 +104,19 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 // Find number of digits, min 2:
                 int numDigits = Math.max(2, Integer.toString(highestRow).length());
 
-                // Set position of all, TODO incl X position clamped so that they float:
+                // Set position of all:
                 for (Entry<@TableDataRowIndex Integer, LabelPane> label : labels.entrySet())
                 {
-                    @AbsColIndex int colIndex = dataDisplay.getPosition().columnIndex;
-                    label.getValue().resizeRelocate(
-                            visibleBounds.getXCoord(colIndex),
-                            visibleBounds.getYCoord(dataDisplay.getAbsRowIndexFromTableRow(label.getKey())),
-                            30,
-                            25
-                    );
                     label.getValue().setMinDigits(numDigits);
-                    label.getValue().leftMostColumn.set(colIndex == 0);
-                    label.getValue().updateClipAndTranslate();
+                    
+                    @AbsColIndex int colIndex = dataDisplay.getPosition().columnIndex;
+                    double width = label.getValue().prefWidth(-1);
+                    double height = 25;
+                    double x = visibleBounds.getXCoord(colIndex) - width;
+                    double y = visibleBounds.getYCoord(dataDisplay.getAbsRowIndexFromTableRow(label.getKey()));
+                    
+                    
+                    label.getValue().updateLayout(visibleBounds, dataDisplay, x, y, width, height, colIndex == 0);
                 }
             });
         }
@@ -225,6 +228,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         private final ResizableRectangle clip = new ResizableRectangle();
         private final BooleanProperty leftMostColumn = new SimpleBooleanProperty(false);
 
+        private double containerTranslateX;
+        private double maxTranslateX;
+        
         public LabelPane()
         {
             setClip(clip);
@@ -278,12 +284,48 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
 
         public void updateClipAndTranslate()
         {
-            double adjustForLeftMost = leftMostColumn.get() ? 0: getWidth();
+            double adjustForLeftMost = leftMostColumn.get() ? 0: 0; //getWidth();
             clip.setX(-adjustForLeftMost);
             clip.setWidth(getWidth());
             clip.setHeight(getHeight());
             double f = slideOutProportion.get();
-            label.translateXProperty().set((1 - f) * getWidth() - adjustForLeftMost);
+            setVisible(f != 0.0);
+            
+            // If there was no floating, just slide-out:
+            double targetTranslateForSlideOut = (1 - f) * getWidth() - adjustForLeftMost;
+
+            // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
+            double clamped = Utility.clampIncl(targetTranslateForSlideOut, -(getLayoutX() + containerTranslateX), maxTranslateX);
+            setTranslateX(clamped);
+
+            Log.debug("Slide out: " + targetTranslateForSlideOut + " clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
+
+            FXUtility.setPseudoclass(label, "row-label-floating", getTranslateX() != 0.0);
+
+        }
+        
+        public void updateLayout(VisibleBounds visibleBounds, DataDisplay dataDisplay, double x, double y, double width, double height, boolean leftMost)
+        {
+            // The furthest we go is to the left edge of the rightmost data cell:
+            maxTranslateX = visibleBounds.getXCoord(dataDisplay.getBottomRightIncl().columnIndex) - x;
+
+            resizeRelocate(
+                x,
+                y,
+                width,
+                height
+            );
+            leftMostColumn.set(leftMost);
+            updateClipAndTranslate();
+        }
+
+        public void adjustForContainerTranslate(DoubleExpression translateX)
+        {
+            containerTranslateX = translateX.get();
+            FXUtility.addChangeListenerPlatformNN(translateX, tx -> {
+                containerTranslateX = tx.doubleValue();
+                updateClipAndTranslate();
+            });
         }
     }
 
