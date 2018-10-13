@@ -39,7 +39,6 @@ import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
 import records.gui.stf.StructuredTextField;
 import records.transformations.expression.type.TypeExpression;
-import sun.jvm.hotspot.gc_implementation.shared.ImmutableSpace;
 import test.TestUtil;
 import test.gen.GenDataType;
 import test.gen.GenDataType.DataTypeAndManager;
