@@ -75,7 +75,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     private class RowLabels
     {
         private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabels;
-        private final RectangleOverlayItem borderShadowRectangle;
+        private final RowLabelBorder borderShadowRectangle;
+        private boolean floating = false;
 
         private RowLabels(DataDisplay dataDisplay)
         {
@@ -83,6 +84,15 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             this.rowLabels = rowLabelMap;
             borderShadowRectangle = new RowLabelBorder(rowLabelMap, dataDisplay);
             virtualGridSupplierFloating.addItem(borderShadowRectangle);
+        }
+
+        public void setFloating(boolean floating)
+        {
+            if (this.floating != floating)
+            {
+                this.floating = floating;
+                borderShadowRectangle.updateClip();
+            }
         }
 
         @OnThread(Tag.FXPlatform)
@@ -201,8 +211,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 {
                     @TableDataRowIndex int relIndex = dataDisplay.getTableRowIndexFromAbsRow(i);
                     labels.rowLabels.computeIfAbsent(relIndex, _x -> {
-                        LabelPane labelPane = new LabelPane();
-                        labelPane.setRow(dataDisplay, relIndex);
+                        LabelPane labelPane = new LabelPane(labels);
+                        labelPane.setRow(dataDisplay, labels, relIndex);
                         Pair<DoubleExpression, DoubleExpression> trans = containerChildren.add(labelPane, ViewOrder.FLOATING);
                         labelPane.adjustForContainerTranslate(trans.getFirst());
                         return labelPane;
@@ -354,9 +364,12 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
 
         private double containerTranslateX;
         private double maxTranslateX;
+
+        private RowLabels rowLabels;
         
-        public LabelPane()
+        public LabelPane(RowLabels rowLabels)
         {
+            this.rowLabels = rowLabels;
             setClip(clip);
             setRight(label);
             setPickOnBounds(false);
@@ -377,6 +390,11 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             });
             this.tooltip = new Tooltip();
             Tooltip.install(this, tooltip);
+            FXUtility.addChangeListenerPlatformNN(translateXProperty(), tx -> {
+                boolean floating = tx.intValue() != 0;
+                rowLabels.setFloating(floating);
+                FXUtility.setPseudoclass(FXUtility.mouse(label), "row-header-floating", floating);
+            });
         }
 
         public boolean isTableRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
@@ -384,13 +402,15 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             return this.tableDisplay == tableDisplay && this.row == row;
         }
         
-        public void setRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
+        public void setRow(DataDisplay tableDisplay, RowLabels rowLabels, @TableDataRowIndex int row)
         {
             this.tableDisplay = tableDisplay;
             this.row = row;
             // User rows begin with 1:
             label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
             this.tooltip.setText(Integer.toString(row + 1));
+            this.rowLabels = rowLabels;
+            rowLabels.setFloating((int)getTranslateX() != 0);
         }
         
         public void setMinDigits(int minDigits)
@@ -398,15 +418,13 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             if (curMinDigits != minDigits && tableDisplay != null)
             {
                 curMinDigits = minDigits;
-                setRow(tableDisplay, row);
+                setRow(tableDisplay, rowLabels, row);
             }
         }
 
         public void updateClipAndTranslate()
         {
-            double adjustForLeftMost = leftMostColumn.get() ? 0: 0; //getWidth();
-            clip.setX(-adjustForLeftMost);
-            clip.setWidth(getWidth());
+            clip.setWidth(getWidth() + 20.0);
             clip.setHeight(getHeight());
             
             // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
@@ -414,9 +432,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             setTranslateX(clamped);
 
             Log.debug("Clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
-
-            FXUtility.setPseudoclass(label, "row-label-floating", getTranslateX() != 0.0);
-
         }
         
         public void updateLayout(VisibleBounds visibleBounds, DataDisplay dataDisplay, double x, double y, double width, double height, boolean leftMost)
@@ -441,55 +456,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 containerTranslateX = tx.doubleValue();
                 updateClipAndTranslate();
             });
-        }
-    }
-
-    public class TableInfo implements VirtualGridSupplierIndividual.GridCellInfo<LabelPane, Visible>
-    {
-        private final DataDisplay tableDisplay;
-        private final ObjectExpression<ImmutableList<Visible>> visible;
-
-        private TableInfo(DataDisplay tableDisplay, ObjectExpression<ImmutableList<Visible>> visible)
-        {
-            this.tableDisplay = tableDisplay;
-            this.visible = visible;
-        }
-
-        @Override
-        public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
-        {
-            @AbsColIndex int columnForRowLabels = Utility.maxCol(CellPosition.col(0), tableDisplay.getPosition().columnIndex - CellPosition.col(1));
-            @AbsRowIndex int topRowLabel = tableDisplay.getDataDisplayTopLeftIncl().from(tableDisplay.getPosition()).rowIndex;
-            @AbsRowIndex int bottomRowLabel = tableDisplay.getDataDisplayBottomRightIncl().from(tableDisplay.getPosition()).rowIndex;
-            if (cellPosition.columnIndex == columnForRowLabels && topRowLabel <= cellPosition.rowIndex && cellPosition.rowIndex <= bottomRowLabel)
-            {
-                return GridAreaCellPosition.relativeFrom(cellPosition, tableDisplay.getPosition());
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        @Override
-        public void fetchFor(GridAreaCellPosition cellPosition, FXPlatformFunction<CellPosition, @Nullable LabelPane> getCell)
-        {
-            @Nullable LabelPane labelPane = getCell.apply(cellPosition.from(tableDisplay.getPosition()));
-            if (labelPane != null)
-                labelPane.setRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex));
-        }
-
-        @Override
-        public ObjectExpression<? extends Collection<Visible>> styleForAllCells()
-        {
-            return visible;
-        }
-
-        @Override
-        public boolean checkCellUpToDate(GridAreaCellPosition cellPosition, LabelPane cell)
-        {
-            return cell.isTableRow(tableDisplay, tableDisplay.getRowIndexWithinTable(cellPosition.rowIndex))
-                && cellAt(tableDisplay.getPosition().offsetByRowCols(cellPosition.rowIndex, cellPosition.columnIndex)) != null;
         }
     }
 }
