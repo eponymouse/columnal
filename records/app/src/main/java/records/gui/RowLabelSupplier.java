@@ -223,7 +223,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         private final Label label = new Label();
         private final Tooltip tooltip;
         private @MonotonicNonNull DataDisplay tableDisplay;
-        private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
         private int curMinDigits = 1;
         private final ResizableRectangle clip = new ResizableRectangle();
         private final BooleanProperty leftMostColumn = new SimpleBooleanProperty(false);
@@ -248,9 +247,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                         contextMenu.show(label, e.getScreenX(), e.getScreenY());
                 }
             });
-            FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
-                Utility.later(this).updateClipAndTranslate();
-            });
             FXUtility.addChangeListenerPlatformNN(leftMostColumn, leftMost -> {
                 Utility.later(this).updateClipAndTranslate();
             });
@@ -270,7 +266,6 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             // User rows begin with 1:
             label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
             this.tooltip.setText(Integer.toString(row + 1));
-            slideOutProportion.bind(tableDisplay.slideOutProperty());
         }
         
         public void setMinDigits(int minDigits)
@@ -288,17 +283,12 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             clip.setX(-adjustForLeftMost);
             clip.setWidth(getWidth());
             clip.setHeight(getHeight());
-            double f = slideOutProportion.get();
-            setVisible(f != 0.0);
             
-            // If there was no floating, just slide-out:
-            double targetTranslateForSlideOut = (1 - f) * getWidth() - adjustForLeftMost;
-
             // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
-            double clamped = Utility.clampIncl(targetTranslateForSlideOut, -(getLayoutX() + containerTranslateX), maxTranslateX);
+            double clamped = Utility.clampIncl(0.0, -(getLayoutX() + containerTranslateX), maxTranslateX);
             setTranslateX(clamped);
 
-            Log.debug("Slide out: " + targetTranslateForSlideOut + " clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
+            Log.debug("Clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
 
             FXUtility.setPseudoclass(label, "row-label-floating", getTranslateX() != 0.0);
 

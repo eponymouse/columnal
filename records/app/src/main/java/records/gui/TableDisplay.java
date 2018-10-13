@@ -150,13 +150,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final AtomicReference<CellPosition> mostRecentBounds;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private final TableBorderOverlay tableBorderOverlay;
-    private final TableRowLabelBorder rowLabelBorder;
     private final @Nullable TableHat tableHat;
     private final TableErrorDisplay tableErrorDisplay;
     private boolean currentKnownRowsIsFinal = false;
 
     private final FXPlatformRunnable onModify;
-    private final DoubleProperty slideOutProportion = new SimpleDoubleProperty(1.0);
 
     @OnThread(Tag.Any)
     public Table getTable()
@@ -168,7 +166,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     public void cleanupFloatingItems()
     {
         super.cleanupFloatingItems();
-        floatingItems.removeItem(rowLabelBorder);
         if (tableHat != null)
             floatingItems.removeItem(tableHat);
         floatingItems.removeItem(tableErrorDisplay);
@@ -223,15 +220,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     @Override
     public @OnThread(Tag.FXPlatform) Pair<ListenerOutcome, @Nullable FXPlatformConsumer<VisibleBounds>> selectionChanged(@Nullable CellSelection oldSelection, @Nullable CellSelection newSelection)
     {
-        ListenerOutcome outcome = super.selectionChanged(oldSelection, newSelection).getFirst();
-        boolean includedInNew = newSelection == null ? false : newSelection.includes(this);
-        boolean includedInOld = oldSelection == null ? false : oldSelection.includes(this);
-        if (includedInNew != includedInOld)
-        {
-            slideOutProportion.set(includedInOld ? 1.0 : 0.0);
-            new Timeline(new KeyFrame(Duration.millis(250), new KeyValue(slideOutProportion, 1.0 - slideOutProportion.get()))).playFromStart();
-        }
-        
+        ListenerOutcome outcome = super.selectionChanged(oldSelection, newSelection).getFirst();        
         return new Pair<>(outcome, tableBorderOverlay::updateClip);
     }
 
@@ -474,9 +463,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         if (recordSet != null)
             setupWithRecordSet(parent.getManager(), table, recordSet);
         
-        // Row label border:
-        rowLabelBorder = new TableRowLabelBorder();
-        supplierFloating.addItem(rowLabelBorder);
         // Hat:
         if (table instanceof Transformation)
         {
@@ -923,19 +909,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             );
         }
         return contextMenu;
-    }
-
-    @Override
-    public void setRowLabelBounds(Optional<BoundingBox> bounds)
-    {
-        rowLabelBorder.currentRowLabelBounds = bounds;
-        rowLabelBorder.updateClip();
-    }
-
-    @Override
-    public DoubleExpression slideOutProperty()
-    {
-        return slideOutProportion;
     }
 
     @Override
@@ -1421,7 +1394,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 }
                 return curClip;
             }).orElse(originalClip);
-            boolean rowLabelsShowing = withParent(p -> p.selectionIncludes(TableDisplay.this)).orElse(false);
+            boolean rowLabelsShowing = true; //withParent(p -> p.selectionIncludes(TableDisplay.this)).orElse(false);
             if (rowLabelsShowing)
             {
                 @SuppressWarnings("units")
@@ -1449,74 +1422,6 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Clipboard.getSystemClipboard().setContent(clipboardContent);
             }
             */
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private class TableRowLabelBorder extends FloatingItem<ResizableRectangle>
-    {
-        private Optional<BoundingBox> currentRowLabelBounds = Optional.empty();
-
-        public TableRowLabelBorder()
-        {
-            super(ViewOrder.TABLE_BORDER);
-            FXUtility.addChangeListenerPlatformNN(slideOutProportion, f -> {
-                if (getNode() != null)
-                {
-                    double clippedWidth = (1.0 - f.doubleValue()) * getNode().getWidth();
-                    getNode().translateXProperty().set(clippedWidth);
-                    updateClip();
-                }
-            });
-        }
-
-        @Override
-        protected Optional<BoundingBox> calculatePosition(VisibleBounds visibleBounds)
-        {
-            return currentRowLabelBounds;
-        }
-
-        @Override
-        protected ResizableRectangle makeCell(VisibleBounds visibleBounds)
-        {
-            ResizableRectangle r = new ResizableRectangle();
-            r.setMouseTransparent(true);
-            r.getStyleClass().add("table-row-label-border");
-            return r;
-        }
-
-        @Override
-        public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
-        {
-            return null;
-        }
-
-        @Override
-        protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
-        {
-            updateClip();
-        }
-
-        @Override
-        public void keyboardActivate(CellPosition cellPosition)
-        {
-            // Not applicable
-        }
-
-        public void updateClip(@UnknownInitialization(FloatingItem.class) TableRowLabelBorder this)
-        {
-            ResizableRectangle cur = getNode();
-            if (cur != null && currentRowLabelBounds != null && currentRowLabelBounds.isPresent())
-            {
-                BoundingBox r = currentRowLabelBounds.get();
-                double clippedWidth = slideOutProportion.get() * r.getWidth();
-                // Outer (excluding right hand side) minus central inner:
-                Shape clip = Shape.subtract(
-                    new Rectangle(-20, -20, clippedWidth + 20, r.getHeight() + 40),
-                    new Rectangle(0, 0, clippedWidth, r.getHeight())
-                );
-                cur.setClip(clip);
-            }
         }
     }
 
