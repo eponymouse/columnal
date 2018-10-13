@@ -431,13 +431,13 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             double clamped = Utility.clampIncl(0.0, -(getLayoutX() + containerTranslateX), maxTranslateX);
             setTranslateX(clamped);
 
-            Log.debug("Clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
+            //Log.debug("Clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
         }
         
         public void updateLayout(VisibleBounds visibleBounds, DataDisplay dataDisplay, double x, double y, double width, double height, boolean leftMost)
         {
             // The furthest we go is to the left edge of the rightmost data cell:
-            maxTranslateX = visibleBounds.getXCoord(dataDisplay.getBottomRightIncl().columnIndex) - x;
+            maxTranslateX = visibleBounds.getXCoord(dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition()).columnIndex) - x - width;
 
             resizeRelocate(
                 x,
