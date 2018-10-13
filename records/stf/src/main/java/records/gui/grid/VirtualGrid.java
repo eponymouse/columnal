@@ -1399,7 +1399,7 @@ public final class VirtualGrid implements ScrollBindable
         }
 
         @Override
-        public void remove(Node node)
+        public Pair<DoubleExpression, DoubleExpression> remove(Node node)
         {
             if (!activeOverlayPane.getChildren().remove(node))
             {
@@ -1407,6 +1407,7 @@ public final class VirtualGrid implements ScrollBindable
                 getChildren().remove(index);
                 viewOrders.remove(index);
             }
+            return new Pair<>(translateXProperty(), translateYProperty());
         }
     }
 

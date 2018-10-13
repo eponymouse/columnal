@@ -39,8 +39,20 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
 {
     // We want to maintain order of adding for iteration, and removal is quite rare, so list is best:
     private final List<FloatingItem<?>> items = new ArrayList<>();
-    private final List<Node> toRemove = new ArrayList<>();
+    private final List<FloatingItemToRemove<?>> toRemove = new ArrayList<>();
 
+    private static class FloatingItemToRemove<T extends Node>
+    {
+        private final FloatingItem<T> item;
+        private final T node;
+
+        private FloatingItemToRemove(FloatingItem<T> item, T node)
+        {
+            this.item = item;
+            this.node = node;
+        }
+    }
+    
     // Prevent creation from outside the package:
     VirtualGridSupplierFloating()
     {
@@ -49,7 +61,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     @Override
     protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
     {
-        toRemove.forEach(r -> containerChildren.remove(r));
+        toRemove.forEach(r -> enactRemove(containerChildren, r));
         toRemove.clear();
         
         for (FloatingItem<?> item : items)
@@ -58,19 +70,24 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         }
     }
 
+    private <T extends Node> void enactRemove(ContainerChildren containerChildren, FloatingItemToRemove<T> r)
+    {
+        r.item.adjustForContainerTranslation(r.node, containerChildren.remove(r.node), false);
+    }
+
     public final <T extends FloatingItem<?>> T addItem(T item)
     {
         items.add(item);
         return item;
     }
     
-    public final void removeItem(FloatingItem item)
+    public final <T extends Node> void removeItem(FloatingItem<T> item)
     {
-        @Nullable Node removed = items.remove(item) ? item.node : null;
+        @Nullable T removed = items.remove(item) ? item.node : null;
         // We don't have access to containerChildren right now to remove, so
         // just queue for removal next time we get laid out:
         if (removed != null)
-            toRemove.add(removed);
+            toRemove.add(new FloatingItemToRemove<>(item, removed));
     }
 
     @Override
@@ -121,8 +138,8 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
         // Called when a cell is made.  If calculatePosition always returns Optional.of, then this is only called once:
         protected abstract T makeCell(VisibleBounds visibleBounds);
         
-        // Called once, after makeCell.
-        public void adjustForContainerTranslation(T item, Pair<DoubleExpression, DoubleExpression> translateXY)
+        // Called once, after makeCell, with adding == true, and once when removed with adding == false
+        public void adjustForContainerTranslation(T item, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
         {
         }
 
@@ -149,7 +166,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
                 {
                     nodeFinal = makeCell(visibleBounds);
                     Pair<DoubleExpression, DoubleExpression> translateXY = containerChildren.add(nodeFinal, viewOrder);
-                    adjustForContainerTranslation(nodeFinal, translateXY);
+                    adjustForContainerTranslation(nodeFinal, translateXY, true);
                     this.node = nodeFinal;
                 }
                 else
@@ -164,7 +181,8 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
                 // Shouldn't be visible; is it?
                 if (node != null)
                 {
-                    containerChildren.remove(node);
+                    Pair<DoubleExpression, DoubleExpression> translateXY = containerChildren.remove(node);
+                    adjustForContainerTranslation(node, translateXY, false);
                     node = null;
                 }
             }

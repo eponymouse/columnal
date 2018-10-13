@@ -76,7 +76,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         // so you can fight against it if you want to be properly pinned.
         public Pair<DoubleExpression, DoubleExpression> add(Node node, ViewOrder viewOrder);
         
-        public void remove(Node node);
+        // Returns the same pair so you can remove listeners if needed
+        public Pair<DoubleExpression, DoubleExpression> remove(Node node);
     }
     
     // The order here is critical.  Early in the list appears underneath later in the list.

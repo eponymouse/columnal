@@ -11,6 +11,7 @@ import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -90,7 +91,7 @@ import java.util.stream.Stream;
 public abstract class DataDisplay extends GridArea implements SelectionListener
 {    
     protected final VirtualGridSupplierFloating floatingItems;
-    private final List<FloatingItem> columnHeaderItems = new ArrayList<>();
+    private final List<FloatingItem<Label>> columnHeaderItems = new ArrayList<>();
     private @Nullable TableHeaderItem tableHeaderItem;
     private TableId curTableId;
 
@@ -345,7 +346,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
 
     public void cleanupFloatingItems()
     {
-        for (FloatingItem columnHeaderItem : columnHeaderItems)
+        for (FloatingItem<Label> columnHeaderItem : columnHeaderItems)
         {
             floatingItems.removeItem(columnHeaderItem);
         }
@@ -753,7 +754,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         public @Nullable FXPlatformRunnable getPrimaryEditOperation(); 
     }
 
-    private class ColumnNameItem extends FloatingItem<Label>
+    private class ColumnNameItem extends FloatingItem<Label> implements ChangeListener<Number>
     {
         private final int columnIndex;
         private final ColumnDetails column;
@@ -777,6 +778,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform)
         public @Nullable ItemState getItemState(CellPosition cellPosition, Point2D screenPos)
         {
             return cellPosition.equals(getFloatingPosition()) ? ItemState.DIRECTLY_CLICKABLE : null;
@@ -850,6 +852,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform)
         public void keyboardActivate(CellPosition cellPosition)
         {
             if (getFloatingPosition().equals(cellPosition) && columnActions != null && columnActions.getPrimaryEditOperation() != null)
@@ -859,12 +862,21 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         }
 
         @Override
-        public void adjustForContainerTranslation(Label node, Pair<DoubleExpression, DoubleExpression> translateXY)
+        @OnThread(value = Tag.FXPlatform)
+        public void adjustForContainerTranslation(Label node, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
         {
-            FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
-                containerTranslateY = ty.doubleValue();
-                updateTranslate(node);
-            });
+            if (adding)
+                translateXY.getSecond().addListener(this);
+            else
+                translateXY.getSecond().removeListener(this);
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
+        {
+            containerTranslateY = newValue.doubleValue();
+            updateTranslate(getNode());
         }
 
         @OnThread(Tag.FX)

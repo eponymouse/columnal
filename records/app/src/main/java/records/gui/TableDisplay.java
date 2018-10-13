@@ -15,6 +15,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -1346,7 +1348,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
      * doesn't work properly.
      */
     @OnThread(Tag.FXPlatform)
-    private class TableBorderOverlay extends RectangleOverlayItem
+    private class TableBorderOverlay extends RectangleOverlayItem implements ChangeListener<Number>
     {
         private @MonotonicNonNull VisibleBounds lastVisibleBounds;
         
@@ -1373,13 +1375,21 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         }
 
         @Override
-        public void adjustForContainerTranslation(ResizableRectangle item, Pair<DoubleExpression, DoubleExpression> translateXY)
+        public void adjustForContainerTranslation(ResizableRectangle item, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
         {
-            super.adjustForContainerTranslation(item, translateXY);
-            FXUtility.addChangeListenerPlatformNN(translateXY.getSecond(), ty -> {
-                if (lastVisibleBounds != null)
-                    updateClip(lastVisibleBounds);
-            });
+            super.adjustForContainerTranslation(item, translateXY, adding);
+            if (adding)
+                translateXY.getSecond().addListener(this);
+            else
+                translateXY.getSecond().removeListener(this);
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
+        {
+            if (lastVisibleBounds != null)
+                updateClip(lastVisibleBounds);
         }
 
         @Override
