@@ -92,7 +92,7 @@ public class View extends StackPane
     // The supplier for buttons to add rows and columns:
     private final ExpandTableArrowSupplier expandTableArrowSupplier;
     // The supplier for row labels:
-    private final RowLabelSupplier rowLabelSupplier = new RowLabelSupplier();
+    private final RowLabelSupplier rowLabelSupplier;
     
     // This is only put into our children while we are doing special mouse capture, but it is always non-null.
     private @Nullable Pane pickPaneMouse;
@@ -602,6 +602,7 @@ public class View extends StackPane
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
+        this.rowLabelSupplier = new RowLabelSupplier(mainPane.getFloatingSupplier());
         mainPane.addNodeSupplier(rowLabelSupplier);
         mainPane.addNewButtonVisibleListener(vis -> {
             emptyListener.consume(tableManager.getAllTables().isEmpty() ?

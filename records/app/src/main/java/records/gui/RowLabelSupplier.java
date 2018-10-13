@@ -2,6 +2,7 @@ package records.gui;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -13,15 +14,19 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -32,6 +37,7 @@ import records.gui.RowLabelSupplier.LabelPane;
 import records.gui.RowLabelSupplier.Visible;
 import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
+import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
 import records.gui.grid.VirtualGridSupplier;
@@ -41,12 +47,14 @@ import records.gui.grid.VirtualGridSupplierFloating;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.ResizableRectangle;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -59,25 +67,127 @@ import java.util.stream.Collectors;
  */
 public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
 {
-    private final HashMap<DataDisplay, HashMap<@TableDataRowIndex Integer, LabelPane>> currentRowLabels = new HashMap<>();
+    // For displaying the border/shadow overlays without repeating code:
+    private final VirtualGridSupplierFloating virtualGridSupplierFloating;
+    private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
     
-    public RowLabelSupplier()
+    @OnThread(Tag.FXPlatform)
+    private class RowLabels
     {
+        private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabels;
+        private final RectangleOverlayItem borderShadowRectangle;
+
+        private RowLabels(DataDisplay dataDisplay)
+        {
+            final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap = new HashMap<>();
+            this.rowLabels = rowLabelMap;
+            borderShadowRectangle = new RowLabelBorder(rowLabelMap, dataDisplay);
+            virtualGridSupplierFloating.addItem(borderShadowRectangle);
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private class RowLabelBorder extends RectangleOverlayItem implements ChangeListener<Number>
+        {
+            private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap;
+            private final DataDisplay dataDisplay;
+
+            public RowLabelBorder(HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap, DataDisplay dataDisplay)
+            {
+                super(ViewOrder.TABLE_BORDER);
+                this.rowLabelMap = rowLabelMap;
+                this.dataDisplay = dataDisplay;
+            }
+
+            @Override
+            protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
+            {
+                double width = rowLabelMap.values().stream().map(p -> p.prefWidth(-1)).findFirst().orElse(0.0);
+                
+                return getVisibleDataArea(visibleBounds, dataDisplay).map(leftHandColumnVis -> {
+                    double right = visibleBounds.getXCoord(leftHandColumnVis.topLeftIncl.columnIndex);
+                    double top = visibleBounds.getYCoord(leftHandColumnVis.topLeftIncl.rowIndex);
+                    double bottom = visibleBounds.getYCoordAfter(leftHandColumnVis.bottomRightIncl.rowIndex);
+                    double left = right - width;
+                    
+                    return Either.left(new BoundingBox(left, top, right - left, bottom - top));
+                });
+                
+            }
+
+            @Override
+            protected void styleNewRectangle(Rectangle r, VisibleBounds visibleBounds)
+            {
+                r.getStyleClass().addAll("table-border-overlay", "row-label-border");
+                calcClip(r);
+            }
+
+            @Override
+            public void adjustForContainerTranslation(ResizableRectangle item, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
+            {
+                super.adjustForContainerTranslation(item, translateXY, adding);
+                if (adding)
+                    translateXY.getSecond().addListener(this);
+                else
+                    translateXY.getSecond().removeListener(this);
+            }
+
+            @Override
+            protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
+            {
+                updateClip();
+            }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
+            {
+                updateClip();
+            }
+
+            private void updateClip()
+            {
+                if (getNode() != null)
+                    calcClip(getNode());
+            }
+
+            @OnThread(Tag.FXPlatform)
+            private void calcClip(Rectangle r)
+            {
+                Shape originalClip = Shape.subtract(
+                    new Rectangle(-20, -20, r.getWidth() + 20, r.getHeight() + 40),
+                    new Rectangle(0, 0, r.getWidth(), r.getHeight())
+                );
+                r.setClip(originalClip);
+                /* // Debug code to help see what clip looks like:
+                if (getPosition().columnIndex == CellPosition.col(7))
+                {
+                    // Hack to clone shape:
+                    Shape s = Shape.union(clip, clip);
+                    Scene scene = new Scene(new Group(s));
+                    ClipboardContent clipboardContent = new ClipboardContent();
+                    clipboardContent.putImage(s.snapshot(null, null));
+                    Clipboard.getSystemClipboard().setContent(clipboardContent);
+                }
+                */
+            }
+        }
+    }
+    
+    public RowLabelSupplier(VirtualGridSupplierFloating virtualGridSupplierFloating)
+    {
+        this.virtualGridSupplierFloating = virtualGridSupplierFloating;
     }
 
     @Override
     protected void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds)
-    {
+    {        
         for (@KeyFor("currentRowLabels") DataDisplay dataDisplay : currentRowLabels.keySet())
         {
-            Optional<RectangleBounds> visibleGrid = visibleBounds.clampVisible(
-                new RectangleBounds(
-                    dataDisplay.getDataDisplayTopLeftIncl().from(dataDisplay.getPosition()), 
-                    dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition())));
+            Optional<RectangleBounds> visibleGrid = getVisibleDataArea(visibleBounds, dataDisplay);
             
             // Remove all non-visible:
-            final HashMap<@TableDataRowIndex Integer, LabelPane> labels = currentRowLabels.get(dataDisplay);
-            labels.entrySet().removeIf((Entry<@TableDataRowIndex Integer, LabelPane> e) -> {
+            final RowLabels labels = currentRowLabels.get(dataDisplay);
+            labels.rowLabels.entrySet().removeIf((Entry<@TableDataRowIndex Integer, LabelPane> e) -> {
                 @AbsRowIndex int absIndex = dataDisplay.getAbsRowIndexFromTableRow(e.getKey());
                 boolean remove = visibleGrid.map(b -> absIndex < b.topLeftIncl.rowIndex || absIndex > b.bottomRightIncl.rowIndex).orElse(false);
                 if (remove)
@@ -90,7 +200,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 for (@AbsRowIndex int i = b.topLeftIncl.rowIndex; i < b.bottomRightIncl.rowIndex; i++)
                 {
                     @TableDataRowIndex int relIndex = dataDisplay.getTableRowIndexFromAbsRow(i);
-                    labels.computeIfAbsent(relIndex, _x -> {
+                    labels.rowLabels.computeIfAbsent(relIndex, _x -> {
                         LabelPane labelPane = new LabelPane();
                         labelPane.setRow(dataDisplay, relIndex);
                         Pair<DoubleExpression, DoubleExpression> trans = containerChildren.add(labelPane, ViewOrder.FLOATING);
@@ -100,12 +210,12 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 }
 
                 // Find highest row number:
-                int highestRow = labels.values().stream().mapToInt(p -> p.row).max().orElse(1);
+                int highestRow = labels.rowLabels.values().stream().mapToInt(p -> p.row).max().orElse(1);
                 // Find number of digits, min 2:
                 int numDigits = Math.max(2, Integer.toString(highestRow).length());
 
                 // Set position of all:
-                for (Entry<@TableDataRowIndex Integer, LabelPane> label : labels.entrySet())
+                for (Entry<@TableDataRowIndex Integer, LabelPane> label : labels.rowLabels.entrySet())
                 {
                     label.getValue().setMinDigits(numDigits);
                     
@@ -120,6 +230,15 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 }
             });
         }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private Optional<RectangleBounds> getVisibleDataArea(VisibleBounds visibleBounds, DataDisplay dataDisplay)
+    {
+        return visibleBounds.clampVisible(
+            new RectangleBounds(
+                dataDisplay.getDataDisplayTopLeftIncl().from(dataDisplay.getPosition()), 
+                dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition())));
     }
 
     @Override
@@ -194,7 +313,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     public void addTable(VirtualGrid virtualGrid, DataDisplay tableDisplay, boolean showAlways)
     {
         final SimpleObjectProperty<ImmutableList<Visible>> visible = new SimpleObjectProperty<>(showAlways ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
-        currentRowLabels.put(tableDisplay, new HashMap<>());
+        RowLabels rowLabels = new RowLabels(tableDisplay);
+        currentRowLabels.put(tableDisplay, rowLabels);
         virtualGrid.addSelectionListener((oldSel, newSel) -> {
             visible.set(showAlways || (newSel != null && newSel.includes(tableDisplay)) ? ImmutableList.of(Visible.VISIBLE) : ImmutableList.of());
             // Slightly lazy way to tidy up after ourselves if we get removed:
@@ -208,9 +328,14 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         // We float so no keyboard activation
     }
 
+    @OnThread(Tag.FXPlatform)
     public void removeGrid(TableDisplay display)
     {
-        currentRowLabels.remove(display);
+        @Nullable RowLabels rowLabels = currentRowLabels.remove(display);
+        if (rowLabels != null)
+        {
+            virtualGridSupplierFloating.removeItem(rowLabels.borderShadowRectangle);
+        }
     }
 
     public static enum Visible { VISIBLE }
