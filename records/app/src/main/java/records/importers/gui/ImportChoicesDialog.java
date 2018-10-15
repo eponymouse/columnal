@@ -6,10 +6,14 @@ import annotation.units.GridAreaRowIndex;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
 import com.google.common.collect.ImmutableList;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -26,6 +30,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Screen;
+import javafx.stage.Window;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -385,6 +392,23 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
     }
 
+    private enum ScrollSpeed
+    {
+        NONE(0), LOW(40), HIGH(80);
+
+        public double getPixelScroll()
+        {
+            return pixelSpeed;
+        }
+
+        private final double pixelSpeed;
+
+        private ScrollSpeed(double pixelSpeed)
+        {
+            this.pixelSpeed = pixelSpeed;
+        }
+    }
+
     // class is public for testing purposes
     public class SrcDataDisplay extends RecordSetDataDisplay
     {
@@ -402,7 +426,12 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         private CellPosition mousePressed = CellPosition.ORIGIN;
         @OnThread(Tag.FXPlatform)
         private final Pane mousePane;
-
+        
+        private ScrollSpeed nudgeScrollLeft = ScrollSpeed.NONE;
+        private ScrollSpeed nudgeScrollRight = ScrollSpeed.NONE;
+        private final double pixelThresholdHigh = 5;
+        private final double pixelThresholdLow = 30;
+        
         @OnThread(Tag.FXPlatform)
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, ObjectExpression<@Nullable RecordSet> recordSetProperty, GridArea destData)
         {
@@ -442,6 +471,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
             mousePane.setOnMouseReleased(e -> {
+                nudgeScrollLeft = ScrollSpeed.NONE;
+                nudgeScrollRight = ScrollSpeed.NONE;
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 if (pendingTrim[0] != null)
                 {
@@ -466,6 +497,31 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
+                nudgeScrollLeft = ScrollSpeed.NONE;
+                nudgeScrollRight = ScrollSpeed.NONE;
+                
+                if (e.isPrimaryButtonDown())
+                {
+                    if (e.getSceneX() < mousePane.localToScene(new Point2D(pixelThresholdHigh, 0)).getX())
+                    {
+                        nudgeScrollLeft = ScrollSpeed.HIGH;
+                    }
+                    else if (e.getSceneX() < mousePane.localToScene(new Point2D(pixelThresholdLow, 0)).getX())
+                    {
+                        nudgeScrollLeft = ScrollSpeed.LOW;
+                    }
+                    
+                    
+                    if (e.getSceneX() > mousePane.localToScene(new Point2D(mousePane.getWidth() - pixelThresholdHigh, 0)).getX())
+                    {
+                        nudgeScrollRight = ScrollSpeed.HIGH;
+                    }
+                    else if (e.getSceneX() > mousePane.localToScene(new Point2D(mousePane.getWidth() - pixelThresholdLow, 0)).getX())
+                    {
+                        nudgeScrollRight = ScrollSpeed.LOW;
+                    }
+                }
+                
                 //Log.debug("Mouse dragged while cursor: " + c);
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
                     //Log.debug("We have bounds");
@@ -529,6 +585,19 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 e.consume();
             });
+            Animation doNudgeScroll = new Timeline(new KeyFrame(Duration.millis(200), e -> {
+                if (nudgeScrollLeft != ScrollSpeed.NONE)
+                {
+                    withParent_(g -> g.getScrollGroup().requestScrollBy(nudgeScrollLeft.getPixelScroll(), 0));
+                }
+                if (nudgeScrollRight != ScrollSpeed.NONE)
+                {
+                    withParent_(g -> g.getScrollGroup().requestScrollBy(-nudgeScrollRight.getPixelScroll(), 0));
+                }
+            }));
+            doNudgeScroll.setCycleCount(Animation.INDEFINITE);
+            doNudgeScroll.playFromStart();
+                    
         }
 
         private Cursor calculateCursor(double x, double y)
