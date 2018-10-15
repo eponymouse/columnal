@@ -67,7 +67,7 @@ public class HTMLImporter implements Importer
     // Gives back an HTML document to display, and a function which takes a table index then imports that.
     @OnThread(Tag.Simulation)
     public static Pair<Document, FXPlatformConsumer<Integer>> importHTMLFile(
-        TableManager mgr, File htmlFile, URL source, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException
+        @Nullable Window parentWindow, TableManager mgr, File htmlFile, URL source, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException
     {
         ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results = new ArrayList<>();
         Document doc = parse(htmlFile);
@@ -95,14 +95,14 @@ public class HTMLImporter implements Importer
         }
         
         FXPlatformConsumer<Integer> importTable = tableIndex -> {
-            importTable(mgr, htmlFile, destination, withDataSources, results, tables, tableIndex);
+            importTable(parentWindow, mgr, htmlFile, destination, withDataSources, results, tables, tableIndex);
         };
         
         return new Pair<>(doc, importTable);
     }
 
     @OnThread(Tag.FXPlatform)
-    protected static void importTable(TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex)
+    protected static void importTable(@Nullable Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, SimulationConsumer<ImmutableList<DataSource>> withDataSources, ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results, Elements tables, Integer tableIndex)
     {
         Element table = tables.get(tableIndex);
         // vals is a list of rows:
@@ -217,7 +217,7 @@ public class HTMLImporter implements Importer
         };
 
         results.add(() -> {
-            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), imp).showAndWait().orElse(null);
+            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parentWindow, htmlFile.getName(), imp).showAndWait().orElse(null);
 
             if (outcome != null)
             {
@@ -235,7 +235,7 @@ public class HTMLImporter implements Importer
     @OnThread(Tag.Simulation)
     private static void importHTMLFileThen(Window parentWindow, TableManager mgr, File htmlFile, CellPosition destination, URL source, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
     {
-        Pair<Document, FXPlatformConsumer<Integer>> p = importHTMLFile(mgr, htmlFile, source, destination, withDataSources);
+        Pair<Document, FXPlatformConsumer<Integer>> p = importHTMLFile(parentWindow, mgr, htmlFile, source, destination, withDataSources);
 
         Platform.runLater(() -> {
             new PickHTMLTableDialog(parentWindow, p.getFirst()).showAndWait().ifPresent(n -> p.getSecond().consume(n));

@@ -21,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VerticalDirection;
@@ -43,6 +44,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
@@ -708,6 +710,16 @@ public class FXUtility
     public static BoundingBox getWindowBounds(Window w)
     {
         return new BoundingBox(w.getX(), w.getY(), w.getWidth(), w.getHeight());
+    }
+
+    public static @Nullable Dimension2D sizeOfBiggestScreen(Window parentWindow)
+    {
+        return Screen.getScreensForRectangle(parentWindow.getX(), parentWindow.getY(), parentWindow.getWidth(), parentWindow.getHeight())
+            .stream()
+            .map(s -> new Dimension2D(s.getVisualBounds().getWidth(), s.getVisualBounds().getHeight()))
+            .sorted(Comparator.comparing(d -> -1.0 * d.getWidth() * d.getHeight()))
+            .findFirst().orElse(null);
+        
     }
 
     public static interface DragHandler

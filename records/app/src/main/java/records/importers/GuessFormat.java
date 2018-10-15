@@ -10,6 +10,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
+import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -1001,11 +1002,11 @@ public class GuessFormat
     }
 
     @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, SimulationConsumer<ImportInfo<FinalTextFormat>> then)
+    public static void guessTextFormatGUI_Then(@Nullable Window parentWindow, TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, SimulationConsumer<ImportInfo<FinalTextFormat>> then)
     {
         Import<InitialTextFormat, FinalTextFormat> imp = guessTextFormat(mgr.getTypeManager(), mgr.getUnitManager(), initial, null, null);
         Platform.runLater(() -> {
-            new ImportChoicesDialog<InitialTextFormat, FinalTextFormat>(mgr, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
+            new ImportChoicesDialog<InitialTextFormat, FinalTextFormat>(parentWindow, suggestedName, imp).showAndWait().ifPresent(importInfo -> {
                 Workers.onWorkerThread("Importing", Priority.SAVE, () -> FXUtility.alertOnError_("Error importing data", () -> then.consume(importInfo)));
             });
         });

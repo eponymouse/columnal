@@ -107,8 +107,11 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
     @OnThread(Tag.Any)
     private final VirtualGrid srcGrid;
 
-    public ImportChoicesDialog(TableManager mgr, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
+    // Window should only be null in test code
+    public ImportChoicesDialog(@Nullable Window parentWindow, String suggestedName, Import<SRC_FORMAT, FORMAT> importer)
     {
+        if (parentWindow != null)
+            initOwner(parentWindow);
         this.importer = importer;
         SimpleObjectProperty<@Nullable RecordSet> srcRecordSet = new SimpleObjectProperty<>(null);
         destRecordSet = new SimpleObjectProperty<>(null);
@@ -226,7 +229,8 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             return null;
         });
         setResizable(true);
-        getDialogPane().setPrefSize(800, 600);
+        @Nullable Dimension2D size = parentWindow == null ? null: FXUtility.sizeOfBiggestScreen(parentWindow);
+        getDialogPane().setPrefSize(size == null ? 800.0 : size.getWidth() - 100.0, size == null ? 600.0 : size.getHeight() - 100.0);
 
 
         setOnShown(e -> {

@@ -106,7 +106,7 @@ public class ExcelImporter implements Importer
                 }
             };
             
-            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(mgr, src.getName(), importInfo).showAndWait().orElse(null);
+            @Nullable ImportInfo<PlainImportInfo> outcome = new ImportChoicesDialog<>(parent, src.getName(), importInfo).showAndWait().orElse(null);
 
             if (outcome != null)
             {

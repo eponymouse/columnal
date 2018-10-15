@@ -85,7 +85,7 @@ public class PropFormat extends ApplicationTest implements ComboUtilTrait
         File htmlFile = File.createTempFile("data", "html");
         FileUtils.writeStringToFile(htmlFile, formatAndData.htmlContent, StandardCharsets.UTF_8);
         SimulationConsumer<ImmutableList<DataSource>> addToLoaded = loaded::addAll;
-        FXPlatformConsumer<Integer> loadTable = HTMLImporter.importHTMLFile(DummyManager.INSTANCE, htmlFile, htmlFile.toURI().toURL(), CellPosition.ORIGIN, addToLoaded).getSecond();
+        FXPlatformConsumer<Integer> loadTable = HTMLImporter.importHTMLFile(null, DummyManager.INSTANCE, htmlFile, htmlFile.toURI().toURL(), CellPosition.ORIGIN, addToLoaded).getSecond();
         CompletableFuture<Boolean> f = new CompletableFuture<>();
         Platform.runLater(() -> {
             loadTable.consume(0);

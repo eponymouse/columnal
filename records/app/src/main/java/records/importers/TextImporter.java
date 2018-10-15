@@ -81,7 +81,7 @@ public class TextImporter implements Importer
         {
             try
             {
-                importTextFile(tableManager, src, destination, rs -> onLoad.consume(rs));
+                importTextFile(parent, tableManager, src, destination, rs -> onLoad.consume(rs));
             }
             catch (InternalException | UserException | IOException ex)
             {
@@ -97,10 +97,10 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    public static void importTextFile(TableManager mgr, File textFile, CellPosition destination, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
+    public static void importTextFile(@Nullable Window parentWindow, TableManager mgr, File textFile, CellPosition destination, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
-        GuessFormat.guessTextFormatGUI_Then(mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, impInfo ->
+        GuessFormat.guessTextFormatGUI_Then(parentWindow, mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, impInfo ->
         {
             try
             {
@@ -122,7 +122,7 @@ public class TextImporter implements Importer
         Map<Charset, List<String>> initial = getInitial(textFile);
         CompletableFuture<RecordSet> f = new CompletableFuture<>();
         // TODO need some test code to operate the GUI
-        importTextFile(mgr, textFile, CellPosition.ORIGIN, data -> {
+        importTextFile(null, mgr, textFile, CellPosition.ORIGIN, data -> {
             try
             {
                 f.complete(data.getData());
