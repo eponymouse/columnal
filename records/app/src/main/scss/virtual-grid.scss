@@ -146,6 +146,8 @@
     -fx-fill: $table-pick-overlay-fill;
     -fx-stroke-width: 3;
     -fx-stroke: $table-pick-overlay-stroke;
+}
+.pick-table-overlay {    
     -fx-stroke-type: outside;
 }
 
