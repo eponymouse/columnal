@@ -1,32 +1,23 @@
 package records.importers;
 
-import annotation.units.AbsColIndex;
-import annotation.units.AbsRowIndex;
 import annotation.units.GridAreaColIndex;
 import annotation.units.GridAreaRowIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
-import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jsoup.Jsoup;
@@ -39,7 +30,6 @@ import records.data.*;
 import records.gui.grid.GridAreaCellPosition;
 import records.importers.GuessFormat.Import;
 import records.importers.GuessFormat.ImportInfo;
-import records.importers.GuessFormat.TrimChoice;
 import records.importers.ImportPlainTable.PlainImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
@@ -47,7 +37,6 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationConsumer;
-import utility.SimulationFunction;
 import utility.SimulationSupplier;
 import records.error.InternalException;
 import records.error.UserException;
@@ -216,7 +205,7 @@ public class HTMLImporter implements Importer
             }
         }
 
-        ImporterUtility.rectangularise(vals);
+        ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
 
         Import<UnitType, PlainImportInfo> imp = new ImportPlainTable(vals.isEmpty() ? 0 : vals.get(0).size(), mgr, vals)
         {

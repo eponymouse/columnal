@@ -47,6 +47,7 @@ import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ImporterUtility
@@ -56,10 +57,18 @@ public class ImporterUtility
     public static void rectangularise(List<ArrayList<String>> vals)
     {
         int maxRowLength = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
-        for (List<String> row : vals)
+        for (Iterator<ArrayList<String>> iterator = vals.iterator(); iterator.hasNext(); )
         {
-            while (row.size() < maxRowLength)
-                row.add("");
+            List<String> row = iterator.next();
+            if (row.stream().allMatch(String::isEmpty))
+            {
+                iterator.remove();
+            }
+            else
+            {
+                while (row.size() < maxRowLength)
+                    row.add("");
+            }
         }
     }
 

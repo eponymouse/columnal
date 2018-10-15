@@ -82,7 +82,7 @@ public class ExcelImporter implements Importer
                     while (vals.size() < currentCell.getRowIndex())
                     {
                         // Can't use Collections.emptyList because this may be later
-                        // modified by rectangularise
+                        // modified by rectangulariseAndRemoveBlankRows
                         vals.add(new ArrayList<>());
                     }
                     while (row.size() < currentCell.getColumnIndex())
@@ -95,7 +95,7 @@ public class ExcelImporter implements Importer
 
                 vals.add(row);
             }
-            ImporterUtility.rectangularise(vals);
+            ImporterUtility.rectangulariseAndRemoveBlankRows(vals);
             int numSrcColumns = vals.isEmpty() ? 0 : vals.get(0).size();
 
             Import<UnitType, PlainImportInfo> importInfo = new ImportPlainTable(numSrcColumns, mgr, vals) {
