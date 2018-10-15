@@ -124,10 +124,12 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         srcDataCellSupplier.addGrid(srcDataDisplay, srcDataDisplay.getDataGridCellInfo());
 
         RowLabelSupplier srcRowLabels = new RowLabelSupplier(srcGrid.getFloatingSupplier());
+        srcRowLabels.setMinRowTranslateX(-SrcDataDisplay.HORIZ_INSET);
         srcGrid.addNodeSupplier(srcRowLabels);
         srcRowLabels.addTable(srcGrid, srcDataDisplay, true);
 
         RowLabelSupplier destRowLabels = new RowLabelSupplier(destGrid.getFloatingSupplier());
+        destRowLabels.setMinRowTranslateX(-SrcDataDisplay.HORIZ_INSET);
         destGrid.addNodeSupplier(destRowLabels);
         destRowLabels.addTable(destGrid, destData, true);
 

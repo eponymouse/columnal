@@ -70,7 +70,13 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     // For displaying the border/shadow overlays without repeating code:
     private final VirtualGridSupplierFloating virtualGridSupplierFloating;
     private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
-    
+    private double minRowTranslateX = 0.0;
+
+    public void setMinRowTranslateX(double t)
+    {
+        this.minRowTranslateX = t;
+    }
+
     @OnThread(Tag.FXPlatform)
     private class RowLabels
     {
@@ -428,7 +434,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             clip.setHeight(getHeight());
             
             // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
-            double clamped = Utility.clampIncl(0.0, -(getLayoutX() + containerTranslateX), maxTranslateX);
+            double clamped = Utility.clampIncl(minRowTranslateX, -(getLayoutX() + containerTranslateX - minRowTranslateX), maxTranslateX);
             setTranslateX(clamped);
 
             //Log.debug("Clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
