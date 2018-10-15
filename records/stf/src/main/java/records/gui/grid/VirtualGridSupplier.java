@@ -89,6 +89,8 @@ public abstract class VirtualGridSupplier<T extends Node>
         // This includes normal cells, and any header items that behave like normal cells
         // (i.e. no floating position, no overlapping other cells)
         STANDARD_CELLS,
+        // A border around a selection of cells, e.g. in the import dialog.
+        CELL_SELECTION,
         // This is any overlay which may need to appear in front of a standard cell,
         // such as the column name header (which gets pinned as we scroll down)
         // and the row labels (which can appear in front of other data)

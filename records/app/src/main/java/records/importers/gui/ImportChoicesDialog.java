@@ -411,7 +411,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             this.curSelectionBounds = new RectangleBounds(getPosition().offsetByRowCols(1, 0), getBottomRightIncl());
             // Will be set right at first layout:
             this.curBoundingBox = new BoundingBox(0, 0, 0, 0);
-            this.selectionRectangle = new RectangleOverlayItem(ViewOrder.TABLE_BORDER) {
+            this.selectionRectangle = new RectangleOverlayItem(ViewOrder.CELL_SELECTION) {
                 @Override
                 protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
                 {
