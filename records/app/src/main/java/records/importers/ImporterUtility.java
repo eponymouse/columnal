@@ -52,9 +52,12 @@ import java.util.List;
 
 public class ImporterUtility
 {
-    // Pads each row with extra blanks so that all rows have the same length
-    // Modifies list (and inner lists) in-place.
-    public static void rectangularise(List<ArrayList<String>> vals)
+    /**
+     * Pads each row with extra blanks so that all rows have the same length.
+     * Removes any rows which contain only blanks.s
+     * Modifies list (and inner lists) in-place.
+     */
+    public static void rectangulariseAndRemoveBlankRows(List<ArrayList<String>> vals)
     {
         int maxRowLength = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
         for (Iterator<ArrayList<String>> iterator = vals.iterator(); iterator.hasNext(); )
