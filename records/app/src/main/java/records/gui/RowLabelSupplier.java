@@ -63,8 +63,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Row label supplier for all tables.
+ * Row label supplier for all tables for a given grid.
  */
+@OnThread(Tag.FXPlatform)
 public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
 {
     // For displaying the border/shadow overlays without repeating code:
@@ -102,7 +103,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         }
 
         @OnThread(Tag.FXPlatform)
-        private class RowLabelBorder extends RectangleOverlayItem implements ChangeListener<Number>
+        private class RowLabelBorder extends RectangleOverlayItem
         {
             private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap;
             private final DataDisplay dataDisplay;
@@ -135,27 +136,12 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             {
                 r.getStyleClass().addAll("table-border-overlay", "row-label-border");
                 calcClip(r);
-            }
-
-            @Override
-            public void adjustForContainerTranslation(ResizableRectangle item, Pair<DoubleExpression, DoubleExpression> translateXY, boolean adding)
-            {
-                super.adjustForContainerTranslation(item, translateXY, adding);
-                if (adding)
-                    translateXY.getSecond().addListener(this);
-                else
-                    translateXY.getSecond().removeListener(this);
+                FXUtility.addChangeListenerPlatformNN(r.widthProperty(), w-> updateClip());
+                FXUtility.addChangeListenerPlatformNN(r.heightProperty(), w-> updateClip());
             }
 
             @Override
             protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
-            {
-                updateClip();
-            }
-
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue)
             {
                 updateClip();
             }
