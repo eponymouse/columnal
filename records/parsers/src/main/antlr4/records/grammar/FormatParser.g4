@@ -22,7 +22,8 @@ tagItem : ident (OPEN_BRACKET type (COMMA type)* CLOSE_BRACKET)?;
 
 defaultValue: DEFAULT VALUE VALUE_END;
 
-columnName : ident;
+// Type names are fine as a column name:
+columnName : ident | NUMBER | BOOLEAN | TEXT | date;
 // The defaultValue contains the NEWLINE if that option is picked:
 column : COLUMN columnName TYPE type (defaultValue | NEWLINE);
 
