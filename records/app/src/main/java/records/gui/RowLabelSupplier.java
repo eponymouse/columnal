@@ -72,10 +72,25 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     private final VirtualGridSupplierFloating virtualGridSupplierFloating;
     private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
     private double minRowTranslateX = 0.0;
+    private @MonotonicNonNull DoubleExpression containerTranslateX;
 
     public void setMinRowTranslateX(double t)
     {
         this.minRowTranslateX = t;
+    }
+    
+    private void setContainerTranslateX(DoubleExpression containerTranslateX)
+    {
+        if (this.containerTranslateX == null)
+        {
+            this.containerTranslateX = containerTranslateX;
+            FXUtility.addChangeListenerPlatformNN(containerTranslateX, tx -> {
+                for (RowLabels rowLabels : currentRowLabels.values())
+                {
+                    rowLabels.containerTranslateChanged();
+                }
+            });
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -83,10 +98,14 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     {
         private final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabels;
         private final RowLabelBorder borderShadowRectangle;
+        private final DataDisplay dataDisplay;
         private boolean floating = false;
+        private double minTranslateX = 0.0;
+        private double maxTranslateXRight;
 
         private RowLabels(DataDisplay dataDisplay)
         {
+            this.dataDisplay = dataDisplay;
             final HashMap<@TableDataRowIndex Integer, LabelPane> rowLabelMap = new HashMap<>();
             this.rowLabels = rowLabelMap;
             borderShadowRectangle = new RowLabelBorder(rowLabelMap, dataDisplay);
@@ -99,6 +118,14 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             {
                 this.floating = floating;
                 borderShadowRectangle.updateClip();
+            }
+        }
+
+        public void containerTranslateChanged()
+        {
+            for (LabelPane value : rowLabels.values())
+            {
+                value.updateClipAndTranslate();
             }
         }
 
@@ -204,9 +231,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                     @TableDataRowIndex int relIndex = dataDisplay.getTableRowIndexFromAbsRow(i);
                     labels.rowLabels.computeIfAbsent(relIndex, _x -> {
                         LabelPane labelPane = new LabelPane(labels);
-                        labelPane.setRow(dataDisplay, labels, relIndex);
+                        labelPane.setRow(labels, relIndex);
                         Pair<DoubleExpression, DoubleExpression> trans = containerChildren.add(labelPane, ViewOrder.FLOATING);
-                        labelPane.adjustForContainerTranslate(trans.getFirst());
+                        setContainerTranslateX(trans.getFirst());
                         return labelPane;
                     });
                 }
@@ -216,19 +243,27 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 // Find number of digits, min 2:
                 int numDigits = Math.max(2, Integer.toString(highestRow).length());
 
+                @AbsColIndex int colIndex = dataDisplay.getPosition().columnIndex;
+                double x = visibleBounds.getXCoord(colIndex);
+                
+                // The furthest we go is to the left edge of the rightmost data cell:
+                labels.maxTranslateXRight = visibleBounds.getXCoord(dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition()).columnIndex) - x;
+                labels.minTranslateX = colIndex == 0 ? minRowTranslateX : 0.0;
+                
                 // Set position of all:
                 for (Entry<@TableDataRowIndex Integer, LabelPane> label : labels.rowLabels.entrySet())
                 {
                     label.getValue().setMinDigits(numDigits);
-                    
-                    @AbsColIndex int colIndex = dataDisplay.getPosition().columnIndex;
                     double width = label.getValue().prefWidth(-1);
-                    double height = 25;
-                    double x = visibleBounds.getXCoord(colIndex) - width;
-                    double y = visibleBounds.getYCoord(dataDisplay.getAbsRowIndexFromTableRow(label.getKey()));
+                    label.getValue().label.requestLayout();
+                    double labelPref = label.getValue().label.prefWidth(-1);
+                    //Log.debug("Text \"" + label.getValue().label.getText() + "\" pref width: " + width + " label pref: " + labelPref);
                     
+                    @AbsRowIndex int row = dataDisplay.getAbsRowIndexFromTableRow(label.getKey());
+                    double y = visibleBounds.getYCoord(row);
+                    double height = visibleBounds.getYCoordAfter(row) - y;
                     
-                    label.getValue().updateLayout(visibleBounds, dataDisplay, x, y, width, height, colIndex == 0);
+                    label.getValue().updateLayout(x, y, width, height);
                 }
             });
         }
@@ -349,15 +384,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         private @TableDataRowIndex int row;
         private final Label label = new Label();
         private final Tooltip tooltip;
-        private @MonotonicNonNull DataDisplay tableDisplay;
+        private RowLabels rowLabels;
         private int curMinDigits = 1;
         private final ResizableRectangle clip = new ResizableRectangle();
-        private final BooleanProperty leftMostColumn = new SimpleBooleanProperty(false);
-
-        private double containerTranslateX;
-        private double maxTranslateX;
-
-        private RowLabels rowLabels;
         
         public LabelPane(RowLabels rowLabels)
         {
@@ -370,15 +399,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             label.setMaxHeight(Double.MAX_VALUE);
             BorderPane.setAlignment(label, Pos.CENTER_RIGHT);
             label.setOnContextMenuRequested(e -> {
-                if (tableDisplay != null)
-                {
-                    @Nullable ContextMenu contextMenu = tableDisplay.makeRowContextMenu(this.row);
-                    if (contextMenu != null)
-                        contextMenu.show(label, e.getScreenX(), e.getScreenY());
-                }
-            });
-            FXUtility.addChangeListenerPlatformNN(leftMostColumn, leftMost -> {
-                Utility.later(this).updateClipAndTranslate();
+                @Nullable ContextMenu contextMenu = rowLabels.dataDisplay.makeRowContextMenu(this.row);
+                if (contextMenu != null)
+                    contextMenu.show(label, e.getScreenX(), e.getScreenY());
             });
             this.tooltip = new Tooltip();
             Tooltip.install(this, tooltip);
@@ -387,67 +410,56 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 rowLabels.setFloating(floating);
                 FXUtility.setPseudoclass(FXUtility.mouse(label), "row-header-floating", floating);
             });
+            FXUtility.onceNotNull(label.skinProperty(), sk -> {
+                Utility.later(this).updateLayout(getLayoutX(), getLayoutY(), prefWidth(-1), getHeight());
+                Utility.later(this).updateClipAndTranslate();
+            });
         }
 
-        public boolean isTableRow(DataDisplay tableDisplay, @TableDataRowIndex int row)
+        public void setRow(RowLabels rowLabels, @TableDataRowIndex int row)
         {
-            return this.tableDisplay == tableDisplay && this.row == row;
-        }
-        
-        public void setRow(DataDisplay tableDisplay, RowLabels rowLabels, @TableDataRowIndex int row)
-        {
-            this.tableDisplay = tableDisplay;
+            this.rowLabels = rowLabels;
             this.row = row;
             // User rows begin with 1:
             label.setText(Strings.padStart(Integer.toString(row + 1), curMinDigits, ' '));
             this.tooltip.setText(Integer.toString(row + 1));
-            this.rowLabels = rowLabels;
+            label.requestLayout();
             rowLabels.setFloating((int)getTranslateX() != 0);
         }
         
         public void setMinDigits(int minDigits)
         {
-            if (curMinDigits != minDigits && tableDisplay != null)
+            if (curMinDigits != minDigits)
             {
                 curMinDigits = minDigits;
-                setRow(tableDisplay, rowLabels, row);
+                // Update the label and tooltip:
+                setRow(rowLabels, row);
             }
         }
 
         public void updateClipAndTranslate()
         {
-            clip.setWidth(getWidth() + 20.0);
+            double width = getWidth();
+            clip.setWidth(width + 20.0);
             clip.setHeight(getHeight());
             
-            // We try to translate ourselves to equivalent layout Y of zero, but without moving ourselves upwards, or further down than maxTranslateY:
-            double clamped = Utility.clampIncl(minRowTranslateX, -(getLayoutX() + containerTranslateX - minRowTranslateX), maxTranslateX);
-            setTranslateX(clamped);
+            // We try to translate ourselves to equivalent layout X of zero, but without moving ourselves leftwards, or further across than maxTranslateXRight:
+            double tx = containerTranslateX == null ? 0.0 : containerTranslateX.doubleValue();
+            double clampedRight = Utility.clampIncl(rowLabels.minTranslateX - width, minRowTranslateX - (getLayoutX() + tx), rowLabels.maxTranslateXRight - width);
+            setTranslateX(clampedRight);
 
-            //Log.debug("Clamped: " + clamped + " layoutX : " + label.getLayoutX() + " us: " + getLayoutX() + " container: " + containerTranslateX);
+            //Log.debug("ClampedRight: " + clampedRight + " left: " + rowLabels.minTranslateX + " layoutX : " + getLayoutX() + " width: " + width + " container: " + tx);
         }
         
-        public void updateLayout(VisibleBounds visibleBounds, DataDisplay dataDisplay, double x, double y, double width, double height, boolean leftMost)
+        public void updateLayout(double x, double y, double width, double height)
         {
-            // The furthest we go is to the left edge of the rightmost data cell:
-            maxTranslateX = visibleBounds.getXCoord(dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition()).columnIndex) - x - width;
-
             resizeRelocate(
                 x,
                 y,
                 width,
                 height
             );
-            leftMostColumn.set(leftMost);
             updateClipAndTranslate();
-        }
-
-        public void adjustForContainerTranslate(DoubleExpression translateX)
-        {
-            containerTranslateX = translateX.get();
-            FXUtility.addChangeListenerPlatformNN(translateX, tx -> {
-                containerTranslateX = tx.doubleValue();
-                updateClipAndTranslate();
-            });
         }
     }
 }

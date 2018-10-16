@@ -54,8 +54,12 @@ class Node
 
     void setScaleX(@UnknownInitialization(javafx.scene.Node.class) Node this, double x);
 
+    double getLayoutX(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    double getLayoutY(@UnknownInitialization(javafx.scene.Node.class) Node this);
     double getWidth(@UnknownInitialization(javafx.scene.Node.class) Node this);
     double getHeight(@UnknownInitialization(javafx.scene.Node.class) Node this);
+    double prefWidth(@UnknownInitialization(javafx.scene.Node.class) Node this, double height);
+    double prefHeight(@UnknownInitialization(javafx.scene.Node.class) Node this, double width);
 
     void setFocusTraversable(@UnknownInitialization(javafx.scene.Node.class) Node this, boolean b);
     BooleanProperty focusedProperty(@UnknownInitialization(javafx.scene.Node.class) Node this);
@@ -298,6 +302,9 @@ class Region
 
     double getWidth(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
     double getHeight(@UnknownInitialization(javafx.scene.layout.Region.class) Region this);
+    
+    double prefWidth(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double height);
+    double prefHeight(@UnknownInitialization(javafx.scene.layout.Region.class) Region this, double width);
 }
 
 package javafx.stage;
