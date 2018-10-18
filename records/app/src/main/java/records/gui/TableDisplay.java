@@ -1415,7 +1415,9 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 @TableDataColIndex int columnZero = 0;
                 // We know where row labels will be, so easy to construct the rectangle:
                 CellPosition topLeftData = getDataPosition(rowZero, columnZero);
-                CellPosition bottomRightData = getDataPosition(currentKnownRows, columnZero);
+                @SuppressWarnings("units")
+                @TableDataRowIndex int oneRow = 1;
+                CellPosition bottomRightData = getDataPosition(currentKnownRows - oneRow, columnZero);
                 double rowStartY = visibleBounds.getYCoord(topLeftData.rowIndex);
                 double rowEndY = visibleBounds.getYCoordAfter(bottomRightData.rowIndex);
                 Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - visibleBounds.getYCoord(getPosition().rowIndex), 20, rowEndY - rowStartY);
