@@ -598,7 +598,7 @@ public class View extends StackPane
 // Ask what they want
             (cellPos, mousePos, grid) -> createTable(FXUtility.mouse(this), tableManager, cellPos, mousePos, grid),
             10, 20, "main-view-grid");
-        expandTableArrowSupplier = new ExpandTableArrowSupplier(Utility.later(this));
+        expandTableArrowSupplier = new ExpandTableArrowSupplier();
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);

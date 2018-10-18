@@ -32,12 +32,10 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
     public static final String RIGHT_ARROW = "\u27F6";
     public static final String DOWN_ARROW = "\u2193";
     private WeakHashMap<Button, Pair<TableDisplay, CellStyle>> buttonTableDisplaysAndHoverStyles = new WeakHashMap<>();
-    private final View parent;
     
-    public ExpandTableArrowSupplier(View parent)
+    public ExpandTableArrowSupplier()
     {
         super(ViewOrder.STANDARD_CELLS, Arrays.asList(CellStyle.values()));
-        this.parent = parent;
     }
     
     @Override
