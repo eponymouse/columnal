@@ -145,7 +145,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             @Override
             protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
             {
-                double width = rowLabelMap.values().stream().map(p -> p.prefWidth(-1)).findFirst().orElse(0.0);
+                double width = rowLabelMap.values().stream().mapToDouble(p -> p.getWidth()).max().orElse(0.0);
                 
                 return getVisibleDataArea(visibleBounds, dataDisplay).map(leftHandColumnVis -> {
                     double right = visibleBounds.getXCoord(leftHandColumnVis.topLeftIncl.columnIndex);
@@ -163,8 +163,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             {
                 r.getStyleClass().addAll("table-border-overlay", "row-label-border");
                 calcClip(r);
-                FXUtility.addChangeListenerPlatformNN(r.widthProperty(), w-> updateClip());
-                FXUtility.addChangeListenerPlatformNN(r.heightProperty(), w-> updateClip());
+                FXUtility.addChangeListenerPlatformNN(r.widthProperty(), w -> updateClip());
+                FXUtility.addChangeListenerPlatformNN(r.heightProperty(), h -> updateClip());
             }
 
             @Override
@@ -266,6 +266,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                     label.getValue().updateLayout(x, y, width, height);
                 }
             });
+            
+            labels.borderShadowRectangle.updateClip();
         }
     }
 
