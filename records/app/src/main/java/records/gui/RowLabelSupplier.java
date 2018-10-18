@@ -27,6 +27,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -49,6 +50,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -71,8 +73,11 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     // For displaying the border/shadow overlays without repeating code:
     private final VirtualGridSupplierFloating virtualGridSupplierFloating;
     private final HashMap<DataDisplay, RowLabels> currentRowLabels = new HashMap<>();
+    private final VirtualGrid virtualGrid;
     private double minRowTranslateX = 0.0;
     private @MonotonicNonNull DoubleExpression containerTranslateX;
+    // Used to make sure we don't queue up multiple requests for a relayout:
+    private @Nullable FXPlatformRunnable cancelRelayout;
 
     public void setMinRowTranslateX(double t)
     {
@@ -187,6 +192,8 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                     new Rectangle(0, 0, r.getWidth(), r.getHeight())
                 );
                 r.setClip(originalClip);
+                //Log.debug("Set row label clip based on width: " + r.getWidth());
+                
                 /* // Debug code to help see what clip looks like:
                 if (getPosition().columnIndex == CellPosition.col(7))
                 {
@@ -202,9 +209,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         }
     }
     
-    public RowLabelSupplier(VirtualGridSupplierFloating virtualGridSupplierFloating)
+    public RowLabelSupplier(VirtualGrid virtualGrid)
     {
-        this.virtualGridSupplierFloating = virtualGridSupplierFloating;
+        this.virtualGrid = virtualGrid;
+        this.virtualGridSupplierFloating = virtualGrid.getFloatingSupplier();
     }
 
     @Override
@@ -250,20 +258,35 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 labels.maxTranslateXRight = visibleBounds.getXCoord(dataDisplay.getDataDisplayBottomRightIncl().from(dataDisplay.getPosition()).columnIndex) - x;
                 labels.minTranslateX = colIndex == 0 ? minRowTranslateX : 0.0;
                 
+                boolean anyWidthZero = false;
+                
                 // Set position of all:
                 for (Entry<@TableDataRowIndex Integer, LabelPane> label : labels.rowLabels.entrySet())
                 {
                     label.getValue().setMinDigits(numDigits);
                     double width = label.getValue().prefWidth(-1);
                     label.getValue().label.requestLayout();
+                    label.getValue().requestLayout();
                     double labelPref = label.getValue().label.prefWidth(-1);
-                    //Log.debug("Text \"" + label.getValue().label.getText() + "\" pref width: " + width + " label pref: " + labelPref);
+                    //Log.debug("Text \"" + label.getValue().label.getText() + "\" pref width: " + width + " label pref: " + labelPref + " min: " + label.getValue().minWidth(-1) + " scene: " + label.getValue().getScene());
+                    if (width == 0)
+                        anyWidthZero = true;
                     
                     @AbsRowIndex int row = dataDisplay.getAbsRowIndexFromTableRow(label.getKey());
                     double y = visibleBounds.getYCoord(row);
                     double height = visibleBounds.getYCoordAfter(row) - y;
                     
                     label.getValue().updateLayout(x, y, width, height);
+                }
+                
+                // This happens when labels have just been added to the scene.  It's a hack, but we just come
+                // back later to do another layout if this is the case:
+                if (anyWidthZero && cancelRelayout == null)
+                {
+                    cancelRelayout = FXUtility.runAfterDelay(Duration.seconds(0.3), () -> {
+                        virtualGrid.positionOrAreaChanged();
+                        cancelRelayout = null;
+                    });
                 }
             });
             

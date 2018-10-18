@@ -602,7 +602,7 @@ public class View extends StackPane
         mainPane.addNodeSupplier(new VirtualGridLineSupplier());
         mainPane.addNodeSupplier(dataCellSupplier);
         mainPane.addNodeSupplier(expandTableArrowSupplier);
-        this.rowLabelSupplier = new RowLabelSupplier(mainPane.getFloatingSupplier());
+        this.rowLabelSupplier = new RowLabelSupplier(mainPane);
         mainPane.addNodeSupplier(rowLabelSupplier);
         mainPane.addNewButtonVisibleListener(vis -> {
             emptyListener.consume(tableManager.getAllTables().isEmpty() ?

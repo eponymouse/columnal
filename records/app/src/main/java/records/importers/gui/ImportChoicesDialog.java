@@ -133,12 +133,12 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         srcGrid.addNodeSupplier(srcDataCellSupplier);
         srcDataCellSupplier.addGrid(srcDataDisplay, srcDataDisplay.getDataGridCellInfo());
 
-        RowLabelSupplier srcRowLabels = new RowLabelSupplier(srcGrid.getFloatingSupplier());
+        RowLabelSupplier srcRowLabels = new RowLabelSupplier(srcGrid);
         srcRowLabels.setMinRowTranslateX(-SrcDataDisplay.HORIZ_INSET);
         srcGrid.addNodeSupplier(srcRowLabels);
         srcRowLabels.addTable(srcGrid, srcDataDisplay, true);
 
-        RowLabelSupplier destRowLabels = new RowLabelSupplier(destGrid.getFloatingSupplier());
+        RowLabelSupplier destRowLabels = new RowLabelSupplier(destGrid);
         destRowLabels.setMinRowTranslateX(-SrcDataDisplay.HORIZ_INSET);
         destGrid.addNodeSupplier(destRowLabels);
         destRowLabels.addTable(destGrid, destData, true);
