@@ -153,8 +153,8 @@
 
 .virt-grid-row-label {
     /* First is colour of vertical separator between rows */
-    -fx-background-color: $table-row-label-background-color, $table-row-label-background-color;
-    -fx-background-insets: 0, 0 0 1 0;
+    -fx-background-color: $table-divider, $table-row-label-background-color;
+    -fx-background-insets: 0, 0 1 1 0;
     -fx-label-padding: 0 2 0 5;
     -fx-text-fill: $table-row-label-text-color;
     -fx-font-size: 10px;
