@@ -1333,9 +1333,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         @Override
         protected Optional<Either<BoundingBox, RectangleBounds>> calculateBounds(VisibleBounds visibleBounds)
         {
-            return Optional.of(Either.right(new RectangleBounds(
-                    getPosition(),
-                    getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1)
+            // We don't use clampVisible because otherwise calculating the clip is too hard
+            // So we just use a big rectangle the size of the entire table.  I don't think this
+            // causes performance issues, but something to check if there are issues later on.
+            double left = visibleBounds.getXCoord(getPosition().columnIndex);
+            double top = visibleBounds.getYCoord(getPosition().rowIndex);
+            CellPosition bottomRight = getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1);
+            // Take one pixel off so that we are on top of the right/bottom divider inset
+            // rather than showing it just inside the rectangle (which looks weird)
+            double right = visibleBounds.getXCoordAfter(bottomRight.columnIndex) - 1;
+            double bottom = visibleBounds.getYCoordAfter(bottomRight.rowIndex) - 1;
+
+            return Optional.of(Either.left(new BoundingBox(
+                    left, top, right - left, bottom - top
             )));
         }
 
@@ -1345,6 +1355,8 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             r.getStyleClass().add("table-border-overlay");
             calcClip(r, visibleBounds);
             this.lastVisibleBounds = visibleBounds;
+            r.layoutXProperty().addListener(this);
+            r.layoutYProperty().addListener(this);
         }
 
         @Override
@@ -1402,17 +1414,18 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 @SuppressWarnings("units")
                 @TableDataColIndex int columnZero = 0;
                 // We know where row labels will be, so easy to construct the rectangle:
-                double rowStartY = visibleBounds.getYCoord(getDataPosition(rowZero, columnZero).rowIndex);
-                double rowEndY = visibleBounds.getYCoord(getDataPosition(currentKnownRows, columnZero).rowIndex);
-                double ourTopY = visibleBounds.getYCoord(getPosition().rowIndex);
-                
-                Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - ourTopY, 20, rowEndY - rowStartY);
+                CellPosition topLeftData = getDataPosition(rowZero, columnZero);
+                CellPosition bottomRightData = getDataPosition(currentKnownRows, columnZero);
+                double rowStartY = visibleBounds.getYCoord(topLeftData.rowIndex);
+                double rowEndY = visibleBounds.getYCoordAfter(bottomRightData.rowIndex);
+                Rectangle rowLabelBounds = new Rectangle(-20, rowStartY - visibleBounds.getYCoord(getPosition().rowIndex), 20, rowEndY - rowStartY);
+                //Log.debug("Rows: " + currentKnownRows + " label bounds: " + rowLabelBounds + " subtracting from " + r);
                 clip = Shape.subtract(clip, rowLabelBounds);
             }
 
             r.setClip(clip);
             /* // Debug code to help see what clip looks like:
-            if (getPosition().columnIndex == CellPosition.col(7))
+            if (getPosition().columnIndex == CellPosition.col(1))
             {
                 // Hack to clone shape:
                 Shape s = Shape.union(clip, clip);
