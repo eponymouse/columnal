@@ -226,7 +226,7 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             
             // Add all visible:
             visibleGrid.ifPresent(b -> {
-                for (@AbsRowIndex int i = b.topLeftIncl.rowIndex; i < b.bottomRightIncl.rowIndex; i++)
+                for (@AbsRowIndex int i = b.topLeftIncl.rowIndex; i <= b.bottomRightIncl.rowIndex; i++)
                 {
                     @TableDataRowIndex int relIndex = dataDisplay.getTableRowIndexFromAbsRow(i);
                     labels.rowLabels.computeIfAbsent(relIndex, _x -> {
