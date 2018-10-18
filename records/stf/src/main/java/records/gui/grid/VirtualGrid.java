@@ -34,6 +34,7 @@ import javafx.scene.effect.Effect;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
@@ -1087,7 +1088,7 @@ public final class VirtualGrid implements ScrollBindable
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 
-                if (cellPosition != null)
+                if (cellPosition != null && mouseEvent.getButton() == MouseButton.PRIMARY)
                 {
                     @NonNull CellPosition cellPositionFinal = cellPosition;
                     boolean clickable = nodeSuppliers.stream().anyMatch(g -> {
