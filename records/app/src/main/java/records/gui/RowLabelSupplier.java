@@ -122,7 +122,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             if (this.floating != floating)
             {
                 this.floating = floating;
-                borderShadowRectangle.updateClip();
+                for (LabelPane pane : rowLabels.values())
+                {
+                    pane.setFloating(floating);
+                }
             }
         }
 
@@ -430,15 +433,15 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             });
             this.tooltip = new Tooltip();
             Tooltip.install(this, tooltip);
-            FXUtility.addChangeListenerPlatformNN(translateXProperty(), tx -> {
-                boolean floating = tx.intValue() != 0;
-                rowLabels.setFloating(floating);
-                FXUtility.setPseudoclass(FXUtility.mouse(label), "row-header-floating", floating);
-            });
             FXUtility.onceNotNull(label.skinProperty(), sk -> {
                 Utility.later(this).updateLayout(getLayoutX(), getLayoutY(), prefWidth(-1), getHeight());
                 Utility.later(this).updateClipAndTranslate();
             });
+        }
+
+        public void setFloating(boolean floating)
+        {
+            FXUtility.setPseudoclass(FXUtility.mouse(label), "row-header-floating", floating);
         }
 
         public void setRow(RowLabels rowLabels, @TableDataRowIndex int row)
@@ -470,8 +473,10 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             
             // We try to translate ourselves to equivalent layout X of zero, but without moving ourselves leftwards, or further across than maxTranslateXRight:
             double tx = containerTranslateX == null ? 0.0 : containerTranslateX.doubleValue();
-            double clampedRight = Utility.clampIncl(rowLabels.minTranslateX - width, minRowTranslateX - (getLayoutX() + tx), rowLabels.maxTranslateXRight - width);
+            double min = rowLabels.minTranslateX - width;
+            double clampedRight = Utility.clampIncl(min, minRowTranslateX - (getLayoutX() + tx), rowLabels.maxTranslateXRight - width);
             setTranslateX(clampedRight);
+            rowLabels.setFloating(clampedRight > min + 1.0);
 
             //Log.debug("ClampedRight: " + clampedRight + " left: " + rowLabels.minTranslateX + " layoutX : " + getLayoutX() + " width: " + width + " container: " + tx);
         }
