@@ -357,13 +357,22 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     private int internal_getColumnCount(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
     {
-        return (displayColumns == null ? 0 : displayColumns.size()) + (addColumnOperation(table) != null ? 1 : 0);
+        return (displayColumns == null ? 0 : displayColumns.size()) + (showAddColumnArrow(table) ? 1 : 0);
+    }
+
+    private boolean showAddColumnArrow(@UnknownInitialization(GridArea.class) TableDisplay this, Table table)
+    {
+        return addColumnOperation(table) != null &&
+            columnDisplay.get().getFirst() != Display.COLLAPSED;
     }
 
     @Override
     protected CellPosition recalculateBottomRightIncl()
     {
-        return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, Math.max(0, internal_getColumnCount(table) - 1));
+        if (columnDisplay.get().getFirst() == Display.COLLAPSED)
+            return getPosition();
+        else
+            return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, Math.max(0, internal_getColumnCount(table) - 1));
     }
 
     @Override
@@ -1088,6 +1097,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             }
         });
     }
+    
+    public ImmutableList<?> getColumns()
+    {
+        return recordSet == null ? ImmutableList.of() : ImmutableList.copyOf(recordSet.getColumns());
+    }
 
     @OnThread(Tag.FXPlatform)
     private class TableHat extends FloatingItem<Node>
@@ -1336,9 +1350,15 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             // We don't use clampVisible because otherwise calculating the clip is too hard
             // So we just use a big rectangle the size of the entire table.  I don't think this
             // causes performance issues, but something to check if there are issues later on.
-            double left = visibleBounds.getXCoord(getPosition().columnIndex);
-            double top = visibleBounds.getYCoord(getPosition().rowIndex);
-            CellPosition bottomRight = getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, internal_getColumnCount(table) - 1);
+            CellPosition topLeft = getPosition();
+            double left = visibleBounds.getXCoord(topLeft.columnIndex);
+            double top = visibleBounds.getYCoord(topLeft.rowIndex);
+            int columnCount = internal_getColumnCount(table);
+            CellPosition bottomRight;
+            if (columnCount == 0)
+                bottomRight = topLeft;
+            else
+                bottomRight = topLeft.offsetByRowCols(internal_getCurrentKnownRows(table) - 1, columnCount - 1);
             // Take one pixel off so that we are on top of the right/bottom divider inset
             // rather than showing it just inside the rectangle (which looks weird)
             double right = visibleBounds.getXCoordAfter(bottomRight.columnIndex) - 1;

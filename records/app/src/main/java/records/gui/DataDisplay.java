@@ -733,7 +733,16 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             tableHeaderItem.setSelected(newSelection instanceof EntireTableSelection && newSelection.includes(this));
         return new Pair<>(ListenerOutcome.KEEP, null);
     }
-    
+
+    /**
+     * The list of columns currently being displayed, in order
+     * of their display (first in list is leftmost column).
+     */
+    public ImmutableList<ColumnDetails> getDisplayColumns()
+    {
+        return displayColumns;
+    }
+
     public static interface ColumnHeaderOps
     {
         public ImmutableList<ColumnOperation> contextOperations();

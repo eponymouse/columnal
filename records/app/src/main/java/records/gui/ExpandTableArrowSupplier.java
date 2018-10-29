@@ -96,6 +96,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             private boolean hasAddRowArrow(GridAreaCellPosition cellPosition)
             {
                 return addRows
+                    && (!tableDisplay.getDisplayColumns().isEmpty() && !tableDisplay.getColumns().isEmpty())
                     && cellPosition.rowIndex == tableDisplay.getDataDisplayBottomRightIncl().rowIndex + 1
                     && cellPosition.columnIndex >= tableDisplay.getDataDisplayTopLeftIncl().columnIndex
                     && cellPosition.columnIndex <= tableDisplay.getDataDisplayBottomRightIncl().columnIndex;
@@ -105,6 +106,7 @@ public class ExpandTableArrowSupplier extends VirtualGridSupplierIndividual<Butt
             public boolean hasAddColumnArrow(GridAreaCellPosition cellPosition)
             {
                 return addColumn != null
+                    && !tableDisplay.getDisplayColumns().isEmpty()
                     && cellPosition.columnIndex == tableDisplay.getDataDisplayBottomRightIncl().columnIndex + 1
                     && (cellPosition.rowIndex >= 1 && cellPosition.rowIndex <= tableDisplay.getDataDisplayBottomRightIncl().rowIndex);
             }
