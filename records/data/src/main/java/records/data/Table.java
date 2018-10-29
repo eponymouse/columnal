@@ -45,7 +45,7 @@ public abstract class Table
         COLLAPSED,
         /** All columns shown */
         ALL,
-        /** Only those affected by transformations since last time table was shown */
+        /** Only those affected by transformation compared to source table */
         ALTERED,
         /** A custom set (done by black list, not white list) */
         CUSTOM;

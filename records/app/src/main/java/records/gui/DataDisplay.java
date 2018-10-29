@@ -616,6 +616,17 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         {
             tableNameField = new TableNameTextField(tableManager, initialTableName, false);
             tableNameField.sizeToFit(30.0, 30.0);
+            // We have to use PRESSED because if we do CLICKED, the field
+            // will already have been focused:
+            tableNameField.getNode().addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+                // Middle click may actually do something (like paste) when
+                // focused, so only steal it when unfocused:
+                if (e.getButton() == MouseButton.MIDDLE && tableNameField != null && !tableNameField.isFocused())
+                {
+                    headerMiddleClicked();
+                    e.consume();
+                }
+            });
             if (renameTable == null)
             {
                 tableNameField.setEditable(false);
@@ -684,10 +695,17 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 e.consume();
             });
             borderPane.setOnMouseClicked(e -> {
-                withParent_(p -> {
-                    @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
-                    p.select(new EntireTableSelection(DataDisplay.this, columnIndex));
-                });
+                if (e.getButton() == MouseButton.PRIMARY)
+                {
+                    withParent_(p -> {
+                        @AbsColIndex int columnIndex = p.getVisibleBounds().getNearestTopLeftToScreenPos(new Point2D(e.getScreenX(), e.getScreenY()), HPos.CENTER, VPos.CENTER).orElse(getPosition()).columnIndex;
+                        p.select(new EntireTableSelection(DataDisplay.this, columnIndex));
+                    });
+                }
+                else if (e.getButton() == MouseButton.MIDDLE)
+                {
+                    headerMiddleClicked();
+                }
                 e.consume();
             });
             borderPane.setOnContextMenuRequested(e -> {
@@ -718,6 +736,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             if (getNode() != null)
                 FXUtility.setPseudoclass(getNode(), "table-selected", selected);
         }
+    }
+
+    // For overridding by subclasses
+    protected void headerMiddleClicked()
+    {
+        
     }
 
     protected ImmutableList<String> getExtraTitleStyleClasses()

@@ -376,6 +376,37 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     }
 
     @Override
+    protected void headerMiddleClicked()
+    {
+        // We cycle through ALL (incl CUSTOM) -> ALTERED -> COLLAPSED 
+        // ALTERED is skipped if N/A.
+        switch (columnDisplay.get().getFirst())
+        {
+            case COLLAPSED:
+                columnDisplay.setValue(columnDisplay.get().replaceFirst(Display.ALL));
+                break;
+            case ALTERED:
+                columnDisplay.setValue(columnDisplay.get().replaceFirst(Display.COLLAPSED));
+                break;
+            default:
+                // If ALTERED is applicable, do that.  Otherwise go to COLLAPSED
+                Display display = Display.COLLAPSED;
+                if (recordSet != null)
+                {
+                    long countOfAltered = recordSet.getColumns().stream().filter(Column::isAltered).count();
+                    // If all or none are altered, that's equivalent to collapsing
+                    // or showing all, so just skip it for this cycling:
+                    if (countOfAltered != 0 && countOfAltered != recordSet.getColumns().size())
+                    {
+                        display = Display.ALTERED;
+                    }
+                }
+                columnDisplay.setValue(columnDisplay.get().replaceFirst(display));
+                break;
+        }
+    }
+
+    @Override
     protected void doCopy(@Nullable RectangleBounds bounds)
     {
         Log.debug("Copying from " + bounds);
