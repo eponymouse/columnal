@@ -260,7 +260,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     // The last data row in grid area terms, not including any append buttons
     @SuppressWarnings("units")
     @OnThread(Tag.FXPlatform)
-    public final GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
+    public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) DataDisplay this)
     {
         return new GridAreaCellPosition(getHeaderRowCount() + currentKnownRows - 1, displayColumns == null ? 0 : (displayColumns.size() - 1));
     }

@@ -73,6 +73,7 @@ import records.errors.ExpressionErrorException;
 import records.errors.ExpressionErrorException.EditableExpression;
 import records.gui.grid.CellSelection;
 import records.gui.grid.GridArea;
+import records.gui.grid.GridAreaCellPosition;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.RectangleOverlayItem;
 import records.gui.grid.VirtualGrid.ListenerOutcome;
@@ -373,6 +374,14 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             return getPosition();
         else
             return getPosition().offsetByRowCols(internal_getCurrentKnownRows(table) - 1, Math.max(0, internal_getColumnCount(table) - 1));
+    }
+
+    // The last data row in grid area terms, not including any append buttons
+    @SuppressWarnings("units")
+    @OnThread(Tag.FXPlatform)
+    public GridAreaCellPosition getDataDisplayBottomRightIncl(@UnknownInitialization(DataDisplay.class) TableDisplay this)
+    {
+        return new GridAreaCellPosition(getHeaderRowCount() + (columnDisplay.get().getFirst() == Display.COLLAPSED ? 0 : currentKnownRows - 1), displayColumns == null ? 0 : (displayColumns.size() - 1));
     }
 
     @Override

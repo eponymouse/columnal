@@ -229,7 +229,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
             final RowLabels labels = currentRowLabels.get(dataDisplay);
             labels.rowLabels.entrySet().removeIf((Entry<@TableDataRowIndex Integer, LabelPane> e) -> {
                 @AbsRowIndex int absIndex = dataDisplay.getAbsRowIndexFromTableRow(e.getKey());
-                boolean remove = visibleGrid.map(b -> absIndex < b.topLeftIncl.rowIndex || absIndex > b.bottomRightIncl.rowIndex).orElse(false);
+                boolean remove = visibleGrid.map(b -> {
+                    return absIndex < b.topLeftIncl.rowIndex || absIndex > b.bottomRightIncl.rowIndex;
+                }).orElse(true); // Remove if nothing visible
                 if (remove)
                     containerChildren.remove(e.getValue());
                 return remove;
@@ -297,6 +299,9 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
         }
     }
 
+    /**
+     * Returns empty if no data area is visible.
+     */
     @OnThread(Tag.FXPlatform)
     private Optional<RectangleBounds> getVisibleDataArea(VisibleBounds visibleBounds, DataDisplay dataDisplay)
     {

@@ -42,7 +42,7 @@ public abstract class VirtualGridSupplier<T extends Node>
      */
     protected abstract void layoutItems(ContainerChildren containerChildren, VisibleBounds visibleBounds);
 
-    void sizesOrPositionsChanged(VisibleBounds visibleBounds)
+    protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
     {
     }
 
