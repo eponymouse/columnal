@@ -399,12 +399,16 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
     }
 
     @OnThread(Tag.FXPlatform)
-    public void removeGrid(TableDisplay display)
+    public void removeGrid(TableDisplay display, ContainerChildren containerChildren)
     {
         @Nullable RowLabels rowLabels = currentRowLabels.remove(display);
         if (rowLabels != null)
         {
             virtualGridSupplierFloating.removeItem(rowLabels.borderShadowRectangle);
+            for (LabelPane pane : rowLabels.rowLabels.values())
+            {
+                containerChildren.remove(pane);
+            }
         }
     }
 

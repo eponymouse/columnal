@@ -1047,6 +1047,14 @@ public final class VirtualGrid implements ScrollBindable
         return highlightedGridArea.highlightAtScreenPos(screenPos, picker, setCursor);
     }
 
+    /**
+     * Useful for add/removing children outside of layout.
+     */
+    public ContainerChildren getContainerChildren()
+    {
+        return container;
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {

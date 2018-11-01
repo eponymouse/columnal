@@ -175,7 +175,7 @@ public class View extends StackPane
                 dataCellSupplier.removeGrid(display);
                 mainPane.removeSelectionListener(display);
                 expandTableArrowSupplier.removeGrid(display);
-                rowLabelSupplier.removeGrid(display);
+                rowLabelSupplier.removeGrid(display, mainPane.getContainerChildren());
                 // This goes last because it will redo layout:
                 mainPane.removeGridArea(display);
             }
