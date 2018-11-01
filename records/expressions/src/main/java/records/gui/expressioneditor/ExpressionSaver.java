@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -379,7 +380,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
             
             // Error!
-            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator), ImmutableList.of());
+            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator.getContent()), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
             items.addAll(prefixIfInvalid.collect(Collectors.toList()));
