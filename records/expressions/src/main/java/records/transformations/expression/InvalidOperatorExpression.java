@@ -49,7 +49,8 @@ public class InvalidOperatorExpression extends NonOperatorExpression
     @Override
     public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
+        // Error should have been recorded elsewhere
+        //onError.recordError(this, StyledString.s("Mixed or invalid operators in expression"));
         return null; // Invalid expressions can't type check
     }
 
