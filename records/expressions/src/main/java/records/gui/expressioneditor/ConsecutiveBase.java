@@ -282,6 +282,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     protected final void save(SEMANTIC_PARENT saver)
     {
+        clearAllErrors();
         for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
         {
             child.save(saver);
