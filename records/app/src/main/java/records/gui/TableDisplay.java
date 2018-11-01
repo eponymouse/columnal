@@ -873,15 +873,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             Calculate calc = (Calculate) table;
             return beforeColumn -> {
-                FXUtility.mouse(this).addColumnBefore_Calc(calc, beforeColumn);
+                FXUtility.mouse(this).addColumnBefore_Calc(calc, beforeColumn, null);
             };
         }
         return null;
     }
     
-    private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn)
+    private void addColumnBefore_Calc(Calculate calc, @Nullable ColumnId beforeColumn, @Nullable @LocalizableKey String topMessageKey)
     {
-        new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, true, null).showAndWait().ifPresent(p -> {
+        EditColumnExpressionDialog dialog = new EditColumnExpressionDialog(parent, parent.getManager().getSingleTableOrNull(calc.getSource()), new ColumnId(""), null, true, null);
+        
+        if (topMessageKey != null)
+            dialog.addTopMessage(topMessageKey);
+        
+        dialog.showAndWait().ifPresent(p -> {
             Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
                 FXUtility.alertOnError_("Error adding column", () -> {
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(),
@@ -975,7 +980,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         if (table instanceof Calculate)
         {
-            addColumnBefore_Calc((Calculate)table, null);
+            addColumnBefore_Calc((Calculate)table, null, "transform.calculate.addInitial");
         }
         // For other tables, do nothing
     }
@@ -1304,7 +1309,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     {
                         if (mouseButton == MouseButton.PRIMARY)
                         {
-                            addColumnBefore_Calc(calc, null);
+                            addColumnBefore_Calc(calc, null, null);
                         }
                     }
                 }));

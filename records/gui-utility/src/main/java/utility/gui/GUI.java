@@ -442,4 +442,11 @@ public class GUI
         splitPane.getStyleClass().addAll(styleClasses);
         return splitPane;
     }
+    
+    public static TextFlow textFlowKey(@LocalizableKey String msgKey, String... styleClasses)
+    {
+        TextFlow textFlow = new TextFlow(new Text(TranslationUtility.getString(msgKey)));
+        textFlow.getStyleClass().addAll(styleClasses);
+        return textFlow;
+    }
 }

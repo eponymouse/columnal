@@ -203,6 +203,11 @@
     -fx-background-color: grey(70%), $light-dialog-background-dark;
     -fx-padding: 10px;
 }
+.edit-column-top-message {
+    -fx-border-width: 0 0 1 0;
+    -fx-border-style: solid inside;
+    -fx-border-color: grey(70%); 
+}
 
 /*
 .units-dialog-content {

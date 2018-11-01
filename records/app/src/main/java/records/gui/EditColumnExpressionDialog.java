@@ -1,6 +1,7 @@
 package records.gui;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -8,6 +9,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.TextFlow;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
@@ -98,5 +101,17 @@ public class EditColumnExpressionDialog extends LightDialog<Pair<ColumnId, Expre
     public Optional<Pair<ColumnId, Expression>> showAndWaitCentredOn(Point2D mouseScreenPos)
     {
         return super.showAndWaitCentredOn(mouseScreenPos, 400, 200);
+    }
+    
+    public void addTopMessage(@LocalizableKey String topMessage)
+    {
+        TextFlow display = GUI.textFlowKey(topMessage, "edit-column-top-message");
+        display.setMaxWidth(9999.0);
+        Node oldContent = getDialogPane().getContent();
+        getDialogPane().setContent(GUI.borderTopCenter(
+            display,
+                oldContent
+        ));
+        BorderPane.setMargin(oldContent, new Insets(10, 0, 0, 0));
     }
 }
