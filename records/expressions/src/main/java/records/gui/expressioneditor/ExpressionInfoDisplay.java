@@ -75,17 +75,12 @@ public class ExpressionInfoDisplay
         this.textField = textField;
         this.popup = popup;
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
+        // This hover includes subcomponents:
         FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> {
             if (b)
                 popup.mouseHoverBegan(makeError(), expressionNode);
             else
                 popup.mouseHoverEnded(expressionNode);
-        });
-        FXUtility.addChangeListenerPlatformNN(topLabel.hoverProperty(), b -> {
-            if (b)
-                popup.mouseHoverBegan(makeError(), topLabel);
-            else
-                popup.mouseHoverEnded(topLabel);
         });
         FXUtility.addChangeListenerPlatformNN(errorMessage, s -> {
             popup.updateError(makeError(), textField, expressionNode, topLabel);
