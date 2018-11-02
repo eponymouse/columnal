@@ -688,8 +688,9 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                         FXUtility.mouse(DataDisplay.this).cellStyles.get().stream().filter(s -> s != CellStyle.TABLE_DRAG_SOURCE).collect(ImmutableList.toImmutableList())
                     );
                     CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
+                    // setPosition calls updateParent()
                     withParent_(p -> FXUtility.mouse(DataDisplay.this).setPosition(dest));
-                    FXUtility.mouse(DataDisplay.this).updateParent();
+                    tableDraggedToNewPosition();
                     overlays.clear();
                 }
                 e.consume();
@@ -742,6 +743,11 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     protected void headerMiddleClicked()
     {
         
+    }
+    
+    // For overriding in child classes
+    protected void tableDraggedToNewPosition()
+    {
     }
 
     protected ImmutableList<String> getExtraTitleStyleClasses()

@@ -687,6 +687,13 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         parent.modified();
     }
 
+    @Override
+    protected void tableDraggedToNewPosition()
+    {
+        super.tableDraggedToNewPosition();
+        parent.modified();
+    }
+
     @OnThread(Tag.Simulation)
     private static void exportToCSV(Table src, File dest) throws InternalException, UserException
     {
