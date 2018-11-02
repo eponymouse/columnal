@@ -126,4 +126,12 @@ public class Log
     {
         logger.log(Level.DEBUG, s);
     }
+
+    // This should only be used temporarily while debugging, and should not be left in:
+    @Pure
+    public static void debugTime(String s)
+    {
+        long millis = System.currentTimeMillis() % 100000L;
+        logger.log(Level.DEBUG, String.format("#%03d.%03d: ", millis / 1000L, millis % 1000L) + s);
+    }
 }
