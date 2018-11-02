@@ -35,6 +35,8 @@ import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.FXPlatformFunction;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -66,15 +68,19 @@ public class ExpressionInfoDisplay
     private final TextField textField;
     private final TopLevelEditor.ErrorMessageDisplayer popup;
     private final SimpleBooleanProperty maskingErrors = new SimpleBooleanProperty();
+    private final FXPlatformFunction<CaretSide, ImmutableList<ErrorInfo>> getAdjacentErrors;
     
+    public static enum CaretSide { LEFT, RIGHT }
     
     @SuppressWarnings("initialization")
-    public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField, ErrorMessageDisplayer popup)
+    public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField, FXPlatformFunction<CaretSide, ImmutableList<ErrorInfo>> getAdjacentErrors, ErrorMessageDisplayer popup)
     {
         this.expressionNode = expressionNode;
         this.textField = textField;
         this.popup = popup;
+        this.getAdjacentErrors = getAdjacentErrors;
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
+        FXUtility.addChangeListenerPlatformNN(textField.caretPositionProperty(), pos -> textFieldFocusChanged(textField.isFocused()));
         // This hover includes subcomponents:
         FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> {
             if (b)
@@ -138,10 +144,27 @@ public class ExpressionInfoDisplay
             // Lost focus, show errors:
             maskingErrors.set(false);
         }
+        
         if (focused)
-            popup.keyboardFocusEntered(makeError(), textField);
+        {
+            ImmutableList.Builder<ErrorInfo> adjacentErrors = ImmutableList.builder();
+            
+            if (textField.getCaretPosition() == 0)
+            {
+                adjacentErrors.addAll(getAdjacentErrors.apply(CaretSide.LEFT));
+            }
+            // Not else; both can apply if field is empty:
+            if (textField.getCaretPosition() == textField.getLength())
+            {
+                adjacentErrors.addAll(getAdjacentErrors.apply(CaretSide.RIGHT));
+            }
+            
+            popup.keyboardFocusEntered(makeError(), adjacentErrors.build(), textField);
+        }
         else
+        {
             popup.keyboardFocusExited(makeError(), textField);
+        }
     }
 
 
@@ -182,5 +205,16 @@ public class ExpressionInfoDisplay
         this.type.set(type);
     }
     
-    
+    public ImmutableList<ErrorInfo> getErrors()
+    {
+        StyledString err = errorMessage.get();
+        if (err.equals(StyledString.s("")))
+        {
+            return ImmutableList.of();
+        }
+        else
+        {
+            return ImmutableList.of(new ErrorInfo(err, fixes.get()));
+        }
+    }
 }

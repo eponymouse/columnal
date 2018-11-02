@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
+import com.google.common.collect.ImmutableList;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -8,6 +9,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.LoadableExpression;
@@ -65,7 +67,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         prefix = new Label();
         container = new ErrorTop(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
-        this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField);
+        this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField, this);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
         
         GeneralOperandEntry us = FXUtility.mouse(this);
@@ -108,6 +110,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     {
         container.setError(true);
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent());
+    }
+
+    @Override
+    public ImmutableList<ErrorInfo> getErrors()
+    {
+        return expressionInfoDisplay.getErrors();
     }
 
     @Override

@@ -11,6 +11,8 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
+import records.gui.expressioneditor.ExpressionInfoDisplay.CaretSide;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression;
@@ -18,6 +20,7 @@ import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.stream.Stream;
@@ -81,4 +84,24 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     void setPrompt(@Localized String prompt);
 
     void bindDisable(BooleanExpression disabledProperty);
+
+    default public ImmutableList<ErrorInfo> getErrorsForAdjacentSide(CaretSide sideOfThisNode)
+    {
+        ImmutableList<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> children = getParent().getAllChildren();
+
+        int index = Utility.indexOfRef(children, this);
+        
+        if (sideOfThisNode == CaretSide.LEFT && index > 0)
+        {
+            return children.get(index - 1).getErrors();
+        }
+        else if (sideOfThisNode == CaretSide.RIGHT && index < children.size() - 1)
+        {
+            return children.get(index + 1).getErrors();
+        }
+        
+        return ImmutableList.of();
+    }
+
+    public ImmutableList<ErrorInfo> getErrors();
 }

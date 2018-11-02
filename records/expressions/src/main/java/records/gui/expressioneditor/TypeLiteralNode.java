@@ -1,11 +1,13 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.scene.control.Label;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
@@ -83,6 +85,12 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     {
     }
 
+    @Override
+    public ImmutableList<ErrorInfo> getErrors()
+    {
+        return ImmutableList.of();
+    }
+    
     /*
     @Override
     public @Recorded Expression save(ErrorDisplayerRecord errorDisplayer, ErrorAndTypeRecorder onError)

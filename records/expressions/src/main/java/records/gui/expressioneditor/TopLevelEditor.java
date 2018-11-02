@@ -30,6 +30,7 @@ import records.data.datatype.TypeManager;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
+import records.gui.expressioneditor.ExpressionInfoDisplay.CaretSide;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.LoadableExpression;
@@ -38,6 +39,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -452,9 +454,11 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
     }
 
-    public ExpressionInfoDisplay installErrorShower(ErrorTop vBox, Label topLabel, TextField textField)
+    public ExpressionInfoDisplay installErrorShower(ErrorTop vBox, Label topLabel, TextField textField, @UnknownInitialization ConsecutiveChild<?, ?> node)
     {
-        ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField, errorMessagePopup);
+        FXPlatformFunction<CaretSide, ImmutableList<ErrorInfo>> getAdjErrors = side -> Utility.later(node).getErrorsForAdjacentSide(side);
+        
+        ExpressionInfoDisplay expressionInfoDisplay = new ExpressionInfoDisplay(vBox, topLabel, textField, getAdjErrors, errorMessagePopup);
         vBox.bindErrorMasking(expressionInfoDisplay.maskingErrors());
         return expressionInfoDisplay;
     }
@@ -511,7 +515,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
         void hidePopup(boolean immediate);
 
-        void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, TextField textField);
+        void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, ImmutableList<ErrorInfo> adjacentErrors, TextField textField);
 
         void keyboardFocusExited(@Nullable ErrorInfo errorInfo, TextField textField);
     }
@@ -700,8 +704,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
 
         @Override
-        public void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, TextField textField)
+        public void keyboardFocusEntered(@Nullable ErrorInfo errorInfo, ImmutableList<ErrorInfo> adjacentErrors, TextField textField)
         {
+            if (errorInfo == null && !adjacentErrors.isEmpty())
+            {
+                errorInfo = adjacentErrors.get(0);
+            }
+            
             keyboardErrorInfo = errorInfo == null ? null : new Pair<>(errorInfo, textField);
             
             updateShowHide(true);

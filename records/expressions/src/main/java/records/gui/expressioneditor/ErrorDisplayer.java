@@ -1,5 +1,8 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
+import records.gui.expressioneditor.ExpressionInfoDisplay.CaretSide;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;

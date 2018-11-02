@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -10,6 +11,7 @@ import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.AutoComplete.WhitespacePolicy;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import styled.StyledString;
@@ -92,7 +94,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         ExpressionEditorUtil.enableSelection(typeLabel, this, textField);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
         container = new ErrorTop(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
-        this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField);
+        this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField, this);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
 
         updateNodes();
@@ -127,7 +129,13 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     {
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, parent);
     }
-    
+
+    @Override
+    public ImmutableList<ErrorInfo> getErrors()
+    {
+        return expressionInfoDisplay.getErrors();
+    }
+
     @Override
     public void showType(String type)
     {

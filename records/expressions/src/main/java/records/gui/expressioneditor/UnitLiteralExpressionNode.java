@@ -1,8 +1,10 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import log.Log;
+import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
@@ -96,6 +98,12 @@ public class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, Expre
     public void addErrorAndFixes(StyledString error, List<QuickFix<Expression, ExpressionSaver>> quickFixes)
     {
         // TODO
+    }
+
+    @Override
+    public ImmutableList<ErrorInfo> getErrors()
+    {
+        return ImmutableList.of();
     }
 
     @Override
