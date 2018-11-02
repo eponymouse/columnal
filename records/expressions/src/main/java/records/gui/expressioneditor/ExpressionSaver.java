@@ -380,7 +380,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
             
             // Error!
-            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + terminator.getContent()), ImmutableList.of());
+            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
             items.addAll(prefixIfInvalid.collect(Collectors.toList()));
