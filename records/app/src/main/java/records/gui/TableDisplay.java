@@ -149,6 +149,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private final View parent;
     @OnThread(Tag.Any)
     private final AtomicReference<CellPosition> mostRecentBounds;
+    // Should only be set in loadPosition and setDisplay:
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
     private final TableBorderOverlay tableBorderOverlay;
     private final @Nullable TableHat tableHat;
@@ -392,10 +393,10 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         switch (columnDisplay.get().getFirst())
         {
             case COLLAPSED:
-                columnDisplay.setValue(columnDisplay.get().replaceFirst(Display.ALL));
+                setDisplay(columnDisplay.get().replaceFirst(Display.ALL));
                 break;
             case ALTERED:
-                columnDisplay.setValue(columnDisplay.get().replaceFirst(Display.COLLAPSED));
+                setDisplay(columnDisplay.get().replaceFirst(Display.COLLAPSED));
                 break;
             default:
                 // If ALTERED is applicable, do that.  Otherwise go to COLLAPSED
@@ -410,7 +411,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         display = Display.ALTERED;
                     }
                 }
-                columnDisplay.setValue(columnDisplay.get().replaceFirst(display));
+                setDisplay(columnDisplay.get().replaceFirst(display));
                 break;
         }
     }
@@ -677,6 +678,12 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         // Only switch if they didn't cancel, otherwise use previous view mode:
         if (blackList != null)
             setDisplay(Display.CUSTOM, blackList);
+    }
+
+    @RequiresNonNull({"columnDisplay", "table", "parent"})
+    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Pair<Display, ImmutableList<ColumnId>> newState)
+    {
+        setDisplay(newState.getFirst(), newState.getSecond());
     }
 
     @RequiresNonNull({"columnDisplay", "table", "parent"})
