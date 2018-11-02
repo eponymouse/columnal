@@ -10,6 +10,9 @@ import annotation.units.AbsRowIndex;
 import annotation.userindex.qual.UnknownIfUserIndex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
@@ -42,6 +45,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -73,14 +77,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -199,7 +196,7 @@ public final class VirtualGrid implements ScrollBindable
     private final BooleanProperty atRightProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atTopProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atBottomProperty = new SimpleBooleanProperty(false);
-    
+
     // A sort of mutex to stop re-entrance to the updateSizeAndPositions() method:
     private boolean updatingSizeAndPositions = false;
     
@@ -1055,11 +1052,28 @@ public final class VirtualGrid implements ScrollBindable
         return container;
     }
 
+    /**
+     * Is nudge scrolling (scrolling when mouse nears window edge) enabled?
+     * Usually used when dragging (for move or resize) something in the grid. 
+     */
+    public void setNudgeScroll(boolean enabled)
+    {
+        container.setNudgeScroll(enabled);
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region implements ContainerChildren
     {
         private final Rectangle clip;
         private List<ViewOrder> viewOrders = new ArrayList<>();
+
+        // For when in nudge scrolling mode:
+        private NudgeScrollSpeed nudgeScrollLeft = NudgeScrollSpeed.NONE;
+        private NudgeScrollSpeed nudgeScrollRight = NudgeScrollSpeed.NONE;
+        private NudgeScrollSpeed nudgeScrollTop = NudgeScrollSpeed.NONE;
+        private NudgeScrollSpeed nudgeScrollBottom = NudgeScrollSpeed.NONE;
+        private boolean nudgeEnabled = false;
+        private final Animation nudgeScrollAnimation;
 
         public Container()
         {
@@ -1171,6 +1185,39 @@ public final class VirtualGrid implements ScrollBindable
             //addEventFilter(MouseEvent.MOUSE_DRAGGED, capture);
             addEventFilter(MouseEvent.DRAG_DETECTED, capture);
             
+            this.nudgeScrollAnimation = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+                double horizPerSecond = nudgeScrollLeft.pixelSpeed - nudgeScrollRight.pixelSpeed;
+                double vertPerSecond = nudgeScrollTop.pixelSpeed - nudgeScrollBottom.pixelSpeed;
+                
+                if (horizPerSecond != 0.0 || vertPerSecond != 0.0)
+                {
+                    VirtualGrid.this.getScrollGroup().requestScrollBy(horizPerSecond / 10.0, vertPerSecond / 10.0);
+                }
+            }));
+            nudgeScrollAnimation.setCycleCount(Animation.INDEFINITE);
+            
+            
+            addEventFilter(MouseEvent.ANY, e -> {
+                // Do nudge scroll if enabled:
+                if (nudgeEnabled && (e.getEventType() == MouseEvent.MOUSE_MOVED || e.getEventType() == MouseEvent.MOUSE_DRAGGED))
+                {
+                    nudgeScrollLeft = NudgeScrollSpeed.calculateNudge(e.getSceneX() - localToScene(0, 0).getX());
+                    nudgeScrollRight = NudgeScrollSpeed.calculateNudge(localToScene(getWidth() - vBar.getWidth(), 0).getX() - e.getSceneX());
+
+                    nudgeScrollTop = NudgeScrollSpeed.calculateNudge(e.getSceneY() - localToScene(0, 0).getY());
+                    nudgeScrollBottom = NudgeScrollSpeed.calculateNudge(localToScene(0, getHeight() - hBar.getHeight()).getY() - e.getSceneY());
+                    
+                    if (nudgeScrollLeft != NudgeScrollSpeed.NONE
+                        || nudgeScrollRight != NudgeScrollSpeed.NONE
+                        || nudgeScrollTop != NudgeScrollSpeed.NONE
+                        || nudgeScrollBottom != NudgeScrollSpeed.NONE)
+                    {
+                        // Does nothing if already playing:
+                        nudgeScrollAnimation.play();
+                    }
+                }
+            });
+            
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
                 {
@@ -1213,6 +1260,17 @@ public final class VirtualGrid implements ScrollBindable
                         e.consume();
                     })
             ));
+        }
+        
+        private void setNudgeScroll(boolean enabled)
+        {
+            Log.debug("Setting nudge scroll enable: " + enabled);
+            nudgeEnabled = enabled;
+            if (!nudgeEnabled)
+            {
+                nudgeScrollAnimation.stop();
+                nudgeScrollAnimation.jumpTo("start");
+            }
         }
 
         @Override
@@ -1912,6 +1970,38 @@ public final class VirtualGrid implements ScrollBindable
             }
             setCursor.consume(picked != null ? Cursor.HAND : null);
             return result == null ? null : result.getSecond();
+        }
+    }
+
+    // The scroll speed when in nudge mode
+    private static enum NudgeScrollSpeed
+    {
+        // Scroll speed (pixels per second), pixel threshold
+        NONE(0, 99999.0),
+        LOW(100, 30),
+        HIGH(500, 5);
+
+        private final double pixelSpeed;
+        private final double pixelThreshold;
+
+        private NudgeScrollSpeed(double pixelSpeed, double pixelThreshold)
+        {
+            this.pixelSpeed = pixelSpeed;
+            this.pixelThreshold = pixelThreshold;
+        }
+
+        /**
+         * Given a proximity to edge (positive: inside the edge, negative: outside the edge),
+         * gives back the appropriate scroll speed, which may be NONE.
+         */
+        public static NudgeScrollSpeed calculateNudge(double proximity)
+        {
+            NudgeScrollSpeed nss = Arrays.stream(values())
+                .filter(s -> proximity < s.pixelThreshold)
+                .max(Comparator.comparing(s -> s.pixelSpeed))
+                .orElse(NONE);
+            Log.debug("Calculated " + nss + " from " + proximity);
+            return nss;
         }
     }
 }

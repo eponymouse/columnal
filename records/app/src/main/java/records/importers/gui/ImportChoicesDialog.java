@@ -396,23 +396,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         }
     }
 
-    private enum ScrollSpeed
-    {
-        NONE(0), LOW(40), HIGH(80);
-
-        public double getPixelScroll()
-        {
-            return pixelSpeed;
-        }
-
-        private final double pixelSpeed;
-
-        private ScrollSpeed(double pixelSpeed)
-        {
-            this.pixelSpeed = pixelSpeed;
-        }
-    }
-
     // class is public for testing purposes
     public class SrcDataDisplay extends RecordSetDataDisplay
     {
@@ -430,11 +413,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
         private CellPosition mousePressed = CellPosition.ORIGIN;
         @OnThread(Tag.FXPlatform)
         private final Pane mousePane;
-        
-        private ScrollSpeed nudgeScrollLeft = ScrollSpeed.NONE;
-        private ScrollSpeed nudgeScrollRight = ScrollSpeed.NONE;
-        private final double pixelThresholdHigh = 5;
-        private final double pixelThresholdLow = 30;
         
         @OnThread(Tag.FXPlatform)
         public SrcDataDisplay(String suggestedName, VirtualGridSupplierFloating srcColumnHeaderSupplier, ObjectExpression<@Nullable RecordSet> recordSetProperty, GridArea destData)
@@ -475,8 +453,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             @Nullable TrimChoice[] pendingTrim = new TrimChoice[]{null};
             mousePane.setOnMouseReleased(e -> {
-                nudgeScrollLeft = ScrollSpeed.NONE;
-                nudgeScrollRight = ScrollSpeed.NONE;
+                withParent_(g -> g.setNudgeScroll(false));
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 if (pendingTrim[0] != null)
                 {
@@ -501,30 +478,7 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
             });
             mousePane.setOnMouseDragged(e -> {
                 Cursor c = mousePane.getCursor();
-                nudgeScrollLeft = ScrollSpeed.NONE;
-                nudgeScrollRight = ScrollSpeed.NONE;
-                
-                if (e.isPrimaryButtonDown())
-                {
-                    if (e.getSceneX() < mousePane.localToScene(new Point2D(pixelThresholdHigh, 0)).getX())
-                    {
-                        nudgeScrollLeft = ScrollSpeed.HIGH;
-                    }
-                    else if (e.getSceneX() < mousePane.localToScene(new Point2D(pixelThresholdLow, 0)).getX())
-                    {
-                        nudgeScrollLeft = ScrollSpeed.LOW;
-                    }
-                    
-                    
-                    if (e.getSceneX() > mousePane.localToScene(new Point2D(mousePane.getWidth() - pixelThresholdHigh, 0)).getX())
-                    {
-                        nudgeScrollRight = ScrollSpeed.HIGH;
-                    }
-                    else if (e.getSceneX() > mousePane.localToScene(new Point2D(mousePane.getWidth() - pixelThresholdLow, 0)).getX())
-                    {
-                        nudgeScrollRight = ScrollSpeed.LOW;
-                    }
-                }
+                withParent_(g -> g.setNudgeScroll(e.isPrimaryButtonDown()));
                 
                 //Log.debug("Mouse dragged while cursor: " + c);
                 withParent(p -> p.getVisibleBounds()).ifPresent(visibleBounds  -> {
@@ -589,18 +543,6 @@ public class ImportChoicesDialog<SRC_FORMAT, FORMAT> extends Dialog<ImportInfo<F
                 mousePane.setCursor(FXUtility.mouse(this).calculateCursor(e.getX(), e.getY() - VERT_INSET));
                 e.consume();
             });
-            Animation doNudgeScroll = new Timeline(new KeyFrame(Duration.millis(200), e -> {
-                if (nudgeScrollLeft != ScrollSpeed.NONE)
-                {
-                    withParent_(g -> g.getScrollGroup().requestScrollBy(nudgeScrollLeft.getPixelScroll(), 0));
-                }
-                if (nudgeScrollRight != ScrollSpeed.NONE)
-                {
-                    withParent_(g -> g.getScrollGroup().requestScrollBy(-nudgeScrollRight.getPixelScroll(), 0));
-                }
-            }));
-            doNudgeScroll.setCycleCount(Animation.INDEFINITE);
-            doNudgeScroll.playFromStart();
                     
         }
 

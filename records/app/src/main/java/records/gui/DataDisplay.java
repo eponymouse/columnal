@@ -668,6 +668,7 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                     FXUtility.mouse(DataDisplay.this).cellStyles.set(newStyles.build());
                     blurStyle.applyStyle(borderPane, true);
                     FXUtility.mouse(DataDisplay.this).updateParent();
+                    withParent_(g -> g.setNudgeScroll(true));
                 }
                 e.consume();
             });
@@ -689,7 +690,10 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                     );
                     CellStyle.TABLE_DRAG_SOURCE.applyStyle(borderPane, false);
                     // setPosition calls updateParent()
-                    withParent_(p -> FXUtility.mouse(DataDisplay.this).setPosition(dest));
+                    withParent_(p -> {
+                        FXUtility.mouse(DataDisplay.this).setPosition(dest);
+                        p.setNudgeScroll(false);
+                    });
                     tableDraggedToNewPosition();
                     overlays.clear();
                 }
