@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 
 /**
  * Keeps all data as-is, but hides a given set of columns from the resulting
- * data set.
+ * data set.  Hidden is decided by black-list.
  */
 @OnThread(Tag.Simulation)
 public class HideColumns extends Transformation
@@ -55,6 +55,7 @@ public class HideColumns extends Transformation
     private final @Nullable RecordSet result;
     @OnThread(Tag.Any)
     private final ImmutableList<ColumnId> hideIds;
+    // The list of columns from the source table which are not hidden:
     private final List<Column> shownColumns = new ArrayList<>();
     @OnThread(Tag.Any)
     private String error;
@@ -165,6 +166,18 @@ public class HideColumns extends Transformation
         if (result == null)
             throw new UserException(error);
         return result;
+    }
+
+    @OnThread(Tag.Any)
+    public TableId getSource()
+    {
+        return srcTableId;
+    }
+
+    @OnThread(Tag.Any)
+    public ImmutableList<ColumnId> getHiddenColumns()
+    {
+        return hideIds;
     }
 
     public static class Info extends SingleSourceTransformationInfo

@@ -94,6 +94,7 @@ import records.transformations.Check;
 import records.transformations.Concatenate;
 import records.transformations.Concatenate.IncompleteColumnHandling;
 import records.transformations.Filter;
+import records.transformations.HideColumns;
 import records.transformations.HideColumnsPanel;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
@@ -1006,7 +1007,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
         public CustomColumnDisplayDialog(TableManager mgr, TableId tableId, ImmutableList<ColumnId> initialHidden)
         {
-            this.hideColumnsPanel = new HideColumnsPanel(mgr, new ReadOnlyObjectWrapper<>(tableId), initialHidden);
+            this.hideColumnsPanel = new HideColumnsPanel(mgr, tableId, initialHidden);
             getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
             getDialogPane().setContent(hideColumnsPanel.getNode());
             getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
@@ -1328,6 +1329,37 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     }
                 }));
                 content = builder.build();
+            }
+            else if (table instanceof HideColumns)
+            {
+                HideColumns hide = (HideColumns) table;
+                
+                Clickable edit = new Clickable()
+                {
+                    @OnThread(Tag.FXPlatform)
+                    @Override
+                    protected void onClick(MouseButton mouseButton, Point2D screenPoint)
+                    {
+                        new HideColumnsDialog(parent.getWindow(), parent.getManager(), hide).showAndWait().ifPresent(makeTrans -> {
+                            Workers.onWorkerThread("Changing hidden columns", Priority.SAVE, () ->
+                                    FXUtility.alertOnError_("Error hiding column", () -> {
+                                        parent.getManager().edit(hide.getId(), makeTrans, null);
+                                    })
+                            );
+                        });
+                    }
+                };
+                
+                content = StyledString.concat(
+                        StyledString.s("From "),
+                        editSourceLink(hide, hide.getSource(), newSource ->
+                                parent.getManager().edit(table.getId(), () -> new HideColumns(parent.getManager(),
+                                        table.getDetailsForCopy(), newSource, hide.getHiddenColumns()), null)),
+                        StyledString.s(", hiding: "),
+                        hide.getHiddenColumns().isEmpty() ? StyledString.s("<none>") : hide.getHiddenColumns().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")),
+                        StyledString.s(" "),
+                        StyledString.s("(edit)").withStyle(edit)
+                );
             }
             else
             {

@@ -1,12 +1,15 @@
 package records.transformations;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import javafx.beans.binding.ObjectExpression;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.Dragboard;
@@ -17,15 +20,21 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
+import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
+import records.error.ExceptionWithStyle;
+import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Workers;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;
@@ -44,16 +53,42 @@ import java.util.List;
 public class HideColumnsPanel
 {
     private final ListView<ColumnId> hiddenColumns;
+    private final ObservableList<ColumnId> allSourceColumns = FXCollections.observableArrayList();
+    // All minus hidden:
     private final ListView<ColumnId> shownColumns;
     private final Pane pane;
 
-    public HideColumnsPanel(TableManager mgr, ObjectExpression<@Nullable TableId> srcIdProperty, ImmutableList<ColumnId> initiallyHidden)
+    public HideColumnsPanel(TableManager mgr, @Nullable TableId srcId, ImmutableList<ColumnId> initiallyHidden)
     {
         this.hiddenColumns = new ListView<>(FXCollections.observableArrayList(initiallyHidden));
-        this.shownColumns = //TransformationEditor.getColumnListView(mgr, srcIdProperty, hiddenColumns.getItems(), col -> {
-            //addAllItemsToHidden(Collections.singletonList(col));
-        //});
-            new ListView<>();
+        this.shownColumns = new ListView<>();
+        Label shownMessage = new Label("Loading...");
+        this.shownColumns.setPlaceholder(shownMessage);
+        Workers.onWorkerThread("Fetching column names", Workers.Priority.FETCH, () -> {
+            Table src = srcId == null ? null : mgr.getSingleTableOrNull(srcId);
+            if (src == null)
+            {
+                FXUtility.runFX(() -> shownMessage.setText("Could not find source table."));
+            }
+            else
+            {
+                try
+                {
+                    ImmutableList<ColumnId> columnIds = src.getData().getColumns().stream().map(c -> c.getName()).collect(ImmutableList.toImmutableList());
+                    FXUtility.runFX(() -> allSourceColumns.setAll(columnIds));
+                }
+                catch (InternalException | UserException e)
+                {
+                    if (e instanceof InternalException)
+                        Log.log(e);
+                    FXUtility.runFX(() -> shownMessage.setText("Error:" + e.getLocalizedMessage()));
+                }
+            }
+        });
+        shownColumns.setItems(
+            allSourceColumns.filtered(c -> !hiddenColumns.getItems().contains(c))
+        );
+        
         shownColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         shownColumns.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER)

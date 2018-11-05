@@ -53,7 +53,7 @@ public class TransformationManager implements TransformationLoader
             new Filter.Info(),
             new Sort.Info(),
             new Check.Info(),
-            //new HideColumns.Info(),
+            new HideColumns.Info(),
             new Concatenate.Info()
         );
     }
