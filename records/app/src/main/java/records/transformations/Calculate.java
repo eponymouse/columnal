@@ -171,7 +171,7 @@ public class Calculate extends Transformation
 
             DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(mgr.getTypeManager(), expression, type.toConcreteType(mgr.getTypeManager()));
             if (type == null || concrete == null)
-                throw new UserException(error == null ? StyledString.s("") : error); // A bit redundant, but control flow will pan out right
+                throw new UserException(StyledString.s("Error in " + columnId.getRaw() + " expression")); // A bit redundant, but control flow will pan out right
             @NonNull DataType typeFinal = concrete;
             return rs -> typeFinal.makeCalculatedColumn(rs, columnId, index -> expression.getValue(new EvaluateState(mgr.getTypeManager(), OptionalInt.of(index))).getFirst());
         }
