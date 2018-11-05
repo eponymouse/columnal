@@ -1355,7 +1355,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         editSourceLink(hide, hide.getSource(), newSource ->
                                 parent.getManager().edit(table.getId(), () -> new HideColumns(parent.getManager(),
                                         table.getDetailsForCopy(), newSource, hide.getHiddenColumns()), null)),
-                        StyledString.s(", hiding: "),
+                        StyledString.s(", drop columns: "),
                         hide.getHiddenColumns().isEmpty() ? StyledString.s("<none>") : hide.getHiddenColumns().stream().map(c -> c.toStyledString()).collect(StyledString.joining(", ")),
                         StyledString.s(" "),
                         StyledString.s("(edit)").withStyle(edit)
@@ -1378,7 +1378,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             double width = visibleBounds.getXCoordAfter(getBottomRightIncl().columnIndex) - x;
             x += 30;
             width -= 40;
-            width = Math.max(width, 150.0);
+            width = Math.max(width, 250.0);
 
             double prefHeight = item.prefHeight(width);
             double y = Math.max(visibleBounds.getYCoord(getPosition().rowIndex) - 10 - prefHeight, visibleBounds.getYCoord(CellPosition.row(0)) + 10);
