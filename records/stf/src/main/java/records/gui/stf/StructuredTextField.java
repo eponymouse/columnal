@@ -6,6 +6,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -99,6 +100,10 @@ public class StructuredTextField extends StyleClassedTextArea
         getStyleClass().add("structured-text-field");
 
         setPrefHeight(FXUtility.measureNotoSansHeight());
+
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bind(textProperty());
+        Tooltip.install(this, tooltip);
         
         // TEMP:
         /*
