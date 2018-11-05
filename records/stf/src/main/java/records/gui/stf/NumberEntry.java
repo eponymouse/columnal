@@ -123,9 +123,12 @@ public class NumberEntry extends TerminalComponent<@Value Number>
 
     private void updateComponentContent()
     {
+        Item dot = makeDotComponent(".");
+        if (actualFracPart.isEmpty())
+            dot = dot.withStyleClasses("stf-number-dot-invisible");
         ImmutableList<Item> prospectiveContent = ImmutableList.of(
             makeIntegerComponent(!focused ? displayIntegerPart : actualIntegerPart),
-            makeDotComponent(actualFracPart.isEmpty() ? "" : "."),
+            dot,
             makeFracComponent(!focused ? displayFracPart : actualFracPart)
         );
         

@@ -143,9 +143,9 @@
 .stf-number-dot {
     -fx-font-family: $font-main;
     -fx-font-size: 85%;
-}
-.number-display-dot-invisible {
-    visibility: hidden;
+    &.stf-number-dot-invisible {
+        visibility:hidden;
+    }
 }
 
 .string-display {
