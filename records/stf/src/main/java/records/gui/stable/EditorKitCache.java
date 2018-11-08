@@ -106,39 +106,13 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     @OnThread(Tag.FXPlatform)
     public class VisibleDetails
     {
-        public final int firstVisibleRowIndex;
-        // We use ArrayList for this because ImmutableList can't contain null.  But don't alter it!
-        public final List<@Nullable Pair<StructuredTextField, EditorKit<@Value V>>> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
-        public final OptionalInt newVisibleIndex; // Index into visibleCells, not a row number, which is the cause for this update
+        public final ImmutableList<StructuredTextField> visibleCells; // First one is firstVisibleRowIndex.
         public final double width;
 
-        private VisibleDetails(OptionalInt rowIndex, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl, double width)
+        private VisibleDetails(double width, Collection<? extends StructuredTextField> visibleFields)
         {
-            this.firstVisibleRowIndex = firstVisibleRowIndexIncl;
-            // Why doesn't OptionalInt have a map method?
-            this.newVisibleIndex = rowIndex.isPresent() ? OptionalInt.of(rowIndex.getAsInt() - firstVisibleRowIndexIncl) : OptionalInt.empty();
             this.width = width;
-
-            visibleCells = new ArrayList<>(lastVisibleRowIndexIncl - firstVisibleRowIndexIncl + 1);
-            for (int i = firstVisibleRowIndexIncl; i <= lastVisibleRowIndexIncl; i++)
-            {
-                @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(i);
-                @Nullable Either<Pair<@Value V, EditorKit<@Value V>>, @Localized String> loadedItemOrError = item == null ? null : item.loadedItemOrError;
-                //Log.debug("  Item: " + loadedItemOrError);
-                if (loadedItemOrError != null)
-                    visibleCells.add(loadedItemOrError.<@Nullable Pair<StructuredTextField, EditorKit<@Value V>>>either(p -> {
-                        @Nullable StructuredTextField field = p.getSecond().getCurField();
-                        //Log.debug("  Field: " + field);
-                        if (field != null)
-                            return new Pair<>(field, p.getSecond());
-                        else
-                            return null;
-                    }, s -> null));
-                else
-                    visibleCells.add(null);
-            }
-            
-            //Log.debug("visibleCells: " + Utility.listToString(visibleCells));
+            visibleCells = ImmutableList.copyOf(visibleFields);
         }
     }
 
@@ -165,7 +139,8 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
             Log.log(e);
             setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel<>(e.getLocalizedMessage()));
         }
-        formatVisible(OptionalInt.of(rowIndex));
+        // No need to call formatVisible here as styleTogether
+        // will be called after fetches by VirtualGridSupplierIndividual
     }
 
     @Override
@@ -178,14 +153,14 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn, double columnSize)
     {
         latestWidth = columnSize;
-        formatVisible(OptionalInt.empty());
+        formatVisible(cellsInColumn, OptionalInt.empty());
     }
 
     @Override
     public final void columnResized(double width)
     {
         latestWidth = width;
-        formatVisible(OptionalInt.empty());
+        //formatVisible(OptionalInt.empty());
     }
 
     @Override
@@ -206,14 +181,14 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
         return null;
     }*/
 
-    protected final void formatVisible(OptionalInt rowIndexUpdated)
+    protected final void formatVisible(Collection<? extends StructuredTextField> cellsInColumn, OptionalInt rowIndexUpdated)
     {
         @TableDataRowIndex int firstVisibleRowIndexIncl = getDataPosition.getFirstVisibleRowIncl();
         @TableDataRowIndex int lastVisibleRowIndexIncl = getDataPosition.getLastVisibleRowIncl();
         
         //Log.debug("formatVisible: " + formatVisibleCells + " " + firstVisibleRowIndexIncl + " " + lastVisibleRowIndexIncl + " " + latestWidth);
         if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
-            formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
+            formatVisibleCells.consume(new VisibleDetails(latestWidth, cellsInColumn));
     }
 
     @Override
@@ -305,7 +280,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 this.loadedItemOrError = Either.<Pair<@Value V, EditorKit<@Value V>>, @Localized String>left(new Pair<@Value V, EditorKit<@Value V>>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
             updateDisplay();
-            formatVisible(OptionalInt.of(rowIndex));
+            //formatVisible(OptionalInt.of(rowIndex));
         }
 
         @OnThread(Tag.FXPlatform)

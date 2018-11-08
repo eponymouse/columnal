@@ -36,23 +36,21 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
     {
         final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
-        for (@Nullable Pair<StructuredTextField, EditorKit<@Value Number>> visibleCell : vis.visibleCells)
+        for (StructuredTextField visibleCell : vis.visibleCells)
         {
             if (visibleCell != null)
             {
-                EditorKit<?> editorKit = visibleCell.getFirst().getEditorKit();
+                EditorKit<?> editorKit = visibleCell.getEditorKit();
                 if (editorKit != null)
                 {
                     NumberEntry numberEntry = editorKit.getComponent(NumberEntry.class);
-                    @Value @Nullable Number value = visibleCell.getSecond().getLastCompletedValue();
+                    @Nullable Number value = Utility.castOrNull(editorKit.getLastCompletedValue(), Number.class);
                     if (numberEntry != null && value != null)
                     {
-                        visibleItems.add(new NumberDetails(visibleCell.getFirst(), numberEntry, value));
+                        visibleItems.add(new NumberDetails(visibleCell, numberEntry, value));
                     }
                 }
             }
-            
-            
         }
         
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
@@ -76,36 +74,33 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
 
         for (NumberDetails display : visibleItems)
         {
-            if (display != null)
+            if (onlyEllipsis)
             {
-                if (onlyEllipsis)
+                display.displayIntegerPart = ELLIPSIS;
+                display.displayDot = "";
+                display.displayFracPart = "";
+            }
+            else
+            {
+                display.displayIntegerPart = display.fullIntegerPart;
+                display.displayFracPart = display.fullFracPart;
+                display.displayDot = NUMBER_DOT;
+
+                while (display.displayFracPart.length() < maxRightLength)
+                    display.displayFracPart += " "; //displayInfo == null ? " " : displayInfo.getPaddingChar();
+
+                if (display.displayFracPart.length() > maxRightLength)
                 {
-                    display.displayIntegerPart = ELLIPSIS;
-                    display.displayDot = "";
-                    display.displayFracPart = "";
+                    display.displayFracPart = display.displayFracPart.substring(0, Math.max(0, maxRightLength - 1)) + ELLIPSIS;
                 }
-                else
+                if (display.displayIntegerPart.length() > maxLeftLength)
                 {
-                    display.displayIntegerPart = display.fullIntegerPart;
-                    display.displayFracPart = display.fullFracPart;
-                    display.displayDot = NUMBER_DOT;
-
-                    while (display.displayFracPart.length() < maxRightLength)
-                        display.displayFracPart += " "; //displayInfo == null ? " " : displayInfo.getPaddingChar();
-
-                    if (display.displayFracPart.length() > maxRightLength)
-                    {
-                        display.displayFracPart = display.displayFracPart.substring(0, Math.max(0, maxRightLength - 1)) + ELLIPSIS;
-                    }
-                    if (display.displayIntegerPart.length() > maxLeftLength)
-                    {
-                        display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
-                    }
-
-                    display.displayDotVisible = !display.fullFracPart.isEmpty();
-
-                    display.updateDisplay();
+                    display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
                 }
+
+                display.displayDotVisible = !display.fullFracPart.isEmpty();
+
+                display.updateDisplay();
             }
         }
     }

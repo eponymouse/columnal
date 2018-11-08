@@ -953,7 +953,7 @@ public class Utility
         return OptionalInt.empty();
     }
 
-    @SuppressWarnings("value") // Input is value, so output can be too
+    @SuppressWarnings("value") // Input is @Value, so output will be too
     public static <T> @Value T cast(@Value Object x, Class<T> cls) throws InternalException
     {
         if (cls.isInstance(x))
@@ -961,6 +961,15 @@ public class Utility
             return cls.cast(x);
         }
         throw new InternalException("Cannot cast " + x.getClass() + " into " + cls);
+    }
+
+    public static <T> @Nullable T castOrNull(@Nullable Object x, Class<T> cls)
+    {
+        if (cls.isInstance(x))
+        {
+            return cls.cast(x);
+        }
+        return null;
     }
 
     @SuppressWarnings("value")
