@@ -69,9 +69,16 @@ public class NumberEntry extends TerminalComponent<@Value Number>
         {
             actualIntegerPart = getItem(ItemVariant.EDITABLE_NUMBER_INT);
             actualFracPart = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
+            @Value Number value = DataTypeUtility.value(Utility.parseNumber(actualIntegerPart + "." + actualFracPart));
+            updateComponentContent();
+            // We must fish out the actual after parsing and updating
+            // the items in the component.  Otherwise the display-specific
+            // aspects (extra spaces and zeroes for padding) can
+            // be taken back into the actual items, which would not be right:
+            actualIntegerPart = getItem(ItemVariant.EDITABLE_NUMBER_INT);
+            actualFracPart = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
             displayIntegerPart = actualIntegerPart;
             displayFracPart = actualFracPart;
-            @Value Number value = DataTypeUtility.value(Utility.parseNumber(actualIntegerPart + "." + actualFracPart));
             return Either.right(value);
         }
         catch (UserException e)
