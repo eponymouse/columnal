@@ -106,6 +106,8 @@ public class ExpressionEditorUtil
                     new BackgroundPosition(Side.LEFT, 4 - (sceneX % 4), false, Side.TOP, 0, false), 
                     BackgroundSize.DEFAULT)));
             });
+            hasError = false;
+            errorPane.setVisible(false);
         }
  
         @OnThread(Tag.FXPlatform)
