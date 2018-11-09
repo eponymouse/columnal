@@ -247,7 +247,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     @Override
     protected Stream<Node> calculateNodes()
     {
-        return Stream.concat(Stream.of(textField), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
+        return Stream.concat(Stream.of(container), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
     }
     
     @Override
