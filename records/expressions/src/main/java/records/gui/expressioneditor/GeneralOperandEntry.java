@@ -2,6 +2,8 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
+import com.sun.javafx.scene.control.skin.TextFieldSkin;
+import com.sun.javafx.scene.text.HitInfo;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -74,7 +76,9 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
         textField.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             if (!us.availableForFocus())
             {
-                if (textField.getCaretPosition() < textField.getLength() / 2)
+                // This will need updating in JavaFX 9 to use the public API:
+                HitInfo hit = ((TextFieldSkin) textField.getSkin()).getIndex(e.getX(), e.getY());
+                if ((double)hit.getInsertionIndex() < (double)textField.getLength() / 2.0)
                 {
                     parent.focusLeftOf(us);
                 }
