@@ -5,8 +5,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -20,12 +19,10 @@ import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
-import records.data.NumericColumnStorage;
-import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
@@ -47,8 +44,8 @@ import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,12 +106,80 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
             });
         });
 
-        // If they click the background, focus the end:
+        // If they click the background, focus the right-hand end of that row:
         // Note we use released here because we don't see press/click if a popup was showing when they clicked us:
         container.setOnMouseReleased(e -> {
             if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY)
             {
-                FXUtility.mouse(this).focus(Focus.RIGHT);
+                // We find the node that is rightmost in our row:
+                
+                // Maps absolute vertical difference from position
+                // to a set of nodes
+                class NodeInfo implements Comparable<NodeInfo>
+                {
+                    private final double verticalDist; // Zero if overlapping
+                    private final double horizDist; // To nearest corner
+                    private final ConsecutiveChild<?, ?> item;
+
+                    NodeInfo(double verticalDist, double horizDist, ConsecutiveChild<?, ?> item)
+                    {
+                        this.verticalDist = verticalDist;
+                        this.horizDist = horizDist;
+                        this.item = item;
+                    }
+
+                    @Override
+                    public int compareTo(NodeInfo o)
+                    {
+                        return Comparator.<NodeInfo, Double>comparing(n -> n.verticalDist).thenComparing(n -> n.horizDist).compare(this, o);
+                    }
+                }
+
+                class NodeFinder implements LocatableVisitor
+                {
+                    private @MonotonicNonNull NodeInfo closest;
+                    
+                    @Override
+                    public <C extends StyledShowable> void register(ConsecutiveChild<? extends C, ?> graphicalItem, Class<C> childType)
+                    {
+                        NodeInfo latest = graphicalItem.nodes().stream().map(node -> {
+                            final double vertDist;
+                            final double horizDist;
+                            
+                            Bounds boundsInScene = node.localToScene(node.getBoundsInLocal());
+                            
+                            if (e.getSceneY() < boundsInScene.getMinY())
+                                vertDist = Math.abs(e.getSceneY() - boundsInScene.getMinY());
+                            else if (e.getSceneY() > boundsInScene.getMaxY())
+                                vertDist = Math.abs(e.getSceneY() - boundsInScene.getMaxY());
+                            else
+                                vertDist = 0;
+
+                            if (e.getSceneX() < boundsInScene.getMinX())
+                                horizDist = Math.abs(e.getSceneX() - boundsInScene.getMinX());
+                            else if (e.getSceneX() > boundsInScene.getMaxX())
+                                horizDist = Math.abs(e.getSceneX() - boundsInScene.getMaxX());
+                            else
+                                horizDist = 0;
+                            
+                            return new NodeInfo(vertDist, horizDist, graphicalItem);
+                        }).min(Comparator.naturalOrder()).orElse(null);
+                        if (latest != null)
+                        {
+                            if (closest == null)
+                                closest = latest;
+                            else if (latest.compareTo(closest) < 0)
+                                closest = latest;
+                        }
+                    }
+                };
+                NodeFinder visitor = new NodeFinder();
+                FXUtility.mouse(this).visitLocatable(visitor);
+                
+                if (visitor.closest != null)
+                {
+                    visitor.closest.item.getParent().focusRightOf(visitor.closest.item, Focus.RIGHT, false);
+                }
                 e.consume();
             }
         });
