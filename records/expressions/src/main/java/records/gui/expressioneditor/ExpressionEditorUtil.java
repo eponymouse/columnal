@@ -147,7 +147,9 @@ public class ExpressionEditorUtil
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)
     {
-        topLabel.getStyleClass().add(parentStyles.collect(Collectors.joining("-")) + "-child");
+        String joined = parentStyles.collect(Collectors.joining("-"));
+        if (!joined.isEmpty())
+            topLabel.getStyleClass().add(joined + "-child");
     }
 
     @SuppressWarnings("recorded")
