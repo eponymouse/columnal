@@ -175,16 +175,21 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @Override
     public void focus(Focus side)
     {
+        int targetIndex = side == Focus.LEFT ? 0 : children.size() - 1;
+        // Empty shouldn't happen, but better to fix than complain:
         if (children.isEmpty())
         {
-            // Shouldn't happen, but better to fix than complain:
             children.add(makeBlankChild());
         }
+        children.get(targetIndex).focus(side);
         
-        if (side == Focus.LEFT)
-            children.get(0).focus(side);
-        else
-            children.get(children.size() - 1).focus(side);
+        
+        if (!children.get(targetIndex).isFocused())
+        {
+            int addIndex = side == Focus.LEFT ? 0 : children.size();
+            
+            children.add(addIndex, focusWhenShown(makeBlankChild()));
+        }
     }
     
     protected void replaceSubExpression(EXPRESSION target, EXPRESSION replacement)
