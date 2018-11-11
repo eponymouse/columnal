@@ -25,9 +25,9 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     protected final EEDisplayNodeParent parent;
     
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable String prefixText, @Nullable String suffixText, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content)
     {
-        super(operations, prefixNode, suffixNode, style);
+        super(operations, prefixText, suffixText, style);
         this.parent = parent;
         if (content != null)
         {

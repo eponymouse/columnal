@@ -34,7 +34,7 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
     public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable TypeExpression startingType)
     {
         super(parent);
-        this.type = new Consecutive<TypeExpression, TypeSaver>(ConsecutiveBase.TYPE_OPS, this, new Label("type{"), new Label("}"), "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
+        this.type = new Consecutive<TypeExpression, TypeSaver>(ConsecutiveBase.TYPE_OPS, this, "type{", "}", "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
         {
             @Override
             public @Recorded TypeExpression save()

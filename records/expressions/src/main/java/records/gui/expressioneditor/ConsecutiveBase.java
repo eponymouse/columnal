@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.TextField;
 import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -17,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
@@ -26,10 +28,13 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import styled.StyledShowable;
 import styled.StyledString;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,14 +66,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected @MonotonicNonNull EXPRESSION mostRecentSave;
 
     @SuppressWarnings("initialization")
-    public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
+    public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable String prefixText, @Nullable String suffixText, String style)
     {
         this.operations = operations;
         this.style = style;
         children = FXCollections.observableArrayList();
         
-        this.prefixNode = prefixNode;
-        this.suffixNode = suffixNode;
+        this.prefixNode = makePrefixSuffixNode(prefixText);
+        this.suffixNode = makePrefixSuffixNode(suffixText);
         listenToNodeRelevantList(children);
         FXUtility.listen(children, c -> {
             //Utility.logStackTrace("Operands size: " + operands.size());
@@ -79,6 +84,25 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             if (!changing)
                 selfChanged();
         });
+    }
+
+    public @Nullable ErrorTop makePrefixSuffixNode(@Nullable String content)
+    {
+        if (content == null)
+            return null;
+        
+        TextField field = new TextField(content) {
+            @Override
+            @OnThread(Tag.FX)
+            public void requestFocus()
+            {
+            }
+        };
+        field.getStyleClass().add("entry-field");
+        FXUtility.setPseudoclass(field, "ps-keyword", true);
+        field.setEditable(false);
+        FXUtility.sizeToFit(field, null, null);
+        return new ErrorTop(GUI.label(null, "labelled-top"), field);
     }
 
     @Override
