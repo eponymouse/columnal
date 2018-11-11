@@ -24,7 +24,7 @@ public class StringLiteralNode extends SimpleLiteralNode
     {
         super(parent, Expression.class, "\"");
 
-        FXUtility.sizeToFit(textField, 10.0, 10.0);
+        FXUtility.sizeToFit(textField, 3.0, 3.0);
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);
     }

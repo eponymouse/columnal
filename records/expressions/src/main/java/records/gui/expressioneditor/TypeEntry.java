@@ -80,7 +80,6 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
                 .map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), "TODO"))
         ).collect(ImmutableList.toImmutableList());
         
-        FXUtility.sizeToFit(textField, 30.0, 30.0);
         this.autoComplete = new AutoComplete<Completion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
 
         updateNodes();
