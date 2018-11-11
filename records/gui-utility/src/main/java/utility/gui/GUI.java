@@ -113,9 +113,9 @@ public class GUI
     /**
      * Looks up key and makes label with it.
      */
-    public static Label label(@LocalizableKey String msgKey, String... styleClasses)
+    public static Label label(@Nullable @LocalizableKey String msgKey, String... styleClasses)
     {
-        @Localized String text = TranslationUtility.getString(msgKey);
+        @Localized String text = msgKey == null ? Utility.universal("") : TranslationUtility.getString(msgKey);
         return labelRaw(text, styleClasses);
     }
 
