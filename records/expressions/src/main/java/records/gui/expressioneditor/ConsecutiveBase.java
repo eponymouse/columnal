@@ -57,8 +57,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     
     protected final String style;
     protected final ObservableList<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> children;
-    private final @Nullable Node prefixNode;
-    private final @Nullable Node suffixNode;
+    protected final @Nullable Node prefixNode;
+    protected final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
     private boolean removingBlanks;
 
@@ -127,7 +127,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         FXUtility.sizeToFit(field, null, null);
         Label topLabel = GUI.label(null, "labelled-top");
         ExpressionEditorUtil.enableSelection(topLabel, selectable, field);
-        return new ErrorTop(topLabel, field);
+        ErrorTop container = new ErrorTop(topLabel, field);
+        container.getStyleClass().add("entry");
+        return container;
     }
 
     @Override

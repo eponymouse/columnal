@@ -124,4 +124,10 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     {
         unit.bindDisable(disabledProperty);
     }
+
+    @Override
+    public void setSelected(boolean selected, boolean focus)
+    {
+        unit.setEntireSelected(selected, focus);
+    }
 }

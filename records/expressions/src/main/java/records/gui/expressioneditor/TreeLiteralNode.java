@@ -152,10 +152,4 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     {
         // We are rich node so we don't set prompts
     }
-
-    @Override
-    public void setSelected(boolean selected, boolean focus)
-    {
-        // TODO I think we need to make a new blank adjacent and focus that
-    }
 }

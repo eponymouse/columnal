@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ConsecutiveBase.PrefixSuffix;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
@@ -21,6 +22,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -167,5 +169,11 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     public void bindDisable(BooleanExpression disabledProperty)
     {
         type.bindDisable(disabledProperty);
+    }
+
+    @Override
+    public void setSelected(boolean selected, boolean focus)
+    {
+        type.setEntireSelected(selected, focus);
     }
 }

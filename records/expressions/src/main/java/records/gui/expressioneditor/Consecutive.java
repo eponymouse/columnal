@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import javafx.scene.Node;
@@ -12,6 +13,7 @@ import records.transformations.function.list.Single;
 import styled.StyledShowable;
 import utility.FXPlatformFunction;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,5 +76,21 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
     public TopLevelEditor<?, ?> getEditor()
     {
         return parent.getEditor();
+    }
+
+    public void setEntireSelected(boolean selected, boolean focus)
+    {
+        ImmutableList<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> ourChildren = getAllChildren();
+        if (!ourChildren.isEmpty())
+            markSelection(ourChildren.get(0), ourChildren.get(ourChildren.size() - 1), selected, null);
+        if (prefixNode != null)
+        {
+            FXUtility.setPseudoclass(prefixNode, "exp-selected", selected);
+            if (focus)
+                prefixNode.requestFocus();
+        }
+        if (suffixNode != null)
+            FXUtility.setPseudoclass(suffixNode, "exp-selected", selected);
+        
     }
 }
