@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 20/12/2016.
  */
-public class StringLiteralNode extends SimpleLiteralNode
+public final class StringLiteralNode extends SimpleLiteralNode
 {
     public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
@@ -27,6 +27,7 @@ public class StringLiteralNode extends SimpleLiteralNode
         FXUtility.sizeToFit(textField, 3.0, 3.0);
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);
+        updateNodes();
     }
 
     @Override

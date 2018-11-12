@@ -34,7 +34,7 @@ import utility.gui.TranslationUtility;
 
 import java.util.stream.Stream;
 
-public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> implements EEDisplayNodeParent
+public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> implements EEDisplayNodeParent
 {
     // Number is not included as that is done separately:
     private static final ImmutableList<Pair<DataType, @LocalizableKey String>> PRIMITIVE_TYPES = ImmutableList.of(
@@ -244,9 +244,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
 
 
     @Override
-    protected Stream<Node> calculateNodes()
+    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) TypeEntry this)
     {
-        return Stream.concat(Stream.of(container), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
+        return Stream.concat(Utility.streamNullable(container), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
     }
     
     @Override
@@ -303,9 +303,9 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
         if (unitSpecifier == null)
         {
             if (unitExpression == null)
-                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, null));
+                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, this, null));
             else
-                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL)));
+                unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true, this, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL)));
         }
         updateNodes();
         updateListeners();
@@ -337,7 +337,7 @@ public class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSaver> im
     }
     
     @Override
-    protected Stream<EEDisplayNode> calculateChildren()
+    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) TypeEntry this)
     {
         return Utility.streamNullable(unitSpecifier);
     }

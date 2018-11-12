@@ -1,23 +1,14 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.binding.BooleanExpression;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.control.TextField;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.Expression;
-import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.stream.Stream;
@@ -32,20 +23,20 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
 
     protected final LeaveableTextField textField;
     private boolean focusPending;
-
-    @SuppressWarnings("initialization")
+    
     public EntryNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, Class<EXPRESSION> expressionClass)
     {
         this.parent = parent;
         this.expressionClass = expressionClass;
-        textField = new LeaveableTextField(this, parent) {
+        // Don't quite understand why I need to wrap this in a later call:
+        textField = Utility.later(new LeaveableTextField(this, parent) {
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void home()
             {
                 parent.focusBlankAtLeft();
             }
-        };
+        });
         textField.getStyleClass().add("entry-field");
     }
     
@@ -133,7 +124,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     }
 
     @Override
-    protected Stream<EEDisplayNode> calculateChildren()
+    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) EntryNode<EXPRESSION, SEMANTIC_PARENT> this)
     {
         return Stream.empty();
     }

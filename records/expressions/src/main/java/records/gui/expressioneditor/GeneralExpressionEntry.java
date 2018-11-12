@@ -62,7 +62,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionSaver> implements ConsecutiveChild<Expression, ExpressionSaver>, ErrorDisplayer<Expression, ExpressionSaver>
+public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionSaver> implements ConsecutiveChild<Expression, ExpressionSaver>, ErrorDisplayer<Expression, ExpressionSaver>
 {
     public static final String ARROW_SAME_ROW = "\u2192";
     public static final String ARROW_WHOLE = "\u2195";
@@ -114,10 +114,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         stringCompletion = new KeyShortcutCompletion("autocomplete.string", '\"');
         unitCompletion = new AddUnitCompletion();
         varDeclCompletion = new VarDeclCompletion();
-        updateNodes();
+        
 
         this.autoComplete = new AutoComplete<Completion>(textField, this::getSuggestions, new CompletionListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, ExpressionOps::differentAlphabet);
 
+        updateNodes();
         updateGraphics();
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
             updateGraphics();
@@ -154,9 +155,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    protected Stream<Node> calculateNodes()
+    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) GeneralExpressionEntry this)
     {
-        return Stream.of(container);
+        return Utility.streamNullable(container);
     }
 
     @RequiresNonNull({"unitCompletion", "stringCompletion", "varDeclCompletion", "parent"})

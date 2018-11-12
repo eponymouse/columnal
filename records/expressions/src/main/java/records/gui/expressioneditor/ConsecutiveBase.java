@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.util.Duration;
 import log.Log;
@@ -65,28 +66,50 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     
     protected @MonotonicNonNull EXPRESSION mostRecentSave;
 
-    @SuppressWarnings("initialization")
-    public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable String prefixText, @Nullable String suffixText, String style)
+    protected void listenToNodeRelevantList(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> this, ObservableList<?> children)
+    {
+        FXUtility.listen(children,c ->
+        {
+            Utility.later(this).updateNodes();
+            Utility.later(this).updateListeners();
+        });
+    }
+
+    protected final static class PrefixSuffix
+    {
+        private final @Nullable String prefixText;
+        private final @Nullable String suffixText;
+        private final @UnknownInitialization ConsecutiveChild<?, ?> selectable;
+
+        public PrefixSuffix(@Nullable String prefixText, @Nullable String suffixText, @UnknownInitialization ConsecutiveChild<?, ?> selectable)
+        {
+            this.prefixText = prefixText;
+            this.suffixText = suffixText;
+            this.selectable = selectable;
+        }
+    }
+
+    public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable PrefixSuffix prefixSuffix, String style)
     {
         this.operations = operations;
         this.style = style;
         children = FXCollections.observableArrayList();
         
-        this.prefixNode = makePrefixSuffixNode(prefixText);
-        this.suffixNode = makePrefixSuffixNode(suffixText);
+        this.prefixNode = prefixSuffix == null ? null : makePrefixSuffixNode(prefixSuffix.prefixText, prefixSuffix.selectable);
+        this.suffixNode = prefixSuffix == null ? null : makePrefixSuffixNode(prefixSuffix.suffixText, prefixSuffix.selectable);
         listenToNodeRelevantList(children);
         FXUtility.listen(children, c -> {
             //Utility.logStackTrace("Operands size: " + operands.size());
             if (!atomicEdit.get())
-                selfChanged();
+                Utility.later(this).selfChanged();
         });
         FXUtility.addChangeListenerPlatformNN(atomicEdit, changing -> {
             if (!changing)
-                selfChanged();
+                Utility.later(this).selfChanged();
         });
     }
 
-    public @Nullable ErrorTop makePrefixSuffixNode(@Nullable String content)
+    private static @Nullable ErrorTop makePrefixSuffixNode(@Nullable String content, @UnknownInitialization ConsecutiveChild<?,? > selectable)
     {
         if (content == null)
             return null;
@@ -102,16 +125,21 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         FXUtility.setPseudoclass(field, "ps-keyword", true);
         field.setEditable(false);
         FXUtility.sizeToFit(field, null, null);
-        return new ErrorTop(GUI.label(null, "labelled-top"), field);
+        Label topLabel = GUI.label(null, "labelled-top");
+        ExpressionEditorUtil.enableSelection(topLabel, selectable, field);
+        return new ErrorTop(topLabel, field);
     }
 
     @Override
-    protected Stream<Node> calculateNodes()
+    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> this)
     {
         List<Node> childrenNodes = new ArrayList<Node>();
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        if (children != null)
         {
-            childrenNodes.addAll(child.nodes());
+            for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+            {
+                childrenNodes.addAll(child.nodes());
+            }
         }
         if (this.prefixNode != null)
             childrenNodes.add(0, this.prefixNode);
@@ -121,9 +149,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     @Override
-    protected Stream<EEDisplayNode> calculateChildren()
+    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> this)
     {
-        return children.stream().map(c -> c);
+        return children == null ? Stream.empty() : children.stream().map(c -> c);
     }
 
     @NonNull

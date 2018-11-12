@@ -1,15 +1,16 @@
 package records.gui.expressioneditor;
 
 
-import javafx.beans.value.ObservableObjectValue;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
-import records.transformations.expression.Expression;
 import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
+import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.stream.Stream;
 
@@ -37,7 +38,9 @@ public abstract class TreeLiteralNode<EXPRESSION extends StyledShowable & Replac
     }
 
     // Can't use Java generics to share the types, so we have to have multiple methods which should return the same thing:
-    protected abstract EEDisplayNode getInnerDisplayNode();
+    // This is only nullable because it may be called during
+    // initialisation
+    protected abstract EEDisplayNode getInnerDisplayNode(); //@UnknownInitialization(DeepNodeTree.class) TreeLiteralNode<EXPRESSION, SEMANTIC_PARENT> this);
 
     @Override
     public void focus(Focus side)

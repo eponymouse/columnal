@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.UnitManager;
@@ -33,7 +34,7 @@ import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> implements ErrorDisplayer<UnitExpression, UnitSaver>
+public final class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> implements ErrorDisplayer<UnitExpression, UnitSaver>
 {
     private final Completion endCompletion = new EndCompletion("}"); //"autocomplete.end");
 
@@ -92,9 +93,9 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitSaver> im
     }
 
     @Override
-    protected Stream<Node> calculateNodes()
+    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) UnitEntry this)
     {
-        return Stream.of(container);
+        return Utility.streamNullable(container);
     }
 
     /*

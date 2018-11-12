@@ -1,10 +1,12 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.control.TextField;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 /**
  * A TextField which is a child of an EEDisplayNodeParent.
@@ -18,9 +20,9 @@ public class LeaveableTextField extends TextField
     private final EEDisplayNodeParent parent;
     private boolean leavingByCursor = false;
 
-    public LeaveableTextField(ConsecutiveChild<?, ?> us, EEDisplayNodeParent parent)
+    public LeaveableTextField(@UnknownInitialization ConsecutiveChild<?, ?> us, EEDisplayNodeParent parent)
     {
-        this.us = us;
+        this.us = Utility.later(us);
         this.parent = parent;
     }
 

@@ -18,9 +18,9 @@ import java.util.stream.Stream;
 
 public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
 {
-    public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, @Nullable Stream<SingleLoader<UnitExpression, UnitSaver>> startContent)
+    public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel, ConsecutiveChild<?, ?> selectable, @Nullable Stream<SingleLoader<UnitExpression, UnitSaver>> startContent)
     {
-        super(UNIT_OPS, parent, topLevel ? "{" : "(", topLevel ? "}" : ")", "unit-compound", startContent != null ? startContent : Stream.of(UnitEntry.load("")));
+        super(UNIT_OPS, parent, new PrefixSuffix(topLevel ? "{" : "(", topLevel ? "}" : ")", selectable    ), "unit-compound", startContent != null ? startContent : Stream.of(UnitEntry.load("")));
     }
 
     @Override

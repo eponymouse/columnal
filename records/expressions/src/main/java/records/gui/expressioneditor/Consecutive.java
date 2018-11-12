@@ -24,25 +24,24 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
 {
     protected final EEDisplayNodeParent parent;
     
-    @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable String prefixText, @Nullable String suffixText, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable PrefixSuffix prefixSuffix, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content)
     {
-        super(operations, prefixText, suffixText, style);
-        this.parent = parent;
+        super(operations, prefixSuffix, style);
+        this.parent = Utility.later(parent);
         if (content != null)
         {
             atomicEdit.set(true);
-            children.addAll(content.map(f -> f.load(this)).collect(Collectors.toList()));
+            children.addAll(content.map(f -> f.load(Utility.later(this))).collect(Collectors.toList()));
             if (children.isEmpty())
-                children.add(makeBlankChild());
+                children.add(Utility.later(this).makeBlankChild());
             atomicEdit.set(false);
             // Get rid of anything which would go if you got focus and lost it again:
-            focusChanged();
+            Utility.later(this).focusChanged();
         }
         else
         {
             atomicEdit.set(true);
-            children.add(makeBlankChild());
+            children.add(Utility.later(this).makeBlankChild());
             atomicEdit.set(false);
         }
     }

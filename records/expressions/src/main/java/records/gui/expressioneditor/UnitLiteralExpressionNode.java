@@ -15,6 +15,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,16 +24,16 @@ import java.util.stream.Stream;
 /**
  * An expression with a unit expression inside.
  */
-public class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, ExpressionSaver>
+public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression, ExpressionSaver>
 {
     private final UnitCompoundBase unit;
     
     public UnitLiteralExpressionNode(ConsecutiveBase<Expression, ExpressionSaver> parent, UnitExpression unitExpression)
     {
         super(parent);
-        this.unit = new UnitCompoundBase(Utility.later(this), true, unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL));
+        this.unit = new UnitCompoundBase(Utility.later(this), true, FXUtility.mouse(this), unitExpression.loadAsConsecutive(BracketedStatus.TOP_LEVEL));
         updateNodes();
-        Utility.later(this).updateListeners();
+        updateListeners();
     }
 
     @Override

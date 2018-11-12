@@ -5,8 +5,10 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.scene.control.Label;
 import log.Log;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.ConsecutiveBase.PrefixSuffix;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
@@ -18,6 +20,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,15 +29,17 @@ import java.util.stream.Stream;
 /**
  * An Expression with a type expression inside.
  */
-public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver>
+public final class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver>
 {
     private final Consecutive<TypeExpression, TypeSaver> type;
     
-    @SuppressWarnings("initialization")
     public TypeLiteralNode(ConsecutiveBase<Expression, ExpressionSaver> parent, @Nullable TypeExpression startingType)
     {
         super(parent);
-        this.type = new Consecutive<TypeExpression, TypeSaver>(ConsecutiveBase.TYPE_OPS, this, "type{", "}", "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
+        // This suppress shouldn't be necessary IMO, as PrefixSuffix is happy with uninitialised:
+        @SuppressWarnings("initialization")
+        @Initialized PrefixSuffix prefixSuffix = new PrefixSuffix("type{", "}", this);
+        this.type = Utility.later(new Consecutive<TypeExpression, TypeSaver>(ConsecutiveBase.TYPE_OPS, this, prefixSuffix, "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
         {
             @Override
             public @Recorded TypeExpression save()
@@ -62,7 +67,7 @@ public class TypeLiteralNode extends TreeLiteralNode<Expression, ExpressionSaver
                 // Even if the type is complete, they'll need to write the '}' to come back out, so show always:
                 return true;
             }
-        };
+        });
         updateNodes();
         updateListeners();
     }

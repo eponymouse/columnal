@@ -5,6 +5,7 @@ import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
@@ -96,8 +97,6 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         container = new ErrorTop(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
         this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField, this);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
-
-        updateNodes();
     }
 
     @Override
@@ -119,9 +118,9 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     }
     
     @Override
-    protected Stream<Node> calculateNodes()
+    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) SimpleLiteralNode this)
     {
-        return Stream.of(container);
+        return Utility.streamNullable(container);
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -27,20 +28,19 @@ abstract class DeepNodeTree
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<EEDisplayNode, Boolean> listeningTo = new IdentityHashMap<>();
     private final ListChangeListener<Node> childrenNodeListener;
-
-    @SuppressWarnings("initialization")
+    
     protected DeepNodeTree()
     {
         this.childrenNodeListener = c ->
         {
-            updateNodes();
+            Utility.later(this).updateNodes();
         };
         FXUtility.addChangeListenerPlatformNN(atomicEdit, inProgress -> {
             if (!inProgress)
             {
                 // At end of edit:
-                updateNodes();
-                updateListeners();
+                Utility.later(this).updateNodes();
+                Utility.later(this).updateListeners();
             }
         });
     }
@@ -50,8 +50,7 @@ abstract class DeepNodeTree
         return new Pair<>(op, TranslationUtility.getString(key));
     }
 
-    @SuppressWarnings("initialization") // Can't prove calculateNodes is safe to call here
-    protected final void updateNodes(@UnknownInitialization(DeepNodeTree.class) DeepNodeTree this)
+    protected final void updateNodes()
     {
         if (atomicEdit.get())
             return;
@@ -73,7 +72,7 @@ abstract class DeepNodeTree
     protected abstract Stream<Node> calculateNodes();
 
     // Called after nodes have been updated
-    protected void updateDisplay() {}
+    protected void updateDisplay(@UnknownInitialization(DeepNodeTree.class) DeepNodeTree this) {}
 
     protected final void updateListeners()
     {
@@ -100,18 +99,6 @@ abstract class DeepNodeTree
                 iterator.remove();
             }
         }
-    }
-
-    protected void listenToNodeRelevantList(ObservableList<?> children)
-    {
-        FXUtility.listen(children,c ->
-        {
-            updateNodes();
-            updateListeners();
-        });
-
-        updateNodes();
-        updateListeners();
     }
 
 }

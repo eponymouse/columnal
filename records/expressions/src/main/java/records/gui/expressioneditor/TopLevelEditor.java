@@ -65,7 +65,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
 
     public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TypeManager typeManager, String... styleClasses)
     {
-        super(operations, null, null, "");
+        super(operations, null, "");
         this.container = new TopLevelEditorFlowPane();
         this.errorMessagePopup = new ErrorMessagePopup();
         this.scrollPane = new ScrollPaneFill(container) {
@@ -333,9 +333,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     {
         this.selectionLocked = selectionLocked;
     }
-
-    @SuppressWarnings("initialization")
-    public <E extends StyledShowable, P> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E, P> src)
+    
+    public <E extends StyledShowable, P> void ensureSelectionIncludes(ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;
@@ -507,15 +506,18 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     }
 
     @Override
-    protected void updateDisplay()
+    protected void updateDisplay(@UnknownInitialization(DeepNodeTree.class) TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> this)
     {
         super.updateDisplay();
-        // Flush focus requests of children.
-        // Must use list copy in case this causes blank to be defocused and removed:
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : new ArrayList<>(children))
+        if (children != null)
         {
-            if (children.contains(child))
-                child.flushFocusRequest();
+            // Flush focus requests of children.
+            // Must use list copy in case this causes blank to be defocused and removed:
+            for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : new ArrayList<>(children))
+            {
+                if (children.contains(child))
+                    child.flushFocusRequest();
+            }
         }
     }
 

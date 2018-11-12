@@ -17,7 +17,7 @@ import utility.Pair;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class TemporalLiteralNode extends SimpleLiteralNode
+public final class TemporalLiteralNode extends SimpleLiteralNode
 {
     private final DateTimeType dateTimeType;
 
@@ -27,7 +27,7 @@ public class TemporalLiteralNode extends SimpleLiteralNode
         this.dateTimeType = dateTimeType;
         if (initialContent != null)
             textField.setText(initialContent);
-        
+        updateNodes();
     }
 
     @Override

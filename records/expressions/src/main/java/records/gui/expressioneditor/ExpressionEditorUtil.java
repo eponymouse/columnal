@@ -11,6 +11,8 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
@@ -233,13 +235,12 @@ public class ExpressionEditorUtil
         }
         return Collections.emptyList();
     }
-
-    @SuppressWarnings("initialization")
+    
     public static <E extends StyledShowable, P> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src)
     {
-        TopLevelEditor<?, ?> editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
-            editor.ensureSelectionIncludes(src);
+            TopLevelEditor<?, ?> editor = FXUtility.mouse(src).getParent().getEditor();
+            editor.ensureSelectionIncludes(FXUtility.mouse(src));
             @Nullable String selection = editor.getSelection();
             if (selection != null)
             {
@@ -250,6 +251,7 @@ public class ExpressionEditorUtil
             e.consume();
         });
         dragSource.setOnDragDone(e -> {
+            TopLevelEditor<?, ?> editor = FXUtility.mouse(src).getParent().getEditor();
             editor.setSelectionLocked(false);
             if (e.getTransferMode() != null)
             {
@@ -258,12 +260,12 @@ public class ExpressionEditorUtil
             e.consume();
         });
     }
-
-    @SuppressWarnings("initialization")
-    public static <E extends StyledShowable, P> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E, P> node, TextField textField)
+    
+    public static <E extends StyledShowable, P> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E, P> node_, TextField textField)
     {
-        typeLabel.setOnMouseClicked(e -> {
-            if (!e.isStillSincePress())
+        ConsecutiveChild<E, P> node = FXUtility.mouse(node_);
+        typeLabel.addEventFilter(MouseEvent.MOUSE_RELEASED, e -> {
+            if (!e.isStillSincePress() || e.getClickCount() != 1 || e.getButton() != MouseButton.PRIMARY)
                 return;
 
             if (e.isShiftDown())
