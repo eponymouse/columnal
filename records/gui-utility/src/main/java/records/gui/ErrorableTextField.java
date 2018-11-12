@@ -59,8 +59,7 @@ public class ErrorableTextField<T>
     
     // Default is to suppress errors if blank and never been unfocused.
     private boolean suppressingErrors = true;
-
-    @SuppressWarnings("initialization") // Due to updateState
+    
     public ErrorableTextField(FXPlatformFunction<String, ConversionResult<T>> converter, ObservableValue... conversionDependencies)
     {
         field.getStyleClass().add("errorable-text-field");
@@ -102,8 +101,10 @@ public class ErrorableTextField<T>
         });
     }
 
-    private void updateState()
+    private void updateState(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
     {
+        // I don't understand why this can be null if ErrorableTextField is initialised?
+        @SuppressWarnings("nullness")
         ConversionResult<T> result = converted.get();
         boolean hasError = result.getError() != null && !suppressingErrors;
         boolean hasWarnings = !result.getWarnings().isEmpty() && !suppressingErrors;

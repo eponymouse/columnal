@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.stage.Window;
+import javafx.util.Callback;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -24,7 +25,6 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
     private final ErrorLabel errorLabel = new ErrorLabel();
     private @Nullable R result;
 
-    @SuppressWarnings("initialization") // For the OK event filter.  Can't click until dialog shows!
     public ErrorableLightDialog(Window parent, boolean buttonsToSide)
     {
         super(parent, buttonsToSide ? new DialogPaneWithSideButtons() : null);
@@ -32,14 +32,14 @@ public abstract class ErrorableLightDialog<R> extends LightDialog<R>
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
-            calculateResult().either_(err -> {
+            FXUtility.mouse(this).calculateResult().either_(err -> {
                 result = null;
                 errorLabel.setText(err);
                 e.consume(); // Prevent OK doing anything
             }, r -> {result = r;});
         });
         //We bind so that if subclass mistakenly tries to set, it will get an error:
-        resultConverterProperty().bind(new ReadOnlyObjectWrapper<>(bt -> {
+        resultConverterProperty().bind(new ReadOnlyObjectWrapper<Callback<ButtonType, @Nullable R>>(bt -> {
             if (bt == ButtonType.OK)
             {
                 if (result != null)
