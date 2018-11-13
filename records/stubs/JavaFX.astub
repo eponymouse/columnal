@@ -380,5 +380,5 @@ class StyleClassedTextArea
 }
 class GenericStyledArea<PS, SEG, S>
 {
-    void replace(@UnknownInitialization(org.fxmisc.richtext.GenericStyledArea.class) StyledDocument<PS, SEG, S> doc);
+    void replace(@UnknownInitialization(org.fxmisc.richtext.GenericStyledArea.class) GenericStyledArea<PS, SEG, S> this, StyledDocument<PS, SEG, S> doc);
 }

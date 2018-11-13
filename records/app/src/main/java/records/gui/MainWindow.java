@@ -77,7 +77,7 @@ public class MainWindow
             ContentState.EMPTY_SEL, TranslationUtility.getString("main.selHint"),
             ContentState.NON_EMPTY, Utility.universal("")
         ));
-        View v = new View(destinationFile, state -> emptyMessage.setText(emptyMessages.get(state)));
+        View v = new View(destinationFile, state -> emptyMessage.setText(emptyMessages.getOrDefault(state, "")));
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
         stage.setOnHidden(e -> {

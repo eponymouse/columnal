@@ -97,7 +97,7 @@ public class VirtualGridSupplierFloating extends VirtualGridSupplier<Node>
     }
 
     @Override
-    void sizesOrPositionsChanged(VisibleBounds visibleBounds)
+    protected void sizesOrPositionsChanged(VisibleBounds visibleBounds)
     {
         for (FloatingItem<?> item : items)
         {

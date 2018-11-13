@@ -144,7 +144,7 @@ public class StructuredTextField extends StyleClassedTextArea
                 if (editorKit.contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
                 {
                     inSuperReplace = true;
-                    super.replace(0, getLength(), makeDoc(editorKit.contentComponent.getItems()));
+                    superReplace(0, getLength(), makeDoc(editorKit.contentComponent.getItems()));
                     selectRange(sel.getStart(), sel.getEnd());
                     inSuperReplace = false;
                 }
@@ -342,6 +342,13 @@ public class StructuredTextField extends StyleClassedTextArea
             return ReadOnlyStyledDocument.fromString("", Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
         }
     }
+    
+    // Checker-friendly way to call super.replace
+    @SuppressWarnings("initialization")
+    private void superReplace(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField this, int start, int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
+    {
+        super.replace(start, end, replacement);
+    }
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -447,7 +454,7 @@ public class StructuredTextField extends StyleClassedTextArea
         curValue.addAll(editorKit.contentComponent.getItems());
         StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(curValue);
         inSuperReplace = true;
-        super.replace(0, getLength(), doc);
+        superReplace(0, getLength(), doc);
         inSuperReplace = false;
         updatePossibleCaretPositions();
     }
@@ -546,7 +553,7 @@ public class StructuredTextField extends StyleClassedTextArea
         curValue.clear();
         curValue.addAll(valueBeforeFocus.items);
         // Call super to avoid our own validation:
-        super.replace(0, getLength(), valueBeforeFocus.doc);
+        superReplace(0, getLength(), valueBeforeFocus.doc);
         editorKit.completedValue = valueBeforeFocus.value;
     }
 
