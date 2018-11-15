@@ -1,6 +1,10 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.binding.BooleanExpression;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -34,6 +38,32 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
             public void home()
             {
                 parent.focusBlankAtLeft();
+            }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void paste()
+            {
+                String s = Clipboard.getSystemClipboard().getString();
+                // We may get removed so it's important to remember the scene:
+                Scene sc = getScene();
+                if (sc != null)
+                {
+                    Scene scene = sc;
+                    // So that all the autocompletes etc fire,
+                    // we paste one character at a time:
+                    s.codePoints().forEach(c -> {
+                        // The focus owner may change during paste,
+                        // so we must requery it with each character:
+                        Node focused = scene.getFocusOwner();
+                        if (focused instanceof TextField)
+                        {
+                            TextField textField = (TextField) focused;
+                            textField.replaceSelection(Utility.codePointToString(c));
+                            textField.positionCaret(textField.getCaretPosition() + 1);
+                        }
+                    });
+                }
             }
         });
         textField.getStyleClass().add("entry-field");
