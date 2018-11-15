@@ -1,32 +1,24 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.primitives.Chars;
-import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.function.list.Single;
 import styled.StyledShowable;
-import utility.FXPlatformFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
 
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Created by neil on 19/02/2017.
  */
-public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
+public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> extends ConsecutiveBase<EXPRESSION, SAVER>
 {
     protected final EEDisplayNodeParent parent;
     
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable PrefixSuffix prefixSuffix, String style, @Nullable Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> content)
+    public Consecutive(OperandOps<EXPRESSION, SAVER> operations, @UnknownInitialization(Object.class) EEDisplayNodeParent parent, @Nullable PrefixSuffix prefixSuffix, String style, @Nullable Stream<SingleLoader<EXPRESSION, SAVER>> content)
     {
         super(operations, prefixSuffix, style);
         this.parent = Utility.later(parent);
@@ -48,7 +40,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
         }
     }
 
-    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive<EXPRESSION, SEMANTIC_PARENT> this)
+    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive<EXPRESSION, SAVER> this)
     {
         if (parent != null)
             parent.changed(this);
@@ -80,7 +72,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SEMANTIC_PA
 
     public void setEntireSelected(boolean selected, boolean focus)
     {
-        ImmutableList<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> ourChildren = getAllChildren();
+        ImmutableList<ConsecutiveChild<EXPRESSION, SAVER>> ourChildren = getAllChildren();
         if (!ourChildren.isEmpty())
             markSelection(ourChildren.get(0), ourChildren.get(ourChildren.size() - 1), selected, null);
         if (prefixNode != null)

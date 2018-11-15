@@ -1,49 +1,31 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextFlow;
-import javafx.util.Duration;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.controlsfx.control.PopOver;
 import records.error.InternalException;
-import records.gui.FixList;
 import records.gui.FixList.FixInfo;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.gui.expressioneditor.TopLevelEditor.ErrorMessageDisplayer;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.FXPlatformFunction;
-import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.OptionalInt;
-import java.util.stream.Collectors;
 
 /**
  * Manages the display of errors, quick fixes and type information in the expression editor.
@@ -170,7 +152,7 @@ public class ExpressionInfoDisplay
 
     
     
-    public <EXPRESSION extends StyledShowable, SEMANTIC_PARENT> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> fixes, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> editor)
+    public <EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SAVER>> fixes, ConsecutiveBase<EXPRESSION, SAVER> editor)
     {
         this.fixes.set(Utility.concatI(this.fixes.get(), fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
             Log.debug("Clicked fix: " + q.getTitle());

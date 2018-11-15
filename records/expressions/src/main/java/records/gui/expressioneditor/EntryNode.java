@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.binding.BooleanExpression;
-import javafx.collections.ObservableList;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -16,15 +15,15 @@ import java.util.stream.Stream;
 /**
  * A helper class that shares code between various text-field based nodes.
  */
-public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION, SAVER>, ErrorDisplayer<EXPRESSION, SAVER>
 {
-    protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent;
+    protected final ConsecutiveBase<EXPRESSION, SAVER> parent;
     private final Class<EXPRESSION> expressionClass;
 
     protected final LeaveableTextField textField;
     private boolean focusPending;
     
-    public EntryNode(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, Class<EXPRESSION> expressionClass)
+    public EntryNode(ConsecutiveBase<EXPRESSION, SAVER> parent, Class<EXPRESSION> expressionClass)
     {
         this.parent = parent;
         this.expressionClass = expressionClass;
@@ -43,7 +42,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     // Don't understand why the checker doesn't see that this method is OK:
     @SuppressWarnings("nullness")
     // Although we don't extend OperandNode, this deliberately implements a method from OperandNode:
-    public final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent(@UnknownInitialization(EntryNode.class) EntryNode<EXPRESSION, SEMANTIC_PARENT> this)
+    public final ConsecutiveBase<EXPRESSION, SAVER> getParent(@UnknownInitialization(EntryNode.class) EntryNode<EXPRESSION, SAVER> this)
     {
         return parent;
     }
@@ -124,7 +123,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     }
 
     @Override
-    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) EntryNode<EXPRESSION, SEMANTIC_PARENT> this)
+    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) EntryNode<EXPRESSION, SAVER> this)
     {
         return Stream.empty();
     }

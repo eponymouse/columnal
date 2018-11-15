@@ -4,13 +4,13 @@ import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  * @param <KEYWORD> Keywords that can alter scope levels, either beginning or ending scopes
  * @param <CONTEXT> Context for reporting back to the expressions.
  */
-public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KEYWORD, CONTEXT>
+public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP, KEYWORD, CONTEXT> implements ClipboardSaver
 {
     /**
      * Gets all special keywords available in child operators,
@@ -67,13 +67,13 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
      */
     //boolean canDeclareVariable(EEDisplayNode chid);
 
-    public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER, OP>
+    public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
     {
         // Only called if the list is valid (one more expression than operators, strictly interleaved
         public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<OP> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus);
     }
 
-    public static interface MakeBinary<EXPRESSION extends StyledShowable, SAVER>
+    public static interface MakeBinary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
     {
         public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus);
     }
@@ -300,7 +300,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
     /**
      * A function to give back the content of a scope being ended.
      */
-    public static interface FetchContent<EXPRESSION extends StyledShowable, SAVER>
+    public static interface FetchContent<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
     {
         /**
          * 
@@ -362,7 +362,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
      * @param <EXPRESSION>
      * @param <SAVER>
      */
-    public static class BracketAndNodes<EXPRESSION extends StyledShowable, SAVER>
+    public static class BracketAndNodes<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
     {
         public final BracketedStatus bracketedStatus;
         public final ConsecutiveChild<EXPRESSION, SAVER> start;
@@ -437,7 +437,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
 
     protected abstract @Recorded EXPRESSION makeExpression(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER> brackets);
     
-    public @Recorded EXPRESSION finish(ConsecutiveChild<EXPRESSION, SAVER> errorDisplayer)
+    public final @Recorded EXPRESSION finish(ConsecutiveChild<EXPRESSION, SAVER> errorDisplayer)
     {
         while (currentScopes.size() > 1)
         {
@@ -754,4 +754,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER, OP, KE
     }
 
     protected abstract EXPRESSION makeSingleInvalid(KEYWORD terminator);
+    
+    public final @Nullable String finishClipboard()
+    {
+        if (currentScopes.isEmpty())
+            return null;
+        
+        return finish(currentScopes.peek().openingNode).toString();
+    }
 }

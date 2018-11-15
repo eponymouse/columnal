@@ -4,9 +4,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.Expression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
-import records.transformations.expression.Replaceable;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -17,9 +15,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
+public interface OperandOps<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
 {
-    public EntryNode<EXPRESSION, SEMANTIC_PARENT> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, @Nullable String initialContent);
+    public EntryNode<EXPRESSION, SAVER> makeGeneral(ConsecutiveBase<EXPRESSION, SAVER> parent, @Nullable String initialContent);
 
     public Class<EXPRESSION> getOperandClass();
 
@@ -28,10 +26,10 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
     String save(EXPRESSION expression, TableAndColumnRenames renames);
 
     // The toString() method of the saver can be used to get the string content
-    @NonNull SEMANTIC_PARENT saveToClipboard(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent);
+    @NonNull SAVER saveToClipboard(ConsecutiveBase<EXPRESSION, SAVER> parent);
 
 
-    Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> replaceAndLoad(EXPRESSION topLevel, EXPRESSION toReplace, EXPRESSION replaceWith, BracketedStatus childrenBracketedStatus);
+    Stream<SingleLoader<EXPRESSION, SAVER>> replaceAndLoad(EXPRESSION topLevel, EXPRESSION toReplace, EXPRESSION replaceWith, BracketedStatus childrenBracketedStatus);
 
 
 
@@ -46,7 +44,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
      *                   to want to bracket "(a + b) = c" than "a + (b = c)".
      */
     /*
-    static <EXPRESSION extends LoadableExpression<EXPRESSION, SEMANTIC_PARENT>, SEMANTIC_PARENT> @Nullable EXPRESSION makeExpressionWithOperators(OperandOps<EXPRESSION, SEMANTIC_PARENT> operandOps, ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
+    static <EXPRESSION extends LoadableExpression<EXPRESSION, SAVER>, SAVER> @Nullable EXPRESSION makeExpressionWithOperators(OperandOps<EXPRESSION, SAVER> operandOps, ImmutableList<ImmutableList<OperatorExpressionInfo<EXPRESSION, SAVER>>> candidates, ErrorAndTypeRecorder errorAndTypeRecorder, ImmutableList<@Recorded EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
     {
         if (ops.size() != expressionExps.size() - 1)
         {
@@ -61,7 +59,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         }
         
         // First, split it into sections based on cohesive parts that have the same operators:
-        List<OperatorSection<EXPRESSION, SEMANTIC_PARENT>> operatorSections = new ArrayList<>();
+        List<OperatorSection<EXPRESSION, SAVER>> operatorSections = new ArrayList<>();
         nextOp: for (int i = 0; i < ops.size(); i++)
         {
             if (operatorSections.isEmpty() || !operatorSections.get(operatorSections.size() - 1).addOperator(ops.get(i), i))
@@ -69,7 +67,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
                 // Make new section:
                 for (int candidateIndex = 0; candidateIndex < candidates.size(); candidateIndex++)
                 {
-                    for (OperatorExpressionInfo<EXPRESSION, SEMANTIC_PARENT> operatorExpressionInfo : candidates.get(candidateIndex))
+                    for (OperatorExpressionInfo<EXPRESSION, SAVER> operatorExpressionInfo : candidates.get(candidateIndex))
                     {
                         if (operatorExpressionInfo.includes(ops.get(i)))
                         {
@@ -93,10 +91,10 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
             // Maybe with the possibility of different brackets?
             if (bracketedStatus == BracketedStatus.MISC)
             {
-                List<LoadableExpression<EXPRESSION, SEMANTIC_PARENT>> possibles = new ArrayList<>();
+                List<LoadableExpression<EXPRESSION, SAVER>> possibles = new ArrayList<>();
                 for (BracketedStatus status : Arrays.asList(BracketedStatus.DIRECT_ROUND_BRACKETED, BracketedStatus.DIRECT_SQUARE_BRACKETED))
                 {
-                    @Nullable LoadableExpression<EXPRESSION, SEMANTIC_PARENT> possible = operatorSections.get(0).makeExpression(expressionExps, status);
+                    @Nullable LoadableExpression<EXPRESSION, SAVER> possible = operatorSections.get(0).makeExpression(expressionExps, status);
                     if (possible != null)
                         possibles.add(possible);
                 }
@@ -126,9 +124,9 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
             @Nullable @Recorded EXPRESSION middle = operatorSections.get(1).makeExpression(expressionExps, bracketedStatus);
             if (middle != null)
             {
-                @Nullable EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT>) operatorSections.get(0)).makeExpressionMiddleMerge(
+                @Nullable EXPRESSION replacement = ((NaryOperatorSection<EXPRESSION, SAVER>) operatorSections.get(0)).makeExpressionMiddleMerge(
                     middle,
-                    (NaryOperatorSection<EXPRESSION, SEMANTIC_PARENT>) operatorSections.get(2),
+                    (NaryOperatorSection<EXPRESSION, SAVER>) operatorSections.get(2),
                     expressionExps, bracketedStatus
                 );
 
@@ -148,7 +146,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
 
             for (int i = 0; i < operatorSections.size(); i++)
             {
-                OperatorSection<EXPRESSION, SEMANTIC_PARENT> operatorSection = operatorSections.get(i);
+                OperatorSection<EXPRESSION, SAVER> operatorSection = operatorSections.get(i);
                 if (operatorSection.operatorSetPrecedence != precedence)
                     break;
 
@@ -160,7 +158,7 @@ public interface OperandOps<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
                     continue;
                 
                 // The replacement if we just bracketed this section:
-                @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> replacement;
+                @UnknownIfRecorded LoadableExpression<EXPRESSION, SAVER> replacement;
                 // There's three possibilities.  One is that if there is one other section, or two that match each other,
                 // we could make a valid expression.  Otherwise we're going to be invalid even with a bracket.
                 if (operatorSections.size() == 2)

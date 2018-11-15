@@ -51,12 +51,12 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, Locatable
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, Locatable
 {
-    protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
+    protected final OperandOps<EXPRESSION, SAVER> operations;
     
     protected final String style;
-    protected final ObservableList<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> children;
+    protected final ObservableList<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> children;
     protected final @Nullable Node prefixNode;
     protected final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
@@ -66,7 +66,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     
     protected @MonotonicNonNull EXPRESSION mostRecentSave;
 
-    protected void listenToNodeRelevantList(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> this, ObservableList<?> children)
+    protected void listenToNodeRelevantList(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase<EXPRESSION, SAVER> this, ObservableList<?> children)
     {
         FXUtility.listen(children,c ->
         {
@@ -89,7 +89,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
     }
 
-    public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable PrefixSuffix prefixSuffix, String style)
+    public ConsecutiveBase(OperandOps<EXPRESSION, SAVER> operations, @Nullable PrefixSuffix prefixSuffix, String style)
     {
         this.operations = operations;
         this.style = style;
@@ -133,12 +133,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     @Override
-    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> this)
+    protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) ConsecutiveBase<EXPRESSION, SAVER> this)
     {
         List<Node> childrenNodes = new ArrayList<Node>();
         if (children != null)
         {
-            for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+            for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
             {
                 childrenNodes.addAll(child.nodes());
             }
@@ -151,13 +151,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     @Override
-    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> this)
+    protected Stream<EEDisplayNode> calculateChildren(@UnknownInitialization(DeepNodeTree.class) ConsecutiveBase<EXPRESSION, SAVER> this)
     {
         return children == null ? Stream.empty() : children.stream().map(c -> c);
     }
 
     @NonNull
-    protected EntryNode<EXPRESSION, SEMANTIC_PARENT> makeBlankChild()
+    protected EntryNode<EXPRESSION, SAVER> makeBlankChild()
     {
         //Log.logStackTrace("Make blank child");
         return operations.makeGeneral(this, null);
@@ -177,7 +177,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     protected void selfChanged()
     {
         removeBlanksLater();
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
             child.bindDisable(disabledProperty);
         }
@@ -196,12 +196,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void removeBlanks()
     {
         //Log.debug("Remove blanks from: " + this);
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
             child.removeNestedBlanks();
         }
         
-        Predicate<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> isRemovable = c -> c.isBlank() && !c.isFocused() && !c.isFocusPending();
+        Predicate<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> isRemovable = c -> c.isBlank() && !c.isFocused() && !c.isFocusPending();
         
         // If we don't need to remove blanks, don't trigger the listeners for a no-op change:
         if (children.stream().noneMatch(isRemovable) || children.size() == 1)
@@ -260,13 +260,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     // Replaces the whole operator-expression that operator was part of, with the new expression
     /*
-    protected void replaceWholeLoad(EntryNode<EXPRESSION, SEMANTIC_PARENT> oldOperator, @UnknownIfRecorded LoadableExpression<EXPRESSION, SEMANTIC_PARENT> e)
+    protected void replaceWholeLoad(EntryNode<EXPRESSION, SAVER> oldOperator, @UnknownIfRecorded LoadableExpression<EXPRESSION, SAVER> e)
     {
         if (children.contains(oldOperator))
         {
-            Pair<List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperandNode<EXPRESSION, SEMANTIC_PARENT>>>, List<SingleLoader<EXPRESSION, SEMANTIC_PARENT, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> loaded = e.loadAsConsecutive(hasImplicitRoundBrackets());
-            List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
-            List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> startingOperators = Utility.mapList(loaded.getSecond(), operator -> operator.load(this, getThisAsSemanticParent()));
+            Pair<List<SingleLoader<EXPRESSION, SAVER, OperandNode<EXPRESSION, SAVER>>>, List<SingleLoader<EXPRESSION, SAVER, OperatorEntry<EXPRESSION, SAVER>>>> loaded = e.loadAsConsecutive(hasImplicitRoundBrackets());
+            List<OperandNode<EXPRESSION, SAVER>> startingOperands = Utility.mapList(loaded.getFirst(), operand -> operand.load(this, getThisAsSemanticParent()));
+            List<OperatorEntry<EXPRESSION, SAVER>> startingOperators = Utility.mapList(loaded.getSecond(), operator -> operator.load(this, getThisAsSemanticParent()));
             atomicEdit.set(true);
             operands.forEach(EEDisplayNode::cleanup);
             operators.forEach(EEDisplayNode::cleanup);
@@ -279,7 +279,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
     */
 
-    public void replace(ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, @Nullable ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> newNode)
+    public void replace(ConsecutiveChild<@NonNull EXPRESSION, SAVER> oldNode, @Nullable ConsecutiveChild<@NonNull EXPRESSION, SAVER> newNode)
     {
         int index = getOperandIndex(oldNode);
         //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
@@ -296,7 +296,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         }
     }
 
-    public void replace(ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> oldNode, Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>> items)
+    public void replace(ConsecutiveChild<@NonNull EXPRESSION, SAVER> oldNode, Stream<SingleLoader<EXPRESSION, SAVER>> items)
     {
         int index = getOperandIndex(oldNode);
         //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
@@ -326,7 +326,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * If the operand to the right of rightOf does NOT pass the given test (or the operator between is non-blank),
      * use the supplier to make one and insert it with blank operator between.
      */
-    public void ensureOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SEMANTIC_PARENT> rightOf, Predicate<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> isAcceptable, Supplier<Stream<SingleLoader<EXPRESSION, SEMANTIC_PARENT>>> makeNew)
+    public void ensureOperandToRight(@UnknownInitialization EntryNode<EXPRESSION, SAVER> rightOf, Predicate<ConsecutiveChild<EXPRESSION, SAVER>> isAcceptable, Supplier<Stream<SingleLoader<EXPRESSION, SAVER>>> makeNew)
     {
         int index = Utility.indexOfRef(children, rightOf);
         if (index + 1 < children.size() && isAcceptable.test(children.get(index + 1)) && children.get(index).isBlank())
@@ -339,10 +339,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public abstract @Recorded EXPRESSION save();
 
-    protected final void save(SEMANTIC_PARENT saver)
+    protected final void save(SAVER saver)
     {
         clearAllErrors();
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
             child.save(saver);
         }
@@ -351,7 +351,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void flushFocusRequest()
     {
         // Take a copy in case focus causes blank removal:
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : new ArrayList<>(children))
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : new ArrayList<>(children))
         {
             child.flushFocusRequest();
         }
@@ -361,9 +361,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         boolean inRange = false;
         atomicEdit.set(true);
-        for (Iterator<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> iterator = children.iterator(); iterator.hasNext(); )
+        for (Iterator<ConsecutiveChild<EXPRESSION, SAVER>> iterator = children.iterator(); iterator.hasNext(); )
         {
-            ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child = iterator.next();
+            ConsecutiveChild<EXPRESSION, SAVER> child = iterator.next();
             // Ordering important here: we remove begin/end inclusive:
             if (child == start)
                 inRange = true;
@@ -385,7 +385,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public boolean balancedBrackets(BracketBalanceType  bracketBalanceType)
     {
         int open = 0;
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
             if (child.opensBracket(bracketBalanceType))
                 open++;
@@ -398,11 +398,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public static enum OperatorOutcome { KEEP, BLANK }
     
-    public void addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> rightOf, String initialContent)
+    public void addOperandToRight(@UnknownInitialization ConsecutiveChild<EXPRESSION, SAVER> rightOf, String initialContent)
     {
         // if coming from blank, must create blank
         withChildIndex(rightOf, index -> {
-            @NonNull final EntryNode<EXPRESSION, SEMANTIC_PARENT> child;
+            @NonNull final EntryNode<EXPRESSION, SAVER> child;
             children.add(index + 1, focusWhenShown(child = makeBlankChild()));
             // Set content after, in case it triggers
             // completion and moves slot:
@@ -410,7 +410,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         });
     }
 
-    private int getOperandIndex(@UnknownInitialization ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> operand)
+    private int getOperandIndex(@UnknownInitialization ConsecutiveChild<@NonNull EXPRESSION, SAVER> operand)
     {
         int index = Utility.indexOfRef(children, operand);
         if (index == -1)
@@ -436,7 +436,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         // all our children have EXPRESSION as inner type:
         withChildIndex(child, index ->
         {
-            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>) child).isBlank();
+            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SAVER>) child).isBlank();
             if (index + 1 < children.size())
             {
                 if (leavingBlank)
@@ -477,7 +477,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             //   A) If we are leaving a blank, we try to focus the item to the left.
             //      If that isn't focusable, we add a blank to its left.
             //   B) If we are leaving a non-blank, we add a blank to its left.
-            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>) child).isBlank();
+            boolean leavingBlank = ((ConsecutiveChild<EXPRESSION, SAVER>) child).isBlank();
             
             if (index > 0)
             {
@@ -509,7 +509,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         Log.debug("Adding blank at left");
         atomicEdit.set(true);
-        EntryNode<@NonNull EXPRESSION, SEMANTIC_PARENT> blankOperand = makeBlankChild();
+        EntryNode<@NonNull EXPRESSION, SAVER> blankOperand = makeBlankChild();
         blankOperand.focusWhenShown();
         children.add(0, blankOperand);
         atomicEdit.set(false);
@@ -529,9 +529,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     @SuppressWarnings("unchecked") // It's not actually unchecked...
     private void withChildIndex(@UnknownInitialization EEDisplayNode child, FXPlatformConsumer<Integer> withIndex)
     {
-        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (@UnknownInitialization ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>)child))
+        if (child instanceof ConsecutiveChild && Utility.containsRef(children, (@UnknownInitialization ConsecutiveChild<@NonNull EXPRESSION, SAVER>)child))
         {
-            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>) child);
+            int index = getOperandIndex((ConsecutiveChild<@NonNull EXPRESSION, SAVER>) child);
             withIndex.consume(index);
         }
     }
@@ -574,7 +574,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return BracketedStatus.MISC;
     }
 /*
-    public @UnknownIfRecorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> first, ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT> last)
+    public @UnknownIfRecorded EXPRESSION save(ErrorDisplayerRecord errorDisplayers, ErrorAndTypeRecorder onError, ConsecutiveChild<@NonNull EXPRESSION, SAVER> first, ConsecutiveChild<@NonNull EXPRESSION, SAVER> last)
     {
         int firstIndex = children.indexOf(first);
         int lastIndex = children.indexOf(last);
@@ -603,9 +603,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * if there any problems (start or end not found, or end before start)
      */
     @Pure
-    public List<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> getChildrenFromTo(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
+    public List<ConsecutiveChild<EXPRESSION, SAVER>> getChildrenFromTo(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
     {
-        List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> allChildren = getAllChildren();
+        List<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> allChildren = getAllChildren();
         int a = allChildren.indexOf(start);
         int b = allChildren.indexOf(end);
         if (a == -1 || b == -1 || a > b)
@@ -613,7 +613,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return allChildren.subList(a, b + 1);
     }
 
-    protected ImmutableList<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> getAllChildren()
+    protected ImmutableList<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> getAllChildren()
     {
         return ImmutableList.copyOf(children);
     }
@@ -623,9 +623,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * (inclusive) to the given boolean, and select the given
      * optional item
      */
-    public final void markSelection(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> from, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> to, boolean selected, @Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> focus)
+    public final void markSelection(ConsecutiveChild<EXPRESSION, SAVER> from, ConsecutiveChild<EXPRESSION, SAVER> to, boolean selected, @Nullable ConsecutiveChild<EXPRESSION, SAVER> focus)
     {
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> n : getChildrenFromTo(from, to))
+        for (ConsecutiveChild<EXPRESSION, SAVER> n : getChildrenFromTo(from, to))
         {
             n.setSelected(selected, n == focus);
         }
@@ -638,9 +638,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     @SuppressWarnings("unchecked")
-    public @Nullable String copyItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
+    public @Nullable String copyItems(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
     {
-        List<ConsecutiveChild<@NonNull EXPRESSION, SEMANTIC_PARENT>> all = getAllChildren();
+        List<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> all = getAllChildren();
         int startIndex = all.indexOf(start);
         int endIndex = all.indexOf(end);
 
@@ -648,13 +648,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             // Problem:
             return null;
 
-        final SEMANTIC_PARENT saver = operations.saveToClipboard(this);
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : all.subList(startIndex, endIndex + 1))
+        final SAVER saver = operations.saveToClipboard(this);
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : all.subList(startIndex, endIndex + 1))
         {
             child.save(saver);
         }
         
-        return saver.toString();
+        return saver.finishClipboard();
     }
 
     /*
@@ -665,11 +665,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         // In the case of a mismatch, we must insert a blank of the other type to get it right.
         atomicEdit.set(true);
 
-        @Nullable Pair<List<OperandNode<EXPRESSION, SEMANTIC_PARENT>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loaded = loadItems(itemsToInsert);
+        @Nullable Pair<List<OperandNode<EXPRESSION, SAVER>>, List<OperatorEntry<EXPRESSION, SAVER>>> loaded = loadItems(itemsToInsert);
         if (loaded == null)
             return false;
-        List<OperandNode<EXPRESSION, SEMANTIC_PARENT>> newOperands = loaded.getFirst();
-        List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> newOperators = loaded.getSecond();
+        List<OperandNode<EXPRESSION, SAVER>> newOperands = loaded.getFirst();
+        List<OperatorEntry<EXPRESSION, SAVER>> newOperators = loaded.getSecond();
 
         boolean endsWithOperator;
         if (itemsToInsert.startsOnOperator)
@@ -733,9 +733,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     */
 
     /*
-    private @Nullable List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loadItems(CopiedItems copiedItems)
+    private @Nullable List<EntryNode<EXPRESSION, SAVER>> loadItems(CopiedItems copiedItems)
     {
-        List<EntryNode<EXPRESSION, SEMANTIC_PARENT>> loaded = new ArrayList<>();
+        List<EntryNode<EXPRESSION, SAVER>> loaded = new ArrayList<>();
         try
         {
             for (int i = 0; i < copiedItems.items.size(); i++)
@@ -752,7 +752,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
     */
 
-    public void removeItems(ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end)
+    public void removeItems(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
     {
         atomicEdit.set(true);
         int startIndex;
@@ -798,7 +798,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     protected void unmaskErrors()
     {
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
             child.unmaskErrors();
         }
@@ -893,11 +893,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return getAllChildren().stream().anyMatch(c -> c.isFocused());
     }
 
-    public void addErrorAndFixes(@Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> start, @Nullable ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> end, StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+    public void addErrorAndFixes(@Nullable ConsecutiveChild<EXPRESSION, SAVER> start, @Nullable ConsecutiveChild<EXPRESSION, SAVER> end, StyledString error, List<QuickFix<EXPRESSION, SAVER>> quickFixes)
     {
         Log.debug("Showing " + error.toPlain() + " from " + start + " to " + end + "; " + quickFixes.size() + " " + quickFixes.stream().map(q -> q.getTitle().toPlain()).collect(Collectors.joining("//")) + "\n\n\n");
         boolean inSpan = start == null;
-        for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+        for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
         {
             if (child == start)
                 inSpan = true;
@@ -934,7 +934,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      * Should we show autocomplete window for given child (which has just been focused), or not?
      * General rule is don't show if expression is currently complete, show if they need to type something.
      */
-    public abstract boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child);
+    public abstract boolean showCompletionImmediately(@UnknownInitialization ConsecutiveChild<EXPRESSION, SAVER> child);
 
     public static final OperandOps<Expression, ExpressionSaver> EXPRESSION_OPS = new ExpressionOps();
     public static final OperandOps<UnitExpression, UnitSaver> UNIT_OPS = new UnitExpressionOps();

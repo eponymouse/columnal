@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.control.skin.TextFieldSkin;
 import com.sun.javafx.scene.text.HitInfo;
@@ -12,9 +11,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
-import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
-import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import styled.StyledString;
 import utility.Pair;
@@ -28,7 +25,7 @@ import java.util.stream.Stream;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> extends EntryNode<EXPRESSION, SAVER> implements ConsecutiveChild<EXPRESSION, SAVER>, ErrorDisplayer<EXPRESSION, SAVER>
 {
     /**
      * A label to the left of the text-field, used for displaying things like the
@@ -57,7 +54,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
      */
     protected boolean completing;
 
-    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
+    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SAVER> parent)
     {
         super(parent, operandClass);
         
@@ -91,7 +88,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     }
 
     @Override
-    public boolean isBlank(@UnknownInitialization(Object.class) GeneralOperandEntry<EXPRESSION, SEMANTIC_PARENT> this)
+    public boolean isBlank(@UnknownInitialization(Object.class) GeneralOperandEntry<EXPRESSION, SAVER> this)
     {
         return textField == null || (textField.getText().trim().isEmpty() && !completing);
     }
@@ -110,7 +107,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SEMANTIC_P
     }
 
     @Override
-    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SEMANTIC_PARENT>> quickFixes)
+    public void addErrorAndFixes(StyledString error, List<QuickFix<EXPRESSION, SAVER>> quickFixes)
     {
         container.setError(true);
         expressionInfoDisplay.addMessageAndFixes(error, quickFixes, getParent());

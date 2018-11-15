@@ -5,7 +5,9 @@ import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.BooleanExpression;
 import javafx.geometry.Side;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Dragboard;
@@ -53,6 +55,7 @@ import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -236,7 +239,7 @@ public class ExpressionEditorUtil
         return Collections.emptyList();
     }
     
-    public static <E extends StyledShowable, P> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src)
+    public static <E extends StyledShowable, P extends ClipboardSaver> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src)
     {
         dragSource.setOnDragDetected(e -> {
             TopLevelEditor<?, ?> editor = FXUtility.mouse(src).getParent().getEditor();
@@ -261,18 +264,35 @@ public class ExpressionEditorUtil
         });
     }
     
-    public static <E extends StyledShowable, P> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E, P> node_, TextField textField)
+    public static <E extends StyledShowable, P extends ClipboardSaver> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E, P> node_, TextField textField)
     {
         ConsecutiveChild<E, P> node = FXUtility.mouse(node_);
+        typeLabel.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+            if (e.isPopupTrigger())
+            {
+                showContextMenu(typeLabel, node, e);
+                e.consume();
+            }
+        });
+        
         typeLabel.addEventFilter(MouseEvent.MOUSE_RELEASED, e -> {
-            if (!e.isStillSincePress() || e.getClickCount() != 1 || e.getButton() != MouseButton.PRIMARY)
+            if (!e.isStillSincePress() || e.getClickCount() != 1)
                 return;
+            
+            if (e.isPopupTrigger())
+            {
+                showContextMenu(typeLabel, node, e);
+                e.consume();
+            }
+            else if (e.getButton() == MouseButton.PRIMARY)
+            {
 
-            if (e.isShiftDown())
-                node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.AS_IS);
-            else
-                node.getParent().getEditor().selectOnly(node);
-            e.consume();
+                if (e.isShiftDown())
+                    node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.AS_IS);
+                else
+                    node.getParent().getEditor().selectOnly(node);
+                e.consume();
+            }
         });
         
         typeLabel.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
@@ -307,5 +327,20 @@ public class ExpressionEditorUtil
             }
             // Important not to consume by default!
         });
+    }
+
+    private static <E extends StyledShowable, P extends ClipboardSaver> void showContextMenu(Label typeLabel, ConsecutiveChild<E, P> node, MouseEvent e)
+    {
+        ContextMenu popupMenu = new ContextMenu(
+            GUI.menuItem("cut", () -> {
+                node.getParent().getEditor().ensureSelectionIncludes(node);
+                node.getParent().getEditor().cutSelection();
+            }),
+            GUI.menuItem("copy", () -> {
+                node.getParent().getEditor().ensureSelectionIncludes(node);
+                node.getParent().getEditor().copySelection();
+            })
+        );
+        popupMenu.show(typeLabel, e.getScreenX(), e.getScreenY());
     }
 }

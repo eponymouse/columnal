@@ -1,9 +1,7 @@
 package records.gui.expressioneditor;
 
-import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -13,9 +11,6 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionInfoDisplay.CaretSide;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
-import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.Expression;
-import records.transformations.expression.LoadableExpression;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -28,10 +23,10 @@ import java.util.stream.Stream;
 /**
  * A child of a ConsecutiveBase item.  Has methods for selection, dragging and focusing.
  */
-public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends EEDisplayNode, Locatable, ErrorDisplayer<EXPRESSION, SEMANTIC_PARENT>
+public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> extends EEDisplayNode, Locatable, ErrorDisplayer<EXPRESSION, SAVER>
 {
     @Pure
-    public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> getParent();
+    public ConsecutiveBase<EXPRESSION, SAVER> getParent();
 
     // Delete from the end, backspace pressed ahead of us.  Return true if handled, false if not.
     boolean deleteLast();
@@ -59,14 +54,14 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
     
     void setHoverDropLeft(boolean on);
 
-    default boolean isBlank(@UnknownInitialization(Object.class) ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> this) { return false; }
+    default boolean isBlank(@UnknownInitialization(Object.class) ConsecutiveChild<EXPRESSION, SAVER> this) { return false; }
 
     void focusChanged();
 
     @OnThread(Tag.FXPlatform)
     Stream<Pair<String, Boolean>> _test_getHeaders();
 
-    public void save(SEMANTIC_PARENT saver);
+    public void save(SAVER saver);
 
     void unmaskErrors();
 
@@ -87,7 +82,7 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SEMANTIC_PA
 
     default public ImmutableList<ErrorInfo> getErrorsForAdjacentSide(CaretSide sideOfThisNode)
     {
-        ImmutableList<ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT>> children = getParent().getAllChildren();
+        ImmutableList<ConsecutiveChild<EXPRESSION, SAVER>> children = getParent().getAllChildren();
 
         int index = Utility.indexOfRef(children, this);
         

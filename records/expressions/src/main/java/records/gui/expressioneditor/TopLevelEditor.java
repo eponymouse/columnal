@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -9,6 +10,8 @@ import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -49,7 +52,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
+public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> extends ConsecutiveBase<EXPRESSION, SAVER>
 {
     private final FlowPane container;
     private final ScrollPaneFill scrollPane;
@@ -63,7 +66,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     private final ErrorMessagePopup errorMessagePopup;
     private @Localized @Nullable String prompt = null;
 
-    public TopLevelEditor(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, TypeManager typeManager, String... styleClasses)
+    public TopLevelEditor(OperandOps<EXPRESSION, SAVER> operations, TypeManager typeManager, String... styleClasses)
     {
         super(operations, null, "");
         this.container = new TopLevelEditorFlowPane();
@@ -228,7 +231,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         */
     }
 
-    protected void loadContent(LoadableExpression<EXPRESSION, SEMANTIC_PARENT> startingValue, boolean unmaskErrors)
+    protected void loadContent(LoadableExpression<EXPRESSION, SAVER> startingValue, boolean unmaskErrors)
     {
         atomicEdit.set(true);
         children.setAll(startingValue.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
@@ -277,7 +280,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         return container.getScene().getWindow();
     }
     @Override
-    public TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> getEditor()
+    public TopLevelEditor<EXPRESSION, SAVER> getEditor()
     {
         return this;
     }
@@ -292,7 +295,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         return Stream.empty();
     }
 
-    private static class SelectionInfo<E extends StyledShowable, P>
+    private static class SelectionInfo<E extends StyledShowable, P extends ClipboardSaver>
     {
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
@@ -334,7 +337,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         this.selectionLocked = selectionLocked;
     }
     
-    public <E extends StyledShowable, P> void ensureSelectionIncludes(ConsecutiveChild<E, P> src)
+    public <E extends StyledShowable, P extends ClipboardSaver> void ensureSelectionIncludes(ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;
@@ -352,7 +355,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         selection.markSelection(true);
     }
 
-    protected void clearSelection(@UnknownInitialization(ConsecutiveBase.class) TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> this)
+    protected void clearSelection(@UnknownInitialization(ConsecutiveBase.class) TopLevelEditor<EXPRESSION, SAVER> this)
     {
         if (selectionLocked)
             return;
@@ -362,7 +365,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         selection = null;
     }
 
-    public <E extends StyledShowable, P> void selectOnly(ConsecutiveChild<E, P> src)
+    public <E extends StyledShowable, P extends ClipboardSaver> void selectOnly(ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;
@@ -371,7 +374,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         ensureSelectionIncludes(src);
     }
 
-    public <E extends StyledShowable, P> void selectAllSiblings(ConsecutiveChild<E, P> src)
+    public <E extends StyledShowable, P extends ClipboardSaver> void selectAllSiblings(ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
             return;
@@ -388,7 +391,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     {
         LEFT, AS_IS, RIGHT;
         
-        public <E extends StyledShowable, P> ConsecutiveChild<E, P> apply(ConsecutiveChild<E, P> original)
+        public <E extends StyledShowable, P extends ClipboardSaver> ConsecutiveChild<E, P> apply(ConsecutiveChild<E, P> original)
         {
             ImmutableList<ConsecutiveChild<E, P>> allChildren = original.getParent().getAllChildren();
             int ourIndex = Utility.indexOfRef(allChildren, original);
@@ -416,7 +419,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     {
         HOME, END;
 
-        public <E extends StyledShowable, P> ConsecutiveChild<E, P> apply(ConsecutiveChild<E, P> original)
+        public <E extends StyledShowable, P extends ClipboardSaver> ConsecutiveChild<E, P> apply(ConsecutiveChild<E, P> original)
         {
             ImmutableList<ConsecutiveChild<E, P>> allChildren = original.getParent().getAllChildren();
             int ourIndex = Utility.indexOfRef(allChildren, original);
@@ -436,13 +439,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
     }
     
-    public <E extends StyledShowable, P> void extendSelectionToExtremity(ConsecutiveChild<E, P> node, SelectExtremityTarget selectExtremityTarget)
+    public <E extends StyledShowable, P extends ClipboardSaver> void extendSelectionToExtremity(ConsecutiveChild<E, P> node, SelectExtremityTarget selectExtremityTarget)
     {
         node = selectExtremityTarget.apply(node);
         extendSelectionTo(node, SelectionTarget.AS_IS);
     }
 
-    public <E extends StyledShowable, P> void extendSelectionTo(ConsecutiveChild<E, P> node, SelectionTarget selectionTarget)
+    public <E extends StyledShowable, P extends ClipboardSaver> void extendSelectionTo(ConsecutiveChild<E, P> node, SelectionTarget selectionTarget)
     {
         if (selectionLocked)
             return;
@@ -506,14 +509,14 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
     }
 
     @Override
-    protected void updateDisplay(@UnknownInitialization(DeepNodeTree.class) TopLevelEditor<EXPRESSION, SEMANTIC_PARENT> this)
+    protected void updateDisplay(@UnknownInitialization(DeepNodeTree.class) TopLevelEditor<EXPRESSION, SAVER> this)
     {
         super.updateDisplay();
         if (children != null)
         {
             // Flush focus requests of children.
             // Must use list copy in case this causes blank to be defocused and removed:
-            for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : new ArrayList<>(children))
+            for (ConsecutiveChild<EXPRESSION, SAVER> child : new ArrayList<>(children))
             {
                 if (children.contains(child))
                     child.flushFocusRequest();
@@ -552,11 +555,28 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SEMANTIC
         }
         else
         {
-            for (ConsecutiveChild<EXPRESSION, SEMANTIC_PARENT> child : children)
+            for (ConsecutiveChild<EXPRESSION, SAVER> child : children)
             {
                 child.setPrompt("");
             }
         }
+    }
+    
+    public final void copySelection()
+    {
+        if (selection != null)
+        {
+            String content = selection.copyItems();
+            if (content != null)
+                Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content));
+        }
+    }
+    
+    public final void cutSelection()
+    {
+        copySelection();
+        if (selection != null)
+            selection.removeItems();
     }
 
     // Only really exists for testing purposes:
