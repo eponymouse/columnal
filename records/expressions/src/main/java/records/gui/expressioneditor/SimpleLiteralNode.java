@@ -19,6 +19,7 @@ import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -94,7 +95,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditorUtil.enableSelection(typeLabel, this, textField);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
-        container = new ErrorTop(typeLabel, new BorderPane(textField, null, new Label("\u201D"), null, new Label("\u201C")));
+        container = new ErrorTop(typeLabel, new BorderPane(textField, null, GUI.labelRaw("\u201D", "literal-delimiter"), null, GUI.labelRaw("\u201C", "literal-delimiter")));
         container.getStyleClass().add("entry");
         this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField, this);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());

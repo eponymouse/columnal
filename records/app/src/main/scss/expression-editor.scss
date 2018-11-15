@@ -97,7 +97,7 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
 .entry:ps-column {
     -fx-background-color: $column-color;
 }
-.entry-field:ps-keyword, .entry-field:ps-op {
+.entry-field:ps-keyword, .entry-field:ps-op, .label.literal-delimiter {
     -fx-text-fill: green; 
 }
 .entry-field:ps-op {
