@@ -130,4 +130,10 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     {
         unit.setEntireSelected(selected, focus);
     }
+
+    @Override
+    public boolean isSelectionFocused()
+    {
+        return unit.isSelectionFocused();
+    }
 }

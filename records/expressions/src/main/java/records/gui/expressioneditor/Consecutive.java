@@ -78,13 +78,17 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
             markSelection(ourChildren.get(0), ourChildren.get(ourChildren.size() - 1), selected, null);
         if (prefixNode != null)
         {
-            FXUtility.setPseudoclass(prefixNode, "exp-selected", selected);
+            FXUtility.setPseudoclass(prefixNode.getFirst(), "exp-selected", selected);
             if (focus)
-                prefixNode.requestFocus();
+                prefixNode.getSecond().requestFocus();
         }
         if (suffixNode != null)
-            FXUtility.setPseudoclass(suffixNode, "exp-selected", selected);
-        
+            FXUtility.setPseudoclass(suffixNode.getFirst(), "exp-selected", selected);
+    }
+    
+    public boolean isSelectionFocused()
+    {
+        return prefixNode == null ? false : prefixNode.getSecond().isFocused();
     }
 
     public abstract @Recorded EXPRESSION save(boolean showErrors);

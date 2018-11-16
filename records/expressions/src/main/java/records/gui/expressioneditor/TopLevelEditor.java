@@ -303,9 +303,9 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
         private final ConsecutiveChild<E, P> end;
-        private final @Nullable ConsecutiveChild<E, P> focus;
+        private final ConsecutiveChild<E, P> focus;
 
-        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end, @Nullable ConsecutiveChild<E, P> focus)
+        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end, ConsecutiveChild<E, P> focus)
         {
             this.parent = parent;
             this.start = start;
@@ -378,7 +378,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             ImmutableList<? extends ConsecutiveChild<?, ?>> children = selection.parent.getAllChildren();
             int startIndex = children.indexOf(selection.start);
             int endIndex = children.indexOf(selection.end);
-            if (startIndex >= 0 && endIndex >= 0 && endIndex >= startIndex)
+            if (startIndex >= 0 && endIndex >= 0 && endIndex >= startIndex && selection.focus.isSelectionFocused())
             {
                 selection.markSelection(true);
             }

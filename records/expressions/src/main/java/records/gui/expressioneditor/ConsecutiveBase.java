@@ -57,8 +57,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     
     protected final String style;
     protected final ObservableList<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> children;
-    protected final @Nullable Node prefixNode;
-    protected final @Nullable Node suffixNode;
+    // The container node to use, and the label to focus on selection
+    protected final @Nullable Pair<ErrorTop, Label> prefixNode;
+    protected final @Nullable Pair<ErrorTop, Label> suffixNode;
     private @Nullable String prompt = null;
     private boolean removingBlanks;
 
@@ -109,7 +110,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         });
     }
 
-    private static @Nullable ErrorTop makePrefixSuffixNode(@Nullable String content, @UnknownInitialization ConsecutiveChild<?,? > selectable)
+    private static @Nullable Pair<ErrorTop, Label> makePrefixSuffixNode(@Nullable String content, @UnknownInitialization ConsecutiveChild<?,? > selectable)
     {
         if (content == null)
             return null;
@@ -129,7 +130,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         ExpressionEditorUtil.enableSelection(topLabel, selectable, field);
         ErrorTop container = new ErrorTop(topLabel, field);
         container.getStyleClass().add("entry");
-        return container;
+        return new Pair<>(container, topLabel);
     }
 
     @Override
@@ -144,9 +145,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             }
         }
         if (this.prefixNode != null)
-            childrenNodes.add(0, this.prefixNode);
+            childrenNodes.add(0, this.prefixNode.getFirst());
         if (this.suffixNode != null)
-            childrenNodes.add(this.suffixNode);
+            childrenNodes.add(this.suffixNode.getFirst());
         return childrenNodes.stream();
     }
 

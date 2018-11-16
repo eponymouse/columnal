@@ -176,4 +176,10 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     {
         type.setEntireSelected(selected, focus);
     }
+
+    @Override
+    public boolean isSelectionFocused()
+    {
+        return type.isSelectionFocused();
+    }
 }

@@ -101,6 +101,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
             typeLabel.requestFocus();
     }
 
+    @Override
+    public boolean isSelectionFocused()
+    {
+        return typeLabel.isFocused();
+    }
+
     public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         parent.changed(this);

@@ -123,4 +123,10 @@ public final class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, T
     {
         unit.setEntireSelected(selected, focus);
     }
+
+    @Override
+    public boolean isSelectionFocused()
+    {
+        return unit.isSelectionFocused();
+    }
 }

@@ -163,6 +163,12 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     }
 
     @Override
+    public boolean isSelectionFocused()
+    {
+        return typeLabel.isFocused();
+    }
+
+    @Override
     public Stream<Pair<String, Boolean>> _test_getHeaders()
     {
         return container._test_getHeaderState();

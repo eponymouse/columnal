@@ -21,6 +21,7 @@ public @Interned interface EEDisplayNode
     /**
      * Is focus in this operand (or one of its children)?
      */
+    @Pure
     public boolean isFocused();
 
     public void focusWhenShown();

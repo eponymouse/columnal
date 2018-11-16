@@ -42,6 +42,12 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SAVER exten
      */
     void setSelected(boolean selected, boolean focus);
 
+    /**
+     * Is focus still with node that would be focused if setSelected(true, true) was called?
+     */
+    @Pure
+    boolean isSelectionFocused();
+
     // Ideally this would be protected access:
     @SuppressWarnings("unchecked")
     public static <US extends StyledShowable, TARGET extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends TARGET, ?>, Double> closestDropSingle(ConsecutiveChild<US, ?> us, Class<US> ourClass, Node node, Point2D loc, Class<TARGET> forType)
