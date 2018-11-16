@@ -42,9 +42,9 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
     }
 
     @Override
-    public @Recorded UnitExpression save()
+    public @Recorded UnitExpression save(boolean showErrors)
     {
-        UnitSaver unitSaver = new UnitSaver(this);
+        UnitSaver unitSaver = new UnitSaver(this, showErrors);
         for (ConsecutiveChild<UnitExpression, UnitSaver> child : children)
         {
             child.save(unitSaver);

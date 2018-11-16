@@ -27,7 +27,7 @@ import java.util.List;
  * For displaying semantic errors (which occur on a particular expression)
  */
 public class ErrorDisplayerRecord
-{    
+{
     // A semantic error matches an expression which may span multiple children.
     public class Span<E extends StyledShowable, S extends ClipboardSaver>
     {
@@ -56,6 +56,14 @@ public class ErrorDisplayerRecord
     private final IdentityHashMap<Expression, Either<TypeConcretisationError, TypeExp>> types = new IdentityHashMap<>();
 
     private final IdentityHashMap<Object, Pair<StyledString, List<QuickFix<?, ?>>>> pending = new IdentityHashMap<>();
+    
+    // false to turn off errors, e.g. while saving for copying to clipboard.
+    private final boolean showErrors;
+
+    public ErrorDisplayerRecord(boolean showErrors)
+    {
+        this.showErrors = showErrors;
+    }
     
     @SuppressWarnings({"initialization", "unchecked", "recorded"})
     public <EXPRESSION extends Expression> @NonNull @Recorded EXPRESSION record(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end,  @NonNull EXPRESSION e)
@@ -86,6 +94,9 @@ public class ErrorDisplayerRecord
 
     private void showError(Expression e, @Nullable StyledString s, List<QuickFix<Expression,ExpressionSaver>> quickFixes)
     {
+        if (!showErrors)
+            return;
+        
         @Nullable Span<Expression, ExpressionSaver> d = expressionDisplayers.get(e);
         if (d != null)
         {
@@ -181,5 +192,10 @@ public class ErrorDisplayerRecord
     public Span<TypeExpression, TypeSaver> recorderFor(@Recorded TypeExpression expression)
     {
         return typeDisplayers.get(expression);
+    }
+
+    public boolean isShowingErrors()
+    {
+        return showErrors;
     }
 }

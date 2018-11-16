@@ -57,9 +57,9 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
     }
     
-    public TypeSaver(ConsecutiveBase<TypeExpression, TypeSaver> parent)
+    public TypeSaver(ConsecutiveBase<TypeExpression, TypeSaver> parent, boolean showFoundErrors)
     {
-        super(parent);
+        super(parent, showFoundErrors);
     }
 
     public class Context {}

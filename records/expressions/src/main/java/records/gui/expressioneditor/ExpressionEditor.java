@@ -1,7 +1,6 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
-import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -28,11 +27,8 @@ import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
-import records.transformations.expression.IdentExpression;
 import records.transformations.expression.InvalidIdentExpression;
-import records.transformations.expression.QuickFix;
 import records.transformations.expression.TypeState;
-import records.typeExp.TypeExp;
 import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
@@ -44,7 +40,6 @@ import utility.gui.FXUtility;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -84,7 +79,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
     @Override
     public @Recorded Expression save()
     {
-        ExpressionSaver saver = new ExpressionSaver(this);
+        ExpressionSaver saver = new ExpressionSaver(this, true);
         super.save(saver);
         @Recorded Expression expression = saver.finish(children.get(children.size() - 1));
         mostRecentSave = expression;
@@ -265,11 +260,11 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         //Log.logStackTrace("selfChanged: " + atomicEdit.get());
         super.selfChanged();
         //Log.debug("selfChanged: " + atomicEdit.get());
-        clearSelection();
+        validateSelection();
         // Can be null during initialisation
         if (!atomicEdit.get())
         {
-            ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
+            ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord(true);
             ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
             clearAllErrors();
             Expression expression = save();

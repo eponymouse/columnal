@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -85,4 +86,6 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
             FXUtility.setPseudoclass(suffixNode, "exp-selected", selected);
         
     }
+
+    public abstract @Recorded EXPRESSION save(boolean showErrors);
 }

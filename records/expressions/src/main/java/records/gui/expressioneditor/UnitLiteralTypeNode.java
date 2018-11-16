@@ -49,7 +49,7 @@ public final class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, T
     @Override
     public void save(TypeSaver saver)
     {
-        saver.saveOperand(new UnitLiteralTypeExpression(unit.save()), this, this, c -> {});
+        saver.saveOperand(new UnitLiteralTypeExpression(unit.save(saver.isShowingErrors())), this, this, c -> {});
     }
 
     @Override

@@ -40,9 +40,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 {
     class Context {}   
     
-    public ExpressionSaver(ConsecutiveBase<Expression, ExpressionSaver> parent)
+    public ExpressionSaver(ConsecutiveBase<Expression, ExpressionSaver> parent, boolean showFoundErrors)
     {
-        super(parent);
+        super(parent, showFoundErrors);
     }
     
     // Only used when getting the operators
@@ -380,7 +380,8 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             }
             
             // Error!
-            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
+            if (isShowingErrors())
+                keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + choices.stream().map(e -> e.keyword.getContent()).collect(Collectors.joining(" or ")) + " but found " + (terminator == null ? "<end>" : terminator.getContent())), ImmutableList.of());
             // Important to call makeContent before adding to scope on the next line:
             ImmutableList.Builder<@Recorded Expression> items = ImmutableList.builder();
             items.addAll(prefixIfInvalid.collect(Collectors.toList()));

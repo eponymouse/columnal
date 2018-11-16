@@ -126,9 +126,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
     @Override
     public TypeSaver saveToClipboard(ConsecutiveBase<TypeExpression, TypeSaver> parent)
     {
-        return new TypeSaver(parent)
-        {
-        };
+        return new TypeSaver(parent, false);
     }
 
     @Override

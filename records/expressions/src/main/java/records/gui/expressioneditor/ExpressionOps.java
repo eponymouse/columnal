@@ -188,7 +188,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     @Override
     public ExpressionSaver saveToClipboard(ConsecutiveBase<Expression, ExpressionSaver> parent)
     {
-        return new ExpressionSaver(parent);
+        return new ExpressionSaver(parent, false);
     }
 
     @Override

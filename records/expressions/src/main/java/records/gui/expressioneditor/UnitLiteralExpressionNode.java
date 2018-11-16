@@ -51,7 +51,7 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     @Override
     public void save(ExpressionSaver saver)
     {
-        @Recorded UnitExpression unitExpression = unit.save();
+        @Recorded UnitExpression unitExpression = unit.save(saver.isShowingErrors());
 
         //Log.debug("Saved as: " + unitExpression);
         //Log.debug("  From:\n      " + unit.children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n      ")));

@@ -52,7 +52,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
     @Override
     public @Recorded TypeExpression save()
     {
-        TypeSaver saver = new TypeSaver(this);
+        TypeSaver saver = new TypeSaver(this, true);
         save(saver);
         return saver.finish(children.get(children.size() - 1));
     }

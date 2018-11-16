@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.animation.Animation;
@@ -268,6 +269,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         scrollPane.fillViewport();
     }
 
+    public abstract @Recorded EXPRESSION save();
+
     public Node getContainer()
     {
         return scrollPane;
@@ -365,6 +368,28 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         selection = null;
     }
 
+    /**
+     * Check selection is still valid and re-mark it.
+     */
+    protected void validateSelection()
+    {
+        if (selection != null)
+        {
+            ImmutableList<? extends ConsecutiveChild<?, ?>> children = selection.parent.getAllChildren();
+            int startIndex = children.indexOf(selection.start);
+            int endIndex = children.indexOf(selection.end);
+            if (startIndex >= 0 && endIndex >= 0 && endIndex >= startIndex)
+            {
+                selection.markSelection(true);
+            }
+            else
+            {
+                selection.markSelection(false);
+                selection = null;
+            }
+        }
+    }
+
     public <E extends StyledShowable, P extends ClipboardSaver> void selectOnly(ConsecutiveChild<E, P> src)
     {
         if (selectionLocked)
@@ -451,8 +476,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             return;
 
         node = selectionTarget.apply(node);
-
-        if (selection != null && node.getParent() == selection.parent)
+        
+        if (selection == null)
+        {
+            selection = new SelectionInfo<E, P>(node.getParent(), node, node, node);
+            selection.markSelection(true);
+        }
+        else if (selection != null && node.getParent() == selection.parent)
         {
             // Given they have same parent, selection must be of type E:
             @SuppressWarnings("unchecked")

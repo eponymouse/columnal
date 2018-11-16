@@ -44,9 +44,9 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
         this.type = Utility.later(new Consecutive<TypeExpression, TypeSaver>(ConsecutiveBase.TYPE_OPS, this, prefixSuffix, "", startingType == null ? null : startingType.loadAsConsecutive(BracketedStatus.TOP_LEVEL))
         {
             @Override
-            public @Recorded TypeExpression save()
+            public @Recorded TypeExpression save(boolean showErrors)
             {
-                TypeSaver typeSaver = new TypeSaver(this);
+                TypeSaver typeSaver = new TypeSaver(this, showErrors);
                 save(typeSaver);
                 return typeSaver.finish(children.get(children.size() - 1));
             }
@@ -132,7 +132,7 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
         //Log.debug("Saved as: " + type);
         //Log.debug("  From:\n      " + type.children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n      ")));
         
-        saver.saveOperand(new TypeLiteralExpression(type.save()), this, this, c -> {});
+        saver.saveOperand(new TypeLiteralExpression(type.save(saver.isShowingErrors())), this, this, c -> {});
     }
 
     @Override

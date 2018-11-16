@@ -67,7 +67,7 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
     @Override
     public @Recorded UnitExpression save()
     {
-        UnitSaver saver = new UnitSaver(this);
+        UnitSaver saver = new UnitSaver(this, true);
         save(saver);
         @Recorded UnitExpression unitExpression = saver.finish(children.get(children.size() - 1));
         Log.debug("Saved as: " + unitExpression);

@@ -62,6 +62,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return r.build();
     }
 
+    public final boolean isShowingErrors(@UnknownInitialization(SaverBase.class) SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT> this)
+    {
+        return errorDisplayerRecord.isShowingErrors();
+    }
+
     /**
      * Can this direct child node declare a variable?  i.e. is it part of a pattern?
      */
@@ -392,16 +397,18 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     }
 
     protected final Stack<Scope> currentScopes = new Stack<>();
-    protected final ErrorDisplayerRecord errorDisplayerRecord = new ErrorDisplayerRecord();
+    protected final ErrorDisplayerRecord errorDisplayerRecord;
     
-    protected SaverBase(ConsecutiveBase<EXPRESSION, SAVER> parent)
+    protected SaverBase(ConsecutiveBase<EXPRESSION, SAVER> parent, boolean showFoundErrors)
     {
+        errorDisplayerRecord = new ErrorDisplayerRecord(showFoundErrors);
         addTopLevelScope(parent);
     }
 
     // Only used during the hack to get the operators
     protected SaverBase()
     {
+        errorDisplayerRecord = new ErrorDisplayerRecord(false);
     }
     
     public void saveOperator(OP operator, ConsecutiveChild<EXPRESSION, SAVER> errorDisplayer, FXPlatformConsumer<CONTEXT> withContext)
@@ -422,7 +429,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             {
                 ConsecutiveChild<EXPRESSION, SAVER> start = parent.getAllChildren().get(0);
                 ConsecutiveChild<EXPRESSION, SAVER> end = keywordErrorDisplayer;
-                end.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
+                if (isShowingErrors())
+                    end.addErrorAndFixes(StyledString.s("Closing " + terminator + " without opening"), ImmutableList.of());
                 @Initialized SaverBase<EXPRESSION, SAVER, OP, KEYWORD, CONTEXT> thisSaver = Utility.later(SaverBase.this);
                 currentScopesFinal.peek().items.add(Either.left(makeContent.fetchContent(new BracketAndNodes<>(BracketedStatus.MISC, start, end))));
                 if (terminator != null)
@@ -739,7 +747,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 else
                 {
                     // Error!
-                    keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
+                    if (isShowingErrors())
+                        keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected " + expected + " but found " + terminator), ImmutableList.of());
                     @Nullable ConsecutiveChild<EXPRESSION, SAVER> start = currentScopes.peek().openingNode;
                     // Important to call makeContent before adding to scope on the next line:
                     ImmutableList.Builder<Either<OP, @Recorded EXPRESSION>> items = ImmutableList.builder();

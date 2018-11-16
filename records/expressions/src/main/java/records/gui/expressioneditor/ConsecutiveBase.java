@@ -337,8 +337,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         atomicEdit.set(false);
     }
 
-    public abstract @Recorded EXPRESSION save();
-
     protected final void save(SAVER saver)
     {
         clearAllErrors();
@@ -613,6 +611,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return allChildren.subList(a, b + 1);
     }
 
+    @Pure
     protected ImmutableList<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> getAllChildren()
     {
         return ImmutableList.copyOf(children);

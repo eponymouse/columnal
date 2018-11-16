@@ -30,9 +30,9 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         new OperatorExpressionInfo(
             opD(UnitOp.RAISE, "op.raise"), UnitSaver::makeRaise));
 
-    public UnitSaver(ConsecutiveBase<UnitExpression, UnitSaver> parent)
+    public UnitSaver(ConsecutiveBase<UnitExpression, UnitSaver> parent, boolean showFoundErrors)
     {
-        super(parent);
+        super(parent, showFoundErrors);
     }
     
     private UnitSaver()
@@ -144,7 +144,8 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     else
                     {
                         // Error!
-                        keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
+                        if (isShowingErrors())
+                            keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
                         ImmutableList.Builder<UnitExpression> items = ImmutableList.builder();
                         items.add(new InvalidSingleUnitExpression(bracket.getContent()));
