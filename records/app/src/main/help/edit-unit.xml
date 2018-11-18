@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+        id="edit-unit" title="Edit Unit Specification" >
+    <help id="name" title="Unit Name">
+        <short>The name of the unit of measurement.</short>
+        <full>
+            <p>Every unit must have name, and it cannot be the same name as other units (including built-in units like m for metre).</p>
+            <p>Unit names must start with a letter or currency symbol (e.g. $) and can only contain letters, underscores and currency symbols.  They cannot contain numbers or spaces.</p>
+        </full>
+    </help>
+    <help id="full" title="New Unit">
+        <short>This creates a new unit (rather than just a new name for an existing unit).</short>
+        <full>
+            <p>Units can be defined as a multiple of another unit (e.g. a millimetre is 1/1000 of a metre) or totally independent of existing units.</p>
+        </full>
+    </help>
+    <help id="description" title="Description">
+        <short>Your description of the new unit, for your own reference.</short>
+        <full>
+            <p>Describe what the unit is, so you can remember later on what it is for.</p>
+        </full>
+    </help>
+    <help id="definition" title="Definition">
+        <short>You can define a unit as a multiple of an existing unit or combination of existing units.</short>
+        <full>
+            <p>A simple example is that you might want to define cL (short for centilitre) as 1/100th of a litre.  Often useful is to define a new name for a combination of units, for example you might want acc (short for acceleration) as a short name for m/s^2.</p>
+            <p>Generally, you should not use this to define relationships which may change.  For example, you could define a Euro to be 1.1 US dollars, but that number is likely to change so it is not a good idea to fix it in the software.</p>
+        </full>
+    </help>
+    <help id="alias" title="Alias">
+        <short>Makes a new name for an existing unit.</short>
+        <full>
+            <p>This makes a new name for an existing unit, for example you might want $ as a short name for USD.</p>
+            <p>The key difference between using an alias and creating a new unit is that if you want to swap between two separate units, you must use a conversion function, whereas with an alias you do not.  So if you have two units 
+                that are just different names for the same unit (for example, a shorter abbreviation for inch), use an alias.  If you have two different units that happen to be equivalent (for example, you might want a unit bagOfSugar which equals
+                1 kilogram, but they are not measuring the same thing), define a full unit instead.</p>
+        </full>
+    </help>
+    <help id="alias-target" title="">
+        <short>The target for the alias.</short>
+        <full>
+            <p>For example, if you want to define f as a shorter name for foot, put "f" in the name field above, and put "foot" as the target in this field.</p>
+        </full>
+    </help>
+</dialog>

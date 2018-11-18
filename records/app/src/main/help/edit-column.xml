@@ -25,4 +25,18 @@
             <p>If you want to have a "blank" value for a column, use a tagged type with a Blank tag.</p>
         </full>
     </help>
+    <help id="column-expression" title="Column Expression">
+        <short>This specifies the calculation of the column.</short>
+        <full>
+            <p>This is like a formula in a spreadsheet or mathematics.</p>
+        </full>
+    </help>
+    <help id="table-name" title="Table Name">
+        <short>The name of the table being created.</short>
+        <full>
+            <p>Every table must have a name, and tables may not share the same name.</p>
+            <p>Column names must start with a letter, optionally followed by a succession
+                of numbers, letters and spaces.  You cannot have adjacent spaces, nor spaces at the beginning and end.</p>
+        </full>
+    </help>
 </dialog>
