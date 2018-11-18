@@ -510,9 +510,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             // The target might be ahead or behind or within the current selection.
             // We try with asking for ahead or behind.  If one is empty, choose the other
             // If both are non-empty, go from start to target:
-            ConsecutiveChild<E, P> oldSelStart = oldSel.start;
             List<ConsecutiveChild<E, P>> startToTarget = oldSel.parent.getChildrenFromTo(oldSel.getAnchorNode(), node);
-            ConsecutiveChild<E, P> oldSelEnd = oldSel.end;
+            
             // Thus the rule is use startToTarget unless it's empty:
             if (!startToTarget.isEmpty())
             {
