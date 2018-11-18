@@ -115,7 +115,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
     // If any of the list are implicit lambda args ('?'), returns a new type state
     // with a type for '?' and a wrap function which will turn the item into a function.
     // If none are, returns null and unaltered type state.
-    protected static Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState)
+    protected static Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> detectImplicitLambda(Expression src, ImmutableList<@Recorded Expression> args, TypeState typeState, ErrorAndTypeRecorder errorAndTypeRecorder)
     {
         ImmutableList<@Recorded ImplicitLambdaArg> lambdaArgs = getLambdaArgsFrom(args);
         
@@ -127,7 +127,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
                 argType = argTypes.get(0);
             else
                 argType = new TupleTypeExp(src, argTypes, true);
-            return new Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState>(t -> TypeExp.function(src, argType, t), typeState.addImplicitLambdas(lambdaArgs, argTypes));
+            return new Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState>(t -> errorAndTypeRecorder.recordTypeNN(src, TypeExp.function(src, argType, t)), typeState.addImplicitLambdas(lambdaArgs, argTypes));
         }
         else
         {
@@ -190,7 +190,7 @@ public class ImplicitLambdaArg extends NonOperatorExpression
 
     public static ImmutableList<@Recorded ImplicitLambdaArg> getLambdaArgsFrom(ImmutableList<@Recorded Expression> possibleArgs)
     {
-        return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
+        return Utility.<@Recorded Expression, @Recorded ImplicitLambdaArg>filterClass(possibleArgs.stream(), (Class<@Recorded ImplicitLambdaArg>)ImplicitLambdaArg.class).collect(ImmutableList.toImmutableList());
     }
 
     @Override

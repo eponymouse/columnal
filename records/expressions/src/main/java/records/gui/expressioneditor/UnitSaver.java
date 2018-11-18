@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
 import records.gui.expressioneditor.UnitSaver.Context;
@@ -67,14 +68,14 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     protected @Recorded UnitExpression makeExpression(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, List<Either<@Recorded UnitExpression, OpAndNode>> content, BracketAndNodes<UnitExpression, UnitSaver> brackets)
     {
         if (content.isEmpty())
-            return new InvalidOperatorUnitExpression(ImmutableList.of());
+            return record(start, end, new InvalidOperatorUnitExpression(ImmutableList.of()));
 
         CollectedItems collectedItems = processItems(content);
 
         if (collectedItems.isValid())
         {
             ArrayList<@Recorded UnitExpression> validOperands = collectedItems.getValidOperands();
-            ArrayList<UnitOp> validOperators = collectedItems.getValidOperators();
+            ArrayList<OpAndNode> validOperators = collectedItems.getValidOperators();
             
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
@@ -88,24 +89,25 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                     if (validOperands.get(i) instanceof SingleUnitExpression && i + 1 < validOperands.size() && validOperands.get(i + 1) instanceof UnitExpressionIntLiteral)
                     {
                         validOperators.remove(i);
-                        UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);
-                        validOperands.set(i, new UnitRaiseExpression(validOperands.get(i), power.getNumber()));
+                        @Recorded UnitExpressionIntLiteral power = (UnitExpressionIntLiteral) validOperands.remove(i + 1);
+                        Span<UnitExpression, UnitSaver> recorder = errorDisplayerRecord.recorderFor(validOperands.get(i));
+                        validOperands.set(i, record(recorder.start, errorDisplayerRecord.recorderFor(power).end, new UnitRaiseExpression(validOperands.get(i), power.getNumber())));
                     }
                 }
             }
             
             // Now we need to check the operators can work together as one group:
-            @Nullable UnitExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, arg ->
+            @Nullable UnitExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> arg) ->
                     makeInvalidOp(brackets.start, brackets.end, arg)
                 , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> arg);
             if (e != null)
             {
-                return e;
+                return record(start, end, e);
             }
 
         }
 
-        return new InvalidOperatorUnitExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new InvalidSingleUnitExpression(o.getContent()), x -> x)));
+        return record(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new InvalidSingleUnitExpression(o.op.getContent()), x -> x))));
     }
 
     @Override
@@ -115,9 +117,9 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected @Recorded UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<UnitOp, @Recorded UnitExpression>> items)
+    protected @Recorded UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> items)
     {
-        return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.either(op -> new InvalidSingleUnitExpression(op.getContent()), y -> y))));
+        return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.either(op -> new InvalidSingleUnitExpression(op.op.getContent()), y -> y))));
     }
 
     private static Pair<UnitOp, @Localized String> opD(UnitOp op, @LocalizableKey String key)

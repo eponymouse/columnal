@@ -57,7 +57,7 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     private final TypeCompletion bracketCompletion = new BracketCompletion("(", "type.entry.tuple.short");
     private final TypeCompletion listCompletion = new BracketCompletion("[", "type.entry.list.short");
     private final TypeCompletion unitBracketCompletion = new UnitCompletion();
-    private final Completion endCompletion = new BracketCompletion("}", "TODO remove this when not type literal"); //"autocomplete.end");
+    private final Completion endCompletion = new BracketCompletion("}", "type.entry.type.end.short"); //"autocomplete.end");
     private final Completion endBracketCompletion = new BracketCompletion(")", "type.entry.tuple.end.short"); //"autocomplete.end");
     private final Completion endListCompletion = new BracketCompletion("]", "type.entry.list.end.short"); //"autocomplete.end");
     private final ImmutableList<Completion> allCompletions;
@@ -72,12 +72,13 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     {
         super(TypeExpression.class, parent);
         this.allCompletions = Utility.concatStreams(
-            Stream.of(listCompletion, bracketCompletion, unitBracketCompletion, endBracketCompletion, endListCompletion, endCompletion),
+            Stream.of(listCompletion, bracketCompletion, unitBracketCompletion, endBracketCompletion, endListCompletion),
+            Stream.of(endCompletion), // TODO hide this if we are not last in a type
             PRIMITIVE_TYPES.stream().map(d -> new TypeCompletion(d.getFirst().toString(), d.getSecond(), d.getFirst().equals(DataType.NUMBER) || d.getFirst().equals(DataType.TEXT))),
             parent.getEditor().getTypeManager().getKnownTaggedTypes().values().stream()
                 // Don't show phantom types like Void, Unit:
                 .filter(t -> !t.getTags().isEmpty())
-                .map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), "TODO"))
+                .map(t -> new TypeCompletion(t.getTaggedTypeName().getRaw(), null))
         ).collect(ImmutableList.toImmutableList());
         
         this.autoComplete = new AutoComplete<Completion>(textField, Utility.later(this)::calculateCompletions, Utility.later(this).getListener(), () -> parent.showCompletionImmediately(this), WhitespacePolicy.ALLOW_ONE_ANYWHERE_TRIM, TypeExpressionOps::differentAlphabet);
@@ -223,13 +224,13 @@ public final class TypeEntry extends GeneralOperandEntry<TypeExpression, TypeSav
     {
         private final boolean showAtTop;
 
-        protected TypeCompletion(String completion, @LocalizableKey String shortKey, boolean showAtTop)
+        protected TypeCompletion(String completion, @LocalizableKey @Nullable String shortKey, boolean showAtTop)
         {
-            super(completion, TranslationUtility.getString(shortKey));
+            super(completion, shortKey == null ? null : TranslationUtility.getString(shortKey));
             this.showAtTop = showAtTop;
         }
 
-        protected TypeCompletion(String completion, @LocalizableKey String shortKey)
+        protected TypeCompletion(String completion, @LocalizableKey @Nullable String shortKey)
         {
             this(completion, shortKey, false);
         }

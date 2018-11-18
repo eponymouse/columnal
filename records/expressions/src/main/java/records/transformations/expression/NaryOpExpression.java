@@ -47,7 +47,7 @@ public abstract class NaryOpExpression extends Expression
     @Override
     public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState);
+        Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, expressions, typeState, onError);
         typeState = lambda.getSecond();
         @Nullable CheckedExp checked = checkNaryOp(dataLookup, typeState, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());

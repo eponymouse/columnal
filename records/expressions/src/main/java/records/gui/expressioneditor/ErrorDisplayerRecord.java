@@ -194,6 +194,12 @@ public class ErrorDisplayerRecord
         return typeDisplayers.get(expression);
     }
 
+    @SuppressWarnings("nullness")
+    public Span<UnitExpression, UnitSaver> recorderFor(@Recorded UnitExpression expression)
+    {
+        return unitDisplayers.get(expression);
+    }
+
     public boolean isShowingErrors()
     {
         return showErrors;

@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveChild;
@@ -28,10 +29,10 @@ import java.util.function.Supplier;
 public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Keyword, Context>
 {
     final ImmutableList<OperatorExpressionInfo> OPERATORS = ImmutableList.of(
-        new OperatorExpressionInfo(ImmutableList.of(new Pair<>(Operator.COMMA, "")), TypeSaver::makeNary)
+        new OperatorExpressionInfo(ImmutableList.of(new Pair<Operator, @Localized String>(Operator.COMMA, Utility.universal(""))), TypeSaver::makeNary)
     );
 
-    private static TypeExpression makeNary(ImmutableList<TypeExpression> typeExpressions, List<Operator> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets)
+    private static TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Operator> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets)
     {
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
         {
@@ -66,7 +67,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
     public void saveKeyword(Keyword keyword, ConsecutiveChild<TypeExpression, TypeSaver> errorDisplayer, FXPlatformConsumer<Context> withContext)
     {
-        Supplier<ImmutableList<TypeExpression>> prefixKeyword = () -> ImmutableList.of(new InvalidIdentTypeExpression(keyword.getContent()));
+        Supplier<ImmutableList<@Recorded TypeExpression>> prefixKeyword = () -> ImmutableList.of(record(errorDisplayer, errorDisplayer, new InvalidIdentTypeExpression(keyword.getContent())));
         
         if (keyword == Keyword.OPEN_ROUND)
         {
@@ -149,13 +150,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<Operator, @Recorded TypeExpression>> items)
+    protected @Recorded TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
     {
         return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.either(u -> new InvalidIdentTypeExpression(","), y -> y))));
     }
 
     @Override
-    protected TypeExpression record(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, TypeExpression typeExpression)
+    protected @Recorded TypeExpression record(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, TypeExpression typeExpression)
     {
         return errorDisplayerRecord.recordType(start, end, typeExpression);
     }
@@ -167,39 +168,39 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected TypeExpression makeExpression(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver> brackets)
+    protected @Recorded TypeExpression makeExpression(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, List<Either<@Recorded TypeExpression, OpAndNode>> content, BracketAndNodes<TypeExpression, TypeSaver> brackets)
     {
         if (content.isEmpty())
-            return new InvalidOpTypeExpression(ImmutableList.of());
+            return record(start, end, new InvalidOpTypeExpression(ImmutableList.of()));
 
         CollectedItems collectedItems = processItems(content);
 
         if (collectedItems.isValid())
         {
-            ArrayList<TypeExpression> validOperands = collectedItems.getValidOperands();
-            ArrayList<Operator> validOperators = collectedItems.getValidOperators();
+            ArrayList<@Recorded TypeExpression> validOperands = collectedItems.getValidOperands();
+            ArrayList<OpAndNode> validOperators = collectedItems.getValidOperators();
 
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
                 if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-                    return new ListTypeExpression(validOperands.get(0));
+                    return record(brackets.start, brackets.end, new ListTypeExpression(validOperands.get(0)));
                 else
                     return validOperands.get(0);
             }
             
             // Now we need to check the operators can work together as one group:
-            @Nullable TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, arg ->
+            @Nullable TypeExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> arg) ->
                     makeInvalidOp(brackets.start, brackets.end, arg)
                 , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> arg);
             if (e != null)
             {
-                return e;
+                return record(start, end, e);
             }
 
         }
 
-        return new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> InvalidIdentTypeExpression.identOrUnfinished(o.getContent()), x -> x)));
+        return record(start, end, new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> InvalidIdentTypeExpression.identOrUnfinished(o.op.getContent()), x -> x))));
     }
     
 }

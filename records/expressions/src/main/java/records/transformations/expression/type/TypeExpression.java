@@ -1,6 +1,7 @@
 package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -45,6 +46,7 @@ import utility.Utility;
 public abstract class TypeExpression implements LoadableExpression<TypeExpression, TypeSaver>, StyledShowable, Replaceable<TypeExpression>
 {
 
+    @SuppressWarnings("recorded")
     public static TypeExpression fromDataType(DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExpression, InternalException>()
@@ -105,6 +107,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
         });
     }
 
+    @SuppressWarnings("recorded")
     public static TypeExpression fromJellyType(JellyType original, TypeManager mgr) throws InternalException, UserException
     {
         return original.apply(new JellyTypeVisitorEx<TypeExpression, UserException>()

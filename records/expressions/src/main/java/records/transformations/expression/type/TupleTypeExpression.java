@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -20,9 +21,9 @@ import java.util.stream.Stream;
 
 public class TupleTypeExpression extends TypeExpression
 {
-    private final ImmutableList<TypeExpression> members;
+    private final ImmutableList<@Recorded TypeExpression> members;
 
-    public TupleTypeExpression(ImmutableList<TypeExpression> members)
+    public TupleTypeExpression(ImmutableList<@Recorded TypeExpression> members)
     {
         this.members = members;
     }
@@ -82,7 +83,7 @@ public class TupleTypeExpression extends TypeExpression
         return false;
     }
 
-    public ImmutableList<TypeExpression> _test_getItems()
+    public ImmutableList<@Recorded TypeExpression> _test_getItems()
     {
         return members;
     }
@@ -104,6 +105,7 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {
         if (this == toReplace)

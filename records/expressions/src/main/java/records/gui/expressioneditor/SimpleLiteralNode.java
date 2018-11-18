@@ -95,7 +95,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditorUtil.enableSelection(typeLabel, this, textField);
         ExpressionEditorUtil.enableDragFrom(typeLabel, this);
-        container = new ErrorTop(typeLabel, new BorderPane(textField, null, GUI.labelRaw("\u201D", "literal-delimiter"), null, GUI.labelRaw("\u201C", "literal-delimiter")));
+        container = new ErrorTop(typeLabel, new BorderPane(textField, null, GUI.labelRaw(Utility.universal("\u201D"), "literal-delimiter"), null, GUI.labelRaw(Utility.universal("\u201C"), "literal-delimiter")));
         container.getStyleClass().add("entry");
         this.expressionInfoDisplay = parent.getEditor().installErrorShower(container, typeLabel, textField, this);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
