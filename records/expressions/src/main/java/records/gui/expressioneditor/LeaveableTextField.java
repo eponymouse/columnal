@@ -4,6 +4,7 @@ import javafx.scene.control.TextField;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
+import records.gui.expressioneditor.TopLevelEditor.SelectionTarget;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -67,6 +68,34 @@ public class LeaveableTextField extends TextField
     public void selectEnd()
     {
         parent.getEditor().extendSelectionToExtremity(us, SelectExtremityTarget.END);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void selectBackward()
+    {
+        if (getCaretPosition() == 0)
+        {
+            if (getSelection().getLength() > 0)
+                parent.getEditor().extendSelectionTo(us, SelectionTarget.AS_IS);
+            parent.getEditor().extendSelectionTo(us, SelectionTarget.LEFT);
+        }
+        else
+            super.selectBackward();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void selectForward()
+    {
+        if (getCaretPosition() == getLength())
+        {
+            if (getSelection().getLength() > 0)
+                parent.getEditor().extendSelectionTo(us, SelectionTarget.AS_IS);
+            parent.getEditor().extendSelectionTo(us, SelectionTarget.RIGHT);
+        }
+        else
+            super.selectForward();
     }
 
     @Override

@@ -298,19 +298,28 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         return Stream.empty();
     }
 
+    private static enum SelectionCaret
+    {START, END}
+    
     private static class SelectionInfo<E extends StyledShowable, P extends ClipboardSaver>
     {
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
         private final ConsecutiveChild<E, P> end;
-        private final ConsecutiveChild<E, P> focus;
+        // The anchor is the opposite end to the caret:
+        private final SelectionCaret caret;
 
-        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end, ConsecutiveChild<E, P> focus)
+        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> start, ConsecutiveChild<E, P> end, SelectionCaret caret)
         {
             this.parent = parent;
             this.start = start;
             this.end = end;
-            this.focus = focus;
+            this.caret = caret;
+        }
+
+        private SelectionInfo(ConsecutiveBase<E, P> parent, ConsecutiveChild<E, P> only)
+        {
+            this(parent, only, only, SelectionCaret.START);
         }
 
         public boolean contains(ConsecutiveChild<?, ?> item)
@@ -330,7 +339,17 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
 
         public void markSelection(boolean selected)
         {
-            parent.markSelection(start, end, selected, focus);
+            parent.markSelection(start, end, selected, getCaretNode());
+        }
+
+        public ConsecutiveChild<E, P> getCaretNode()
+        {
+            return caret == SelectionCaret.START ? start : end;
+        }
+
+        public ConsecutiveChild<E, P> getAnchorNode()
+        {
+            return caret == SelectionCaret.START ? end : start;
         }
     }
 
@@ -354,7 +373,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             clearSelection();
         }
 
-        selection = new SelectionInfo<E, P>(src.getParent(), src, src, src);
+        selection = new SelectionInfo<E, P>(src.getParent(), src);
         selection.markSelection(true);
     }
 
@@ -378,7 +397,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             ImmutableList<? extends ConsecutiveChild<?, ?>> children = selection.parent.getAllChildren();
             int startIndex = children.indexOf(selection.start);
             int endIndex = children.indexOf(selection.end);
-            if (startIndex >= 0 && endIndex >= 0 && endIndex >= startIndex && selection.focus.isSelectionFocused())
+            if (startIndex >= 0 && endIndex >= 0 && endIndex >= startIndex && selection.getCaretNode().isSelectionFocused())
             {
                 selection.markSelection(true);
             }
@@ -407,7 +426,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         clearSelection();
         ImmutableList<ConsecutiveChild<@NonNull E, P>> siblings = src.getParent().getAllChildren();
         ConsecutiveChild<@NonNull E, P> end = siblings.get(siblings.size() - 1);
-        selection = new SelectionInfo<>(src.getParent(), siblings.get(0), end, end);
+        selection = new SelectionInfo<>(src.getParent(), siblings.get(0), end, SelectionCaret.END);
         selection.markSelection(true);
     }
     
@@ -479,7 +498,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         
         if (selection == null)
         {
-            selection = new SelectionInfo<E, P>(node.getParent(), node, node, node);
+            selection = new SelectionInfo<E, P>(node.getParent(), node);
             selection.markSelection(true);
         }
         else if (selection != null && node.getParent() == selection.parent)
@@ -492,19 +511,19 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             // We try with asking for ahead or behind.  If one is empty, choose the other
             // If both are non-empty, go from start to target:
             ConsecutiveChild<E, P> oldSelStart = oldSel.start;
-            List<ConsecutiveChild<E, P>> startToTarget = oldSel.parent.getChildrenFromTo(oldSelStart, node);
+            List<ConsecutiveChild<E, P>> startToTarget = oldSel.parent.getChildrenFromTo(oldSel.getAnchorNode(), node);
             ConsecutiveChild<E, P> oldSelEnd = oldSel.end;
             // Thus the rule is use startToTarget unless it's empty:
             if (!startToTarget.isEmpty())
             {
                 clearSelection();
-                selection = new SelectionInfo<E, P>(node.getParent(), oldSelStart, node, node);
+                selection = new SelectionInfo<E, P>(node.getParent(), oldSel.getAnchorNode(), node, SelectionCaret.END);
                 selection.markSelection(true);
             }
             else
             {
                 clearSelection();
-                selection = new SelectionInfo<E, P>(node.getParent(), node, oldSelEnd, node);
+                selection = new SelectionInfo<E, P>(node.getParent(), node, oldSel.getAnchorNode(), SelectionCaret.START);
                 selection.markSelection(true);
             }
         }
