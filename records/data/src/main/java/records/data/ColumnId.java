@@ -62,7 +62,7 @@ public class ColumnId implements Comparable<ColumnId>, Serializable, StyledShowa
 
     public @Localized String getRaw()
     {
-        return Utility.universal(columnId);
+        return Utility.userInput(columnId);
     }
 
     @Override

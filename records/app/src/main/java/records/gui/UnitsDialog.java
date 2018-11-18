@@ -263,13 +263,13 @@ public class UnitsDialog extends Dialog<Void>
         {
             @UnitIdentifier String name = IdentifierUtility.asUnitIdentifier(unitNameField.getText().trim());
             if (name == null)
-                return Either.left("Invalid name.  Names must be only letters, optionally with single underscores in the middle.");
+                return Either.left(TranslationUtility.getString("invalid.name"));
             
             if (toggleGroup.getSelectedToggle() == toggleGroup.getToggles().get(1))
             {
                 @UnitIdentifier String aliasTarget = IdentifierUtility.asUnitIdentifier(aliasTargetField.getText().trim());
                 if (aliasTarget == null)
-                    return Either.left("Invalid alias target name.  Names must be only letters, optionally with single underscores in the middle.");
+                    return Either.left(TranslationUtility.getString("invalid.alias.target.name"));
                 
                 return Either.right(new Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>(name, Either.left(aliasTarget)));
             }
@@ -290,7 +290,7 @@ public class UnitsDialog extends Dialog<Void>
                 }
                 catch (InternalException | UserException e)
                 {
-                    return Either.left("Invalid scale: " + e.getLocalizedMessage());
+                    return Either.<@Localized String, Pair<@UnitIdentifier String, Either<@UnitIdentifier String, UnitDeclaration>>>left(Utility.concatLocal(TranslationUtility.getString("invalid.scale"),  e.getLocalizedMessage()));
                 }
 
                 Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> unitExpOrError = definition.save().asUnit(unitManager);
@@ -309,7 +309,7 @@ public class UnitsDialog extends Dialog<Void>
                         return Either.left(e.getLocalizedMessage());
                     }
                     if (concreteUnit == null)
-                        return Either.left("Invalid unit (cannot contain unit variables)");
+                        return Either.left(TranslationUtility.getString("invalid.unit.contains.vars"));
                     
                     @Nullable Pair<Rational, Unit> equiv = new Pair<>(UnitManager.loadScale(scaleContext), concreteUnit);
 

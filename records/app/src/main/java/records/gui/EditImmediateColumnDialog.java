@@ -79,7 +79,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         if (creatingNewTable)
         {
             tableNameTextField = new TableNameTextField(tableManager, null, true);
-            tableNameTextField.setPromptText("Automatic");
+            tableNameTextField.setPromptText(TranslationUtility.getString("table.name.prompt.auto"));
             content.addRow(GUI.labelledGridRow("edit.table.name", "edit-column/table-name", tableNameTextField.getNode()));
         }
         else

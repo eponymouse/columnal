@@ -3,6 +3,7 @@ package styled;
 import com.google.common.reflect.ImmutableTypeToInstanceMap;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.text.Text;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
@@ -131,7 +132,8 @@ public final class StyledString
         })));
     }
 
-    public String toPlain()
+    @SuppressWarnings("i18n")
+    public @Localized String toPlain()
     {
         return members.stream().map(p -> p.getSecond()).collect(Collectors.joining());
     }

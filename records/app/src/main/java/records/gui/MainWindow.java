@@ -72,7 +72,7 @@ public class MainWindow
         emptyMessage.setMaxWidth(400.0);
         emptyMessage.setMouseTransparent(true);
 
-        EnumMap<ContentState, @Localized String> emptyMessages = new EnumMap<ContentState, String>(ImmutableMap.of(
+        EnumMap<ContentState, @Localized String> emptyMessages = new EnumMap<ContentState, @Localized String>(ImmutableMap.of(
             ContentState.EMPTY_NO_SEL, TranslationUtility.getString("main.emptyHint"),
             ContentState.EMPTY_SEL, TranslationUtility.getString("main.selHint"),
             ContentState.NON_EMPTY, Utility.universal("")
