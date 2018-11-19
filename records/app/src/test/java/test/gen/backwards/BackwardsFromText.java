@@ -15,6 +15,7 @@ import records.transformations.expression.type.TypeExpression;
 
 import java.util.List;
 
+@SuppressWarnings("recorded")
 public class BackwardsFromText extends BackwardsProvider
 {
     public BackwardsFromText(SourceOfRandomness r, RequestBackwardsExpression parent)

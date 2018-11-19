@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("recorded")
 public class BackwardsBooleans extends BackwardsProvider
 {
     public BackwardsBooleans(SourceOfRandomness r, RequestBackwardsExpression parent)

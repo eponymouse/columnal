@@ -22,6 +22,7 @@ import utility.Utility.ListEx;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
+@SuppressWarnings("recorded")
 public class BackwardsLiteral extends BackwardsProvider
 {
     public BackwardsLiteral(SourceOfRandomness r, RequestBackwardsExpression parent)

@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@SuppressWarnings("recorded")
 public class BackwardsMatch extends BackwardsProvider
 {
     private static class VarInfo

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("recorded")
 public class BackwardsText extends BackwardsProvider
 {
     public BackwardsText(SourceOfRandomness r, RequestBackwardsExpression parent)

@@ -13,6 +13,7 @@ import test.DummyManager;
 
 import java.util.List;
 
+@SuppressWarnings("recorded")
 public class BackwardsFixType extends BackwardsProvider
 {
     public BackwardsFixType(SourceOfRandomness r, RequestBackwardsExpression parent)

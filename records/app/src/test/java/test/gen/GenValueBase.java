@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -253,6 +254,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         return r.choose(distinctTypes);
     }
 
+    @SuppressWarnings("recorded")
     public UnitExpression makeUnitExpression(Unit unit)
     {
         // TODO make more varied unit expressions which cancel out
@@ -291,7 +293,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                 // Times.  Could join it to existing one:
                 if (u instanceof UnitTimesExpression && r.nextBoolean())
                 {
-                    List<UnitExpression> prevOperands = new ArrayList<>(((UnitTimesExpression)u).getOperands());
+                    List<@Recorded UnitExpression> prevOperands = new ArrayList<>(((UnitTimesExpression)u).getOperands());
 
                     prevOperands.add(sExp);
                     u = new UnitTimesExpression(ImmutableList.copyOf(prevOperands));
