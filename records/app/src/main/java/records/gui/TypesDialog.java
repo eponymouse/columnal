@@ -258,7 +258,7 @@ public class TypesDialog extends Dialog<Void>
             if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab && !crossSetting)
             {
                 boolean hasTypeArgs = !innerValueTypeArgs.getText().trim().isEmpty();
-                Either<String, ImmutableList<String>> plainTagNames = Either.mapM(innerValueTagList.getItems(), t -> t.flatMap(v -> v.getInner() == null ? Either.<@NonNull String, @NonNull String>right(v.getName()) : Either.<@NonNull String, @NonNull String>left(Utility.universal("err"))));
+                Either<@Localized String, ImmutableList<String>> plainTagNames = Either.<@Localized String, String, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), t -> t.<String>flatMap(v -> v.getInner() == null ? Either.<@NonNull @Localized String, @NonNull String>right(v.getName()) : Either.<@NonNull @Localized String, @NonNull String>left(Utility.universal("err"))));
                 boolean enablePlain = !hasTypeArgs && plainTagNames.isRight();
                 crossSetting = true;
                 plainTab.setDisable(!enablePlain);
@@ -338,9 +338,9 @@ public class TypesDialog extends Dialog<Void>
             public TagValueEdit(@Nullable TagType<JellyType> initialContent, boolean editImmediately)
             {
                 getStyleClass().add("tag-value-edit");
-                this.currentValue = new SimpleObjectProperty<>(Either.right(new TagType<>(
+                this.currentValue = new SimpleObjectProperty<Either<@Localized String, TagType<JellyType>>>(Either.<@Localized String, TagType<JellyType>>right(new TagType<>(
                     initialContent == null ? "" : initialContent.getName(),
-                    initialContent == null ? null : initialContent.getInner() 
+                    initialContent == null ? null : initialContent.getInner()
                 )));
                 this.tagName = new TextField(initialContent == null ? "" : initialContent.getName());
                 tagName.setPromptText(TranslationUtility.getString("edit.type.inner.tag.prompt"));
