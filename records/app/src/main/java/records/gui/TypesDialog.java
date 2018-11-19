@@ -188,19 +188,7 @@ public class TypesDialog extends Dialog<Void>
             ));
             plainTab.getStyleClass().add("type-entry-tab-plain");
 
-            innerValueTagList = new FancyList<Either<@Localized String, TagType<JellyType>>, TagValueEdit>(existing == null ? ImmutableList.<Either<@Localized String, TagType<JellyType>>>of() : Utility.<TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapListI(existing.getTags(), Either::right), true, true, true)
-            {
-                @Override
-                protected @OnThread(Tag.FXPlatform) Pair<TagValueEdit, ObjectExpression<Either<@Localized String, TagType<JellyType>>>> makeCellContent(@Nullable Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
-                {
-                    TagValueEdit tagValueEdit = new TagValueEdit(initialContent == null ? null : initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
-                    return new Pair<>(tagValueEdit, tagValueEdit.currentValue);
-                }
-                
-                {
-                    listenForCellChange(c -> innerValueChanged());
-                }
-            };
+            innerValueTagList = new InnerValueTagList(existing);
             innerValueTagList.getNode().setMinHeight(200);
             innerValueTagList.getNode().setPrefHeight(350);
             
@@ -396,6 +384,25 @@ public class TypesDialog extends Dialog<Void>
                     innerValueChanged();
                 });
             }
+        }
+
+        private class InnerValueTagList extends FancyList<Either<@Localized String, TagType<JellyType>>, TagValueEdit>
+        {
+            @OnThread(Tag.FXPlatform)
+            public InnerValueTagList(@Nullable TaggedTypeDefinition existing)
+            {
+                super(existing == null ? ImmutableList.<Either<@Localized String, TagType<JellyType>>>of() : Utility.<TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapListI(existing.getTags(), Either::right), true, true, true);
+                listenForCellChange(c -> innerValueChanged());
+            }
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            protected Pair<TagValueEdit, ObjectExpression<Either<@Localized String, TagType<JellyType>>>> makeCellContent(@Nullable Either<@Localized String, TagType<JellyType>> initialContent, boolean editImmediately)
+            {
+                TagValueEdit tagValueEdit = new TagValueEdit(initialContent == null ? null : initialContent.<@Nullable TagType<JellyType>>either(s -> null, v -> v), editImmediately);
+                return new Pair<>(tagValueEdit, tagValueEdit.currentValue);
+            }
+
         }
     }
     
