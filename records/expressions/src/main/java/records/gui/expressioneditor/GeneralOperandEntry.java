@@ -8,12 +8,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ConsecutiveBase.BracketBalanceType;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
 import styled.StyledString;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -94,11 +96,15 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     }
 
     @Override
-    public final void setSelected(boolean selected, boolean focus)
+    public final void setSelected(boolean selected, boolean focus, @Nullable FXPlatformRunnable onFocusLost)
     {
         FXUtility.setPseudoclass(container, "exp-selected", selected);
         if (focus)
+        {
             typeLabel.requestFocus();
+            if (onFocusLost != null)
+                FXUtility.onFocusLostOnce(typeLabel, onFocusLost);
+        }
     }
 
     @Override

@@ -20,6 +20,7 @@ import records.transformations.expression.type.TypeSaver;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -172,9 +173,9 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     }
 
     @Override
-    public void setSelected(boolean selected, boolean focus)
+    public void setSelected(boolean selected, boolean focus, @Nullable FXPlatformRunnable onFocusLost)
     {
-        type.setEntireSelected(selected, focus);
+        type.setEntireSelected(selected, focus, onFocusLost);
     }
 
     @Override

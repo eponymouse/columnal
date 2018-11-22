@@ -16,6 +16,7 @@ import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.Expression;
 import records.transformations.expression.QuickFix;
 import styled.StyledString;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -155,11 +156,15 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     }
 
     @Override
-    public final void setSelected(boolean selected, boolean focus)
+    public final void setSelected(boolean selected, boolean focus, @Nullable FXPlatformRunnable onFocusLost)
     {
         FXUtility.setPseudoclass(container, "exp-selected", selected);
         if (focus)
+        {
             typeLabel.requestFocus();
+            if (onFocusLost != null)
+                FXUtility.onFocusLostOnce(typeLabel, onFocusLost);
+        }
     }
 
     @Override

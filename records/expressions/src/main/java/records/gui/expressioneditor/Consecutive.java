@@ -6,6 +6,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import styled.StyledShowable;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -71,7 +72,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
         return parent.getEditor();
     }
 
-    public void setEntireSelected(boolean selected, boolean focus)
+    public void setEntireSelected(boolean selected, boolean focus, @Nullable FXPlatformRunnable onFocusLost)
     {
         ImmutableList<ConsecutiveChild<EXPRESSION, SAVER>> ourChildren = getAllChildren();
         if (!ourChildren.isEmpty())
@@ -80,7 +81,11 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
         {
             FXUtility.setPseudoclass(prefixNode.getFirst(), "exp-selected", selected);
             if (focus)
+            {
                 prefixNode.getSecond().requestFocus();
+                if (onFocusLost != null)
+                    FXUtility.onFocusLostOnce(prefixNode.getSecond(), onFocusLost);
+            }
         }
         if (suffixNode != null)
             FXUtility.setPseudoclass(suffixNode.getFirst(), "exp-selected", selected);

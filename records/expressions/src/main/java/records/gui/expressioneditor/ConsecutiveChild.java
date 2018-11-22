@@ -14,6 +14,7 @@ import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import styled.StyledShowable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -39,8 +40,9 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SAVER exten
      * focus the top header.
      * @param selected Selected or not?
      * @param focus Focus the top header?
+     * @param onFocusLost If we focus the top header, run this on next focus loss.
      */
-    void setSelected(boolean selected, boolean focus);
+    void setSelected(boolean selected, boolean focus, @Nullable FXPlatformRunnable onFocusLost);
 
     /**
      * Is focus still with node that would be focused if setSelected(true, true) was called?

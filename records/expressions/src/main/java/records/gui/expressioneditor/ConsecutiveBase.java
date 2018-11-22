@@ -32,6 +32,7 @@ import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -621,13 +622,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     /**
      * Change the selection state of all children in range from/to
      * (inclusive) to the given boolean, and select the given
-     * optional item
+     * optional focus item (plus run the action once focus is lost)
      */
-    public final void markSelection(ConsecutiveChild<EXPRESSION, SAVER> from, ConsecutiveChild<EXPRESSION, SAVER> to, boolean selected, @Nullable ConsecutiveChild<EXPRESSION, SAVER> focus)
+    public final void markSelection(ConsecutiveChild<EXPRESSION, SAVER> from, ConsecutiveChild<EXPRESSION, SAVER> to, boolean selected, @Nullable Pair<ConsecutiveChild<EXPRESSION, SAVER>, FXPlatformRunnable> focus)
     {
         for (ConsecutiveChild<EXPRESSION, SAVER> n : getChildrenFromTo(from, to))
         {
-            n.setSelected(selected, n == focus);
+            n.setSelected(selected, focus != null && n == focus.getFirst(), focus == null ? null : focus.getSecond());
         }
     }
 

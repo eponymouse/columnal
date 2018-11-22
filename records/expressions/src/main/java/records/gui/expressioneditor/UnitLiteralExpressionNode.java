@@ -4,6 +4,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
@@ -13,6 +14,7 @@ import records.transformations.expression.UnitLiteralExpression;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -126,9 +128,9 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     }
 
     @Override
-    public void setSelected(boolean selected, boolean focus)
+    public void setSelected(boolean selected, boolean focus, @Nullable FXPlatformRunnable onFocusLost)
     {
-        unit.setEntireSelected(selected, focus);
+        unit.setEntireSelected(selected, focus, onFocusLost);
     }
 
     @Override

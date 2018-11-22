@@ -41,6 +41,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -301,7 +302,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     private static enum SelectionCaret
     {START, END}
     
-    private static class SelectionInfo<E extends StyledShowable, P extends ClipboardSaver>
+    private class SelectionInfo<E extends StyledShowable, P extends ClipboardSaver>
     {
         private final ConsecutiveBase<E, P> parent;
         private final ConsecutiveChild<E, P> start;
@@ -337,9 +338,12 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             parent.removeItems(start, end);
         }
 
-        public void markSelection(boolean selected)
+        public void markSelection(boolean selected, FXPlatformRunnable clearSelection)
         {
-            parent.markSelection(start, end, selected, getCaretNode());
+            // Must lock selection to avoid focus-loss from wiping it out:
+            selectionLocked = true;
+            parent.markSelection(start, end, selected, new Pair<>(getCaretNode(), clearSelection));
+            selectionLocked = false;
         }
 
         public ConsecutiveChild<E, P> getCaretNode()
@@ -374,7 +378,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         }
 
         selection = new SelectionInfo<E, P>(src.getParent(), src);
-        selection.markSelection(true);
+        selection.markSelection(true, this::clearSelection);
     }
 
     protected void clearSelection(@UnknownInitialization(ConsecutiveBase.class) TopLevelEditor<EXPRESSION, SAVER> this)
@@ -383,7 +387,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             return;
 
         if (selection != null)
-            selection.markSelection(false);
+            selection.markSelection(false, this::clearSelection);
         selection = null;
     }
 
@@ -399,11 +403,11 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             int endIndex = children.indexOf(selection.end);
             if (startIndex >= 0 && endIndex >= 0 && endIndex >= startIndex && selection.getCaretNode().isSelectionFocused())
             {
-                selection.markSelection(true);
+                selection.markSelection(true, this::clearSelection);
             }
             else
             {
-                selection.markSelection(false);
+                selection.markSelection(false, this::clearSelection);
                 selection = null;
             }
         }
@@ -427,7 +431,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         ImmutableList<ConsecutiveChild<@NonNull E, P>> siblings = src.getParent().getAllChildren();
         ConsecutiveChild<@NonNull E, P> end = siblings.get(siblings.size() - 1);
         selection = new SelectionInfo<>(src.getParent(), siblings.get(0), end, SelectionCaret.END);
-        selection.markSelection(true);
+        selection.markSelection(true, this::clearSelection);
     }
     
     // Exact item given, or its left or its right?
@@ -499,7 +503,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         if (selection == null)
         {
             selection = new SelectionInfo<E, P>(node.getParent(), node);
-            selection.markSelection(true);
+            selection.markSelection(true, this::clearSelection);
         }
         else if (selection != null && node.getParent() == selection.parent)
         {
@@ -517,13 +521,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             {
                 clearSelection();
                 selection = new SelectionInfo<E, P>(node.getParent(), oldSel.getAnchorNode(), node, SelectionCaret.END);
-                selection.markSelection(true);
+                selection.markSelection(true, this::clearSelection);
             }
             else
             {
                 clearSelection();
                 selection = new SelectionInfo<E, P>(node.getParent(), node, oldSel.getAnchorNode(), SelectionCaret.START);
-                selection.markSelection(true);
+                selection.markSelection(true, this::clearSelection);
             }
         }
     }
