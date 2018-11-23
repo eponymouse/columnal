@@ -27,9 +27,9 @@ public class UnitLiteralTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
-        return "{" + unitExpression.save(true) + "}";
+        return "{" + unitExpression.save(structured, true) + "}";
     }
 
     @Override

@@ -4,6 +4,7 @@ import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.scene.control.Label;
+import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -69,6 +70,12 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
             {
                 // Even if the type is complete, they'll need to write the '}' to come back out, so show always:
                 return true;
+            }
+
+            @Override
+            public DataFormat getClipboardType()
+            {
+                return TypeEditor.TYPE_CLIPBOARD_TYPE;
             }
         });
         updateNodes();

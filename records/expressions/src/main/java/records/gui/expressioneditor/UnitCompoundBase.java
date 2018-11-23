@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
 import javafx.scene.control.Label;
+import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -57,5 +58,11 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
     {
         // They'll need to enter the '}' to close anyway:
         return true;
+    }
+
+    @Override
+    public DataFormat getClipboardType()
+    {
+        return UnitEditor.UNIT_CLIPBOARD_TYPE;
     }
 }

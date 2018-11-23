@@ -100,7 +100,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         StringBuilder s = new StringBuilder(surround == BracketedStatus.MISC ? "(" : "");
         s.append(getSpecialPrefix());
@@ -108,7 +108,7 @@ public abstract class NaryOpExpression extends Expression
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save(BracketedStatus.MISC, renames));
+            s.append(expressions.get(i).save(structured, BracketedStatus.MISC, renames));
         }
         if (surround == BracketedStatus.MISC)
             s.append(")");

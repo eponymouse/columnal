@@ -51,7 +51,7 @@ public class PropLoadSaveExpression
     {
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save();
         assertEquals(expression, edited);
-        assertEquals(expression.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
+        assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
     }
 
     @Property(trials = 1000)
@@ -69,11 +69,11 @@ public class PropLoadSaveExpression
 
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
-        String saved = expression.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
+        String saved = expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
         Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
-        String resaved = reloaded.save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
+        String resaved = reloaded.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);
 
     }

@@ -28,6 +28,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.FixList;
 import records.gui.FixList.FixInfo;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
@@ -51,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -299,6 +302,35 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         return Stream.empty();
     }
 
+    // Returns true if successful
+    public final boolean addContent(String src)
+    {
+        try
+        {
+            @Nullable LoadableExpression<EXPRESSION, SAVER> parsed = parse(src);
+            if (parsed == null)
+                return false;
+            else
+            {
+                // TODO add in place, not just at end
+                atomicEdit.set(true);
+                children.addAll(parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
+                atomicEdit.set(false);
+                return true;
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            if (e instanceof InternalException)
+                Log.log(e);
+            return false;
+        }
+    }
+
+    // Parses expression (with tokens, @unfinished etc) into an expression
+    protected abstract @Nullable LoadableExpression<EXPRESSION, SAVER> parse(String src) throws InternalException, UserException;
+    
+
     private static enum SelectionCaret
     {START, END}
     
@@ -328,7 +360,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             return parent.getChildrenFromTo(start, end).contains(item);
         }
 
-        public @Nullable String copyItems()
+        public @Nullable Map<DataFormat, Object> copyItems()
         {
             return parent.copyItems(start, end);
         }
@@ -540,7 +572,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         }
     }
 
-    public @Nullable String getSelection()
+    public @Nullable Map<DataFormat, Object> getSelection()
     {
         if (selection != null)
         {
@@ -618,9 +650,9 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     {
         if (selection != null)
         {
-            String content = selection.copyItems();
+            Map<DataFormat, Object> content = selection.copyItems();
             if (content != null)
-                Clipboard.getSystemClipboard().setContent(ImmutableMap.of(DataFormat.PLAIN_TEXT, content));
+                Clipboard.getSystemClipboard().setContent(content);
         }
     }
     

@@ -157,12 +157,12 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     // Either gives back an error + (maybe empty) list of quick fixes, or a successful unit
     public abstract Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> asUnit(UnitManager unitManager);
     
-    public abstract String save(boolean topLevel);
+    public abstract String save(boolean structured, boolean topLevel);
 
     @Override
     public final StyledString toStyledString()
     {
-        return StyledString.s(save(true));
+        return StyledString.s(save(true, true));
     }
 
     @Override
@@ -178,6 +178,6 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
     @Override
     public String toString()
     {
-        return save(true);
+        return save(true, true);
     }
 }

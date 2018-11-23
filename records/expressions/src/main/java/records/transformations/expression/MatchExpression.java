@@ -108,9 +108,9 @@ public class MatchExpression extends NonOperatorExpression
             return null;
         }
 
-        public String save(TableAndColumnRenames renames)
+        public String save(boolean structured, TableAndColumnRenames renames)
         {
-            return " @case " + patterns.stream().map(p -> p.save(renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(BracketedStatus.MISC, renames);
+            return " @case " + patterns.stream().map(p -> p.save(structured, renames)).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(structured, BracketedStatus.MISC, renames);
         }
 
         public StyledString toDisplay()
@@ -229,9 +229,9 @@ public class MatchExpression extends NonOperatorExpression
             return newState;
         }
 
-        public String save(TableAndColumnRenames renames)
+        public String save(boolean structured, TableAndColumnRenames renames)
         {
-            return pattern.save(BracketedStatus.MISC, renames) + (guard == null ? "" : " @given " + guard.save(BracketedStatus.MISC, renames));
+            return pattern.save(structured, BracketedStatus.MISC, renames) + (guard == null ? "" : " @given " + guard.save(structured, BracketedStatus.MISC, renames));
         }
 
         public StyledString toDisplay()
@@ -324,7 +324,7 @@ public class MatchExpression extends NonOperatorExpression
                 return clause.outcome.getValue(newState);
             }
         }
-        throw new UserException("No matching clause found in expression: \"" + save(BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");
+        throw new UserException("No matching clause found in expression: \"" + save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY) + "\"");
     }
 
     @Override
@@ -334,9 +334,9 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String inner = "@match " + expression.save(BracketedStatus.MISC, renames) + clauses.stream().map(c -> c.save(renames)).collect(Collectors.joining("")) + " @endmatch";
+        String inner = "@match " + expression.save(structured, BracketedStatus.MISC, renames) + clauses.stream().map(c -> c.save(structured, renames)).collect(Collectors.joining("")) + " @endmatch";
         return (surround == BracketedStatus.DIRECT_ROUND_BRACKETED || surround == BracketedStatus.TOP_LEVEL) ? inner : ("(" + inner + ")");
     }
 

@@ -117,9 +117,9 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "[" + items.stream().map(e -> e.save(items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC, renames)).collect(Collectors.joining(", ")) + "]";
+        return "[" + items.stream().map(e -> e.save(structured, items.size() == 1 ? BracketedStatus.DIRECT_SQUARE_BRACKETED : BracketedStatus.MISC, renames)).collect(Collectors.joining(", ")) + "]";
     }
 
     @Override

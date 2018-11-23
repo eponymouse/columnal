@@ -42,7 +42,7 @@ public class IdentTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
         return value;
     }

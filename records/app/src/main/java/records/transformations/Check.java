@@ -143,7 +143,7 @@ public class Check extends Transformation
     @OnThread(Tag.Any)
     protected List<String> saveDetail(@Nullable File destination, TableAndColumnRenames renames)
     {
-        return Collections.singletonList(PREFIX + " " + checkExpression.save(BracketedStatus.MISC, renames));
+        return Collections.singletonList(PREFIX + " " + checkExpression.save(true, BracketedStatus.MISC, renames));
     }
 
     @Override

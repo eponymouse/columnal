@@ -60,9 +60,9 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "{" + unitExpression.save(true) + "}";
+        return "{" + unitExpression.save(structured, true) + "}";
     }
 
     @Override

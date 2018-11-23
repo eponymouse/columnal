@@ -82,7 +82,7 @@ public class TemporalLiteral extends Literal
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String prefix;
         switch (literalType)
@@ -113,7 +113,7 @@ public class TemporalLiteral extends Literal
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.s(save(bracketedStatus, new TableAndColumnRenames(ImmutableMap.of())));
+        return StyledString.s(save(true, bracketedStatus, new TableAndColumnRenames(ImmutableMap.of())));
     }
 
     @Override

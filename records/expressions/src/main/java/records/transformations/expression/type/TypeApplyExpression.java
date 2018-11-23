@@ -44,14 +44,14 @@ public class TypeApplyExpression extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
         StringBuilder sb = new StringBuilder();
         sb.append(typeName);
         for (int i = 0; i < arguments.size(); i++)
         {
             Either<UnitExpression, TypeExpression> e = arguments.get(i);
-            sb.append(e.<String>either(u -> "({" + u.save(true) + "})", x -> "(" + x.save(renames) + ")"));
+            sb.append(e.<String>either(u -> "({" + u.save(structured,  true) + "})", x -> "(" + x.save(structured, renames) + ")"));
         }
         return sb.toString();
     }

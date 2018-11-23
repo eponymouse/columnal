@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableMap;
+import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -12,7 +13,9 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.expression.InvalidSingleUnitExpression;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
@@ -23,6 +26,7 @@ import java.util.stream.Stream;
 
 public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
 {
+    public static final DataFormat UNIT_CLIPBOARD_TYPE = new DataFormat("application/records-type");
     private final FXPlatformConsumer<@Nullable Unit> onChange;
 
     public UnitEditor(TypeManager typeManager, @Nullable UnitExpression startingValue, FXPlatformConsumer<@Nullable Unit> onChange)
@@ -103,4 +107,15 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
         return (before instanceof UnitEntry && ((UnitEntry)before).isOperator());
     }
 
+    @Override
+    public DataFormat getClipboardType()
+    {
+        return UNIT_CLIPBOARD_TYPE;
+    }
+
+    @Override
+    protected @Nullable LoadableExpression<UnitExpression, UnitSaver> parse(String src) throws InternalException, UserException
+    {
+        return UnitExpression.load(src);
+    }
 }

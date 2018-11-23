@@ -214,7 +214,15 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnReference> allColumnReferences();
 
-    public abstract String save(BracketedStatus surround, TableAndColumnRenames renames);
+    /**
+     * 
+     * @param structured If true, include full keywords for things like invalid, function calls etc.
+     *                   If false, give back string which could be entered direct in the GUI.
+     * @param surround
+     * @param renames
+     * @return
+     */
+    public abstract String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames);
 
     public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager) throws UserException, InternalException
     {
@@ -616,7 +624,7 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
     @Override
     public String toString()
     {
-        return save(BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY);
+        return save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY);
     }
 
     // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)

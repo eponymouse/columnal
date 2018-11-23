@@ -113,6 +113,6 @@ public class TestLoadSaveExpression
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
         assertEquals(expression, Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
-        assertEquals(src, expression.save(BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY));
+        assertEquals(src, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY));
     }
 }

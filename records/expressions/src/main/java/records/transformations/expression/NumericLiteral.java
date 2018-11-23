@@ -78,13 +78,13 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String num = numberAsString();
         if (unit == null || unit.equals(Unit.SCALAR))
             return num;
         else
-            return num + "{" + unit.save(true) + "}";
+            return num + "{" + unit.save(structured, true) + "}";
     }
 
     @Override

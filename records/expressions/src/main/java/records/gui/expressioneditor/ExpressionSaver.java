@@ -3,11 +3,14 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.ExpressionSaver.Context;
 import records.gui.expressioneditor.GeneralExpressionEntry.Keyword;
@@ -30,6 +33,7 @@ import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -609,5 +613,14 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     public static ImmutableList<ImmutableList<OperatorExpressionInfo>> getOperators()
     {
         return new ExpressionSaver().OPERATORS;
+    }
+
+    @Override
+    protected Map<DataFormat, Object> toClipboard(Expression expression)
+    {
+        return ImmutableMap.of(
+            ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY),
+            DataFormat.PLAIN_TEXT, expression.save(false, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY)
+        );
     }
 }

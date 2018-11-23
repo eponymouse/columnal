@@ -36,11 +36,14 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(boolean structured, boolean topLevel)
     {
-        return "@INVALIDOPS (" + 
-            items.stream().map(item -> item.save(false)).collect(Collectors.joining(", "))
-            + ")";
+        if (structured)
+            return "@INVALIDOPS (" + 
+                items.stream().map(item -> item.save(structured, false)).collect(Collectors.joining(", "))
+                + ")";
+        else
+            return items.stream().map(item -> item.save(structured, false)).collect(Collectors.joining(""));
     }
 
     @Override

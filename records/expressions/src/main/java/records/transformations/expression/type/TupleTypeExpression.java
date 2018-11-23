@@ -52,9 +52,9 @@ public class TupleTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
-        return "(" + members.stream().map(m -> m.save(renames)).collect(Collectors.joining(", ")) + ")";
+        return "(" + members.stream().map(m -> m.save(structured, renames)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override

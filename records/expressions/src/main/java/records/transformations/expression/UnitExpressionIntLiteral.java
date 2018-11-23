@@ -34,7 +34,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(boolean structured, boolean topLevel)
     {
         return Integer.toString(number);
     }

@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -61,6 +62,7 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -244,12 +246,12 @@ public class ExpressionEditorUtil
         dragSource.setOnDragDetected(e -> {
             TopLevelEditor<?, ?> editor = FXUtility.mouse(src).getParent().getEditor();
             editor.ensureSelectionIncludes(FXUtility.mouse(src));
-            @Nullable String selection = editor.getSelection();
+            @Nullable Map<DataFormat, Object> selection = editor.getSelection();
             if (selection != null)
             {
                 editor.setSelectionLocked(true);
                 Dragboard db = dragSource.startDragAndDrop(TransferMode.MOVE);
-                db.setContent(Collections.singletonMap(FXUtility.getTextDataFormat("Expression"), selection));
+                db.setContent(selection);
             }
             e.consume();
         });
@@ -316,12 +318,25 @@ public class ExpressionEditorUtil
             {
                 node.getParent().getEditor().deleteSelection();
             }
+            else if (e.getCode() == KeyCode.X && e.isShortcutDown())
+            {
+                node.getParent().getEditor().cutSelection();
+            }
+            else if (e.getCode() == KeyCode.C && e.isShortcutDown())
+            {
+                node.getParent().getEditor().copySelection();
+            }
+            else if (e.getCode() == KeyCode.A && e.isShortcutDown())
+            {
+                node.getParent().getEditor().selectAllSiblings(node);
+            }
             e.consume();
         });
         
         textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             if ((e.isShortcutDown() && e.getCode() == KeyCode.A) || e.getCode() == KeyCode.F9)
             {
+                node.getParent().getEditor().selectOnly(node);
                 node.getParent().getEditor().selectAllSiblings(node);
                 e.consume();
             }

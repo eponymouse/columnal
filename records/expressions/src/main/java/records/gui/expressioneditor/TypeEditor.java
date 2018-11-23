@@ -3,12 +3,16 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableMap;
+import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import utility.FXPlatformConsumer;
@@ -18,6 +22,7 @@ import java.util.stream.Stream;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
 {
+    public static final DataFormat TYPE_CLIPBOARD_TYPE = new DataFormat("application/records-type");
     private final FXPlatformConsumer<TypeExpression> onChange;
 
     public TypeEditor(TypeManager typeManager, TypeExpression startingValue, FXPlatformConsumer<TypeExpression> onChange)
@@ -83,5 +88,17 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
         
         // TODO this should be toJellyType, once we add type variable usage to the editor
         return mostRecentSave == null || mostRecentSave.toDataType(getTypeManager()) == null;
+    }
+
+    @Override
+    public DataFormat getClipboardType()
+    {
+        return TYPE_CLIPBOARD_TYPE;
+    }
+
+    @Override
+    protected @Nullable LoadableExpression<TypeExpression, TypeSaver> parse(String src) throws InternalException, UserException
+    {
+        return TypeExpression.parseTypeExpression(getTypeManager(), src);
     }
 }

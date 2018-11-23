@@ -4,14 +4,19 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
+import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveChild;
 import records.gui.expressioneditor.SaverBase;
+import records.gui.expressioneditor.TypeEditor;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeSaver.Context;
 import threadchecker.OnThread;
@@ -23,6 +28,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @OnThread(Tag.FXPlatform)
@@ -202,5 +208,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
         return record(start, end, new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> InvalidIdentTypeExpression.identOrUnfinished(o.op.getContent()), x -> x))));
     }
-    
+
+    @Override
+    protected Map<DataFormat, Object> toClipboard(TypeExpression expression)
+    {
+        return ImmutableMap.of(
+                TypeEditor.TYPE_CLIPBOARD_TYPE, expression.save(true, TableAndColumnRenames.EMPTY),
+                DataFormat.PLAIN_TEXT, expression.save(false, TableAndColumnRenames.EMPTY)
+        );
+    }
 }

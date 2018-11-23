@@ -42,7 +42,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         return OutputBuilder.quoted(value);
     }

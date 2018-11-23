@@ -42,7 +42,7 @@ public class SingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(boolean structured, boolean topLevel)
     {
         return name;
     }

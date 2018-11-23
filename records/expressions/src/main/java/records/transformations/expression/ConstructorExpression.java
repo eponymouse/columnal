@@ -76,9 +76,12 @@ public class ConstructorExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + ":" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
+        if (structured)
+            return tag.either(s -> "@unfinished " + OutputBuilder.quoted(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + ":" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
+        else
+            return tag.either(s -> s, t -> t.getTypeName().getRaw() + ":" + t.getTagInfo().getName());
     }
 
     @Override

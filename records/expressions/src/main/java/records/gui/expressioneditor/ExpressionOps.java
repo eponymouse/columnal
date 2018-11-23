@@ -182,7 +182,7 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
     @Override
     public String save(Expression child, TableAndColumnRenames renames)
     {
-        return child.save(BracketedStatus.MISC, renames);
+        return child.save(true, BracketedStatus.MISC, renames);
     }
 
     @Override

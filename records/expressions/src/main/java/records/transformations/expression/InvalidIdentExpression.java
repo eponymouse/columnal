@@ -65,9 +65,12 @@ public class InvalidIdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@unfinished " + OutputBuilder.quoted(text);
+        if (structured)
+            return "@unfinished " + OutputBuilder.quoted(text);
+        else
+            return text;
     }
 
     @Override

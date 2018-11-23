@@ -38,9 +38,12 @@ public class InvalidSingleUnitExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(boolean structured, boolean topLevel)
     {
-        return "@unfinished "+ OutputBuilder.quoted(name);
+        if (structured)
+            return "@unfinished "+ OutputBuilder.quoted(name);
+        else
+            return name;
     }
 
     @Override

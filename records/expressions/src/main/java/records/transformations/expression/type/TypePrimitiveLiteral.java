@@ -52,7 +52,7 @@ public class TypePrimitiveLiteral extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
         try
         {
@@ -61,7 +61,7 @@ public class TypePrimitiveLiteral extends TypeExpression
         catch (InternalException e)
         {
             Log.log(e);
-            return new InvalidIdentTypeExpression("").save(renames);
+            return new InvalidIdentTypeExpression("").save(structured, renames);
         }
     }
 

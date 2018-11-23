@@ -35,9 +35,9 @@ public class UnitRaiseExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(boolean structured, boolean topLevel)
     {
-        return unit.save(false) + "^" + power;
+        return unit.save(structured, false) + "^" + power;
     }
 
     @Override

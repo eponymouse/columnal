@@ -180,7 +180,7 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
         });
     }
 
-    public abstract String save(TableAndColumnRenames renames);
+    public abstract String save(boolean structured, TableAndColumnRenames renames);
 
     public abstract @Nullable DataType toDataType(TypeManager typeManager);
 
@@ -333,6 +333,6 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
     @Override
     public String toString()
     {
-        return save(TableAndColumnRenames.EMPTY);
+        return save(true, TableAndColumnRenames.EMPTY);
     }
 }

@@ -120,9 +120,13 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String ideal = renames.columnId(tableName, columnName).getOutput();
+        
+        if (!structured)
+            return ideal;
+        
         // Sanity check to avoid saving something we can't load:
         String ident = IdentifierUtility.asExpressionIdentifier(ideal);
         if (ident != null)

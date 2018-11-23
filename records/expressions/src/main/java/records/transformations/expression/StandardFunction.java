@@ -79,9 +79,12 @@ public class StandardFunction extends NonOperatorExpression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@function " + OutputBuilder.quotedIfNecessary(functionDefinition.getName());
+        if (structured)
+            return "@function " + OutputBuilder.quotedIfNecessary(functionDefinition.getName());
+        else
+            return functionDefinition.getName();
     }
 
     @Override

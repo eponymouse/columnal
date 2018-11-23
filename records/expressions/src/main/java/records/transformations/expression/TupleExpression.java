@@ -101,9 +101,9 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public String save(BracketedStatus surround, TableAndColumnRenames renames)
+    public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        String content = members.stream().map(e -> e.save(BracketedStatus.MISC, renames)).collect(Collectors.joining(", "));
+        String content = members.stream().map(e -> e.save(structured, BracketedStatus.MISC, renames)).collect(Collectors.joining(", "));
         if (surround == BracketedStatus.DIRECT_ROUND_BRACKETED)
             return content;
         else

@@ -100,7 +100,6 @@
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->
                                     <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
-                                    <arg>-AprintErrorStack</arg>
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
                                     <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex</arg>
@@ -152,7 +151,6 @@
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->
                                     <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
-                                    <arg>-AprintErrorStack</arg>
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
                                     <arg>-Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex</arg>

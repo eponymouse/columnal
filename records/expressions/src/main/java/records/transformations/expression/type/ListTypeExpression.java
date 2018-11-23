@@ -41,9 +41,9 @@ public class ListTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
-        return "[" + innerType.save(renames) + "]";
+        return "[" + innerType.save(structured, renames) + "]";
     }
 
     @Override

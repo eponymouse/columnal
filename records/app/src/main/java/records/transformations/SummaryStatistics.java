@@ -340,7 +340,7 @@ public class SummaryStatistics extends Transformation
             b.kw("SUMMARY");
             b.id(renames.columnId(getId(), entry.getFirst()));
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
-            b.raw(entry.getSecond().save(BracketedStatus.MISC, renames));
+            b.raw(entry.getSecond().save(true, BracketedStatus.MISC, renames));
             b.nl();
         }
         for (ColumnId c : splitBy)

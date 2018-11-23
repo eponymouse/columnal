@@ -4,6 +4,7 @@ import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -768,11 +770,13 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected abstract EXPRESSION makeSingleInvalid(KEYWORD terminator);
     
-    public final @Nullable String finishClipboard()
+    public final @Nullable Map<DataFormat, Object> finishClipboard()
     {
         if (currentScopes.isEmpty())
             return null;
         
-        return finish(currentScopes.peek().openingNode).toString();
+        return toClipboard(finish(currentScopes.peek().openingNode));
     }
+
+    protected abstract Map<DataFormat, Object> toClipboard(EXPRESSION expression);
 }

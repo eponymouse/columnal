@@ -120,7 +120,7 @@ public class TypeExpressionOps implements OperandOps<TypeExpression, TypeSaver>
     @Override
     public String save(TypeExpression typeExpression, TableAndColumnRenames renames)
     {
-        return typeExpression.save(renames);
+        return typeExpression.save(true, renames);
     }
 
     @Override

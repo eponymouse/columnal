@@ -112,7 +112,7 @@ class UnitExpressionOps implements OperandOps<UnitExpression, UnitSaver>
     @Override
     public String save(UnitExpression unitExpression, TableAndColumnRenames renames)
     {
-        return unitExpression.save(true);
+        return unitExpression.save(true, true);
     }
 
     @Override

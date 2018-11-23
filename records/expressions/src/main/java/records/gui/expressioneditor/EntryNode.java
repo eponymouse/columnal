@@ -44,7 +44,17 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public void paste()
             {
-                String s = Clipboard.getSystemClipboard().getString();
+                Clipboard clipboard = Clipboard.getSystemClipboard();
+                if (clipboard.hasContent(parent.getClipboardType()))
+                {
+                    Object content = clipboard.getContent(parent.getClipboardType());
+                    if (content != null)
+                    {
+                        parent.getEditor().addContent(content.toString());
+                        return;
+                    }
+                }
+                String s = clipboard.getString();
                 // We may get removed so it's important to remember the scene:
                 Scene sc = getScene();
                 if (sc != null)

@@ -10,6 +10,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.DataFormat;
 import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -76,6 +78,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
             Utility.later(this).updateListeners();
         });
     }
+
+    public abstract DataFormat getClipboardType();
 
     protected final static class PrefixSuffix
     {
@@ -639,7 +643,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     }
 
     @SuppressWarnings("unchecked")
-    public @Nullable String copyItems(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
+    public @Nullable Map<DataFormat, Object> copyItems(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end)
     {
         List<ConsecutiveChild<@NonNull EXPRESSION, SAVER>> all = getAllChildren();
         int startIndex = all.indexOf(start);

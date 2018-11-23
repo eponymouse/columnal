@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -19,6 +20,8 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionParser;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ErrorAndTypeRecorder;
@@ -28,6 +31,7 @@ import records.transformations.expression.Expression.ExpressionKind;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.InvalidIdentExpression;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.TypeState;
 import styled.StyledShowable;
 import styled.StyledString;
@@ -47,6 +51,7 @@ import java.util.stream.Stream;
  */
 public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver>
 {
+    public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = new DataFormat("application/records-expression");
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
@@ -322,5 +327,17 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             return this.children.size() == 1; // Show if otherwise empty
         ConsecutiveChild<Expression, ExpressionSaver> before = this.children.get(index - 1);
         return (before instanceof GeneralExpressionEntry && ((GeneralExpressionEntry)before).isOperator());
+    }
+
+    @Override
+    public DataFormat getClipboardType()
+    {
+        return EXPRESSION_CLIPBOARD_TYPE;
+    }
+
+    @Override
+    protected @Nullable LoadableExpression<Expression, ExpressionSaver> parse(String src) throws InternalException, UserException
+    {
+        return Expression.parse(null, src, getTypeManager());
     }
 }

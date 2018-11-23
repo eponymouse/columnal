@@ -87,7 +87,7 @@ public interface EnterTypeTrait extends FxRobotInterface
             if (units != null)
             {
                 write("{");
-                write(units.save(true), DELAY);
+                write(units.save(false, true), DELAY);
                 write("}");
             }
         }

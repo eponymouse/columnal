@@ -39,11 +39,14 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
-    public String save(TableAndColumnRenames renames)
+    public String save(boolean structured, TableAndColumnRenames renames)
     {
-        return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INVALIDOPS) + " (" +
-            items.stream().map(item -> item.save(renames)).collect(Collectors.joining(", ")) 
-            + ")";
+        if (structured)
+            return OutputBuilder.token(FormatLexer.VOCABULARY, FormatLexer.INVALIDOPS) + " (" +
+                items.stream().map(item -> item.save(structured, renames)).collect(Collectors.joining(", ")) 
+                + ")";
+        else
+            return items.stream().map(item -> item.save(structured, renames)).collect(Collectors.joining(""));
     }
 
     @Override

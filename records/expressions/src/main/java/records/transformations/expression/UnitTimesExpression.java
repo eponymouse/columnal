@@ -41,14 +41,14 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public String save(boolean topLevel)
+    public String save(boolean structured, boolean topLevel)
     {
         StringBuilder b = new StringBuilder();
         if (!topLevel)
             b.append("(");
         for (int i = 0; i < operands.size(); i++)
         {
-            b.append(operands.get(i).save(false));
+            b.append(operands.get(i).save(structured, false));
             if (i < operands.size() - 1)
             {
                 b.append("*");
