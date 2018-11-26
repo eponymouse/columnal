@@ -241,11 +241,12 @@ public class ExpressionEditorUtil
         return Collections.emptyList();
     }
     
-    public static <E extends StyledShowable, P extends ClipboardSaver> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src)
+    public static <E extends StyledShowable, P extends ClipboardSaver> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E, P> src_)
     {
+        ConsecutiveChild<E, P> src = FXUtility.mouse(src_);
         dragSource.setOnDragDetected(e -> {
-            TopLevelEditor<?, ?> editor = FXUtility.mouse(src).getParent().getEditor();
-            editor.ensureSelectionIncludes(FXUtility.mouse(src));
+            TopLevelEditor<?, ?> editor = src.getParent().getEditor();
+            editor.ensureSelectionIncludes(src);
             @Nullable Map<DataFormat, Object> selection = editor.getSelection();
             if (selection != null)
             {
@@ -255,12 +256,26 @@ public class ExpressionEditorUtil
             }
             e.consume();
         });
-        dragSource.setOnDragDone(e -> {
-            TopLevelEditor<?, ?> editor = FXUtility.mouse(src).getParent().getEditor();
+        dragSource.setOnDragOver(e -> {
+            if (e.getDragboard().hasContent(src.getParent().getClipboardType()))
+                e.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        });
+        dragSource.setOnDragDropped(e -> {
+            TopLevelEditor<?, ?> editor = src.getParent().getEditor();
             editor.setSelectionLocked(false);
-            if (e.getTransferMode() != null)
+            if (!editor.selectionContains(src) && e.getDragboard().hasContent(editor.getClipboardType()))
             {
-                editor.removeSelectedItems();
+                Object content = e.getDragboard().getContent(editor.getClipboardType());
+                if (content != null)
+                {
+                    if (e.getTransferMode() == TransferMode.MOVE)
+                    {
+                        editor.removeSelectedItems();
+                    }
+                    editor.addContent(src, content.toString());
+                    e.setDropCompleted(true);
+                    return;
+                }
             }
             e.consume();
         });

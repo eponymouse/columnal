@@ -123,7 +123,12 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
             {
                 push(KeyCode.SHORTCUT, KeyCode.X);
                 headers = TestUtil.fx(() -> expressionEditor._test_getHeaders().map(Pair::getFirst).collect(ImmutableList.toImmutableList()));
-                clickOn(headers.get(destBeforeNodexIndexIncl - (endNodeIndexIncl - startNodeIndexIncl + 1)));
+                int adjustedDest;
+                if (destBeforeNodexIndexIncl < startNodeIndexIncl)
+                    adjustedDest = destBeforeNodexIndexIncl;
+                else
+                    adjustedDest = destBeforeNodexIndexIncl - (endNodeIndexIncl - startNodeIndexIncl + 1);
+                clickOn(headers.get(adjustedDest));
                 push(KeyCode.DOWN);
                 push(KeyCode.LEFT);
                 push(KeyCode.SHORTCUT, KeyCode.V);
@@ -132,7 +137,7 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
             {
                 drag(headers.get(startNodeIndexIncl), MouseButton.PRIMARY);
                 Node target = headers.get(destBeforeNodexIndexIncl);
-                dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX() + 5), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 5));
+                dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX() + 1), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 1));
             }
             clickOk();
             entered = getExpressionFromCalculate(view);

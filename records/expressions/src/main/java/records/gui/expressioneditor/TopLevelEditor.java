@@ -302,8 +302,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         return Stream.empty();
     }
 
-    // Returns true if successful
-    public final boolean addContent(String src)
+    /**
+     * @param before The child to add before, or null to add at the end
+     * @param src The parseable structured source (i.e. full of @unfinished and so on,
+     *            not just the raw text entered by the user)
+     * Returns true if successful 
+     */
+    public final boolean addContent(@Nullable ConsecutiveChild<?, ?> before, String src)
     {
         try
         {
@@ -312,9 +317,15 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                 return false;
             else
             {
-                // TODO add in place, not just at end
+                int beforeIndex = before == null ? children.size() : Utility.indexOfRef(children, before);
+                if (beforeIndex < 0)
+                {
+                    Log.error("Child " + before + " not found in " + children);
+                    // Better to fix than crash:
+                    beforeIndex = children.size();
+                }
                 atomicEdit.set(true);
-                children.addAll(parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
+                children.addAll(beforeIndex, parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
                 atomicEdit.set(false);
                 return true;
             }
@@ -330,7 +341,6 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     // Parses expression (with tokens, @unfinished etc) into an expression
     protected abstract @Nullable LoadableExpression<EXPRESSION, SAVER> parse(String src) throws InternalException, UserException;
     
-
     private static enum SelectionCaret
     {START, END}
     
@@ -393,6 +403,11 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
     public void setSelectionLocked(boolean selectionLocked)
     {
         this.selectionLocked = selectionLocked;
+    }
+
+    public boolean selectionContains(ConsecutiveChild<?, ?> item)
+    {
+        return selection != null && selection.contains(item);
     }
     
     public <E extends StyledShowable, P extends ClipboardSaver> void ensureSelectionIncludes(ConsecutiveChild<E, P> src)
