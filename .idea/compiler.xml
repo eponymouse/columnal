@@ -31,9 +31,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\utility/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -52,9 +51,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\gui-utility/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -66,9 +64,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\data/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -80,9 +77,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\stf/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -94,9 +90,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\functions/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -108,9 +103,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\expressions/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -122,9 +116,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\app/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <option name="units" value="annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex" />
         <processor name="annotation.identifier.IdentifierChecker" />
         <processor name="annotation.ValueTypeChecker" />
@@ -147,17 +140,6 @@
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.5.7/jdk8-2.5.7.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200 -AprintErrorStack" />
-    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="anns" options="" />
-      <module name="app" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\app/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="data" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\data/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="expressions" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\expressions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="functions" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\functions/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="gui-utility" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\gui-utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="parsers" options="" />
-      <module name="stf" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\stf/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-      <module name="utility" options="-Xbootclasspath/p:${org.checkerframework:jdk8:jar} -AprintErrorStack &quot;-AskipDefs=records.grammar.|one.util.&quot; -Astubs=C:\Users\neil\intellij\records\records\utility/../stubs -Aunits=annotation.units.AbsColIndex,annotation.units.AbsRowIndex,annotation.units.GridAreaColIndex,annotation.units.GridAreaRowIndex,annotation.units.TableDataRowIndex,annotation.units.TableDataColIndex,annotation.units.RowOrColIndex -Xplugin:threadchecker.TCPlugin -Werror" />
-    </option>
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.5.7/jdk8-2.5.7.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin -Werror -Xmaxerrs 200" />
   </component>
 </project>
