@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
+import javafx.scene.control.Label;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
@@ -92,7 +93,7 @@ public final class UnitLiteralExpressionNode extends TreeLiteralNode<Expression,
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Stream<Pair<String, Boolean>> _test_getHeaders()
+    public @OnThread(Tag.FXPlatform) Stream<Pair<Label, Boolean>> _test_getHeaders()
     {
         return unit._test_getHeaders();
     }

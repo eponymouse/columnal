@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -67,7 +68,7 @@ public interface ConsecutiveChild<EXPRESSION extends StyledShowable, SAVER exten
     void focusChanged();
 
     @OnThread(Tag.FXPlatform)
-    Stream<Pair<String, Boolean>> _test_getHeaders();
+    Stream<Pair<Label, Boolean>> _test_getHeaders();
 
     public void save(SAVER saver);
 

@@ -105,6 +105,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.function.Mean;
 import records.transformations.function.Sum;
+import styled.StyledCSS;
 import styled.StyledString;
 import styled.StyledString.Builder;
 import styled.StyledString.Style;
@@ -1133,7 +1134,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     });
                 }
             }
-        });
+        }).withStyle(new StyledCSS("edit-expression-link"));
     }
     
     private StyledString fixExpressionLink(EditableExpression fixer)
@@ -1312,7 +1313,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                         {
                             FXUtility.alertOnErrorFX_("Error editing column", () -> editColumn_Calc(calc, c));
                         }
-                    }));
+                    }).withStyle(new StyledCSS("edit-calculate-column")));
                     if (calc.getCalculatedColumns().keySet().size() > 3)
                         threeEditLinks = Stream.concat(threeEditLinks, Stream.of(StyledString.s("...")));
                     builder.append(StyledString.intercalate(StyledString.s(", "), threeEditLinks.collect(Collectors.toList())));

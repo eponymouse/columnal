@@ -323,7 +323,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         return this == child || getAllChildren().stream().anyMatch(n -> n.isOrContains(child));
     }
 
-    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    public Stream<Pair<Label, Boolean>> _test_getHeaders()
     {
         return getAllChildren().stream().flatMap(o -> o._test_getHeaders());
     }

@@ -205,7 +205,7 @@ public class TestExpressionEditorError extends ApplicationTest implements Scroll
             assertNotNull(editorPane);
             if (editorPane == null) return;
             TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
-            List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).collect(Collectors.toList());
+            List<Pair<String, Boolean>> actualHeaders = TestUtil.fx(() -> expressionEditor._test_getHeaders()).map(h -> h.mapFirst(Label::getText)).collect(Collectors.toList());
 
             // Dismiss before comparison to avoid issues with exception:
             push(KeyCode.ESCAPE);

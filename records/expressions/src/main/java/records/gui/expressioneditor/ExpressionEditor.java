@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -76,7 +77,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
 
     // Gets content, and error (true = error) state of all header labels.
     @OnThread(Tag.FXPlatform)
-    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    public Stream<Pair<Label, Boolean>> _test_getHeaders()
     {
         return getAllChildren().stream().flatMap(c -> c._test_getHeaders());
     }

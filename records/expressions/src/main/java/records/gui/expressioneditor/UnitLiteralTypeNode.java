@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
+import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
@@ -85,7 +86,7 @@ public final class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, T
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Stream<Pair<String, Boolean>> _test_getHeaders()
+    public @OnThread(Tag.FXPlatform) Stream<Pair<Label, Boolean>> _test_getHeaders()
     {
         return unit._test_getHeaders();
     }

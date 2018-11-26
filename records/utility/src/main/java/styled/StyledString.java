@@ -106,8 +106,6 @@ public final class StyledString
      */
     @Pure public <S extends Style<S>> StyledString withStyle(S newStyle)
     {
-        
-        
         return new StyledString(Utility.mapListI(members, p -> p.mapFirst(prevStyles -> {
             ImmutableList.Builder<Style<?>> newStyles = ImmutableList.builder();
             boolean added = false;

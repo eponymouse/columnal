@@ -118,9 +118,9 @@ public class ExpressionEditorUtil
         }
  
         @OnThread(Tag.FXPlatform)
-        public Stream<Pair<String, Boolean>> _test_getHeaderState()
+        public Stream<Pair<Label, Boolean>> _test_getHeaderState()
         {
-            return Stream.of(new Pair<>(topLabel.getText(), hasError && !maskErrors));
+            return Stream.of(new Pair<>(topLabel, hasError && !maskErrors));
         }
 
         @OnThread(Tag.FXPlatform)

@@ -129,7 +129,7 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Stream<Pair<String, Boolean>> _test_getHeaders()
+    public @OnThread(Tag.FXPlatform) Stream<Pair<Label, Boolean>> _test_getHeaders()
     {
         return type._test_getHeaders();
     }

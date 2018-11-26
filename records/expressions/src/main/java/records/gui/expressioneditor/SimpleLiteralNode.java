@@ -174,7 +174,7 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     }
 
     @Override
-    public Stream<Pair<String, Boolean>> _test_getHeaders()
+    public Stream<Pair<Label, Boolean>> _test_getHeaders()
     {
         return container._test_getHeaderState();
     }
