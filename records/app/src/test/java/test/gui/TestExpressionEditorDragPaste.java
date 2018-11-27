@@ -190,7 +190,11 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
 
         for (MoveMethod moveMethod : MoveMethod.values())
         {
-            testMove(expression, startNodeIndexIncl, endNodeIndexIncl, destBeforeNodexIndexIncl, after, moveMethod, new Random(1L));
+            // Don't try to drag to left of first item:
+            if (destBeforeNodexIndexIncl > 0 || moveMethod != MoveMethod.DRAG_LEFT)
+            {
+                testMove(expression, startNodeIndexIncl, endNodeIndexIncl, destBeforeNodexIndexIncl, after, moveMethod, new Random(1L));
+            }
         }
     }
 
@@ -199,6 +203,22 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
     {
         testSimple("(1, 2, 3)", 3, 4, 1, "(2, 1, 3)");
     }
+    
+    @Test
+    public void testFuncArgToInvalid() throws Exception
+    {
+        testSimple("@call @function abs(3)",
+            2, 3, 0, "@invalidops(3, @unfinished \")\", @function abs, @invalidops(@unfinished \"(\", @unfinished \"\"))");
+    }
+
+    @Test
+    public void testFuncArgToValid() throws Exception
+    {
+        testSimple("@invalidops(3, @unfinished \")\", @function abs, @invalidops(@unfinished \"(\", @unfinished \"\"))",
+                0, 1, 4, "@call @function abs(3)");
+    }
+    
+    // TODO test mixed editors (types and units in expressions)
 
     /*
     @Test
@@ -337,4 +357,12 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
         testSimple("\"\";(\"A\";\"B\")");
     }
     */
+
+    @Override
+    @OnThread(value = Tag.Any)
+    public FxRobot write(String text, int sleepMillis)
+    {
+        Log.normal("Writing: {{{" + text + "}}}");
+        return super.write(text, sleepMillis);
+    }
 }
