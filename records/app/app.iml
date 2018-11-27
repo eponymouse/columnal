@@ -52,10 +52,9 @@
     <orderEntry type="library" scope="TEST" name="Maven: ru.vyarus:generics-resolver:2.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.pholser:junit-quickcheck-generators:0.8.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-core:4.0.12-alpha" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-internal-java8:4.0.12-alpha" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.assertj:assertj-core:3.9.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-junit:4.0.12-alpha" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-core:4.0.15-alpha" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.assertj:assertj-core:3.11.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-junit:4.0.15-alpha" level="project" />
     <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.12" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.richtext:richtextfx:0.7-M5" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.undo:undofx:1.2.2" level="project" />
