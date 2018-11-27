@@ -632,7 +632,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         for (ConsecutiveChild<EXPRESSION, SAVER> n : getChildrenFromTo(from, to))
         {
-            n.setSelected(selected, focus != null && n == focus.getFirst(), focus == null ? null : focus.getSecond());
+            n.setSelected(selected, selected && focus != null && n == focus.getFirst(), focus == null ? null : focus.getSecond());
         }
     }
 
