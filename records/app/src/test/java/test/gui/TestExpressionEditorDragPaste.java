@@ -62,8 +62,9 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
         this.windowToUse = stage;
     }
     
+    // We try dragging slightly to left or right of target divider
     @OnThread(Tag.Any)
-    private static enum MoveMethod { DRAG, CUT_PASTE }
+    private static enum MoveMethod { DRAG_LEFT, DRAG_RIGHT, CUT_PASTE }
     
     private void testMove(Expression expression,
                           int startNodeIndexIncl, int endNodeIndexIncl,
@@ -133,11 +134,11 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
                 push(KeyCode.LEFT);
                 push(KeyCode.SHORTCUT, KeyCode.V);
             }
-            else if (moveMethod == MoveMethod.DRAG)
+            else
             {
                 drag(headers.get(startNodeIndexIncl), MouseButton.PRIMARY);
                 Node target = headers.get(destBeforeNodexIndexIncl);
-                dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX() + 1), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 1));
+                dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX() + (moveMethod == MoveMethod.DRAG_LEFT ? -2 : 2)), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 1));
             }
             clickOk();
             entered = getExpressionFromCalculate(view);
@@ -168,7 +169,7 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
         // Now close dialog, and check for equality;
 
         TestUtil.sleep(500);
-        assertNull(lookup(".ok-button").query());
+        assertFalse(lookup(".ok-button").tryQuery().isPresent());
     }
 
     private Expression getExpressionFromCalculate(View view)

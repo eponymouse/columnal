@@ -10,9 +10,12 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase.PrefixSuffix;
 import records.gui.expressioneditor.TopLevelEditor.ErrorInfo;
 import records.transformations.expression.BracketedStatus;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeLiteralExpression;
@@ -51,6 +54,12 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
                 TypeSaver typeSaver = new TypeSaver(this, showErrors);
                 save(typeSaver);
                 return typeSaver.finish(children.get(children.size() - 1));
+            }
+
+            @Override
+            protected @Nullable LoadableExpression<TypeExpression, TypeSaver> parse(String src) throws InternalException, UserException
+            {
+                return TypeExpression.parseTypeExpression(getEditor().getTypeManager(), src);
             }
 
             @Override

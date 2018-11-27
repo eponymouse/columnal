@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.BooleanExpression;
+import javafx.geometry.Point2D;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
@@ -33,6 +34,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.gui.expressioneditor.EEDisplayNode.Focus;
 import records.gui.expressioneditor.TopLevelEditor.SelectExtremityTarget;
 import records.gui.expressioneditor.TopLevelEditor.SelectionTarget;
 import records.jellytype.JellyType;
@@ -52,6 +54,7 @@ import styled.StyledShowable;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplierInt;
 import utility.Pair;
 import utility.Utility;
@@ -256,26 +259,38 @@ public class ExpressionEditorUtil
             }
             e.consume();
         });
-        dragSource.setOnDragOver(e -> {
-            if (e.getDragboard().hasContent(src.getParent().getClipboardType()))
+    }
+    
+    public static <E extends StyledShowable, P extends ClipboardSaver> void enableDragTo(Node container, @UnknownInitialization TopLevelEditor<E, P> editor_)
+    {
+        TopLevelEditor<E, P> editor = FXUtility.mouse(editor_);
+        container.setOnDragOver(e -> {
+            if (e.getDragboard().hasContent(editor.getClipboardType()))
                 e.acceptTransferModes(TransferMode.COPY_OR_MOVE);
         });
-        dragSource.setOnDragDropped(e -> {
-            TopLevelEditor<?, ?> editor = src.getParent().getEditor();
+        container.setOnDragDropped(e -> {
             editor.setSelectionLocked(false);
-            if (!editor.selectionContains(src) && e.getDragboard().hasContent(editor.getClipboardType()))
-            {
-                Object content = e.getDragboard().getContent(editor.getClipboardType());
-                if (content != null)
+            @Nullable Pair<ConsecutiveChild<?, ?>, FXPlatformRunnable> dropBefore = editor.findClosestDrop(new Point2D(e.getSceneX(), e.getSceneY()), f -> {
+                Dragboard db = e.getDragboard();
+                if (db.hasContent(f))
                 {
-                    if (e.getTransferMode() == TransferMode.MOVE)
-                    {
-                        editor.removeSelectedItems();
-                    }
-                    editor.addContent(src, content.toString());
-                    e.setDropCompleted(true);
-                    return;
+                    Object content = e.getDragboard().getContent(f);
+                    if (content != null)
+                        return content.toString();
                 }
+                return null;
+            });
+            if (dropBefore != null && !editor.selectionContains(dropBefore.getFirst()))
+            {
+                if (e.getTransferMode() == TransferMode.MOVE)
+                {
+                    editor.removeSelectedItems();
+                }
+                  
+                dropBefore.getSecond().run();
+                //editor.addContent(dropBefore, content.toString());
+                e.setDropCompleted(true);
+                return;
             }
             e.consume();
         });
@@ -344,6 +359,10 @@ public class ExpressionEditorUtil
             else if (e.getCode() == KeyCode.A && e.isShortcutDown())
             {
                 node.getParent().getEditor().selectAllSiblings(node);
+            }
+            else if (e.getCode() == KeyCode.DOWN && !e.isShiftDown())
+            {
+                node.focus(Focus.LEFT);
             }
             e.consume();
         });

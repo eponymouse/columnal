@@ -6,7 +6,10 @@ import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
@@ -34,6 +37,12 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitSaver>
     public void showType(String type)
     {
         // This shouldn't occur for units
+    }
+
+    @Override
+    protected @Nullable LoadableExpression<UnitExpression, UnitSaver> parse(String src) throws InternalException, UserException
+    {
+        return UnitExpression.load(src);
     }
 
     @Override

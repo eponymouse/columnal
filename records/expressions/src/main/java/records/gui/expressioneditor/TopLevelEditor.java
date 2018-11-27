@@ -8,6 +8,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -191,6 +192,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                 e.consume();
             }
         });
+        ExpressionEditorUtil.enableDragTo(container, this);
         container.addEventHandler(MouseEvent.ANY, e -> {
             e.consume();
         });
@@ -297,49 +299,37 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         focusListeners.add(focusListener);
     }
 
+    public @Nullable Pair<ConsecutiveChild<?, ?>, FXPlatformRunnable> findClosestDrop(Point2D pointInScene, FXPlatformFunction<DataFormat, @Nullable String> availableFormats)
+    {
+        class Locator implements LocatableVisitor
+        {
+            double minDist = Double.MAX_VALUE;
+            @MonotonicNonNull Pair<ConsecutiveChild<?, ?>, FXPlatformRunnable> nearest = null;
+
+            @Override
+            public <D extends StyledShowable> void register(ConsecutiveChild<? extends D, ?> item, Class<D> childType)
+            {
+                @Nullable String data = availableFormats.apply(item.getParent().getClipboardType());
+                if (data != null && !item.nodes().isEmpty())
+                {
+                    double dist = FXUtility.distanceToLeft(item.nodes().get(0), pointInScene);
+                    if (dist < minDist)
+                    {
+                        nearest = new Pair<>(item, () -> item.getParent().addContent(item, data));
+                        minDist = dist;
+                    }
+                }
+            }
+        }
+        Locator locator = new Locator();
+        visitLocatable(locator);
+        return locator.nearest;
+    }
+
     public Stream<ColumnReference> getAvailableColumnReferences()
     {
         return Stream.empty();
     }
-
-    /**
-     * @param before The child to add before, or null to add at the end
-     * @param src The parseable structured source (i.e. full of @unfinished and so on,
-     *            not just the raw text entered by the user)
-     * Returns true if successful 
-     */
-    public final boolean addContent(@Nullable ConsecutiveChild<?, ?> before, String src)
-    {
-        try
-        {
-            @Nullable LoadableExpression<EXPRESSION, SAVER> parsed = parse(src);
-            if (parsed == null)
-                return false;
-            else
-            {
-                int beforeIndex = before == null ? children.size() : Utility.indexOfRef(children, before);
-                if (beforeIndex < 0)
-                {
-                    Log.error("Child " + before + " not found in " + children);
-                    // Better to fix than crash:
-                    beforeIndex = children.size();
-                }
-                atomicEdit.set(true);
-                children.addAll(beforeIndex, parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
-                atomicEdit.set(false);
-                return true;
-            }
-        }
-        catch (InternalException | UserException e)
-        {
-            if (e instanceof InternalException)
-                Log.log(e);
-            return false;
-        }
-    }
-
-    // Parses expression (with tokens, @unfinished etc) into an expression
-    protected abstract @Nullable LoadableExpression<EXPRESSION, SAVER> parse(String src) throws InternalException, UserException;
     
     private static enum SelectionCaret
     {START, END}

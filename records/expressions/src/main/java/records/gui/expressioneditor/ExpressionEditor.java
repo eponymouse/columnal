@@ -187,35 +187,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
         return locator.smallest;
     }
 
-    private <C extends StyledShowable> @Nullable Pair<ConsecutiveChild<? extends C, ?>, Double> findClosestDrop(Point2D pointInScene, Class<C> targetClass)
-    {
-        class Locator implements LocatableVisitor
-        {
-            double minDist = Double.MAX_VALUE;
-            @MonotonicNonNull ConsecutiveChild<? extends C, ?> nearest = null;
-
-            @Override
-            public <D extends StyledShowable> void register(ConsecutiveChild<? extends D, ?> item, Class<D> childType)
-            {
-                if (targetClass.isAssignableFrom(childType) && !item.nodes().isEmpty())
-                {
-                    double dist = FXUtility.distanceToLeft(item.nodes().get(0), pointInScene);
-                    if (dist < minDist)
-                    {
-                        // Safe because of the check above:
-                        @SuppressWarnings("unchecked")
-                        ConsecutiveChild<? extends C, ?> casted = (ConsecutiveChild)item;
-                        nearest = casted;
-                    }
-                }
-            }
-        }
-        Locator locator = new Locator();
-        visitLocatable(locator);
-        return locator.nearest == null ? null : new Pair<>(locator.nearest, locator.minDist);
-    }
-
-//    @Override
+    //    @Override
 //    public @Nullable DataType getType(EEDisplayNode child)
 //    {
 //        return type;

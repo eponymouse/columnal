@@ -20,9 +20,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorTop;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.Expression;
+import records.transformations.expression.LoadableExpression;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import records.transformations.expression.QuickFix;
 import records.transformations.expression.UnitExpression;
@@ -927,6 +930,45 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
 
     public void showType(String type)
     {
+    }
+
+    // Parses expression (with tokens, @unfinished etc) into an expression
+    protected abstract @Nullable LoadableExpression<EXPRESSION, SAVER> parse(String src) throws InternalException, UserException;
+
+    /**
+     * @param before The child to add before, or null to add at the end
+     * @param src The parseable structured source (i.e. full of @unfinished and so on,
+     *            not just the raw text entered by the user)
+     * Returns true if successful 
+     */
+    public final boolean addContent(@Nullable ConsecutiveChild<?, ?> before, String src)
+    {
+        try
+        {
+            @Nullable LoadableExpression<EXPRESSION, SAVER> parsed = parse(src);
+            if (parsed == null)
+                return false;
+            else
+            {
+                int beforeIndex = before == null ? children.size() : Utility.indexOfRef(children, before);
+                if (beforeIndex < 0)
+                {
+                    Log.error("Child " + before + " not found in " + children);
+                    // Better to fix than crash:
+                    beforeIndex = children.size();
+                }
+                atomicEdit.set(true);
+                children.addAll(beforeIndex, parsed.loadAsConsecutive(BracketedStatus.TOP_LEVEL).map(l -> l.load(this)).collect(Collectors.toList()));
+                atomicEdit.set(false);
+                return true;
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            if (e instanceof InternalException)
+                Log.log(e);
+            return false;
+        }
     }
 
     @Override
