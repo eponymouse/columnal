@@ -616,7 +616,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
-    protected Map<DataFormat, Object> toClipboard(Expression expression)
+    protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded Expression expression)
     {
         return ImmutableMap.of(
             ExpressionEditor.EXPRESSION_CLIPBOARD_TYPE, expression.save(true, BracketedStatus.TOP_LEVEL, TableAndColumnRenames.EMPTY),

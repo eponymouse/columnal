@@ -778,5 +778,5 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         return toClipboard(finish(currentScopes.peek().openingNode));
     }
 
-    protected abstract Map<DataFormat, Object> toClipboard(EXPRESSION expression);
+    protected abstract Map<DataFormat, Object> toClipboard(@UnknownIfRecorded EXPRESSION expression);
 }

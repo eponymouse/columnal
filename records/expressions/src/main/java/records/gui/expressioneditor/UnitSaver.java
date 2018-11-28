@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.scene.input.DataFormat;
@@ -193,7 +194,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected Map<DataFormat, Object> toClipboard(UnitExpression expression)
+    protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded UnitExpression expression)
     {
         return ImmutableMap.of(
                 UnitEditor.UNIT_CLIPBOARD_TYPE, expression.save(true, true),

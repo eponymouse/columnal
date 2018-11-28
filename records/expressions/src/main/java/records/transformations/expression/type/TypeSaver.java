@@ -2,6 +2,7 @@ package records.transformations.expression.type;
 
 import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -210,7 +211,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected Map<DataFormat, Object> toClipboard(TypeExpression expression)
+    protected Map<DataFormat, Object> toClipboard(@UnknownIfRecorded TypeExpression expression)
     {
         return ImmutableMap.of(
                 TypeEditor.TYPE_CLIPBOARD_TYPE, expression.save(true, TableAndColumnRenames.EMPTY),
