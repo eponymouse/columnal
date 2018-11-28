@@ -62,7 +62,7 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
     @Override
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        GenDataType genDataType = onlyNumTextTemporal ? new GenDataType(ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL)) : new GenDataType();
+        GenDataType genDataType = onlyNumTextTemporal ? new GenDataType(ImmutableSet.of(TypeKinds.NUM_TEXT_TEMPORAL), true) : new GenDataType(true);
         DataTypeAndManager generated = genDataType.generate(sourceOfRandomness, generationStatus);
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
