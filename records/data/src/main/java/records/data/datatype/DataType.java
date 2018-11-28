@@ -2056,6 +2056,7 @@ public class DataType implements StyledShowable
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND))
+                            .thenComparing((TemporalAccessor t) -> ZonedDateTime.from(t).getZone().toString())
                     );
             }
             throw new InternalException("Unknown date type: " + type);
