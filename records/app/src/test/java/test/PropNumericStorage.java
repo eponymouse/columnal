@@ -1,8 +1,10 @@
 package test;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.NumericColumnStorage;
@@ -42,8 +44,13 @@ public class PropNumericStorage
 
         List<String> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
-            out.add(storage.getType().getCollapsed(i).toString());
-        TestUtil.assertEqualList(input, out);
+            out.add(Utility.numberToString((Number)storage.getType().getCollapsed(i)));
+
+        ImmutableList<String> inputLessTrailingZeroes = input.stream()
+            .map(s -> s.replaceAll("\\.((?:0*[1-9])+)0+$", "\\.$1"))
+            .collect(ImmutableList.toImmutableList());
+        
+        TestUtil.assertEqualList(inputLessTrailingZeroes, out);
     }
 
     @Property
