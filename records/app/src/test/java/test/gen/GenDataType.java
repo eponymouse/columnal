@@ -56,7 +56,7 @@ public class GenDataType extends Generator<DataTypeAndManager>
     public GenDataType(ImmutableSet<TypeKinds> typeKinds, boolean mustHaveValues)
     {
         super(DataTypeAndManager.class);
-        genJellyType = new GenJellyType(typeKinds, ImmutableSet.of());
+        genJellyType = new GenJellyType(typeKinds, ImmutableSet.of(), mustHaveValues);
         this.mustHaveValues = mustHaveValues;
     }
     

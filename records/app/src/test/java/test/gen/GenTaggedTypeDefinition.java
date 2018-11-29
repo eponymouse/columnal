@@ -49,7 +49,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             }
             GenJellyType genDataType = new GenJellyType(ImmutableSet.of(NUM_TEXT_TEMPORAL,
                     BOOLEAN_TUPLE_LIST,
-                    BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()));
+                    BUILTIN_TAGGED), typeVars.stream().map(p -> p.getSecond()).collect(ImmutableSet.toImmutableSet()), false);
             
             // Outside type variables are not visible in a new tagged type:
             boolean noInner = r.nextInt() % 3 == 1;

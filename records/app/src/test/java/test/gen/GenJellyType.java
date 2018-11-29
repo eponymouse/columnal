@@ -57,6 +57,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
 
     private final ImmutableSet<TypeKinds> typeKinds;
     private final ImmutableSet<@ExpressionIdentifier String> availableTypeVars;
+    private final boolean mustHaveValues;
 
     public static class JellyTypeAndManager
     {
@@ -77,14 +78,15 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
 
     public GenJellyType(ImmutableSet<TypeKinds> typeKinds)
     {
-        this(typeKinds, ImmutableSet.of());
+        this(typeKinds, ImmutableSet.of(), false);
     }
 
-    public GenJellyType(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars)
+    public GenJellyType(ImmutableSet<TypeKinds> typeKinds, ImmutableSet<@ExpressionIdentifier String> availableTypeVars, boolean mustHaveValues)
     {
         super(JellyTypeAndManager.class);
         this.typeKinds = typeKinds;
         this.availableTypeVars = availableTypeVars;
+        this.mustHaveValues = mustHaveValues;
     }
 
     @Override
@@ -156,11 +158,16 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
     protected JellyType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
         TaggedTypeDefinition typeDefinition = null;
-        Collection<TaggedTypeDefinition> pool;
+        List<TaggedTypeDefinition> pool;
         if (typeKinds.contains(TypeKinds.BUILTIN_TAGGED))
-            pool = typeManager.getKnownTaggedTypes().values();
+            pool = new ArrayList<>(typeManager.getKnownTaggedTypes().values());
         else
-            pool = typeManager.getUserTaggedTypes().values();
+            pool = new ArrayList<>(typeManager.getUserTaggedTypes().values());
+        
+        if (mustHaveValues)
+        {
+            pool.removeIf(t -> t.getTags().isEmpty());
+        }
 
         // Limit it to 100 types:
         int typeIndex = r.nextInt(100);
