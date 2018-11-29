@@ -92,6 +92,7 @@ class Scene
 {
     @Pure @Nullable Window getWindow();
     void setFill(@Nullable Paint paint);
+    WritableImage snapshot(@Nullable WritableImage image);
 }
 
 package javafx.scene.control;
@@ -381,4 +382,9 @@ class StyleClassedTextArea
 class GenericStyledArea<PS, SEG, S>
 {
     void replace(@UnknownInitialization(org.fxmisc.richtext.GenericStyledArea.class) GenericStyledArea<PS, SEG, S> this, StyledDocument<PS, SEG, S> doc);
+}
+package javafx.embed.swing;
+class SwingFXUtils
+{
+    static BufferedImage fromFXImage(Image img, @Nullable BufferedImage bimg);
 }

@@ -22,6 +22,7 @@ import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -37,19 +38,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestKeyboardMovement extends ApplicationTest
+public class TestKeyboardMovement extends FXApplicationTest
 {
-    @OnThread(Tag.Any)
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        windowToUse = stage;
-    }
-
     /**
      * Check that keyboard moving around is consistent (right always selects more to the right, etc)
      * and reversible, and keeps the selected item in view.
