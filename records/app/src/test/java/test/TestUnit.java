@@ -52,7 +52,7 @@ public class TestUnit
         SingleUnit g = mgr.getDeclared("g");
         SingleUnit l = mgr.getDeclared("l");
         SingleUnit s = mgr.getDeclared("s");
-        SingleUnit d = mgr.getDeclared("$");
+        SingleUnit d = mgr.getDeclared("USD");
         assertEquals("m", Unit._test_make(m, 1).toString());
         assertEquals("m^-1", Unit._test_make(m, -1).toString());
         assertEquals("s^-1", Unit._test_make(s, -1).toString());

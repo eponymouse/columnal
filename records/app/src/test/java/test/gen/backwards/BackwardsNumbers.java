@@ -132,7 +132,7 @@ public class BackwardsNumbers extends BackwardsProvider
                 m.loadUse("deg"),
                 m.loadUse("s"),
                 m.loadUse("hour"),
-                m.loadUse("$")
+                m.loadUse("USD")
         ));
     }
 }

@@ -691,7 +691,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
             m.loadUse("deg"),
             m.loadUse("s"),
             m.loadUse("hour"),
-            m.loadUse("$")
+            m.loadUse("USD")
         ));
     }
 
