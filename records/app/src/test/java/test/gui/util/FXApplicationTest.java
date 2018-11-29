@@ -38,6 +38,7 @@ public class FXApplicationTest extends ApplicationTest
             }
             else
             {
+                System.out.println("Window no longer showing, stopping screenshots");
                 timeline.stop();
             }
         }));

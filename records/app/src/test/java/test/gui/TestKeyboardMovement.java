@@ -48,6 +48,7 @@ public class TestKeyboardMovement extends FXApplicationTest
     @OnThread(Tag.Simulation)
     public void testKeyboardMovement(@When(seed=1L) @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
+        Log.debug("Beginning testKeyboardMovement");
         VirtualGrid virtualGrid = TestUtil.openDataAsTable(windowToUse, src.mgr).get()._test_getVirtualGrid();
         targetWindow(windowToUse);
         push(KeyCode.CONTROL, KeyCode.HOME);
@@ -61,7 +62,7 @@ public class TestKeyboardMovement extends FXApplicationTest
             List<KeyCode> presses = Utility.replicate(dist, r.nextBoolean() ? KeyCode.DOWN : KeyCode.RIGHT);
             for (KeyCode keyCode : presses)
             {
-                //Log.debug("Pressing: " + keyCode + " Focus owner: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+                Log.debug("Pressing: " + keyCode + " Focus owner: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
                 push(keyCode);
             }
             paths.add(new Pair<>(
@@ -84,6 +85,7 @@ public class TestKeyboardMovement extends FXApplicationTest
         }
         // Should be back at origin:
         assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));
+        Log.debug("Ending testKeyboardMovement");
     }
 
     @OnThread(Tag.Any)
