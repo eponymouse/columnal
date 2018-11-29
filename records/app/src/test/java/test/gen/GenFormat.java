@@ -46,9 +46,9 @@ public class GenFormat extends Generator<FinalTextFormat>
         try
         {
             currencies = Arrays.asList(
-                DummyManager.INSTANCE.getUnitManager().loadUse("$"),
-                DummyManager.INSTANCE.getUnitManager().loadUse("£"),
-                DummyManager.INSTANCE.getUnitManager().loadUse("€")
+                DummyManager.INSTANCE.getUnitManager().loadUse("USD"),
+                DummyManager.INSTANCE.getUnitManager().loadUse("GBP"),
+                DummyManager.INSTANCE.getUnitManager().loadUse("EUR")
             );
         }
         catch (InternalException | UserException e)
