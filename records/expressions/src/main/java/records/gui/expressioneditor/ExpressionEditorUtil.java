@@ -328,20 +328,28 @@ public class ExpressionEditorUtil
         });
         
         typeLabel.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.LEFT && e.isShiftDown())
+            if (e.getCode() == KeyCode.LEFT)
             {
+                if (!e.isShiftDown())
+                    node.getParent().getEditor().clearSelection();
                 node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.LEFT);
             }
-            else if (e.getCode() == KeyCode.RIGHT && e.isShiftDown())
+            else if (e.getCode() == KeyCode.RIGHT)
             {
+                if (!e.isShiftDown())
+                    node.getParent().getEditor().clearSelection();
                 node.getParent().getEditor().extendSelectionTo(node, SelectionTarget.RIGHT);
             }
-            else if (e.getCode() == KeyCode.HOME && e.isShiftDown())
+            else if (e.getCode() == KeyCode.HOME)
             {
+                if (!e.isShiftDown())
+                    node.getParent().getEditor().clearSelection();
                 node.getParent().getEditor().extendSelectionToExtremity(node, SelectExtremityTarget.HOME);
             }
-            else if (e.getCode() == KeyCode.END && e.isShiftDown())
+            else if (e.getCode() == KeyCode.END)
             {
+                if (!e.isShiftDown())
+                    node.getParent().getEditor().clearSelection();
                 node.getParent().getEditor().extendSelectionToExtremity(node, SelectExtremityTarget.END);
             }
             else if (e.getCode() == KeyCode.BACK_SPACE || e.getCode() == KeyCode.DELETE)
