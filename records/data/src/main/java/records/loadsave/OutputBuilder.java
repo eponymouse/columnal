@@ -89,7 +89,7 @@ public class OutputBuilder
     }
 
     @OnThread(Tag.Any)
-    private static String stripQuotes(String quoted)
+    public static String stripQuotes(String quoted)
     {
         if (quoted.startsWith("'") && quoted.endsWith("'"))
             return quoted.substring(1, quoted.length() - 1);

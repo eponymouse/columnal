@@ -13,10 +13,12 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.FormatLexer;
 import records.gui.expressioneditor.TypeEntry;
 import records.gui.expressioneditor.UnitLiteralTypeNode;
 import records.jellytype.JellyType;
 import records.jellytype.JellyUnit;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.UnitExpression;
 import styled.StyledString;
@@ -47,6 +49,8 @@ public class TypeApplyExpression extends TypeExpression
     public String save(boolean structured, TableAndColumnRenames renames)
     {
         StringBuilder sb = new StringBuilder();
+        if (structured)
+            sb.append(OutputBuilder.stripQuotes(FormatLexer.VOCABULARY.getLiteralName(FormatLexer.APPLY)));
         sb.append(typeName);
         for (int i = 0; i < arguments.size(); i++)
         {
