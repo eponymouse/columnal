@@ -137,19 +137,30 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
     @Override
     public void focus(Focus side)
     {
-        //Log.debug("### Focusing now: " + textField + " Editable: " + textField.isEditable() + " Scene: " + textField.getScene());
-        textField.requestFocus();
-        if (!textField.isFocused())
+        if (!textField.isEditable())
         {
-            Log.error("Text field not focused, editable: " + textField.isEditable() + " disabled: " + textField.isDisabled() + " in scene: " + (textField.getScene() != null));
-        }
-        if (side == Focus.LEFT)
-        {
-            textField.positionCaret(0);
+            if (side == Focus.LEFT)
+                parent.focusLeftOf(this);
+            else
+                parent.focusRightOf(this, Focus.LEFT, false);
         }
         else
         {
-            textField.positionCaret(textField.getLength());
+
+            //Log.debug("### Focusing now: " + textField + " Editable: " + textField.isEditable() + " Scene: " + textField.getScene());
+            textField.requestFocus();
+            if (!textField.isFocused())
+            {
+                Log.error("Text field not focused, editable: " + textField.isEditable() + " disabled: " + textField.isDisabled() + " in scene: " + (textField.getScene() != null));
+            }
+            if (side == Focus.LEFT)
+            {
+                textField.positionCaret(0);
+            }
+            else
+            {
+                textField.positionCaret(textField.getLength());
+            }
         }
     }
 
