@@ -33,12 +33,6 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
         this.expressionClass = expressionClass;
         // Don't quite understand why I need to wrap this in a later call:
         textField = Utility.later(new LeaveableTextField(this, parent) {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void home()
-            {
-                parent.focusBlankAtLeft();
-            }
 
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)

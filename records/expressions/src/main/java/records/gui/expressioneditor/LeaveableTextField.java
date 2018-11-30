@@ -58,6 +58,20 @@ public class LeaveableTextField extends TextField
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void home()
+    {
+        parent.getEditor().focus(Focus.LEFT);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void end()
+    {
+        parent.getEditor().focus(Focus.RIGHT);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void selectHome()
     {
         parent.getEditor().extendSelectionToExtremity(us, SelectExtremityTarget.HOME);
