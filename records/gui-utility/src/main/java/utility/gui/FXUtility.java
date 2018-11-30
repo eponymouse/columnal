@@ -830,6 +830,25 @@ public class FXUtility
         }
     }
 
+    // What's the shortest distance from the point to the left-hand side of the node?
+    public static double distanceToRight(Node node, Point2D pointInScene)
+    {
+        Bounds boundsInScene = node.localToScene(node.getBoundsInLocal());
+        if (pointInScene.getY() < boundsInScene.getMinY())
+        {
+            return Math.hypot(pointInScene.getX() - boundsInScene.getMaxX(), pointInScene.getY() - boundsInScene.getMinY());
+        }
+        else if (pointInScene.getY() > boundsInScene.getMaxY())
+        {
+            return Math.hypot(pointInScene.getX() - boundsInScene.getMaxX(), pointInScene.getY() - boundsInScene.getMaxY());
+        }
+        else
+        {
+            // On same vertical level as edge, so just use difference:
+            return Math.abs(pointInScene.getX() - boundsInScene.getMaxX());
+        }
+    }
+
     @OnThread(Tag.Any)
     public static void logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
