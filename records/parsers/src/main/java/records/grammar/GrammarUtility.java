@@ -90,7 +90,7 @@ public class GrammarUtility
         if (!Character.isAlphabetic(firstCodepoint))
             return false;
         // Underscore is not letter or digit, so needs special case here:
-        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_' || c == '.' || c ==' ');
+        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_' || c ==' ');
     }
     
     public static boolean validIdentifier(String s)
