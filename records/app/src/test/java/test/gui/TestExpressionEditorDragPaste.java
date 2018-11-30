@@ -2,6 +2,7 @@ package test.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -21,7 +22,12 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.EditableRecordSet;
+import records.data.ImmediateDataSource;
 import records.data.KnownLengthRecordSet;
+import records.data.Table.InitialLoadDetails;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.gui.MainWindow.MainWindowActions;
@@ -73,8 +79,17 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
                           MoveMethod moveMethod,
                           Random r) throws Exception
     {
-        DummyManager typeManager = new DummyManager();
-        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, typeManager.getTypeManager(), new KnownLengthRecordSet(ImmutableList.of(), 0));
+        TableManager tableManager = new DummyManager();
+        ImmediateDataSource dummySource = new ImmediateDataSource(tableManager, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN, null), new EditableRecordSet(ImmutableList.of(), () -> 0));
+        tableManager.record(dummySource);
+        Calculate calculate = new Calculate(tableManager,
+            new InitialLoadDetails(new TableId("Table1"),
+                new CellPosition(CellPosition.row(1), CellPosition.col(2)),
+                null),
+            new TableId("Src"), ImmutableMap.of(new ColumnId("Col"), expression));
+        tableManager.record(calculate);
+        
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, tableManager).get();
         try
         {
             View view = lookup(".view").query();
@@ -85,25 +100,7 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
             }
             
             Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
-            CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(1));
-            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
-            // Only need to click once as already selected by keyboard:
-            for (int i = 0; i < 1; i++)
-                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-            // Not sure why this doesn't work:
-            //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-            clickOn(".id-new-transform");
-            clickOn(".id-transform-calculate");
-            write("Table1");
-            push(KeyCode.ENTER);
-            TestUtil.sleep(200);
-            write("DestCol");
-            // Focus expression editor:
-            push(KeyCode.TAB);
-            Log.normal("Entering expression:\n" + expression.toString() + "\n");
-            enterExpression(expression, false, r);
-
-            clickOk();
+            
             Expression entered = getExpressionFromCalculate(view);
             // Check expressions match:
             assertEquals(expression, entered);
@@ -115,7 +112,7 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
             assertNotNull(editorPane);
             if (editorPane == null) return;
             TopLevelEditor<?, ?> expressionEditor = editorPane._test_getEditor();
-            ImmutableList<Label> headers = TestUtil.fx(() -> expressionEditor._test_getHeaders().map(Pair::getFirst).collect(ImmutableList.toImmutableList()));
+            ImmutableList<Label> headers = getHeaders(expressionEditor);
             clickOn(headers.get(startNodeIndexIncl));
             press(KeyCode.SHIFT);
             clickOn(headers.get(endNodeIndexIncl));
@@ -123,22 +120,43 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
             if (moveMethod == MoveMethod.CUT_PASTE)
             {
                 push(KeyCode.SHORTCUT, KeyCode.X);
-                headers = TestUtil.fx(() -> expressionEditor._test_getHeaders().map(Pair::getFirst).collect(ImmutableList.toImmutableList()));
+                headers = getHeaders(expressionEditor);
                 int adjustedDest;
                 if (destBeforeNodexIndexIncl < startNodeIndexIncl)
                     adjustedDest = destBeforeNodexIndexIncl;
                 else
                     adjustedDest = destBeforeNodexIndexIncl - (endNodeIndexIncl - startNodeIndexIncl + 1);
-                clickOn(headers.get(adjustedDest));
-                push(KeyCode.DOWN);
-                push(KeyCode.LEFT);
+                if (adjustedDest >= headers.size())
+                {
+                    clickOn(headers.get(headers.size() - 1));
+                    push(KeyCode.DOWN);
+                    push(KeyCode.END);
+                }
+                else
+                {
+                    clickOn(headers.get(adjustedDest));
+                    push(KeyCode.DOWN);
+                    push(KeyCode.LEFT);
+                }
                 push(KeyCode.SHORTCUT, KeyCode.V);
             }
             else
             {
+                headers = getHeaders(expressionEditor);
                 drag(headers.get(startNodeIndexIncl), MouseButton.PRIMARY);
-                Node target = headers.get(destBeforeNodexIndexIncl);
-                dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX() + (moveMethod == MoveMethod.DRAG_LEFT ? -2 : 2)), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 1));
+                if (headers.size() == destBeforeNodexIndexIncl)
+                {
+                    Node target = headers.get(destBeforeNodexIndexIncl - 1);
+                    assertNotNull(target);
+                    dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX() + (moveMethod == MoveMethod.DRAG_LEFT ? -2 : 2)), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 1));
+                }
+                else
+                {
+                    Node target = headers.get(destBeforeNodexIndexIncl);
+                    assertNotNull(target);
+                    assertTrue("Target " + destBeforeNodexIndexIncl + " not in scene, total " + headers.size(), TestUtil.fx(() -> target.getScene() != null));
+                    dropTo(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX() + (moveMethod == MoveMethod.DRAG_LEFT ? -2 : 2)), TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY() + 1));
+                }
             }
             clickOk();
             entered = getExpressionFromCalculate(view);
@@ -158,6 +176,12 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
             Stage s = windowToUse;
             Platform.runLater(() -> s.hide());
         }
+    }
+
+    @OnThread(Tag.Any)
+    private ImmutableList<Label> getHeaders(TopLevelEditor<?, ?> expressionEditor)
+    {
+        return TestUtil.fx(() -> expressionEditor._test_getHeaders().map(Pair::getFirst).collect(ImmutableList.toImmutableList()));
     }
 
     private void clickOk()
@@ -190,7 +214,8 @@ public class TestExpressionEditorDragPaste extends ApplicationTest implements Li
 
         for (MoveMethod moveMethod : MoveMethod.values())
         {
-            // Don't try to drag to left of first item:
+            // Don't try to drag to left of first item or right of last:
+            // TODO we should probably allow this...
             if (destBeforeNodexIndexIncl > 0 || moveMethod != MoveMethod.DRAG_LEFT)
             {
                 testMove(expression, startNodeIndexIncl, endNodeIndexIncl, destBeforeNodexIndexIncl, after, moveMethod, new Random(1L));
