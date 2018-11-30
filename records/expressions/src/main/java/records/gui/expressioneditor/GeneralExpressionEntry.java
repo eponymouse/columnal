@@ -613,9 +613,21 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
             }
             else if (c instanceof KeywordCompletion)
             {
-
                 String content = ((KeywordCompletion) c).keyword.getContent();
-                if ((content.equals(")") && parent.balancedBrackets(BracketBalanceType.ROUND)) || (content.equals("]") && parent.balancedBrackets(BracketBalanceType.SQUARE)))
+
+                @Nullable BracketBalanceType bracketBalanceType = null;
+                if (content.equals(")"))
+                    bracketBalanceType = BracketBalanceType.ROUND;
+                else if (content.equals("]"))
+                    bracketBalanceType = BracketBalanceType.SQUARE;
+                
+                boolean followedByClose = false;
+                ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> siblings = parent.getAllChildren();
+                int index = Utility.indexOfRef(siblings, this);
+                if (index + 1 < siblings.size() && bracketBalanceType != null)
+                    followedByClose = siblings.get(index + 1).closesBracket(bracketBalanceType);
+                
+                if (bracketBalanceType != null && parent.balancedBrackets(bracketBalanceType) && followedByClose)
                 {
                     newText = "";
                     moveFocus = true;
