@@ -48,7 +48,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
-            Expression.parse(null, "@column \"Card\"", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column Card", DummyManager.INSTANCE.getTypeManager())
         );
     }
     @Test
@@ -60,7 +60,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            Expression.parse(null, "@column \"Card\" <> \"xxx\"", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column Card <> \"xxx\"", DummyManager.INSTANCE.getTypeManager())
         );
         assertBothWays(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
