@@ -1,16 +1,17 @@
 package test.gui;
 
+import com.google.common.collect.Streams;
 import javafx.scene.Node;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Window;
 import org.apache.commons.lang3.SystemUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+
+import java.util.stream.Collectors;
 
 public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
 {
@@ -19,7 +20,10 @@ public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
     {
         Node focusOwner = getFocusOwner();
         if (!(focusOwner instanceof TextInputControl))
-            throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()));
+            throw new RuntimeException("Focus owner is " + (focusOwner == null ? "null" : focusOwner.getClass().toString()) 
+                + "\nTarget window is " + targetWindow() + " " + TestUtil.fx(() -> targetWindow().isFocused())
+                //+ "\nOut of " + TestUtil.fx(() -> Streams.stream(Window.impl_getWindows()).map(w -> w.toString() + ":" + w.isFocused()).collect(Collectors.joining("/")))
+            );
         TextInputControl textField = (TextInputControl) focusOwner;
 
         // Some sort of bug on OS X prevents Cmd-A working in TestFX:
