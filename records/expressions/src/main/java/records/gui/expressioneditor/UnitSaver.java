@@ -89,7 +89,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             // Raise is a special case as it doesn't need to be bracketed:
             for (int i = 0; i < validOperators.size(); i++)
             {
-                if (validOperators.get(i).equals(UnitOp.RAISE))
+                if (validOperators.get(i).op.equals(UnitOp.RAISE))
                 {
                     if (validOperands.get(i) instanceof SingleUnitExpression && i + 1 < validOperands.size() && validOperands.get(i + 1) instanceof UnitExpressionIntLiteral)
                     {
