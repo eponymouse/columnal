@@ -506,7 +506,6 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.20.1</version>
                 <configuration>
-                    <argLine>-Xmx1G -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999 -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1280x1024-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
                     <!-- <argLine>-Xmx1G</argLine> -->
                     <skipAfterFailureCount>0</skipAfterFailureCount>
                     <includes>
@@ -545,6 +544,36 @@
 
         </plugins>
     </build>
+    
+    <profiles>
+        <profile>
+        <id>headless</id>
+
+        <activation>
+            <property>
+                <name>headless</name>
+                <value>true</value>
+            </property>
+        </activation>
+
+        <build>
+        <pluginManagement>
+        <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <!-- surefire is for unit tests, ours are really integration tests so we use failsafe -->
+            <!-- See https://stackoverflow.com/questions/28986005/what-is-the-difference-between-the-maven-surefire-and-maven-failsafe-plugins -->
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>2.20.1</version>
+            <configuration>
+                <argLine>-Xmx1G -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999 -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1280x1024-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
+            </configuration>
+        </plugin>
+        </plugins>
+        </pluginManagement>
+        </build>
+        </profile>
+    </profiles>
 
     <reporting>
         <plugins>
