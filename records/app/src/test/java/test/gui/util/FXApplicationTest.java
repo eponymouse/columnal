@@ -13,6 +13,7 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.testfx.framework.junit.ApplicationTest;
+import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
@@ -32,7 +33,7 @@ public class FXApplicationTest extends ApplicationTest
         {
             super.failed(e, description);
             System.out.println("Screenshot of failure: ");
-            dumpScreenshot(windowToUse);
+            TestUtil.fx_(() -> dumpScreenshot(windowToUse));
         }
     };
     
