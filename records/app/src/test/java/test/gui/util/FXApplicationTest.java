@@ -9,6 +9,9 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.testfx.framework.junit.ApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -21,6 +24,18 @@ import java.util.Base64;
 
 public class FXApplicationTest extends ApplicationTest
 {
+    @Rule
+    public TestWatcher screenshotOnFail = new TestWatcher()
+    {
+        @Override
+        protected void failed(Throwable e, Description description)
+        {
+            super.failed(e, description);
+            System.out.println("Screenshot of failure: ");
+            dumpScreenshot(windowToUse);
+        }
+    };
+    
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     protected Stage windowToUse;

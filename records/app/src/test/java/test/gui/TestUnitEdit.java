@@ -31,6 +31,7 @@ import records.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenUnitDefinition;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -44,19 +45,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestUnitEdit extends ApplicationTest implements TextFieldTrait
+public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
 {
-    @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-    }
-    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testNewUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails unitDetails) throws Exception
