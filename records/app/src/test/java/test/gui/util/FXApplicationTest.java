@@ -32,7 +32,10 @@ public class FXApplicationTest extends ApplicationTest
         protected void failed(Throwable e, Description description)
         {
             super.failed(e, description);
-            System.out.println("Screenshot of failure: ");
+            e.printStackTrace();
+            if (e.getCause() != null)
+                e.getCause().printStackTrace();
+            System.err.println("Screenshot of failure: ");
             TestUtil.fx_(() -> dumpScreenshot(windowToUse));
         }
     };
@@ -75,7 +78,7 @@ public class FXApplicationTest extends ApplicationTest
         }
         catch (IOException e)
         {
-            System.out.println("Cannot write screenshot: " + e.getLocalizedMessage());
+            System.err.println("Cannot write screenshot: " + e.getLocalizedMessage());
             return;
         }
         String base64Image = Base64.getEncoder().encodeToString(baos.toByteArray());

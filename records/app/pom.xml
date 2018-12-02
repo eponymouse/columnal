@@ -510,8 +510,8 @@
                     <!-- <argLine>-Xmx1G</argLine> -->
                     <skipAfterFailureCount>0</skipAfterFailureCount>
                     <includes>
-                        <include>**/Test*.java</include>
-                        <include>**/Prop*.java</include>
+                        <include>**/TestUnitEdit.java</include>
+                        <!-- <include>**/Prop*.java</include> -->
                     </includes>
                     <!-- Uncomment to exclude GUI tests from Maven test (can still run direct from IDE): -->
                     <!--
