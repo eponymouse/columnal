@@ -46,7 +46,7 @@ public class FXApplicationTest extends ApplicationTest
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public final void start(Stage stage) throws Exception
+    public void start(Stage stage) throws Exception
     {
         windowToUse = stage;
         Timeline timeline = new Timeline();
@@ -69,6 +69,11 @@ public class FXApplicationTest extends ApplicationTest
     @OnThread(Tag.FXPlatform)
     protected final static void dumpScreenshot(Window target)
     {
+        if (target.getScene() == null)
+        {
+            System.err.println("Window " + target + " does not have a scene");
+            return;
+        }
         // From https://stackoverflow.com/questions/31407382/javafx-chart-to-image-to-base64-string-use-in-php
         WritableImage image = target.getScene().snapshot(null);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

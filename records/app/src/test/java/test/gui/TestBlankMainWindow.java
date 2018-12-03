@@ -46,6 +46,7 @@ import test.gen.GenNumber;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -68,11 +69,10 @@ import static org.junit.Assert.*;
  */
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait, FocusOwnerTrait
+public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilTrait, ScrollToTrait, ClickTableLocationTrait, EnterTypeTrait, EnterStructuredValueTrait, FocusOwnerTrait, TextFieldTrait
 {
     public static final CellPosition NEW_TABLE_POS = new CellPosition(CellPosition.row(1), CellPosition.col(1));
-    @SuppressWarnings("nullness")
-    private @NonNull Stage mainWindow;
+    
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull MainWindowActions mainWindowActions;
@@ -80,10 +80,10 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @Override
     public void start(Stage stage) throws Exception
     {
+        super.start(stage);
         File dest = File.createTempFile("blank", "rec");
         dest.deleteOnExit();
         mainWindowActions = MainWindow.show(stage, dest, null);
-        mainWindow = stage;
     }
 
     @After
@@ -101,9 +101,10 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     public void testStartState()
     {
-        assertTrue(TestUtil.fx(() -> mainWindow.isShowing()));
+        assertTrue(TestUtil.fx(() -> windowToUse.isShowing()));
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().size()));
         assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
+        assertEquals(1, (int) TestUtil.fx(() -> listWindows().size()));
     }
 
     @Test
