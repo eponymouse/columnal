@@ -4,7 +4,9 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.Scene;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -12,8 +14,11 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.testfx.api.FxRobot;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 import test.TestUtil;
+import test.gui.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
@@ -23,7 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 
-public class FXApplicationTest extends ApplicationTest
+public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait
 {
     @Rule
     public TestWatcher screenshotOnFail = new TestWatcher()
@@ -88,5 +93,31 @@ public class FXApplicationTest extends ApplicationTest
         }
         String base64Image = Base64.getEncoder().encodeToString(baos.toByteArray());
         System.out.println("<img src=\"data:image/png;base64, " + base64Image + "\">");
-    }    
+    }
+
+    // Because of the bug in TestFX+monocle where multiple windows
+    // return true from isFocused(), write can write to the wrong
+    // window.  So we override the methods and use our own
+    // getRealFocusedWindow() method to find the right window.
+    
+    @Override
+    public FxRobot write(String text, int sleepMillis)
+    {
+        Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
+        robotContext().getBaseRobot().typeKeyboard(scene, KeyCode.UNDEFINED, text);
+        WaitForAsyncUtils.waitForFxEvents();
+        return this;
+    }
+
+    @Override
+    public FxRobot write(String text)
+    {
+        return write(text, 0);
+    }
+
+    @Override
+    public FxRobot write(char character)
+    {
+        return write(Character.toString(character));
+    }
 }
