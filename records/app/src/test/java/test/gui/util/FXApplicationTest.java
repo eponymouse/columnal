@@ -21,6 +21,7 @@ import test.TestUtil;
 import test.gui.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import javax.imageio.ImageIO;
@@ -106,8 +107,10 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     public FxRobot write(String text, int sleepMillis)
     {
         Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
-        robotContext().getBaseRobot().typeKeyboard(scene, KeyCode.UNDEFINED, text);
-        WaitForAsyncUtils.waitForFxEvents();
+        text.chars().forEach(c -> {
+            robotContext().getBaseRobot().typeKeyboard(scene, KeyCode.UNDEFINED, Utility.codePointToString(c));
+            WaitForAsyncUtils.waitForFxEvents();
+        });
         return this;
     }
 
