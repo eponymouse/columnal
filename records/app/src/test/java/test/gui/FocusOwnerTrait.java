@@ -18,6 +18,13 @@ public interface FocusOwnerTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default @Nullable Node getFocusOwner()
     {
+        Window curWindowFinal = TestUtil.fx(() -> getRealFocusedWindow());
+        return TestUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
+    }
+
+    @OnThread(Tag.FXPlatform)
+    default Window getRealFocusedWindow()
+    {
         List<Window> curWindow = new ArrayList<>(listWindows().stream().filter(Window::isFocused).collect(Collectors.toList()));
         if (curWindow.isEmpty())
             throw new RuntimeException("No focused window?!");
@@ -33,8 +40,7 @@ public interface FocusOwnerTrait extends FxRobotInterface
             });
         }
         // Fall back to targetWindow if we still haven't narrowed it down:
-        Window curWindowFinal = curWindow.size() == 1 ? curWindow.get(0) : targetWindow();
-        return TestUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
+        return curWindow.size() == 1 ? curWindow.get(0) : targetWindow();
     }
 
     @OnThread(Tag.Any)
@@ -42,7 +48,13 @@ public interface FocusOwnerTrait extends FxRobotInterface
     {
         Node node = getFocusOwner();
         if (!expectedClass.isInstance(node))
-            throw new RuntimeException("Focus owner is " + (node == null ? "null" : node.getClass().toString()) + " but expected " + expectedClass);
+            throw new RuntimeException("Focus owner is " + (node == null ? "null" : node.getClass().toString()) + " but expected " + expectedClass + " Target window: " + targetWindow() + " Real focused window: " + TestUtil.fx(() -> getRealFocusedWindow()));
         return expectedClass.cast(node);
+    }
+
+    @OnThread(Tag.Any) 
+    default void correctTargetWindow()
+    {
+        targetWindow(TestUtil.fx(() -> getRealFocusedWindow()));
     }
 }
