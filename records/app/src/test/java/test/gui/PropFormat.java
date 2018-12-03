@@ -18,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
@@ -70,6 +71,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
+@Ignore
 public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
