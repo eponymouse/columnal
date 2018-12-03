@@ -39,6 +39,7 @@ import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import test.gen.GenRandom;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -56,18 +57,8 @@ import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditor extends ApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait
+public class TestExpressionEditor extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait
 {
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-    }
-
     @Override
     @OnThread(value = Tag.Any)
     public FxRobot write(char character)

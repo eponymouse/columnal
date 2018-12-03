@@ -30,6 +30,7 @@ import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -47,18 +48,8 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorPosition extends ApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait
-{
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-    }
-    
+public class TestExpressionEditorPosition extends FXApplicationTest implements ScrollToTrait, ListUtilTrait, ClickTableLocationTrait, FocusOwnerTrait
+{    
     @Test
     public void testPosition1()
     {

@@ -22,6 +22,7 @@ import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -41,14 +42,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestFilter extends ApplicationTest implements ListUtilTrait, ScrollToTrait
+public class TestFilter extends FXApplicationTest implements ListUtilTrait, ScrollToTrait
 {
-    @OnThread(Tag.Any)
-    private Stage windowToUse;
-
-    @SuppressWarnings("nullness")
-    public TestFilter() { }
-
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propNumberFilter(
@@ -85,12 +80,5 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait, Scroll
         // Need to fish out first column from clip, then compare item:
         List<@Value Object> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).collect(Collectors.toList());
         TestUtil.assertValueListEqual("Filtered", expected, clip.get().get(0).getSecond());
-    }
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        windowToUse = stage;
     }
 }

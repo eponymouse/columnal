@@ -58,6 +58,7 @@ import records.gui.stf.TableDisplayUtility.GetDataPosition;
 import test.TestUtil;
 import test.gen.*;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -115,7 +116,7 @@ import static test.TestUtil.sim;
  */
 @SuppressWarnings({"initialization", "deprecation"})
 @RunWith(JUnitQuickcheck.class)
-public class TestStructuredTextField extends ApplicationTest
+public class TestStructuredTextField extends FXApplicationTest
 {
     private DataDisplay dataDisplay;
     private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
@@ -125,6 +126,7 @@ public class TestStructuredTextField extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
+        super.start(stage);
         VirtualGrid virtualGrid = new VirtualGrid(null, 0, 0);
         dataDisplay = new DataDisplay(null, new TableId("TestTable"), null, virtualGrid.getFloatingSupplier())
         {

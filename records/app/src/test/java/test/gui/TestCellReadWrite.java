@@ -26,6 +26,7 @@ import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import test.gen.GenValueSpecifiedType;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -42,26 +43,14 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestCellReadWrite extends ApplicationTest implements ScrollToTrait, FocusOwnerTrait
+public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait
 {
-    @OnThread(Tag.Any)
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private VirtualGrid virtualGrid;
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private TableManager tableManager;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-        FXUtility._test_setTestingMode();
-    }
 
     @Property(trials = 3)
     @OnThread(Tag.Simulation)

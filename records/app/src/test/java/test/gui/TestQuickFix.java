@@ -41,6 +41,7 @@ import records.transformations.TransformationInfo;
 import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.TestUtil;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationFunction;
@@ -58,18 +59,8 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestQuickFix extends ApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait
+public class TestQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait
 {
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-    }
-    
     // Test that adding two strings suggests a quick fix to switch to string concatenation
     @Test
     @OnThread(Tag.Simulation)

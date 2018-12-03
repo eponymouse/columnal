@@ -37,6 +37,7 @@ import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationFunction;
@@ -50,19 +51,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTableUpdate extends ApplicationTest implements ScrollToTrait, FocusOwnerTrait
-{
-    @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-    }
-    
+public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait
+{    
     /**
      * We make a two-column table, and two chained transformations of it, so that it all fits on screen
      * (if any update problems appear, it will be most noticeable if the relevant value is already shown).

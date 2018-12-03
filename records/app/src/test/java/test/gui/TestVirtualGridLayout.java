@@ -35,6 +35,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import test.TestUtil;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestVirtualGridLayout extends ApplicationTest
+public class TestVirtualGridLayout extends FXApplicationTest
 {
     public static final int WINDOW_WIDTH = 810;
     public static final int WINDOW_HEIGHT = 600;
@@ -62,6 +63,7 @@ public class TestVirtualGridLayout extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
+        super.start(stage);
         dummySupplier = new DummySupplier();
         virtualGrid = new VirtualGrid(null, 0, 0);
         virtualGrid.addNodeSupplier(dummySupplier);

@@ -46,6 +46,7 @@ import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTaggedTypeDefinition;
 import test.gen.GenUnitDefinition;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -61,19 +62,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTypeEdit extends ApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds
-{
-    @SuppressWarnings("nullness")
-    @OnThread(Tag.Any)
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-    }
-    
+public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds
+{    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception

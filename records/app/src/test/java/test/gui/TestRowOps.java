@@ -45,6 +45,7 @@ import test.gen.GenExpressionValueForwards;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -65,13 +66,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait
+public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait
 {
     @SuppressWarnings("units")
     public static final @TableDataRowIndex int ONE_ROW = 1;
-    @OnThread(Tag.Any)
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
     
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
@@ -79,15 +77,6 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait, ClickO
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     private TableManager tableManager;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-        FXUtility._test_setTestingMode();
-    }
-
 
     /**
      * Generates a file with some raw data and a transform, then loads it and deletes a row in the source table.

@@ -22,6 +22,7 @@ import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -34,21 +35,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, CheckCSVTrait
+public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait, CheckCSVTrait
 {
-    @OnThread(Tag.Any)
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-        FXUtility._test_setTestingMode();
-    }
-
-
     /**
      * Generates a file with some raw data and a transform, then loads it and exports to CSV
      */

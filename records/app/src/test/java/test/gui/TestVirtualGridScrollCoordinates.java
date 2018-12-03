@@ -37,6 +37,7 @@ import records.gui.grid.VirtualGridSupplier.VisibleBounds;
 import records.gui.grid.VirtualGridSupplierFloating.FloatingItem;
 import styled.StyledString;
 import test.TestUtil;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -49,7 +50,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestVirtualGridScrollCoordinates extends ApplicationTest
+public class TestVirtualGridScrollCoordinates extends FXApplicationTest
 {
     private final double ORIGINAL_SCROLL = 5001.0;
     @SuppressWarnings("nullness")
@@ -63,6 +64,7 @@ public class TestVirtualGridScrollCoordinates extends ApplicationTest
     @Override
     public void start(Stage stage) throws Exception
     {
+        super.start(stage);
         virtualGrid = new VirtualGrid(null, 0, 0);
         stage.setScene(new Scene(new BorderPane(virtualGrid.getNode())));
         stage.setWidth(800);

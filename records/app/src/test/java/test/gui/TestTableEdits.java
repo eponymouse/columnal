@@ -46,6 +46,7 @@ import test.gen.GenColumnId;
 import test.gen.GenTableId;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -68,11 +69,8 @@ import static org.junit.Assert.fail;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestTableEdits extends ApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait
+public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait
 {
-    @SuppressWarnings("nullness")
-    private @NonNull Stage mainWindow;
-
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private @NonNull VirtualGrid virtualGrid;
@@ -95,7 +93,7 @@ public class TestTableEdits extends ApplicationTest implements ClickTableLocatio
     @Override
     public void start(Stage stage) throws Exception
     {
-        mainWindow = stage;
+        super.start(stage);
         TableManager dummyManager = new DummyManager();
         Workers.onWorkerThread("Making tables", Priority.FETCH, () -> {
             try

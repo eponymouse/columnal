@@ -42,6 +42,7 @@ import records.importers.gui.ImporterGUI.PickOrOther;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenFormattedData;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -69,7 +70,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class PropFormat extends ApplicationTest implements ComboUtilTrait
+public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
     @OnThread(Tag.Simulation)

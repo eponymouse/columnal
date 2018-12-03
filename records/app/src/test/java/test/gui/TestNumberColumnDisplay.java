@@ -30,6 +30,7 @@ import records.gui.MainWindow.MainWindowActions;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -49,20 +50,8 @@ import static org.junit.Assert.*;
 
 @OnThread(Tag.Simulation)
 @RunWith(JUnitQuickcheck.class)
-public class TestNumberColumnDisplay extends ApplicationTest
+public class TestNumberColumnDisplay extends FXApplicationTest
 {
-    @OnThread(Tag.Any)
-    @SuppressWarnings("nullness")
-    private Stage windowToUse;
-
-    @Override
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void start(Stage stage) throws Exception
-    {
-        this.windowToUse = stage;
-        FXUtility._test_setTestingMode();
-    }
-
     @OnThread(Tag.Any)
     private static enum Target { FAR_LEFT, INSIDE_LEFT, MIDDLE, INSIDE_RIGHT, FAR_RIGHT }
     
