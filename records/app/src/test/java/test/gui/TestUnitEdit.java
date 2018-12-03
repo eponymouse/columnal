@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
@@ -76,15 +77,15 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
     @OnThread(Tag.Simulation)
     private void enterUnitDetails(GenUnitDefinition.UnitDetails unitDetails) throws InternalException
     {
-        selectAllCurrentTextField();
+        correctTargetWindow();
+        TextInputControl input = selectAllCurrentTextField();
         write(unitDetails.name);
-        // Focus the full radio:
-        push(KeyCode.TAB);
+        assertEquals(unitDetails.name, TestUtil.fx(input::getText));
         if (unitDetails.aliasOrDeclaration.isLeft())
         {
             // Select and move to alias field:
-            push(KeyCode.DOWN);
-            push(KeyCode.SPACE);
+            clickOn(".id-unit-alias");
+            
             push(KeyCode.TAB);
             selectAllCurrentTextField();
             write(unitDetails.aliasOrDeclaration.getLeft(""));
@@ -92,7 +93,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
         else
         {
             // Select and move to units:
-            push(KeyCode.SPACE);
+            clickOn(".id-unit-full");
             push(KeyCode.TAB);
             UnitDeclaration declaration = unitDetails.aliasOrDeclaration.getRight("");
             selectAllCurrentTextField();
@@ -159,7 +160,7 @@ public class TestUnitEdit extends FXApplicationTest implements TextFieldTrait
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testEditUnit(@When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @When(seed=2L) @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
+    public void testEditUnit(@From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails before, @From(GenUnitDefinition.class) GenUnitDefinition.UnitDetails after) throws Exception
     {
         DummyManager prevManager = new DummyManager();
         prevManager.getUnitManager().addUserUnit(new Pair<>(before.name, before.aliasOrDeclaration));

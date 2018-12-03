@@ -248,7 +248,7 @@ public class GUI
 
     public static LabelledGrid.Row radioGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, ToggleGroup toggleGroup)
     {
-        RadioButton radioButton = new RadioButton(TranslationUtility.getString(labelKey));
+        RadioButton radioButton = addIdClass(new RadioButton(TranslationUtility.getString(labelKey)), labelKey);
         radioButton.setToggleGroup(toggleGroup);
         return new LabelledGrid.Row(radioButton, helpBox(helpId, radioButton));
     }
