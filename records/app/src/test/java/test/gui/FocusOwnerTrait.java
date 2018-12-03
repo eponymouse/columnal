@@ -8,6 +8,7 @@ import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +23,18 @@ public interface FocusOwnerTrait extends FxRobotInterface
         return TestUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
     }
 
+    // Ignores PopupWindow
     @OnThread(Tag.FXPlatform)
     default Window getRealFocusedWindow()
     {
-        List<Window> curWindow = new ArrayList<>(listWindows().stream().filter(Window::isFocused).collect(Collectors.toList()));
+        // The only children of Window are PopupWindow, Stage and EmbeddedWindow.
+        // We are not interested in popup or embedded so we may as well
+        // filter down to Stage:
+        List<Stage> curWindow = new ArrayList<>(
+            Utility.filterClass(
+                listWindows().stream().filter(Window::isFocused),
+                Stage.class)
+            .collect(Collectors.toList()));
         if (curWindow.isEmpty())
             throw new RuntimeException("No focused window?!");
         // It seems that (only in Monocle?) multiple windows can claim to
