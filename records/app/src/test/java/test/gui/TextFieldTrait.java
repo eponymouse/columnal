@@ -13,6 +13,8 @@ import threadchecker.Tag;
 
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertTrue;
+
 public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
 {
     @OnThread(Tag.Any)
@@ -26,6 +28,10 @@ public interface TextFieldTrait extends FxRobotInterface, FocusOwnerTrait
             );
         TextInputControl textField = (TextInputControl) focusOwner;
 
+        assertTrue(TestUtil.fx(textField::isEditable));
+        assertTrue(!TestUtil.fx(textField::isDisabled));
+        assertTrue(TestUtil.fx(textField::isFocused));
+        
         // Some sort of bug on OS X prevents Cmd-A working in TestFX:
         if (SystemUtils.IS_OS_MAC_OSX)
             TestUtil.fx_(() -> textField.selectAll());
