@@ -36,7 +36,7 @@ public class FXApplicationTest extends ApplicationTest
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
             System.err.println("Screenshot of failure: ");
-            TestUtil.fx_(() -> dumpScreenshot(windowToUse));
+            TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
         }
     };
     
