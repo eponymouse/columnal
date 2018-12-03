@@ -56,6 +56,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     {
         windowToUse = stage;
         FXUtility._test_setTestingMode();
+        targetWindow(stage);
         
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(60),e -> {
