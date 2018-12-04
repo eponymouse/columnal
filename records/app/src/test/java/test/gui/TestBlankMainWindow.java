@@ -149,7 +149,8 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
         // Only need to click once as already selected by keyboard:
         clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-        clickOn(".id-new-data");
+        correctTargetWindow().clickOn(".id-new-data");
+        correctTargetWindow();
         if (tableName != null)
             write(tableName, DELAY);
         push(KeyCode.TAB);
@@ -412,23 +413,6 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     @OnThread(Tag.Any)
     private void enterValue(CellPosition position, DataType dataType, @Value Object value, Random random) throws UserException, InternalException
     {
-        Node row = lookup(new Predicate<Node>()
-        {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public boolean test(Node node)
-            {
-                // Don't click on the last row which has the append button:
-                return node.getStyleClass().contains("virt-grid-cell") && node.lookup(".stable-view-row-append-button") == null;
-            }
-
-            ;
-        }).<Node>query();
-        if (row != null)
-        {
-            targetWindow(row);
-            clickOn(row);
-        }
         for (int i = 0; i < 2; i++)
             clickOnItemInBounds(lookup(".structured-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
 

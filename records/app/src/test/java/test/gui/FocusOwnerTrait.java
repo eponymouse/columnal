@@ -62,8 +62,8 @@ public interface FocusOwnerTrait extends FxRobotInterface
     }
 
     @OnThread(Tag.Any) 
-    default void correctTargetWindow()
+    default FxRobotInterface correctTargetWindow()
     {
-        targetWindow(TestUtil.fx(() -> getRealFocusedWindow()));
+        return targetWindow(TestUtil.fx(() -> getRealFocusedWindow()));
     }
 }

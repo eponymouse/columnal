@@ -101,9 +101,9 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
                 clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
             // Not sure why this doesn't work:
             //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
-            clickOn(".id-new-transform");
-            clickOn(".id-transform-calculate");
-            write("Table1");
+            correctTargetWindow().clickOn(".id-new-transform");
+            correctTargetWindow().clickOn(".id-transform-calculate");
+            correctTargetWindow().write("Table1");
             push(KeyCode.ENTER);
             TestUtil.sleep(200);
             write("DestCol");
