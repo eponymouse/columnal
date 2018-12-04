@@ -12,6 +12,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -48,6 +49,7 @@ import java.util.stream.IntStream;
 import static com.google.common.collect.ImmutableList.of;
 import static org.junit.Assert.*;
 
+@Ignore
 @OnThread(Tag.Simulation)
 @RunWith(JUnitQuickcheck.class)
 public class TestNumberColumnDisplay extends FXApplicationTest

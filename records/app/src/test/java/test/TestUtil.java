@@ -1149,33 +1149,6 @@ public class TestUtil
         clipboardContent.putImage(img);
         Clipboard.getSystemClipboard().setContent(clipboardContent);
     }
-
-    @OnThread(Tag.FXPlatform)
-    public static void copyScreenshotToClipboard()
-    {
-        Log.debug("Screenshotting...");
-        try
-        {
-            Robot robot = new Robot();
-
-            Toolkit myToolkit = Toolkit.getDefaultToolkit();
-            Dimension screenSize = myToolkit.getScreenSize();
-
-            Rectangle screen = new Rectangle(screenSize);
-
-            BufferedImage screenFullImage = robot.createScreenCapture(screen);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(screenFullImage, "jpg", baos);
-            Image image = new Image(new java.io.ByteArrayInputStream(baos.toByteArray()), screenFullImage.getWidth(), screenFullImage.getHeight(), true, true);
-            ClipboardContent clipboardContent = new ClipboardContent();
-            clipboardContent.putImage(image);
-            Clipboard.getSystemClipboard().setContent(clipboardContent);
-        }
-        catch (AWTException | IOException ex)
-        {
-            Log.log(ex);
-        }        
-    }
     
     public static interface TestRunnable
     {

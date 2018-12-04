@@ -14,6 +14,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -57,6 +58,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
+@Ignore
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class TestQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait
@@ -344,12 +346,10 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
         {
             // Test fails regardless, so no harm turning checked exception
             // into unchecked for simpler signatures:
-            TestUtil.fx_(() -> TestUtil.copyScreenshotToClipboard());
             throw new RuntimeException(e);
         }
         catch (Throwable t)
         {
-            TestUtil.fx_(() -> TestUtil.copyScreenshotToClipboard());
             throw t;
         }
     }
