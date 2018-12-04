@@ -71,7 +71,6 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-@Ignore
 public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)

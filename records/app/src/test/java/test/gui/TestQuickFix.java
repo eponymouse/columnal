@@ -58,7 +58,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-@Ignore
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class TestQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait

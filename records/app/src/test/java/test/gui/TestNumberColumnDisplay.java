@@ -49,7 +49,6 @@ import java.util.stream.IntStream;
 import static com.google.common.collect.ImmutableList.of;
 import static org.junit.Assert.*;
 
-@Ignore
 @OnThread(Tag.Simulation)
 @RunWith(JUnitQuickcheck.class)
 public class TestNumberColumnDisplay extends FXApplicationTest
