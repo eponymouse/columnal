@@ -288,8 +288,8 @@ public class TestStructuredTextField extends FXApplicationTest
         for (int i = 0; i < 5; i++)
         {
             @Nullable StructuredTextField stf = fx(() -> {
-                targetWindow().getScene().getRoot().applyCss();
-                @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) targetWindow().getScene().getRoot().lookup(".structured-text-field");
+                getRealFocusedWindow().getScene().getRoot().applyCss();
+                @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) getRealFocusedWindow().getScene().getRoot().lookup(".structured-text-field");
                 if (structuredTextField != null)
                     structuredTextField.requestFocus();
                 return structuredTextField;
