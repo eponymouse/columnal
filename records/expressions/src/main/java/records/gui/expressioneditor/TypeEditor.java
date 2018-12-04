@@ -17,12 +17,13 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.stream.Stream;
 
 public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
 {
-    public static final DataFormat TYPE_CLIPBOARD_TYPE = new DataFormat("application/records-type");
+    public static final DataFormat TYPE_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     private final FXPlatformConsumer<TypeExpression> onChange;
 
     public TypeEditor(TypeManager typeManager, TypeExpression startingValue, FXPlatformConsumer<TypeExpression> onChange)

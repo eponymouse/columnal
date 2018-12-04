@@ -37,10 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@OnThread(Tag.FXPlatform)
 public class ClipboardUtils
 {
 
-    public static final DataFormat DATA_FORMAT = new DataFormat("application/records");
+    public static final DataFormat DATA_FORMAT = FXUtility.getDataFormat("application/records");
 
     // Returns column-major, i.e. a list of columns
     @OnThread(Tag.FXPlatform)
@@ -145,11 +146,13 @@ public class ClipboardUtils
             });
             b.end().t(MainLexer.VALUES).nl();
             String str = b.toString();
-            Map<DataFormat, Object> copyData = new HashMap<>();
-            copyData.put(DATA_FORMAT, str);
-            copyData.put(DataFormat.PLAIN_TEXT, plainText.toString());
-            System.out.println("Copying: {{{\n" + str + "\n}}}");
-            Platform.runLater(() -> Clipboard.getSystemClipboard().setContent(copyData));
+            Platform.runLater(() -> {
+                Map<DataFormat, Object> copyData = new HashMap<>();
+                copyData.put(DATA_FORMAT, str);
+                copyData.put(DataFormat.PLAIN_TEXT, plainText.toString());
+                System.out.println("Copying: {{{\n" + str + "\n}}}");
+                Clipboard.getSystemClipboard().setContent(copyData);
+            });
         });
     }
 }

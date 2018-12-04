@@ -52,7 +52,7 @@ import java.util.stream.Stream;
  */
 public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver>
 {
-    public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = new DataFormat("application/records-expression");
+    public static final DataFormat EXPRESSION_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-expression");
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;

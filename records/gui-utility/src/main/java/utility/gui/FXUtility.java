@@ -143,6 +143,17 @@ public class FXUtility
     public static @NonNull DataFormat getTextDataFormat(String subType)
     {
         String whole = "text/" + subType;
+        return getDataFormat(whole);
+    }
+
+    /**
+     * Lookups or creates the given DataFormat.  It is important to
+     * use this rather than the constructor directly,
+     *  to prevent exception which occurs on duplicate
+     *  creation.
+     */
+    public static DataFormat getDataFormat(String whole)
+    {
         DataFormat f = DataFormat.lookupMimeType(whole);
         if (f != null)
             return f;

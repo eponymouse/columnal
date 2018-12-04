@@ -21,12 +21,13 @@ import records.transformations.expression.type.TypeExpression;
 import records.transformations.expression.type.TypeSaver;
 import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.stream.Stream;
 
 public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
 {
-    public static final DataFormat UNIT_CLIPBOARD_TYPE = new DataFormat("application/records-type");
+    public static final DataFormat UNIT_CLIPBOARD_TYPE = FXUtility.getDataFormat("application/records-type");
     private final FXPlatformConsumer<@Nullable Unit> onChange;
 
     public UnitEditor(TypeManager typeManager, @Nullable UnitExpression startingValue, FXPlatformConsumer<@Nullable Unit> onChange)
