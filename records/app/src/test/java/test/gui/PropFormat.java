@@ -69,6 +69,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Created by neil on 29/10/2016.
  */
+@Ignore
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class PropFormat extends FXApplicationTest implements ComboUtilTrait
