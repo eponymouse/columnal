@@ -19,6 +19,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -86,8 +88,18 @@ public class GenFile extends Generator<GeneratedTextFile>
                     if (columnTypes[column].getType().isText())
                     {
                         string = (String)value;
+                        
+                        boolean canEncDec = charset.newEncoder().canEncode(string);
+                        if (canEncDec)
+                        {
+                            // It seems that canEncode is not the same as being able to round-trip
+                            // (See Big5-HKSCS and "LMPiv\uF3EB") so we test the round-trip:
+                            ByteBuffer byteBuffer = charset.newEncoder().encode(CharBuffer.wrap(string));
 
-                        if (!charset.newEncoder().canEncode(string))
+                            canEncDec = string.equals(charset.newDecoder().decode(byteBuffer).toString());
+                        }
+                            
+                        if (!canEncDec)
                         {
                             string = "" + rnd.nextDouble();
                             value = DataTypeUtility.value(string); 

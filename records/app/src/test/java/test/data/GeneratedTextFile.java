@@ -46,7 +46,10 @@ public class GeneratedTextFile
     public String toString()
     {
         return "GeneratedTextFile{" +
-            "lineCount=" + lineCount +
+            "charset=" + charset +
+            ", lineCount=" + lineCount +
+            ", separator='" + separator + '\'' +
+            ", quote='" + quote + '\'' +
             '}';
     }
 
