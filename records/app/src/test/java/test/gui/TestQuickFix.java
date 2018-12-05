@@ -294,8 +294,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             // Move field so that errors show up (cancel masking on new fields):
             push(KeyCode.HOME);
             
-            TextField lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<TextField>query();
-            assertNotNull(lhs);
+            TextField lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<TextField>tryQuery().orElse(null);
+            assertNotNull("Fields: " + lookup(".entry-field").queryAll().stream().map(t -> TestUtil.fx(() -> ((TextField)t).getText())).collect(Collectors.joining("\n")), lhs);
             if (lhs == null) return;
             @NonNull Node lhsFinal = lhs;
             if (!TestUtil.fx(() -> lhsFinal.isFocused()))

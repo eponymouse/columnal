@@ -116,6 +116,7 @@ import static test.TestUtil.sim;
  */
 @SuppressWarnings({"initialization", "deprecation"})
 @RunWith(JUnitQuickcheck.class)
+@OnThread(Tag.Simulation)
 public class TestStructuredTextField extends FXApplicationTest
 {
     private DataDisplay dataDisplay;
@@ -298,7 +299,7 @@ public class TestStructuredTextField extends FXApplicationTest
                 return stf;
             TestUtil.delay(200);
         }
-        dumpScreenshot(windowToUse);
+        TestUtil.fx_(() -> dumpScreenshot(windowToUse));
         throw new RuntimeException("Couldn't find STF, windows: " + getWindowList() + "\n");
     }
 
