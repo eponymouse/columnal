@@ -17,6 +17,8 @@ import org.junit.runner.RunWith;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
+import records.gui.MainWindow.MainWindowActions;
+import records.gui.TableDisplay;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
@@ -30,9 +32,11 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,25 +53,37 @@ public class TestKeyboardMovement extends FXApplicationTest
     @OnThread(Tag.Simulation)
     public void testKeyboardMovement(@When(seed=1L) @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
-        Log.debug("Beginning testKeyboardMovement");
-        VirtualGrid virtualGrid = TestUtil.openDataAsTable(windowToUse, src.mgr).get()._test_getVirtualGrid();
-        targetWindow(windowToUse);
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        TestUtil.sleep(2000);
+        
+        VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
         push(KeyCode.CONTROL, KeyCode.HOME);
         assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));
         checkSelectionOnScreen("Origin", virtualGrid);
+        @SuppressWarnings("nullness")
+        String tableSummary = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> (TableDisplay)t.getDisplay()).map(t -> t.getPosition() + " - " + t.getBottomRightIncl()).collect(Collectors.joining()));
         
         // We go for a random walk right/down, then check that it is reversible:
         List<Pair<List<KeyCode>, RectangleBounds>> paths = new ArrayList<>();
         for (int i = 0; i < 20; i++)
         {
             int dist = 1 + r.nextInt(5);
-            List<KeyCode> presses = Utility.replicate(dist, r.nextInt(3) != 1 ? KeyCode.DOWN : KeyCode.RIGHT);
-            for (KeyCode keyCode : presses)
+            ArrayList<KeyCode> presses = new ArrayList<>(Utility.replicate(dist, r.nextInt(3) != 1 ? KeyCode.DOWN : KeyCode.RIGHT));
+            RectangleBounds rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+            for (Iterator<KeyCode> iterator = presses.iterator(); iterator.hasNext(); )
             {
+                KeyCode keyCode = iterator.next();
                 Log.debug("Pressing: " + keyCode + " Focus owner: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
                 push(keyCode);
+                // If we've reached edge, don't count keypress on the reverse trip:
+                RectangleBounds newRectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+                if (newRectangleBounds.equals(rectangleBounds))
+                {
+                    iterator.remove();
+                }
+                rectangleBounds = newRectangleBounds;
             }
-            RectangleBounds rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+            rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
             if (paths.isEmpty() || !paths.get(paths.size() - 1).getSecond().equals(rectangleBounds))
             {
                 paths.add(new Pair<>(
@@ -87,25 +103,26 @@ public class TestKeyboardMovement extends FXApplicationTest
                 // Reverse the down/right into up/left:
                 push(keyCode == KeyCode.DOWN ? KeyCode.UP : KeyCode.LEFT);
             }
-            checkSelectionOnScreen(paths.get(i).getSecond().toString(), virtualGrid);
+            checkSelectionOnScreen("Index " + i + " " + paths.get(i).getSecond().toString() + (i < paths.size() - 1 ? (" (from " + paths.get(i + 1).getSecond() + ")") : "") + " tables: " + tableSummary, virtualGrid);
         }
         // Should be back at origin:
         assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));
-        Log.debug("Ending testKeyboardMovement");
     }
 
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     public void checkSelectionOnScreen(String prefix, VirtualGrid virtualGrid)
     {
+        assertTrue(prefix, TestUtil.fx(() -> windowToUse.isFocused()));
         Node selectionRect = lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null);
         if (selectionRect == null)
         {
             // In case of a load:
             TestUtil.delay(5000);
             selectionRect = lookup(".virt-grid-selection-overlay").match(Node::isVisible).tryQuery().orElse(null);
-            TestUtil.fx_(() -> dumpScreenshot(virtualGrid.getNode().getScene().getWindow()));
+            Log.debug("Window: " + windowToUse + " Target: " + targetWindow() + " rect: " + lookup(".virt-grid-selection-overlay").tryQuery().orElse(null));
         }
+        assertTrue(prefix, TestUtil.fx(() -> windowToUse.isFocused()));
         assertNotNull(prefix, selectionRect);
         if (selectionRect != null)
         {
