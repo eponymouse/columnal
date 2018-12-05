@@ -85,6 +85,9 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     @OnThread(Tag.FXPlatform)
     protected final static void dumpScreenshot(Window target)
     {
+        if (true)
+            return; // Disable screenshots for now
+        
         if (target.getScene() == null)
         {
             System.err.println("Window " + target + " does not have a scene");
