@@ -599,8 +599,8 @@ public final class VirtualGrid implements ScrollBindable
                 logicalScrollColumnOffset = curOffset;
 
                 // Can we do the rest via a simple layout alteration?
-                if (-this.extraRenderXPixelsBefore <= scrollBy - extraPixelsToShowBefore
-                    && scrollBy + extraPixelsToShowAfter <= this.extraRenderXPixelsAfter)
+                if (this.extraRenderXPixelsBefore - extraPixelsToShowBefore >= scrollBy
+                    && this.extraRenderXPixelsAfter - extraPixelsToShowAfter >= -scrollBy)
                 {
                     // Just move everything by that amount without doing a full layout:
                     for (Node node : container.getChildrenUnmodifiable())
