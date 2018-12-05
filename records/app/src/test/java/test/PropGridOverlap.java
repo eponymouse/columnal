@@ -30,7 +30,7 @@ public class PropGridOverlap
     @Rule
     public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
     
-    @Property(trials = 10000)
+    @Property(trials = 1000)
     public void testLoad(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
         VirtualGrid grid = new VirtualGrid(null, 0, 0);
@@ -89,7 +89,7 @@ public class PropGridOverlap
         }
     }
 
-    @Property(trials = 10000)
+    @Property(trials = 1000)
     public void testMove(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
     {
         VirtualGrid grid = new VirtualGrid(null, 0, 0);
