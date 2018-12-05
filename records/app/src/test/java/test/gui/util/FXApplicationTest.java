@@ -28,6 +28,7 @@ import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.stream.Collectors;
 
 public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrait
 {
@@ -38,14 +39,20 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         protected void failed(Throwable e, Description description)
         {
             super.failed(e, description);
+            System.err.println("Screenshot of failure: ");
+            TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
             e.printStackTrace();
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
-            System.err.println("Screenshot of failure: ");
-            TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
+            System.err.println("Current windows: " + listWindows().stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n")));
         }
     };
-    
+
+    private static String showWindow(Window w)
+    {
+        return w.toString() + TestUtil.fx(() -> (w instanceof Stage ? ((Stage)w).getTitle() : ""));
+    }
+
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
     protected Stage windowToUse;
