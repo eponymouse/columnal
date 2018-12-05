@@ -282,8 +282,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             TestUtil.sleep(2000);
             NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));
             clickOnItemInBounds(arrowQuery, mainWindowActions._test_getVirtualGrid(), new RectangleBounds(
-                new CellPosition(CellPosition.row(10), CellPosition.col(1)),
-                new CellPosition(CellPosition.row(10), CellPosition.col(20))
+                new CellPosition(CellPosition.row(8), CellPosition.col(1)),
+                new CellPosition(CellPosition.row(8), CellPosition.col(20))
             ));
             TestUtil.sleep(1000);
             write("DestCol");

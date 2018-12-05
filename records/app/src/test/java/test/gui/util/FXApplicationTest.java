@@ -40,13 +40,18 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         {
             super.failed(e, description);
             System.err.println("Screenshot of failure: ");
-            TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
+            //TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
             e.printStackTrace();
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
-            System.err.println("Current windows: " + listWindows().stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n")));
+            System.err.println("Current windows: " + getWindowList());
         }
     };
+
+    protected String getWindowList()
+    {
+        return listWindows().stream().map(w -> "  " + showWindow(w)).collect(Collectors.joining("\n"));
+    }
 
     private static String showWindow(Window w)
     {
@@ -79,15 +84,12 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         }));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.setAutoReverse(false);
-        timeline.play();
+        //timeline.play();
     }
     
     @OnThread(Tag.FXPlatform)
     protected final static void dumpScreenshot(Window target)
     {
-        if (true)
-            return; // Disable screenshots for now
-        
         if (target.getScene() == null)
         {
             System.err.println("Window " + target + " does not have a scene");

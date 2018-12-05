@@ -58,8 +58,10 @@ public class TestKeyboardMovement extends FXApplicationTest
         
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
         TestUtil.fx_(windowToUse::requestFocus);
-        push(KeyCode.CONTROL, KeyCode.HOME);
-        assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));
+        assertTrue(TestUtil.fx(() -> windowToUse.isFocused()));
+        Log.debug("Focus owner: " + TestUtil.fx(() -> windowToUse.getScene().getFocusOwner()));
+        push(KeyCode.CONTROL, KeyCode.HOME);        
+        assertEquals(Optional.of(true), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN))));
         checkSelectionOnScreen("Origin", virtualGrid);
         @SuppressWarnings("nullness")
         String tableSummary = TestUtil.fx(() -> mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> (TableDisplay)t.getDisplay()).map(t -> t.getPosition() + " - " + t.getBottomRightIncl()).collect(Collectors.joining()));

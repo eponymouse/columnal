@@ -298,7 +298,8 @@ public class TestStructuredTextField extends FXApplicationTest
                 return stf;
             TestUtil.delay(200);
         }
-        throw new RuntimeException("Couldn't find STF");
+        dumpScreenshot(windowToUse);
+        throw new RuntimeException("Couldn't find STF, windows: " + getWindowList() + "\n");
     }
 
     private GetDataPosition makeGetDataPosition()
