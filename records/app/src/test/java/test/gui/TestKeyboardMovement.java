@@ -51,12 +51,13 @@ public class TestKeyboardMovement extends FXApplicationTest
      */
     @Property(trials=5)
     @OnThread(Tag.Simulation)
-    public void testKeyboardMovement(@When(seed=1L) @NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void testKeyboardMovement(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
         TestUtil.sleep(2000);
         
         VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
+        TestUtil.fx_(windowToUse::requestFocus);
         push(KeyCode.CONTROL, KeyCode.HOME);
         assertTrue(TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle().contains(CellPosition.ORIGIN)).orElse(false)));
         checkSelectionOnScreen("Origin", virtualGrid);
