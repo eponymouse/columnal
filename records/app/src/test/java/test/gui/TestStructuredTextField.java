@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
@@ -107,9 +108,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
-import static test.TestUtil.fx;
-import static test.TestUtil.fx_;
-import static test.TestUtil.sim;
 
 /**
  * Created by neil on 19/06/2017.
@@ -119,8 +117,11 @@ import static test.TestUtil.sim;
 @OnThread(Tag.Simulation)
 public class TestStructuredTextField extends FXApplicationTest
 {
+    @OnThread(Tag.Any)
     private DataDisplay dataDisplay;
+    @OnThread(Tag.FXPlatform)
     private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
+    @OnThread(Tag.Any)
     private TextField dummy;
 
     @Override
@@ -171,8 +172,8 @@ public class TestStructuredTextField extends FXApplicationTest
     @Test
     public void testPrompt() throws InternalException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 10, 29)));
-        assertEquals("29/10/2034", fx(() -> f.get().getText()));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 10, 29))));
+        assertEquals("29/10/2034", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
                 new int[] {0, 1, 2},
                 null,
@@ -181,8 +182,8 @@ public class TestStructuredTextField extends FXApplicationTest
                 new int[] {6, 7, 8, 9, 10}
         );
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(2034, 10, 29, 13, 56, 22)));
-        assertEquals("29/10/2034 13:56:22", fx(() -> f.get().getText()));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(2034, 10, 29, 13, 56, 22))));
+        assertEquals("29/10/2034 13:56:22", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1, 2},
             null,
@@ -197,7 +198,7 @@ public class TestStructuredTextField extends FXApplicationTest
             new int[] {17, 18, 19}
         );
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
         // Delete the month:
         push(KeyCode.HOME);
         push(KeyCode.DELETE);
@@ -205,7 +206,7 @@ public class TestStructuredTextField extends FXApplicationTest
         push(KeyCode.RIGHT);
         push(KeyCode.DELETE);
         push(KeyCode.DELETE);
-        assertEquals("1/Month/1900", fx(() -> f.get().getText()));
+        assertEquals("1/Month/1900", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1},
             null,
@@ -214,11 +215,11 @@ public class TestStructuredTextField extends FXApplicationTest
             new int[] {8, 9, 10, 11, 12}
         );
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
         // Delete all:
         pushSelectAll();
         push(KeyCode.DELETE);
-        assertEquals("Day/Month/Year", fx(() -> f.get().getText()));
+        assertEquals("Day/Month/Year", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0},
             null,
@@ -227,11 +228,11 @@ public class TestStructuredTextField extends FXApplicationTest
             new int[] {10}
         );
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 1, 1, 1, 1, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 1, 1, 1, 1, 1))));
         // Delete all:
         pushSelectAll();
         push(KeyCode.DELETE);
-        assertEquals("Day/Month/Year Hour:Minute:Second", fx(() -> f.get().getText()));
+        assertEquals("Day/Month/Year Hour:Minute:Second", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0},
             null,
@@ -247,12 +248,14 @@ public class TestStructuredTextField extends FXApplicationTest
         );
     }
 
-    private StructuredTextField dateField(DateTimeInfo dateTimeInfo, TemporalAccessor t) throws InternalException
+    @OnThread(Tag.FXPlatform)
+    private StructuredTextField dateField(DateTimeInfo dateTimeInfo, TemporalAccessor t)
     {
         return field(DataType.date(dateTimeInfo), t);
     }
 
-    private StructuredTextField field(DataType dataType, Object value) throws InternalException
+    @OnThread(Tag.FXPlatform)
+    private StructuredTextField field(DataType dataType, Object value)
     {
         CompletableFuture<DataTypeValue> fut = new CompletableFuture<>();
         Workers.onWorkerThread("", Priority.SAVE, () ->
@@ -269,40 +272,31 @@ public class TestStructuredTextField extends FXApplicationTest
             }
         });
 
-        fx_(() ->
+        try
         {
-            try
-            {
-                @SuppressWarnings("units")
-                @TableDataColIndex int col = 0;
-                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, makeGetDataPosition(), () -> {});
-                dataDisplay.setColumns(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
-                //stableView.loadColumnWidths(new double[]{600.0});
-            }
-            catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
-        TestUtil.delay(500);
-
-        for (int i = 0; i < 5; i++)
-        {
-            @Nullable StructuredTextField stf = fx(() -> {
-                getRealFocusedWindow().getScene().getRoot().applyCss();
-                @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) getRealFocusedWindow().getScene().getRoot().lookup(".structured-text-field");
-                if (structuredTextField != null)
-                    structuredTextField.requestFocus();
-                return structuredTextField;
-            });
-            if (stf != null)
-                return stf;
-            TestUtil.delay(200);
+            @SuppressWarnings("units")
+            @TableDataColIndex int col = 0;
+            EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, makeGetDataPosition(), () -> {});
+            dataDisplay.setColumns(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
+            //stableView.loadColumnWidths(new double[]{600.0});
         }
-        TestUtil.fx_(() -> dumpScreenshot(windowToUse));
+        catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        getRealFocusedWindow().getScene().getRoot().applyCss();
+        @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) getRealFocusedWindow().getScene().getRoot().lookup(".structured-text-field");
+        if (structuredTextField != null)
+        {
+            structuredTextField.requestFocus();
+            return structuredTextField;
+        }
+        dumpScreenshot(windowToUse);
         throw new RuntimeException("Couldn't find STF, windows: " + getWindowList() + "\n");
     }
 
+    @OnThread(Tag.Any)
     private GetDataPosition makeGetDataPosition()
     {
         return new GetDataPosition()
@@ -343,11 +337,11 @@ public class TestStructuredTextField extends FXApplicationTest
     {
         // Check home and end:
         push(KeyCode.HOME);
-        assertEquals(positions[0][0], f.get().getCaretPosition());
+        assertEquals(positions[0][0], (int)TestUtil.fx(() -> f.get().getCaretPosition()));
         push(KeyCode.END);
-        assertEquals(positions[positions.length - 1][positions[positions.length - 1].length - 1], f.get().getCaretPosition());
+        assertEquals(positions[positions.length - 1][positions[positions.length - 1].length - 1], (int)TestUtil.fx(() -> f.get().getCaretPosition()));
         push(KeyCode.HOME);
-        assertEquals(positions[0][0], f.get().getCaretPosition());
+        assertEquals(positions[0][0], (int)TestUtil.fx(() -> f.get().getCaretPosition()));
 
         ArrayList<Integer> collapsed = new ArrayList<>();
         ArrayList<Double> collapsedX = new ArrayList<>();
@@ -366,7 +360,7 @@ public class TestStructuredTextField extends FXApplicationTest
                 {
                     int newPos = positions[major][minor];
                     collapsed.add(newPos);
-                    collapsedX.add(fx(() -> newPos == 0 ?
+                    collapsedX.add(TestUtil.fx(() -> newPos == 0 ?
                         // No idea why I need these casts here:
                         ((Optional<Bounds>)f.get().getCharacterBoundsOnScreen(newPos, newPos + 1)).get().getMinX() :
                         ((Optional<Bounds>)f.get().getCharacterBoundsOnScreen(newPos - 1, newPos)).get().getMaxX()));
@@ -381,27 +375,27 @@ public class TestStructuredTextField extends FXApplicationTest
         // Now go through one at a time using LEFT and RIGHT, backing up and advancing each stage:
         for (int i = 0; i < collapsed.size(); i++)
         {
-            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            assertEquals(collapsed.get(i), TestUtil.fx(() -> f.get().getCaretPosition()));
             // Forward then back:
             if (i + 1 < collapsed.size())
             {
                 push(KeyCode.RIGHT);
                 push(KeyCode.LEFT);
             }
-            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            assertEquals(collapsed.get(i), TestUtil.fx(() -> f.get().getCaretPosition()));
             // Back then forward:
             if (i > 0)
             {
                 push(KeyCode.LEFT);
                 push(KeyCode.RIGHT);
             }
-            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            assertEquals(collapsed.get(i), TestUtil.fx(() -> f.get().getCaretPosition()));
             push(KeyCode.RIGHT);
         }
-        assertEquals(collapsed.get(collapsed.size() - 1), fx(() -> f.get().getCaretPosition()));
+        assertEquals(collapsed.get(collapsed.size() - 1), TestUtil.fx(() -> f.get().getCaretPosition()));
 
         // Basic click tests:
-        Bounds screenBounds = fx(() -> f.get().localToScreen(f.get().getBoundsInLocal()));
+        Bounds screenBounds = TestUtil.fx(() -> f.get().localToScreen(f.get().getBoundsInLocal()));
         Map<Double, Integer> xToPos = new HashMap<>();
         for (int i = 0; i < collapsed.size(); i++)
         {
@@ -409,7 +403,7 @@ public class TestStructuredTextField extends FXApplicationTest
             clickOn(collapsedX.get(i), screenBounds.getMinY() + 4.0);
             // Move so we don't treat as double click:
             moveBy(10, 0);
-            assertEquals("Clicked: " + collapsedX.get(i) + ", " + (screenBounds.getMinY() + 4.0), collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            assertEquals("Clicked: " + collapsedX.get(i) + ", " + (screenBounds.getMinY() + 4.0), collapsed.get(i), TestUtil.fx(() -> f.get().getCaretPosition()));
             if (i + 1 < collapsed.size())
             {
                 // Clicking progressively between the two positions should end up in one, or the other:
@@ -419,7 +413,7 @@ public class TestStructuredTextField extends FXApplicationTest
                     clickOn(x, screenBounds.getMinY() + 4.0);
                     // Move so we don't treat as double click:
                     moveBy(10, 0);
-                    int outcome = fx(() -> f.get().getCaretPosition());
+                    int outcome = TestUtil.fx(() -> f.get().getCaretPosition());
                     assertThat("Aiming for " + i + " by clicking at offset " + (x - screenBounds.getMinX()), outcome, Matchers.isIn(Arrays.asList(collapsed.get(i), collapsed.get(i + 1))));
                     xToPos.put(x, outcome);
                 }
@@ -438,8 +432,8 @@ public class TestStructuredTextField extends FXApplicationTest
             clickOn(b.getKey(), screenBounds.getMinY() + 4.0);
             release(KeyCode.SHIFT);
             String label = "#" + i + " from " + a.getKey() + "->" + a.getValue() + " to " + b.getKey() + "->" + b.getValue();
-            assertEquals(label, a.getValue(), fx(() -> f.get().getAnchor()));
-            assertEquals(label, b.getValue(), fx(() -> f.get().getCaretPosition()));
+            assertEquals(label, a.getValue(), TestUtil.fx(() -> f.get().getAnchor()));
+            assertEquals(label, b.getValue(), TestUtil.fx(() -> f.get().getCaretPosition()));
             // Move so we don't treat as double click:
             moveBy(10, 0);
         }
@@ -455,8 +449,8 @@ public class TestStructuredTextField extends FXApplicationTest
             moveTo(start.getKey() + 10, screenBounds.getMinY() + 4.0);
             // Use click to initially position:
             clickOn(start.getKey(), screenBounds.getMinY() + 4.0);
-            assertEquals(start.getValue(), fx(() -> f.get().getCaretPosition()));
-            assertEquals(start.getValue(), fx(() -> f.get().getAnchor()));
+            assertEquals(start.getValue(), TestUtil.fx(() -> f.get().getCaretPosition()));
+            assertEquals(start.getValue(), TestUtil.fx(() -> f.get().getAnchor()));
             // Then press ctrl-left or ctrl-right some number of times:
 
             // For reasons I don't understand (TestFX/Robot bug?), SHIFT+CTRL registers as CTRL on Windows,
@@ -479,10 +473,10 @@ public class TestStructuredTextField extends FXApplicationTest
                 pos = calculateExpectedWordMove(positions, pos, right);
             }
 
-            String label = "From " + start.getValue() + " sel:" + useSelection + " right:" + right + " x " + number + " content " + f.get().getText();
+            String label = "From " + start.getValue() + " sel:" + useSelection + " right:" + right + " x " + number + " content " + TestUtil.fx(() -> f.get().getText());
             // Work out where we expect it to end up:
-            assertEquals(label, useSelection ? (int)start.getValue() : pos, (int)fx(() -> f.get().getAnchor()));
-            assertEquals(label, pos, (int)fx(() -> f.get().getCaretPosition()));
+            assertEquals(label, useSelection ? (int)start.getValue() : pos, (int)TestUtil.fx(() -> f.get().getAnchor()));
+            assertEquals(label, pos, (int)TestUtil.fx(() -> f.get().getCaretPosition()));
         }
     }
 
@@ -551,28 +545,28 @@ public class TestStructuredTextField extends FXApplicationTest
     @Test
     public void testYMD() throws InternalException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        f.get().selectAll();
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
+        TestUtil.fx_(() -> f.get().selectAll());
         type("17", "17$/Month/Year");
         type("/3/", "17/3/$Year");
         type("1973", "17/03/1973", LocalDate.of(1973, 3, 17));
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
         push(KeyCode.HOME);
         push(KeyCode.DELETE);
         type("", "$1/04/1900");
         type("2", "21/04/1900", LocalDate.of(1900, 4, 21));
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        f.get().selectAll();
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
+        TestUtil.fx_(() -> f.get().selectAll());
         type("31 10 86","31/10/1986", LocalDate.of(1986, 10, 31));
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        f.get().selectAll();
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
+        TestUtil.fx_(() -> f.get().selectAll());
         type("5 6 27","05/06/2027", LocalDate.of(2027, 6, 5));
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        f.get().selectAll();
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
+        TestUtil.fx_(() -> f.get().selectAll());
         type("6", "6$/Month/Year");
         type("-", "6/$Month/Year");
         type("7", "6/7$/Year");
@@ -580,12 +574,12 @@ public class TestStructuredTextField extends FXApplicationTest
         type("3", "06/07/2003", LocalDate.of(2003, 7, 6));
 
         // Check prompts for invalid dates:
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
         pushSelectAll();
         type("", "^01/04/1900$");
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
-        fx_(()-> dummy.requestFocus());
+        TestUtil.fx_(()-> dummy.requestFocus());
         type("", "Day/Month/$Year");
         assertNotNull(lookup(".invalid-data-input-popup").query());
         assertNotNull(lookup(".invalid-data-input-popup .invalid-data-revert").query());
@@ -595,7 +589,7 @@ public class TestStructuredTextField extends FXApplicationTest
         assertNull(lookup(".invalid-data-input-popup").query());
         type("", "01/04/1900$");
 
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
         pushSelectAll();
         type("", "^01/04/1900$");
         push(KeyCode.DELETE);
@@ -617,7 +611,8 @@ public class TestStructuredTextField extends FXApplicationTest
         // Popup should be back:
         assertNotNull(lookup(".invalid-data-input-popup").query());
         // Should show the first value as a fix:
-        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("01/04/1900"));
+        Label label = lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query();
+        assertThat(TestUtil.fx(() -> label.getText()), Matchers.containsString("01/04/1900"));
         // Click in again:
         targetF();
         push(KeyCode.HOME);
@@ -635,7 +630,8 @@ public class TestStructuredTextField extends FXApplicationTest
         clickOn(dummy);
         // New popup should show most recent value:
         assertNotNull(lookup(".invalid-data-input-popup").query());
-        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("08/07/2169"));
+        Label label2 = lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query();
+        assertThat(TestUtil.fx(() -> label2.getText()), Matchers.containsString("08/07/2169"));
 
         // Check swapped or invalid dates have the right suggestions:
         checkFix("0/3/2000", "01/03/2000");
@@ -668,20 +664,20 @@ public class TestStructuredTextField extends FXApplicationTest
     {
         // Some sort of bug on OS X prevents Cmd-A working in TestFX:
         if (SystemUtils.IS_OS_MAC_OSX)
-            fx_(() -> f.get().selectAll());
+            TestUtil.fx_(() -> f.get().selectAll());
         else
             push(TestUtil.ctrlCmd(), KeyCode.A);
     }
 
     public void targetF()
     {
-        doubleClickOn(f.get());
+        doubleClickOn(TestUtil.fx(() -> f.get()));
     }
 
     @Property(trials = 15)
     public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1))));
         enterDate(localDate, r, "");
     }
 
@@ -691,7 +687,7 @@ public class TestStructuredTextField extends FXApplicationTest
         int[] cs = s.codePoints().filter(c -> c <= 0x7dff && !Character.isISOControl(c) && c != '\"').toArray();
         s = new String(cs, 0, cs.length);
 
-        f.set(field(DataType.TEXT, "initial value"));
+        TestUtil.fx_(() -> f.set(field(DataType.TEXT, "initial value")));
         targetF();
         pushSelectAll();
         if (s.isEmpty())
@@ -705,7 +701,7 @@ public class TestStructuredTextField extends FXApplicationTest
         BigDecimal numA = new BigDecimal(numAsStringA, MathContext.DECIMAL128);
         BigDecimal numB = new BigDecimal(numAsStringB, MathContext.DECIMAL128);
         DataType numType = DataType.number(new NumberInfo(Unit.SCALAR));
-        f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial}));
+        TestUtil.fx_(() -> f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial})));
         targetF();
         pushSelectAll();
         type("", "(^" + initial.toString() + "," + initial.toString() + "$)");
@@ -728,7 +724,7 @@ public class TestStructuredTextField extends FXApplicationTest
         DataType numType = DataType.number(new NumberInfo(Unit.SCALAR));
         boolean numFirst = r.nextBoolean();
         DataType tupleType = numFirst ? DataType.tuple(numType, DataType.BOOLEAN) : DataType.tuple(DataType.BOOLEAN, numType);
-        f.set(field(tupleType, numFirst ? new Object[] {0, !boolValue} : new Object[] {!boolValue, 0}));
+        TestUtil.fx_(() -> f.set(field(tupleType, numFirst ? new Object[] {0, !boolValue} : new Object[] {!boolValue, 0})));
         targetF();
         pushSelectAll();
         if (numFirst)
@@ -785,7 +781,7 @@ public class TestStructuredTextField extends FXApplicationTest
         assumeThat(c, Matchers.<Character>greaterThan(' '));
 
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
-        f.set(field(DataType.number(new NumberInfo(Unit.SCALAR)), initial));
+        TestUtil.fx_(() -> f.set(field(DataType.number(new NumberInfo(Unit.SCALAR)), initial)));
         targetF();
         pushSelectAll();
         type(numAsString, numAsString, num);
@@ -809,7 +805,7 @@ public class TestStructuredTextField extends FXApplicationTest
     @Property(trials = 15)
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1))));
         String timeVal = timeString(localDateTime);
         enterDate(localDateTime, r, " " + timeVal);
     }
@@ -827,7 +823,7 @@ public class TestStructuredTextField extends FXApplicationTest
     @Property(trials = 15)
     public void propYM(@From(GenYearMonth.class) YearMonth yearMonth, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1))));
         String timeVal = yearMonth.getMonthValue() + "/" + yearMonth.getYear();
         targetF();
         pushSelectAll();
@@ -838,8 +834,8 @@ public class TestStructuredTextField extends FXApplicationTest
     @Property(trials = 15)
     public void propDateTimeZoned(@From(GenDateTimeZoned.class) @Value ZonedDateTime zonedDateTime) throws InternalException, UserException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.from(DateTimeInfo.DEFAULT_VALUE)));
-        String timeVal = sim(new SimulationSupplier<String>()
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.from(DateTimeInfo.DEFAULT_VALUE))));
+        String timeVal = TestUtil.sim(new SimulationSupplier<String>()
         {
             @Override
             @OnThread(Tag.Simulation)
@@ -865,7 +861,7 @@ public class TestStructuredTextField extends FXApplicationTest
     @Property(trials = 15)
     public void propTime(@From(GenTime.class) LocalTime localTime, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(dateField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1)));
+        TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1))));
         String timeVal = timeString(localTime);
         targetF();
         pushSelectAll();
@@ -893,16 +889,16 @@ public class TestStructuredTextField extends FXApplicationTest
     @Test
     public void testBool() throws InternalException
     {
-        f.set(field(DataType.BOOLEAN, false));
+        TestUtil.fx_(() -> f.set(field(DataType.BOOLEAN, false)));
         targetF();
         push(KeyCode.HOME);
         // Should immediately show the popup:
         assertAutoCompleteVisible(0, null);
         // Tried using the :filled pseudo-class here but that didn't seem to work:
-        Set<STFAutoCompleteCell> items = lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> !c.isEmpty()).queryAll();
+        Set<STFAutoCompleteCell> items = lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> TestUtil.fx(() -> !c.isEmpty())).queryAll();
         assertEquals(2, items.size());
-        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> c.getItem().suggestion).sorted().collect(Collectors.toList()));
-        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> c.getText()).sorted().collect(Collectors.toList()));
+        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> TestUtil.fx(() -> c.getItem()).suggestion).sorted().collect(Collectors.toList()));
+        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> TestUtil.fx(() -> c.getText())).sorted().collect(Collectors.toList()));
 
         pushSelectAll();
         // Deliberate capital A, should still work:
@@ -914,7 +910,7 @@ public class TestStructuredTextField extends FXApplicationTest
         pushSelectAll();
         push(KeyCode.DELETE);
         type("", "$");
-        STFAutoCompleteCell autoSuggestTrue = lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>) ((STFAutoCompleteCell c) -> !c.isEmpty() && "true".equals(c.getItem().suggestion))).<STFAutoCompleteCell>query();
+        STFAutoCompleteCell autoSuggestTrue = lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>) ((STFAutoCompleteCell c) -> TestUtil.fx(() -> !c.isEmpty() && "true".equals(c.getItem().suggestion)))).<STFAutoCompleteCell>query();
         assertNotNull(autoSuggestTrue);
         clickOn(autoSuggestTrue);
         type("", "true", true);
@@ -932,8 +928,8 @@ public class TestStructuredTextField extends FXApplicationTest
     public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {
         @Value Object initialVal = taggedTypeAndValueGen.makeValue();
-        f.set(field(taggedTypeAndValueGen.getType(), initialVal));
-        type("", sim(new SimulationSupplier<String>()
+        TestUtil.fx_(() -> f.set(field(taggedTypeAndValueGen.getType(), initialVal)));
+        type("", TestUtil.sim(new SimulationSupplier<String>()
         {
             @Override
             @OnThread(Tag.Simulation)
@@ -955,7 +951,7 @@ public class TestStructuredTextField extends FXApplicationTest
         else
         {
             // Get text for inner item, enter that, check value.
-            String inner = sim(new SimulationSupplier<String>()
+            String inner = TestUtil.sim(new SimulationSupplier<String>()
             {
                 @Override
                 @OnThread(Tag.Simulation)
@@ -974,14 +970,15 @@ public class TestStructuredTextField extends FXApplicationTest
     @Property(trials = 15)
     public void propPositions(@When(seed=-8325242676710787694L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
-        f.set(field(typeAndValueGen.getType(), typeAndValueGen.makeValue()));
-        checkPositions(typeAndValueGen.getType() + ":" + fx(() -> f.get().getText()));
+        @Value Object origValue = typeAndValueGen.makeValue();
+        TestUtil.fx_(() -> f.set(field(typeAndValueGen.getType(), origValue)));
+        checkPositions(typeAndValueGen.getType() + ":" + TestUtil.fx(() -> f.get().getText()));
         targetF();
         pushSelectAll();
         push(KeyCode.DELETE);
-        checkPositions(typeAndValueGen.getType() + ":" + fx(() -> f.get().getText()));
+        checkPositions(typeAndValueGen.getType() + ":" + TestUtil.fx(() -> f.get().getText()));
         @Value Object value = typeAndValueGen.makeValue();
-        String str = sim(new SimulationSupplier<String>()
+        String str = TestUtil.sim(new SimulationSupplier<String>()
         {
             @Override
             @OnThread(Tag.Simulation)
@@ -1031,14 +1028,14 @@ public class TestStructuredTextField extends FXApplicationTest
 
     private int getCaretPosition()
     {
-        return fx(() -> f.get().getCaretPosition());
+        return TestUtil.fx(() -> f.get().getCaretPosition());
     }
 
     @Test
     public void testList() throws InternalException
     {
         DataType dataType = DataType.array(DataType.NUMBER);
-        f.set(field(dataType, new ListExList(Collections.emptyList())));
+        TestUtil.fx_(() -> f.set(field(dataType, new ListExList(Collections.emptyList()))));
         push(KeyCode.RIGHT);
         push(KeyCode.RIGHT);
         type("", "[]$");
@@ -1059,7 +1056,7 @@ public class TestStructuredTextField extends FXApplicationTest
         push(KeyCode.LEFT);
         type("", "$[]");
 
-        f.set(field(DataType.array(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), new ListExList(Collections.emptyList())));
+        TestUtil.fx_(() -> f.set(field(DataType.array(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), new ListExList(Collections.emptyList()))));
         push(KeyCode.LEFT);
         push(KeyCode.LEFT);
         type("", "$[]");
@@ -1094,7 +1091,7 @@ public class TestStructuredTextField extends FXApplicationTest
         push(KeyCode.DELETE);
         type("", "[$Hour:Minute:Second]");
 
-        f.set(field(DataType.array(DataType.array(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))), new ListExList(Collections.singletonList(new ListExList(Collections.emptyList())))));
+        TestUtil.fx_(() -> f.set(field(DataType.array(DataType.array(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))), new ListExList(Collections.singletonList(new ListExList(Collections.emptyList()))))));
         for (int count = 0; count < 4;count++)
             push(KeyCode.LEFT);
         type("", "$[[]]");
@@ -1115,7 +1112,7 @@ public class TestStructuredTextField extends FXApplicationTest
     {
         // Some sort of bug on Windows doesn't let shift work:
         if (SystemUtils.IS_OS_WINDOWS)
-            fx_(() -> f.get().previousChar(SelectionPolicy.EXTEND));
+            TestUtil.fx_(() -> f.get().previousChar(SelectionPolicy.EXTEND));
         else
             push(KeyCode.SHIFT, KeyCode.LEFT);
     }
@@ -1124,7 +1121,7 @@ public class TestStructuredTextField extends FXApplicationTest
     {
         // Some sort of bug on Windows doesn't let shift work:
         if (SystemUtils.IS_OS_WINDOWS)
-            fx_(() -> f.get().nextChar(SelectionPolicy.EXTEND));
+            TestUtil.fx_(() -> f.get().nextChar(SelectionPolicy.EXTEND));
         else
             push(KeyCode.SHIFT, KeyCode.RIGHT);
     }
@@ -1136,10 +1133,9 @@ public class TestStructuredTextField extends FXApplicationTest
         if (sameAs != null)
             assertSame(sameAs, autoComplete);
         // In the right place:
-        Bounds fScreen = f.get().localToScreen(f.get().getBoundsInLocal());
-        Bounds charBounds = f.get().getCharacterBoundsOnScreen(atChar, atChar + 1).get();
-        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), Matchers.<Double>is(Matchers.<Double>both(Matchers.<Double>greaterThan(charBounds.getMinX() - 8)).<Double>and(Matchers.<Double>lessThan(charBounds.getMaxX() + 2))));
-        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), Matchers.<Double>is(Matchers.<Double>both(Matchers.<Double>greaterThan(charBounds.getMaxY() - 2)).<Double>and(Matchers.<Double>lessThan(charBounds.getMaxY() + 5))));
+        Bounds charBounds = TestUtil.fx(() -> f.get().getCharacterBoundsOnScreen(atChar, atChar + 1).get());
+        assertThat(TestUtil.fx(() -> autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX()), Matchers.<Double>is(Matchers.<Double>both(Matchers.<Double>greaterThan(charBounds.getMinX() - 8)).<Double>and(Matchers.<Double>lessThan(charBounds.getMaxX() + 2))));
+        assertThat(TestUtil.fx(() -> autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY()), Matchers.<Double>is(Matchers.<Double>both(Matchers.<Double>greaterThan(charBounds.getMaxY() - 2)).<Double>and(Matchers.<Double>lessThan(charBounds.getMaxY() + 5))));
         return autoComplete;
     }
 
@@ -1197,14 +1193,14 @@ public class TestStructuredTextField extends FXApplicationTest
                     variant += divs.get(r.nextInt(divs.size()));
                 }
             }
-            fx_(() -> f.get().requestFocus());
+            TestUtil.fx_(() -> f.get().requestFocus());
             pushSelectAll();
             type(variant + extra, value + extra, localDate);
 
             // Also try Month name, day, year:
             List<String> monthPoss = monthNames.get(vals[1] - 1);
             String variantMD = monthPoss.get(r.nextInt(monthPoss.size())) + "/" + vals[0] + "/" + vals[2];
-            fx_(() -> f.get().requestFocus());
+            TestUtil.fx_(() -> f.get().requestFocus());
             pushSelectAll();
             type(variantMD + extra, value + extra, localDate);
         }
@@ -1229,8 +1225,8 @@ public class TestStructuredTextField extends FXApplicationTest
         type(input, input + "$");
         clickOn(dummy);
         assertNotNull(lookup(".invalid-data-input-popup").query());
-        Node fix = lookup(".invalid-data-input-popup .invalid-data-fix").lookup((Label l) -> l.getText().contains(suggestedFix)).query();
-        assertNotNull(lookup(".invalid-data-input-popup .invalid-data-fix").<Label>queryAll().stream().map(l -> l.getText()).collect(Collectors.joining(" | ")),fix);
+        Node fix = lookup(".invalid-data-input-popup .invalid-data-fix").lookup((Label l) -> TestUtil.fx(() -> l.getText()).contains(suggestedFix)).query();
+        assertNotNull(lookup(".invalid-data-input-popup .invalid-data-fix").<Label>queryAll().stream().map(l -> TestUtil.fx(() -> l.getText())).collect(Collectors.joining(" | ")),fix);
         clickOn(fix);
         type("", suggestedFix + "$");
     }
@@ -1246,17 +1242,17 @@ public class TestStructuredTextField extends FXApplicationTest
         write(entry);
         if (endEditAndCompareTo != null)
         {
-            FXUtility.runAfter(() -> dummy.requestFocus());
+            Platform.runLater(() -> dummy.requestFocus());
             WaitForAsyncUtils.waitForFxEvents();
         }
-        String actual = fx(() -> f.get().getText());
+        String actual = TestUtil.fx(() -> f.get().getText());
         // We only care about cursor position if we haven't finished editing:
         if (endEditAndCompareTo == null)
         {
             // Add curly brackets to indicate selection:
-            int anchor = fx(() -> f.get().getAnchor());
+            int anchor = TestUtil.fx(() -> f.get().getAnchor());
             actual = actual.substring(0, anchor) + "^" + actual.substring(anchor);
-            int caretPos = fx(() -> f.get().getCaretPosition());
+            int caretPos = TestUtil.fx(() -> f.get().getCaretPosition());
             boolean anchorBeforeCaret = anchor <= caretPos;
             actual = actual.substring(0, caretPos + (anchorBeforeCaret ? 1 : 0)) + "$" + actual.substring(caretPos + (anchorBeforeCaret ? 1 : 0));
 
@@ -1269,9 +1265,9 @@ public class TestStructuredTextField extends FXApplicationTest
         if (endEditAndCompareTo != null)
         {
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
-            EditorKit<?> ed = f.get().getEditorKit();
+            EditorKit<?> ed = TestUtil.fx(() -> f.get().getEditorKit());
             @SuppressWarnings("value")
-            @Value Object value = ed.getLastCompletedValue();
+            @Value Object value = TestUtil.fx(() -> ed.getLastCompletedValue());
             @SuppressWarnings("value")
             @Value Object eeco = endEditAndCompareTo;
             Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {
@@ -1286,7 +1282,7 @@ public class TestStructuredTextField extends FXApplicationTest
             });
             try
             {
-                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText() + " " + DataTypeUtility._test_valueToString(eeco) + " vs " + DataTypeUtility._test_valueToString(value), 0, x.intValue()));
+                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(TestUtil.fx(() -> f.get().getText()) + " " + DataTypeUtility._test_valueToString(eeco) + " vs " + DataTypeUtility._test_valueToString(value), 0, x.intValue()));
             }
             catch (InterruptedException | ExecutionException e)
             {
