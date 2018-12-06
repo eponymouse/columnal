@@ -941,7 +941,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
      *            not just the raw text entered by the user)
      * Returns true if successful 
      */
-    public final boolean addContent(@Nullable ConsecutiveChild<?, ?> before, String src)
+    public final boolean addContent(@Nullable ConsecutiveChild<EXPRESSION, SAVER> before, String src)
     {
         try
         {
