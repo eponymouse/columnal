@@ -187,7 +187,10 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                 
                 if (visitor.closest != null)
                 {
-                    visitor.closest.item.getParent().focusRightOf(visitor.closest.item, Focus.RIGHT, false);
+                    if (visitor.closest.item.isBlank())
+                        visitor.closest.item.focus(Focus.RIGHT);
+                    else
+                        visitor.closest.item.getParent().focusRightOf(visitor.closest.item, Focus.RIGHT, false);
                 }
                 e.consume();
             }
