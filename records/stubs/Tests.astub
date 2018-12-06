@@ -17,5 +17,5 @@ class Assert
 
 package org.testfx.service.query;
 interface NodeQuery {
-    <T extends Node> @Nullable T query();
+    <T extends Node> @NonNull T query();
 }

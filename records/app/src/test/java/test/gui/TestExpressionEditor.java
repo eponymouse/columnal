@@ -121,7 +121,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
                 return;
             }
             TestUtil.sleep(500);
-            assertNull(lookup(".ok-button").query());
+            assertNull(lookup(".ok-button").tryQuery().orElse(null));
             Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
             // Check expressions match:
