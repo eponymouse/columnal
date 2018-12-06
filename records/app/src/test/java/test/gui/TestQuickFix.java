@@ -279,7 +279,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             CellPosition position = new CellPosition(CellPosition.row(7), CellPosition.col(1));
             tableManager.edit(null, () -> new Calculate(tableManager, new InitialLoadDetails(null, position, null), tableManager.getAllTables().get(0).getId(), ImmutableMap.of()), null);
 
-            TestUtil.sleep(2000);
+            TestUtil.sleep(3000);
             NodeQuery arrowQuery = lookup(".expand-arrow").match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-right")));
             clickOnItemInBounds(arrowQuery, mainWindowActions._test_getVirtualGrid(), new RectangleBounds(
                 new CellPosition(CellPosition.row(8), CellPosition.col(1)),
@@ -306,6 +306,10 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
                 clickOn(MouseButton.MIDDLE);
                 clickOn(MouseButton.MIDDLE);
                 clickOn();
+                // Note that the field may not get focus if
+                // if is a keyword, but the blank next to it
+                // should get focused.
+                TestUtil.delay(500);
             }
             List<Window> windows = listWindows();
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
