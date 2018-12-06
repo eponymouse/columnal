@@ -44,7 +44,7 @@ public abstract class EntryNode<EXPRESSION extends StyledShowable, SAVER extends
                     Object content = clipboard.getContent(parent.getClipboardType());
                     if (content != null)
                     {
-                        parent.getEditor().addContent(FXUtility.mouse(EntryNode.this), content.toString());
+                        parent.addContent(FXUtility.mouse(EntryNode.this), content.toString());
                         return;
                     }
                 }
