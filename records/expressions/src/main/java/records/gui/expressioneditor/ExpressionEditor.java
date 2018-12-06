@@ -169,7 +169,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             int nodesSizeOfSmallest = Integer.MAX_VALUE;
 
             @Override
-            public <C extends StyledShowable> void register(ConsecutiveChild<? extends C, ?> graphicalItem, Class<C> childType)
+            public <C extends StyledShowable, S extends ClipboardSaver> void register(ConsecutiveChild<C, S> graphicalItem, Class<C> childType)
             {
                 for (Node node : graphicalItem.nodes())
                 {

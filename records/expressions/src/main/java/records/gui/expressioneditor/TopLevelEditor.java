@@ -149,7 +149,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                     private @MonotonicNonNull NodeInfo closest;
                     
                     @Override
-                    public <C extends StyledShowable> void register(ConsecutiveChild<? extends C, ?> graphicalItem, Class<C> childType)
+                    public <C extends StyledShowable, S extends ClipboardSaver> void register(ConsecutiveChild<C, S> graphicalItem, Class<C> childType)
                     {
                         NodeInfo latest = graphicalItem.nodes().stream().map(node -> {
                             final double vertDist;
@@ -307,7 +307,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
             @MonotonicNonNull Pair<ConsecutiveChild<?, ?>, FXPlatformRunnable> nearest = null;
 
             @Override
-            public <D extends StyledShowable> void register(ConsecutiveChild<? extends D, ?> item, Class<D> childType)
+            public <D extends StyledShowable, S extends ClipboardSaver> void register(ConsecutiveChild<D, S> item, Class<D> childType)
             {
                 @Nullable String data = availableFormats.apply(item.getParent().getClipboardType());
                 if (data != null && !item.nodes().isEmpty())

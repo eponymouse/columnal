@@ -13,7 +13,7 @@ public interface Locatable
     // This can be implemented to return closest insert-before position, or item-at-target
     public interface LocatableVisitor
     {
-        public <C extends StyledShowable> void register(ConsecutiveChild<? extends C, ?> graphicalItem, Class<C> childType);
+        public <C extends StyledShowable, S extends ClipboardSaver> void register(ConsecutiveChild<C, S> graphicalItem, Class<C> childType);
         
         // TODO add another method for clause nodes to call
     }
