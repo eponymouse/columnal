@@ -104,13 +104,13 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnitLiteralFix4()
     {
-        testFix("@ifACC1=ACC2=32@then2@else7+6", "32", "", "@if (@column ACC1 = @column ACC2 = 32{m/s^2}) @then 2 @else (7 + 6)");
+        testFix("@ifACC1=ACC2=32@then2@else7+6@endif", "32", "", "@if (@column ACC1 = @column ACC2 = 32{m/s^2}) @then 2 @else (7 + 6) @endif");
     }
 
     @Test
     public void testUnitLiteralFix5()
     {
-        testFix("@matchACC1@case3@then5", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 5");
+        testFix("@matchACC1@case3@then5@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 5 @endmatch");
     }
 
     @Test
