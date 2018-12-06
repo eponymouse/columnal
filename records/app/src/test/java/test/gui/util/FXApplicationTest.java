@@ -4,17 +4,25 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.testfx.api.FxRobot;
+import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import test.TestUtil;
@@ -25,6 +33,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
@@ -137,5 +146,33 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     public FxRobot write(char character)
     {
         return write(Character.toString(character));
+    }
+
+    /**
+     * Monocle doesn't seem to show context menu when right-clicking, so we use
+     * this work-around for headless mode.
+     */
+    @SuppressWarnings({"units", "value", "identifier"})
+    public FxRobotInterface showContextMenu(String nodeQuery)
+    {
+        if (GraphicsEnvironment.isHeadless())
+        {
+            @NonNull Node node = lookup(nodeQuery).<@NonNull Node>query();
+            TestUtil.fx_(() -> {
+                Bounds local = node.getBoundsInLocal();
+                Bounds screen = node.localToScreen(local);
+                Point2D localMid = Utility.middle(local);
+                Point2D screenMid = Utility.middle(screen);
+                ContextMenuEvent contextMenuEvent = new ContextMenuEvent(ContextMenuEvent.CONTEXT_MENU_REQUESTED,
+                        localMid.getX(), localMid.getY(),
+                        screenMid.getX(), screenMid.getY(), false, null);
+                node.getOnContextMenuRequested().handle(contextMenuEvent);
+            });
+            return this;
+        }
+        else
+        {
+            return clickOn(nodeQuery, MouseButton.SECONDARY);
+        }
     }
 }

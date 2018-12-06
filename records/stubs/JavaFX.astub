@@ -251,6 +251,13 @@ class Clipboard
 {
     @Nullable Object getContent(DataFormat dataFormat);
 }
+class ContextMenuEvent
+{
+    ContextMenuEvent(EventType<ContextMenuEvent> eventType,
+        double x, double y,
+        double screenX, double screenY,
+        boolean keyboardTrigger, @Nullable PickResult pickResult);
+}
 
 package javafx.scene.layout;
 class BorderPane

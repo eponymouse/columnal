@@ -131,7 +131,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             assertEquals(expressionValue.expression.toString(), expression.toString());
 
             // Now check values match:
-            clickOn(".table-display-table-title.transformation-table-title", MouseButton.SECONDARY)
+            showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
             Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<List<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
