@@ -29,7 +29,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
             atomicEdit.set(true);
             children.addAll(content.map(f -> f.load(Utility.later(this))).collect(Collectors.toList()));
             if (children.isEmpty())
-                children.add(Utility.later(this).makeBlankChild());
+                children.add(Utility.later(this).makeBlankChild(false));
             atomicEdit.set(false);
             // Get rid of anything which would go if you got focus and lost it again:
             Utility.later(this).focusChanged();
@@ -37,7 +37,7 @@ public abstract class Consecutive<EXPRESSION extends StyledShowable, SAVER exten
         else
         {
             atomicEdit.set(true);
-            children.add(Utility.later(this).makeBlankChild());
+            children.add(Utility.later(this).makeBlankChild(false));
             atomicEdit.set(false);
         }
     }

@@ -164,12 +164,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         return children == null ? Stream.empty() : children.stream().map(c -> c);
     }
-
-    @NonNull
-    protected EntryNode<EXPRESSION, SAVER> makeBlankChild()
+    
+    protected EntryNode<EXPRESSION, SAVER> makeBlankChild(boolean showErrors)
     {
         //Log.logStackTrace("Make blank child");
-        return operations.makeGeneral(this, null);
+        EntryNode<EXPRESSION, SAVER> blank = operations.makeGeneral(this, null);
+        if (showErrors)
+            blank.unmaskErrors();
+        return blank;
     }
 
     public void setDisable(boolean disabled)
@@ -222,7 +224,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         
         children.removeIf(isRemovable);
         if (children.isEmpty())
-            children.add(makeBlankChild());
+            children.add(makeBlankChild(false));
         atomicEdit.set(false);
         //Log.debug("  Now size " + children.size());
         removingBlanks = false;
@@ -242,7 +244,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         // Empty shouldn't happen, but better to fix than complain:
         if (children.isEmpty())
         {
-            children.add(makeBlankChild());
+            children.add(makeBlankChild(false));
         }
         children.get(targetIndex).focus(side);
         
@@ -251,7 +253,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         {
             int addIndex = side == Focus.LEFT ? 0 : children.size();
             
-            children.add(addIndex, focusWhenShown(makeBlankChild()));
+            children.add(addIndex, focusWhenShown(makeBlankChild(true)));
         }
     }
     
@@ -380,7 +382,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                 inRange = false;
         }
         if (children.isEmpty())
-            children.add(focusWhenShown(makeBlankChild()));
+            children.add(focusWhenShown(makeBlankChild(false)));
         atomicEdit.set(false);
     }
 
@@ -410,7 +412,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
         // if coming from blank, must create blank
         withChildIndex(rightOf, index -> {
             @NonNull final EntryNode<EXPRESSION, SAVER> child;
-            children.add(index + 1, focusWhenShown(child = makeBlankChild()));
+            children.add(index + 1, focusWhenShown(child = makeBlankChild(false)));
             // Set content after, in case it triggers
             // completion and moves slot:
             child.setText(initialContent);
@@ -451,17 +453,17 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                     if (children.get(index + 1).availableForFocus())
                         children.get(index + 1).focus(side);
                     else
-                        children.add(index + 2, focusWhenShown(makeBlankChild()));
+                        children.add(index + 2, focusWhenShown(makeBlankChild(true)));
                 }
                 else
-                    children.add(index + 1, focusWhenShown(makeBlankChild()));
+                    children.add(index + 1, focusWhenShown(makeBlankChild(true)));
             }
             else
             {
                 if (leavingBlank)
                     parentFocusRightOfThis(side, becauseOfTab);
                 else
-                    children.add(index + 1, focusWhenShown(makeBlankChild()));
+                    children.add(index + 1, focusWhenShown(makeBlankChild(true)));
             }
         });
     }
@@ -493,10 +495,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
                     if (children.get(index - 1).availableForFocus())
                         children.get(index - 1).focus(Focus.RIGHT);
                     else
-                        children.add(index - 1, focusWhenShown(makeBlankChild()));
+                        children.add(index - 1, focusWhenShown(makeBlankChild(true)));
                 }
                 else
-                    children.add(index, focusWhenShown(makeBlankChild()));
+                    children.add(index, focusWhenShown(makeBlankChild(true)));
             }
             else
             {
@@ -516,7 +518,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         Log.debug("Adding blank at left");
         atomicEdit.set(true);
-        EntryNode<@NonNull EXPRESSION, SAVER> blankOperand = makeBlankChild();
+        EntryNode<@NonNull EXPRESSION, SAVER> blankOperand = makeBlankChild(true);
         blankOperand.focusWhenShown();
         children.add(0, blankOperand);
         atomicEdit.set(false);
@@ -527,7 +529,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     public void focusWhenShown()
     {
         if (children.isEmpty())
-            children.add(makeBlankChild());
+            children.add(makeBlankChild(false));
         
         children.get(0).focusWhenShown();
     }
