@@ -320,7 +320,7 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                     }
 
                     // If we are last item, it could be added to our right:
-                    ImmutableList<? extends ConsecutiveChild<? extends D, ?>> itemSiblings = item.getParent().getAllChildren();
+                    ImmutableList<ConsecutiveChild<D, S>> itemSiblings = item.getParent().getAllChildren();
                     if (Utility.indexOfRef(itemSiblings, item) == itemSiblings.size() - 1)
                     {
                         dist = FXUtility.distanceToRight(item.nodes().get(item.nodes().size() - 1), pointInScene);

@@ -623,7 +623,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
                 
                 boolean followedByClose = false;
                 ImmutableList<ConsecutiveChild<@NonNull Expression, ExpressionSaver>> siblings = parent.getAllChildren();
-                int index = Utility.indexOfRef(siblings, this);
+                int index = Utility.indexOfRef(siblings, GeneralExpressionEntry.this);
                 if (index + 1 < siblings.size() && bracketBalanceType != null)
                     followedByClose = siblings.get(index + 1).closesBracket(bracketBalanceType);
                 
