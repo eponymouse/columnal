@@ -883,6 +883,13 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                 this.keyboardErrorInfo = errorInfo == null ? null : this.keyboardErrorInfo.replaceFirst(errorInfo);
             }
             
+            // Can happen after a save; error was wiped but
+            // keyboard focus remains:
+            if (this.keyboardErrorInfo == null && errorInfo != null &&  keyboardFocus.isFocused())
+            {
+                this.keyboardErrorInfo = new Pair<>(errorInfo, keyboardFocus);
+            }
+            
             // Not else; both may happen:
             List<Node> hoverNodes = Arrays.asList(possibleHoverNodes);
             if (this.mouseErrorInfo != null && Utility.containsRef(hoverNodes, this.mouseErrorInfo.getSecond()))
