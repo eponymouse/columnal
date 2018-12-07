@@ -151,7 +151,7 @@ public class NumericLiteral extends Literal
         return new NumericLiteral(value, UnitExpression.load(unit));
     }
 
-    public Number getNumber()
+    public @Value Number getNumber()
     {
         return value;
     }
