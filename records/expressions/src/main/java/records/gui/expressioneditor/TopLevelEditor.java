@@ -917,9 +917,14 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
         @Override
         public void keyboardFocusExited(@Nullable ErrorInfo errorInfo, TextField textField)
         {
-            keyboardErrorInfo = null;
+            // We may get the new focus then a relinquish of the old one,
+            // so need to make sure the relinquish doesn't overwrite the new focus:
+            if (keyboardErrorInfo != null && keyboardErrorInfo.getSecond() == textField)
+            {
+                keyboardErrorInfo = null;
 
-            updateShowHide(true);
+                updateShowHide(true);
+            }
         }
 
         @Override
