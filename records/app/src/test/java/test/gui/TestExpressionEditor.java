@@ -12,6 +12,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -155,6 +156,61 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         }
     }
 
+    public @Nullable Expression plainEntry(String expressionSrc) throws Exception
+    {
+        TestUtil.fx_(() -> {windowToUse = new Stage();});
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, null, new KnownLengthRecordSet(ImmutableList.of(), 0));
+        try
+        {
+            Region gridNode = TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode());
+            CellPosition targetPos = new CellPosition(CellPosition.row(3), CellPosition.col(5));
+            keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
+            // Only need to click once as already selected by keyboard:
+            for (int i = 0; i < 1; i++)
+                clickOnItemInBounds(from(gridNode), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            // Not sure why this doesn't work:
+            //clickOnItemInBounds(lookup(".create-table-grid-button"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+            correctTargetWindow().clickOn(".id-new-transform");
+            correctTargetWindow().clickOn(".id-transform-calculate");
+            correctTargetWindow().write("Table1");
+            push(KeyCode.ENTER);
+            TestUtil.sleep(200);
+            write("DestCol");
+            // Focus expression editor:
+            push(KeyCode.TAB);
+            write(expressionSrc, 1);
+
+            moveTo(".ok-button");
+            // Get rid of popups:
+            clickOn(MouseButton.MIDDLE);
+            clickOn(MouseButton.PRIMARY);
+            // Now close dialog, and check for equality;
+            View view = correctTargetWindow().lookup(".view").query();
+            if (view == null)
+            {
+                assertNotNull(view);
+                return null;
+            }
+            TestUtil.sleep(500);
+            assertNull(lookup(".ok-button").tryQuery().orElse(null));
+            Calculate calculate = (Calculate) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
+
+            // Check expressions match:
+            Expression expression = calculate.getCalculatedColumns().values().iterator().next();
+            
+            // If test is success, ignore exceptions (which seem to occur due to hiding error display popup):
+            // Shouldn't really need this code but test is flaky without it due to some JavaFX animation-related exceptions:
+            TestUtil.sleep(2000);
+            WaitForAsyncUtils.clearExceptions();
+            return expression;
+        }
+        finally
+        {
+            Stage s = windowToUse;
+            Platform.runLater(() -> s.hide());
+        }
+    }
+
     // TODO test that nonsense is preserved after load (which will change it all to invalid) -> save -> load (which should load invalid version)
     
     private void testSimple(String expressionSrc) throws Exception
@@ -168,6 +224,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             new KnownLengthRecordSet(ImmutableList.of(), 0),
             expression
         ), new Random(0));
+        
+        assertEquals(expression, plainEntry(expressionSrc));
     }
     
     @Test
@@ -245,6 +303,47 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     {
         testSimple("1*(-2+3)");
     }
+
+    @Test
+    public void testPlus() throws Exception
+    {
+        testSimple("+2");
+    }
+
+    @Test
+    public void testPlus2() throws Exception
+    {
+        testSimple("1+2");
+    }
+
+    @Test
+    public void testPlus2b() throws Exception
+    {
+        testSimple("1 + 2");
+    }
+
+    @Test
+    public void testPlus2c() throws Exception
+    {
+        testSimple("\"a\"+2");
+    }
+
+    @Test
+    public void testPlus3() throws Exception
+    {
+        testSimple("1*+2");
+    }
+    @Test
+    public void testPlus4() throws Exception
+    {
+        testSimple("1++2");
+    }
+
+    @Test
+    public void testPlus5() throws Exception
+    {
+        testSimple("1*(+2/3)");
+    }
     
     @Test
     public void testBracket() throws Exception
@@ -301,7 +400,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     }
     
     @Test
-    public void testMarch() throws Exception
+    public void testMatch() throws Exception
     {
         testSimple("@match @call @function from text to(type{DateTime}, \"2047-12-23 10:50:09.094335028\") @case @call @function from text to(type{DateTime}, \"2024-06-09 13:26:01.165156525\") @given true @orcase @call @function datetime(date{8848-10-02}, time{14:57:00}) @given (true = @call @function from text to(type{Boolean}, \"true\") = true = @call @function from text to(type{Boolean}, \"true\")) @then @call @function from text to(type{(Number, Number)}, \"(7,242784)\") @case @anything @given true @orcase @call @function from text to(type{DateTime}, @call @function from text to(type{Text}, \"^q2914-03-04 09:00:00.753695607^q\")) @orcase @call @function from text to(type{DateTime}, \"\") @given true @orcase @newvar var11 @given (var11 = @call @function second(@call @function second(@call @function from text to(type{(Number {(USD*m)/s^2}, (DateTime, DateTime), [Text], Number)}, \"(-2147483649,(2047-09-04 22:11:00,2047-12-23 10:50:09.094335028),[^qUNITS^q,^qknr90rr9rra^q,^qX^q],1609257947333)\")))) @then (3, 4) @endmatch");
     }
