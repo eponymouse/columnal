@@ -22,6 +22,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.spreadsheet.Grid;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Ignore
 public class TestVirtualGridLayout extends FXApplicationTest
 {
     public static final int WINDOW_WIDTH = 810;
