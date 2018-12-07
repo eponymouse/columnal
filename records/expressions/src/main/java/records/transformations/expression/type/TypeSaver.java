@@ -1,6 +1,5 @@
 package records.transformations.expression.type;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
@@ -17,7 +16,6 @@ import records.gui.expressioneditor.TypeEditor;
 import records.gui.expressioneditor.TypeEntry.Keyword;
 import records.gui.expressioneditor.TypeEntry.Operator;
 import records.transformations.expression.BracketedStatus;
-import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.type.TypeSaver.Context;
 import threadchecker.OnThread;
@@ -148,6 +146,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             }
         }
         super.saveOperand(singleItem, start, end, withContext);
+    }
+
+    @Override
+    protected @Nullable Supplier<TypeExpression> canBeUnary(OpAndNode operator, TypeExpression followingOperand)
+    {
+        return null;
     }
 
     @Override

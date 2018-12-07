@@ -203,11 +203,6 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
         if (current.startsWith("@"))
         {
             return !Character.isLetter(newCodepoint);
-        }   
-        // Numeric literal starting with +/-, don't compare to first character: 
-        if ((current.startsWith("+") || current.startsWith("-")) && (current.length() == 1 || current.codePoints().anyMatch(Character::isDigit)))
-        {
-            return OperandOps.alphabetDiffers(Arrays.asList(ExpressionAlphabet.values()), "0" + current.substring(1), newCodepoint);
         }
         // Identifiers can have numbers after first char:
         if (current.codePoints().limit(1).anyMatch(ExpressionAlphabet.WORD::test) && Character.isDigit(newCodepoint))

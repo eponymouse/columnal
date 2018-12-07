@@ -532,6 +532,15 @@ public class Utility
         return Rational.ofBigDecimal(new BigDecimal(text));
     }
 
+    @SuppressWarnings("value")
+    public static @Value Number negate(@Value Number n)
+    {
+        if (n instanceof BigDecimal)
+            return toBigDecimal(n).negate(MathContext.DECIMAL128);
+        else
+            return -n.longValue();
+    }
+    
     // If !add, subtract
     @SuppressWarnings("value")
     public static @Value Number addSubtractNumbers(@Value Number lhs, @Value Number rhs, boolean add)

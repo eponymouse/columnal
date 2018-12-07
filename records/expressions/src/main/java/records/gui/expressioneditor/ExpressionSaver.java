@@ -420,6 +420,22 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     }
 
     @Override
+    protected @Nullable Supplier<Expression> canBeUnary(OpAndNode operator, Expression followingOperand)
+    {
+        if (ImmutableList.of(Op.ADD, Op.SUBTRACT).contains(operator.op)
+                && followingOperand instanceof NumericLiteral)
+        {
+            NumericLiteral numericLiteral = (NumericLiteral) followingOperand;
+            if (operator.op == Op.SUBTRACT)
+                return () -> new NumericLiteral(Utility.negate(numericLiteral.getNumber()), numericLiteral.getUnitExpression());
+            else
+                return () -> numericLiteral; // No change needed for unary plus
+        }
+        else
+            return null;
+    }
+
+    @Override
     protected Expression makeSingleInvalid(Keyword terminator)
     {
         return new InvalidIdentExpression(terminator.getContent());

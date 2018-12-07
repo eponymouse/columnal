@@ -405,10 +405,10 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         @Override
         public ShowStatus shouldShow(String input)
         {
-            // To allow "+", "-", or "1.", we add zero at the end before parsing:
+            // To allow "1.", we add zero at the end before parsing:
             try
             {
-                return !input.isEmpty() && Utility.parseAsOne(input + "0", ExpressionLexer::new, ExpressionParser::new, p -> p.numericLiteral())
+                return !input.isEmpty() && Utility.parseAsOne(input + "0", ExpressionLexer::new, ExpressionParser::new, p -> p.completeNumber())
                     != null ? ShowStatus.PHANTOM : ShowStatus.NO_MATCH;
             }
             catch (InternalException | UserException e)
@@ -428,7 +428,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         {
             final String possible;
             if (curInput.isEmpty())
-                possible = "0123456789+-._";
+                possible = "0123456789._";
             else
             {
                 if (curInput.contains("."))

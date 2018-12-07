@@ -8,7 +8,6 @@ import javafx.scene.input.DataFormat;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.UnitEntry.UnitBracket;
 import records.gui.expressioneditor.UnitEntry.UnitOp;
@@ -24,7 +23,7 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, UnitBracket, Context>// implements ErrorAndTypeRecorder
 {
@@ -113,6 +112,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
         }
 
         return record(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new InvalidSingleUnitExpression(o.op.getContent()), x -> x))));
+    }
+
+    @Override
+    protected @Nullable Supplier<UnitExpression> canBeUnary(OpAndNode operator, UnitExpression followingOperand)
+    {
+        return null;
     }
 
     @Override

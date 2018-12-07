@@ -81,4 +81,4 @@ topLevelExpression : compoundExpression | match | expression /* includes termina
 completeExpression: topLevelExpression EOF;
 
 completeBooleanLiteral : booleanLiteral EOF;
-completeNumericLiteral : numericLiteral EOF;
+completeNumber : NUMBER EOF;
