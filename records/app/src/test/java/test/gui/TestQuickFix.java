@@ -102,6 +102,12 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     }
 
     @Test
+    public void testUnitLiteralFix3B()
+    {
+        testFix("ACC1=103", "103", "", "@column ACC1 = 103{m/s^2}");
+    }
+
+    @Test
     public void testUnitLiteralFix4()
     {
         testFix("@ifACC1=ACC2=32@then2@else7+6@endif", "32", "", "@if (@column ACC1 = @column ACC2 = 32{m/s^2}) @then 2 @else (7 + 6) @endif");
@@ -309,8 +315,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
                 // Note that the field may not get focus if
                 // if is a keyword, but the blank next to it
                 // should get focused.
-                TestUtil.delay(500);
             }
+            TestUtil.delay(500);
             List<Window> windows = listWindows();
             @Nullable Window errorPopup = windows.stream().filter(w -> w instanceof PopOver).findFirst().orElse(null);
             assertNotNull(Utility.listToString(windows), errorPopup);
