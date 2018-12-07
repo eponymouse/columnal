@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 public class NumericLiteral extends Literal
 {
     private final @Value Number value;
-    private final @Nullable UnitExpression unit;
+    private final @Nullable @Recorded UnitExpression unit;
 
     public NumericLiteral(Number value, @Nullable @Recorded UnitExpression unit)
     {
@@ -141,7 +141,7 @@ public class NumericLiteral extends Literal
         return numberAsString();
     }
 
-    public @Nullable UnitExpression getUnitExpression()
+    public @Nullable @Recorded UnitExpression getUnitExpression()
     {
         return unit;
     }

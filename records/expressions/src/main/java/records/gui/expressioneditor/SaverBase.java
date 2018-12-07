@@ -506,7 +506,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         private CollectedItems(List<Either<@Recorded EXPRESSION, OpAndNode>> originalContent)
         {
             // Take a copy because we may modify it while processing unary operators:
-            ArrayList<Either<EXPRESSION, OpAndNode>> content = new ArrayList<>(originalContent);
+            ArrayList<Either<@Recorded EXPRESSION, OpAndNode>> content = new ArrayList<>(originalContent);
             
             // Although it's duplication, we keep a list for if it turns out invalid, and two lists for if it is valid:
             // Valid means that operands interleave exactly with operators, and there is an operand at beginning and end.
@@ -519,7 +519,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
             for (int i = 0; i < content.size(); i++)
             {
-                Either<EXPRESSION, OpAndNode> item = content.get(i);
+                Either<@Recorded EXPRESSION, OpAndNode> item = content.get(i);
                 int iFinal = i;
                 
                 item.either_(expression -> {
@@ -533,7 +533,6 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     }
                     lastWasExpression[0] = true;
                 }, op -> {
-                    boolean beginning = invalid.isEmpty();
                     invalid.add(Either.left(op));
                     validOperators.add(op);
 
@@ -541,8 +540,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     // One is that it's at the beginning of a group,
                     // the other is that it follows exactly one other operator
 
-                    @Nullable Supplier<EXPRESSION> canBeUnary = iFinal + 1 >= content.size() ? null :
-                            content.get(iFinal + 1).<@Nullable Supplier<EXPRESSION>> either(next -> canBeUnary(op, next), anotherOp -> null);
+                    @Nullable Supplier<@Recorded EXPRESSION> canBeUnary = iFinal + 1 >= content.size() ? null :
+                            content.get(iFinal + 1).<@Nullable Supplier<@Recorded EXPRESSION>> either((@Recorded EXPRESSION next) -> canBeUnary(op, next), anotherOp -> null);
 
                     if (!lastWasExpression[0])
                     {
@@ -569,7 +568,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
      * If the operator followed by the operand can act as a unary operator,
      * return a supplier to make the combined item.  If not, return null.
      */
-    protected abstract @Nullable Supplier<EXPRESSION> canBeUnary(OpAndNode operator, EXPRESSION followingOperand);
+    protected abstract @Nullable Supplier<@Recorded EXPRESSION> canBeUnary(OpAndNode operator, @Recorded EXPRESSION followingOperand);
 
     /**
      * If all operators are from the same {@link records.gui.expressioneditor.OperandOps.OperatorExpressionInfo}, returns a normal expression with those operators.

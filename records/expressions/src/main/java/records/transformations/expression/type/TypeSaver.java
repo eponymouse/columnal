@@ -149,7 +149,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected @Nullable Supplier<TypeExpression> canBeUnary(OpAndNode operator, TypeExpression followingOperand)
+    protected @Nullable Supplier<@Recorded TypeExpression> canBeUnary(OpAndNode operator, TypeExpression followingOperand)
     {
         return null;
     }

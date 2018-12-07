@@ -115,7 +115,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected @Nullable Supplier<UnitExpression> canBeUnary(OpAndNode operator, UnitExpression followingOperand)
+    protected @Nullable Supplier<@Recorded UnitExpression> canBeUnary(OpAndNode operator, UnitExpression followingOperand)
     {
         return null;
     }
