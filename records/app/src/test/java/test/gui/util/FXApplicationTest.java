@@ -152,7 +152,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
      * Monocle doesn't seem to show context menu when right-clicking, so we use
      * this work-around for headless mode.
      */
-    @SuppressWarnings({"units", "value", "identifier"})
+    @SuppressWarnings({"all"})
     public FxRobotInterface showContextMenu(String nodeQuery)
     {
         if (GraphicsEnvironment.isHeadless())
