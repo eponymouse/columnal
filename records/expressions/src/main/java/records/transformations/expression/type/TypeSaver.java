@@ -189,10 +189,10 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         // Don't examine last item, can't be followed by unit:
         for (int i = 0; i < content.size() - 1; i++)
         {
-            NumberTypeExpression numberType = content.get(i).<@Nullable NumberTypeExpression>either(e -> e instanceof NumberTypeExpression && !((NumberTypeExpression) e).hasUnit() ? (NumberTypeExpression)e : null, op -> null);
+            @Recorded NumberTypeExpression numberType = content.get(i).<@Nullable @Recorded NumberTypeExpression>either(e -> e instanceof NumberTypeExpression && !((NumberTypeExpression) e).hasUnit() ? (NumberTypeExpression)e : null, op -> null);
             if (numberType != null)
             {
-                UnitLiteralTypeExpression unitLiteral = content.get(i + 1).<@Nullable UnitLiteralTypeExpression>either(e -> e instanceof UnitLiteralTypeExpression ? (UnitLiteralTypeExpression)e : null, op -> null);
+                @Recorded UnitLiteralTypeExpression unitLiteral = content.get(i + 1).<@Nullable @Recorded UnitLiteralTypeExpression>either(e -> e instanceof UnitLiteralTypeExpression ? (UnitLiteralTypeExpression)e : null, op -> null);
                 if (unitLiteral != null)
                 {
                     content.set(i, Either.left(
