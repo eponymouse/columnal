@@ -3,7 +3,6 @@ package test.gui;
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
-import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -13,7 +12,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -30,12 +28,14 @@ import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
+import records.data.ImmediateDataSource;
+import records.data.Table.InitialLoadDetails;
 import records.data.TableId;
+import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -46,16 +46,11 @@ import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DataDisplay;
-import records.gui.grid.RectangleBounds;
-import records.gui.grid.VirtualGrid;
-import records.gui.stable.EditorKitCache;
-import records.gui.stable.ColumnDetails;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
-import records.gui.stf.TableDisplayUtility;
 import records.gui.stf.TableDisplayUtility.GetDataPosition;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.*;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
@@ -63,7 +58,7 @@ import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformRunnable;
+import utility.FXPlatformSupplier;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
@@ -94,8 +89,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -112,55 +106,49 @@ import static org.junit.Assume.assumeThat;
 /**
  * Created by neil on 19/06/2017.
  */
-@SuppressWarnings({"initialization", "deprecation"})
+@SuppressWarnings({"deprecation", "nullness"}) // nullness because of int[] vararg
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class TestStructuredTextField extends FXApplicationTest
 {
-    @OnThread(Tag.Any)
-    private DataDisplay dataDisplay;
     @OnThread(Tag.FXPlatform)
     private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
     @OnThread(Tag.Any)
+    @SuppressWarnings("nullness")
     private TextField dummy;
+    @SuppressWarnings("nullness")
+    @OnThread(Tag.Simulation)
+    private TableManager tableManager;
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
         super.start(stage);
-        VirtualGrid virtualGrid = new VirtualGrid(null, 0, 0);
-        dataDisplay = new DataDisplay(null, new TableId("TestTable"), null, virtualGrid.getFloatingSupplier())
-        {
-            @Override
-            protected CellPosition recalculateBottomRightIncl()
+        AtomicBoolean simDone = new AtomicBoolean(false);
+        Workers.onWorkerThread("Init", Priority.SAVE, () -> {
+            try
             {
-                return getPosition().offsetByRowCols(getHeaderRowCount(), 0);
+                tableManager = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get()._test_getTableManager();
+                simDone.set(true);
             }
-
-            @Override
-            public @OnThread(Tag.FXPlatform) void updateKnownRows(int checkUpToRowIncl, FXPlatformRunnable updateSizeAndPositions)
+            catch (Exception e)
             {
+                e.printStackTrace();
             }
-
-            @Override
-            protected void doCopy(@Nullable RectangleBounds dataBounds)
-            {
-            }
-        };
-        virtualGrid.addGridAreas(ImmutableList.of(dataDisplay));
+        });
+        TestUtil.fxYieldUntil(() -> simDone.get());
         dummy = new TextField();
-        Scene scene = new Scene(new VBox(dummy, virtualGrid.getNode()));
-        stage.setScene(scene);
+        windowToUse.getScene().setRoot(new VBox(dummy, windowToUse.getScene().getRoot()));
         stage.setMinWidth(800);
-        stage.setMinHeight(300);
+        stage.setMinHeight(500);
         stage.show();
         FXUtility.addChangeListenerPlatformNN(f, field -> {
             FXUtility.runAfter(() ->
             {
-                scene.getRoot().layout();
+                stage.getScene().getRoot().layout();
                 stage.sizeToScene();
-                scene.getRoot().layout();
+                stage.getScene().getRoot().layout();
                 field.requestFocus();
             });
             WaitForAsyncUtils.waitForFxEvents();
@@ -173,7 +161,7 @@ public class TestStructuredTextField extends FXApplicationTest
     public void testPrompt() throws InternalException
     {
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 10, 29))));
-        assertEquals("29/10/2034", TestUtil.fx(() -> f.get().getText()));
+        assertEquals("2034-10-29", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
                 new int[] {0, 1, 2},
                 null,
@@ -183,7 +171,7 @@ public class TestStructuredTextField extends FXApplicationTest
         );
 
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(2034, 10, 29, 13, 56, 22))));
-        assertEquals("29/10/2034 13:56:22", TestUtil.fx(() -> f.get().getText()));
+        assertEquals("2034-10-29 13:56:22", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1, 2},
             null,
@@ -257,14 +245,19 @@ public class TestStructuredTextField extends FXApplicationTest
     @OnThread(Tag.FXPlatform)
     private StructuredTextField field(DataType dataType, Object value)
     {
-        CompletableFuture<DataTypeValue> fut = new CompletableFuture<>();
         Workers.onWorkerThread("", Priority.SAVE, () ->
         {
             try
             {
+                List<TableId> ids = Utility.mapList(tableManager.getAllTables(), t -> t.getId());
+                for (TableId id : ids)
+                {
+                    tableManager.remove(id);
+                }
                 @SuppressWarnings({"keyfor", "value", "units"})
                 EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<@Value Object>singletonList(value), DataTypeUtility.makeDefaultValue(dataType))), () -> 1);
-                fut.complete(rs.getColumns().get(0).getType());
+                ImmediateDataSource dataSource = new ImmediateDataSource(tableManager, new InitialLoadDetails(null, CellPosition.ORIGIN, null), rs);
+                tableManager.record(dataSource);
             }
             catch (InternalException | UserException e)
             {
@@ -272,26 +265,22 @@ public class TestStructuredTextField extends FXApplicationTest
             }
         });
 
-        try
-        {
-            @SuppressWarnings("units")
-            @TableDataColIndex int col = 0;
-            EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(col, fut.get(2000, TimeUnit.MILLISECONDS), true, makeGetDataPosition(), () -> {});
-            dataDisplay.setColumns(ImmutableList.of(new ColumnDetails(new ColumnId("C"), dataType, null, cacheSTF)), null, null);
-            //stableView.loadColumnWidths(new double[]{600.0});
-        }
-        catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)
-        {
-            throw new RuntimeException(e);
-        }
-
-        getRealFocusedWindow().getScene().getRoot().applyCss();
-        @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) getRealFocusedWindow().getScene().getRoot().lookup(".structured-text-field");
-        if (structuredTextField != null)
-        {
-            structuredTextField.requestFocus();
-            return structuredTextField;
-        }
+        
+        FXPlatformSupplier<@Nullable StructuredTextField> findSTF = () -> {
+            getRealFocusedWindow().getScene().getRoot().applyCss();
+            @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) getRealFocusedWindow().getScene().getRoot().lookup(".structured-text-field");
+            if (structuredTextField != null)
+            {
+                structuredTextField.requestFocus();
+                return structuredTextField;
+            }
+            return null;
+        };
+        TestUtil.fxYieldUntil(() -> findSTF.get() != null);
+        StructuredTextField stf = findSTF.get();
+        if (stf != null)
+            return stf;
+        
         dumpScreenshot(windowToUse);
         throw new RuntimeException("Couldn't find STF, windows: " + getWindowList() + "\n");
     }
@@ -914,7 +903,7 @@ public class TestStructuredTextField extends FXApplicationTest
         assertNotNull(autoSuggestTrue);
         clickOn(autoSuggestTrue);
         type("", "true", true);
-        assertNull(lookup(".stf-autocomplete").query());
+        assertNull(lookup(".stf-autocomplete").tryQuery().orElse(null));
 
         // Tab should auto-complete plausible option:
         targetF();

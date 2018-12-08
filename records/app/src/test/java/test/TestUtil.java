@@ -9,6 +9,8 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
+import com.sun.javafx.tk.Toolkit;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
@@ -17,6 +19,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import log.Log;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
@@ -78,7 +81,6 @@ import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Robot;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1149,7 +1151,32 @@ public class TestUtil
         clipboardContent.putImage(img);
         Clipboard.getSystemClipboard().setContent(clipboardContent);
     }
-    
+
+    public static void fxYieldUntil(FXPlatformSupplier<Boolean> waitUntilTrue)
+    {
+        Object finish = new Object();
+        FXPlatformRunnable repeat = new FXPlatformRunnable()
+        {
+            int attempts = 0;
+            
+            @Override
+            public void run()
+            {
+                if (waitUntilTrue.get() || attempts >= 10)
+                {
+                    com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(finish, "");
+                }
+                else
+                {
+                    attempts += 1;
+                    FXUtility.runAfterDelay(Duration.millis(300), this);
+                }
+            }
+        };
+        Platform.runLater(repeat::run);
+        Toolkit.getToolkit().enterNestedEventLoop(finish);
+    }
+
     public static interface TestRunnable
     {
         public void run() throws Exception;
