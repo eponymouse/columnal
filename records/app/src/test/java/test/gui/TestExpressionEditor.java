@@ -212,8 +212,13 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     }
 
     // TODO test that nonsense is preserved after load (which will change it all to invalid) -> save -> load (which should load invalid version)
-    
+
     private void testSimple(String expressionSrc) throws Exception
+    {
+        testSimple(expressionSrc, expressionSrc.replaceAll("@(call|function)", ""));
+    }
+    
+    private void testSimple(String expressionSrc, String plainEntry) throws Exception
     {
         Expression expression = Expression.parse(null, expressionSrc, DummyManager.INSTANCE.getTypeManager());
         
@@ -225,7 +230,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             expression
         ), new Random(0));
         
-        assertEquals(expression, plainEntry(expressionSrc.replaceAll("@(call|function)", "")));
+        
+        assertEquals(expression, plainEntry(plainEntry));
     }
     
     @Test
@@ -408,7 +414,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testList3() throws Exception
     {
-        testSimple("1 + 2 + [@invalidops(3, @unfinished \"*\", 4, @unfinished \"/\", 5)] + 6");
+        testSimple("1 + 2 + [@invalidops(3, @unfinished \"*\", 4, @unfinished \"/\", 5)] + 6", 
+    "1 + 2 + [3 * 4 / 5] + 6");
     }
     
     @Test

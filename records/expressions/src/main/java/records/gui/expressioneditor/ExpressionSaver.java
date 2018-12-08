@@ -8,6 +8,7 @@ import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -124,12 +125,6 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
     @Override
     protected @Recorded Expression makeExpression(ConsecutiveChild<Expression, ExpressionSaver> start, ConsecutiveChild<Expression, ExpressionSaver> end, List<Either<@Recorded Expression, OpAndNode>> content, BracketAndNodes<Expression, ExpressionSaver> brackets)
     {
-        UnaryOperator<@Recorded Expression> wrap;
-        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
-            wrap = e -> errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(e)));
-        else
-            wrap = e -> e;
-        
         if (content.isEmpty())
         {
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
@@ -139,16 +134,17 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         }
         
         CollectedItems collectedItems = processItems(content);
-        
+
+        @Nullable @Recorded Expression e = null;
         if (collectedItems.isValid())
         {
             ArrayList<@Recorded Expression> validOperands = collectedItems.getValidOperands();
             ArrayList<OpAndNode> validOperators = collectedItems.getValidOperators();
-            @Nullable @Recorded Expression e;
+            
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                e = wrap.apply(validOperands.get(0));
+                e = validOperands.get(0);
             }
             else
             {
@@ -157,17 +153,21 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 e = makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> 
                     errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(arg)))
                 );
-            }
-            if (e != null)
-            {
-                return e;
-            }
-            
+            }            
         }
         
-        return wrap.apply(errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(
-            Utility.<Either<OpAndNode, @Recorded Expression>, @Recorded Expression>mapListI(collectedItems.getInvalid(), e -> e.<@Recorded Expression>either(o -> errorDisplayerRecord.record(o.sourceNode, o.sourceNode, new InvalidIdentExpression(o.op.getContent())), x -> x))
-        )));
+        if (e == null)
+        {
+            e = errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(
+                    Utility.<Either<OpAndNode, @Recorded Expression>, @Recorded Expression>mapListI(collectedItems.getInvalid(), et -> et.<@Recorded Expression>either(o -> errorDisplayerRecord.record(o.sourceNode, o.sourceNode, new InvalidIdentExpression(o.op.getContent())), x -> x))
+            ));
+        }
+        
+        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && !(e instanceof ArrayExpression))
+        {
+            e = errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(e)));
+        }
+        return e;
     }
 
     @Override
