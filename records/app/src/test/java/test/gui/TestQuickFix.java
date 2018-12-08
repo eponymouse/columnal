@@ -227,7 +227,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     {
         // If a column-single-row is used where a list is expected, offer to switch to
         // a whole-column item:
-        testSimpleFix("sum(ACC1)", "sum", "sum(@entirecolumn ACC1)");
+        testSimpleFix("sum(ACC1)", "sum", "@call @function sum(@entirecolumn ACC1)");
     }
 
     @Test
@@ -237,7 +237,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
         // a column-single-row item:
         
         // Note units aren't right here, but fix should still be offered:
-        testFix("ACC1§ + 6", "ACC1", dotCssClassFor("@column ACC1"), "@column ACC1 + 6");
+        testFix("@entirecolumn ACC1 + 6", "ACC1", dotCssClassFor("@column ACC1"), "@column ACC1 + 6");
     }
     
     

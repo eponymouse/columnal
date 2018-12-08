@@ -2,18 +2,23 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.transformations.expression.NaryOpExpression.TypeProblemDetails;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+
+import java.util.Optional;
 
 /**
  * Created by neil on 30/11/2016.
@@ -52,6 +57,9 @@ public class NotEqualExpression extends BinaryOpExpression
         rhsType.requireEquatable(oneIsPattern);
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType.typeExp, rhsType.typeExp)) == null)
         {
+            ImmutableList<Optional<TypeExp>> expressionTypes = ImmutableList.of(Optional.of(lhsType.typeExp), Optional.of(rhsType.typeExp));
+            onError.recordQuickFixes(lhs, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 0)));
+            onError.recordQuickFixes(rhs, ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(expressionTypes, ImmutableList.of(lhs, rhs), 1)));
             return null;
         }
         return new CheckedExp(onError.recordTypeNN(this, TypeExp.bool(this)), state, ExpressionKind.EXPRESSION);

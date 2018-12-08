@@ -2,20 +2,25 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import annotation.recorded.qual.Recorded;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditorUtil;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.typeExp.MutVar;
+import records.typeExp.NumTypeExp;
 import records.typeExp.TypeClassRequirements;
 import records.typeExp.TypeExp;
 import styled.StyledString;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
 
@@ -59,39 +64,65 @@ public class EqualExpression extends NaryOpExpression
         // The type state must not carry over between operands, because otherwise you could write if ($s, $t) = (t, s) which doesn't pan out,
         // because all the non-patterns must be evaluated before the pattern.
         TypeExp type = new MutVar(this);
+        List<Integer> invalidIndexes = new ArrayList<>();
+        List<Optional<TypeExp>> expressionTypes = new ArrayList<>(expressions.size());
         for (int i = 0; i < expressions.size(); i++)
         {
+            boolean invalid = false;
             Expression expression = expressions.get(i);
             @Nullable CheckedExp checked = expression.check(dataLookup, typeState, onError);
+            expressionTypes.add(Optional.ofNullable(checked).map(c -> c.typeExp));
             if (checked == null)
-                return null;
-            if (checked.expressionKind == ExpressionKind.PATTERN)
             {
-                // Have we already seen a pattern?
-                if (patternIndex.isPresent() && patternIndex.getAsInt() != i)
+                invalid = true;
+            }
+            else
+            {
+                if (checked.expressionKind == ExpressionKind.PATTERN)
                 {
-                    onError.recordError(this, StyledString.s("Only one item in an equals expression can be a pattern."));
-                    return null;
+                    // Have we already seen a pattern?
+                    if (patternIndex.isPresent() && patternIndex.getAsInt() != i)
+                    {
+                        onError.recordError(this, StyledString.s("Only one item in an equals expression can be a pattern."));
+                        invalid = true;
+                    }
+                    else if (expressions.size() > 2)
+                    {
+                        // If there is a pattern and an expression, we don't allow two expressions, because it's not
+                        // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
+                        // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
+                        onError.recordError(this, StyledString.s("Cannot have a pattern in an equals expression with more than two operands."));
+                        invalid = true;
+                    }
+                    else
+                    {
+                        patternIndex = OptionalInt.of(i);
+                        retTypeState = checked.typeState;
+                        checked.requireEquatable(false);
+                    }
                 }
-                else if (expressions.size() > 2)
+
+                if (!invalid && onError.recordError(this, TypeExp.unifyTypes(type, checked.typeExp)) == null)
                 {
-                    // If there is a pattern and an expression, we don't allow two expressions, because it's not
-                    // easily obvious to the user what the semantics should be e.g. 1 = @anything = 2, or particularly
-                    // (1, (? + 1)) = (1, @anything) = (1, (? + 2)).
-                    onError.recordError(this, StyledString.s("Cannot have a pattern in an equals expression with more than two operands."));
-                    return null;
-                }
-                else
-                {
-                    patternIndex = OptionalInt.of(i);
-                    retTypeState = checked.typeState;
-                    checked.requireEquatable(false);
+                    invalid = true;
                 }
             }
             
-            if (onError.recordError(this, TypeExp.unifyTypes(type, checked.typeExp)) == null)
-                return null;
+            if (invalid)
+            {
+                invalidIndexes.add(i);
+            }
         }
+        if (!invalidIndexes.isEmpty())
+        {
+            for (Integer index : invalidIndexes)
+            {
+                TypeProblemDetails tpd = new TypeProblemDetails(ImmutableList.copyOf(expressionTypes), ImmutableList.copyOf(expressions), index);
+                onError.recordQuickFixes(expressions.get(index), ExpressionEditorUtil.getFixesForMatchingNumericUnits(typeState, tpd));
+            }
+        }
+        
+        
         if (!patternIndex.isPresent())
         {
             type.requireTypeClasses(TypeClassRequirements.require("Equatable", "<equals>"));
