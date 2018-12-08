@@ -173,6 +173,9 @@ public abstract class UnitExpression implements LoadableExpression<UnitExpressio
 
     public abstract boolean isEmpty();
 
+    /**
+     * Is this the integer literal 1 ?
+     */
     public abstract boolean isScalar();
 
     @Override

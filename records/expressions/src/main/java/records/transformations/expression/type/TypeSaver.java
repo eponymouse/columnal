@@ -183,6 +183,26 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     {
         if (content.isEmpty())
             return record(start, end, new InvalidOpTypeExpression(ImmutableList.of()));
+        
+        content = new ArrayList<>(content);
+
+        // Don't examine last item, can't be followed by unit:
+        for (int i = 0; i < content.size() - 1; i++)
+        {
+            NumberTypeExpression numberType = content.get(i).<@Nullable NumberTypeExpression>either(e -> e instanceof NumberTypeExpression && !((NumberTypeExpression) e).hasUnit() ? (NumberTypeExpression)e : null, op -> null);
+            if (numberType != null)
+            {
+                UnitLiteralTypeExpression unitLiteral = content.get(i + 1).<@Nullable UnitLiteralTypeExpression>either(e -> e instanceof UnitLiteralTypeExpression ? (UnitLiteralTypeExpression)e : null, op -> null);
+                if (unitLiteral != null)
+                {
+                    content.set(i, Either.left(
+                        record(errorDisplayerRecord.recorderFor(numberType).start,
+                            errorDisplayerRecord.recorderFor(unitLiteral).end,
+                            new NumberTypeExpression(unitLiteral.getUnitExpression()))));
+                    i -= 1;
+                }
+            }
+        }
 
         CollectedItems collectedItems = processItems(content);
 
