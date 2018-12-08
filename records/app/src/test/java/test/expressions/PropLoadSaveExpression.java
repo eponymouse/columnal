@@ -20,7 +20,7 @@ import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import test.DummyManager;
-import test.JavaFXThreadingRule;
+import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
@@ -38,9 +38,6 @@ import static org.junit.Assert.fail;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression extends FXApplicationTest
 {
-    @Rule
-    public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
-
     @Property(trials = 2000)
     public void testLoadSaveNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
@@ -48,12 +45,14 @@ public class PropLoadSaveExpression extends FXApplicationTest
     }
 
     @Property(trials = 1000)
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
-        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save();
-        assertEquals(expression, edited);
-        assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
+        TestUtil.fxTest_(() -> {
+            Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {
+            }).save();
+            assertEquals(expression, edited);
+            assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
+        });
     }
 
     @Property(trials = 1000)

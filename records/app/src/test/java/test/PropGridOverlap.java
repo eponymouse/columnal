@@ -26,26 +26,24 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 @RunWith(JUnitQuickcheck.class)
-@OnThread(value = Tag.FXPlatform, ignoreParent = true)
 public class PropGridOverlap extends FXApplicationTest
 {
-    @Rule
-    public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
-    
     @Property(trials = 1000)
     public void testLoad(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas)
     {
-        VirtualGrid grid = new VirtualGrid(null, 0, 0);
-        ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
-        grid.addGridAreas(gridAreas.gridAreas);
-        checkNoOverlap(gridAreas.gridAreas);
-        //checkHorizSorted(sortedByOriginalX);
-
+        TestUtil.fxTest_(() -> {
+            VirtualGrid grid = new VirtualGrid(null, 0, 0);
+            ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
+            grid.addGridAreas(gridAreas.gridAreas);
+            checkNoOverlap(gridAreas.gridAreas);
+            //checkHorizSorted(sortedByOriginalX);
+        });
     }
 
     // For any given pair of tables, if they overlap vertically, checks
     // that they are still in the horizontal order that they were originally
     @SuppressWarnings("deprecation")
+    @OnThread(Tag.FXPlatform)
     private static void checkHorizSorted(ImmutableList<GridArea> sortedByOriginalX)
     {
         // Check that this list is sorted by current X in the cases where they overlap:
@@ -64,11 +62,13 @@ public class PropGridOverlap extends FXApplicationTest
         }
     }
 
+    @OnThread(Tag.FXPlatform)
     private static ImmutableList<GridArea> sortByCurrentX(ImmutableList<GridArea> gridAreas)
     {
         return gridAreas.stream().sorted(Comparator.comparing(g -> g.getPosition().columnIndex)).collect(ImmutableList.toImmutableList());
     }
 
+    @OnThread(Tag.FXPlatform)
     private void checkNoOverlap(ImmutableList<GridArea> gridAreas)
     {
         // Now check that none overlap.  We do a brute force N^2 test as it is simplest:
@@ -94,33 +94,37 @@ public class PropGridOverlap extends FXApplicationTest
     @Property(trials = 1000)
     public void testMove(@From(GenGridAreaList.class) GenGridAreaList.GridAreaList gridAreas, int toMove, int newColumn, int newRow)
     {
-        VirtualGrid grid = new VirtualGrid(null, 0, 0);
-        ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
-        grid.addGridAreas(gridAreas.gridAreas);
-        checkNoOverlap(gridAreas.gridAreas);
-        //checkHorizSorted(sortedByOriginalX);
-        
-        gridAreas.gridAreas.get(Math.abs(toMove) % gridAreas.gridAreas.size()).setPosition(
-            new CellPosition(CellPosition.row(Math.abs(newColumn) % 25), CellPosition.col(Math.abs(newRow) % 25))
-        );
-        
-        
-        checkNoOverlap(gridAreas.gridAreas);
-        // TODO
-        //checkHorizSortedBy(gridAreas.gridAreas, originalX);
+        TestUtil.fxTest_(() -> {
+            VirtualGrid grid = new VirtualGrid(null, 0, 0);
+            ImmutableList<GridArea> sortedByOriginalX = sortByCurrentX(gridAreas.gridAreas);
+            grid.addGridAreas(gridAreas.gridAreas);
+            checkNoOverlap(gridAreas.gridAreas);
+            //checkHorizSorted(sortedByOriginalX);
+
+            gridAreas.gridAreas.get(Math.abs(toMove) % gridAreas.gridAreas.size()).setPosition(
+                    new CellPosition(CellPosition.row(Math.abs(newColumn) % 25), CellPosition.col(Math.abs(newRow) % 25))
+            );
+
+
+            checkNoOverlap(gridAreas.gridAreas);
+            // TODO
+            //checkHorizSortedBy(gridAreas.gridAreas, originalX);
+        });
     }
     
     @Test
     public void testPair()
     {
-        // A particular pair which caused an infinite loop:
-        VirtualGrid grid = new VirtualGrid(null, 0, 0);
-        ImmutableList<GridArea> gridAreas = ImmutableList.of(
-            GenGridAreaList.makeGridArea(3, 1, 6, 15),
-            GenGridAreaList.makeGridArea(6, 7, 7, 11)
-            
-        );
-        grid.addGridAreas(gridAreas);
-        checkNoOverlap(gridAreas);
+        TestUtil.fxTest_(() -> {
+            // A particular pair which caused an infinite loop:
+            VirtualGrid grid = new VirtualGrid(null, 0, 0);
+            ImmutableList<GridArea> gridAreas = ImmutableList.of(
+                    GenGridAreaList.makeGridArea(3, 1, 6, 15),
+                    GenGridAreaList.makeGridArea(6, 7, 7, 11)
+
+            );
+            grid.addGridAreas(gridAreas);
+            checkNoOverlap(gridAreas);
+        });
     }
 }

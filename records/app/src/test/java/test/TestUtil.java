@@ -670,6 +670,35 @@ public class TestUtil
     }
 
     @OnThread(Tag.Any)
+    public static void fxTest_(FXPlatformRunnable action)
+    {
+        try
+        {
+            WaitForAsyncUtils.<Optional<Throwable>>asyncFx(new Callable<Optional<Throwable>>()
+            {
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public Optional<Throwable> call() throws Exception
+                {
+                    try
+                    {
+                        action.run();
+                        return Optional.empty();
+                    }
+                    catch (Throwable t)
+                    {
+                        return Optional.of(t);
+                    }
+                }
+            }).get(5, TimeUnit.MINUTES).ifPresent(e -> {throw new RuntimeException(e);});
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnThread(Tag.Any)
     public static <T> T sim(SimulationSupplier<T> action)
     {
         try
