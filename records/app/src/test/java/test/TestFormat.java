@@ -83,10 +83,10 @@ public class TestFormat
     @OnThread(Tag.Simulation)
     public void testCurrency() throws InternalException, UserException, InterruptedException, ExecutionException, TimeoutException
     {
-        assertFormat(GenFormat.f(0, c(col(NUM("USD", "$"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
-            "$0, A", "$1, Whatever", "$2, C");
-        assertFormat(GenFormat.f(0, c(col(NUM("GBP", "£"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
-            "£ 0, A", "£ 1, Whatever", "£ 2, C");
+        //assertFormat(GenFormat.f(0, c(col(NUM("USD", "$"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
+            //"$0, A", "$1, Whatever", "$2, C");
+        assertFormat(GenFormat.f(0, c(col(NUM("EUR", "€"), "C1"), col(TEXT, "C2")), ",", "", UTF8),
+            "€ 0, A", "€ 1, Whatever", "€ 2, C");
         assertFormat(GenFormat.f(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ",", "", UTF8),
             "A0, A", "A1, Whatever", "A2, C");
     }
