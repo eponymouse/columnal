@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 import records.data.Table;
@@ -33,6 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 30/11/2016.
  */
+@Ignore
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression
 {

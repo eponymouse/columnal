@@ -509,7 +509,8 @@
                     <!-- <argLine>-Xmx1G</argLine> -->
                     <skipAfterFailureCount>0</skipAfterFailureCount>
                     <includes>
-                        <include>**/gui/*.java</include>                        
+                        <include>**/Test*.java</include>
+                        <include>**/Prop*.java</include>
                     </includes>
                     <!-- Uncomment to exclude GUI tests from Maven test (can still run direct from IDE): -->
                     <!--

@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import log.Log;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +24,7 @@ import java.util.Comparator;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+@Ignore
 @RunWith(JUnitQuickcheck.class)
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 public class PropGridOverlap
