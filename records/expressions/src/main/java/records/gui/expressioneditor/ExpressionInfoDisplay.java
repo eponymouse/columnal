@@ -74,7 +74,7 @@ public class ExpressionInfoDisplay
         });
         textField.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             OptionalInt fKey = FXUtility.FKeyNumber(e.getCode());
-            if (e.isShiftDown() && fKey.isPresent() && popup != null)
+            if (e.isShiftDown() && fKey.isPresent() && fKey.getAsInt() - 1 < fixes.size() && popup != null)
             {
                 e.consume();
                 popup.hidePopup(true);
