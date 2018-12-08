@@ -225,7 +225,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             expression
         ), new Random(0));
         
-        assertEquals(expression, plainEntry(expressionSrc));
+        assertEquals(expression, plainEntry(expressionSrc.replaceAll("@(call|function)", "")));
     }
     
     @Test
@@ -379,6 +379,18 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     public void testTupleAndListType() throws Exception
     {
         testSimple("@call @function asType(type{[[(Number, [Boolean])]]}, @call @function from text(\"[]\"))");
+    }
+    
+    @Test
+    public void testNumberType() throws Exception
+    {
+        testSimple("@call @function asType(type{Number{1}}, @call @function from text(\"3\"))");
+    }
+
+    @Test
+    public void testNumberType2() throws Exception
+    {
+        testSimple("@call @function asType(type{Number{m/s}}, @call @function from text(\"3\"))");
     }
 
     @Test
