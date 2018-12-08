@@ -25,6 +25,7 @@ import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import test.gen.GenNonsenseExpression;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -34,9 +35,8 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 30/11/2016.
  */
-@Ignore
 @RunWith(JUnitQuickcheck.class)
-public class PropLoadSaveExpression
+public class PropLoadSaveExpression extends FXApplicationTest
 {
     @Rule
     public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();

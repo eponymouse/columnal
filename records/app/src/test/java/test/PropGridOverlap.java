@@ -15,6 +15,7 @@ import records.data.CellPosition;
 import records.gui.grid.GridArea;
 import records.gui.grid.VirtualGrid;
 import test.gen.GenGridAreaList;
+import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -24,10 +25,9 @@ import java.util.Comparator;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-@Ignore
 @RunWith(JUnitQuickcheck.class)
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-public class PropGridOverlap
+public class PropGridOverlap extends FXApplicationTest
 {
     @Rule
     public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();

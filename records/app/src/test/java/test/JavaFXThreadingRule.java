@@ -26,13 +26,8 @@ import org.junit.runners.model.Statement;
  * From: http://andrewtill.blogspot.co.uk/2012/10/junit-rule-for-javafx-controller-testing.html
  *
  */
-public class JavaFXThreadingRule implements TestRule {
-
-    /**
-     * Flag for setting up the JavaFX, we only need to do this once for all tests.
-     */
-    private static boolean jfxIsSetup;
-
+public class JavaFXThreadingRule implements TestRule
+{
     @Override
     public Statement apply(Statement statement, Description description) {
 
@@ -50,14 +45,8 @@ public class JavaFXThreadingRule implements TestRule {
         private @Nullable Throwable rethrownException = null;
 
         @Override
-        public void evaluate() throws Throwable {
-
-            if(!jfxIsSetup) {
-                setupJavaFX();
-
-                jfxIsSetup = true;
-            }
-
+        public void evaluate() throws Throwable
+        {
             final CountDownLatch countDownLatch = new CountDownLatch(1);
 
             Platform.runLater(new Runnable() {
@@ -79,24 +68,5 @@ public class JavaFXThreadingRule implements TestRule {
                 throw rethrownException;
             }
         }
-
-        protected void setupJavaFX() throws InterruptedException {
-
-            long timeMillis = System.currentTimeMillis();
-
-            final CountDownLatch latch = new CountDownLatch(1);
-
-            SwingUtilities.invokeLater(() -> {
-                // initializes JavaFX environment
-                new JFXPanel();
-
-                latch.countDown();
-            });
-
-            System.out.println("javafx initialising...");
-            latch.await();
-            System.out.println("javafx is initialised in " + (System.currentTimeMillis() - timeMillis) + "ms");
-        }
-
     }
 }
