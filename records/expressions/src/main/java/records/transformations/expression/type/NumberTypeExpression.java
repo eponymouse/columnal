@@ -105,13 +105,14 @@ public class NumberTypeExpression extends TypeExpression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NumberTypeExpression that = (NumberTypeExpression) o;
-        return Objects.equals(unitExpression, that.unitExpression);
+        return Objects.equals(unitExpression, that.unitExpression)
+            || (unitExpression == null && that.unitExpression != null && that.unitExpression.isScalar())
+            || (that.unitExpression == null && unitExpression != null && unitExpression.isScalar());
     }
 
     @Override
     public int hashCode()
     {
-
         return Objects.hash(unitExpression);
     }
 
