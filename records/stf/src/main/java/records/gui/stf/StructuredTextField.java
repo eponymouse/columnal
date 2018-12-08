@@ -287,6 +287,9 @@ public class StructuredTextField extends StyleClassedTextArea
     private void showFixPopup(List<ErrorFix> errorFixes)
     {
         hidePopup();
+        if (getScene() == null || getScene().getWindow() == null)
+            return; // Can happen during testing
+        
         PopOver popup = new PopOver();
         popup.getStyleClass().add("invalid-data-input-popup");
         List<Node> fixNodes = new ArrayList<>();
