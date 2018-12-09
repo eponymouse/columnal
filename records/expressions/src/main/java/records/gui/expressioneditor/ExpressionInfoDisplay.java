@@ -52,6 +52,7 @@ public class ExpressionInfoDisplay
     private final TopLevelEditor.ErrorMessageDisplayer popup;
     private final SimpleBooleanProperty maskingErrors = new SimpleBooleanProperty();
     private final FXPlatformFunction<CaretSide, ImmutableList<ErrorInfo>> getAdjacentErrors;
+    private boolean textFieldHasHadFocus;
     
     public static enum CaretSide { LEFT, RIGHT }
     
@@ -63,6 +64,7 @@ public class ExpressionInfoDisplay
         this.popup = popup;
         this.topLabel = topLabel;
         this.getAdjacentErrors = getAdjacentErrors;
+        textFieldHasHadFocus = textField.isFocused();
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
         FXUtility.addChangeListenerPlatformNN(textField.caretPositionProperty(), pos -> textFieldFocusChanged(textField.isFocused()));
         // This hover includes subcomponents:
@@ -133,14 +135,15 @@ public class ExpressionInfoDisplay
     
     private void textFieldFocusChanged(boolean focused)
     {
-        if (!focused)
+        if (!focused && textFieldHasHadFocus)
         {
             // Lost focus, show errors:
-            maskingErrors.set(false);
+            unmaskErrors();
         }
         
         if (focused)
         {
+            textFieldHasHadFocus = true;
             ImmutableList.Builder<ErrorInfo> adjacentErrors = ImmutableList.builder();
             
             if (textField.getCaretPosition() == 0)
