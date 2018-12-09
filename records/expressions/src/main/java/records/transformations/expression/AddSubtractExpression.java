@@ -88,7 +88,8 @@ public class AddSubtractExpression extends NaryOpExpression
             @Nullable TypeExp ourType = p.getOurType();
             if (ourType == null)
                 return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(null, ImmutableList.of());
-            @Nullable StyledString err = ourType == null ? null : StyledString.concat(StyledString.s("You can only add/subtract numbers with identical units, but found "), ourType.toStyledString());
+            @Nullable StyledString err = ourType == null || p.expressionTypes.stream().filter(Optional::isPresent).count() <= 1
+                    ? null : StyledString.concat(StyledString.s("You can only add/subtract numbers (with identical units), but found "), ourType.toStyledString());
             ImmutableList.Builder<QuickFix<Expression,ExpressionSaver>> fixes = ImmutableList.builder();
             // Is the problematic type text, and all ops '+'? If so, offer to convert it 
             
@@ -102,7 +103,8 @@ public class AddSubtractExpression extends NaryOpExpression
 
             if (ourType instanceof NumTypeExp)
                 fixes.addAll(ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p));
-            return new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(err, fixes.build());
+            ImmutableList<QuickFix<Expression, ExpressionSaver>> builtFixes = fixes.build();
+            return err == null && builtFixes.isEmpty() ? null : new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(err, builtFixes);
         }));
         return type;
     }

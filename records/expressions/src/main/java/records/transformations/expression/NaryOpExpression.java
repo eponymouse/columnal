@@ -248,7 +248,7 @@ public abstract class NaryOpExpression extends Expression
         }
     }
     
-    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>>> getCustomErrorAndFix) throws InternalException, UserException
+    public @Nullable TypeExp checkAllOperandsSameTypeAndNotPatterns(TypeExp target, TableLookup data, TypeState state, ErrorAndTypeRecorder onError, Function<TypeProblemDetails, @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>>> getCustomErrorAndFix) throws InternalException, UserException
     {
         boolean allValid = true;
         ArrayList<@Nullable Pair<@Nullable StyledString, TypeExp>> unificationOutcomes = new ArrayList<>(expressions.size());
@@ -285,17 +285,19 @@ public abstract class NaryOpExpression extends Expression
             for (int i = 0; i < expressions.size(); i++)
             {
                 Expression expression = expressions.get(i);
-                Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
-                onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
-                StyledString error;
-                if (errorAndQuickFix.getFirst() != null)
+                @Nullable Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression, ExpressionSaver>>> errorAndQuickFix = getCustomErrorAndFix.apply(new TypeProblemDetails(expressionTypes, expressions, i));
+                if (errorAndQuickFix != null)
+                    onError.recordQuickFixes(expression, errorAndQuickFix.getSecond());
+                StyledString error = null;
+                if (errorAndQuickFix != null && errorAndQuickFix.getFirst() != null)
                     error = errorAndQuickFix.getFirst();
                 else if (unificationOutcomes.get(i) != null && unificationOutcomes.get(i).getFirst() != null)
                     error = unificationOutcomes.get(i).getFirst();
-                else
+                else if (errorAndQuickFix != null && !errorAndQuickFix.getSecond().isEmpty())
                     // Hack to ensure there is an error:
                     error = StyledString.s(" ");
-                onError.recordError(expression, error);
+                if (error != null)
+                    onError.recordError(expression, error);
             }
         }
         

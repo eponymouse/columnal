@@ -158,9 +158,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         
         if (e == null)
         {
-            e = errorDisplayerRecord.record(start, end, new InvalidOperatorExpression(
-                    Utility.<Either<OpAndNode, @Recorded Expression>, @Recorded Expression>mapListI(collectedItems.getInvalid(), et -> et.<@Recorded Expression>either(o -> errorDisplayerRecord.record(o.sourceNode, o.sourceNode, new InvalidIdentExpression(o.op.getContent())), x -> x))
-            ));
+            e = collectedItems.makeInvalid(start, end, InvalidOperatorExpression::new);
         }
         
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && !(e instanceof ArrayExpression))
@@ -168,6 +166,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             e = errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(e)));
         }
         return e;
+    }
+
+    @Override
+    protected Expression opToInvalid(Op op)
+    {
+        return new InvalidIdentExpression(op.getContent());
     }
 
     @Override
@@ -591,6 +595,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         return new OrExpression(args);
     }
 
+    @Override
+    protected Span<Expression, ExpressionSaver> recorderFor(Expression expression)
+    {
+        return errorDisplayerRecord.recorderFor(expression);
+    }
 
     @Override
     @OnThread(Tag.Any)

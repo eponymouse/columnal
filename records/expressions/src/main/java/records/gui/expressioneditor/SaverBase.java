@@ -4,6 +4,8 @@ import annotation.recorded.qual.Recorded;
 import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.input.DataFormat;
 import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -11,6 +13,7 @@ import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.transformations.expression.BracketedStatus;
 import records.transformations.expression.QuickFix;
 import styled.StyledShowable;
@@ -446,8 +449,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     }
 
     protected abstract @Recorded EXPRESSION record(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, EXPRESSION expression);
+    
+    protected abstract Span<EXPRESSION, SAVER> recorderFor(EXPRESSION expression);
 
     protected abstract EXPRESSION keywordToInvalid(KEYWORD keyword);
+
+    protected abstract EXPRESSION opToInvalid(OP op);
 
     protected abstract @Recorded EXPRESSION makeExpression(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, List<Either<@Recorded EXPRESSION, OpAndNode>> content, BracketAndNodes<EXPRESSION, SAVER> brackets);
     
@@ -478,19 +485,27 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected class CollectedItems
     {
-        private boolean valid;
+        // This is like a boolean; null means valid, non-null means invalid
+        // because of that error.
+        private @Nullable Pair<Span<EXPRESSION, SAVER>, StyledString> invalidReason;
         private final ArrayList<Either<OpAndNode, @Recorded EXPRESSION>> invalid;
         private final ArrayList<@Recorded EXPRESSION> validOperands;
         private final ArrayList<OpAndNode> validOperators;
 
         public boolean isValid()
         {
-            return valid;
+            return invalidReason == null;
         }
 
-        public ArrayList<Either<OpAndNode, @Recorded EXPRESSION>> getInvalid()
+        public @Recorded EXPRESSION makeInvalid(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, Function<ImmutableList<EXPRESSION>, EXPRESSION> makeInvalid)
         {
-            return invalid;
+            @Recorded EXPRESSION expression = record(start, end, makeInvalid.apply(
+                    Utility.<Either<OpAndNode, @Recorded EXPRESSION>, @Recorded EXPRESSION>mapListI(invalid, et -> et.<@Recorded EXPRESSION>either(o -> record(o.sourceNode, o.sourceNode, opToInvalid(o.op)), x -> x))
+            ));
+            @Nullable Pair<Span<EXPRESSION, SAVER>, StyledString> invalidReason = this.invalidReason;
+            if (invalidReason != null)
+                invalidReason.getFirst().addErrorAndFixes(invalidReason.getSecond(), ImmutableList.of());
+            return expression;
         }
 
         public ArrayList<@Recorded EXPRESSION> getValidOperands()
@@ -510,12 +525,13 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             
             // Although it's duplication, we keep a list for if it turns out invalid, and two lists for if it is valid:
             // Valid means that operands interleave exactly with operators, and there is an operand at beginning and end.
-            valid = true;
+            invalidReason = null;
             invalid = new ArrayList<>();
             validOperands = new ArrayList<>();
             validOperators = new ArrayList<>();
 
-            boolean lastWasExpression[] = new boolean[] {false}; // Think of it as an invisible empty prefix operator
+            SimpleBooleanProperty lastWasOperand = new SimpleBooleanProperty(false); // Think of it as an invisible empty prefix operator
+            SimpleObjectProperty<Span<EXPRESSION,SAVER>> lastNodeSpan = new SimpleObjectProperty<>();
 
             for (int i = 0; i < content.size(); i++)
             {
@@ -526,12 +542,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     invalid.add(Either.right(expression));
                     validOperands.add(expression);
 
-                    if (lastWasExpression[0])
+                    if (lastWasOperand.get())
                     {
-                        // TODO missing operator error (two expressions in a row)
-                        valid = false;
+                        invalidReason = new Pair<>(new Span<>(lastNodeSpan.get().start, recorderFor(expression).end), StyledString.s("Missing operator"));
                     }
-                    lastWasExpression[0] = true;
+                    lastWasOperand.set(true);
+                    lastNodeSpan.set(recorderFor(expression));
                 }, op -> {
                     invalid.add(Either.left(op));
                     validOperators.add(op);
@@ -543,7 +559,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     @Nullable Supplier<@Recorded EXPRESSION> canBeUnary = iFinal + 1 >= content.size() ? null :
                             content.get(iFinal + 1).<@Nullable Supplier<@Recorded EXPRESSION>> either((@Recorded EXPRESSION next) -> canBeUnary(op, next), anotherOp -> null);
 
-                    if (!lastWasExpression[0])
+                    if (!lastWasOperand.get())
                     {
                         if (canBeUnary != null)
                         {
@@ -554,12 +570,18 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         }
                         else
                         {
-                            // TODO missing operand error (two operands in a row)
-                            valid = false;
+                            invalidReason = new Pair<>(new Span<>(lastNodeSpan.get().start,op.sourceNode), StyledString.s("Missing item between operators"));
                         }
                     }
-                    lastWasExpression[0] = false;
+                    lastWasOperand.set(false);
+                    lastNodeSpan.set(new Span<>(op.sourceNode, op.sourceNode));
                 });
+            }
+            
+            // Must end with operand:
+            if (!lastWasOperand.get() && !content.isEmpty())
+            {
+                invalidReason = new Pair<>(lastNodeSpan.get(), StyledString.s("Trailing operator missing."));
             }
         }
     }

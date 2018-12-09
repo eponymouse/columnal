@@ -29,7 +29,7 @@ import java.util.List;
 public class ErrorDisplayerRecord
 {
     // A semantic error matches an expression which may span multiple children.
-    public class Span<E extends StyledShowable, S extends ClipboardSaver>
+    public static class Span<E extends StyledShowable, S extends ClipboardSaver>
     {
         public final ConsecutiveChild<E, S> start;
         public final ConsecutiveChild<E, S> end;

@@ -111,7 +111,13 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
 
         }
 
-        return record(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> new InvalidSingleUnitExpression(o.op.getContent()), x -> x))));
+        return collectedItems.makeInvalid(start, end, InvalidOperatorUnitExpression::new);
+    }
+
+    @Override
+    protected UnitExpression opToInvalid(UnitOp unitOp)
+    {
+        return new InvalidSingleUnitExpression(unitOp.getContent());
     }
 
     @Override
@@ -179,6 +185,12 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     protected UnitExpression keywordToInvalid(UnitBracket unitBracket)
     {
         return new InvalidSingleUnitExpression(unitBracket.getContent());
+    }
+
+    @Override
+    protected Span<UnitExpression, UnitSaver> recorderFor(UnitExpression unitExpression)
+    {
+        return errorDisplayerRecord.recorderFor(unitExpression);
     }
 
     @Override

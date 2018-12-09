@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveChild;
+import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.SaverBase;
 import records.gui.expressioneditor.TypeEditor;
 import records.gui.expressioneditor.TypeEntry.Keyword;
@@ -161,6 +162,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
+    protected Span<TypeExpression, TypeSaver> recorderFor(TypeExpression typeExpression)
+    {
+        return errorDisplayerRecord.recorderFor(typeExpression);
+    }
+
+    @Override
     protected @Recorded TypeExpression record(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, TypeExpression typeExpression)
     {
         return errorDisplayerRecord.recordType(start, end, typeExpression);
@@ -225,7 +232,13 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
 
         }
 
-        return record(start, end, new InvalidOpTypeExpression(Utility.mapListI(collectedItems.getInvalid(), e -> e.either(o -> InvalidIdentTypeExpression.identOrUnfinished(o.op.getContent()), x -> x))));
+        return collectedItems.makeInvalid(start, end, InvalidOpTypeExpression::new);
+    }
+
+    @Override
+    protected TypeExpression opToInvalid(Operator operator)
+    {
+        return InvalidIdentTypeExpression.identOrUnfinished(operator.getContent());
     }
 
     @Override

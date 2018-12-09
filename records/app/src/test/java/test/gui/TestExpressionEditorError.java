@@ -7,6 +7,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import log.Log;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -54,18 +55,27 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     @OnThread(Tag.Any)
     private static class State
     {
-        public final String headerText;
+        // null means can be anything
+        public final @Nullable String headerText;
         public final boolean errorColourHeader;
 
-        private State(String headerText, boolean errorColourHeader)
+        private State(@Nullable String headerText, boolean errorColourHeader)
         {
             this.headerText = headerText;
             this.errorColourHeader = errorColourHeader;
         }
         
-        public Pair<String, Boolean> toPair()
+        public boolean equals(@Nullable Object o)
         {
-            return new Pair<>(headerText, errorColourHeader);
+            if (o instanceof Pair)
+            {
+                @SuppressWarnings("unchecked")
+                Pair<String, Boolean> p = (Pair<String, Boolean>)o;
+                if (headerText != null && !headerText.equals(p.getFirst()))
+                    return false;
+                return errorColourHeader == p.getSecond();
+            }
+            return false;
         }
     }
     
@@ -87,7 +97,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     public void test2A()
     {
         // Error once we leave the slot:
-        testError("foo+1", false, eRed(), h(), h());
+        testError("foo+1", false, red(), h(), h());
     }
 
     @Test
@@ -95,7 +105,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     {
         // Error once we leave the slot:
         // (but no error in the blank operand added at the end)
-        testError("foo+", false, eRed(), h(), h());
+        testError("foo+", false, h(), red(), h());
     }
 
     @Test
@@ -103,19 +113,46 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     {
         // Error once we leave the slot:
         // (and error in the blank operand skipped)
-        testError("foo+/", false, eRed(), h(), eRed(), h(), h());
+        testError("1+/3", false, h(), red(), red(), h());
+    }
+
+    @Test
+    public void test2D()
+    {
+        // Error once we leave the slot:
+        testError("foo*1", false, red(), h(), h());
+    }
+
+    @Test
+    public void test2E()
+    {
+        // Error once we leave the slot:
+        // (but no error in the blank operand added at the end)
+        testError("1+", false, h(), red(), h());
     }
     
+    /*
     @Test
     public void test3()
     {
-        testError("@if # @then #", false,
+        testError("@if true @then 3 @else 5", false,
             // if, condition
-            h(), eRed(),
-            // then, # (but focused)
             h(), h(),
-            // else, blank (but unvisited)
-            h(), e());
+            // then, 3, endif
+            h(), h(), h()
+        );
+    }
+
+    @Test
+    public void test3A()
+    {
+        testError("@if # @then # @endif", false,
+                // if, condition
+                h(), red(),
+                // then, #
+                h(), red(),
+                // endif, blank (but unvisited)
+                h(), e());
     }
 
     @Test
@@ -141,6 +178,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
                 // else, blank (but unvisited)
                 h(), e());
     }
+    */
 
     private static State h()
     {
@@ -153,9 +191,14 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
         return new State(s, false);
     }
 
-    private static State red(String header)
+    private static State red(@Nullable String header)
     {
         return new State(header, true);
+    }
+
+    private static State red()
+    {
+        return red(null);
     }
 
 
@@ -216,7 +259,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             
             
             Log.debug("Checking states");
-            assertEquals(Arrays.stream(states).map(State::toPair).collect(Collectors.toList()), actualHeaders);
+            assertEquals(Arrays.stream(states).collect(Collectors.toList()), actualHeaders);
             Log.debug("Checked states");
             // TODO check error popup
             
