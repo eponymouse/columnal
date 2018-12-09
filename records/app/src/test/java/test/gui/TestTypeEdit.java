@@ -233,7 +233,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             push(KeyCode.DOWN);
             push(KeyCode.HOME);
             clickOn(".id-types-edit");
-            TestUtil.delay(500);
+            TestUtil.delay(2000);
             clickOn(".ok-button");
             TestUtil.sleep(500);
             clickOn(".close-button");

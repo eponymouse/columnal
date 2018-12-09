@@ -58,7 +58,7 @@ public class JellyTypeApply extends JellyType
     public void save(OutputBuilder output)
     {
         output.t(FormatLexer.APPLY, FormatLexer.VOCABULARY);
-        output.quote(typeName);
+        output.unquoted(typeName);
         for (Either<JellyUnit, JellyType> typeParam : typeParams)
         {
             output.raw("(");
