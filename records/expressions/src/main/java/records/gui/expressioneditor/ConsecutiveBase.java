@@ -924,6 +924,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends StyledShowabl
     {
         children.forEach(op -> op.clearAllErrors());
     }
+    
+    protected void saved()
+    {
+        children.forEach(c -> c.saved());
+    }
 
     public boolean isShowingError()
     {

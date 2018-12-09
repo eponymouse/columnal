@@ -43,6 +43,7 @@ public class TypeEditor extends TopLevelEditor<TypeExpression, TypeSaver>
         super.selfChanged();
         clearAllErrors();
         @UnknownIfRecorded TypeExpression typeExpression = save();
+        saved();
         //String asStr = typeExpression.save(new TableAndColumnRenames(ImmutableMap.of()));
         //@Nullable DataType dataType = typeExpression.toDataType(getTypeManager());
         //Log.debug("Latest type: " + dataType + " from expression: " + asStr);

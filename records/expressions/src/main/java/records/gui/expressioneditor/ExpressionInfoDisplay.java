@@ -124,6 +124,13 @@ public class ExpressionInfoDisplay
         maskingErrors.set(false);
     }
     
+    public void saved()
+    {
+        // Adjacent errors may have changed,
+        // so update them:
+        textFieldFocusChanged(textField.isFocused());
+    }
+    
     private void textFieldFocusChanged(boolean focused)
     {
         if (!focused)
@@ -159,7 +166,7 @@ public class ExpressionInfoDisplay
     
     public <EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver> void addMessageAndFixes(StyledString msg, List<QuickFix<EXPRESSION, SAVER>> fixes, ConsecutiveBase<EXPRESSION, SAVER> editor)
     {
-        this.fixes= Utility.concatI(this.fixes, fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
+        this.fixes = Utility.concatI(this.fixes, fixes.stream().map(q -> new FixInfo(q.getTitle(), q.getCssClasses(), () -> {
             Log.debug("Clicked fix: " + q.getTitle());
             if (popup != null)
                 popup.hidePopup(true);

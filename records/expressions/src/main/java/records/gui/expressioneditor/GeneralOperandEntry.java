@@ -151,6 +151,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends StyledShowable, SAVER exte
     }
 
     @Override
+    public void saved()
+    {
+        expressionInfoDisplay.saved();
+    }
+
+    @Override
     public void showType(String type)
     {
         expressionInfoDisplay.setType(type);

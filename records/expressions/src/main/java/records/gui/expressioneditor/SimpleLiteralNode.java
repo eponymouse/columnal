@@ -119,7 +119,13 @@ public abstract class SimpleLiteralNode extends EntryNode<Expression, Expression
     {
         expressionInfoDisplay.clearError();
     }
-    
+
+    @Override
+    public void saved()
+    {
+        expressionInfoDisplay.saved();
+    }
+
     @Override
     protected Stream<Node> calculateNodes(@UnknownInitialization(DeepNodeTree.class) SimpleLiteralNode this)
     {

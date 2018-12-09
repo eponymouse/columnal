@@ -246,6 +246,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             ErrorAndTypeRecorder recorder = errorDisplayers.getRecorder();
             clearAllErrors();
             Expression expression = save();
+            saved();
             Log.debug("Saved as: " + expression);
             //Log.debug("  From:\n    " + children.stream().map(c -> (c instanceof EntryNode) ? ((EntryNode)c).textField.getText() : "£" + c.getClass()).collect(Collectors.joining("\n    ")));
             if (onChange != null)

@@ -110,6 +110,12 @@ public final class UnitLiteralTypeNode extends TreeLiteralNode<TypeExpression, T
     }
 
     @Override
+    public void saved()
+    {
+        unit.saved();
+    }
+
+    @Override
     public void visitLocatable(LocatableVisitor visitor)
     {
         unit.visitLocatable(visitor);

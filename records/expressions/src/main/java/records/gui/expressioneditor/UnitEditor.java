@@ -48,6 +48,7 @@ public class UnitEditor extends TopLevelEditor<UnitExpression, UnitSaver>
         super.selfChanged();
         clearAllErrors();
         @UnknownIfRecorded UnitExpression unitExpression = save();
+        saved();
         @Nullable Unit unit = unitExpression.asUnit(getTypeManager().getUnitManager()).<@Nullable Unit>either(p -> null, u -> {
             try
             {

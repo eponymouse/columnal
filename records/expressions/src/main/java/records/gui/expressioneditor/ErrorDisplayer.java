@@ -25,4 +25,6 @@ public interface ErrorDisplayer<EXPRESSION extends StyledShowable, SEMANTIC_PARE
     public void cleanup();
 
     public void clearAllErrors();
+
+    public void saved();
 }

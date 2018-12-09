@@ -183,6 +183,12 @@ public final class TypeLiteralNode extends TreeLiteralNode<Expression, Expressio
     }
 
     @Override
+    public void saved()
+    {
+        type.saved();
+    }
+
+    @Override
     public void bindDisable(BooleanExpression disabledProperty)
     {
         type.bindDisable(disabledProperty);
