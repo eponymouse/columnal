@@ -539,7 +539,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 @Override
                 public OperatorSection makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
                 {
-                    return new NaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets) -> {
+                    return new NaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, /* Dummy: */ (args, _ops, brackets, edr) -> {
                         switch (brackets.bracketedStatus)
                         {
                             case DIRECT_SQUARE_BRACKETED:
@@ -555,42 +555,42 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         )
     );
 
-    private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets)
+    private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals(Op.ADD) ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
     }
 
-    private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets)
+    private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new TimesExpression(args);
     }
 
-    private static Expression makeStringConcat(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets)
+    private static Expression makeStringConcat(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new StringConcatExpression(args);
     }
 
-    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets)
+    private static Expression makeEqual(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new EqualExpression(args);
     }
 
-    private static Expression makeComparisonLess(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets)
+    private static Expression makeComparisonLess(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new ComparisonExpression(args, Utility.mapListI(ops, op -> op.getFirst().equals(Op.LESS_THAN) ? ComparisonOperator.LESS_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL_TO));
     }
 
-    private static Expression makeComparisonGreater(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets)
+    private static Expression makeComparisonGreater(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new ComparisonExpression(args, Utility.mapListI(ops, op -> op.getFirst().equals(Op.GREATER_THAN) ? ComparisonOperator.GREATER_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO));
     }
 
-    private static Expression makeAnd(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets)
+    private static Expression makeAnd(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new AndExpression(args);
     }
 
-    private static Expression makeOr(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets)
+    private static Expression makeOr(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new OrExpression(args);
     }

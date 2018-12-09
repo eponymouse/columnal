@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ConsecutiveChild;
+import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ErrorDisplayerRecord.Span;
 import records.gui.expressioneditor.SaverBase;
 import records.gui.expressioneditor.TypeEditor;
@@ -38,7 +39,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         new OperatorExpressionInfo(ImmutableList.of(new Pair<Operator, @Localized String>(Operator.COMMA, Utility.universal(""))), TypeSaver::makeNary)
     );
 
-    private static TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, ConsecutiveChild<TypeExpression, TypeSaver>>> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets)
+    private static TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, ConsecutiveChild<TypeExpression, TypeSaver>>> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
         {
@@ -55,7 +56,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
             {
                 items.add(typeExpressions.get(i));
                 if (i < operators.size())
-                    items.add(InvalidIdentTypeExpression.identOrUnfinished(operators.get(i).getFirst().getContent()));
+                    items.add(errorDisplayerRecord.recordType(operators.get(i).getSecond(), operators.get(i).getSecond(), InvalidIdentTypeExpression.identOrUnfinished(operators.get(i).getFirst().getContent())));
             }
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
                 return new ListTypeExpression(new InvalidOpTypeExpression(items.build()));
@@ -158,7 +159,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @Override
     protected @Recorded TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
     {
-        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.<Either<OpAndNode, @Recorded TypeExpression>, @Recorded TypeExpression>mapListI(items, x -> x.either(u -> record(u.sourceNode, u.sourceNode, new InvalidIdentTypeExpression(",")), y -> y))));
+        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.<Either<OpAndNode, @Recorded TypeExpression>, @Recorded TypeExpression>mapListI(items, x -> x.<@Recorded TypeExpression>either(u -> record(u.sourceNode, u.sourceNode, new InvalidIdentTypeExpression(",")), y -> y))));
     }
 
     @Override
