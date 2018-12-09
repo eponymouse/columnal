@@ -38,7 +38,7 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         new OperatorExpressionInfo(ImmutableList.of(new Pair<Operator, @Localized String>(Operator.COMMA, Utility.universal(""))), TypeSaver::makeNary)
     );
 
-    private static TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Operator> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets)
+    private static TypeExpression makeNary(ImmutableList<@Recorded TypeExpression> typeExpressions, List<Pair<Operator, ConsecutiveChild<TypeExpression, TypeSaver>>> operators, BracketAndNodes<TypeExpression, TypeSaver> brackets)
     {
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_ROUND_BRACKETED)
         {
@@ -50,12 +50,12 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
         }
         else
         {
-            Builder<TypeExpression> items = ImmutableList.builderWithExpectedSize(typeExpressions.size() + operators.size());
+            Builder<@Recorded TypeExpression> items = ImmutableList.builderWithExpectedSize(typeExpressions.size() + operators.size());
             for (int i = 0; i < typeExpressions.size(); i++)
             {
                 items.add(typeExpressions.get(i));
                 if (i < operators.size())
-                    items.add(InvalidIdentTypeExpression.identOrUnfinished(operators.get(i).getContent()));
+                    items.add(InvalidIdentTypeExpression.identOrUnfinished(operators.get(i).getFirst().getContent()));
             }
             if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
                 return new ListTypeExpression(new InvalidOpTypeExpression(items.build()));
@@ -158,11 +158,11 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     @Override
     protected @Recorded TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
     {
-        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.either(u -> new InvalidIdentTypeExpression(","), y -> y))));
+        return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.<Either<OpAndNode, @Recorded TypeExpression>, @Recorded TypeExpression>mapListI(items, x -> x.either(u -> record(u.sourceNode, u.sourceNode, new InvalidIdentTypeExpression(",")), y -> y))));
     }
 
     @Override
-    protected Span<TypeExpression, TypeSaver> recorderFor(TypeExpression typeExpression)
+    protected Span<TypeExpression, TypeSaver> recorderFor(@Recorded TypeExpression typeExpression)
     {
         return errorDisplayerRecord.recorderFor(typeExpression);
     }

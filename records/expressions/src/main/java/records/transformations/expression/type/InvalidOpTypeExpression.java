@@ -1,5 +1,6 @@
 package records.transformations.expression.type;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
@@ -25,9 +26,9 @@ import java.util.stream.Stream;
 
 public class InvalidOpTypeExpression extends TypeExpression
 {
-    private final ImmutableList<TypeExpression> items;
+    private final ImmutableList<@Recorded TypeExpression> items;
 
-    public InvalidOpTypeExpression(ImmutableList<TypeExpression> items)
+    public InvalidOpTypeExpression(ImmutableList<@Recorded TypeExpression> items)
     {
         this.items = items;
     }
@@ -73,7 +74,7 @@ public class InvalidOpTypeExpression extends TypeExpression
         return StyledString.s("Invalid"); // TODO
     }
 
-    public ImmutableList<TypeExpression> _test_getItems()
+    public ImmutableList<@Recorded TypeExpression> _test_getItems()
     {
         return items;
     }
@@ -94,6 +95,7 @@ public class InvalidOpTypeExpression extends TypeExpression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public TypeExpression replaceSubExpression(TypeExpression toReplace, TypeExpression replaceWith)
     {
         if (this == toReplace)

@@ -83,6 +83,8 @@ public class ExpressionInfoDisplay
                 // 1 is F1, but should trigger fix zero:
                 fixes.get(fKey.getAsInt() - 1).executeFix.run();
             }
+            else
+                Log.debug("F key: " + fKey + " fixes: " + fixes.size());
             if (e.getCode() == KeyCode.ESCAPE)
             {
                 popup.hidePopup(true);

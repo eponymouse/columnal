@@ -80,12 +80,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
     {
         // Only called if the list is valid (one more expression than operators, strictly interleaved
-        public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<OP> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus);
+        public @Nullable EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus);
     }
 
     public static interface MakeBinary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver>
     {
-        public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus);
+        public EXPRESSION makeBinary(@Recorded EXPRESSION lhs, ConsecutiveChild<EXPRESSION, SAVER> opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord);
     }
 
     // One set of operators that can be used to make a particular expression
@@ -114,11 +114,11 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             return operators.stream().anyMatch(p -> op.equals(p.getFirst()));
         }
 
-        public OperatorSection makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, OP initialOperator, int initialIndex)
+        public OperatorSection makeOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, int operatorSetPrecedence, OpAndNode initialOperator, int initialIndex)
         {
             return makeExpression.either(
                 nAry -> new NaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, nAry, initialIndex, initialOperator),
-                binary -> new BinaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, binary, initialIndex)
+                binary -> new BinaryOperatorSection(errorDisplayerRecord, operators, operatorSetPrecedence, binary, initialIndex, initialOperator)
             );
         }
     }
@@ -141,7 +141,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
          * Attempts to add the operator to this section.  If it can be added, it is added, and true is returned.
          * If it can't be added, nothing is changed, and false is returned.
          */
-        abstract boolean addOperator(@NonNull OP operator, int indexOfOperator);
+        abstract boolean addOperator(@NonNull OpAndNode operator, int indexOfOperator);
 
         /**
          * Given the operators already added, makes an expression.  Will only use the indexes that pertain
@@ -161,16 +161,18 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     {
         protected final MakeBinary<EXPRESSION, SAVER> makeExpression;
         private final int operatorIndex;
+        private final OpAndNode operator;
 
-        BinaryOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SAVER> makeExpression, int initialIndex)
+        BinaryOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeBinary<EXPRESSION, SAVER> makeExpression, int initialIndex, OpAndNode operator)
         {
             super(errorDisplayerRecord, operators, candidatePrecedence);
             this.makeExpression = makeExpression;
             this.operatorIndex = initialIndex;
+            this.operator = operator;
         }
 
         @Override
-        boolean addOperator(OP operator, int indexOfOperator)
+        boolean addOperator(OpAndNode operator, int indexOfOperator)
         {
             // Can never add another operator to a binary operator:
             return false;
@@ -179,12 +181,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         @Override
         @Recorded EXPRESSION makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER> brackets)
         {
-            return makeBinary(expressions.get(operatorIndex), expressions.get(operatorIndex + 1), brackets);
+            return makeBinary(expressions.get(operatorIndex), operator.sourceNode, expressions.get(operatorIndex + 1), brackets, errorDisplayerRecord);
         }
 
-        protected @Recorded EXPRESSION makeBinary(@Recorded EXPRESSION lhs, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER> brackets)
+        protected @Recorded EXPRESSION makeBinary(@Recorded EXPRESSION lhs, ConsecutiveChild<EXPRESSION, SAVER> opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER> brackets, ErrorDisplayerRecord errorDisplayerRecord)
         {
-            return record(brackets.start, brackets.end, makeExpression.makeBinary(lhs, rhs, brackets));
+            return record(brackets.start, brackets.end, makeExpression.makeBinary(lhs, opNode, rhs, brackets, errorDisplayerRecord));
         }
 
         @Override
@@ -202,39 +204,39 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         @Override
         @Recorded EXPRESSION makeExpressionReplaceLHS(@Recorded EXPRESSION lhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER> brackets)
         {
-            return makeBinary(lhs , expressions.get(operatorIndex + 1), brackets);
+            return makeBinary(lhs, operator.sourceNode, expressions.get(operatorIndex + 1), brackets, errorDisplayerRecord);
         }
 
         @Override
         @Recorded EXPRESSION makeExpressionReplaceRHS(@Recorded EXPRESSION rhs, ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER> brackets)
         {
-            return makeBinary(expressions.get(operatorIndex), rhs, brackets);
+            return makeBinary(expressions.get(operatorIndex), operator.sourceNode, rhs, brackets, errorDisplayerRecord);
         }
     }
 
     protected final class NaryOperatorSection extends OperatorSection
     {
         protected final MakeNary<EXPRESSION, SAVER, OP> makeExpression;
-        private final ArrayList<OP> actualOperators = new ArrayList<>();
+        private final ArrayList<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> actualOperators = new ArrayList<>();
         private final int startingOperatorIndexIncl;
         private int endingOperatorIndexIncl;
 
-        NaryOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION, SAVER, OP> makeExpression, int initialIndex, OP initialOperator)
+        NaryOperatorSection(ErrorDisplayerRecord errorDisplayerRecord, ImmutableList<Pair<OP, @Localized String>> operators, int candidatePrecedence, MakeNary<EXPRESSION, SAVER, OP> makeExpression, int initialIndex, OpAndNode initialOperator)
         {
             super(errorDisplayerRecord, operators, candidatePrecedence);
             this.makeExpression = makeExpression;
             this.startingOperatorIndexIncl = initialIndex;
             this.endingOperatorIndexIncl = initialIndex;
-            this.actualOperators.add(initialOperator);
+            this.actualOperators.add(new Pair<>(initialOperator.op, initialOperator.sourceNode));
         }
 
         @Override
-        boolean addOperator(@NonNull OP operator, int indexOfOperator)
+        boolean addOperator(@NonNull OpAndNode operator, int indexOfOperator)
         {
             if (possibleOperators.stream().anyMatch(p -> operator.equals(p.getFirst())) && indexOfOperator == endingOperatorIndexIncl + 1)
             {
                 endingOperatorIndexIncl = indexOfOperator;
-                actualOperators.add(operator);
+                actualOperators.add(new Pair<>(operator.op, operator.sourceNode));
                 return true;
             }
             else
@@ -301,7 +303,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                 return record(brackets.start, brackets.end, expression);
         }
 
-        protected @Nullable @Recorded EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<OP> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus)
+        protected @Nullable @Recorded EXPRESSION makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus)
         {
             EXPRESSION expression = makeExpression.makeNary(expressions, operators, bracketedStatus);
             if (expression == null)
@@ -450,7 +452,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     protected abstract @Recorded EXPRESSION record(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, EXPRESSION expression);
     
-    protected abstract Span<EXPRESSION, SAVER> recorderFor(EXPRESSION expression);
+    protected abstract Span<EXPRESSION, SAVER> recorderFor(@Recorded EXPRESSION expression);
 
     protected abstract EXPRESSION keywordToInvalid(KEYWORD keyword);
 
@@ -497,7 +499,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             return invalidReason == null;
         }
 
-        public @Recorded EXPRESSION makeInvalid(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, Function<ImmutableList<EXPRESSION>, EXPRESSION> makeInvalid)
+        public @Recorded EXPRESSION makeInvalid(ConsecutiveChild<EXPRESSION, SAVER> start, ConsecutiveChild<EXPRESSION, SAVER> end, Function<ImmutableList<@Recorded EXPRESSION>, EXPRESSION> makeInvalid)
         {
             @Recorded EXPRESSION expression = record(start, end, makeInvalid.apply(
                     Utility.<Either<OpAndNode, @Recorded EXPRESSION>, @Recorded EXPRESSION>mapListI(invalid, et -> et.<@Recorded EXPRESSION>either(o -> record(o.sourceNode, o.sourceNode, opToInvalid(o.op)), x -> x))
@@ -625,7 +627,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         List<OperatorSection> operatorSections = new ArrayList<>();
         nextOp: for (int i = 0; i < ops.size(); i++)
         {
-            if (operatorSections.isEmpty() || !operatorSections.get(operatorSections.size() - 1).addOperator(ops.get(i).op, i))
+            if (operatorSections.isEmpty() || !operatorSections.get(operatorSections.size() - 1).addOperator(ops.get(i), i))
             {
                 // Make new section:
                 for (int candidateIndex = 0; candidateIndex < candidates.size(); candidateIndex++)
@@ -634,7 +636,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     {
                         if (operatorExpressionInfo.includes(ops.get(i).op))
                         {
-                            operatorSections.add(operatorExpressionInfo.makeOperatorSection(errorDisplayerRecord, candidateIndex, ops.get(i).op, i));
+                            operatorSections.add(operatorExpressionInfo.makeOperatorSection(errorDisplayerRecord, candidateIndex, ops.get(i), i));
                             continue nextOp;
                         }
                     }

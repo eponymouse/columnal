@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
@@ -22,9 +23,9 @@ import java.util.stream.Stream;
 
 public class InvalidOperatorUnitExpression extends UnitExpression
 {
-    private final ImmutableList<UnitExpression> items;
+    private final ImmutableList<@Recorded UnitExpression> items;
 
-    public InvalidOperatorUnitExpression(ImmutableList<UnitExpression> items)
+    public InvalidOperatorUnitExpression(ImmutableList<@Recorded UnitExpression> items)
     {
         this.items = items;
     }
@@ -82,6 +83,7 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     }
 
     @Override
+    @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
     public UnitExpression replaceSubExpression(UnitExpression toReplace, UnitExpression replaceWith)
     {
         if (this == toReplace)

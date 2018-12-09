@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableAndColumnRenames;
 import records.gui.expressioneditor.GeneralExpressionEntry.Op;
+import records.gui.expressioneditor.SaverBase.OpAndNode;
 import records.transformations.expression.*;
 import records.transformations.expression.LoadableExpression.SingleLoader;
 import utility.Pair;

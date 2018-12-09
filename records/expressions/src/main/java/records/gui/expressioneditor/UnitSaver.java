@@ -44,23 +44,23 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     {
     }
     
-    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<UnitOp> operators, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
+    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, ConsecutiveChild<UnitExpression, UnitSaver>>> operators, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
     {
         return new UnitTimesExpression(expressions);
     }
 
-    private static UnitExpression makeDivide(UnitExpression lhs, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
+    private static UnitExpression makeDivide(UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
     {
         return new UnitDivideExpression(lhs, rhs);
     }
 
-    private static UnitExpression makeRaise(UnitExpression lhs, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus)
+    private static UnitExpression makeRaise(UnitExpression lhs, ConsecutiveChild<UnitExpression, UnitSaver> opNode, UnitExpression rhs, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
     {
         if (rhs instanceof UnitExpressionIntLiteral)
             return new UnitRaiseExpression(lhs, ((UnitExpressionIntLiteral) rhs).getNumber());
         else
             return new InvalidOperatorUnitExpression(ImmutableList.of(
-                    lhs, new InvalidSingleUnitExpression("^"), rhs
+                    lhs, errorDisplayerRecord.recordUnit(opNode, opNode, new InvalidSingleUnitExpression("^")), rhs
             ));
     };
 
@@ -129,7 +129,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     @Override
     protected @Recorded UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> items)
     {
-        return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.either(op -> new InvalidSingleUnitExpression(op.op.getContent()), y -> y))));
+        return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.<Either<OpAndNode, @Recorded UnitExpression>, @Recorded UnitExpression>mapListI(items, x -> x.<@Recorded UnitExpression>either(op -> errorDisplayerRecord.recordUnit(op.sourceNode, op.sourceNode, new InvalidSingleUnitExpression(op.op.getContent())), y -> y))));
     }
 
     private static Pair<UnitOp, @Localized String> opD(UnitOp op, @LocalizableKey String key)
@@ -159,11 +159,11 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
                         if (isShowingErrors())
                             keywordErrorDisplayer.addErrorAndFixes(StyledString.s("Expected ) but found " + terminator), ImmutableList.of());
                         // Important to call makeContent before adding to scope on the next line:
-                        ImmutableList.Builder<UnitExpression> items = ImmutableList.builder();
-                        items.add(new InvalidSingleUnitExpression(bracket.getContent()));
+                        ImmutableList.Builder<@Recorded UnitExpression> items = ImmutableList.builder();
+                        items.add(record(errorDisplayer, errorDisplayer, new InvalidSingleUnitExpression(bracket.getContent())));
                         items.add(makeContent.fetchContent(brackets));
                         if (terminator != null)
-                            items.add(new InvalidSingleUnitExpression(terminator.getContent()));
+                            items.add(record(errorDisplayer, errorDisplayer, new InvalidSingleUnitExpression(terminator.getContent())));
                         @Recorded UnitExpression invalid = record(brackets.start, keywordErrorDisplayer, new InvalidOperatorUnitExpression(items.build()));
                         currentScopes.peek().items.add(Either.left(invalid));
                     }
@@ -188,7 +188,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected Span<UnitExpression, UnitSaver> recorderFor(UnitExpression unitExpression)
+    protected Span<UnitExpression, UnitSaver> recorderFor(@Recorded UnitExpression unitExpression)
     {
         return errorDisplayerRecord.recorderFor(unitExpression);
     }
