@@ -434,14 +434,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         else
             return null;
     }
-
-    @Override
-    protected Expression makeSingleInvalid(Keyword terminator)
-    {
-        return new InvalidIdentExpression(terminator.getContent());
-    }
-
-
+    
     /**
      * Get likely types and completions for given child.  For example,
      * if the expression is column Name = _ (where the RHS

@@ -121,12 +121,6 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     }
 
     @Override
-    protected UnitExpression makeSingleInvalid(UnitBracket terminator)
-    {
-        return new InvalidSingleUnitExpression(terminator.getContent());
-    }
-
-    @Override
     protected @Recorded UnitExpression makeInvalidOp(ConsecutiveChild<UnitExpression, UnitSaver> start, ConsecutiveChild<UnitExpression, UnitSaver> end, ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> items)
     {
         return errorDisplayerRecord.recordUnit(start, end, new InvalidOperatorUnitExpression(Utility.mapListI(items, x -> x.either(op -> new InvalidSingleUnitExpression(op.op.getContent()), y -> y))));

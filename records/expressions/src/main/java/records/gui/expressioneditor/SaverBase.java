@@ -790,14 +790,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                     items.addAll(Utility.<@Recorded EXPRESSION, Either<OpAndNode, @Recorded EXPRESSION>>mapListI(prefixItemsOnFailedClose.get(), (@Recorded EXPRESSION e) -> Either.<OpAndNode, @Recorded EXPRESSION>right(e)));
                     items.add(Either.right(makeContent.fetchContent(makeBrackets.apply(keywordErrorDisplayer))));
                     if (terminator != null)
-                        items.add(Either.right(record(keywordErrorDisplayer, keywordErrorDisplayer, makeSingleInvalid(terminator))));
+                        items.add(Either.right(record(keywordErrorDisplayer, keywordErrorDisplayer, keywordToInvalid(terminator))));
                     @Recorded EXPRESSION invalid = makeInvalidOp(start, keywordErrorDisplayer, items.build());
                     currentScopes.peek().items.add(Either.left(invalid));
                 }
             }};
     }
-
-    protected abstract EXPRESSION makeSingleInvalid(KEYWORD terminator);
     
     public final @Nullable Map<DataFormat, Object> finishClipboard()
     {

@@ -155,12 +155,6 @@ public class TypeSaver extends SaverBase<TypeExpression, TypeSaver, Operator, Ke
     }
 
     @Override
-    protected TypeExpression makeSingleInvalid(Keyword terminator)
-    {
-        return new InvalidIdentTypeExpression(terminator.getContent());
-    }
-
-    @Override
     protected @Recorded TypeExpression makeInvalidOp(ConsecutiveChild<TypeExpression, TypeSaver> start, ConsecutiveChild<TypeExpression, TypeSaver> end, ImmutableList<Either<OpAndNode, @Recorded TypeExpression>> items)
     {
         return errorDisplayerRecord.recordType(start, end, new InvalidOpTypeExpression(Utility.mapListI(items, x -> x.either(u -> new InvalidIdentTypeExpression(","), y -> y))));
