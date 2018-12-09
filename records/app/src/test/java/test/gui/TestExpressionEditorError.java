@@ -80,7 +80,14 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     public void test2()
     {
         // Don't want an error if we're still in the slot::
-        testError("1#", false, h());
+        testError("foo", false, h());
+    }
+
+    @Test
+    public void test2A()
+    {
+        // Error once we leave the slot:
+        testError("foo+1", false, eRed(), h(), h());
     }
 
     @Test
@@ -88,7 +95,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     {
         // Error once we leave the slot:
         // (but no error in the blank operand added at the end)
-        testError("1#+", false, eRed(), h(), h());
+        testError("foo+", false, eRed(), h(), h());
     }
 
     @Test
@@ -96,7 +103,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
     {
         // Error once we leave the slot:
         // (and error in the blank operand skipped)
-        testError("1#+/", false, eRed(), h(), eRed(), h(), h());
+        testError("foo+/", false, eRed(), h(), eRed(), h(), h());
     }
     
     @Test
