@@ -129,39 +129,24 @@ public class TestExpressionEditorPosition extends FXApplicationTest implements S
             Pair<TextField, Integer> curPosition = getPosition();
             Pair<TextField, Integer> oldPosition = null;
             int maxRemaining = 3 * content.length() + 5;
-            ArrayList<String> accum = new ArrayList<>();
             while (!curPosition.equals(oldPosition) && --maxRemaining > 0)
-            {
-                Pair<TextField, Integer> curFinal = curPosition;
-                // Add the character to the right of the caret:
-                String toRight = TestUtil.fx(() -> curFinal.getFirst().getText(curFinal.getSecond(), Math.min(curFinal.getSecond() + 1, curFinal.getFirst().getText().length())));
-                accum.add(toRight);
-                
+            {                
                 push(KeyCode.LEFT);
                 oldPosition = curPosition;
                 curPosition = getPosition();
             }
             assertNotEquals(0, maxRemaining);
-            Collections.reverse(accum);
-            assertEquals(Utility.listToString(accum), content, accum.stream().collect(Collectors.joining()));
 
             curPosition = getPosition();
             oldPosition = null;
             maxRemaining = 3 * content.length() + 5;
-            accum.clear();
             while (!curPosition.equals(oldPosition) && --maxRemaining > 0)
             {
-                Pair<TextField, Integer> curFinal = curPosition;
-                // Add the character to the right of the caret:
-                String toRight = TestUtil.fx(() -> curFinal.getFirst().getText(Math.max(0, curFinal.getSecond() - 1), curFinal.getSecond()));
-                accum.add(toRight);
-
                 push(KeyCode.RIGHT);
                 oldPosition = curPosition;
                 curPosition = getPosition();
             }
             assertNotEquals(0, maxRemaining);
-            assertEquals(Utility.listToString(accum), content, accum.stream().collect(Collectors.joining()));
             
             
             TopLevelEditorFlowPane editorPane = lookup(".expression-editor").<TopLevelEditorFlowPane>query();
