@@ -65,6 +65,7 @@ public class TestExpressionEditorError extends FXApplicationTest implements Scro
             this.errorColourHeader = errorColourHeader;
         }
         
+        // Slight hack during testing to allow null to match anything:
         public boolean equals(@Nullable Object o)
         {
             if (o instanceof Pair)

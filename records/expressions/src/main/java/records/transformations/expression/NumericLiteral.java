@@ -81,7 +81,7 @@ public class NumericLiteral extends Literal
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         String num = numberAsString();
-        if (unit == null || unit.equals(Unit.SCALAR))
+        if (unit == null || unit.isScalar())
             return num;
         else
             return num + "{" + unit.save(structured, true) + "}";
@@ -91,7 +91,7 @@ public class NumericLiteral extends Literal
     public StyledString toDisplay(BracketedStatus surround)
     {
         StyledString num = StyledString.s(numberAsString());
-        if (unit == null || unit.equals(Unit.SCALAR))
+        if (unit == null || unit.isScalar())
             return num;
         else
             return StyledString.concat(num, StyledString.s("{"), unit.toStyledString(), StyledString.s("}"));

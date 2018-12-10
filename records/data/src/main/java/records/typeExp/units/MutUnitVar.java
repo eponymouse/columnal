@@ -7,6 +7,8 @@ import styled.CommonStyles;
 import styled.StyledShowable;
 import styled.StyledString;
 
+import java.util.Objects;
+
 public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
 {
     // For Comparable and printing purposes
@@ -28,6 +30,21 @@ public class MutUnitVar implements Comparable<MutUnitVar>, StyledShowable
     public int compareTo(@NonNull MutUnitVar o)
     {
         return Long.compare(id, o.id);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MutUnitVar that = (MutUnitVar) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(id);
     }
 
     @Override

@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -141,6 +142,22 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                     public int compareTo(NodeInfo o)
                     {
                         return Comparator.<NodeInfo, Double>comparing(n -> n.verticalDist).thenComparing(n -> n.horizDist).compare(this, o);
+                    }
+
+                    @Override
+                    public boolean equals(Object o)
+                    {
+                        if (this == o) return true;
+                        if (o == null || getClass() != o.getClass()) return false;
+                        NodeInfo nodeInfo = (NodeInfo) o;
+                        return Double.compare(nodeInfo.verticalDist, verticalDist) == 0 &&
+                                Double.compare(nodeInfo.horizDist, horizDist) == 0;
+                    }
+
+                    @Override
+                    public int hashCode()
+                    {
+                        return Objects.hash(verticalDist, horizDist);
                     }
                 }
 
