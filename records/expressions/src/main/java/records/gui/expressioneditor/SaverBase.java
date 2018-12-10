@@ -233,7 +233,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         @Override
         boolean addOperator(@NonNull OpAndNode operator, int indexOfOperator)
         {
-            if (possibleOperators.stream().anyMatch(p -> operator.equals(p.getFirst())) && indexOfOperator == endingOperatorIndexIncl + 1)
+            if (possibleOperators.stream().anyMatch(p -> operator.op.equals(p.getFirst())) && indexOfOperator == endingOperatorIndexIncl + 1)
             {
                 endingOperatorIndexIncl = indexOfOperator;
                 actualOperators.add(new Pair<>(operator.op, operator.sourceNode));

@@ -145,7 +145,8 @@ public abstract class TopLevelEditor<EXPRESSION extends StyledShowable, SAVER ex
                     }
 
                     @Override
-                    public boolean equals(Object o)
+                    @SuppressWarnings("unchecked") // IntelliJ gets confused
+                    public boolean equals(@Nullable Object o)
                     {
                         if (this == o) return true;
                         if (o == null || getClass() != o.getClass()) return false;
