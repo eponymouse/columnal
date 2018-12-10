@@ -533,7 +533,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             validOperators = new ArrayList<>();
 
             SimpleBooleanProperty lastWasOperand = new SimpleBooleanProperty(false); // Think of it as an invisible empty prefix operator
-            SimpleObjectProperty<Span<EXPRESSION,SAVER>> lastNodeSpan = new SimpleObjectProperty<>();
+            SimpleObjectProperty<@Nullable Span<EXPRESSION,SAVER>> lastNodeSpan = new SimpleObjectProperty<>(null);
 
             for (int i = 0; i < content.size(); i++)
             {
@@ -546,7 +546,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
                     if (lastWasOperand.get())
                     {
-                        invalidReason = new Pair<>(new Span<>(lastNodeSpan.get().start, recorderFor(expression).end), StyledString.s("Missing operator"));
+                        ConsecutiveChild<EXPRESSION, SAVER> start = lastNodeSpan.get() != null ? lastNodeSpan.get().start : recorderFor(expression).start;
+                        invalidReason = new Pair<>(new Span<>(start, recorderFor(expression).end), StyledString.s("Missing operator"));
                     }
                     lastWasOperand.set(true);
                     lastNodeSpan.set(recorderFor(expression));
@@ -572,7 +573,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
                         }
                         else
                         {
-                            invalidReason = new Pair<>(new Span<>(lastNodeSpan.get().start,op.sourceNode), StyledString.s("Missing item between operators"));
+                            ConsecutiveChild<EXPRESSION, SAVER> start = lastNodeSpan.get() != null ? lastNodeSpan.get().start : op.sourceNode;
+                            invalidReason = new Pair<>(new Span<>(start,op.sourceNode), StyledString.s("Missing item between operators"));
                         }
                     }
                     lastWasOperand.set(false);
@@ -581,7 +583,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             }
             
             // Must end with operand:
-            if (!lastWasOperand.get() && !content.isEmpty())
+            if (!lastWasOperand.get() && lastNodeSpan.get() != null)
             {
                 invalidReason = new Pair<>(lastNodeSpan.get(), StyledString.s("Trailing operator missing."));
             }
