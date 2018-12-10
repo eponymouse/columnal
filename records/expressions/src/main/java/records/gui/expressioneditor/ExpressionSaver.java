@@ -557,7 +557,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
 
     private static Expression makeAddSubtract(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
     {
-        return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.equals(Op.ADD) ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
+        return new AddSubtractExpression(args, Utility.mapList(ops, op -> op.getFirst().equals(Op.ADD) ? AddSubtractOp.ADD : AddSubtractOp.SUBTRACT));
     }
 
     private static Expression makeTimes(ImmutableList<@Recorded Expression> args, List<Pair<Op, ConsecutiveChild<Expression, ExpressionSaver>>> _ops, BracketAndNodes brackets, ErrorDisplayerRecord errorDisplayerRecord)
