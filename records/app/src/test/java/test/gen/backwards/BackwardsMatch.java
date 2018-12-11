@@ -236,7 +236,7 @@ public class BackwardsMatch extends BackwardsProvider
             return Optional.<Function<MatchExpression, MatchClause>>of((MatchExpression me) -> {
                 try
                 {
-                    return me.new MatchClause(Utility.mapListEx(patterns, p -> p.toPattern()), outcome);
+                    return me.new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), outcome);
                 }
                 catch (UserException | InternalException e)
                 {
@@ -263,7 +263,7 @@ public class BackwardsMatch extends BackwardsProvider
         clauses.add(r.nextInt(0, clauses.size()), me -> {
             try
             {
-                return me.new MatchClause(Utility.mapListEx(patterns, p -> p.toPattern()), toMatch);
+                return me.new MatchClause(Utility.mapListExI(patterns, p -> p.toPattern()), toMatch);
             }
             catch (InternalException | UserException e)
             {

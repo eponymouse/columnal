@@ -526,14 +526,14 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
             for (MatchClauseContext matchClauseContext : ctx.matchClause())
             {
                 clauses.add(me -> {
-                    List<Pattern> patterns = new ArrayList<>();
+                    ImmutableList.Builder<Pattern> patterns = ImmutableList.builderWithExpectedSize(matchClauseContext.pattern().size());
                     for (PatternContext patternContext : matchClauseContext.pattern())
                     {
                         @Nullable TopLevelExpressionContext guardExpression = patternContext.topLevelExpression().size() < 2 ? null : patternContext.topLevelExpression(1);
                         @Nullable Expression guard = guardExpression == null ? null : visitTopLevelExpression(guardExpression);
                         patterns.add(new Pattern(visitTopLevelExpression(patternContext.topLevelExpression(0)), guard));
                     }
-                    return me.new MatchClause(patterns, visitExpression(matchClauseContext.expression()));
+                    return me.new MatchClause(patterns.build(), visitExpression(matchClauseContext.expression()));
                 });
             }
             return new MatchExpression(visitExpression(ctx.expression()), clauses);

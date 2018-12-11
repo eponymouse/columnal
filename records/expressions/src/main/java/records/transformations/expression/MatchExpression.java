@@ -40,10 +40,10 @@ public class MatchExpression extends NonOperatorExpression
      */
     public class MatchClause
     {
-        private final List<Pattern> patterns;
+        private final ImmutableList<Pattern> patterns;
         private final @Recorded Expression outcome;
 
-        public MatchClause(List<Pattern> patterns, @Recorded Expression outcome)
+        public MatchClause(ImmutableList<Pattern> patterns, @Recorded Expression outcome)
         {
             this.patterns = patterns;
             this.outcome = outcome;
@@ -169,7 +169,7 @@ public class MatchExpression extends NonOperatorExpression
         @SuppressWarnings("recorded") // Because the replaced version is immediately loaded again
         public Function<MatchExpression, MatchClause> replaceSubExpression(Expression toReplace, Expression replaceWith)
         {
-            return me -> me.new MatchClause(Utility.mapList(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
+            return me -> me.new MatchClause(Utility.mapListI(patterns, p -> p.replaceSubExpression(toReplace, replaceWith)), outcome.replaceSubExpression(toReplace, replaceWith));
         }
     }
 
@@ -372,29 +372,30 @@ public class MatchExpression extends NonOperatorExpression
             return null;
         }
         
-        // Add one extra for the srcType:
+        // Add one extra for the srcType.  This size will be wrong if a clause
+        // has multiple patterns, but it's only a hint.
         List<TypeExp> patternTypes = new ArrayList<>(1 + clauses.size());
-        patternTypes.add(srcType.typeExp);
         TypeExp[] outcomeTypes = new TypeExp[clauses.size()];
         // Includes the original source pattern:
-        List<Expression> patternExpressions = new ArrayList<>();
+        ImmutableList.Builder<@Recorded Expression> patternExpressions = ImmutableList.builderWithExpectedSize(patternTypes.size());
+        // Note: patternTypes and patternExpressions should always be the same length.        
+        patternTypes.add(srcType.typeExp);
         patternExpressions.add(expression);
-        boolean allValid = true;
+        
         for (int i = 0; i < clauses.size(); i++)
         {
-            patternExpressions.addAll(Utility.mapList(clauses.get(i).getPatterns(), p -> p.pattern));
+            patternExpressions.addAll(Utility.<Pattern, @Recorded Expression>mapList(clauses.get(i).getPatterns(), p -> p.getPattern()));
             @Nullable Pair<List<TypeExp>, TypeExp> patternAndOutcomeType = clauses.get(i).check(dataLookup, state, onError);
             if (patternAndOutcomeType == null)
                 return null;
             patternTypes.addAll(patternAndOutcomeType.getFirst());
             outcomeTypes[i] = patternAndOutcomeType.getSecond();
         }
-        @SuppressWarnings("recorded")
-        ImmutableList<@Recorded Expression> immPatternExpressions = ImmutableList.copyOf(patternExpressions);
+        ImmutableList<@Recorded Expression> immPatternExpressions = patternExpressions.build();
         
-        for (int i = 0; i < patternExpressions.size(); i++)
+        for (int i = 0; i < immPatternExpressions.size(); i++)
         {
-            Expression expression = patternExpressions.get(i);
+            Expression expression = immPatternExpressions.get(i);
             List<QuickFix<Expression, ExpressionSaver>> fixesForMatchingNumericUnits = ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, new TypeProblemDetails(patternTypes.stream().map(p -> Optional.of(p)).collect(ImmutableList.toImmutableList()), immPatternExpressions, i));
             if (!fixesForMatchingNumericUnits.isEmpty())
             {

@@ -332,26 +332,26 @@ public class PropTypecheckIndividual
 
         // One clause with one pattern, all checks out:
         assertEquals(resultType, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // One clause, two patterns
         assertEquals(resultType, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns each
         assertEquals(resultType, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns, one pattern doesn't match:
         assertEquals(null, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType))))));
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns, one clause doesn't match:
         assertEquals(null, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(otherType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+            ImmutableList.of(new Pattern(new DummyPatternMatch(otherType), null), new Pattern(new DummyPatternMatch(otherType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
         // Two clauses, two patterns, one result doesn't match:
         assertEquals(null, checkConcrete(match.typeManager, new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
-            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(otherType))))));
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            ImmutableList.of(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(otherType))))));
     }
 
     private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
