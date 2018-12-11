@@ -322,7 +322,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
                 // Note that the field may not get focus if
                 // if is a keyword, but the blank next to it
                 // should get focused.
-                if (!fixFieldContent.startsWith("@"))
+                if (Character.isLetterOrDigit(fixFieldContent.codePointAt(0)))
                     assertTrue(TestUtil.fx(() -> lhs.isFocused()));
             }
             TestUtil.delay(500);
