@@ -7,10 +7,13 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import log.Log;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
+import org.testfx.service.finder.NodeFinder;
 import org.testfx.service.query.NodeQuery;
 import records.data.CellPosition;
 import records.gui.grid.VirtualGrid;
@@ -40,8 +43,13 @@ public interface ScrollToTrait extends FxRobotInterface
             System.err.println("No such node to scroll to: " + nodeLocator);
             return;
         }
-        @NonNull Node target = targetQ;
+        scrollTo(targetQ);
+    }
 
+    // Scrolls until the entire node is on screen
+    @OnThread(Tag.Any)
+    default public void scrollTo(Node target)
+    {
         // Find enclosing scroll:
         ScrollPane enclosingScroll = TestUtil.fx(() -> {
             Node n = target.getParent();
@@ -57,30 +65,32 @@ public interface ScrollToTrait extends FxRobotInterface
         }
 
         Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.localToScreen(enclosingScroll.getViewportBounds()));
+        // Move, ready for potentially scrolling:
+        moveTo(viewBounds);
         // We limit how many times we will scroll, to avoid an infinite loop in case of test failure:
         for (int i = 0;i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX()) > viewBounds.getMaxX(); i++)
         {
             System.out.println("Scrolling RIGHT");
-            clickOn(".main-scroll > .scroll-bar:horizontal > .increment-button");
+            clickOrScroll(".main-scroll > .scroll-bar:horizontal > .increment-button", () -> scroll(HorizontalDirection.RIGHT));
             //scroll(HorizontalDirection.RIGHT);
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX()) < viewBounds.getMinX(); i++)
         {
             System.out.println("Scrolling LEFT");
-            clickOn(".main-scroll > .scroll-bar:horizontal > .decrement-button");
+            clickOrScroll(".main-scroll > .scroll-bar:horizontal > .decrement-button", () -> scroll(HorizontalDirection.LEFT));
             //scroll(HorizontalDirection.LEFT);
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxY()) > viewBounds.getMaxY(); i++)
         {
             System.out.println("Scrolling DOWN");
             //scroll(VerticalDirection.DOWN);
-            clickOn(".main-scroll > .scroll-bar:vertical > .increment-button");
+            clickOrScroll(".main-scroll > .scroll-bar:vertical > .increment-button", () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY()) < viewBounds.getMinY(); i++)
         {
             System.out.println("Scrolling UP");
             //scroll(VerticalDirection.UP);
-            clickOn(".main-scroll > .scroll-bar:vertical > .decrement-button");
+            clickOrScroll(".main-scroll > .scroll-bar:vertical > .decrement-button", () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
         }
         assertTrue(viewBounds.contains(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()))));
     }
@@ -109,5 +119,16 @@ public interface ScrollToTrait extends FxRobotInterface
         }
         // Wait for smooth scroll to finish:
         TestUtil.sleep(300);
+    }
+    
+    // Ideally, will be private in later Java:
+    @OnThread(Tag.Any)
+    default public void clickOrScroll(String nodeQuery, Runnable scroll)
+    {
+        Node scrollButton = lookup(nodeQuery).tryQuery().orElse(null);
+        if (scrollButton != null)
+            clickOn(scrollButton, MouseButton.PRIMARY);
+        else
+            scroll.run();
     }
 }

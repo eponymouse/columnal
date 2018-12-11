@@ -134,7 +134,13 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnitLiteralFix6C()
     {
-            testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
+        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
+    }
+
+    @Test
+    public void testUnitLiteralFix6D()
+    {
+            testFix("@matchACC1@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
     }
 
     @Test
@@ -307,6 +313,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             if (!TestUtil.fx(() -> lhsFinal.isFocused()))
             {
                 Log.debug("Focusing target field: " + lhsFinal);
+                scrollTo(lhs);
                 moveTo(lhs);
                 // Get rid of any popups in the way:
                 clickOn(MouseButton.MIDDLE);
@@ -315,6 +322,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
                 // Note that the field may not get focus if
                 // if is a keyword, but the blank next to it
                 // should get focused.
+                if (!fixFieldContent.startsWith("@"))
+                    assertTrue(TestUtil.fx(() -> lhs.isFocused()));
             }
             TestUtil.delay(500);
             List<Window> windows = listWindows();
