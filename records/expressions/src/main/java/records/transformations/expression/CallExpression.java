@@ -99,7 +99,8 @@ public class CallExpression extends Expression
         {
             // Check after unification attempted, because that will have constrained
             // to list if possible (and not, if not)
-            boolean takesList = TypeExp.isList(paramType.typeExp);
+            @Nullable TypeExp functionArgTypeExp = TypeExp.getFunctionArg(functionType.typeExp);
+            boolean takesList = functionArgTypeExp != null && TypeExp.isList(functionArgTypeExp);
             if (takesList)
             {
                 TypeExp prunedParam = paramType.typeExp.prune();

@@ -352,7 +352,16 @@ public abstract class TypeExp implements StyledShowable
 
     public static boolean isFunction(TypeExp typeExp)
     {
-        return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_LIST);
+        return typeExp instanceof TypeCons && ((TypeCons)typeExp).name.equals(TypeCons.CONS_FUNCTION);
+    }
+    
+    public static @Nullable TypeExp getFunctionArg(TypeExp functionTypeExp)
+    {
+        if (isFunction(functionTypeExp))
+        {
+            return ((TypeCons)functionTypeExp).operands.get(0).<@Nullable TypeExp>either(u -> null, t -> t);
+        }
+        return null;
     }
 
     /**
