@@ -188,7 +188,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         {
             assertEquals(originalColumns, table.getData().getColumns().size());
         }
-        int row = Math.abs(n) % (originalRows + 2); 
+        int row = 1 + (Math.abs(n) % (originalRows + 2)); 
         clickOnItemInBounds(lookup(".expand-arrow"), virtualGrid, new RectangleBounds(originalTableTopLeft.offsetByRowCols(row, 0), originalTableTopLeft.offsetByRowCols(row, originalColumns)));
         
         // We borrow n as a seed:
