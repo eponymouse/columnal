@@ -133,7 +133,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     String guiMinusEllipsis = gui.replaceAll("\u2026", "").trim();
                     
                     Function<Integer, Point2D> posOfCaret = n -> {
-                        Optional<Bounds> b = Optional.empty();
+                        Optional<Bounds> b;
                         String curText = TestUtil.fx(() -> cellFinal.getText());
                         if (n < curText.length())
                         {
@@ -162,7 +162,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
                     {
                         case FAR_LEFT:
                             clickOnScreenPos = posOfCaret.apply(0);
-                            afterIndex = nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
+                            afterIndex = 0; //nonEllipsisPos + (gui.startsWith("\u2026") ? -1 : 0);
                             break;
                         case INSIDE_LEFT:
                             clickOnScreenPos = posOfCaret.apply(1);
