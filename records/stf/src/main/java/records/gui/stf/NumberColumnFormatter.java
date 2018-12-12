@@ -29,7 +29,6 @@ import java.util.ArrayList;
 // package-visible
 class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value Number>.VisibleDetails>
 {
-    private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
 
     @Override
@@ -77,14 +76,12 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             if (onlyEllipsis)
             {
                 display.displayIntegerPart = ELLIPSIS;
-                display.displayDot = "";
                 display.displayFracPart = "";
             }
             else
             {
                 display.displayIntegerPart = display.fullIntegerPart;
                 display.displayFracPart = display.fullFracPart;
-                display.displayDot = NUMBER_DOT;
 
                 while (display.displayFracPart.length() < maxRightLength)
                     display.displayFracPart += " "; //displayInfo == null ? " " : displayInfo.getPaddingChar();
@@ -112,7 +109,6 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private final String fullIntegerPart;
         private String displayFracPart;
         private String displayIntegerPart;
-        private String displayDot;
         private boolean displayDotVisible;
         private final NumberEntry numberEntry;
 
@@ -125,14 +121,13 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
             // TODO should these be taken from NumberEntry?
             displayIntegerPart = fullIntegerPart;
             displayFracPart = fullFracPart;
-            displayDot = ".";
             displayDotVisible = true;
         }
 
         private void updateDisplay()
         {
             //Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
-            if (numberEntry.setDisplay(displayIntegerPart, displayFracPart))
+            if (numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
                 structuredTextField.updateFromEditorKit();
             /*
             List<String> dotStyle = new ArrayList<>();
@@ -447,7 +442,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         if (SIZES == null)
             SIZES = new DigitSizes();
 
-        double width = totalWidth - SIZES.DOT_WIDTH;
+        double width = totalWidth - (right == 0 ? 0 : SIZES.DOT_WIDTH);
         width -= right * SIZES.RIGHT_DIGIT_WIDTH;
         return (int)Math.floor(width / SIZES.LEFT_DIGIT_WIDTH);
     }

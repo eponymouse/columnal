@@ -22,12 +22,16 @@ import java.util.List;
  */
 public class NumberEntry extends TerminalComponent<@Value Number>
 {
+    private static final String NUMBER_DOT = "."; //"\u00B7"; //"\u2022";
+    
     // NumberEntry can have overrides while it is not focused for editing:
     private String actualIntegerPart;
     private String actualFracPart;
 
     private String displayIntegerPart;
     private String displayFracPart;
+    
+    private boolean showDot;
     
     private boolean focused;
 
@@ -91,11 +95,14 @@ public class NumberEntry extends TerminalComponent<@Value Number>
      * Sets the display integer and fractional parts (for when the field is NOT focused).
      * Returns true if this was a change from before
      */
-    public boolean setDisplay(String displayIntegerPart, String displayFracPart)
+    public boolean setDisplay(String displayIntegerPart, boolean showDot, String displayFracPart)
     {
-        if (this.displayIntegerPart.equals(displayIntegerPart) && this.displayFracPart.equals(displayFracPart))
+        if (this.displayIntegerPart.equals(displayIntegerPart)
+            && this.showDot == showDot    
+            && this.displayFracPart.equals(displayFracPart))
             return false;
         this.displayIntegerPart = displayIntegerPart;
+        this.showDot = showDot;
         this.displayFracPart = displayFracPart;
         updateComponentContent();
         return true;
@@ -106,17 +113,18 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     {
         this.focused = focused;
         // We have to work out whereabouts the caret currently lies.
-        CaretPositionMapper mapper;
-        String integerComponent = getItem(ItemVariant.EDITABLE_NUMBER_INT);
-        String dotComponent = getItem(ItemVariant.NUMBER_DOT);
-        String fracComponent = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
-        int prevInt = integerComponent.length();
-        int prevDot = dotComponent.length();
+        int prevInt = getItem(ItemVariant.EDITABLE_NUMBER_INT).length();
+        int prevDot = getItem(ItemVariant.NUMBER_DOT).length();
         updateComponentContent();
         if (focused)
         {
             return n -> {
-                if (n <= prevInt)
+                String integerComponent = getItem(ItemVariant.EDITABLE_NUMBER_INT);
+                String dotComponent = getItem(ItemVariant.NUMBER_DOT);
+                // Clicking the left always stays left most:
+                if (n == 0)
+                    return 0;
+                else if (n <= prevInt)
                     // Right-align the position:
                     return integerComponent.length() - (prevInt - n);
                 else
@@ -130,8 +138,8 @@ public class NumberEntry extends TerminalComponent<@Value Number>
 
     private void updateComponentContent()
     {
-        Item dot = makeDotComponent(".");
-        if (actualFracPart.isEmpty())
+        Item dot = makeDotComponent(showDot ? NUMBER_DOT : "");
+        if (actualFracPart.isEmpty() || !showDot)
             dot = dot.withStyleClasses("stf-number-dot-invisible");
         ImmutableList<Item> prospectiveContent = ImmutableList.of(
             makeIntegerComponent(!focused ? displayIntegerPart : actualIntegerPart),
