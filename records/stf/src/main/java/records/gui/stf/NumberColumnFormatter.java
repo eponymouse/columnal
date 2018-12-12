@@ -412,9 +412,9 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
 
     private static class DigitSizes
     {
-        private static double LEFT_DIGIT_WIDTH;
-        private static double RIGHT_DIGIT_WIDTH;
-        private static double DOT_WIDTH;
+        private final double LEFT_DIGIT_WIDTH;
+        private final double RIGHT_DIGIT_WIDTH;
+        private final double DOT_WIDTH;
 
         @OnThread(Tag.FXPlatform)
         public DigitSizes()
