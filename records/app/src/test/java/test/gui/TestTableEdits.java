@@ -69,7 +69,7 @@ import static org.junit.Assert.fail;
 
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait
+public class TestTableEdits extends FXApplicationTest implements ClickTableLocationTrait, EnterColumnDetailsTrait, TextFieldTrait
 {
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
@@ -130,12 +130,12 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     @OnThread(Tag.Simulation)
     public void testRenameTable(@From(GenTableId.class) TableId newTableId) throws Exception
     {
-        // 2 tables, 2 columns, each with 2 header rows:
+        // 2 tables, 2 columns:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(0, originalColumns));
         clickOnItemInBounds(lookup(".table-display-table-title .text-field"), virtualGrid, rectangleBounds);
-        deleteAll();
+        selectAllCurrentTextField();
         write(newTableId.getRaw());
         // Different ways of exiting:
 
@@ -149,19 +149,19 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertEquals(ImmutableSet.of("Sorted", newTableId.getRaw()), tableManager.getAllTables().stream().map(t -> t.getId().getRaw()).sorted().collect(Collectors.toSet()));
         // Check we haven't amassed multiple tables during the rename re-runs:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
     }
 
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void testRenameColumn(@From(GenColumnId.class) ColumnId newColumnId) throws Exception
     {
-        // 2 tables, 2 columns, each with 2 header rows:
+        // 2 tables, 2 columns:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        clickOnItemInBounds(lookup(".table-display-column-title .text-field").lookup((Predicate<Node>) n -> TestUtil.fx(() -> ((TextField)n).getText()).equals("A")), virtualGrid, rectangleBounds);
-        deleteAll();
+        clickOnItemInBounds(lookup(".table-display-column-title").lookup((Predicate<Node>) n -> TestUtil.fx(() -> ((TextField)n).getText()).equals("A")), virtualGrid, rectangleBounds);
+        selectAllCurrentTextField();
         write(newColumnId.getRaw());
         // Different ways of exiting:
 
@@ -176,10 +176,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         assertEquals(ImmutableSet.<ColumnId>of(new ColumnId("B"), newColumnId), ImmutableSet.copyOf(tableManager.getSingleTableOrThrow(new TableId("Sorted")).getData().getColumnIds()));
         // Check we haven't amassed multiple tables during the rename re-runs:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
     }
     
-    @Property(trials=2, shrink = false)
+    @Property(trials = 2, shrink = false)
     @OnThread(Tag.Simulation)
     public void testAddColumnAtRight(int n, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
@@ -221,9 +221,9 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
     public void testAddColumnBeforeAfter(int positionIndicator, @From(GenColumnId.class) ColumnId name, @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         tableManager.getTypeManager()._test_copyTaggedTypesFrom(typeAndValueGen.getTypeManager());
-        // 2 tables, 2 columns, each with 2 header rows:
+        // 2 tables, 2 columns:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(8, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(4, lookup(".table-display-column-title").queryAll().size());
         // 2 columns which you can add to, 3 rows plus 2 column headers:
         assertEquals(originalColumns + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
 
@@ -243,7 +243,7 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
 
         // Should now be one more column in each table:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(12, lookup(".table-display-column-title").queryAll().size());
+        assertEquals(6, lookup(".table-display-column-title").queryAll().size());
         // One extra column:
         assertEquals(originalColumns + 1 + originalRows + 2, lookup(".expand-arrow").queryAll().stream().filter(Node::isVisible).count());
         
@@ -265,14 +265,5 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
             assertEquals(columnDetails.dataType, columns.get(newPosition).getType());
             TestUtil.assertValueEqual("", columns.get(newPosition) instanceof EditableColumn ? columnDetails.defaultValue : null, columns.get(newPosition).getDefaultValue());
         }
-    }
-    
-    @OnThread(Tag.Any)
-    private void deleteAll()
-    {
-        push(KeyCode.END);
-        // TODO: ain't gonna work on Mac
-        push(KeyCode.CONTROL, KeyCode.A);
-        push(KeyCode.DELETE);
     }
 }
