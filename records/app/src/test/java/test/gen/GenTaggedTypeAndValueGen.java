@@ -9,6 +9,7 @@ import test.gen.GenDataType.GenTaggedType;
  */
 public class GenTaggedTypeAndValueGen extends GenTypeAndValueGen
 {
+    @Override
     public Generator<DataTypeAndManager> typeGenerator()
     {
         return new GenTaggedType();
