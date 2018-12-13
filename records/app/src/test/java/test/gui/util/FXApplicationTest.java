@@ -15,8 +15,10 @@ import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
@@ -48,8 +50,8 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         protected void failed(Throwable e, Description description)
         {
             super.failed(e, description);
-            System.err.println("Screenshot of failure: ");
-            //TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
+            System.err.println("Screenshot of failure, " + targetWindow().toString() + ":");
+            TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
             e.printStackTrace();
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
@@ -128,6 +130,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     @Override
     public FxRobot write(String text, int sleepMillis)
     {
+        Log.debug("Writing: " + text + " to " + TestUtil.fx(() -> getRealFocusedWindow()));
         Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
         text.chars().forEach(c -> {
             robotContext().getBaseRobot().typeKeyboard(scene, KeyCode.UNDEFINED, Utility.codePointToString(c));
@@ -148,16 +151,20 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         return write(Character.toString(character));
     }
 
+    public FxRobotInterface showContextMenu(String nodeQuery)
+    {
+        return showContextMenu(lookup(nodeQuery).query(), null);
+    }
+    
     /**
      * Monocle doesn't seem to show context menu when right-clicking, so we use
      * this work-around for headless mode.
      */
     @SuppressWarnings({"all"})
-    public FxRobotInterface showContextMenu(String nodeQuery)
+    public FxRobotInterface showContextMenu(Node node, @Nullable Point2D pointOnScreen)
     {
         if (GraphicsEnvironment.isHeadless())
         {
-            @NonNull Node node = lookup(nodeQuery).<@NonNull Node>query();
             TestUtil.fx_(() -> {
                 Bounds local = node.getBoundsInLocal();
                 Bounds screen = node.localToScreen(local);
@@ -172,7 +179,10 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         }
         else
         {
-            return clickOn(nodeQuery, MouseButton.SECONDARY);
+            if (pointOnScreen == null)
+                return clickOn(node, MouseButton.SECONDARY);
+            else
+                return clickOn(pointOnScreen, MouseButton.SECONDARY);
         }
     }
 }

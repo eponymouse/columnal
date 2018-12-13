@@ -14,6 +14,7 @@ import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformBiConsumer;
 import utility.gui.FXUtility;
 
 import java.util.Set;
@@ -24,6 +25,12 @@ public interface ClickTableLocationTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
     public default void clickOnItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, MouseButton... buttons)
+    {
+        withItemInBounds(nodeQuery, virtualGrid, rectangleBounds, (n, p) -> clickOn(p, buttons));
+    }
+    
+    @OnThread(Tag.Any)
+    public default void withItemInBounds(NodeQuery nodeQuery, VirtualGrid virtualGrid, RectangleBounds rectangleBounds, FXPlatformBiConsumer<Node, Point2D> action)
     {
         Bounds theoretical = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
         // We shrink by two pixels in each direction to avoid
@@ -44,7 +51,6 @@ public interface ClickTableLocationTrait extends FxRobotInterface
         Log.debug("Found target " + targetNN + " at " + TestUtil.fx(() -> targetNN.localToScreen(targetNN.getBoundsInLocal())));
         Rectangle2D intersect = TestUtil.fx(() -> FXUtility.intersectRect(FXUtility.boundsToRect(targetNN.localToScreen(targetNN.getBoundsInLocal())), FXUtility.boundsToRect(box)));
         Point2D centre = FXUtility.getCentre(intersect);
-        Log.debug("Clicking " + centre);
-        clickOn(centre, buttons);
+        TestUtil.fx_(() -> action.consume(targetNN, centre));
     }
 }

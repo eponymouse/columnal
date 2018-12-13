@@ -231,10 +231,10 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         String targetColumnName = Arrays.asList("A", "B").get(Math.abs(positionIndicator) % originalColumns);
         // Bring up context menu and click item:
         RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        clickOnItemInBounds(lookup(".column-title").lookup((Label t) -> TestUtil.fx(() -> t.getText()).equals(targetColumnName)), 
+        withItemInBounds(lookup(".column-title").lookup((Label t) -> TestUtil.fx(() -> t.getText()).equals(targetColumnName)), 
             virtualGrid, rectangleBounds,
-            MouseButton.SECONDARY);
-        clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>tryQuery().get());
+                this::showContextMenu);
+        clickOn(lookup(positionIndicator < 0 ? ".id-virtGrid-column-addBefore" : ".id-virtGrid-column-addAfter").<Node>query());
 
         // We borrow n as a seed:
         ColumnDetails columnDetails = new ColumnDetails(null, name, typeAndValueGen.getType(), typeAndValueGen.makeValue());
