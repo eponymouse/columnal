@@ -267,8 +267,8 @@ public class TestStructuredTextField extends FXApplicationTest
 
         
         FXPlatformSupplier<@Nullable StructuredTextField> findSTF = () -> {
-            getRealFocusedWindow().getScene().getRoot().applyCss();
-            @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) getRealFocusedWindow().getScene().getRoot().lookup(".structured-text-field");
+            windowToUse.getScene().getRoot().applyCss();
+            @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) windowToUse.getScene().getRoot().lookup(".structured-text-field");
             if (structuredTextField != null)
             {
                 structuredTextField.requestFocus();
@@ -276,7 +276,9 @@ public class TestStructuredTextField extends FXApplicationTest
             }
             return null;
         };
-        TestUtil.fxYieldUntil(() -> findSTF.get() != null);
+        // Need a moment for old field to get cleared:
+        long now = System.currentTimeMillis();
+        TestUtil.fxYieldUntil(() -> System.currentTimeMillis() > now + 800 && findSTF.get() != null);
         StructuredTextField stf = findSTF.get();
         if (stf != null)
             return stf;
