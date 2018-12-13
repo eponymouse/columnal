@@ -2,6 +2,7 @@ package test.gui;
 
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
@@ -29,49 +30,15 @@ public interface EnterColumnDetailsTrait extends FxRobotInterface, EnterTypeTrai
     {
         // We should be focused on name initially with the whole field selected, or blank:
         write(columnDetails.columnId.getRaw(), DELAY);
-        boolean useKeyboard = r.nextBoolean();
-        Log.debug("Entering type: " + columnDetails.dataType + " with keyboard: " + useKeyboard);
-        if (useKeyboard)
-        {
-            // Navigate with keyboard
-            push(KeyCode.TAB);
-            if (columnDetails.dataType.equals(DataType.NUMBER) && r.nextBoolean())
-            {
-                // Nothing to do
-            }
-            else if (columnDetails.dataType.equals(DataType.TEXT) && r.nextBoolean())
-            {
-                push(KeyCode.DOWN);
-            }
-            else
-            {
-                // Don't have to select by keyboard; focusing custom field and typing should do the same:
-                if (r.nextBoolean())
-                {
-                    push(KeyCode.DOWN);
-                    push(KeyCode.DOWN);
-                }
-                push(KeyCode.TAB);
-                enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
-            }
-        }
-        else
-        {
-            // Navigate with mouse
-            if (columnDetails.dataType.equals(DataType.NUMBER) && r.nextBoolean())
-                clickOn(".radio-type-number");
-            else if (columnDetails.dataType.equals(DataType.TEXT) && r.nextBoolean())
-                clickOn(".radio-type-text");
-            else
-            {
-                // Should be empty:
-                clickOn(".type-editor");
-                enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
-            }
-        }
-        Log.debug("Pressing ESCAPE");
+        Window dialog = TestUtil.fx(() -> getRealFocusedWindow());
+        Log.debug("Pressing TAB on window: " + dialog);
+        push(KeyCode.TAB);
+        enterType(TypeExpression.fromDataType(columnDetails.dataType), r);
+        dialog = TestUtil.fx(() -> getRealFocusedWindow());
+        Log.debug("Pressing ESCAPE on window: " + dialog);
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
+        //assertTrue(TestUtil.fx(() -> dialog.isShowing()));
         Node defValue = lookup(".default-value").<Node>query();
         assertNotNull(defValue);
         if (defValue != null)
