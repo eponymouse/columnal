@@ -813,7 +813,7 @@ public class TestStructuredTextField extends FXApplicationTest
     public void propYM(@From(GenYearMonth.class) YearMonth yearMonth, @From(GenRandom.class) Random r) throws InternalException
     {
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1))));
-        String timeVal = yearMonth.getMonthValue() + "/" + yearMonth.getYear();
+        String timeVal = yearMonth.getYear() + "-" + yearMonth.getMonthValue();
         targetF();
         pushSelectAll();
         type(timeVal, timeVal, yearMonth);
