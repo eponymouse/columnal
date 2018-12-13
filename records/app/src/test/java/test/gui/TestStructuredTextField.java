@@ -795,13 +795,20 @@ public class TestStructuredTextField extends FXApplicationTest
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1))));
-        String timeVal = timeString(localDateTime);
+        String timeVal = timeString(localDateTime, false);
         enterDate(localDateTime, r, " " + timeVal);
     }
 
-    private static String timeString(TemporalAccessor t)
+    private static String timeString(TemporalAccessor t, boolean padded)
     {
-        String timeVal = t.get(ChronoField.HOUR_OF_DAY) + ":" + t.get(ChronoField.MINUTE_OF_HOUR) + ":" + t.get(ChronoField.SECOND_OF_MINUTE);
+        int hour = t.get(ChronoField.HOUR_OF_DAY);
+        int minute = t.get(ChronoField.MINUTE_OF_HOUR);
+        int second = t.get(ChronoField.SECOND_OF_MINUTE);
+        String timeVal;
+        if (padded)
+            timeVal = String.format("%02d:%02d:%02d", hour, minute, second);
+        else
+            timeVal = hour + ":" + minute + ":" + second;
         if (t.get(ChronoField.NANO_OF_SECOND) != 0)
         {
             timeVal += new BigDecimal("0." + String.format("%09d", t.get(ChronoField.NANO_OF_SECOND))).stripTrailingZeros().toPlainString().substring(1);
@@ -814,9 +821,10 @@ public class TestStructuredTextField extends FXApplicationTest
     {
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1))));
         String timeVal = yearMonth.getYear() + "-" + yearMonth.getMonthValue();
+        String timeVal42 = String.format("%04d", yearMonth.getYear()) + "-" + String.format("%02d", yearMonth.getMonthValue());
         targetF();
         pushSelectAll();
-        type(timeVal, timeVal, yearMonth);
+        type(timeVal, timeVal42, yearMonth);
         // TODO also test errors, and other variants (e.g. text months)
     }
 
@@ -851,10 +859,9 @@ public class TestStructuredTextField extends FXApplicationTest
     public void propTime(@From(GenTime.class) LocalTime localTime, @From(GenRandom.class) Random r) throws InternalException
     {
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1))));
-        String timeVal = timeString(localTime);
         targetF();
         pushSelectAll();
-        type(timeVal, timeVal, localTime);
+        type(timeString(localTime, false), timeString(localTime, true), localTime);
         // TODO also test errors
     }
 
