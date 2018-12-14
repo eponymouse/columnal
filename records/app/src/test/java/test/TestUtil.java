@@ -648,9 +648,7 @@ public class TestUtil
     {
         try
         {
-            T t = WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
-            WaitForAsyncUtils.waitForFxEvents();
-            return t;
+            return WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
         }
         catch (Exception e)
         {
@@ -658,6 +656,7 @@ public class TestUtil
         }
     }
 
+    // Note: also waits for the queue to be empty
     @OnThread(Tag.Any)
     public static void fx_(FXPlatformRunnable action)
     {
