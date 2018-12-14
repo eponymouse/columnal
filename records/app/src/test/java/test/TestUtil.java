@@ -648,7 +648,9 @@ public class TestUtil
     {
         try
         {
-            return WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
+            T t = WaitForAsyncUtils.asyncFx(action).get(60, TimeUnit.SECONDS);
+            WaitForAsyncUtils.waitForFxEvents();
+            return t;
         }
         catch (Exception e)
         {
@@ -662,6 +664,7 @@ public class TestUtil
         try
         {
             WaitForAsyncUtils.asyncFx(action::run).get(60, TimeUnit.SECONDS);
+            WaitForAsyncUtils.waitForFxEvents();
         }
         catch (Exception e)
         {
