@@ -46,23 +46,14 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.ImmediateDataSource;
-import records.data.RecordSet;
+import records.data.*;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.InitialLoadDetails;
-import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
-import records.data.TableId;
-import records.data.TableManager;
-import records.data.TableOperations;
 import records.data.TableOperations.DeleteRows;
 import records.data.TableOperations.InsertRows;
 import records.data.TableOperations.RenameTable;
-import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -802,11 +793,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                 Log.log(e);
             }
         }
-        
-        
+
+        DataType type = null;
         try
         {
-            DataType type = table.getData().getColumn(c).getType();
+            type = table.getData().getColumn(c).getType();
             if (type.isNumber())
             {
                 r.add(columnQuickTransform(tableManager, table, "recipe.sum", "sum", c, newId -> {
@@ -823,6 +814,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Log.log(e);
         }
 
+        @Nullable DataType typeFinal = type;
         ImmutableList<ColumnOperation> ops = r.build();
         return new ColumnHeaderOps()
         {
@@ -842,6 +834,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
                     return () -> FXUtility.alertOnErrorFX_("Error editing column", () -> {
                         FXUtility.mouse(TableDisplay.this).editColumn_Calc(calc, c);
                     });
+                }
+                else if (table instanceof ImmediateDataSource)
+                {
+                    ImmediateDataSource data = (ImmediateDataSource) table;
+                    return () -> FXUtility.mouse(TableDisplay.this).editColumn_IDS(data, c, typeFinal);
                 }
                 
                 return null;
@@ -864,6 +861,19 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
             Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
                 FXUtility.alertOnError_("Error saving column", () ->
                     parent.getManager().edit(calc.getId(), () -> new Calculate(parent.getManager(), calc.getDetailsForCopy(), calc.getSource(), newColumns), null)
+                );
+            });
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void editColumn_IDS(ImmediateDataSource data, ColumnId columnId, @Nullable DataType type)
+    {
+        // TODO apply the type and default value.
+        new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(),columnId, type, false).showAndWait().ifPresent(columnDetails -> {
+            Workers.onWorkerThread("Editing column", Priority.SAVE, () -> {
+                FXUtility.alertOnError_("Error saving column", () ->
+                    parent.getManager().edit(data.getId(), null, new TableAndColumnRenames(ImmutableMap.of(data.getId(), new Pair<>(data.getId(), ImmutableMap.of(columnId, columnDetails.columnId)))))
                 );
             });
         });
@@ -914,7 +924,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
 
     public void addColumnBefore_IDS(ImmediateDataSource ids, @Nullable ColumnId beforeColumn)
     {
-        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName(), false).showAndWait();
+        Optional<EditImmediateColumnDialog.ColumnDetails> optInitialDetails = new EditImmediateColumnDialog(parent.getWindow(), parent.getManager(), table.proposeNewColumnName(), null, false).showAndWait();
         optInitialDetails.ifPresent(initialDetails -> Workers.onWorkerThread("Adding column", Priority.SAVE, () ->
             FXUtility.alertOnError_("Error adding column", () ->
                 ids.getData().addColumn(beforeColumn, initialDetails.dataType.makeImmediateColumn(initialDetails.columnId, initialDetails.defaultValue))

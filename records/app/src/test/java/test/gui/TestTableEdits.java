@@ -159,15 +159,13 @@ public class TestTableEdits extends FXApplicationTest implements ClickTableLocat
         // 2 tables, 2 columns:
         assertEquals(2, lookup(".table-display-table-title").queryAll().size());
         assertEquals(4, lookup(".table-display-column-title").queryAll().size());
-        RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, originalColumns));
-        clickOnItemInBounds(lookup(".table-display-column-title").lookup((Predicate<Node>) n -> TestUtil.fx(() -> ((TextField)n).getText()).equals("A")), virtualGrid, rectangleBounds);
+        RectangleBounds rectangleBounds = new RectangleBounds(originalTableTopLeft, originalTableTopLeft.offsetByRowCols(1, 0));
+        clickOnItemInBounds(lookup(".table-display-column-title"), virtualGrid, rectangleBounds);
+        TestUtil.delay(1000);
+        clickOn(".column-name-text-field");
         selectAllCurrentTextField();
         write(newColumnId.getRaw());
-        // Different ways of exiting:
-
-        // Click on right-hand end of table header:
-        Bounds headerBox = TestUtil.fx(() -> virtualGrid.getRectangleBoundsScreen(rectangleBounds));
-        clickOn(new Point2D(headerBox.getMaxX() - 2, headerBox.getMinY() + 2));
+        clickOn(".ok-button");
 
         // Renaming involves thread hopping, so wait for a bit:
         TestUtil.sleep(1000);

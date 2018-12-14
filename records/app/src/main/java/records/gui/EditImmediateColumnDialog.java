@@ -25,6 +25,7 @@ import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
+import records.transformations.expression.type.TypeExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -69,7 +70,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private @Nullable @Value Object defaultValue;
     
     @OnThread(Tag.FXPlatform)
-    public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial, boolean creatingNewTable)
+    public EditImmediateColumnDialog(Window parent, TableManager tableManager, @Nullable ColumnId initial, @Nullable DataType dataType, boolean creatingNewTable)
     {
         super(parent, true);
 
@@ -92,7 +93,19 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         
         StructuredTextField defaultValueField = new StructuredTextField();
         defaultValueField.getStyleClass().add("default-value");
-        typeEditor = new TypeEditor(tableManager.getTypeManager(), new InvalidIdentTypeExpression(""), t -> {
+        TypeExpression typeExpression = new InvalidIdentTypeExpression("");
+        if (dataType != null)
+        {
+            try
+            {
+                typeExpression = TypeExpression.fromDataType(dataType);
+            }
+            catch (InternalException e)
+            {
+                Log.log(e);
+            }
+        }
+        typeEditor = new TypeEditor(tableManager.getTypeManager(), typeExpression, t -> {
             customDataType = t.toDataType(tableManager.getTypeManager());
             updateType(defaultValueField, customDataType);
             Scene scene = getDialogPane().getScene();
