@@ -16,6 +16,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
@@ -283,7 +284,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         for (int i = 0; i < 15; i++)
         {
             int iFinal = i;
-            TestUtil.fx_(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
+            WaitForAsyncUtils.asyncFx(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
             TestUtil.sleep(1000);
             checkNumericSorted(getCurShowing.get());
         }
