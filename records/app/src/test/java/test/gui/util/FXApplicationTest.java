@@ -133,10 +133,18 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         Log.debug("Writing: " + text + " to " + TestUtil.fx(() -> getRealFocusedWindow()));
         Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
         text.chars().forEach(c -> {
-            robotContext().getBaseRobot().typeKeyboard(scene, KeyCode.UNDEFINED, Utility.codePointToString(c));
+            robotContext().getBaseRobot().typeKeyboard(scene, determineKeyCode(c), Utility.codePointToString(c));
             WaitForAsyncUtils.waitForFxEvents();
         });
         return this;
+    }
+
+    private KeyCode determineKeyCode(int character)
+    {
+        KeyCode key = KeyCode.UNDEFINED;
+        key = (character == '\n') ? KeyCode.ENTER : key;
+        key = (character == '\t') ? KeyCode.TAB : key;
+        return key;
     }
 
     @Override
