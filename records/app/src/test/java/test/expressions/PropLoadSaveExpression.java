@@ -35,6 +35,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 30/11/2016.
  */
+@Ignore
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression extends FXApplicationTest
 {
