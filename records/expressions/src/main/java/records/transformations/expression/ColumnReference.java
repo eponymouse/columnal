@@ -140,7 +140,7 @@ public class ColumnReference extends NonOperatorExpression
     {
         return StyledString.concat(
             StyledString.s(referenceType == ColumnReferenceType.WHOLE_COLUMN ? GeneralExpressionEntry.ARROW_WHOLE : GeneralExpressionEntry.ARROW_SAME_ROW),
-            StyledString.s(OutputBuilder.quotedIfNecessary(columnName.getOutput()))
+            columnName.toStyledString()
         );
     }
 

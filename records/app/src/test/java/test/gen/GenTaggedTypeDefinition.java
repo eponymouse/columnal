@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
@@ -37,7 +38,7 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
     {
         try
         {
-            final ImmutableList<Pair<TypeVariableKind, String>> typeVars;
+            final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVars;
             if (r.nextInt(3) == 1)
             {
                 // Must use distinct to make sure no duplicates:
@@ -61,7 +62,11 @@ public class GenTaggedTypeDefinition extends Generator<TaggedTypeDefinition>
             }
             @SuppressWarnings("identifier")
             TypeId typeId = new TypeId("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'));
-            return new TaggedTypeDefinition(typeId, typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
+            return new TaggedTypeDefinition(typeId, typeVars, Utility.mapListExI_Index(types, (i, t) -> {
+                @SuppressWarnings("identifier")
+                @ExpressionIdentifier String tagName = "T" + i;
+                return new DataType.TagType<JellyType>(tagName, t);
+            }));
         }
         catch (InternalException | UserException e)
         {

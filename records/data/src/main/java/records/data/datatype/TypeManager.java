@@ -17,15 +17,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
-import records.grammar.FormatParser.BracketedTypeContext;
-import records.grammar.FormatParser.DateContext;
-import records.grammar.FormatParser.DecimalPlacesContext;
-import records.grammar.FormatParser.NumberContext;
-import records.grammar.FormatParser.TagItemContext;
-import records.grammar.FormatParser.TypeContext;
-import records.grammar.FormatParser.TypeDeclContext;
-import records.grammar.FormatParser.TypeDeclsContext;
-import records.grammar.FormatParser.UnbracketedTypeContext;
+import records.grammar.FormatParser.*;
 import records.grammar.MainParser.TypesContext;
 import records.jellytype.JellyType;
 import records.loadsave.OutputBuilder;
@@ -33,6 +25,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.GraphUtility;
+import utility.IdentifierUtility;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
@@ -64,7 +57,7 @@ public class TypeManager
     public TypeManager(UnitManager unitManager) throws InternalException
     {
         this.unitManager = unitManager;
-        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
+        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier  String>(TypeVariableKind.TYPE, "a")), ImmutableList.of(
             new TagType<>("Missing", null),
             new TagType<>("Present", JellyType.typeVariable("a"))
         ));
@@ -73,10 +66,10 @@ public class TypeManager
         voidType = new TaggedTypeDefinition(new TypeId("Void"), ImmutableList.of(), ImmutableList.of());
         builtInTypes.put(voidType.getTaggedTypeName(), voidType);
         // TODO make this into a GADT:
-        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
+        typeGADT = new TaggedTypeDefinition(new TypeId("Type"), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier String>(TypeVariableKind.TYPE, "t")), ImmutableList.of(new TagType<>("Type", null)));
         builtInTypes.put(new TypeId("Type"), typeGADT);
         // TODO make this into a GADT:
-        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
+        unitGADT = new TaggedTypeDefinition(new TypeId("Unit"), ImmutableList.of(new Pair<TypeVariableKind, @ExpressionIdentifier String>(TypeVariableKind.UNIT, "u")), ImmutableList.of(new TagType<>("Unit", null)));
         builtInTypes.put(new TypeId("Unit"), unitGADT);
         allKnownTypes.putAll(builtInTypes);
     }
@@ -102,7 +95,7 @@ public class TypeManager
     
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
-    public @Nullable TaggedTypeDefinition registerTaggedType(@ExpressionIdentifier String typeName, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tagTypes) throws InternalException
+    public @Nullable TaggedTypeDefinition registerTaggedType(@ExpressionIdentifier String typeName, ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVariables, ImmutableList<TagType<JellyType>> tagTypes) throws InternalException
     {
         if (tagTypes.isEmpty())
             throw new InternalException("Tagged type cannot have zero tags");
@@ -146,13 +139,13 @@ public class TypeManager
     {
         @SuppressWarnings("identifier")
         TypeId typeName = new TypeId(typeDeclContext.typeName().getText());
-        ImmutableList<Pair<TypeVariableKind, String>> typeParams = Utility.mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
-            return new Pair<>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, var.ident().getText());
+        ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeParams = Utility.<TagDeclParamContext, Pair<TypeVariableKind, @ExpressionIdentifier String>>mapListExI(typeDeclContext.taggedDecl().tagDeclParam(), var -> {
+            return new Pair<TypeVariableKind, @ExpressionIdentifier String>(var.TYPEVAR() != null ? TypeVariableKind.TYPE : TypeVariableKind. UNIT, IdentifierUtility.fromParsed(var.ident()));
         });
         List<TagType<JellyType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
-            String tagName = item.ident().getText();
+            @ExpressionIdentifier String tagName = IdentifierUtility.fromParsed(item.ident());
 
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");

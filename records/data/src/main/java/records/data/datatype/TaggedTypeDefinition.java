@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -26,12 +27,12 @@ public class TaggedTypeDefinition
     
     private final TypeId name;
     // Order matters here:
-    private final ImmutableList<Pair<TypeVariableKind, String>> typeVariables;
+    private final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVariables;
     // Version with the type variables unsubstituted:
     // The only free variables should be the ones in the typeVariables list:
     private final ImmutableList<TagType<JellyType>> tags;
     
-    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, String>> typeVariables, ImmutableList<TagType<JellyType>> tags) throws InternalException
+    public TaggedTypeDefinition(TypeId name, ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVariables, ImmutableList<TagType<JellyType>> tags) throws InternalException
     {
         this.name = name;
         this.typeVariables = typeVariables;
@@ -97,10 +98,10 @@ public class TaggedTypeDefinition
     public void save(OutputBuilder b)
     {
         b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
-        for (Pair<TypeVariableKind, String> typeVariable : typeVariables)
+        for (Pair<TypeVariableKind, @ExpressionIdentifier String> typeVariable : typeVariables)
         {
             b.t(typeVariable.getFirst() == TypeVariableKind.TYPE ? FormatLexer.TYPEVAR : FormatLexer.UNITVAR, FormatLexer.VOCABULARY)
-                .raw(b.quotedIfNecessary(typeVariable.getSecond()));
+                .expId(typeVariable.getSecond());
         }
         b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
         boolean first = true;
@@ -108,7 +109,7 @@ public class TaggedTypeDefinition
         {
             if (!first)
                 b.t(FormatLexer.TAGOR, FormatLexer.VOCABULARY);
-            b.kw(b.quotedIfNecessary(tag.getName()));
+            b.expId(tag.getName());
             @Nullable JellyType inner = tag.getInner();
             if (inner != null)
             {
@@ -138,7 +139,7 @@ public class TaggedTypeDefinition
         return Objects.hash(name, typeVariables, tags);
     }
 
-    public ImmutableList<Pair<TypeVariableKind, String>> getTypeArguments()
+    public ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> getTypeArguments()
     {
         return typeVariables;
     }

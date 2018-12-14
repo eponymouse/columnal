@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -477,16 +478,16 @@ public class DataType implements StyledShowable
 
     public static class TagType<T>
     {
-        private final String name;
+        private final @ExpressionIdentifier String name;
         private final @Nullable T inner;
 
-        public TagType(String name, @Nullable T inner)
+        public TagType(@ExpressionIdentifier String name, @Nullable T inner)
         {
             this.name = name;
             this.inner = inner;
         }
 
-        public String getName()
+        public @ExpressionIdentifier String getName()
         {
             return name;
         }

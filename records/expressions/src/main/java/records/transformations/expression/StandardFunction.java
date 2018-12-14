@@ -82,7 +82,7 @@ public class StandardFunction extends NonOperatorExpression
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
         if (structured)
-            return "@function " + OutputBuilder.quotedIfNecessary(functionDefinition.getName());
+            return "@function " + functionDefinition.getName();
         else
             return functionDefinition.getName();
     }

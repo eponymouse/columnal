@@ -1,5 +1,6 @@
 package records.loadsave;
 
+import annotation.identifier.qual.ExpressionIdentifier;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.Vocabulary;
@@ -111,6 +112,13 @@ public class OutputBuilder
         return id(id.getOutput(), QuoteBehaviour.QUOTE_SPACES);
     }
 
+    // Outputs an expression identifier, with no quotes
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder expId(@ExpressionIdentifier String id)
+    {
+        return raw(id);
+    }
+
     @OnThread(Tag.Any)
     public synchronized OutputBuilder quote(TypeId id)
     {
@@ -197,7 +205,7 @@ public class OutputBuilder
     }
 
     @OnThread(Tag.Any)
-    public static String quotedIfNecessary(String s)
+    private static String quotedIfNecessary(String s)
     {
         if (GrammarUtility.validUnquoted(s))
             return s;

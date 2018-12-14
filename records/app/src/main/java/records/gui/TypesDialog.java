@@ -222,8 +222,8 @@ public class TypesDialog extends Dialog<Void>
                     crossSetting = true;
                     innerValueTypeArgs.setText("");
                     innerValueTagList.resetItems(getPlainTags(plainTagList).map(plain -> {
-                        return Either.<String, TagType<JellyType>>right(new TagType<JellyType>(plain, null));
-                    }).collect(ImmutableList.toImmutableList()));
+                        return plain.map(p -> new TagType<JellyType>(p, null));
+                    }).collect(Collectors.toList()));
                     crossSetting = false;
                 }
             });
@@ -284,21 +284,18 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    String[] tags = getPlainTags(plainTagList).toArray(String[]::new);
-                    Either<@Localized String, ImmutableList<String>> tagNames = Either.right(ImmutableList.of());
-                    if (!Arrays.equals(tags, new String[]{""}))
-                        tagNames = Either.mapM(Arrays.asList(tags), t -> parseTagName(TranslationUtility.getString("type.invalid.tag.name"), t));
-                    Either<@Localized String, TaggedTypeDefinition> r = tagNames.mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, t -> new TagType<>(t, null))));
+                    ImmutableList<Either<String, @ExpressionIdentifier String>> tags = getPlainTags(plainTagList).collect(ImmutableList.toImmutableList());
+                    Either<@Localized String, TaggedTypeDefinition> r = Either.<@Localized String, @ExpressionIdentifier String, Either<String, @ExpressionIdentifier String>>mapM(tags, x -> x).mapInt((ImmutableList<@ExpressionIdentifier String> ts) -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, (@ExpressionIdentifier String t) -> new TagType<JellyType>(t, null))));
                     return r;
                 }
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
                 {
                     String[] typeArgs = innerValueTypeArgs.getText().trim().split("\\s*,\\s*");
-                    Either<@Localized String, ImmutableList<String>> typeArgsOrErr = Either.right(ImmutableList.of());
+                    Either<@Localized String, ImmutableList<@ExpressionIdentifier String>> typeArgsOrErr = Either.right(ImmutableList.of());
                     if (!Arrays.equals(typeArgs, new String[]{""}))
                         typeArgsOrErr = Either.mapM(Arrays.asList(typeArgs), t -> parseTagName(TranslationUtility.getString("type.invalid.argument"), t));
                     
-                    return typeArgsOrErr.flatMapInt(args -> Either.<@Localized String, TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), (Either<@Localized String, TagType<JellyType>> e) -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, Utility.mapListI(args, a -> new Pair<>(TypeVariableKind.TYPE, a)), ts)));
+                    return typeArgsOrErr.flatMapInt(args -> Either.<@Localized String, TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), (Either<@Localized String, TagType<JellyType>> e) -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, Utility.<@ExpressionIdentifier String, Pair<TypeVariableKind, @ExpressionIdentifier String>>mapListI(args, a -> new Pair<TypeVariableKind, @ExpressionIdentifier String>(TypeVariableKind.TYPE, a)), ts)));
                 }
                 
                 // Shouldn't happen:
@@ -311,12 +308,15 @@ public class TypesDialog extends Dialog<Void>
             }
         }
 
-        private Stream<String> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
+        private Stream<Either<String, @ExpressionIdentifier String>> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
         {
-            return Arrays.stream(plainTagList.getText()
-                .split(" *(,|\n|\r) *"))
+            return Arrays.stream(plainTagList.getText().split(" *[,\n\r] *"))
                 .map(s -> s.trim())
-                .filter(s -> !s.isEmpty());
+                .filter(s -> !s.isEmpty())
+                .<Either<String, @ExpressionIdentifier String>>map(s -> {
+                    @Nullable @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(s);
+                    return ident == null ? Either.left("Invalid tag name: \"" + ident + "\"") : Either.right(ident);
+                });
         }
 
         private Either<@Localized String, @ExpressionIdentifier String> parseTagName(@Localized String errorPrefix, String src)
@@ -338,14 +338,12 @@ public class TypesDialog extends Dialog<Void>
             public TagValueEdit(@Nullable TagType<JellyType> initialContent, boolean editImmediately)
             {
                 getStyleClass().add("tag-value-edit");
-                this.currentValue = new SimpleObjectProperty<Either<@Localized String, TagType<JellyType>>>(Either.<@Localized String, TagType<JellyType>>right(new TagType<>(
-                    initialContent == null ? "" : initialContent.getName(),
-                    initialContent == null ? null : initialContent.getInner()
-                )));
-                this.tagName = new TextField(initialContent == null ? "" : initialContent.getName());
+                String initialName = initialContent == null ? "" : initialContent.getName();
+                this.currentValue = new SimpleObjectProperty<Either<@Localized String, TagType<JellyType>>>(Either.left("Loading"));
+                this.tagName = new TextField(initialName);
                 tagName.setPromptText(TranslationUtility.getString("edit.type.inner.tag.prompt"));
                 FXUtility.addChangeListenerPlatformNN(tagName.textProperty(), name -> {
-                    currentValue.set(currentValue.getValue().map(tt -> new TagType<>(name, tt.getInner())));
+                    updateCurrentValue(null);
                 });
                 TypeExpression startingExpression = null;
                 try
@@ -359,18 +357,7 @@ public class TypesDialog extends Dialog<Void>
                 if (startingExpression == null)
                     startingExpression = new InvalidIdentTypeExpression("");
                 this.innerType = new TypeEditor(typeManager, startingExpression, latest -> {
-                    try
-                    {
-                        @Nullable JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager);
-                        currentValue.set(Either.right(new TagType<JellyType>(tagName.getText(),
-                                jellyType)));
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        if (e instanceof InternalException)
-                            Log.log(e);
-                        currentValue.set(Either.left(e.getLocalizedMessage()));
-                    }
+                    updateCurrentValue(latest);
                 });
                 innerType.setPromptText(TranslationUtility.getString("edit.type.tag.inner.prompt"));
                 
@@ -383,6 +370,34 @@ public class TypesDialog extends Dialog<Void>
                 FXUtility.addChangeListenerPlatformNN(currentValue, v -> {
                     innerValueChanged();
                 });
+                
+                updateCurrentValue(null);
+            }
+
+            // null when only name has changed.
+            @RequiresNonNull({"tagName", "currentValue"})
+            public void updateCurrentValue(@UnknownInitialization(BorderPane.class) TagValueEdit this, @Nullable TypeExpression latest)
+            {
+                if (innerType == null)
+                    return;
+                
+                if (latest == null)
+                    latest = innerType.save();
+                try
+                {
+                    @Nullable JellyType jellyType = latest.isEmpty() ? null : latest.toJellyType(typeManager);
+                    @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(tagName.getText());
+                    if (ident != null)
+                        currentValue.set(Either.right(new TagType<JellyType>(ident, jellyType)));
+                    else
+                        currentValue.set(Either.left("Invalid tag name: \"" + tagName.getText() + "\""));
+                }
+                catch (InternalException | UserException e)
+                {
+                    if (e instanceof InternalException)
+                        Log.log(e);
+                    currentValue.set(Either.left(e.getLocalizedMessage()));
+                }
             }
         }
 

@@ -175,7 +175,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
         {
             // Don't need to add N more, just add one for now:
 
-            final ImmutableList<Pair<TypeVariableKind, String>> typeVars;
+            final ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>> typeVars;
             if (r.nextBoolean())
             {
                 // Must use distinct to make sure no duplicates:
@@ -200,7 +200,11 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
             }
             @SuppressWarnings("identifier")
             @ExpressionIdentifier String typeName = "" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z');
-            typeDefinition = typeManager.registerTaggedType(typeName, typeVars, Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<JellyType>("T" + i, t)));
+            typeDefinition = typeManager.registerTaggedType(typeName, typeVars, Utility.mapListExI_Index(types, (i, t) -> {
+                @SuppressWarnings("identifier")
+                @ExpressionIdentifier String tagName = "T" + i;
+                return new DataType.TagType<JellyType>(tagName, t);
+            }));
         }
         
         if (typeDefinition == null)

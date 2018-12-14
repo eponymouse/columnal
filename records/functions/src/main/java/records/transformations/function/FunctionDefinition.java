@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.funcdoc.qual.FuncDocKey;
+import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -63,7 +64,8 @@ public abstract class FunctionDefinition
         return split[0];
     }
 
-    private static String extractName(@FuncDocKey String funcDocKey)
+    @SuppressWarnings("identifier")
+    private static @ExpressionIdentifier String extractName(@FuncDocKey String funcDocKey)
     {
         String[] split = funcDocKey.split(":");
         return split[split.length - 1];
@@ -209,7 +211,7 @@ public abstract class FunctionDefinition
         }*/
     }
 
-    public String getName()
+    public @ExpressionIdentifier String getName()
     {
         return extractName(funcDocKey);
     }

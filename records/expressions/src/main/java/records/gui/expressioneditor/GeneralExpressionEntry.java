@@ -580,7 +580,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         @Override
         protected String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
         {
-            Log.normalStackTrace("Selected " + currentText, 4);
+            //Log.normalStackTrace("Selected " + currentText, 4);
             savePrefix = null;
             prefix.setText("");
             completing = true;
