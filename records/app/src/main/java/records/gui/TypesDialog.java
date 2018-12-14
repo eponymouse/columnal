@@ -284,8 +284,9 @@ public class TypesDialog extends Dialog<Void>
 
                 if (tabPane.getSelectionModel().getSelectedItem() == plainTab)
                 {
-                    ImmutableList<Either<String, @ExpressionIdentifier String>> tags = getPlainTags(plainTagList).collect(ImmutableList.toImmutableList());
-                    Either<@Localized String, TaggedTypeDefinition> r = Either.<@Localized String, @ExpressionIdentifier String, Either<String, @ExpressionIdentifier String>>mapM(tags, x -> x).mapInt((ImmutableList<@ExpressionIdentifier String> ts) -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, (@ExpressionIdentifier String t) -> new TagType<JellyType>(t, null))));
+                    ImmutableList<Either<@Localized String, @ExpressionIdentifier String>> tags = getPlainTags(plainTagList).collect(ImmutableList.toImmutableList());
+                    Either<@Localized String, ImmutableList<@ExpressionIdentifier String>> tagsFlipped = Either.<@Localized String, @ExpressionIdentifier String, Either<@Localized String, @ExpressionIdentifier String>>mapM(tags, (Either<@Localized String, @ExpressionIdentifier String> x) -> x);
+                    Either<@Localized String, TaggedTypeDefinition> r = tagsFlipped.mapInt((ImmutableList<@ExpressionIdentifier String> ts) -> new TaggedTypeDefinition(typeIdentifierFinal, ImmutableList.of(), Utility.mapListI(ts, (@ExpressionIdentifier String t) -> new TagType<JellyType>(t, null))));
                     return r;
                 }
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
@@ -308,14 +309,25 @@ public class TypesDialog extends Dialog<Void>
             }
         }
 
-        private Stream<Either<String, @ExpressionIdentifier String>> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
+        private Stream<Either<@Localized String, @ExpressionIdentifier String>> getPlainTags(@UnknownInitialization(Object.class) EditTypeDialog this, TextArea plainTagList)
         {
             return Arrays.stream(plainTagList.getText().split(" *[,\n\r] *"))
                 .map(s -> s.trim())
                 .filter(s -> !s.isEmpty())
-                .<Either<String, @ExpressionIdentifier String>>map(s -> {
+                .<Either<@Localized String, @ExpressionIdentifier String>>map(s -> {
                     @Nullable @ExpressionIdentifier String ident = IdentifierUtility.asExpressionIdentifier(s);
-                    return ident == null ? Either.left("Invalid tag name: \"" + ident + "\"") : Either.right(ident);
+                    if (ident == null)
+                    {
+                        return Either.<@Localized String, @ExpressionIdentifier String>left(
+                            Utility.concatLocal(ImmutableList.<@Localized String>of(TranslationUtility.getString("type.invalid.tag.name"),
+                                Utility.universal("\""),
+                                Utility.userInput(s),
+                                Utility.universal("\""))));
+                    }
+                    else 
+                    {
+                        return Either.<@Localized String, @ExpressionIdentifier String>right(ident);
+                    }
                 });
         }
 
@@ -339,7 +351,7 @@ public class TypesDialog extends Dialog<Void>
             {
                 getStyleClass().add("tag-value-edit");
                 String initialName = initialContent == null ? "" : initialContent.getName();
-                this.currentValue = new SimpleObjectProperty<Either<@Localized String, TagType<JellyType>>>(Either.left("Loading"));
+                this.currentValue = new SimpleObjectProperty<Either<@Localized String, TagType<JellyType>>>(Either.left(Utility.universal("Loading")));
                 this.tagName = new TextField(initialName);
                 tagName.setPromptText(TranslationUtility.getString("edit.type.inner.tag.prompt"));
                 FXUtility.addChangeListenerPlatformNN(tagName.textProperty(), name -> {
@@ -390,7 +402,13 @@ public class TypesDialog extends Dialog<Void>
                     if (ident != null)
                         currentValue.set(Either.right(new TagType<JellyType>(ident, jellyType)));
                     else
-                        currentValue.set(Either.left("Invalid tag name: \"" + tagName.getText() + "\""));
+                        currentValue.set(Either.left(
+                            Utility.concatLocal(ImmutableList.<@Localized String>of(
+                                TranslationUtility.getString("type.invalid.tag.name"),
+                                Utility.universal("\""),
+                                Utility.userInput(tagName.getText()),
+                                Utility.universal("\"")
+                        ))));
                 }
                 catch (InternalException | UserException e)
                 {

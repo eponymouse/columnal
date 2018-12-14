@@ -1080,6 +1080,12 @@ public class Utility
         return a + b;
     }
 
+    @SuppressWarnings("i18n")
+    public static @Localized String concatLocal(ImmutableList<@Localized String> ss)
+    {
+        return ss.stream().collect(Collectors.joining());
+    }
+
     public static String codePointToString(int codepoint)
     {
         return new String(new int[] {codepoint}, 0, 1);
