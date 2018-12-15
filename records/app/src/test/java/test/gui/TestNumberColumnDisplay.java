@@ -284,7 +284,7 @@ public class TestNumberColumnDisplay extends FXApplicationTest
         for (int i = 0; i < 15; i++)
         {
             int iFinal = i;
-            WaitForAsyncUtils.asyncFx(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
+            TestUtil.asyncFx_(() -> mwa._test_getVirtualGrid().getScrollGroup().requestScrollBy(0, (iFinal % 4 == 0) ? 1000 : -1000));
             TestUtil.sleep(1000);
             checkNumericSorted(getCurShowing.get());
         }

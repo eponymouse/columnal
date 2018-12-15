@@ -671,6 +671,13 @@ public class TestUtil
         }
     }
 
+    // Doesn't wait for action to complete
+    @OnThread(Tag.Any)
+    public static void asyncFx_(FXPlatformRunnable action)
+    {
+        WaitForAsyncUtils.asyncFx(action::run);
+    }
+
     @OnThread(Tag.Any)
     public static void fxTest_(FXPlatformRunnable action)
     {
