@@ -23,6 +23,13 @@ public interface FocusOwnerTrait extends FxRobotInterface
         return TestUtil.fx(() -> curWindowFinal.getScene().getFocusOwner());
     }
 
+    @OnThread(Tag.Any)
+    default Window fxGetRealFocusedWindow()
+    {
+        return TestUtil.fx(this::getRealFocusedWindow);
+    }
+    
+
     // Ignores PopupWindow
     @OnThread(Tag.FXPlatform)
     default Window getRealFocusedWindow()

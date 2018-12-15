@@ -15,6 +15,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -58,8 +59,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds
@@ -74,13 +74,17 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 
             clickOn("#id-menu-view").clickOn(".id-menu-view-types");
             TestUtil.delay(200);
+            Window typeWindow = fxGetRealFocusedWindow();
             clickOn(".id-types-add");
             TestUtil.delay(200);
+            Window dialog = fxGetRealFocusedWindow();
             enterTypeDetails(typeDefinition, random, mainWindowActions._test_getTableManager().getTypeManager());
             clickOn(".ok-button");
             TestUtil.sleep(500);
+            assertNotEquals(dialog, fxGetRealFocusedWindow());
             clickOn(".close-button");
             TestUtil.sleep(500);
+            assertNotEquals(typeWindow, fxGetRealFocusedWindow());
 
             // Check that saved types in file match our new unit:
             String fileContent = FileUtils.readFileToString(TestUtil.fx(() -> mainWindowActions._test_getCurFile()), "UTF-8");
