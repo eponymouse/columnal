@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds
+public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds, ScrollToTrait
 {    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
@@ -207,6 +207,8 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         }
         TestUtil.delay(200);
         Log.debug("Entering: " + tagType.getName());
+        //TestUtil.fx_(() -> dumpScreenshot(getRealFocusedWindow()));
+        scrollTo(".id-fancylist-add");
         clickOn(".id-fancylist-add");
         TestUtil.delay(500);
         write(tagType.getName(), 1);

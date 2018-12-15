@@ -64,9 +64,9 @@ public interface ScrollToTrait extends FxRobotInterface
             fail("Could not find enclosing scroll pane");
         }
 
-        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.localToScreen(enclosingScroll.getViewportBounds()));
+        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.getContent().localToScreen(enclosingScroll.getContent().getBoundsInLocal()));
         // Move, ready for potentially scrolling:
-        moveTo(viewBounds);
+        moveTo(viewBounds.getMinX() + 2, viewBounds.getMinY() + 2);
         // We limit how many times we will scroll, to avoid an infinite loop in case of test failure:
         for (int i = 0;i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX()) > viewBounds.getMaxX(); i++)
         {
@@ -92,7 +92,8 @@ public interface ScrollToTrait extends FxRobotInterface
             //scroll(VerticalDirection.UP);
             clickOrScroll(".main-scroll > .scroll-bar:vertical > .decrement-button", () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
         }
-        assertTrue(viewBounds.contains(TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()))));
+        Bounds targetScreenBounds = TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
+        assertTrue("View bounds: " + viewBounds + " target: " + targetScreenBounds, viewBounds.contains(targetScreenBounds));
     }
     
     @OnThread(Tag.Any)
