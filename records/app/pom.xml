@@ -569,12 +569,9 @@
                 <forkCount>3</forkCount>
                 <reuseForks>false</reuseForks>
                 <!-- We must give system property for failsafe plugin's test search to not baulk at FX classes: -->
-                <systemProperties>
-                    <property>
-                        <name>JAVA_EXT_PATH</name>
-                        <value>${project.basedir}/target/java-extensions</value>
-                    </property>
-                </systemProperties>
+                <additionalClasspathElements>
+                    <additionalClasspathElement>${project.basedir}/target/java-extensions/jfxrt.jar</additionalClasspathElement>
+                </additionalClasspathElements>
                 <!-- -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999  -->
                 <argLine>-Xmx3G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1080-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
             </configuration>
