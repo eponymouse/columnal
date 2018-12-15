@@ -566,7 +566,10 @@
             <artifactId>maven-failsafe-plugin</artifactId>
             <version>2.20.1</version>
             <configuration>
-                <argLine>-Xmx4G -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999 -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1080-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
+                <forkCount>3</forkCount>
+                <reuseForks>false</reuseForks>
+                <!-- -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999  -->
+                <argLine>-Xmx3G -Djava.awt.headless=true -Dtestfx.robot=glass -Dtestfx.headless=true -Dprism.order=sw -Dprism.text=t2k -Dtestfx.setup.timeout=5000 -Dglass.platform=Monocle -Dmonocle.platform=Headless -Dheadless.geometry=1920x1080-32 -Djava.ext.dirs=${project.basedir}/target/java-extensions</argLine>
             </configuration>
         </plugin>
         </plugins>
