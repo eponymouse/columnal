@@ -374,8 +374,20 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         // Move to first cell in that row, which will make row labels visible
         // and ensure we are at correct Y position
         keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager,id).offsetByRowCols(3 + targetRow, 0));
-        return lookup(".virt-grid-row-label-pane").match(Node::isVisible)
-            .lookup(".virt-grid-row-label").match((Node l) -> l instanceof Label && TestUtil.fx(() -> ((Label)l).getText().trim().equals(Integer.toString(1 + targetRow)))).query();
+        Set<Node> possibles = 
+            lookup(".virt-grid-row-label-pane")
+            .match(Node::isVisible)
+            .match((RowLabelSupplier.LabelPane p) -> id.equals(TestUtil.<@Nullable TableId>fx(() -> p._test_getTableId())))
+            .lookup(".virt-grid-row-label")
+            .match((Label l) -> TestUtil.fx(() -> l.getText().trim().equals(Integer.toString(1 + targetRow))))
+            .queryAll();
+        
+        if (possibles.size() != 1)
+        {
+            fail("Possibles is not size 1: " + Utility.listToString(new ArrayList<>(possibles)));
+        }
+            
+        return possibles.iterator().next();
     }
 
     @OnThread(Tag.Any)
