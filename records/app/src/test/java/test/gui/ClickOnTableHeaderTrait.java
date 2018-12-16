@@ -1,6 +1,7 @@
 package test.gui;
 
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
@@ -20,7 +21,7 @@ import threadchecker.Tag;
 public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
 {
     @OnThread(Tag.Any)
-    public default void clickOnTableHeader(VirtualGrid virtualGrid, TableManager tableManager, TableId id, MouseButton... buttons) throws UserException
+    public default void triggerTableHeaderContextMenu(VirtualGrid virtualGrid, TableManager tableManager, TableId id) throws UserException
     {
         keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager, id));
         
@@ -32,6 +33,10 @@ public interface ClickOnTableHeaderTrait extends FxRobotInterface, ScrollToTrait
         @SuppressWarnings("nullness")
         Node tableHeader = TestUtil.fx(() -> tableNameField.getParent());
         Bounds tableHeaderBounds = TestUtil.fx(() -> tableHeader.localToScreen(tableHeader.getBoundsInLocal()));
-        clickOn(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2, buttons);
+        showContextMenu(tableHeader, new Point2D(tableHeaderBounds.getMinX() + 1, tableHeaderBounds.getMinY() + 2));
     }
+    
+    // Matches method in FXApplicationTest:
+    @OnThread(Tag.Any)
+    public FxRobotInterface showContextMenu(Node node, @Nullable Point2D pointOnScreen);
 }
