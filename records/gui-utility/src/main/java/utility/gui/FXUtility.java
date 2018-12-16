@@ -433,10 +433,19 @@ public class FXUtility
 
     public static @Nullable File getFileSaveAs(Node parent)
     {
+        Window parentWindow = parent.getScene() == null ? null : parent.getScene().getWindow();
+        
         if (testingMode)
-            return new TextInputDialog().showAndWait().map(File::new).orElse(null);
+        {
+            TextInputDialog textInputDialog = new TextInputDialog();
+            if (parentWindow != null)
+                textInputDialog.initOwner(parentWindow);
+            return textInputDialog.showAndWait().map(File::new).orElse(null);
+        }
         else
-            return new FileChooser().showSaveDialog(parent.getScene() == null ? null : parent.getScene().getWindow());
+        {
+            return new FileChooser().showSaveDialog(parentWindow);
+        }
     }
 
 
