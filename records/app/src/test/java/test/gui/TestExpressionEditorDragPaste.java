@@ -49,6 +49,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -106,7 +107,18 @@ public class TestExpressionEditorDragPaste extends FXApplicationTest implements 
             ImmutableList<Label> headers = getHeaders(expressionEditor);
             clickOn(headers.get(startNodeIndexIncl));
             press(KeyCode.SHIFT);
-            clickOn(headers.get(endNodeIndexIncl));
+            // Shift-click doesn't work headless because of
+            // https://github.com/TestFX/Monocle/issues/13
+            // so use shift-right instead:
+            if (GraphicsEnvironment.isHeadless())
+            {
+                for (int i = startNodeIndexIncl; i < endNodeIndexIncl; i++)
+                    push(KeyCode.RIGHT);
+            }
+            else
+            {
+                clickOn(headers.get(endNodeIndexIncl));
+            }
             release(KeyCode.SHIFT);
             if (moveMethod == MoveMethod.CUT_PASTE)
             {
