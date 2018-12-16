@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnTableHeaderTrait
+public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnTableHeaderTrait, FocusOwnerTrait
 {
     @OnThread(Tag.Simulation)
     default void exportToCSVAndCheck(VirtualGrid virtualGrid, TableManager tableManager, String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
@@ -48,7 +48,7 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
         destCSV.deleteOnExit();
 
         // Enter file name into first dialog:
-        write(destCSV.getAbsolutePath());
+        correctTargetWindow().write(destCSV.getAbsolutePath());
         push(KeyCode.ENTER);
 
         /* TODO add and handle options dialog
