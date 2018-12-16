@@ -10,11 +10,9 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
-import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.NodeQuery;
 import records.data.CellPosition;
 import records.data.Column;
@@ -32,6 +30,7 @@ import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
+import records.gui.RowLabelSupplier;
 import records.gui.grid.VirtualGrid;
 import records.gui.stf.StructuredTextField;
 import records.transformations.Calculate;
@@ -50,7 +49,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -58,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -109,8 +108,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         @SuppressWarnings("units")
         @TableDataRowIndex int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
-        scrollToRow(srcData.getId(), randomRow);
-        rightClickRowLabel(srcData.getId(), randomRow);
+        triggerRowLabelContextMenu(srcData.getId(), randomRow);
         clickOn(".id-virtGrid-row-delete");
         TestUtil.delay(500);
         scrollToRow(calculated.getId(), randomRow);
@@ -174,7 +172,8 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             try
             {
                 return TestUtil.openDataAsTable(windowToUse, manager);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 throw new RuntimeException(e);
             }
@@ -191,8 +190,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         if (targetNewRow < srcLength && (targetNewRow == 0 || r.nextBoolean()))
         {
             // Let's do insert-before to get the new row
-            scrollToRow(srcData.getId(), targetNewRow);
-            rightClickRowLabel(srcData.getId(), targetNewRow);
+            triggerRowLabelContextMenu(srcData.getId(), targetNewRow);
             clickOn(".id-virtGrid-row-insertBefore");
             TestUtil.delay(500);
         }
@@ -200,8 +198,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         {
             // Insert-after:
             @TableDataRowIndex int beforeTargetRow = targetNewRow - ONE_ROW;
-            scrollToRow(srcData.getId(), beforeTargetRow);
-            rightClickRowLabel(srcData.getId(), beforeTargetRow);
+            triggerRowLabelContextMenu(srcData.getId(), beforeTargetRow);
             clickOn(".id-virtGrid-row-insertAfter");
             TestUtil.delay(500);
         }
@@ -355,12 +352,12 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     }
 
     @OnThread(Tag.Any)
-    private void rightClickRowLabel(TableId id, @TableDataRowIndex int targetRow) throws UserException
+    private void triggerRowLabelContextMenu(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
         Node rowLabel = findRowLabel(id, targetRow);
         if (rowLabel == null)
             throw new RuntimeException("Row label for 0-based " + targetRow + " not found.  Labels: " + findVisRowLabels(id));
-        rightClickOn(rowLabel);
+        showContextMenu(rowLabel, null);
     }
 
     @OnThread(Tag.Any)

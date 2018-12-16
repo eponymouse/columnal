@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
+import records.data.TableId;
 import records.gui.RowLabelSupplier.LabelPane;
 import records.gui.RowLabelSupplier.Visible;
 import records.gui.grid.GridAreaCellPosition;
@@ -499,6 +500,16 @@ public class RowLabelSupplier extends VirtualGridSupplier<LabelPane>
                 height
             );
             updateClipAndTranslate();
+        }
+        
+        public @Nullable TableId _test_getTableId()
+        {
+            DataDisplay dataDisplay = rowLabels.dataDisplay;
+            if (dataDisplay instanceof TableDisplay)
+            {
+                return ((TableDisplay)dataDisplay).getTable().getId();
+            }
+            return null;
         }
     }
 }
