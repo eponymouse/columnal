@@ -301,16 +301,15 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
                 }));
             }
         }
-        TestUtil.sim_(() -> {
-            try
-            {
-                exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
+        
+        try
+        {
+            exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
                 // TODO sort expected output
                 //exportToCSVAndCheck("After inserting " + targetNewRow, expectedCalcContent, calculated.getId());
 

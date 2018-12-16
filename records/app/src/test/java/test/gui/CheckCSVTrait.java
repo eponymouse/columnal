@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnTableHeaderTrait, FocusOwnerTrait
 {
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     default void exportToCSVAndCheck(VirtualGrid virtualGrid, TableManager tableManager, String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
     {
         triggerTableHeaderContextMenu(virtualGrid, tableManager, tableId);
@@ -62,13 +62,9 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait, ClickOnT
             TestUtil.sleep(500);
         }
         */
-        if (Workers._test_isOnWorkerThread())
-        {
-            WaitForAsyncUtils.waitForFxEvents();
-            Workers._test_yield();
-        }
-        else
-            TestUtil.sleep(2000);
+        TestUtil.sleep(2000);
+        // Wait for work queue to be empty:
+        TestUtil.sim_(() -> {});
 
         // Now load CSV and check it:
         String actualCSV = FileUtils.readFileToString(destCSV, Charset.forName("UTF-8"));
