@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.stage.Stage;
 import org.junit.runner.RunWith;
@@ -42,7 +43,9 @@ public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait,
      */
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testCalculateToCSV(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws Exception
+    public void testCalculateToCSV(
+            @When(seed=-7265728807976809456L)
+            @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws Exception
     {
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);

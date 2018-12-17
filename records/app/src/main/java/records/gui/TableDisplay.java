@@ -111,8 +111,11 @@ import utility.gui.TranslationUtility;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -698,7 +701,7 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     private static void exportToCSV(Table src, File dest) throws InternalException, UserException
     {
         // Write column names:
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(dest)))
+        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest), StandardCharsets.UTF_8)))
         {
             @OnThread(Tag.Any) RecordSet data = src.getData();
             @OnThread(Tag.Any) List<Column> columns = data.getColumns();
