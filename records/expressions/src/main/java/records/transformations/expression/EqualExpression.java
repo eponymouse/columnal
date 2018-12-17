@@ -120,6 +120,7 @@ public class EqualExpression extends NaryOpExpression
                 TypeProblemDetails tpd = new TypeProblemDetails(ImmutableList.copyOf(expressionTypes), ImmutableList.copyOf(expressions), index);
                 onError.recordQuickFixes(expressions.get(index), ExpressionEditorUtil.getFixesForMatchingNumericUnits(typeState, tpd));
             }
+            return null;
         }
         
         
