@@ -1,9 +1,12 @@
 package test.gui;
 
 import annotation.qual.Value;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.stage.Window;
+import log.Log;
 import org.testfx.api.FxRobotInterface;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -31,14 +34,24 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     
     // Checks STF has same content after running defocus
     @OnThread(Tag.Any)
-    default public void defocusSTFAndCheck(FXPlatformRunnable defocus)
+    default public void defocusSTFAndCheck(boolean checkContentSame, FXPlatformRunnable defocus)
     {
-        Window window = window(Window::isFocused);
+        Window window = TestUtil.fx(() -> getRealFocusedWindow());
         Node node = TestUtil.fx(() -> window.getScene().getFocusOwner());
         assertTrue("" + node, node instanceof StructuredTextField);
         String content = TestUtil.fx(() -> ((StructuredTextField)node).getText());
+        ChangeListener<String> logTextChange = (a, oldVal, newVal) -> Log.logStackTrace("Text changed on defocus from : \"" + oldVal + "\" to \"" + newVal + "\"");
+        if (checkContentSame)
+        {
+            TestUtil.fx_(() -> ((StructuredTextField)node).textProperty().addListener(logTextChange));
+        }
         TestUtil.fx_(defocus);
+        WaitForAsyncUtils.waitForFxEvents();
         assertNotEquals(node, TestUtil.fx(() -> window.getScene().getFocusOwner()));
-        assertEquals(content, TestUtil.fx(() -> ((StructuredTextField)node).getText()));
+        if (checkContentSame)
+        {
+            assertEquals(content, TestUtil.fx(() -> ((StructuredTextField) node).getText()));
+            TestUtil.fx_(() -> ((StructuredTextField)node).textProperty().removeListener(logTextChange));
+        }
     }
 }

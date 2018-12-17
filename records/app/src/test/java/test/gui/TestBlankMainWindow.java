@@ -168,7 +168,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
             push(KeyCode.TAB);
             enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1));
-            defocusSTFAndCheck(() -> push(KeyCode.TAB));
+            defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
         }
         clickOn(".ok-button");
     }
@@ -244,7 +244,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void propUndoAddAndEditData(@From(GenRandom.class) Random r) throws InternalException, UserException
+    public void propUndoAddAndEditData(@When(seed=-3641321152999151732L) @From(GenRandom.class) Random r) throws InternalException, UserException
     {
         GenNumber gen = new GenNumber();
         Supplier<@Value Number> makeNumber = () -> DataTypeUtility.value(gen.generate(new SourceOfRandomness(r), null));
@@ -380,7 +380,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 3)
     @OnThread(Tag.Any)
-    public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propEnterColumn(@When(seed=-8805493384441186542L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
@@ -425,11 +425,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof StructuredTextField);
         push(KeyCode.HOME);
         enterStructuredValue(dataType, value, random);
-        // One to get rid of any code completion:
-        push(KeyCode.ESCAPE);
-        // Escape to finish editing:
-        push(KeyCode.ESCAPE);
-        assertNotEquals(focused, getFocusOwner());
+        defocusSTFAndCheck(!dataType.isNumber(), () -> {
+            // One to get rid of any code completion:
+            push(KeyCode.ESCAPE);
+            // Escape to finish editing:
+            push(KeyCode.ESCAPE);
+            push(KeyCode.ESCAPE);
+        });
     }
 
     @OnThread(Tag.Any)
