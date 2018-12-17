@@ -171,6 +171,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
         }
         clickOn(".ok-button");
+        TestUtil.delay(200);
     }
 
     @Test
