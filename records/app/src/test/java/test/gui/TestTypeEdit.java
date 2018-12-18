@@ -184,7 +184,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
         while (lookup(".small-delete").tryQuery().isPresent() && ++count < 30)
         {
             // Click highest one as likely to not be off the screen:
-            Node node = lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(0, 0).getY()))).findFirst().orElse(null);
+            Node node = TestUtil.<@Nullable Node>fx(() -> lookup(".small-delete-circle").match(NodeQueryUtils.isVisible()).<Node>queryAll().stream().sorted(Comparator.comparing(n -> n.localToScene(0, 0).getY())).findFirst().orElse(null));
             if (node != null)
             {
                 clickOn(node);
