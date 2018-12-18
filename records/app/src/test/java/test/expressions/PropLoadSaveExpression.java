@@ -2,12 +2,10 @@ package test.expressions;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Ignore;
-import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.TableAndColumnRenames;
@@ -15,9 +13,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.BracketedStatus;
-import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
-import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.TestUtil;
@@ -49,11 +45,43 @@ public class PropLoadSaveExpression extends FXApplicationTest
     public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         TestUtil.fxTest_(() -> {
-            Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {
-            }).save();
-            assertEquals(expression, edited);
-            assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
+            testNoOpEdit(expression);
         });
+    }
+    
+    @Test
+    public void testInvalids()
+    {
+        TestUtil.fxTest_(() -> {
+            try
+            {
+                testNoOpEdit("@invalidops(2, @unfinished \"+\")");
+                testNoOpEdit("@invalidops(2, @unfinished \"#\", 3)");
+                testNoOpEdit("@invalidops(1, @unfinished \"+\", 2, @unfinished \"*\", 3)");
+                testNoOpEdit("@invalidops(1, @unfinished \"+\", -2, @unfinished \"*\", 3)");
+                testNoOpEdit("@invalidops(-1, @unfinished \"+\", -2, @unfinished \"*\", 3)");
+                testNoOpEdit("-1");
+            }
+            catch (UserException | InternalException e)
+            {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void testNoOpEdit(String src) throws UserException, InternalException
+    {
+        testNoOpEdit(Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private void testNoOpEdit(Expression expression)
+    {
+        Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), true, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {
+        }).save();
+        assertEquals(expression, edited);
+        assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
     }
 
     @Property(trials = 1000)
