@@ -84,6 +84,7 @@ public class NumberEntry extends TerminalComponent<@Value Number>
             actualIntegerPart = getItem(ItemVariant.EDITABLE_NUMBER_INT);
             actualFracPart = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
             @Value Number value = DataTypeUtility.value(Utility.parseNumber(actualIntegerPart + "." + actualFracPart));
+            showDot = showDot || !actualFracPart.matches("^0*$");
             updateComponentContent();
             // We must fish out the actual after parsing and updating
             // the items in the component.  Otherwise the display-specific
