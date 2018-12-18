@@ -8,18 +8,17 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.UnknownUnits;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -51,7 +50,7 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         {
             super.failed(e, description);
             System.err.println("Screenshot of failure, " + targetWindow().toString() + ":");
-            TestUtil.fx_(() -> dumpScreenshot(targetWindow()));
+            TestUtil.fx_(() -> dumpScreenshot());
             e.printStackTrace();
             if (e.getCause() != null)
                 e.getCause().printStackTrace();
@@ -97,9 +96,15 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         timeline.setAutoReverse(false);
         //timeline.play();
     }
+
+    @OnThread(Tag.FXPlatform)
+    protected final void dumpScreenshot()
+    {
+        printBase64(capture(Screen.getPrimary().getBounds()).getImage());
+    }
     
     @OnThread(Tag.FXPlatform)
-    protected final static void dumpScreenshot(Window target)
+    protected static void dumpScreenshot(Window target)
     {
         if (target.getScene() == null)
         {
@@ -108,6 +113,11 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
         }
         // From https://stackoverflow.com/questions/31407382/javafx-chart-to-image-to-base64-string-use-in-php
         WritableImage image = target.getScene().snapshot(null);
+        printBase64(image);
+    }
+
+    private static void printBase64(Image image)
+    {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try
         {
