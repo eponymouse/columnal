@@ -188,7 +188,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(0, lookup(".table-display-table-title").queryAll().size());
     }
 
-    @Property(trials = 3)
+    @Property(trials = 2)
     @OnThread(Tag.Any)
     public void propUndoNewEntryTable(@From(GenRandom.class) Random r) throws InternalException, UserException
     {
@@ -197,7 +197,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         
         ArrayList<TableId> tableIds = new ArrayList<>();
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 8; i++)
         {
             if (r.nextInt(5) <= 2 || tableIds.isEmpty())
             {
@@ -353,7 +353,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             clickOn(sub);
     }
 
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Any)
     public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
@@ -381,7 +381,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 3)
     @OnThread(Tag.Any)
-    public void propEnterColumn(@When(seed=-8805493384441186542L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
     {
         propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
