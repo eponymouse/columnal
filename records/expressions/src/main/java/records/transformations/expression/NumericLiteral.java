@@ -14,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Op;
 import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.jellytype.JellyUnit;
 import records.typeExp.NumTypeExp;
@@ -106,7 +107,13 @@ public class NumericLiteral extends Literal
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
         ImmutableList.Builder<SingleLoader<Expression, ExpressionSaver>> builder = ImmutableList.builder();
-        builder.add(GeneralExpressionEntry.load(Utility.numberToString(value)));
+        String valueStr = Utility.numberToString(this.value);
+        if (valueStr.startsWith("-"))
+        {
+            valueStr = valueStr.substring(1);
+            builder.add(GeneralExpressionEntry.load(Op.SUBTRACT));
+        }
+        builder.add(GeneralExpressionEntry.load(valueStr));
         if (unit != null)
         {
             @NonNull UnitExpression unitFinal = unit;
