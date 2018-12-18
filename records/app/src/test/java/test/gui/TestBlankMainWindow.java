@@ -245,7 +245,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
 
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void propUndoAddAndEditData(@When(seed=-3641321152999151732L) @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void propUndoAddAndEditData(@From(GenRandom.class) Random r) throws InternalException, UserException
     {
         GenNumber gen = new GenNumber();
         Supplier<@Value Number> makeNumber = () -> DataTypeUtility.value(gen.generate(new SourceOfRandomness(r), null));
@@ -286,8 +286,14 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             {
                 // Edit a random row
                 int row = r.nextInt(latest.size());
-                @Value Number newVal = makeNumber.get();
-                Log.debug("@@@ Editing row " + row + " to be: " + newVal);
+                @Value Number newVal;
+                int attempts = 0;
+                do
+                {
+                    newVal = makeNumber.get();
+                }
+                while (Utility.compareNumbers(latest.get(row), newVal) == 0 && ++attempts < 100);
+                Log.debug("@@@ Editing row " + row + " to be: " + newVal + " attempts: " + attempts);
                 enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), DataType.NUMBER, newVal, new Random(1));
                 latest.set(row, newVal);
             }
