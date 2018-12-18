@@ -64,9 +64,20 @@ public final class QuickFix<EXPRESSION extends StyledShowable, SEMANTIC_PARENT>
         this.makeReplacement = makeReplacement;
     }
 
+    @OnThread(Tag.FXPlatform)
     public StyledString getTitle()
     {
-        return title;
+        StyledString replacement;
+        try
+        {
+            replacement = makeReplacement.get().toStyledString();
+        }
+        catch (InternalException e)
+        {
+            Log.log(e);
+            replacement = StyledString.s("");
+        }
+        return StyledString.concat(title, StyledString.s(" \u21fe "), replacement);
     }
     
     @OnThread(Tag.FXPlatform)
