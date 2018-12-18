@@ -59,7 +59,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditor extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait
+public class TestExpressionEditor extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait, PopupTrait
 {
     @Override
     @OnThread(value = Tag.Any)
@@ -112,9 +112,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             Log.normal("Entering expression:\n" + expressionValue.expression.toString() + "\n");
             enterExpression(expressionValue.expression, false, r);
             
-            moveTo(".ok-button");
             // Get rid of popups:
-            clickOn(MouseButton.MIDDLE);
+            moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(MouseButton.PRIMARY);
             // Now close dialog, and check for equality;
             View view = correctTargetWindow().lookup(".view").query();
@@ -180,9 +179,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             push(KeyCode.TAB);
             write(expressionSrc, 1);
 
-            moveTo(".ok-button");
             // Get rid of popups:
-            clickOn(MouseButton.MIDDLE);
+            moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn(MouseButton.PRIMARY);
             // Now close dialog, and check for equality;
             View view = correctTargetWindow().lookup(".view").query();

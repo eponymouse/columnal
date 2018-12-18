@@ -60,7 +60,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait
+public class TestQuickFix extends FXApplicationTest implements EnterExpressionTrait, ScrollToTrait, ComboUtilTrait, ListUtilTrait, ClickTableLocationTrait, PopupTrait
 {
     // Test that adding two strings suggests a quick fix to switch to string concatenation
     @Test
@@ -306,24 +306,22 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             // Move field so that errors show up (cancel masking on new fields):
             push(KeyCode.HOME);
             
-            TextField lhs = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<TextField>tryQuery().orElse(null);
-            assertNotNull("Fields: " + lookup(".entry-field").queryAll().stream().map(t -> TestUtil.fx(() -> ((TextField)t).getText())).collect(Collectors.joining("\n")), lhs);
-            if (lhs == null) return;
-            @NonNull Node lhsFinal = lhs;
-            if (!TestUtil.fx(() -> lhsFinal.isFocused()))
+            TextField targetField = lookup(".entry-field").<Node>match((Predicate<Node>) (n -> TestUtil.fx(() -> ((TextField) n).getText().equals(fixFieldContent)))).<TextField>tryQuery().orElse(null);
+            assertNotNull("Fields: " + lookup(".entry-field").queryAll().stream().map(t -> TestUtil.fx(() -> ((TextField)t).getText())).collect(Collectors.joining("\n")), targetField);
+            if (targetField == null) return;
+            @NonNull Node targetFinal = targetField;
+            if (!TestUtil.fx(() -> targetFinal.isFocused()))
             {
-                Log.debug("Focusing target field: " + lhsFinal);
-                scrollTo(lhs);
-                moveTo(lhs);
+                Log.debug("Focusing target field: " + targetFinal);
+                scrollTo(targetField);
                 // Get rid of any popups in the way:
-                clickOn(MouseButton.MIDDLE);
-                clickOn(MouseButton.MIDDLE);
+                moveAndDismissPopupsAtPos(point(targetField));
                 clickOn();
                 // Note that the field may not get focus if
                 // if is a keyword, but the blank next to it
                 // should get focused.
                 if (Character.isLetterOrDigit(fixFieldContent.codePointAt(0)))
-                    assertTrue(TestUtil.fx(() -> lhs.isFocused()));
+                    assertTrue(TestUtil.fx(() -> targetField.isFocused()));
             }
             TestUtil.delay(500);
             List<Window> windows = listWindows();
@@ -347,9 +345,7 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             TestUtil.sleep(200);
             assertTrue("Popup still showing: "+ errorPopup, TestUtil.fx(() -> errorPopup != null && !errorPopup.isShowing()));
             WaitForAsyncUtils.waitForFxEvents();
-            moveTo(".ok-button");
-            clickOn(MouseButton.MIDDLE);
-            clickOn(MouseButton.MIDDLE);
+            moveAndDismissPopupsAtPos(point(".ok-button"));
             clickOn();
             TestUtil.sleep(1000);
             WaitForAsyncUtils.waitForFxEvents();

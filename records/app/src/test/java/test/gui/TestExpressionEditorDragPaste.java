@@ -58,7 +58,7 @@ import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
-public class TestExpressionEditorDragPaste extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait
+public class TestExpressionEditorDragPaste extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, EnterExpressionTrait, ClickTableLocationTrait, PopupTrait
 {    
     // We try dragging slightly to left or right of target divider
     @OnThread(Tag.Any)
@@ -189,9 +189,8 @@ public class TestExpressionEditorDragPaste extends FXApplicationTest implements 
 
     private void clickOk()
     {
-        moveTo(".ok-button");
         // Get rid of popups:
-        clickOn(MouseButton.MIDDLE);
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(MouseButton.PRIMARY);
         // Now close dialog, and check for equality;
 
