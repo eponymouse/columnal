@@ -105,12 +105,12 @@ public class DataEntryUtil
                     delete(4);
                     robot.write(String.format("%04d", t.get(ChronoField.YEAR)) + "-", DELAY);
                     delete(2);
-                    robot.write(Integer.toString(t.get(ChronoField.MONTH_OF_YEAR)), DELAY);
+                    robot.write(String.format("%02d", t.get(ChronoField.MONTH_OF_YEAR)), DELAY);
                     if (dateTimeInfo.getType().hasDay())
                     {
                         robot.write("-");
                         delete(2);
-                        robot.write(Integer.toString(t.get(ChronoField.DAY_OF_MONTH)));
+                        robot.write(String.format("%02d", t.get(ChronoField.DAY_OF_MONTH)));
                     }
                     if (dateTimeInfo.getType().hasTime())
                         robot.write(" ");
@@ -118,11 +118,11 @@ public class DataEntryUtil
                 if (dateTimeInfo.getType().hasTime())
                 {
                     delete(2);
-                    robot.write(Integer.toString(t.get(ChronoField.HOUR_OF_DAY)) + ":", DELAY);
+                    robot.write(String.format("%02d", t.get(ChronoField.HOUR_OF_DAY)) + ":", DELAY);
                     delete(2);
-                    robot.write(Integer.toString(t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
+                    robot.write(String.format("%02d", t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
                     delete(2);
-                    robot.write(Integer.toString(t.get(ChronoField.SECOND_OF_MINUTE)) + ".", DELAY);
+                    robot.write(String.format("%02d", t.get(ChronoField.SECOND_OF_MINUTE)) + ".", DELAY);
                     delete(9);
                     robot.write(String.format("%09d", t.get(ChronoField.NANO_OF_SECOND)), DELAY);
                 }
