@@ -38,10 +38,10 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        actualIntegerPart = initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString());
+        actualIntegerPart = initial == null ? "" : getIntegerPart(initial);
         Item integerComponent = makeIntegerComponent(actualIntegerPart);
         items.add(integerComponent);
-        actualFracPart = initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE);
+        actualFracPart = initial == null ? "" : getFracPart(initial);
         Item dotComponent = makeDotComponent(actualFracPart.isEmpty() ? "" : ".");
         items.add(dotComponent);
         Item fracComponent = makeFracComponent(actualFracPart);
@@ -49,6 +49,16 @@ public class NumberEntry extends TerminalComponent<@Value Number>
 
         displayIntegerPart = actualIntegerPart;
         displayFracPart = actualFracPart;
+    }
+
+    public static String getFracPart(Number n)
+    {
+        return Utility.getFracPartAsString(n, 0, Integer.MAX_VALUE);
+    }
+
+    public static String getIntegerPart(Number n)
+    {
+        return n instanceof BigDecimal ? ((BigDecimal) n).toBigInteger().toString() : n.toString();
     }
 
     private Item makeFracComponent(@UnknownInitialization(TerminalComponent.class) NumberEntry this, String fracPart)
@@ -79,8 +89,8 @@ public class NumberEntry extends TerminalComponent<@Value Number>
             // the items in the component.  Otherwise the display-specific
             // aspects (extra spaces and zeroes for padding) can
             // be taken back into the actual items, which would not be right:
-            actualIntegerPart = getItem(ItemVariant.EDITABLE_NUMBER_INT);
-            actualFracPart = getItem(ItemVariant.EDITABLE_NUMBER_FRAC);
+            actualIntegerPart = getIntegerPart(value);
+            actualFracPart = getFracPart(value);
             displayIntegerPart = actualIntegerPart;
             displayFracPart = actualFracPart;
             return Either.right(value);
