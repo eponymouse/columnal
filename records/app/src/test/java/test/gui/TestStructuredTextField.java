@@ -695,8 +695,8 @@ public class TestStructuredTextField extends FXApplicationTest
         TestUtil.fx_(() -> f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial})));
         targetF();
         pushSelectAll();
-        type("", "(^" + initial.toString() + "," + initial.toString() + "$)");
-        type(numAsStringA + "," + (space ? " " : "") + numAsStringB, "(" + numAsStringA + "," + numAsStringB + ")", new Object[]{numA, numB});
+        type("", "^(" + initial.toString() + "," + initial.toString() + ")$");
+        type("(" + numAsStringA + "," + (space ? " " : "") + numAsStringB, "(" + numAsStringA + "," + numAsStringB + ")", new Object[]{numA, numB});
         targetF();
         push(KeyCode.END);
         type("", "(" + numAsStringA + "," + numAsStringB + "^$)");
@@ -720,8 +720,8 @@ public class TestStructuredTextField extends FXApplicationTest
         pushSelectAll();
         if (numFirst)
         {
-            type("", "(^0," + !boolValue + "$)");
-            type(numAsString, "(" + numAsString + "$,)");
+            type("", "^(0," + !boolValue + ")$");
+            type("(" + numAsString, "(" + numAsString + "$,)");
             type(",", "(" + numAsString + ",$)");
             if (r.nextBoolean())
             {
@@ -741,7 +741,7 @@ public class TestStructuredTextField extends FXApplicationTest
         }
         else
         {
-            type("", "(^" + !boolValue + ",0$)");
+            type("", "^(" + !boolValue + ",0)$");
             if (r.nextBoolean())
             {
                 // Type full:
@@ -797,7 +797,7 @@ public class TestStructuredTextField extends FXApplicationTest
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
         TestUtil.fx_(() -> f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1))));
-        String timeVal = timeString(localDateTime, false);
+        String timeVal = timeString(localDateTime, true);
         enterDate(localDateTime, r, " " + timeVal);
     }
 
@@ -1142,17 +1142,18 @@ public class TestStructuredTextField extends FXApplicationTest
         // Try it in valid form with four digit year:
         targetF();
         pushSelectAll();
-        String oneDigEntry = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
-        String value = String.format("%02d", localDate.get(ChronoField.DAY_OF_MONTH)) + "/" + String.format("%02d", localDate.get(ChronoField.MONTH_OF_YEAR)) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
+        String oneDigEntry = String.format("%04d", localDate.get(ChronoField.YEAR)) + "-" + localDate.get(ChronoField.MONTH_OF_YEAR) + "-" + localDate.get(ChronoField.DAY_OF_MONTH);
+        String value = String.format("%04d", localDate.get(ChronoField.YEAR)) + "-" + String.format("%02d", localDate.get(ChronoField.MONTH_OF_YEAR)) + "-" + String.format("%02d", localDate.get(ChronoField.DAY_OF_MONTH));
         type(oneDigEntry + extra, value + extra, localDate);
         if (localDate.get(ChronoField.YEAR) > Year.now().getValue() - 80 && localDate.get(ChronoField.YEAR) < Year.now().getValue() + 20)
         {
             // Do two digits:
             targetF();
             pushSelectAll();
-            String twoDigYear = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
+            String twoDigYear = Integer.toString(localDate.get(ChronoField.YEAR)).substring(2) + "-" + localDate.get(ChronoField.MONTH_OF_YEAR) + "-" + localDate.get(ChronoField.DAY_OF_MONTH);
             type(twoDigYear + extra, value + extra, localDate);
         }
+        /*
         // Try slight variant, such as other dividers or leading zeros:
         // Also try month names:
         int[] vals = new int[] {localDate.get(ChronoField.DAY_OF_MONTH), localDate.get(ChronoField.MONTH_OF_YEAR), localDate.get(ChronoField.YEAR)};
@@ -1202,7 +1203,9 @@ public class TestStructuredTextField extends FXApplicationTest
             pushSelectAll();
             type(variantMD + extra, value + extra, localDate);
         }
+        */
         // Try errors and fixes; transposition, etc:
+        /*
         if (vals[0] > 12)
         {
             // Swap day and month:
@@ -1214,6 +1217,7 @@ public class TestStructuredTextField extends FXApplicationTest
             String wrongVal = vals[2] + "/" + vals[1] + "/" + vals[0];
             checkFix(wrongVal + extra, value + extra);
         }
+        */
     }
 
     private void checkFix(String input, String suggestedFix)
