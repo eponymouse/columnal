@@ -381,7 +381,11 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             .match((Label l) -> TestUtil.fx(() -> l.getText().trim().equals(Integer.toString(1 + targetRow))))
             .queryAll();
         
-        if (possibles.size() != 1)
+        if (possibles.isEmpty())
+        {
+            return null;
+        }
+        else if (possibles.size() != 1)
         {
             fail("Possibles is not size 1: " + Utility.listToString(new ArrayList<>(possibles)));
         }
