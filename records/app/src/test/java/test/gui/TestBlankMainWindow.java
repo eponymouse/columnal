@@ -432,7 +432,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof StructuredTextField);
         push(KeyCode.HOME);
         enterStructuredValue(dataType, value, random);
-        defocusSTFAndCheck(!dataType.isNumber(), () -> {
+        defocusSTFAndCheck(!dataType.hasNumber(), () -> {
             // One to get rid of any code completion:
             push(KeyCode.ESCAPE);
             // Escape to finish editing:

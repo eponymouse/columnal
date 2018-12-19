@@ -122,9 +122,10 @@ public class DataEntryUtil
                     delete(2);
                     robot.write(String.format("%02d", t.get(ChronoField.MINUTE_OF_HOUR)) + ":", DELAY);
                     delete(2);
-                    robot.write(String.format("%02d", t.get(ChronoField.SECOND_OF_MINUTE)) + ".", DELAY);
+                    int nano = t.get(ChronoField.NANO_OF_SECOND);
+                    robot.write(String.format("%02d", t.get(ChronoField.SECOND_OF_MINUTE)) + (nano == 0 ? "" : "."), DELAY);
                     delete(9);
-                    robot.write(String.format("%09d", t.get(ChronoField.NANO_OF_SECOND)), DELAY);
+                    robot.write(String.format("%09d", nano).replaceAll("0*$", ""), DELAY);
                 }
                 if (dateTimeInfo.getType().hasZoneId())
                 {
