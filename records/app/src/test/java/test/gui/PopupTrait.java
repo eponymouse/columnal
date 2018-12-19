@@ -18,7 +18,7 @@ public interface PopupTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default public void moveAndDismissPopupsAtPos(PointQuery pointQuery)
     {
-        Point2D p = pointQuery.getPosition();
+        Point2D p = pointQuery.query();
         Supplier<Boolean> popupAtMousePos = () -> {
             return TestUtil.fx(() -> {
                 return Utility.filterClass(listWindows().stream(), PopupWindow.class).anyMatch(w -> {
