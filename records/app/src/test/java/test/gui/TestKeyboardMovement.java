@@ -34,6 +34,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -73,10 +74,19 @@ public class TestKeyboardMovement extends FXApplicationTest
             int dist = 1 + r.nextInt(5);
             ArrayList<KeyCode> presses = new ArrayList<>(Utility.replicate(dist, r.nextInt(3) != 1 ? KeyCode.DOWN : KeyCode.RIGHT));
             RectangleBounds rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
-            for (Iterator<KeyCode> iterator = presses.iterator(); iterator.hasNext(); )
+            for (ListIterator<KeyCode> iterator = presses.listIterator(); iterator.hasNext(); )
             {
                 KeyCode keyCode = iterator.next();
-                Log.debug("Pressing: " + keyCode + " Focus owner: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
+                // Don't go RIGHT out of a table header as this can 
+                // create an irreversible path:
+                if (rectangleBounds.topLeftIncl.columnIndex != rectangleBounds.bottomRightIncl.columnIndex)
+                {
+                    keyCode = KeyCode.DOWN;
+                    iterator.set(keyCode);
+                }
+                    
+                Log.debug("Pressing: " + keyCode + " at rect: " + rectangleBounds); 
+                        //" Focus owner: " + TestUtil.fx(() -> targetWindow().getScene().getFocusOwner()));
                 push(keyCode);
                 // If we've reached edge, don't count keypress on the reverse trip:
                 RectangleBounds newRectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
@@ -86,7 +96,6 @@ public class TestKeyboardMovement extends FXApplicationTest
                 }
                 rectangleBounds = newRectangleBounds;
             }
-            rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
             if (paths.isEmpty() || !paths.get(paths.size() - 1).getSecond().equals(rectangleBounds))
             {
                 paths.add(new Pair<>(
@@ -101,10 +110,14 @@ public class TestKeyboardMovement extends FXApplicationTest
         for (int i = paths.size() - 1; i >= 0; i--)
         {
             assertEquals("Index " + i, Optional.of(paths.get(i).getSecond()), TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())));
-            for (KeyCode keyCode : paths.get(i).getFirst())
+            List<KeyCode> first = paths.get(i).getFirst();
+            for (int k = first.size() - 1; k >= 0; k--)
             {
+                KeyCode keyCode = first.get(k);
                 // Reverse the down/right into up/left:
                 push(keyCode == KeyCode.DOWN ? KeyCode.UP : KeyCode.LEFT);
+                RectangleBounds rectangleBounds = TestUtil.fx(() -> virtualGrid._test_getSelection().map(s -> s.getSelectionDisplayRectangle())).get();
+                Log.debug("Reversed " + keyCode + " to get to " + rectangleBounds);
             }
             checkSelectionOnScreen("Index " + i + " " + paths.get(i).getSecond().toString() + (i < paths.size() - 1 ? (" (from " + paths.get(i + 1).getSecond() + ")") : "") + " tables: " + tableSummary, virtualGrid);
         }
@@ -134,7 +147,7 @@ public class TestKeyboardMovement extends FXApplicationTest
             Bounds gridScreenBounds = TestUtil.fx(() -> virtualGrid.getNode().localToScreen(virtualGrid.getNode().getLayoutBounds()));
             // Selection must be at least part in view (ideally wholly in view, but if table is big, whole table
             // selection isn't all going to fit)
-            Log.debug("Grid bounds on screen: " + gridScreenBounds + " sel bounds " + selScreenBounds);
+            //Log.debug("Grid bounds on screen: " + gridScreenBounds + " sel bounds " + selScreenBounds);
             // Incidental check that the grid node should not be massive:
             MatcherAssert.assertThat(prefix, gridScreenBounds.getWidth(), Matchers.lessThan(2000.0));
             MatcherAssert.assertThat(prefix, gridScreenBounds.getHeight(), Matchers.lessThan(2000.0));
