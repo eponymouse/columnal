@@ -132,7 +132,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
         completions.getStyleClass().add("autocomplete");
         completions.setPrefWidth(400.0);
         container = new BorderPane(null, null, null, null, completions);
-        completions.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+        container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
             if (e.getButton() == MouseButton.MIDDLE)
             {
                 hide();
