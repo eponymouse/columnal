@@ -1011,6 +1011,20 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
         {
             addColumnBefore_Calc((Calculate)table, null, "transform.calculate.addInitial");
         }
+        else if (table instanceof Filter)
+        {
+            Filter filter = (Filter)table;
+            new EditExpressionDialog(parent, 
+                parent.getManager().getSingleTableOrNull(filter.getSource()),
+                filter.getFilterExpression(),
+                true,
+                DataType.BOOLEAN).showAndWait().ifPresent(newExp -> Workers.onWorkerThread("Editing filter", Priority.SAVE, () ->  FXUtility.alertOnError_("Error editing filter", () -> 
+            {
+                
+                    parent.getManager().edit(table.getId(), () -> new Filter(parent.getManager(),
+                        table.getDetailsForCopy(), filter.getSource(), newExp), null);
+            })));    
+        }
         // For other tables, do nothing
     }
 
