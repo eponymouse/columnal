@@ -33,10 +33,16 @@ public class EditExpressionDialog extends LightDialog<Expression>
         
         getDialogPane().setContent(new BorderPane(expressionEditor.getContainer()));
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
+        getDialogPane().lookupButton(ButtonType.CANCEL).getStyleClass().add("cancel-button");
         FXUtility.fixButtonsWhenPopupShowing(getDialogPane());
         setResultConverter(bt -> bt == ButtonType.OK ? curValue : null);
         setOnHiding(e -> {
             expressionEditor.cleanup();
+        });
+        setOnShown(e -> {
+            // Have to use runAfter to combat ButtonBarSkin grabbing focus:
+            FXUtility.runAfter(expressionEditor::focusWhenShown);
         });
         //FXUtility.onceNotNull(getDialogPane().sceneProperty(), org.scenicview.ScenicView::show);
     }
