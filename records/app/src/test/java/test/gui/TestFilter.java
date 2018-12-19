@@ -7,17 +7,28 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.MainWindow.MainWindowActions;
+import records.gui.TableDisplay;
+import records.gui.grid.RectangleBounds;
 import records.importers.ClipboardUtils;
+import records.transformations.Filter;
 import records.transformations.TransformationInfo;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.NumericLiteral;
 import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;
@@ -39,11 +50,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestFilter extends FXApplicationTest implements ListUtilTrait, ScrollToTrait
+public class TestFilter extends FXApplicationTest implements ListUtilTrait, ScrollToTrait, PopupTrait, ClickTableLocationTrait
 {
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
@@ -52,29 +62,39 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
             @When(seed=9064559552451687290L) @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
-        TestUtil.openDataAsTable(windowToUse, original.mgr).get();
-        clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-        // TODO fix this
-        //selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().matches("filter.*"));
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();
+        TestUtil.sleep(1000);
+        CellPosition targetPos = new CellPosition(CellPosition.row(1), CellPosition.col(TestUtil.fx(() -> Utility.filterOptional(mainWindowActions._test_getTableManager().getAllTables().stream().map(t -> Optional.ofNullable((TableDisplay) t.getDisplay()))).mapToInt(d -> d.getBottomRightIncl().columnIndex + 1).max().orElse(1))));
+        keyboardMoveTo(mainWindowActions._test_getVirtualGrid(), targetPos);
+        clickOnItemInBounds(from(TestUtil.fx(() -> mainWindowActions._test_getVirtualGrid().getNode())), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(targetPos, targetPos), MouseButton.PRIMARY);
+        TestUtil.delay(100);
+        clickOn(".id-new-transform");
+        TestUtil.delay(100);
+        clickOn(".id-transform-filter");
+        TestUtil.delay(100);
+        write(original.data().getId().getRaw());
+        push(KeyCode.ENTER);
+        TestUtil.sleep(200);
         // Then enter filter condition.
         // Find numeric column:
         Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> c.getType().isNumber())).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
         // Pick arbitrary value as cut-off:
         @Value Number cutOff = (Number)srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
-
-        // Focus expression editor:
-        push(KeyCode.TAB);
+        
+        push(TestUtil.ctrlCmd(), KeyCode.A);
+        push(KeyCode.DELETE);
         // Select column in auto complete:
         write(srcColumn.getName().getRaw());
         push(KeyCode.TAB);
         write(">");
         write(DataTypeUtility._test_valueToString(cutOff));
+        moveAndDismissPopupsAtPos(point(".ok-button"));
         clickOn(".ok-button");
 
-        TestUtil.sleep(1000);
-        scrollTo(".tableDisplay-transformation .id-tableDisplay-menu-button");
         // Now check output values by getting them from clipboard:
-        clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
+        TestUtil.sleep(500);
+        showContextMenu(".table-display-table-title.transformation-table-title")
+                .clickOn(".id-tableDisplay-menu-copyValues");
         TestUtil.sleep(1000);
         
         assertEquals(new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN)), Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Filter.class).findFirst().get().getFilterExpression());
