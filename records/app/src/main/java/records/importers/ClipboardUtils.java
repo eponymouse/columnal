@@ -2,6 +2,7 @@ package records.importers;
 
 import annotation.qual.Value;
 import annotation.units.TableDataRowIndex;
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
@@ -45,7 +46,7 @@ public class ClipboardUtils
 
     // Returns column-major, i.e. a list of columns
     @OnThread(Tag.FXPlatform)
-    public static Optional<List<Pair<ColumnId, List<@Value Object>>>> loadValuesFromClipboard(TypeManager typeManager)
+    public static Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>> loadValuesFromClipboard(TypeManager typeManager)
     {
         @Nullable Object content = Clipboard.getSystemClipboard().getContent(DATA_FORMAT);
 
@@ -55,7 +56,7 @@ public class ClipboardUtils
         {
             try
             {
-                return Optional.of(Utility.<List<Pair<ColumnId,List<@Value Object>>>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
+                return Optional.of(Utility.<ImmutableList<Pair<ColumnId,List<@Value Object>>>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
             }
             catch (UserException e)
             {
@@ -69,7 +70,7 @@ public class ClipboardUtils
         }
     }
 
-    private static List<Pair<ColumnId, List<@Value Object>>> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
+    private static ImmutableList<Pair<ColumnId, List<@Value Object>>> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
     {
         IsolatedValuesContext ctx = main.isolatedValues();
         // TODO check that units, types match
@@ -86,7 +87,7 @@ public class ClipboardUtils
                 cols.get(i).getSecond().add(DataType.loadSingleItem(colFormat.dataType, p, false));
             }
         });
-        return cols;
+        return ImmutableList.copyOf(cols);
     }
     
     public static class RowRange

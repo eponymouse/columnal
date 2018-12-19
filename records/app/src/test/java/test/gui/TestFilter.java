@@ -1,6 +1,7 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -75,7 +76,10 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         // Now check output values by getting them from clipboard:
         clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
         TestUtil.sleep(1000);
-        Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<List<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        
+        assertEquals(new ComparisonExpression(ImmutableList.of(new ColumnReference(srcColumn.getName(), ColumnReferenceType.CORRESPONDING_ROW), new NumericLiteral(cutOff, null)), ImmutableList.of(ComparisonOperator.GREATER_THAN)), Utility.filterClass(mainWindowActions._test_getTableManager().streamAllTables(), Filter.class).findFirst().get().getFilterExpression());
+                
+        Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<@Value Object> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).collect(Collectors.toList());

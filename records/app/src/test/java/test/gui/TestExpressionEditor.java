@@ -136,7 +136,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             showContextMenu(".table-display-table-title.transformation-table-title")
                 .clickOn(".id-tableDisplay-menu-copyValues");
             TestUtil.sleep(1000);
-            Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<List<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
+            Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.<Optional<ImmutableList<Pair<ColumnId, List<@Value Object>>>>>fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
             assertTrue(clip.isPresent());
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
