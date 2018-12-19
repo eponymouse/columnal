@@ -19,6 +19,7 @@ import records.gui.expressioneditor.UnitLiteralExpressionNode;
 import records.jellytype.JellyUnit;
 import records.typeExp.NumTypeExp;
 import records.typeExp.TypeExp;
+import records.typeExp.units.MutUnitVar;
 import records.typeExp.units.UnitExp;
 import styled.StyledString;
 import utility.Either;
@@ -48,7 +49,7 @@ public class NumericLiteral extends Literal
     public Either<StyledString, TypeExp> checkType(TypeState state) throws InternalException
     {
         if (unit == null)
-            return Either.right(TypeExp.plainNumber(this));
+            return Either.right(new NumTypeExp(this, new UnitExp(new MutUnitVar())));
 
         Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<Either<StyledString, TypeExp>>eitherInt(err -> {
