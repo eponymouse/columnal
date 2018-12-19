@@ -317,7 +317,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     @Test
     public void testInvalidPlus() throws Exception
     {
-        testSimple("@invalidops(2, @unfinished \"+\")");
+        testSimple("@invalidops(2, @unfinished \"+\")", "2+");
     }
 
     @Test
