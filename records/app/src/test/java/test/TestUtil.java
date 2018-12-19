@@ -151,12 +151,16 @@ public class TestUtil
     }
 
     @OnThread(Tag.Any)
-    public static void assertValueListEqual(String prefix, List<@Value Object> a, List<@Value Object> b) throws UserException, InternalException
+    public static void assertValueListEqual(String prefix, List<@Value Object> a, @Nullable List<@Value Object> b) throws UserException, InternalException
     {
-        assertEquals(prefix + " list size", a.size(), b.size());
-        for (int i = 0; i < a.size(); i++)
+        assertNotNull(prefix + " not null", b);
+        if (b != null)
         {
-            assertValueEqual(prefix, a.get(i), b.get(i));
+            assertEquals(prefix + " list size", a.size(), b.size());
+            for (int i = 0; i < a.size(); i++)
+            {
+                assertValueEqual(prefix, a.get(i), b.get(i));
+            }
         }
     }
 

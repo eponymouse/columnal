@@ -83,6 +83,6 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<@Value Object> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).collect(Collectors.toList());
-        TestUtil.assertValueListEqual("Filtered", expected, clip.get().get(0).getSecond());
+        TestUtil.assertValueListEqual("Filtered", expected, Utility.pairListToMap(clip.get()).get(srcColumn.getName()));
     }
 }
