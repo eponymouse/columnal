@@ -231,6 +231,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         
         assertEquals(expression, plainEntry(plainEntry));
     }
+
+    @Test
+    public void testGreaterMinus() throws Exception
+    {
+        testSimple("2>-1");
+    }
     
     @Test
     public void testTuple() throws Exception

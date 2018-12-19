@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import com.sun.javafx.scene.control.skin.TextFieldSkin;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
@@ -314,13 +315,26 @@ public class AutoComplete<C extends Completion> extends PopupControl
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
             Log.debug("Checking alphabet: [[" + text + "]]");
-            if (codepoints.length >= 1 && inNextAlphabet.differentAlphabet(new String(codepoints, 0, codepoints.length - 1), codepoints[codepoints.length - 1]))
+            String withoutLast = new String(codepoints, 0, codepoints.length - 1);
+            int last = codepoints[codepoints.length - 1];
+            ImmutableList<C> completionWithoutLast = ImmutableList.of();
+            try
             {
-                int last = codepoints[codepoints.length - 1];
-                String withoutLast = new String(codepoints, 0, codepoints.length - 1);
+                completionWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.CONTINUED_ENTRY).collect(ImmutableList.toImmutableList());
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+            }
+            if (codepoints.length >= 1 && 
+                (inNextAlphabet.differentAlphabet(withoutLast, last)
+                    || (completionWithoutLast.stream().allMatch(c -> !c.features(withoutLast, last))
+                            && completionWithoutLast.stream().anyMatch(c -> c.shouldShow(withoutLast) == ShowStatus.DIRECT_MATCH))
+                ))
+            {
                 try
                 {
-                    if (withoutLast != null && !available.stream().anyMatch(c -> c.features(withoutLast, last)))
+                    if (!available.stream().anyMatch(c -> c.features(withoutLast, last)))
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
@@ -367,7 +381,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     instruction.hide();
                     return change;
                 }
-                else if (completionAction == ShowStatus.START_DIRECT_MATCH || completionAction == ShowStatus.PHANTOM || (settingContentDirectly && completionAction == ShowStatus.DIRECT_MATCH))
+                else if (completionAction == ShowStatus.START_DIRECT_MATCH || completionAction == ShowStatus.PHANTOM || completionAction == ShowStatus.DIRECT_MATCH)
                 {
                     // Select it, at least:
                     if (!haveSelected)
