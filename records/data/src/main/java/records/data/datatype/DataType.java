@@ -875,7 +875,9 @@ public class DataType implements StyledShowable
     @Pure
     public boolean hasNumber()
     {
-        return isNumber() || (tagTypes != null && tagTypes.stream().anyMatch(tt -> tt.getInner() != null && tt.getInner().hasNumber()));
+        return isNumber()
+            || (tagTypes != null && tagTypes.stream().anyMatch(tt -> tt.getInner() != null && tt.getInner().hasNumber()))
+            || (memberType != null && memberType.stream().anyMatch(DataType::hasNumber));
     }
 
     @Pure
