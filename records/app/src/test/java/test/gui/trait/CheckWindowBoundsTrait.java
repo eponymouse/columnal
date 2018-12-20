@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
@@ -15,7 +15,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 
-public interface CheckWindowBounds extends FxRobotInterface
+public interface CheckWindowBoundsTrait extends FxRobotInterface
 {
     @OnThread(Tag.Any)
     public default void checkWindowWithinScreen()

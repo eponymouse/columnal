@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
@@ -6,7 +6,6 @@ import javafx.stage.Window;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
-import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;

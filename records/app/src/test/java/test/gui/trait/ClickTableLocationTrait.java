@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;

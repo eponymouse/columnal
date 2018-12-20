@@ -1,14 +1,11 @@
 package test.gui;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.stage.Stage;
 import org.junit.runner.RunWith;
-import org.testfx.framework.junit.ApplicationTest;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
@@ -23,12 +20,13 @@ import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
+import test.gui.trait.CheckCSVTrait;
+import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,15 +1,11 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseButton;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
-import records.data.CellPosition;
-import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.error.UserException;

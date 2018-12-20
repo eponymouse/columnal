@@ -1,17 +1,14 @@
-package test.gui;
+package test.gui.trait;
 
-import com.google.common.collect.Streams;
 import javafx.scene.Node;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
-import javafx.stage.Window;
 import org.apache.commons.lang3.SystemUtils;
 import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
+import test.gui.trait.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
 

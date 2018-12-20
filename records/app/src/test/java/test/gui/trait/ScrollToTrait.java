@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;

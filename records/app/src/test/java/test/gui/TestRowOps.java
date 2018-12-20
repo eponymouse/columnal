@@ -44,6 +44,8 @@ import test.gen.GenExpressionValueForwards;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
+import test.gui.trait.CheckCSVTrait;
+import test.gui.trait.ClickOnTableHeaderTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;

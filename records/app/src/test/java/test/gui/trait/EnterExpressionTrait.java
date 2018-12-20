@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import com.google.common.collect.ImmutableList;
 import javafx.scene.input.KeyCode;

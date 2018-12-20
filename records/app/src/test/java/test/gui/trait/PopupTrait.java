@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;

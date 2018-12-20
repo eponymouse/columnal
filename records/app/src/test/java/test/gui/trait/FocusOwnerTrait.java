@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import javafx.scene.Node;
 import javafx.stage.Stage;

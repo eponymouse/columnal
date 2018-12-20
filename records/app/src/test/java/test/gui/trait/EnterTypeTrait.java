@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import org.testfx.api.FxRobotInterface;
 import records.error.InternalException;

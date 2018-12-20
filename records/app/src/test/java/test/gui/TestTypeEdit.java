@@ -1,38 +1,26 @@
 package test.gui;
 
-import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Orientation;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.TableCell;
 import javafx.scene.input.KeyCode;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.assertj.core.internal.bytebuddy.description.type.TypeDefinition;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
-import org.sosy_lab.common.rationals.Rational;
-import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.NodeQueryUtils;
-import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
-import records.data.unit.UnitDeclaration;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -46,11 +34,13 @@ import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTaggedTypeDefinition;
-import test.gen.GenUnitDefinition;
+import test.gui.trait.CheckWindowBoundsTrait;
+import test.gui.trait.EnterTypeTrait;
+import test.gui.trait.ScrollToTrait;
+import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.Comparator;
@@ -62,7 +52,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBounds, ScrollToTrait
+public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, EnterTypeTrait, CheckWindowBoundsTrait, ScrollToTrait
 {    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)

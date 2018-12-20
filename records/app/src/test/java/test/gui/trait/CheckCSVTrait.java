@@ -1,29 +1,22 @@
-package test.gui;
+package test.gui.trait;
 
 import com.google.common.primitives.Ints;
-import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.testfx.api.FxRobotInterface;
-import org.testfx.service.query.NodeQuery;
 import org.testfx.util.WaitForAsyncUtils;
-import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.TableDisplay;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
-import utility.Workers;
 
 import java.io.File;
 import java.io.IOException;

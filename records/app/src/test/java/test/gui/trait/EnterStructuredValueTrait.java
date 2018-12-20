@@ -1,4 +1,4 @@
-package test.gui;
+package test.gui.trait;
 
 import annotation.qual.Value;
 import javafx.beans.value.ChangeListener;

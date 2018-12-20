@@ -27,7 +27,7 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import test.TestUtil;
-import test.gui.FocusOwnerTrait;
+import test.gui.trait.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;

@@ -1,17 +1,12 @@
 package test.gui;
 
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Region;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 import log.Log;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
-import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
 import records.data.ColumnId;
 import records.data.EditableColumn;
@@ -19,31 +14,28 @@ import records.data.EditableRecordSet;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
-import records.data.TableManager;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.gui.MainWindow.MainWindowActions;
-import records.gui.expressioneditor.ExpressionEditor;
 import records.gui.expressioneditor.TopLevelEditor;
 import records.gui.expressioneditor.TopLevelEditor.TopLevelEditorFlowPane;
 import records.gui.grid.RectangleBounds;
-import records.transformations.TransformationInfo;
 import test.TestUtil;
+import test.gui.trait.ClickTableLocationTrait;
+import test.gui.trait.FocusOwnerTrait;
+import test.gui.trait.ListUtilTrait;
+import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
