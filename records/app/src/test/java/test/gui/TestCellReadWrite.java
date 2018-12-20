@@ -78,6 +78,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
+            // Need to wait for hop to simulation thread and back:
+            TestUtil.delay(2000);
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             String valueFromData = DataTypeUtility.valueToString(columnDTV, columnDTV.getCollapsed(row), null);
@@ -119,12 +121,14 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             Log.debug("Making value for type " + columnDTV);
             @Value Object value = valueGenerator.makeValue(table.getData().getColumns().get(column).getType());
             DataEntryUtil.enterValue(this, r, columnDTV, value, false);
-            push(KeyCode.ENTER);
+            push(KeyCode.ESCAPE);
 
             Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + target);
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
+            // Need to wait for hop to simulation thread and back:
+            TestUtil.delay(10000);
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             
             String valueEntered = DataTypeUtility.valueToString(columnDTV, value, null);
@@ -137,6 +141,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             keyboardMoveTo(virtualGrid, target);
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
+            // Need to wait for hop to simulation thread and back:
+            TestUtil.delay(2000);
             String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
             assertEquals(written, copiedFromTable);
         });
