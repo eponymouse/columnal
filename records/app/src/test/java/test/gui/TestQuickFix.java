@@ -3,6 +3,7 @@ package test.gui;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
@@ -53,6 +54,7 @@ import javax.swing.plaf.TextUI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -80,67 +82,67 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
     @Test
     public void testUnitLiteralFix1()
     {
-        testFix("ACC1+6", "6", "", "@column ACC1 + 6{m/s^2}");
+        testFix("ACC1+6{1}", "6", "", "@column ACC1 + 6{m/s^2}");
     }
 
     @Test
     public void testUnitLiteralFix1B()
     {
-        testFix("6-ACC1", "6", "", "6{m/s^2} - @column ACC1");
+        testFix("6{1}-ACC1", "6", "", "6{m/s^2} - @column ACC1");
     }
 
     @Test
     public void testUnitLiteralFix2()
     {
-        testFix("ACC1>6>ACC3", "6", "", "@column ACC1 > 6{m/s^2} > @column ACC3");
+        testFix("ACC1>6{1}>ACC3", "6", "", "@column ACC1 > 6{m/s^2} > @column ACC3");
     }
 
     @Test
     public void testUnitLiteralFix3()
     {
-        testFix("ACC1<>103", "103", "", "@column ACC1 <> 103{m/s^2}");
+        testFix("ACC1<>103{m/s}", "103", "", "@column ACC1 <> 103{m/s^2}");
     }
 
     @Test
     public void testUnitLiteralFix3B()
     {
-        testFix("ACC1=103", "103", "", "@column ACC1 = 103{m/s^2}");
+        testFix("ACC1=103{1}", "103", "", "@column ACC1 = 103{m/s^2}");
     }
 
     @Test
     public void testUnitLiteralFix4()
     {
-        testFix("@ifACC1=ACC2=32@then2@else7+6@endif", "32", "", "@if (@column ACC1 = @column ACC2 = 32{m/s^2}) @then 2 @else (7 + 6) @endif");
+        testFix("@ifACC1=ACC2=32{1}@then2@else7+6@endif", "32", "", "@if (@column ACC1 = @column ACC2 = 32{m/s^2}) @then 2 @else (7 + 6) @endif");
     }
 
     @Test
     public void testUnitLiteralFix5()
     {
-        testFix("@matchACC1@case3@then5@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 5 @endmatch");
+        testFix("@matchACC1@case3{1}@then5@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 5 @endmatch");
     }
 
     @Test
     public void testUnitLiteralFix6()
     {
-        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12 @orcase 14 @then 63 @endmatch");
+        testFix("@matchACC1@case3{1}@then52@case12{1}@orcase14{1}@then63@endmatch", "3", "", "@match @column ACC1 @case 3{m/s^2} @then 52 @case 12{1} @orcase 14{1} @then 63 @endmatch");
     }
 
     @Test
     public void testUnitLiteralFix6B()
     {
-        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "12", "", "@match @column ACC1 @case 3 @then 52 @case 12{m/s^2} @orcase 14 @then 63 @endmatch");
+        testFix("@matchACC1@case3{1}@then52@case12{1}@orcase14{1}@then63@endmatch", "12", "", "@match @column ACC1 @case 3{1} @then 52 @case 12{m/s^2} @orcase 14{1} @then 63 @endmatch");
     }
 
     @Test
     public void testUnitLiteralFix6C()
     {
-        testFix("@matchACC1@case3@then52@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 3 @then 52 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
+        testFix("@matchACC1@case3{1}@then52@case12{1}@orcase14{1}@then63@endmatch", "14", "", "@match @column ACC1 @case 3{1} @then 52 @case 12{1} @orcase 14{m/s^2} @then 63 @endmatch");
     }
 
     @Test
     public void testUnitLiteralFix6D()
     {
-            testFix("@matchACC1@case12@orcase14@then63@endmatch", "14", "", "@match @column ACC1 @case 12 @orcase 14{m/s^2} @then 63 @endmatch");
+            testFix("@matchACC1@case12{1}@orcase14{1}@then63@endmatch", "14", "", "@match @column ACC1 @case 12{1} @orcase 14{m/s^2} @then 63 @endmatch");
     }
 
     @Test
@@ -312,16 +314,20 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
             @NonNull Node targetFinal = targetField;
             if (!TestUtil.fx(() -> targetFinal.isFocused()))
             {
+                TestUtil.fx_(() -> dumpScreenshot());
                 Log.debug("Focusing target field: " + targetFinal);
                 scrollTo(targetField);
                 // Get rid of any popups in the way:
                 moveAndDismissPopupsAtPos(point(targetField));
-                clickOn();
+                clickOn(targetField);
                 // Note that the field may not get focus if
                 // if is a keyword, but the blank next to it
                 // should get focused.
                 if (Character.isLetterOrDigit(fixFieldContent.codePointAt(0)))
-                    assertTrue(TestUtil.fx(() -> targetField.isFocused()));
+                {
+                    boolean focused = TestUtil.fx(() -> targetField.isFocused());
+                    assertTrue("Focus owner is: " + TestUtil.fx(() -> Optional.ofNullable(fxGetRealFocusedWindow().getScene()).map(Scene::getFocusOwner)).orElse(null), focused);
+                }
             }
             TestUtil.delay(500);
             List<Window> windows = listWindows();
