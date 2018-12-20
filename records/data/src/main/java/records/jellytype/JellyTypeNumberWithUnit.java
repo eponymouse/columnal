@@ -56,12 +56,9 @@ class JellyTypeNumberWithUnit extends JellyType
     public void save(OutputBuilder output)
     {
         output.t(FormatParser.NUMBER, FormatParser.VOCABULARY);
-        if (!unit.isScalar())
-        {
-            output.raw("{");
-            unit.save(output);
-            output.raw("}");
-        }
+        output.raw("{");
+        unit.save(output);
+        output.raw("}");
     }
 
     @Override

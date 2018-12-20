@@ -34,7 +34,7 @@ public class NumberTypeExpression extends TypeExpression
     @Override
     public String save(boolean structured, TableAndColumnRenames renames)
     {
-        if (unitExpression == null || unitExpression.isEmpty() || unitExpression.isScalar())
+        if (unitExpression == null || unitExpression.isEmpty())
             return "Number";
         else
             return "Number {" + unitExpression.save(structured, true) + "}"; 
@@ -105,9 +105,7 @@ public class NumberTypeExpression extends TypeExpression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NumberTypeExpression that = (NumberTypeExpression) o;
-        return Objects.equals(unitExpression, that.unitExpression)
-            || (unitExpression == null && that.unitExpression != null && that.unitExpression.isScalar())
-            || (that.unitExpression == null && unitExpression != null && unitExpression.isScalar());
+        return Objects.equals(unitExpression, that.unitExpression);
     }
 
     @Override
