@@ -1,5 +1,6 @@
 package test.gui;
 
+import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.HorizontalDirection;
 import javafx.geometry.VerticalDirection;
@@ -64,33 +65,46 @@ public interface ScrollToTrait extends FxRobotInterface
             fail("Could not find enclosing scroll pane");
         }
 
-        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.getContent().localToScreen(enclosingScroll.getContent().getBoundsInLocal()));
+        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.getContent().localToScreen(enclosingScroll.getBoundsInLocal()));
         // Move, ready for potentially scrolling:
         moveTo(viewBounds.getMinX() + 2, viewBounds.getMinY() + 2);
         // We limit how many times we will scroll, to avoid an infinite loop in case of test failure:
         for (int i = 0;i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxX()) > viewBounds.getMaxX(); i++)
         {
             System.out.println("Scrolling RIGHT");
-            clickOrScroll(enclosingScroll, ".scroll-bar:horizontal > .increment-button", () -> scroll(HorizontalDirection.RIGHT));
+            clickOrScroll(
+                from(enclosingScroll)
+                .lookup(".scroll-bar")
+                .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("horizontal"))))
+                .lookup(".increment-button"), () -> scroll(HorizontalDirection.RIGHT));
             //scroll(HorizontalDirection.RIGHT);
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinX()) < viewBounds.getMinX(); i++)
         {
             System.out.println("Scrolling LEFT");
-            clickOrScroll(enclosingScroll, ".scroll-bar:horizontal > .decrement-button", () -> scroll(HorizontalDirection.LEFT));
+            clickOrScroll(from(enclosingScroll)
+                    .lookup(".scroll-bar")
+                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("horizontal"))))
+                    .lookup(".decrement-button"), () -> scroll(HorizontalDirection.LEFT));
             //scroll(HorizontalDirection.LEFT);
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMaxY()) > viewBounds.getMaxY(); i++)
         {
             System.out.println("Scrolling DOWN");
             //scroll(VerticalDirection.DOWN);
-            clickOrScroll(enclosingScroll, ".scroll-bar:vertical > .increment-button", () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
+            clickOrScroll(from(enclosingScroll)
+                    .lookup(".scroll-bar")
+                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("vertical"))))
+                    .lookup(".increment-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY()) < viewBounds.getMinY(); i++)
         {
             System.out.println("Scrolling UP");
             //scroll(VerticalDirection.UP);
-            clickOrScroll(enclosingScroll, ".scroll-bar:vertical > .decrement-button", () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
+            clickOrScroll(from(enclosingScroll)
+                    .lookup(".scroll-bar")
+                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("vertical"))))
+                    .lookup(".decrement-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
         }
         Bounds targetScreenBounds = TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
         assertTrue("View bounds: " + viewBounds + " target: " + targetScreenBounds, viewBounds.contains(targetScreenBounds));
@@ -124,9 +138,9 @@ public interface ScrollToTrait extends FxRobotInterface
     
     // Ideally, will be private in later Java:
     @OnThread(Tag.Any)
-    default public void clickOrScroll(ScrollPane scrollPane, String nodeQuery, Runnable scroll)
+    default public void clickOrScroll(NodeQuery nodeQuery, Runnable scroll)
     {
-        Node scrollButton = from(scrollPane).lookup(nodeQuery).tryQuery().orElse(null);
+        Node scrollButton = nodeQuery.tryQuery().orElse(null);
         if (scrollButton != null)
             clickOn(scrollButton, MouseButton.PRIMARY);
         else
