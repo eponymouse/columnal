@@ -106,7 +106,7 @@ import static org.junit.Assume.assumeThat;
 /**
  * Created by neil on 19/06/2017.
  */
-@SuppressWarnings({"deprecation", "nullness"}) // nullness because of int[] vararg
+@SuppressWarnings("deprecation")
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
 public class TestStructuredTextField extends FXApplicationTest
@@ -164,9 +164,9 @@ public class TestStructuredTextField extends FXApplicationTest
         assertEquals("2034-10-29", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
                 new int[] {0, 1, 2},
-                null,
+                nul(),
                 new int[] {3, 4, 5},
-                null,
+                nul(),
                 new int[] {6, 7, 8, 9, 10}
         );
 
@@ -174,15 +174,15 @@ public class TestStructuredTextField extends FXApplicationTest
         assertEquals("2034-10-29 13:56:22", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1, 2},
-            null,
+            nul(),
             new int[] {3, 4, 5},
-            null,
+            nul(),
             new int[] {6, 7, 8, 9, 10},
-            null,
+            nul(),
             new int[] {11, 12, 13},
-            null,
+            nul(),
             new int[] {14, 15, 16},
-            null,
+            nul(),
             new int[] {17, 18, 19}
         );
 
@@ -197,9 +197,9 @@ public class TestStructuredTextField extends FXApplicationTest
         assertEquals("1/Month/1900", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1},
-            null,
+            nul(),
             new int[] {2},
-            null,
+            nul(),
             new int[] {8, 9, 10, 11, 12}
         );
 
@@ -210,9 +210,9 @@ public class TestStructuredTextField extends FXApplicationTest
         assertEquals("Day/Month/Year", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0},
-            null,
+            nul(),
             new int[] {4},
-            null,
+            nul(),
             new int[] {10}
         );
 
@@ -223,17 +223,24 @@ public class TestStructuredTextField extends FXApplicationTest
         assertEquals("Day/Month/Year Hour:Minute:Second", TestUtil.fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0},
-            null,
+            nul(),
             new int[] {4},
-            null,
+            nul(),
             new int[] {10},
-            null,
+            nul(),
             new int[] {15},
-            null,
+            nul(),
             new int[] {20},
-            null,
+            nul(),
             new int[] {27}
         );
+    }
+
+    // Shorthand for null that is ignored by the checker:
+    @SuppressWarnings("nullness")
+    private int[] nul()
+    {
+        return null;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -895,7 +902,9 @@ public class TestStructuredTextField extends FXApplicationTest
         // Tried using the :filled pseudo-class here but that didn't seem to work:
         Set<STFAutoCompleteCell> items = lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> TestUtil.fx(() -> !c.isEmpty())).queryAll();
         assertEquals(2, items.size());
-        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> TestUtil.fx(() -> c.getItem()).suggestion).sorted().collect(Collectors.toList()));
+        @SuppressWarnings("nullness")
+        List<String> completions = items.stream().map(c -> TestUtil.fx(() -> c.getItem()).suggestion).sorted().collect(Collectors.toList());
+        assertEquals(Arrays.asList("false", "true"), completions);
         assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> TestUtil.fx(() -> c.getText())).sorted().collect(Collectors.toList()));
 
         pushSelectAll();
@@ -908,6 +917,7 @@ public class TestStructuredTextField extends FXApplicationTest
         pushSelectAll();
         push(KeyCode.DELETE);
         type("", "$");
+        @SuppressWarnings("nullness")
         STFAutoCompleteCell autoSuggestTrue = lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>) ((STFAutoCompleteCell c) -> TestUtil.fx(() -> !c.isEmpty() && "true".equals(c.getItem().suggestion)))).<STFAutoCompleteCell>query();
         assertNotNull(autoSuggestTrue);
         clickOn(autoSuggestTrue);
@@ -953,6 +963,7 @@ public class TestStructuredTextField extends FXApplicationTest
             {
                 @Override
                 @OnThread(Tag.Simulation)
+                @SuppressWarnings("nullness")
                 public String get() throws InternalException, UserException
                 {
                     return DataTypeUtility.valueToString(tag.getInner(), value.getInner(), taggedTypeAndValueGen.getType());
@@ -1267,9 +1278,10 @@ public class TestStructuredTextField extends FXApplicationTest
         if (endEditAndCompareTo != null)
         {
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
+            @SuppressWarnings("nullness")
             EditorKit<?> ed = TestUtil.fx(() -> f.get().getEditorKit());
-            @SuppressWarnings("value")
-            @Value Object value = TestUtil.fx(() -> ed.getLastCompletedValue());
+            @SuppressWarnings({"value", "nullness"})
+            @NonNull @Value Object value = TestUtil.fx(() -> ed.getLastCompletedValue());
             @SuppressWarnings("value")
             @Value Object eeco = endEditAndCompareTo;
             Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {
