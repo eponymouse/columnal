@@ -73,7 +73,7 @@ public class NumberEntry extends TerminalComponent<@Value Number>
 
     public Item makeIntegerComponent(@UnknownInitialization(TerminalComponent.class) NumberEntry this, String intPart)
     {
-        return new Item(getItemParents(), intPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int");
+        return new Item(getItemParents(), intPart, ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("")).withStyleClasses("stf-number-int");
     }
 
     @Override
