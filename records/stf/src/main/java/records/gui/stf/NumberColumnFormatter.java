@@ -127,7 +127,7 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private void updateDisplay()
         {
             //Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
-            if (numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
+            if (!structuredTextField.isFocused() && numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
                 structuredTextField.updateFromEditorKit();
             /*
             List<String> dotStyle = new ArrayList<>();
