@@ -116,7 +116,7 @@ public class StructuredTextField extends StyleClassedTextArea
         */
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            if (editorKit == null || editorKit.store == null)
+            if (editorKit == null)
                 return;
 
             StructuredTextField usFocused = FXUtility.focused(this);
