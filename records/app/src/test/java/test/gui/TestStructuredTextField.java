@@ -3,6 +3,8 @@ package test.gui;
 import annotation.qual.Value;
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -23,6 +25,7 @@ import javafx.stage.Stage;
 import log.Log;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
@@ -42,7 +45,10 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -59,6 +65,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformSupplier;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
@@ -74,33 +81,20 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
 
 /**
@@ -1303,5 +1297,319 @@ public class TestStructuredTextField extends FXApplicationTest
                 fail(e.getLocalizedMessage());
             }
         }
+    }
+    
+    @OnThread(Tag.Any)
+    private static class DeleteInfo
+    {
+        private final int deleteLeft;
+        private final Either<Supplier<String>, String> contentAfter;
+        private final int caretAfter;
+
+        private DeleteInfo(int deleteLeft, String contentAfter, int caretAfter)
+        {
+            this.deleteLeft = deleteLeft;
+            this.contentAfter = Either.right(contentAfter);
+            this.caretAfter = caretAfter;
+        }
+
+        private DeleteInfo(int deleteLeft, Supplier<String> contentAfter, int caretAfter)
+        {
+            this.deleteLeft = deleteLeft;
+            this.contentAfter = Either.left(contentAfter);
+            this.caretAfter = caretAfter;
+        }
+
+        public String getContentAfter()
+        {
+            return contentAfter.either(Supplier::get, Functions.identity());
+        }
+
+        public DeleteInfo withPrefix(int deleteBefore, String beforeContent, String after, int posBefore)
+        {
+            return contentAfter.either(
+                ss -> new DeleteInfo(deleteLeft + deleteBefore, () -> beforeContent + ss.get() + after, posBefore + caretAfter),
+                s -> new DeleteInfo(deleteLeft + deleteBefore, beforeContent + s + after, posBefore + caretAfter)
+            );
+        }
+    }
+
+    @Property(trials=10)
+    @OnThread(Tag.Simulation)
+    public void testPartialDelete(@When(seed=1L) @From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    {
+        @Value Object value = typeAndValueGen.makeValue();
+        List<DeleteInfo> possibleDeletes = calcDeletes(typeAndValueGen.getType(), value);
+        for (DeleteInfo possibleDelete : possibleDeletes)
+        {
+            TestUtil.fx_(() -> f.set(field(typeAndValueGen.getType(), value)));
+            String original = TestUtil.fx(() -> f.get().getText());
+            targetF();
+            TestUtil.fx_(() -> f.get().moveTo(0));
+            press(KeyCode.SHIFT);
+            for (int i = 0; i < possibleDelete.deleteLeft; i++)
+            {
+                push(KeyCode.RIGHT);
+            }
+            release(KeyCode.SHIFT);
+            // Backspace not delete, so that we delete nothing if at beginning
+            // and nothing selected:
+            push(KeyCode.BACK_SPACE);
+            assertEquals("Deleting " + possibleDelete.deleteLeft + " from {{{" + original + "}}}", possibleDelete.getContentAfter(), TestUtil.fx(() -> f.get().getText()));
+            // Not totally sure about where cursor should end up
+            // when deleting selection involving undeletable part:
+            //assertEquals("Deleting " + possibleDelete.deleteLeft + " from {{{" + original + "}}} to get {{{" + possibleDelete.getContentAfter() + "}}}", possibleDelete.caretAfter, (int)TestUtil.<Integer>fx(() -> f.get().getCaretPosition()));
+        }
+    }
+
+    // The first item in the list is always what happens if you
+    // delete nothing.
+    // The last item in the list is always what happens if you delete
+    // the whole lot.
+    @OnThread(Tag.Simulation)
+    private List<DeleteInfo> calcDeletes(DataType type, @Value Object value) throws InternalException, UserException
+    {
+        return type.fromCollapsed((i, prog) -> value).applyGet(new DataTypeVisitorGetEx<List<DeleteInfo>, UserException>()
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<DeleteInfo> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            {
+                return standard(Utility.numberToString(g.get(0)), "Number");
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<DeleteInfo> text(GetValue<@Value String> g) throws InternalException, UserException
+            {
+                String s = g.get(0);
+                ArrayList<DeleteInfo> deleteInfos = new ArrayList<>(s.length() + 2);
+                deleteInfos.add(new DeleteInfo(0, "\"" + s + "\"", 0));
+                int index;
+                for (index = 0; index < s.length(); index = s.offsetByCodePoints(index, 1))
+                {
+                    deleteInfos.add(new DeleteInfo(1 + index, "\"" + s.substring(index) + "\"", 1));
+                }
+                deleteInfos.add(new DeleteInfo(2 + index, "\"\"", 2));
+                return deleteInfos;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<DeleteInfo> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
+            {
+                return standard(Boolean.toString(g.get(0)), "");
+            }
+
+            @Override
+            public List<DeleteInfo> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
+            {
+                TemporalAccessor t = (TemporalAccessor)value;
+                ArrayList<String> contentChunks = new ArrayList<>();
+                ArrayList<String> prompts = new ArrayList<>();
+                ArrayList<String> dividers = new ArrayList<>();
+                if (dateTimeInfo.getType().hasYearMonth())
+                {
+                    contentChunks.add(String.format("%04d", t.get(ChronoField.YEAR)));
+                    prompts.add("Year");
+                    dividers.add("-");
+                    contentChunks.add(String.format("%02d", t.get(ChronoField.MONTH_OF_YEAR)));
+                    prompts.add("Month");
+                    if (dateTimeInfo.getType().hasDay())
+                    {
+                        dividers.add("-");
+                        contentChunks.add(String.format("%02d", t.get(ChronoField.DAY_OF_MONTH)));
+                        prompts.add("Day");
+                    }
+                    if (dateTimeInfo.getType().hasTime())
+                        dividers.add(" ");
+                }
+                if (dateTimeInfo.getType().hasTime())
+                {
+                    contentChunks.add(String.format("%02d", t.get(ChronoField.HOUR_OF_DAY)));
+                    prompts.add("Hour");
+                    dividers.add(":");
+                    contentChunks.add(String.format("%02d", t.get(ChronoField.MINUTE_OF_HOUR)));
+                    prompts.add("Minute");
+                    dividers.add(":");
+                    int nano = t.get(ChronoField.NANO_OF_SECOND);
+                    String secs = String.format("%02d", t.get(ChronoField.SECOND_OF_MINUTE)) + (nano == 0 ? "" : ".") + String.format("%09d", nano).replaceAll("0*$", "");
+                    contentChunks.add(secs);
+                    prompts.add("Second");
+                }
+                if (dateTimeInfo.getType().hasZoneId())
+                {
+                    ZoneId zone = ((ZonedDateTime) t).getZone();
+                    dividers.add(" ");
+                    contentChunks.add(zone.getId());
+                    prompts.add("Zone");
+                }
+                
+                LinkedList<DeleteInfo> deleteInfos = new LinkedList<>();
+                String after = "";
+
+                for (int i = contentChunks.size() - 1; i >= 0; i--)
+                {
+                    int beforeCount = dividers.subList(0, i).stream().mapToInt(String::length).sum() + contentChunks.subList(0, i).stream().mapToInt(String::length).sum();
+                    // If we delete everything up to here, we'll only have prompts and dividers
+                    StringBuilder before = new StringBuilder();
+                    for (int j = 0; j < i; j++)
+                    {
+                        before.append(prompts.get(j));
+                        before.append(dividers.get(j));
+                    }
+                    
+                    String chunk = contentChunks.get(i);
+
+                    // Delete-all must be last only for last item:
+                    DeleteInfo deleteAll = new DeleteInfo(beforeCount + chunk.length(), before + prompts.get(i) + after, before.length() + prompts.get(i).length());
+                    if (i == contentChunks.size() - 1)
+                        deleteInfos.addLast(deleteAll);
+                    else
+                        deleteInfos.addFirst(deleteAll);
+                    
+                    for (int c = 0; c < chunk.length() - 1; c++)
+                    {
+                        deleteInfos.addFirst(new DeleteInfo(beforeCount + c, before.toString() + chunk.substring(c) + after, before.length() + c));
+                    }
+                    
+                    
+                    after = ((i - 1 < dividers.size() && i != 0) ? dividers.get(i - 1) : "") + chunk + after;
+                }
+                
+                // Delete nothing:
+                deleteInfos.addFirst(new DeleteInfo(0, after, 0));
+                
+                return deleteInfos;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<DeleteInfo> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                TagType<DataTypeValue> tt = tagTypes.get(g.get(0));
+                String tag = tt.getName();
+                
+                ArrayList<DeleteInfo> deleteInfos = new ArrayList<>();
+                
+                @Nullable List<DeleteInfo> content = tt.getInner() == null ? null : calcDeletes(tt.getInner(), tt.getInner().getCollapsed(0));
+                
+                for (int index = 0; index < tag.length(); index = tag.offsetByCodePoints(index, 1))
+                {
+                    deleteInfos.add(new DeleteInfo(index, tag.substring(index) + (content == null ? "" : "(" + content.get(0).getContentAfter() + ")"), 0));
+                }
+                
+                // Deleting whole tag will be prefixing the delete-nothing
+                // tag with whole delete
+                
+                if (content != null)
+                {
+                    deleteInfos.addAll(Utility.mapListEx(content, d -> d.withPrefix(tag.length() + 1, tag + "(", ")", 1)));
+                }
+                else
+                {
+                    deleteInfos.add(new DeleteInfo(tag.length(), "Tag", 0));
+                }
+                
+                return deleteInfos;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<DeleteInfo> tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
+            {
+                List<DeleteInfo> r = new ArrayList<>();
+                List<List<DeleteInfo>> itemDeletes = Utility.mapListEx(types, t -> calcDeletes(t, t.getCollapsed(0)));
+                
+                // Delete nothing:
+                r.add(new DeleteInfo(0, "(" + itemDeletes.stream().map(l -> l.get(0).getContentAfter()).collect(Collectors.joining(",")) + ")", 0));
+                
+                StringBuilder prevGone = new StringBuilder("(");
+                int latestPos = 1;
+                int deletePrev = 1;
+                for (int i = 0; i < itemDeletes.size(); i++)
+                {
+                    if (i > 0)
+                    {
+                        latestPos += 1; // for the comma
+                        deletePrev += 1;
+                        prevGone.append(",");
+                    }
+                    String after = itemDeletes.stream().skip(i + 1).map(d -> "," + d.get(0).getContentAfter()).collect(Collectors.joining()) + ")";
+                    for (DeleteInfo possible : itemDeletes.get(i))
+                    {
+                        r.add(possible.withPrefix(deletePrev, prevGone.toString(), after, latestPos));
+                    }
+                    DeleteInfo deleteAll = itemDeletes.get(i).get(itemDeletes.get(i).size() - 1);
+                    latestPos += deleteAll.caretAfter;
+                    deletePrev += deleteAll.deleteLeft;
+                    prevGone.append(deleteAll.getContentAfter());
+                }
+                r.add(new DeleteInfo(deletePrev + 1, prevGone.toString() + ")", latestPos + 1));
+                return r;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public List<DeleteInfo> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            {
+                assertNotNull(inner);
+                @SuppressWarnings("nullness")
+                @NonNull DataType innerNN = inner;
+
+                Pair<Integer, DataTypeValue> array = g.get(0);
+
+                List<DeleteInfo> r = new ArrayList<>();
+                List<List<DeleteInfo>> itemDeletes =
+                        new ArrayList<>();
+                for (int arrayIndex = 0; arrayIndex < array.getFirst(); arrayIndex++)
+                {
+                    @Value Object collapsed = array.getSecond().getCollapsed(arrayIndex);
+                    itemDeletes.add(calcDeletes(innerNN, collapsed));
+                }
+
+                // Delete nothing:
+                r.add(new DeleteInfo(0, "[" + itemDeletes.stream().map(l -> l.get(0).getContentAfter()).collect(Collectors.joining(",")) + "]", 0));
+                
+                int latestPos = 1;
+                int deletePrev = 1;
+                for (int i = 0; i < itemDeletes.size(); i++)
+                {
+                    if (i > 0)
+                    {
+                        latestPos += 1; // for the comma
+                        deletePrev += 1;
+                    }
+                    String after = itemDeletes.stream().skip(i + 1).map(d -> "," + d.get(0).getContentAfter()).collect(Collectors.joining()) + "]";
+                    List<DeleteInfo> itemDeletePoss = itemDeletes.get(i);
+                    for (int possIndex = 0; possIndex < itemDeletePoss.size(); possIndex++)
+                    {
+                        DeleteInfo possible = itemDeletePoss.get(possIndex);
+                        // Don't test delete-all here if it is last item in the list:
+                        if (possIndex < itemDeletePoss.size() - 1 || i < itemDeletes.size() - 1)
+                            r.add(possible.withPrefix(deletePrev, "[", after, latestPos));
+                    }
+                    DeleteInfo deleteAll = itemDeletePoss.get(itemDeletePoss.size() - 1);
+                    deletePrev += deleteAll.deleteLeft;
+                }
+                // Delete everything:
+                r.add(new DeleteInfo(deletePrev + 1, "[]", 2));
+                return r;
+            }
+
+            @OnThread(Tag.Simulation)
+            private List<DeleteInfo> standard(String s, String prompt)
+            {
+                List<DeleteInfo> deleteInfos = new ArrayList<>();
+                int index;
+                for (index = 0; index < s.length(); index = s.offsetByCodePoints(index, 1))
+                {
+                    deleteInfos.add(new DeleteInfo(index, s.substring(index), 0));
+                }
+                // Delete everything:
+                deleteInfos.add(new DeleteInfo(s.length(), prompt, 0));
+                return deleteInfos;
+            }
+        });
     }
 }
