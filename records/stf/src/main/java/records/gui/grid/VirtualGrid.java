@@ -1105,7 +1105,7 @@ public final class VirtualGrid implements ScrollBindable
             
             EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp @UnknownUnits @UnknownIfFuncDoc @UnknownIfIdentifier MouseEvent> clickHandler = mouseEvent -> {
 
-                Log.debug("Processing: " + mouseEvent);
+                //Log.debug("Processing: " + mouseEvent + " shift: " + mouseEvent.isShiftDown() + " still: " + mouseEvent.isStillSincePress() +  " click count: " + mouseEvent.getClickCount());
                 
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 Point2D screenPos = new Point2D(mouseEvent.getScreenX(), mouseEvent.getScreenY());

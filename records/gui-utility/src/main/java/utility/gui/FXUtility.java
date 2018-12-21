@@ -698,6 +698,7 @@ public class FXUtility
         return node.getPseudoClassStates().stream().anyMatch(p -> p.getPseudoClassName().equals(className));
     }
 
+    @OnThread(Tag.Any)
     public static Rectangle2D boundsToRect(Bounds bounds)
     {
         return new Rectangle2D(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight());

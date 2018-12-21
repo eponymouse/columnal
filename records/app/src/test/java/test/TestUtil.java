@@ -1025,7 +1025,7 @@ public class TestUtil
         }
     }
 
-    private static String stringAsHexChars(String str)
+    public static String stringAsHexChars(String str)
     {
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
