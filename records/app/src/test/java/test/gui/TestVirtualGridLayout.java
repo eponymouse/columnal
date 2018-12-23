@@ -51,7 +51,6 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@Ignore
 public class TestVirtualGridLayout extends FXApplicationTest
 {
     public static final int WINDOW_WIDTH = 810;

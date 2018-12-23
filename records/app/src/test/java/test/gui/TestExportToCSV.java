@@ -42,7 +42,6 @@ public class TestExportToCSV extends FXApplicationTest implements ScrollToTrait,
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void testCalculateToCSV(
-            @When(seed=-7265728807976809456L)
             @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws Exception
     {
         TableManager manager = new DummyManager();

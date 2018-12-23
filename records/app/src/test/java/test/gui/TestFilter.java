@@ -53,8 +53,8 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propNumberFilter(
-            @When(seed=6793627309703186619L) @NumTables(maxTables = 1) @MustIncludeNumber @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
-            @When(seed=9064559552451687290L) @From(GenRandom.class) Random r) throws Exception
+            @NumTables(maxTables = 1) @MustIncludeNumber @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original,
+            @From(GenRandom.class) Random r) throws Exception
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, original.mgr).get();

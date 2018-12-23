@@ -85,8 +85,8 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propTestDeleteRow(
-        @When(seed=1L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
-        @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+        @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
+        @From(GenRandom.class) Random r) throws Exception
     {
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
@@ -157,8 +157,8 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     @Property(trials = 10)
     @OnThread(Tag.Any)
     public void propTestInsertRow(
-        @When(seed=1L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
-        @When(seed=1L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
+        @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
             return; // Can't insert if there's no table or no columns
