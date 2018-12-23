@@ -13,6 +13,7 @@ import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
@@ -237,7 +238,8 @@ public class TestQuickFix extends FXApplicationTest implements EnterExpressionTr
         // a whole-column item:
         testSimpleFix("sum(ACC1)", "sum", "@call @function sum(@entire ACC1)");
     }
-
+    
+    @Ignore // Not sure if this fix is even worth implementing
     @Test
     public void testColumnFromListFix1() throws UserException, InternalException
     {
