@@ -26,11 +26,11 @@
                 </data>
             </table>
             <example>
-                <input>@call @function lookup(@entirecolumn Scores:Person, "Qing", @entirecolumn Scores:Score)</input>
+                <input>@call @function lookup(@entire Scores:Person, "Qing", @entire Scores:Score)</input>
                 <output>45</output>
             </example>
             <example>
-                <input>@call @function lookup(@entirecolumn Scores:Person, "Hannah", @entirecolumn Scores:Score)</input>
+                <input>@call @function lookup(@entire Scores:Person, "Hannah", @entire Scores:Score)</input>
                 <output>error</output>
             </example>
         </exampleGroup>

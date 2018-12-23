@@ -23,7 +23,7 @@ NON_EQUALITY : '<>';
 LESS_THAN: '<=' | '<';
 GREATER_THAN: '>=' | '>';
 COLUMN : '@column';
-WHOLECOLUMN: '@entirecolumn';
+WHOLECOLUMN: '@entire';
 MATCH : '@match';
 ENDMATCH : '@endmatch';
 CASE : '@case';

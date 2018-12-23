@@ -130,7 +130,7 @@ public class ColumnReference extends NonOperatorExpression
         // Sanity check to avoid saving something we can't load:
         String ident = IdentifierUtility.asExpressionIdentifier(ideal);
         if (ident != null)
-            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entirecolumn " : "@column ") + ident;
+            return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "@column ") + ident;
         else
             return "@unfinished " + OutputBuilder.quoted(ideal);
     }
