@@ -74,7 +74,11 @@ public class TestFilter extends FXApplicationTest implements ListUtilTrait, Scro
         // Find numeric column:
         Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> c.getType().isNumber())).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
         // Pick arbitrary value as cut-off:
-        @Value Number cutOff = (Number)srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
+        @Value Number cutOff;
+        if (srcColumn.getLength() == 0)
+            cutOff = DataTypeUtility.value(42);
+        else
+            cutOff = (Number)srcColumn.getType().getCollapsed(r.nextInt(srcColumn.getLength()));
         
         push(TestUtil.ctrlCmd(), KeyCode.A);
         push(KeyCode.DELETE);
