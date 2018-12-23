@@ -181,6 +181,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         addAllFunctions(r);
         r.add(new SimpleCompletion("true", null));
         r.add(new SimpleCompletion("false", null));
+        availableColumns.clear();
         for (ColumnReference column : Utility.iterableStream(parent.getEditor().getAvailableColumnReferences()))
         {
             availableColumns.add(column);
