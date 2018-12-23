@@ -56,7 +56,12 @@ public class NumTypeExp extends TypeExp
     {
         @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
         if (concreteUnit == null)
-            return Either.left(new TypeConcretisationError(StyledString.concat(StyledString.s("Ambiguous unit: "), unit.toStyledString()), DataType.NUMBER));
+        {
+            if (this.unit.isOnlyVars())
+                return Either.right(DataType.number(new NumberInfo(Unit.SCALAR)));
+            else
+                return Either.left(new TypeConcretisationError(StyledString.concat(StyledString.s("Ambiguous unit: "), unit.toStyledString()), DataType.NUMBER));
+        }
         else
             return Either.right(DataType.number(new NumberInfo(concreteUnit)));
     }

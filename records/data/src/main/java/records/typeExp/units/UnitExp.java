@@ -368,4 +368,9 @@ public final class UnitExp implements StyledShowable
     {
         return Objects.hash(units);
     }
+
+    public boolean isOnlyVars()
+    {
+        return this.units.keySet().stream().allMatch(Either::isLeft);
+    }
 }
