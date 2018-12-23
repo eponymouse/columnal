@@ -891,7 +891,7 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
     public static SingleLoader<Expression, ExpressionSaver> load(ColumnReference columnReference)
     {
         return p -> {
-            GeneralExpressionEntry gee = new GeneralExpressionEntry(columnReference.getColumnId().getRaw(), p);
+            GeneralExpressionEntry gee = new GeneralExpressionEntry((columnReference.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN ? "@entire " : "") + columnReference.getColumnId().getRaw(), p);
             gee.setPrefixColumn(columnReference);
             return gee;
         };
@@ -1041,6 +1041,11 @@ public final class GeneralExpressionEntry extends GeneralOperandEntry<Expression
         for (ColumnReference availableColumn : availableColumns)
         {
             if (availableColumn.getColumnId().getRaw().equals(text) && availableColumn.getReferenceType() == ColumnReferenceType.CORRESPONDING_ROW)
+            {
+                saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
+                return;
+            }
+            else if (text.startsWith("@entire ") && availableColumn.getColumnId().getRaw().equals(text.substring("@entire ".length())) && availableColumn.getReferenceType() == ColumnReferenceType.WHOLE_COLUMN)
             {
                 saver.saveOperand(new ColumnReference(availableColumn), this, this, this::afterSave);
                 return;
