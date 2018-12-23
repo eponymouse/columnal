@@ -65,7 +65,7 @@ public interface ScrollToTrait extends FxRobotInterface
             fail("Could not find enclosing scroll pane");
         }
 
-        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.getContent().localToScreen(enclosingScroll.getBoundsInLocal()));
+        Bounds viewBounds = TestUtil.fx(() -> enclosingScroll.localToScreen(enclosingScroll.getBoundsInLocal()));
         // Move, ready for potentially scrolling:
         moveTo(viewBounds.getMinX() + 2, viewBounds.getMinY() + 2);
         // We limit how many times we will scroll, to avoid an infinite loop in case of test failure:
@@ -75,7 +75,7 @@ public interface ScrollToTrait extends FxRobotInterface
             clickOrScroll(
                 from(enclosingScroll)
                 .lookup(".scroll-bar")
-                .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("horizontal"))))
+                .match((ScrollBar sb) -> TestUtil.fx(() -> sb.isVisible() && !sb.isDisable() && sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("horizontal"))))
                 .lookup(".increment-button"), () -> scroll(HorizontalDirection.RIGHT));
             //scroll(HorizontalDirection.RIGHT);
         }
@@ -84,7 +84,7 @@ public interface ScrollToTrait extends FxRobotInterface
             System.out.println("Scrolling LEFT");
             clickOrScroll(from(enclosingScroll)
                     .lookup(".scroll-bar")
-                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("horizontal"))))
+                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.isVisible() && !sb.isDisable() && sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("horizontal"))))
                     .lookup(".decrement-button"), () -> scroll(HorizontalDirection.LEFT));
             //scroll(HorizontalDirection.LEFT);
         }
@@ -94,7 +94,7 @@ public interface ScrollToTrait extends FxRobotInterface
             //scroll(VerticalDirection.DOWN);
             clickOrScroll(from(enclosingScroll)
                     .lookup(".scroll-bar")
-                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("vertical"))))
+                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.isVisible() && !sb.isDisable() && sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("vertical"))))
                     .lookup(".increment-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN));
         }
         for (int i = 0; i < 100 && TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()).getMinY()) < viewBounds.getMinY(); i++)
@@ -103,7 +103,7 @@ public interface ScrollToTrait extends FxRobotInterface
             //scroll(VerticalDirection.UP);
             clickOrScroll(from(enclosingScroll)
                     .lookup(".scroll-bar")
-                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("vertical"))))
+                    .match((ScrollBar sb) -> TestUtil.fx(() -> sb.isVisible() && !sb.isDisable() && sb.getPseudoClassStates().contains(PseudoClass.getPseudoClass("vertical"))))
                     .lookup(".decrement-button"), () -> scroll(SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.DOWN : VerticalDirection.UP));
         }
         Bounds targetScreenBounds = TestUtil.fx(() -> target.localToScreen(target.getBoundsInLocal()));
