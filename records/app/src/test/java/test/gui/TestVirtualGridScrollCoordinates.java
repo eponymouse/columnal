@@ -431,7 +431,7 @@ public class TestVirtualGridScrollCoordinates extends FXApplicationTest
             });
             for (boolean up : scrollDocumentUp)
             {
-                scroll(3, up == SystemUtils.IS_OS_MAC_OSX ? VerticalDirection.UP : VerticalDirection.DOWN);
+                scroll(3, up ? VerticalDirection.UP : VerticalDirection.DOWN);
             }
             TestUtil.sleep(1200);
             TestUtil.fx_(() -> { if (timer[0] != null) timer[0].stop();});
