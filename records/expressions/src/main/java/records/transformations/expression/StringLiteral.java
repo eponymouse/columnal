@@ -6,6 +6,7 @@ import records.data.TableAndColumnRenames;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.gui.expressioneditor.ExpressionSaver;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
@@ -22,6 +23,7 @@ import java.util.stream.Stream;
  */
 public class StringLiteral extends Literal
 {
+    // The actual String value, without any escapes.
     private final @Value String value;
 
     public StringLiteral(String value)
@@ -76,14 +78,10 @@ public class StringLiteral extends Literal
         return Stream.of(p -> new StringLiteralNode(editString(), p));
     }
 
+    // Escapes the characters ready for editing.
     @Override
     public String editString()
     {
-        return value;
-    }
-
-    public String getRawString()
-    {
-        return value;
+        return GrammarUtility.escapeChars(value);
     }
 }
