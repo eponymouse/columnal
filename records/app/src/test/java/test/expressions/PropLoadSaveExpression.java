@@ -2,6 +2,7 @@ package test.expressions;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,7 +43,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     }
 
     @Property(trials = 1000)
-    public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    public void testEditNonsense(@When(seed=113206909306075447L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         TestUtil.fxTest_(() -> {
             testNoOpEdit(expression);

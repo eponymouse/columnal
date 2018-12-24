@@ -80,7 +80,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public Stream<SingleLoader<Expression, ExpressionSaver>> loadAsConsecutive(BracketedStatus bracketedStatus)
     {
-        return Stream.of(GeneralExpressionEntry.load(varName));
+        return Stream.of(GeneralExpressionEntry.load("$" + varName));
     }
 
     @Override
