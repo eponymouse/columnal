@@ -36,14 +36,14 @@ import static org.junit.Assert.fail;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression extends FXApplicationTest
 {
-    @Property(trials = 2000)
+    @Property(trials = 200)
     public void testLoadSaveNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         testLoadSave(expression);
     }
 
-    @Property(trials = 1000)
-    public void testEditNonsense(@When(seed=113206909306075447L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    @Property(trials = 100)
+    public void testEditNonsense(@When(seed=-7405524265083987449L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         TestUtil.fxTest_(() -> {
             testNoOpEdit(expression);
@@ -85,7 +85,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
         assertEquals(expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY), edited.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY));
     }
 
-    @Property(trials = 1000)
+    @Property(trials = 200)
     public void testLoadSaveReal(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws InternalException, UserException
     {
         try
