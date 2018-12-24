@@ -201,7 +201,7 @@ public class OutputBuilder
     public static String quoted(String s)
     {
         // Order matters; escape ^ by itself first:
-        return "\"" + s.replace("^", "^c").replace("\"", "^q").replace("\n", "^n").replace("\r", "^r").replace("@", "^a") + "\"";
+        return "\"" + GrammarUtility.escapeChars(s) + "\"";
     }
 
     @OnThread(Tag.Any)
