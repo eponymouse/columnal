@@ -420,17 +420,6 @@ public class TestUtil
         return s;
     }
 
-    public static String makeUnquotedIdent(SourceOfRandomness r, GenerationStatus gs)
-    {
-        String s;
-        do
-        {
-            s = makeString(r, gs);
-        }
-        while (!GrammarUtility.validUnquoted(s));
-        return s;
-    }
-
     public static List<ColumnId> generateColumnIds(SourceOfRandomness r, int numColumns)
     {
         List<ColumnId> columnIds = new ArrayList<>();
