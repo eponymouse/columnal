@@ -132,6 +132,12 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             else
                 return errorDisplayerRecord.record(start, end, new InvalidIdentExpression(""));
         }
+
+        UnaryOperator<Expression> applyBrackets = UnaryOperator.identity();
+        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
+        {
+            applyBrackets = x -> errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(x)));
+        }
         
         CollectedItems collectedItems = processItems(content);
 
@@ -144,7 +150,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             // Single expression?
             if (validOperands.size() == 1 && validOperators.size() == 0)
             {
-                e = validOperands.get(0);
+                e = applyBrackets.apply(validOperands.get(0));
             }
             else
             {
@@ -158,13 +164,9 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
         
         if (e == null)
         {
-            e = collectedItems.makeInvalid(start, end, InvalidOperatorExpression::new);
+            e = applyBrackets.apply(collectedItems.makeInvalid(start, end, InvalidOperatorExpression::new));
         }
         
-        if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && !(e instanceof ArrayExpression))
-        {
-            e = errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(e)));
-        }
         return e;
     }
 
