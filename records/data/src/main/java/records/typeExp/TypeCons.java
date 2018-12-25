@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -148,7 +149,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         if (operands.isEmpty())
         {
@@ -173,7 +174,7 @@ public class TypeCons extends TypeExp
                 // for future unification:
                 for (Either<UnitExp, TypeExp> operand : operands)
                 {
-                    @Nullable StyledString err = operand.<@Nullable StyledString>either(u -> null, t -> t.requireTypeClasses(typeClasses));
+                    @Nullable StyledString err = operand.<@Nullable StyledString>either(u -> null, t -> t.requireTypeClasses(typeClasses, visited));
                     if (err != null)
                         return err;
                 }
@@ -187,9 +188,9 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public StyledString toStyledString()
+    public StyledString toStyledString(int maxDepth)
     {
-        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("-("), t.either(UnitExp::toStyledString, TypeExp::toStyledString), StyledString.s(")"))).toArray(StyledString[]::new)));
+        return StyledString.concat(StyledString.s(name), operands.isEmpty() ? StyledString.s("") : StyledString.concat(operands.stream().map(t -> StyledString.concat(StyledString.s("-("), t.either(UnitExp::toStyledString, ty -> ty.toStyledString(maxDepth)), StyledString.s(")"))).toArray(StyledString[]::new)));
     }
 
     @Override

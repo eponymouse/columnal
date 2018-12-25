@@ -42,8 +42,8 @@ public class PropLoadSaveExpression extends FXApplicationTest
         testLoadSave(expression);
     }
 
-    @Property(trials = 100)
-    public void testEditNonsense(@When(seed=-7405524265083987449L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    @Property(trials = 200)
+    public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         TestUtil.fxTest_(() -> {
             testNoOpEdit(expression);

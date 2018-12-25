@@ -4,6 +4,7 @@ import annotation.identifier.qual.ExpressionIdentifier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -366,6 +367,23 @@ public abstract class TypeExp implements StyledShowable
     /**
      * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
      */
-    public abstract @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses);
+    public final @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    {
+        return requireTypeClasses(typeClasses, new IdentityHashSet<>());
+    }
 
+    /**
+     * Adds all the given type-classes as constraints to this TypeExp if possible.  If not, an error is returned.
+     * The visitedMutVar keeps track of visited MutVar to prevent infinite
+     * recursion in case of there being a cycle in the type.
+     */
+    public abstract  @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visitedMutVar);
+
+    @Override
+    public final StyledString toStyledString()
+    {
+        return toStyledString(4);
+    }
+    
+    protected abstract StyledString toStyledString(int maxDepth);
 }

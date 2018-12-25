@@ -1,6 +1,7 @@
 package records.typeExp;
 
 import com.google.common.collect.ImmutableList;
+import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -46,11 +47,11 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         for (TypeExp member : knownMembers)
         {
-            @Nullable StyledString err = member.requireTypeClasses(typeClasses);
+            @Nullable StyledString err = member.requireTypeClasses(typeClasses, visited);
             if (err != null)
                 return err;
         }
@@ -132,10 +133,10 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    public StyledString toStyledString()
+    public StyledString toStyledString(int maxDepth)
     {
         return StyledString.concat(StyledString.s("("), 
-            StyledString.intercalate(StyledString.s(", "), knownMembers.stream().map(t -> t.toStyledString()).collect(ImmutableList.toImmutableList())),
+            StyledString.intercalate(StyledString.s(", "), knownMembers.stream().map(t -> t.toStyledString(maxDepth)).collect(ImmutableList.toImmutableList())),
             StyledString.s(complete ? ")" : ", ...)"));
     }
 }

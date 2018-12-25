@@ -1,6 +1,7 @@
 package records.typeExp;
 
 import com.google.common.collect.ImmutableSet;
+import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
@@ -67,7 +68,7 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
         return typeClasses.checkIfSatisfiedBy(StyledString.s("Number"), NATURAL_TYPE_CLASSES);
     }
@@ -88,7 +89,7 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public StyledString toStyledString()
+    public StyledString toStyledString(int maxDepth)
     {
         return StyledString.concat(StyledString.s("Number{"), unit.toStyledString(), StyledString.s("}"));
     }

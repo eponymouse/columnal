@@ -1,5 +1,6 @@
 package records.typeExp;
 
+import de.uni_freiburg.informatik.ultimate.smtinterpol.util.IdentityHashSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -100,12 +101,20 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses)
+    public @Nullable StyledString requireTypeClasses(TypeClassRequirements typeClasses, IdentityHashSet<MutVar> visited)
     {
+        if (visited.contains(this))
+            return StyledString.s("Cyclic type found");
+        
         return typeClassesOrPointer.<@Nullable StyledString>either(t -> {
             typeClassesOrPointer = Either.left(TypeClassRequirements.union(t, typeClasses));
             return null;
-        }, p -> p.requireTypeClasses(typeClasses));
+        }, p -> {
+            IdentityHashSet<MutVar> visitedPlusUs = new IdentityHashSet<>();
+            visitedPlusUs.addAll(visited);
+            visitedPlusUs.add(this);
+            return p.requireTypeClasses(typeClasses, visitedPlusUs);
+        });
     }
 
     @Override
@@ -116,11 +125,11 @@ public class MutVar extends TypeExp
     }
 
     @Override
-    public StyledString toStyledString()
+    public StyledString toStyledString(int maxDepth)
     {
         String name = "_t" + id;
         return typeClassesOrPointer.either(t -> StyledString.styled(name, CommonStyles.ITALIC),
-           pointer -> StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(), StyledString.s("]"))
+           pointer -> maxDepth <= 0 ? StyledString.s("...") : StyledString.concat(StyledString.s(name + "[="), pointer.toStyledString(maxDepth - 1), StyledString.s("]"))
                     .withStyle(CommonStyles.ITALIC));
     }
 }
