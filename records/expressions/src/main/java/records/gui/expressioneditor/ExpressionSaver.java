@@ -133,7 +133,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                 return errorDisplayerRecord.record(start, end, new InvalidIdentExpression(""));
         }
 
-        UnaryOperator<Expression> applyBrackets = UnaryOperator.identity();
+        UnaryOperator<@Recorded Expression> applyBrackets = UnaryOperator.identity();
         if (brackets.bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED)
         {
             applyBrackets = x -> errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(ImmutableList.of(x)));
