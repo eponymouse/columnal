@@ -29,17 +29,9 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    public @Nullable TypeExp withoutMutVar(MutVar mutVar)
+    public boolean containsMutVar(MutVar mutVar)
     {
-        ImmutableList.Builder<TypeExp> members = ImmutableList.builder();
-        for (TypeExp knownMember : knownMembers)
-        {
-            TypeExp t = knownMember.withoutMutVar(mutVar);
-            if (t == null)
-                return null;
-            members.add(t);
-        }
-        return new TupleTypeExp(src, members.build(), complete);
+        return knownMembers.stream().anyMatch(t -> t.containsMutVar(mutVar));
     }
 
     @Override

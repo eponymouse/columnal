@@ -65,27 +65,31 @@ public class MutVar extends TypeExp
         {
             // Do an occurs check to prevent cyclic types:
             // Note: no need to prune b, as it is already pruned.
-            @Nullable TypeExp without = b.withoutMutVar(this);
-            if (without == null)
+            boolean cycle = b.containsMutVar(this);
+            if (cycle)
             {
                 return Either.left(StyledString.concat(StyledString.s("Cyclic type while attempting to match "), toStyledString(), StyledString.s(" with "), b.toStyledString()));
             }
             else
             {
                 // Check that the item we are pointing to is a member of the needed type-classes:
-                @Nullable StyledString maybeError = without.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
+                @Nullable StyledString maybeError = b.requireTypeClasses(typeClassesOrPointer.getLeft("Internal variable should be TCR when pruned"));
                 if (maybeError != null)
                     return Either.left(maybeError);
-                typeClassesOrPointer = Either.right(without);
+                typeClassesOrPointer = Either.right(b);
                 return Either.right(this);
             }
         }
     }
 
     @Override
-    public @Nullable TypeExp withoutMutVar(MutVar mutVar)
+    public boolean containsMutVar(MutVar mutVar)
     {
-        return this == mutVar ? null : this;
+        // It feels like we should recurse into the pointer.
+        // But if there is a cycle with
+        // another MutVar, we would risk infinite recursion,
+        // and Sheard's paper doesn't seem to recurse.
+        return this == mutVar;
     }
 
     @Override

@@ -30,9 +30,9 @@ public class NumTypeExp extends TypeExp
     }
 
     @Override
-    public TypeExp withoutMutVar(MutVar mutVar)
+    public boolean containsMutVar(MutVar mutVar)
     {
-        return this;
+        return false;
     }
 
     @Override

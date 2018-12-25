@@ -93,20 +93,9 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    public @Nullable TypeExp withoutMutVar(MutVar mutVar)
+    public boolean containsMutVar(MutVar mutVar)
     {
-        ImmutableList.Builder<Either<UnitExp, TypeExp>> without = ImmutableList.builder();
-        for (Either<UnitExp, TypeExp> operand : operands)
-        {
-            @Nullable Either<UnitExp, TypeExp> e = operand.<@Nullable Either<UnitExp, TypeExp>>either(u -> Either.left(u), t -> {
-                @Nullable TypeExp r = t.withoutMutVar(mutVar);
-                return r == null ? null : Either.right(r);
-            });
-            if (e == null)
-                return null;
-            without.add(e);
-        }
-        return new TypeCons(src, name, without.build(), typeClasses);
+        return operands.stream().anyMatch(operand -> operand.either(u -> false, t -> t.containsMutVar(mutVar)));
     }
 
     @Override

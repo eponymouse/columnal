@@ -203,11 +203,10 @@ public abstract class TypeExp implements StyledShowable
     }
 
     /**
-     * If possible, return a variant of this type without the containing
-     * MutVar (basically, if you are a disjunction, eliminate those possibilities).  If null is returned, that wasn't possible: a cycle
-     * is inevitable.
+     * Is this TypeExp equal to, or does it contain, the given MutVar?
+     * Used to check for cycles.
      */
-    public abstract @Nullable TypeExp withoutMutVar(MutVar mutVar);
+    public abstract boolean containsMutVar(MutVar mutVar);
     
     protected final Either<StyledString, TypeExp> typeMismatch(TypeExp other)
     {
