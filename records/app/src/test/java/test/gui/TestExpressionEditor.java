@@ -431,6 +431,12 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
         testSimple("1 + 2 + [@invalidops(3, @unfinished \"*\", 4, @unfinished \"/\", 5)] + 6", 
     "1 + 2 + [3 * 4 / 5] + 6");
     }
+
+    @Test
+    public void testList4() throws Exception
+    {
+        testSimple("[] ; [[[]]] ; [[], [[]], [[4],[],[1,2,3]]]");
+    }
     
     @Ignore
     @Test

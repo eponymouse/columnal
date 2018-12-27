@@ -1825,4 +1825,19 @@ public class Utility
         Token token = lexer.nextToken();
         return token.getType() == tokenType && token.getText().equals(src);
     }
+    
+    
+    public static <T, R> @PolyNull R onNullable(@PolyNull T t, Function<@NonNull T, @NonNull R> f)
+    {
+        if (t == null)
+        {
+            return null;
+        }
+        else
+        {
+            @NonNull T tNN = t;
+            @NonNull R r = f.apply(t);
+            return r;
+        }
+    }
 }

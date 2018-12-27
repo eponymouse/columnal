@@ -44,7 +44,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
     {
     }
     
-    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, ConsecutiveChild<UnitExpression, UnitSaver>>> operators, BracketAndNodes<UnitExpression, UnitSaver> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord)
+    private static UnitExpression makeTimes(ImmutableList<@Recorded UnitExpression> expressions, List<Pair<UnitOp, ConsecutiveChild<UnitExpression, UnitSaver>>> operators)
     {
         return new UnitTimesExpression(expressions);
     }
@@ -103,7 +103,7 @@ public class UnitSaver extends SaverBase<UnitExpression, UnitSaver, UnitOp, Unit
             // Now we need to check the operators can work together as one group:
             @Nullable UnitExpression e = makeExpressionWithOperators(ImmutableList.of(OPERATORS), errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded UnitExpression>> arg) ->
                     makeInvalidOp(brackets.start, brackets.end, arg)
-                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, arg -> arg);
+                , ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, (brs, arg) -> Utility.onNullable(arg, l -> l.get(0)));
             if (e != null)
             {
                 return record(start, end, e);
