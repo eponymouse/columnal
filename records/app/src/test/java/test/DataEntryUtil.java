@@ -17,7 +17,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
-import records.gui.stf.StructuredTextField;
+import records.gui.flex.FlexibleTextField;
 import test.gui.trait.FocusOwnerTrait;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -63,7 +63,7 @@ public class DataEntryUtil
                 // Doesn't seem to work:
                 //robot.push(TestUtil.ctrlCmd(), KeyCode.DELETE);
                 // Do it manually instead:                
-                StructuredTextField view = robot.getFocusOwner(StructuredTextField.class);
+                FlexibleTextField view = robot.getFocusOwner(FlexibleTextField.class);
                 
                 TestUtil.fx_(() -> {
                     // Taken from StyledTextAreaBehavior.deleteNextWord()

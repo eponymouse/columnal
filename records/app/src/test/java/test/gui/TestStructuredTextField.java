@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.util.WaitForAsyncUtils;
@@ -109,6 +110,7 @@ import static org.junit.Assume.assumeThat;
 @SuppressWarnings("deprecation")
 @RunWith(JUnitQuickcheck.class)
 @OnThread(Tag.Simulation)
+@Ignore
 public class TestStructuredTextField extends FXApplicationTest
 {
     @OnThread(Tag.FXPlatform)

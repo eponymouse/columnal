@@ -32,12 +32,13 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.flex.FlexibleTextField;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stable.ColumnDetails;
-import records.gui.stf.StructuredTextField.EditorKit;
+import records.gui.flex.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -111,7 +112,7 @@ public class TableDisplayUtility
                         @Override
                         public void fetchValue(@TableDataRowIndex int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent)
                         {
-                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
+                            setCellContent.loadedValue(rowIndex, columnIndexFinal, new records.gui.flex.EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
                         }
 
                         @Override
@@ -133,7 +134,7 @@ public class TableDisplayUtility
                         }
 
                         @Override
-                        public void styleTogether(Collection<? extends StructuredTextField> cellsInColumn, double columnSize)
+                        public void styleTogether(Collection<? extends FlexibleTextField> cellsInColumn, double columnSize)
                         {
                         }
                     });
@@ -383,7 +384,9 @@ public class TableDisplayUtility
                     }
                 } : null;
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                return new EditorKit<@Value T>(makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
+                @SuppressWarnings("nullness") // TODO
+                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(null); // TODO makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
+                return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
         }

@@ -32,7 +32,7 @@ import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.RowLabelSupplier;
 import records.gui.grid.VirtualGrid;
-import records.gui.stf.StructuredTextField;
+import records.gui.flex.FlexibleTextField;
 import records.transformations.Calculate;
 import records.transformations.Sort;
 import records.transformations.Sort.Direction;
@@ -333,7 +333,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
-            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((StructuredTextField)rowCells.get(iFinal)).getText()));
+            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((FlexibleTextField)rowCells.get(iFinal)).getText()));
         }
     }
 

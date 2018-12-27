@@ -6,7 +6,7 @@ import records.data.CellPosition;
 import records.data.RecordSet.RecordSetListener;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stf.StructuredTextField;
+import records.gui.flex.FlexibleTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -44,5 +44,5 @@ public interface ColumnHandler extends RecordSetListener
     @OnThread(Tag.Simulation)
     public @Value Object getValue(int index) throws InternalException, UserException;
 
-    void styleTogether(Collection<? extends StructuredTextField> cellsInColumn, double columnSize);
+    void styleTogether(Collection<? extends FlexibleTextField> cellsInColumn, double columnSize);
 }

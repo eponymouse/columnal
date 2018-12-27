@@ -10,7 +10,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stf.StructuredTextField;
+import records.gui.flex.FlexibleTextField;
 import test.DataEntryUtil;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -38,20 +38,21 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     {
         Window window = TestUtil.fx(() -> getRealFocusedWindow());
         Node node = TestUtil.fx(() -> window.getScene().getFocusOwner());
-        assertTrue("" + node, node instanceof StructuredTextField);
-        String content = TestUtil.fx(() -> ((StructuredTextField)node).getText());
+        assertTrue("" + node, node instanceof FlexibleTextField);
+        FlexibleTextField field = (FlexibleTextField) node;
+        String content = TestUtil.fx(() -> field.getText());
         ChangeListener<String> logTextChange = (a, oldVal, newVal) -> Log.logStackTrace("Text changed on defocus from : \"" + oldVal + "\" to \"" + newVal + "\"");
         if (checkContentSame)
         {
-            TestUtil.fx_(() -> ((StructuredTextField)node).textProperty().addListener(logTextChange));
+            TestUtil.fx_(() -> field.textProperty().addListener(logTextChange));
         }
         TestUtil.fx_(defocus);
         WaitForAsyncUtils.waitForFxEvents();
         assertNotEquals(node, TestUtil.fx(() -> window.getScene().getFocusOwner()));
         if (checkContentSame)
         {
-            assertEquals(content, TestUtil.fx(() -> ((StructuredTextField) node).getText()));
-            TestUtil.fx_(() -> ((StructuredTextField)node).textProperty().removeListener(logTextChange));
+            assertEquals(content, TestUtil.fx(() -> field.getText()));
+            TestUtil.fx_(() -> field.textProperty().removeListener(logTextChange));
         }
     }
 }

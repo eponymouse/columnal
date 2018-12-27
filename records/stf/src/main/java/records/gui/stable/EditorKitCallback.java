@@ -2,7 +2,7 @@ package records.gui.stable;
 
 import annotation.units.TableDataColIndex;
 import annotation.units.TableDataRowIndex;
-import records.gui.stf.StructuredTextField.EditorKit;
+import records.gui.flex.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

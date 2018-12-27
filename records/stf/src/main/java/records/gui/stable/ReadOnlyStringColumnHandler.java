@@ -5,7 +5,7 @@ import annotation.units.TableDataRowIndex;
 import records.data.CellPosition;
 import records.data.Column;
 import records.data.ColumnId;
-import records.gui.stf.EditorKitSimpleLabel;
+import records.gui.flex.EditorKitSimpleLabel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;

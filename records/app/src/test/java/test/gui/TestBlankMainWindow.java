@@ -35,7 +35,7 @@ import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.RectangleBounds;
-import records.gui.stf.StructuredTextField;
+import records.gui.flex.FlexibleTextField;
 import records.transformations.expression.type.TypeExpression;
 import test.TestUtil;
 import test.gen.GenDataType;
@@ -233,7 +233,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         clickOnItemInBounds(lookup(".expand-arrow"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(arrowPos, arrowPos));
         assertEquals(1, tableManager.getAllTables().get(0).getData().getLength());
         assertEquals(1, lookup(".table-display-table-title").queryAll().size());
-        assertEquals(1, lookup(".structured-text-field").queryAll().size());
+        assertEquals(1, lookup(".flexible-text-field").queryAll().size());
         
         clickOn("#id-menu-edit").moveBy(5, 0).clickOn(".id-menu-edit-undo", Motion.VERTICAL_FIRST);
         TestUtil.sleep(1000);
@@ -242,7 +242,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         assertEquals(0, tableManager.getAllTables().get(0).getData().getLength());
         // STF will be retained invisible for re-use, so
         // must check visibility:
-        assertEquals(0, lookup(".structured-text-field").match(Node::isVisible).queryAll().size());
+        assertEquals(0, lookup(".flexible-text-field").match(Node::isVisible).queryAll().size());
     }
 
     @Property(trials = 5)
@@ -425,13 +425,13 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     private void enterValue(CellPosition position, DataType dataType, @Value Object value, Random random) throws UserException, InternalException
     {
         for (int i = 0; i < 2; i++)
-            clickOnItemInBounds(lookup(".structured-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
+            clickOnItemInBounds(lookup(".flexible-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
 
         Node focused = getFocusOwner();
         assertNotNull(focused);
         if (focused == null)
             return; // To satisfy checker
-        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof StructuredTextField);
+        assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof FlexibleTextField);
         push(KeyCode.HOME);
         enterStructuredValue(dataType, value, random);
         defocusSTFAndCheck(!dataType.hasNumber(), () -> {

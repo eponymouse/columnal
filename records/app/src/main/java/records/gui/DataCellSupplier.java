@@ -11,11 +11,12 @@ import records.data.CellPosition;
 import records.data.Column;
 import records.gui.DataCellSupplier.CellStyle;
 import records.gui.DataCellSupplier.VersionedSTF;
+import records.gui.flex.EditorKit;
+import records.gui.flex.EditorKitSimpleLabel;
+import records.gui.flex.FlexibleTextField;
 import records.gui.grid.VirtualGridSupplierIndividual;
 import records.gui.grid.VirtualGridSupplierIndividual.GridCellInfo;
 import records.gui.stable.ColumnDetails;
-import records.gui.stf.EditorKitSimpleLabel;
-import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
@@ -169,7 +170,7 @@ public class DataCellSupplier extends VirtualGridSupplierIndividual<VersionedSTF
 
     // A simple subclass of STF that holds a version param.  A version is a weak reference
     // to a list of column details
-    public static class VersionedSTF extends StructuredTextField
+    public static class VersionedSTF extends FlexibleTextField
     {
         @OnThread(Tag.FXPlatform)
         private @Nullable WeakReference<ImmutableList<ColumnDetails>> currentVersion = null;

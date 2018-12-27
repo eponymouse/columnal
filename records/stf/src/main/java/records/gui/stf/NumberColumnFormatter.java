@@ -11,8 +11,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import records.gui.flex.EditorKit;
+import records.gui.flex.FlexibleTextField;
 import records.gui.stable.EditorKitCache;
-import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -35,19 +36,21 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     public @OnThread(Tag.FXPlatform) void consume(EditorKitCache<@Value Number>.VisibleDetails vis)
     {
         final ArrayList<NumberDetails> visibleItems = new ArrayList<>();
-        for (StructuredTextField visibleCell : vis.visibleCells)
+        for (FlexibleTextField visibleCell : vis.visibleCells)
         {
             if (visibleCell != null)
             {
                 EditorKit<?> editorKit = visibleCell.getEditorKit();
                 if (editorKit != null)
                 {
+                    /* TODO
                     NumberEntry numberEntry = editorKit.getComponent(NumberEntry.class);
                     @Nullable Number value = Utility.castOrNull(editorKit.getLastCompletedValue(), Number.class);
                     if (numberEntry != null && value != null)
                     {
                         visibleItems.add(new NumberDetails(visibleCell, numberEntry, value));
                     }
+                    */
                 }
             }
         }
