@@ -81,7 +81,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
     public static interface MakeNary<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
     {
         // Only called if the list is valid (one more expression than operators, strictly interleaved
-        public @Nullable ImmutableList<EXPRESSION> makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord);
+        public @Nullable ImmutableList<@Recorded EXPRESSION> makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus, ErrorDisplayerRecord errorDisplayerRecord);
     }
 
     public static interface MakeNarySimple<EXPRESSION extends StyledShowable, SAVER extends ClipboardSaver, OP>
@@ -110,12 +110,12 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         public OperatorExpressionInfo(ImmutableList<Pair<OP, @Localized String>> operators, MakeNarySimple<EXPRESSION, SAVER, OP> makeExpression)
         {
             this.operators = operators;
-            this.makeExpression = Either.left((es, ops, _b, _err) -> {
+            this.makeExpression = Either.left((ImmutableList<@Recorded EXPRESSION> es, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> ops, BracketAndNodes<EXPRESSION, SAVER> bracketAndNodes, ErrorDisplayerRecord _err) -> {
                 EXPRESSION expression = makeExpression.makeNary(es, ops);
                 if (expression == null)
                     return null;
                 else
-                    return ImmutableList.of(expression);
+                    return ImmutableList.of(record(bracketAndNodes.start, bracketAndNodes.end, expression));
             });
         }
 
@@ -198,9 +198,9 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         }
 
         @Override
-        @Recorded ImmutableList<EXPRESSION> makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER> brackets)
+        ImmutableList<@Recorded EXPRESSION> makeExpression(ImmutableList<@Recorded EXPRESSION> expressions, BracketAndNodes<EXPRESSION, SAVER> brackets)
         {
-            return ImmutableList.of(makeBinary(expressions.get(operatorIndex), operator.sourceNode, expressions.get(operatorIndex + 1), brackets, errorDisplayerRecord));
+            return ImmutableList.<@Recorded EXPRESSION>of(makeBinary(expressions.get(operatorIndex), operator.sourceNode, expressions.get(operatorIndex + 1), brackets, errorDisplayerRecord));
         }
 
         protected @Recorded EXPRESSION makeBinary(@Recorded EXPRESSION lhs, ConsecutiveChild<EXPRESSION, SAVER> opNode, @Recorded EXPRESSION rhs, BracketAndNodes<EXPRESSION, SAVER> brackets, ErrorDisplayerRecord errorDisplayerRecord)
@@ -290,7 +290,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             ArrayList<@Recorded EXPRESSION> args = new ArrayList<>(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2));
             args.set(0, lhs);
-            return Utility.onNullable(makeNary(ImmutableList.copyOf(args), actualOperators, brackets), l -> l.get(0));
+            return Utility.<ImmutableList<@Recorded EXPRESSION>, @Recorded EXPRESSION>onNullable(makeNary(ImmutableList.copyOf(args), actualOperators, brackets), l -> l.get(0));
         }
 
         @Override
@@ -298,7 +298,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
         {
             ArrayList<@Recorded EXPRESSION> args = new ArrayList<>(expressions.subList(startingOperatorIndexIncl, endingOperatorIndexIncl + 2));
             args.set(args.size() - 1, rhs);
-            return Utility.onNullable(makeNary(ImmutableList.copyOf(args), actualOperators, brackets), l -> l.get(0));
+            return Utility.<ImmutableList<@Recorded EXPRESSION>, @Recorded EXPRESSION>onNullable(makeNary(ImmutableList.copyOf(args), actualOperators, brackets), l -> l.get(0));
         }
 
         /**
@@ -315,11 +315,8 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
             args.add(middle);
             // Add RHS, minus the start one:
             args.addAll(expressions.subList(rhs.startingOperatorIndexIncl + 1, rhs.endingOperatorIndexIncl + 2));
-            EXPRESSION expression = Utility.onNullable(makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, errorDisplayerRecord), l -> l.get(0));
-            if (expression == null)
-                return null;
-            else
-                return record(brackets.start, brackets.end, expression);
+            @Nullable @Recorded EXPRESSION expression = Utility.<ImmutableList<@Recorded EXPRESSION>, @Recorded EXPRESSION>onNullable(makeExpression.makeNary(ImmutableList.copyOf(args), Utility.concatI(actualOperators, rhs.actualOperators), brackets, errorDisplayerRecord), l -> l.get(0));
+            return expression;
         }
 
         protected @Nullable ImmutableList<@Recorded EXPRESSION> makeNary(ImmutableList<@Recorded EXPRESSION> expressions, List<Pair<OP, ConsecutiveChild<EXPRESSION, SAVER>>> operators, BracketAndNodes<EXPRESSION, SAVER> bracketedStatus)
@@ -613,7 +610,7 @@ public abstract class SaverBase<EXPRESSION extends StyledShowable, SAVER extends
 
     public static interface ApplyBrackets<EXPRESSION>
     {
-        public @PolyNull EXPRESSION apply(BracketedStatus bracketedStatus, @PolyNull ImmutableList<@Recorded EXPRESSION> expressions);
+        public @PolyNull @Recorded EXPRESSION apply(BracketedStatus bracketedStatus, @PolyNull ImmutableList<@Recorded EXPRESSION> expressions);
     }
     
     /**

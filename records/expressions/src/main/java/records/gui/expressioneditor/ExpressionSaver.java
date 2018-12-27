@@ -156,7 +156,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
             {
                 // Now we need to check the operators can work together as one group:
 
-                e = makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, (brs, commaSepArgs) ->
+                e = makeExpressionWithOperators(OPERATORS, errorDisplayerRecord, (ImmutableList<Either<OpAndNode, @Recorded Expression>> es) -> makeInvalidOp(start, end, es), ImmutableList.copyOf(validOperands), ImmutableList.copyOf(validOperators), brackets, (BracketedStatus brs, ImmutableList<@Recorded Expression> commaSepArgs) ->
                 {
                     if (commaSepArgs == null)
                     {
@@ -164,11 +164,11 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     }
                     else if (brs == BracketedStatus.DIRECT_SQUARE_BRACKETED)
                     {
-                        return new ArrayExpression(commaSepArgs); 
+                        return errorDisplayerRecord.record(brackets.start, brackets.end, new ArrayExpression(commaSepArgs)); 
                     }
                     else if (brs == BracketedStatus.DIRECT_ROUND_BRACKETED && commaSepArgs.size() > 1)
                     {
-                        return new TupleExpression(commaSepArgs);
+                        return errorDisplayerRecord.record(brackets.start, brackets.end, new TupleExpression(commaSepArgs));
                     }
                     else if (commaSepArgs.size() == 1)
                     {
@@ -177,7 +177,7 @@ public class ExpressionSaver extends SaverBase<Expression, ExpressionSaver, Op, 
                     else
                     {
                         // This shouldn't happen!  But play safe:
-                        return new InvalidOperatorExpression(commaSepArgs);
+                        return errorDisplayerRecord.record(brackets.start, brackets.end, new InvalidOperatorExpression(commaSepArgs));
                     }
                 });
             }            
