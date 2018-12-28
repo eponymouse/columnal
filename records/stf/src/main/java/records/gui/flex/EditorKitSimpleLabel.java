@@ -12,7 +12,7 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
         super(new Recogniser<T>()
         {
             @Override
-            public Either<ErrorDetails, Pair<T, ParseProgress>> process(ParseProgress src)
+            public Either<ErrorDetails, SuccessDetails<T>> process(ParseProgress src)
             {
                 // Shouldn't be called anyway:
                 return Either.left(new ErrorDetails(StyledString.s(label)));

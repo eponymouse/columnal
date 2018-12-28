@@ -33,6 +33,10 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.flex.FlexibleTextField;
+import records.gui.flex.Recogniser;
+import records.gui.flex.recognisers.BooleanRecogniser;
+import records.gui.flex.recognisers.StringRecogniser;
+import records.gui.flex.recognisers.TupleRecogniser;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCache.MakeEditorKit;
@@ -43,16 +47,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 import utility.Utility.ListEx;
-import utility.Utility.ListExList;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -353,20 +351,20 @@ public class TableDisplayUtility
     public static class GetValueAndComponent<@Value T>
     {
         public final GetValue<@Value T> g;
-        public final ComponentMaker<@Value T> makeComponent;
+        public final Recogniser<@Value T> recogniser;
         private final @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter;
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent)
+        public GetValueAndComponent(GetValue<@Value T> g, Recogniser<@Value T> recogniser)
         {
-            this(g, makeComponent, null);
+            this(g, recogniser, null);
         }
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(GetValue<@Value T> g, ComponentMaker<@Value T> makeComponent, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
+        public GetValueAndComponent(GetValue<@Value T> g, Recogniser<@Value T> recogniser, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
         {
             this.g = g;
-            this.makeComponent = makeComponent;
+            this.recogniser = recogniser;
             this.formatter = formatter;
         }
         
@@ -385,7 +383,7 @@ public class TableDisplayUtility
                 } : null;
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
                 @SuppressWarnings("nullness") // TODO
-                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(null); // TODO makeComponent.makeComponent(ImmutableList.of(), value), saveChange, relinquishFocusRunnable, stfStyles);
+                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(recogniser); //, saveChange, relinquishFocusRunnable, stfStyles));
                 return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
@@ -456,19 +454,19 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@Value Number>(g, NumberEntry::new, new NumberColumnFormatter());
+                return new GetValueAndComponent<@Value Number>(g, dummy(), new NumberColumnFormatter());
             }
 
             @Override
             public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value String>(g, TextEntry::new);
+                return new GetValueAndComponent<@Value String>(g, new StringRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> bool(GetValue<@Value Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value Boolean>(g, BoolComponent::new);
+                return new GetValueAndComponent<@Value Boolean>(g, new BooleanRecogniser());
             }
 
             @Override
@@ -477,25 +475,27 @@ public class TableDisplayUtility
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, YMD::new);
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
                     case YEARMONTH:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, YM::new);
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
                     case TIMEOFDAY:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, TimeComponent::new);
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
                     /*
                     case TIMEOFDAYZONED:
                         return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<@Value TemporalAccessor, @Value TemporalAccessor, @Value ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
                     */
                     case DATETIME:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<@Value TemporalAccessor/*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
+                            //(parents, value) -> new Component2<@Value TemporalAccessor/*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
                     case DATETIMEZONED:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents0, value) ->
-                            new Component2<@Value TemporalAccessor /*ZonedDateTime*/, @Value TemporalAccessor /*LocalDateTime*/, @Value ZoneId>(parents0,
-                                parents1 -> new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(
-                                        parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
-                                " ",
-                                parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b))
-                        );
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy()); 
+                            //(parents0, value) ->
+                            //new Component2<@Value TemporalAccessor /*ZonedDateTime*/, @Value TemporalAccessor /*LocalDateTime*/, @Value ZoneId>(parents0,
+//                                parents1 -> new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(
+//                                        parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
+//                                " ",
+//                                parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b))
+//                        );
                 }
                 throw new InternalException("Unknown type: " + dateTimeInfo.getType());
             }
@@ -504,7 +504,8 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(getTagged, (parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
+                return new GetValueAndComponent<TaggedValue>(getTagged, dummy()); 
+                    //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
             @Override
@@ -544,19 +545,7 @@ public class TableDisplayUtility
                 };
 
 
-                return new GetValueAndComponent<@Value Object @Value[]>(tupleGet, (parents, value) -> {
-                    ArrayList<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @Value Object>>> components = new ArrayList<>(types.size());
-                    for (int i = 0; i < types.size(); i++)
-                    {
-                        GetValueAndComponent<?> gvac = gvacs.get(i);
-                        // Have to use some casts because we can't express the type safety:
-                        @SuppressWarnings("unchecked")
-                        ComponentMaker<@Value Object> makeComponent = (ComponentMaker)gvac.makeComponent;
-                        int iFinal = i;
-                        components.add(subParents -> makeComponent.makeComponent(subParents, value[iFinal]));
-                    }
-                    return new FixedLengthComponentList<@Value Object @Value[], @Value Object>(parents, "(", components, ",", ")", (List<@Value Object> l) -> DataTypeUtility.value(l.<@Value Object>toArray(new @Value Object[0])));
-                });
+                return new GetValueAndComponent<@Value Object @Value[]>(tupleGet, new TupleRecogniser(Utility.<GetValueAndComponent<?>, Recogniser<@Value ?>>mapListI(gvacs, gvac -> gvac.recogniser)));
             }
 
             @Override
@@ -567,8 +556,10 @@ public class TableDisplayUtility
                     throw new InternalException("Can't make components for the empty list type");
 
                 @NonNull DataType innerType = inner;
-
-                return new GetValueAndComponent<@Value ListEx>(DataTypeUtility.toListEx(innerType, g), (parents, value) ->
+                
+                return new GetValueAndComponent<@Value ListEx>(DataTypeUtility.toListEx(innerType, g), dummy());
+                    /*
+                (parents, value) ->
                 {
                     List<@Value Object> fxList = DataTypeUtility.fetchList(value);
 
@@ -591,138 +582,12 @@ public class TableDisplayUtility
                         }
                     };
                 });
+                */
             }
         });
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static Component<@NonNull @Value ?> component(ImmutableList<Component<?>> parents, DataType dataType, @Nullable @Value Object value) throws InternalException
-    {
-        return dataType.apply(new DataTypeVisitorEx<Component<@NonNull @Value ?>, InternalException>()
-        {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> number(NumberInfo displayInfo) throws InternalException
-            {
-                return new NumberEntry(parents, (Number) value);
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> text() throws InternalException
-            {
-                return new TextEntry(parents, value == null ? "" : (String)value);
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> bool() throws InternalException
-            {
-                return new BoolComponent(parents, (Boolean)value);
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
-            {
-                switch (dateTimeInfo.getType())
-                {
-                    case YEARMONTHDAY:
-                        return new YMD(parents, (TemporalAccessor)value);
-                    case YEARMONTH:
-                        return new YM(parents, (TemporalAccessor)value);
-                    case TIMEOFDAY:
-                        return new TimeComponent(parents, (TemporalAccessor)value);
-                    /*
-                    case TIMEOFDAYZONED:
-                        return new Component2<@Value TemporalAccessor, @Value TemporalAccessor, @Value ZoneOffset>(parents, subParents -> new TimeComponent(subParents, (TemporalAccessor)value), null, subParents -> new PlusMinusOffsetComponent(subParents, value == null ? null : ((OffsetTime)value).getOffset().getTotalSeconds()), (a, b) -> OffsetTime.of((LocalTime) a, b));
-                    */
-                    case DATETIME:
-                        return new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, (TemporalAccessor)value), " ", subParents -> new TimeComponent(subParents, (TemporalAccessor)value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b));
-                    case DATETIMEZONED:
-                        return new Component2<@Value TemporalAccessor /*ZonedDateTime*/, @Value TemporalAccessor /*LocalDateTime*/, @Value ZoneId>(parents,
-                                        parents1 -> new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(
-                                                parents1, parents2 -> new YMD(parents2, (TemporalAccessor)value), " ", parents2 -> new TimeComponent(parents2, (TemporalAccessor)value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
-                                        " ",
-                                        parents1 -> new ZoneIdComponent(parents1, value == null ? null : ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b));
-                }
-                throw new InternalException("Unknown type: " + dateTimeInfo.getType());
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
-            {
-                return (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, (TaggedValue)value);
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> tuple(ImmutableList<DataType> types) throws InternalException
-            {
-                List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends @Value Object>>> comps = new ArrayList<>(types.size());
-                for (int i = 0; i < types.size(); i++)
-                {
-                    DataType type = types.get(i);
-                    int iFinal = i;
-                    comps.add(subParents -> component(subParents, type, value == null ? null : ((@Value Object @Value[]) value)[iFinal]));
-                }
-                return new FixedLengthComponentList<@Value Object @Value[], @Value Object>(parents, "(", ",", comps, ")", (List<@Value Object> l) -> DataTypeUtility.value(l.toArray(new @Value Object[0])));
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> array(@Nullable DataType inner) throws InternalException
-            {
-                if (inner == null)
-                    throw new InternalException("Can't make components for the empty list type");
-
-                @NonNull DataType innerType = inner;
-                if (value == null)
-                {
-                    return new VariableLengthComponentList<@Value ListEx, @Value Object>(parents, "[", ",", "]", ListExList::new)
-                    {
-                        @Override
-                        protected Component<? extends @Value Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
-                        {
-                            return component(subParents, innerType, null);
-                        }
-                    };
-                }
-                else
-                {
-                    try
-                    {
-                        List<@Value Object> fxList = DataTypeUtility.fetchList((ListEx)value);
-
-                        // Have to use some casts because we can't express the type safety:
-                        @SuppressWarnings("unchecked")
-                        ComponentMaker<@Value Object> makeComponent = (ComponentMaker) valueAndComponent(innerType.fromCollapsed((index, prog) -> DataTypeUtility.value(0))).makeComponent;
-                        List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull @Value Object>>> components = new ArrayList<>(fxList.size());
-                        for (int i = 0; i < fxList.size(); i++)
-                        {
-                            int iFinal = i;
-                            components.add(subParents -> makeComponent.makeComponent(subParents, fxList.get(iFinal)));
-                        }
-
-                        return new VariableLengthComponentList<@Value ListEx, @Value Object>(parents, "[", ",", components, "]", ListExList::new)
-                        {
-                            @Override
-                            protected Component<? extends @Value Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
-                            {
-                                return component(subParents, innerType, null);
-                            }
-                        };
-                    }
-                    catch (UserException e)
-                    {
-                        throw new InternalException("Unexpected fetch issue", e);
-                    }
-                }
-            }
-        });
-    }
-
+    
     private static interface EditorKitMaker<V>
     {
         @OnThread(Tag.FXPlatform)
@@ -790,4 +655,65 @@ public class TableDisplayUtility
         }
     }
     */
+    
+    
+    public static Recogniser<@Value ?> recogniser(DataType dataType) throws InternalException
+    {   
+        return dataType.apply(new DataTypeVisitorEx<Recogniser<@Value ?>, InternalException>()
+        {
+            @Override
+            public Recogniser<@Value ?> number(NumberInfo numberInfo) throws InternalException
+            {
+                return dummy();
+            }
+
+            @Override
+            public Recogniser<@Value ?> text() throws InternalException
+            {
+                return new StringRecogniser();
+            }
+
+            @Override
+            public Recogniser<@Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            {
+                return dummy();
+            }
+
+            @Override
+            public Recogniser<@Value ?> bool() throws InternalException
+            {
+                return new BooleanRecogniser();
+            }
+
+            @Override
+            public Recogniser<@Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            {
+                return dummy();
+            }
+
+            @Override
+            public Recogniser<@Value ?> tuple(ImmutableList<DataType> inner) throws InternalException
+            {
+                return new TupleRecogniser(Utility.<DataType, Recogniser<@Value ?>>mapListInt(inner, t -> recogniser(t)));
+            }
+
+            @Override
+            public Recogniser<@Value ?> array(DataType inner) throws InternalException
+            {
+                return dummy();
+            }
+        });
+    }
+
+    private static <T> Recogniser<@Value T> dummy()
+    {
+        return new Recogniser<@Value T>()
+        {
+            @Override
+            public Either<ErrorDetails, SuccessDetails<@Value T>> process(ParseProgress parseProgress)
+            {
+                return error("Unimplemented");
+            }
+        };
+    }
 }

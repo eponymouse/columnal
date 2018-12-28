@@ -45,6 +45,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         @Nullable DT innerType = initialValue == null ? null : tagTypes.get(initialValue.getTagIndex()).getInner();
         if (initialValue != null && initialValue.getInner() != null && innerType != null)
         {
+            /*
             try
             {
                 currentChild = TableDisplayUtility.component(getItemParents(), innerType, initialValue.getInner());
@@ -55,6 +56,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
                 // Just leave blank:
                 currentChild = null;
             }
+            */
         }
     }
 
@@ -79,6 +81,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         {
             if (matchingTag.getInner() != null)
             {
+                /*
                 try
                 {
                     currentChild = TableDisplayUtility.component(getItemParents(), matchingTag.getInner(), null);
@@ -89,6 +92,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
                     // Just leave blank:
                     currentChild = null;
                 }
+                */
             }
             else
             {

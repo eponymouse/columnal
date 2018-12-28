@@ -191,9 +191,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
         defaultValue = DataTypeUtility.makeDefaultValue(dataType);
-        @SuppressWarnings("nullness") // TODO
-        @NonNull EditorKit<?> r = null;
-        return r;
+        return new EditorKit<>(TableDisplayUtility.recogniser(dataType));
         //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
     }
 /*
