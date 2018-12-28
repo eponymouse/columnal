@@ -19,9 +19,8 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.expressioneditor.TypeEditor;
-import records.gui.stf.Component;
-import records.gui.stf.StructuredTextField;
-import records.gui.stf.StructuredTextField.EditorKit;
+import records.gui.flex.EditorKit;
+import records.gui.flex.FlexibleTextField;
 import records.gui.stf.TableDisplayUtility;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -91,7 +90,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
         columnNameTextField = new ColumnNameTextField(initial);
         content.addRow(GUI.labelledGridRow("edit.column.name", "edit-column/column-name", columnNameTextField.getNode()));
         
-        StructuredTextField defaultValueField = new StructuredTextField();
+        FlexibleTextField defaultValueField = new FlexibleTextField();
         defaultValueField.getStyleClass().add("default-value");
         TypeExpression typeExpression = new InvalidIdentTypeExpression("");
         if (dataType != null)
@@ -166,25 +165,25 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     }
 
     @OnThread(Tag.FXPlatform)
-    private void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, StructuredTextField structuredTextField, @Nullable DataType t)
+    private void updateType(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, FlexibleTextField textField, @Nullable DataType t)
     {
         if (t == null)
-            structuredTextField.setDisable(true);
+            textField.setDisable(true);
         else
         {
             try
             {
                 if (!t.equals(latestType))
                 {
-                    structuredTextField.resetContent(makeEditorKit(t));
+                    textField.resetContent(makeEditorKit(t));
                     latestType = t;
                 }
-                structuredTextField.setDisable(false);
+                textField.setDisable(false);
             }
             catch (InternalException e)
             {
                 Log.log(e);
-                structuredTextField.setDisable(true);
+                textField.setDisable(true);
             }
         }
     }
@@ -192,11 +191,15 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
         defaultValue = DataTypeUtility.makeDefaultValue(dataType);
-        return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
+        @SuppressWarnings("nullness") // TODO
+        @NonNull EditorKit<?> r = null;
+        return r;
+        //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
     }
-
+/*
     private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
     {
         return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
     }
+*/    
 }

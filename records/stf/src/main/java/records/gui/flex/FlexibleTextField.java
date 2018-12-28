@@ -13,7 +13,7 @@ public class FlexibleTextField extends StyleClassedTextArea
         getStyleClass().add("flexible-text-field");
     }
 
-    protected <T> void resetContent(EditorKit<T> editorKit)
+    public <T> void resetContent(EditorKit<T> editorKit)
     {
         if (this.editorKit != null)
         {
