@@ -17,6 +17,6 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
                 // Shouldn't be called anyway:
                 return Either.left(new ErrorDetails(StyledString.s(label)));
             }
-        });
+        }, (t, v) -> {});
     }
 }

@@ -20,7 +20,12 @@ public abstract class Recogniser<T>
             this.src = src;
             this.curCharIndex = curCharIndex;
         }
-        
+
+        public static ParseProgress fromStart(String text)
+        {
+            return new ParseProgress(text, 0);
+        }
+
         public @Nullable ParseProgress consumeNext(String match)
         {
             int next = skipSpaces();

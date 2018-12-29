@@ -21,6 +21,7 @@ import records.gui.EditImmediateColumnDialog.ColumnDetails;
 import records.gui.expressioneditor.TypeEditor;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
+import records.gui.flex.Recogniser;
 import records.gui.stf.TableDisplayUtility;
 import records.transformations.expression.type.IdentTypeExpression;
 import records.transformations.expression.type.InvalidIdentTypeExpression;
@@ -191,8 +192,13 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
     private EditorKit<?> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, DataType dataType) throws InternalException
     {
         defaultValue = DataTypeUtility.makeDefaultValue(dataType);
-        return new EditorKit<>(TableDisplayUtility.recogniser(dataType));
+        return makeEditorKit(TableDisplayUtility.recogniser(dataType));
         //return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
+    }
+
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Recogniser<T> recogniser)
+    {
+        return new EditorKit<T>(recogniser, (String s, @Value T v) -> {defaultValue = v;});
     }
 /*
     private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException

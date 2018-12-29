@@ -372,18 +372,19 @@ public class TableDisplayUtility
         public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
             MakeEditorKit<@Value T> makeEditorKit = (rowIndex, value, relinquishFocus) -> {
-                FXPlatformConsumer<Pair<String, @Value T>> saveChange = isEditable ? new FXPlatformConsumer<Pair<String, @Value T>>()
+                FXPlatformBiConsumer<String, @Value T> saveChange = (String s, @Value T v) -> {};
+                if (isEditable)
+                    saveChange = new FXPlatformBiConsumer<String, @Value T>()
                 {
                     @Override
-                    public @OnThread(Tag.FXPlatform) void consume(Pair<String, @Value T> p)
+                    public @OnThread(Tag.FXPlatform) void consume(String text, @Value T v)
                     {
-                        Workers.onWorkerThread("Saving", Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, p.getSecond())));
+                        Workers.onWorkerThread("Saving", Priority.SAVE, () -> FXUtility.alertOnError_("Error storing data value", () -> g.set(rowIndex, v)));
                         onModify.run();
                     }
-                } : null;
+                };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                @SuppressWarnings("nullness") // TODO
-                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(recogniser); //, saveChange, relinquishFocusRunnable, stfStyles));
+                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(recogniser, saveChange); // relinquishFocusRunnable, stfStyles));
                 return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
@@ -657,60 +658,60 @@ public class TableDisplayUtility
     */
     
     
-    public static Recogniser<@Value ?> recogniser(DataType dataType) throws InternalException
+    public static Recogniser<@NonNull @Value ?> recogniser(DataType dataType) throws InternalException
     {   
-        return dataType.apply(new DataTypeVisitorEx<Recogniser<@Value ?>, InternalException>()
+        return dataType.apply(new DataTypeVisitorEx<Recogniser<@NonNull @Value ?>, InternalException>()
         {
             @Override
-            public Recogniser<@Value ?> number(NumberInfo numberInfo) throws InternalException
+            public Recogniser<@NonNull @Value ?> number(NumberInfo numberInfo) throws InternalException
             {
                 return dummy();
             }
 
             @Override
-            public Recogniser<@Value ?> text() throws InternalException
+            public Recogniser<@NonNull @Value ?> text() throws InternalException
             {
                 return new StringRecogniser();
             }
 
             @Override
-            public Recogniser<@Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            public Recogniser<@NonNull @Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return dummy();
             }
 
             @Override
-            public Recogniser<@Value ?> bool() throws InternalException
+            public Recogniser<@NonNull @Value ?> bool() throws InternalException
             {
                 return new BooleanRecogniser();
             }
 
             @Override
-            public Recogniser<@Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public Recogniser<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 return dummy();
             }
 
             @Override
-            public Recogniser<@Value ?> tuple(ImmutableList<DataType> inner) throws InternalException
+            public Recogniser<@NonNull @Value ?> tuple(ImmutableList<DataType> inner) throws InternalException
             {
                 return new TupleRecogniser(Utility.<DataType, Recogniser<@Value ?>>mapListInt(inner, t -> recogniser(t)));
             }
 
             @Override
-            public Recogniser<@Value ?> array(DataType inner) throws InternalException
+            public Recogniser<@NonNull @Value ?> array(DataType inner) throws InternalException
             {
                 return dummy();
             }
         });
     }
 
-    private static <T> Recogniser<@Value T> dummy()
+    private static <T> Recogniser<@NonNull @Value T> dummy()
     {
-        return new Recogniser<@Value T>()
+        return new Recogniser<@NonNull @Value T>()
         {
             @Override
-            public Either<ErrorDetails, SuccessDetails<@Value T>> process(ParseProgress parseProgress)
+            public Either<ErrorDetails, SuccessDetails<@NonNull @Value T>> process(ParseProgress parseProgress)
             {
                 return error("Unimplemented");
             }
