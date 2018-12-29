@@ -11,6 +11,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformBiConsumer;
+import utility.FXPlatformRunnable;
 
 import java.util.Collection;
 
@@ -19,12 +20,14 @@ public class EditorKit<T>
 {
     private final Recogniser<T> recogniser;
     private final FXPlatformBiConsumer<String, T> onChange;
+    private final FXPlatformRunnable relinquishFocus;
     private Either<StyledString, T> latestValue = Either.left(StyledString.s("Loading"));
 
-    public EditorKit(Recogniser<T> recogniser, FXPlatformBiConsumer<String, T> onChange)
+    public EditorKit(Recogniser<T> recogniser, FXPlatformBiConsumer<String, T> onChange, FXPlatformRunnable relinquishFocus)
     {
         this.recogniser = recogniser;
         this.onChange = onChange;
+        this.relinquishFocus = relinquishFocus;
     }
 
     public boolean isEditable()
@@ -51,5 +54,10 @@ public class EditorKit<T>
             onChange.consume(text, succ.value);
             return succ.value;
         });
+    }
+
+    public void relinquishFocus()
+    {
+        relinquishFocus.run();
     }
 }

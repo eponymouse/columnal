@@ -384,7 +384,7 @@ public class TableDisplayUtility
                     }
                 };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(recogniser, saveChange); // relinquishFocusRunnable, stfStyles));
+                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
                 return editorKit;
             };
             return new EditorKitCache<@Value T>(columnIndex, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
