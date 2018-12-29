@@ -6,6 +6,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
@@ -25,9 +26,19 @@ public class FlexibleTextField extends StyleClassedTextArea
         getStyleClass().add("flexible-text-field");
         setPrefHeight(FXUtility.measureNotoSansHeight());
 
-        FXUtility.addChangeListenerPlatformNN(textProperty(), text -> {
-            if (editorKit != null)
-                editorKit.fieldChanged(text, isFocused());
+        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            FlexibleTextField usFocused = FXUtility.focused(this);
+            if (usFocused.editorKit == null)
+                return;
+            //usFocused.updateAutoComplete(getSelection());
+            if (focused)
+            {
+                usFocused.focusGained();
+            }
+            else
+            {
+                usFocused.focusLost();
+            }
         });
 
         Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
@@ -101,5 +112,19 @@ public class FlexibleTextField extends StyleClassedTextArea
         boolean atEnd = getCaretPosition() == getLength();
         if (atEnd && editorKit != null)
             editorKit.relinquishFocus(); // Should move focus away from us
+    }
+
+    @RequiresNonNull("editorKit")
+    private <T> void focusGained()
+    {
+        editorKit.focusChanged(getText(), true);
+    }
+
+    @RequiresNonNull("editorKit")
+    private <T> void focusLost()
+    {
+        // Deselect when focus is lost:
+        deselect();
+        editorKit.focusChanged(getText(), false);
     }
 }

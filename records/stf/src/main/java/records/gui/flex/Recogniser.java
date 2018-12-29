@@ -10,6 +10,24 @@ import utility.Pair;
 
 public abstract class Recogniser<T>
 {
+    protected  @Nullable Pair<String, ParseProgress> consumeDigits(ParseProgress parseProgress)
+    {
+        int i;
+        for (i = parseProgress.curCharIndex; i < parseProgress.src.length(); i++)
+        {
+            char c = parseProgress.src.charAt(i);
+            if (c < '0' || c > '9')
+            {
+                break;
+            }
+        }
+        
+        if (i == parseProgress.curCharIndex)
+            return null;
+        else
+            return new Pair<>(parseProgress.src.substring(parseProgress.curCharIndex, i), parseProgress.skip(i - parseProgress.curCharIndex));
+    }
+
     public static class ParseProgress
     {
         public final String src;
@@ -28,7 +46,7 @@ public abstract class Recogniser<T>
 
         public @Nullable ParseProgress consumeNext(String match)
         {
-            int next = skipSpaces();
+            int next = skipSpaces().curCharIndex;
             if (src.startsWith(match, next))
                 return new ParseProgress(src, next + match.length());
             else
@@ -36,7 +54,7 @@ public abstract class Recogniser<T>
         }
         
         // Consumes all text until the terminator, and returns it, and consumes the terminator.
-        public @Nullable Pair<String, ParseProgress> consumeUntil(String terminator)
+        public @Nullable Pair<String, ParseProgress> consumeUpToAndIncluding(String terminator)
         {
             int index = src.indexOf(terminator, curCharIndex);
             if (index == -1)
@@ -44,10 +62,24 @@ public abstract class Recogniser<T>
             return new Pair<>(src.substring(curCharIndex, index), new ParseProgress(src, index + terminator.length()));
         }
 
+        // Consumes all text until the soonest terminator, and returns it, and does NOT consume the terminator.
+        // If none are found, consumes whole string
+        public Pair<String, ParseProgress> consumeUpToAndExcluding(ImmutableList<String> terminators)
+        {
+            int earliest = src.length();
+            for (String terminator : terminators)
+            {
+                int index = src.indexOf(terminator, curCharIndex);
+                if (index != -1 && index < earliest)
+                    earliest = index;
+            }
+            return new Pair<>(src.substring(curCharIndex, earliest), new ParseProgress(src, earliest));
+        }
+
         // Ignore case
         public @Nullable ParseProgress consumeNextIC(String match)
         {
-            int next = skipSpaces();
+            int next = skipSpaces().curCharIndex;
             if (src.regionMatches(true, next, match, 0, match.length()))
                 return new ParseProgress(src, next + match.length());
             else
@@ -59,12 +91,12 @@ public abstract class Recogniser<T>
             return new ParseProgress(src, curCharIndex + chars);
         }
         
-        private int skipSpaces()
+        public ParseProgress skipSpaces()
         {
             int i = curCharIndex;
-            while (Character.isWhitespace(src.charAt(i)))
+            while (i < src.length() && Character.isWhitespace(src.charAt(i)))
                 i += 1;
-            return i;
+            return new ParseProgress(src, i);
         }
     }
     

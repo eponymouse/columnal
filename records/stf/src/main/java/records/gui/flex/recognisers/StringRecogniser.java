@@ -14,7 +14,7 @@ public class StringRecogniser extends Recogniser<@Value String>
         ParseProgress pp = orig.consumeNext("\"");
         if (pp == null)
             return error("Looking for \" to begin text");
-        Pair<String, ParseProgress> content = orig.consumeUntil("\"");
+        Pair<String, ParseProgress> content = orig.consumeUpToAndIncluding("\"");
         if (content == null)
             return error("Could not find closing \" for text");
         return success(DataTypeUtility.value(content.getFirst()), content.getSecond());

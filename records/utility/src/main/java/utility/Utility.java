@@ -458,8 +458,7 @@ public class Utility
     {
         Log.log(e); // TODO log and send back
     }
-
-    @SuppressWarnings("value")
+    
     public static @Value Number parseNumber(String number) throws UserException
     {
         return parseNumberOpt(number).orElseThrow(() -> new UserException("Problem parsing number \"" + number + "\""));

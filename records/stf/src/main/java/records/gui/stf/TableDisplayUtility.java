@@ -35,7 +35,9 @@ import records.error.UserException;
 import records.gui.flex.FlexibleTextField;
 import records.gui.flex.Recogniser;
 import records.gui.flex.recognisers.BooleanRecogniser;
+import records.gui.flex.recognisers.NumberRecogniser;
 import records.gui.flex.recognisers.StringRecogniser;
+import records.gui.flex.recognisers.TemporalRecogniser;
 import records.gui.flex.recognisers.TupleRecogniser;
 import records.gui.stable.ColumnHandler;
 import records.gui.stable.EditorKitCache;
@@ -455,7 +457,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@Value Number>(g, dummy(), new NumberColumnFormatter());
+                return new GetValueAndComponent<@Value Number>(g, new NumberRecogniser(), new NumberColumnFormatter());
             }
 
             @Override
@@ -473,23 +475,23 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
-                switch (dateTimeInfo.getType())
-                {
-                    case YEARMONTHDAY:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
-                    case YEARMONTH:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
-                    case TIMEOFDAY:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
-                    /*
-                    case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<@Value TemporalAccessor, @Value TemporalAccessor, @Value ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
-                    */
-                    case DATETIME:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
+                return new GetValueAndComponent<@Value TemporalAccessor>(g, new TemporalRecogniser(dateTimeInfo.getType()));
+                
+                //switch (dateTimeInfo.getType())
+                //{
+                //    case YEARMONTHDAY:
+                //        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
+                //    case YEARMONTH:
+                //        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
+                //    case TIMEOFDAY:
+                //        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
+                //    case TIMEOFDAYZONED:
+                //        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<@Value TemporalAccessor, @Value TemporalAccessor, @Value ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
+                 //   case DATETIME:
+                 //       return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy());
                             //(parents, value) -> new Component2<@Value TemporalAccessor/*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
-                    case DATETIMEZONED:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy()); 
+                 //   case DATETIMEZONED:
+                 //       return new GetValueAndComponent<@Value TemporalAccessor>(g, dummy()); 
                             //(parents0, value) ->
                             //new Component2<@Value TemporalAccessor /*ZonedDateTime*/, @Value TemporalAccessor /*LocalDateTime*/, @Value ZoneId>(parents0,
 //                                parents1 -> new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(
@@ -497,8 +499,8 @@ public class TableDisplayUtility
 //                                " ",
 //                                parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b))
 //                        );
-                }
-                throw new InternalException("Unknown type: " + dateTimeInfo.getType());
+                //}
+                //throw new InternalException("Unknown type: " + dateTimeInfo.getType());
             }
 
             @Override
@@ -665,7 +667,7 @@ public class TableDisplayUtility
             @Override
             public Recogniser<@NonNull @Value ?> number(NumberInfo numberInfo) throws InternalException
             {
-                return dummy();
+                return new NumberRecogniser();
             }
 
             @Override
@@ -677,7 +679,7 @@ public class TableDisplayUtility
             @Override
             public Recogniser<@NonNull @Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                return dummy();
+                return new TemporalRecogniser(dateTimeInfo.getType());
             }
 
             @Override

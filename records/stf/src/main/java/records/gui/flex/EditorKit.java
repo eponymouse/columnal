@@ -45,19 +45,22 @@ public class EditorKit<T>
         return new SimpleEditableStyledDocument<>(ImmutableList.of(), ImmutableList.of());
     }
 
-    public void fieldChanged(String text, boolean focused)
-    {
-        latestValue = recogniser.process(ParseProgress.fromStart(text)).mapBoth(err -> {
-            return err.error;
-        }, succ -> {
-            // TODO apply styles
-            onChange.consume(text, succ.value);
-            return succ.value;
-        });
-    }
-
     public void relinquishFocus()
     {
         relinquishFocus.run();
+    }
+
+    public void focusChanged(String text, boolean focused)
+    {
+        if (!focused)
+        {
+            latestValue = recogniser.process(ParseProgress.fromStart(text)).mapBoth(err -> {
+                return err.error;
+            }, succ -> {
+                // TODO apply styles
+                onChange.consume(text, succ.value);
+                return succ.value;
+            });
+        }
     }
 }
