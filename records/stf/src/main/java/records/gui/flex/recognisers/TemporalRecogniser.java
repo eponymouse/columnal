@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.error.InternalException;
@@ -147,14 +148,14 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                 }
 
                 @Override
-                @SuppressWarnings("unchecked")
-                public <R> R query(TemporalQuery<R> query)
+                @SuppressWarnings({"unchecked", "nullness"})
+                public <R> @Nullable R query(TemporalQuery<R> query)
                 {
                     if (query.equals(TemporalQueries.zone()) || query.equals(TemporalQueries.zoneId()))
                     {
                         return (R)zone;
                     }
-                    return query.queryFrom(this);
+                    return null;
                 }
             }), pp);
         }
