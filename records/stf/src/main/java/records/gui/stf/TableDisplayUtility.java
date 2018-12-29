@@ -35,8 +35,10 @@ import records.error.UserException;
 import records.gui.flex.FlexibleTextField;
 import records.gui.flex.Recogniser;
 import records.gui.flex.recognisers.BooleanRecogniser;
+import records.gui.flex.recognisers.ListRecogniser;
 import records.gui.flex.recognisers.NumberRecogniser;
 import records.gui.flex.recognisers.StringRecogniser;
+import records.gui.flex.recognisers.TaggedRecogniser;
 import records.gui.flex.recognisers.TemporalRecogniser;
 import records.gui.flex.recognisers.TupleRecogniser;
 import records.gui.stable.ColumnHandler;
@@ -507,7 +509,7 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(getTagged, dummy()); 
+                return new GetValueAndComponent<TaggedValue>(getTagged, new TaggedRecogniser(Utility.<TagType<DataTypeValue>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t))))); 
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
@@ -560,7 +562,7 @@ public class TableDisplayUtility
 
                 @NonNull DataType innerType = inner;
                 
-                return new GetValueAndComponent<@Value ListEx>(DataTypeUtility.toListEx(innerType, g), dummy());
+                return new GetValueAndComponent<@Value ListEx>(DataTypeUtility.toListEx(innerType, g), new ListRecogniser(recogniser(inner)));
                     /*
                 (parents, value) ->
                 {
@@ -691,7 +693,7 @@ public class TableDisplayUtility
             @Override
             public Recogniser<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return dummy();
+                return new TaggedRecogniser(Utility.<TagType<DataType>, TagType<Recogniser<@Value ?>>>mapListInt(tags, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t))));
             }
 
             @Override
@@ -703,20 +705,8 @@ public class TableDisplayUtility
             @Override
             public Recogniser<@NonNull @Value ?> array(DataType inner) throws InternalException
             {
-                return dummy();
+                return new ListRecogniser(recogniser(inner));
             }
         });
-    }
-
-    private static <T> Recogniser<@NonNull @Value T> dummy()
-    {
-        return new Recogniser<@NonNull @Value T>()
-        {
-            @Override
-            public Either<ErrorDetails, SuccessDetails<@NonNull @Value T>> process(ParseProgress parseProgress)
-            {
-                return error("Unimplemented");
-            }
-        };
     }
 }

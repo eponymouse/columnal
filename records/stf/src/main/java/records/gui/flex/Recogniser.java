@@ -117,14 +117,14 @@ public abstract class Recogniser<T>
         public final ImmutableList<StyleSpanInfo> styles;
         public final ParseProgress parseProgress;
 
-        public SuccessDetails(@NonNull T value, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
+        private SuccessDetails(@NonNull T value, ImmutableList<StyleSpanInfo> styles, ParseProgress parseProgress)
         {
             this.value = value;
             this.styles = styles;
             this.parseProgress = parseProgress;
         }
 
-        public SuccessDetails(@NonNull T value, ParseProgress parseProgress)
+        private SuccessDetails(@NonNull T value, ParseProgress parseProgress)
         {
             this(value, ImmutableList.of(), parseProgress);
         }

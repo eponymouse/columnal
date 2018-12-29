@@ -103,7 +103,7 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                 zone = "";
             }
 
-            return Either.right(new SuccessDetails<@Value TemporalAccessor>(new DateTimeInfo(dateTimeType).fromParsed(new TemporalAccessor()
+            return success(new DateTimeInfo(dateTimeType).fromParsed(new TemporalAccessor()
             {
                 @Override
                 public boolean isSupported(TemporalField field)
@@ -156,7 +156,7 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                     }
                     return query.queryFrom(this);
                 }
-            }), pp));
+            }), pp);
         }
         catch (InternalException e)
         {
