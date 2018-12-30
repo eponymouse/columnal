@@ -17,6 +17,8 @@ import records.data.CellPosition;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
+import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -70,6 +72,8 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
 
     @OnThread(Tag.Any)
     private final GetValue<@Value V> getValue;
+    @OnThread(Tag.Any)
+    private final DataType dataType;
     private final GetDataPosition getDataPosition;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
     private final MakeEditorKit<@Value V> makeEditorKit;
@@ -77,9 +81,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public EditorKitCache(@TableDataColIndex int columnIndex, GetValue<@Value V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, GetDataPosition getDataPosition, MakeEditorKit<@Value V> makeEditorKit)
+    public EditorKitCache(@TableDataColIndex int columnIndex, DataType dataType, GetValue<@Value V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, GetDataPosition getDataPosition, MakeEditorKit<@Value V> makeEditorKit)
     {
         this.columnIndex = columnIndex;
+        this.dataType = dataType;
         this.getValue = getValue;
         this.getDataPosition = getDataPosition;
         this.formatVisibleCells = formatVisibleCells;
@@ -93,7 +98,7 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
     public static interface MakeEditorKit<V>
     {
         @OnThread(Tag.FXPlatform)
-        public EditorKit<V> makeKit(@TableDataRowIndex int rowIndex, V initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
+        public EditorKit<V> makeKit(@TableDataRowIndex int rowIndex, Pair<String, @Nullable V> initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
     }
 
 /*
@@ -274,10 +279,10 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
             Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
         }
 
-        public synchronized void update(@Value V loadedItem)
+        public synchronized void update(String content, @Value V loadedItem)
         {
             FXUtility.alertOnErrorFX_("Error loading value for display", () -> {
-                this.loadedItemOrError = Either.<Pair<@Value V, EditorKit<@Value V>>, @Localized String>left(new Pair<@Value V, EditorKit<@Value V>>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
+                this.loadedItemOrError = Either.<Pair<@Value V, EditorKit<@Value V>>, @Localized String>left(new Pair<@Value V, EditorKit<@Value V>>(loadedItem, makeEditorKit.makeKit(rowIndex, new Pair<>(content, loadedItem), relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
             updateDisplay();
             //formatVisible(OptionalInt.of(rowIndex));
@@ -343,7 +348,8 @@ public final class EditorKitCache<@Value V> implements ColumnHandler
                 };
                 prog.progressUpdate(0.0);
                 @Value V val = getValue.getWithProgress(originalIndex, prog);
-                Platform.runLater(() -> displayCacheItem.update(val));
+                String valAsStr = DataTypeUtility.valueToString(dataType, val, null);
+                Platform.runLater(() -> displayCacheItem.update(valAsStr, val));
             }
             catch (UserException | InternalException e)
             {

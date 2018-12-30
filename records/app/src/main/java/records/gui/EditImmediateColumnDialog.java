@@ -198,7 +198,7 @@ public class EditImmediateColumnDialog extends ErrorableLightDialog<ColumnDetail
 
     private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> makeEditorKit(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Recogniser<T> recogniser)
     {
-        return new EditorKit<T>(recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        return new EditorKit<T>("", recogniser, (String s, @Value T v) -> {defaultValue = v;}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
     }
 /*
     private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(LightDialog.class)EditImmediateColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException

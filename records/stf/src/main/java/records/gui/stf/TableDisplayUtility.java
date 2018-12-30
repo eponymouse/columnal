@@ -354,19 +354,21 @@ public class TableDisplayUtility
     
     public static class GetValueAndComponent<@Value T>
     {
+        private final DataType dataType;
         public final GetValue<@Value T> g;
         public final Recogniser<@Value T> recogniser;
         private final @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter;
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(GetValue<@Value T> g, Recogniser<@Value T> recogniser)
+        public GetValueAndComponent(DataType dataType, GetValue<@Value T> g, Recogniser<@Value T> recogniser)
         {
-            this(g, recogniser, null);
+            this(dataType, g, recogniser, null);
         }
 
         @OnThread(Tag.Any)
-        public GetValueAndComponent(GetValue<@Value T> g, Recogniser<@Value T> recogniser, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
+        public GetValueAndComponent(DataType dataType, GetValue<@Value T> g, Recogniser<@Value T> recogniser, @Nullable FXPlatformConsumer<EditorKitCache<@Value T>.VisibleDetails> formatter)
         {
+            this.dataType = dataType;
             this.g = g;
             this.recogniser = recogniser;
             this.formatter = formatter;
@@ -375,7 +377,7 @@ public class TableDisplayUtility
         @OnThread(Tag.Any)
         public EditorKitCache<@Value T> makeDisplayCache(@TableDataColIndex int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, GetDataPosition getDataPosition, FXPlatformRunnable onModify)
         {
-            MakeEditorKit<@Value T> makeEditorKit = (rowIndex, value, relinquishFocus) -> {
+            MakeEditorKit<@Value T> makeEditorKit = (int rowIndex, Pair<String, @Nullable T> value, FXPlatformConsumer<CellPosition> relinquishFocus) -> {
                 FXPlatformBiConsumer<String, @Value T> saveChange = (String s, @Value T v) -> {};
                 if (isEditable)
                     saveChange = new FXPlatformBiConsumer<String, @Value T>()
@@ -388,10 +390,10 @@ public class TableDisplayUtility
                     }
                 };
                 FXPlatformRunnable relinquishFocusRunnable = () -> relinquishFocus.consume(getDataPosition.getDataPosition(rowIndex, columnIndex));
-                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
+                EditorKit<@Value T> editorKit = new EditorKit<@Value T>(value.getFirst(), recogniser, saveChange, relinquishFocusRunnable); // stfStyles));
                 return editorKit;
             };
-            return new EditorKitCache<@Value T>(columnIndex, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
+            return new EditorKitCache<@Value T>(columnIndex, dataType, g, formatter != null ? formatter : vis -> {}, getDataPosition, makeEditorKit);
         }
     }
 
@@ -459,25 +461,25 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<@Value Number>(g, new NumberRecogniser(), new NumberColumnFormatter());
+                return new GetValueAndComponent<@Value Number>(dataTypeValue, g, new NumberRecogniser(), new NumberColumnFormatter());
             }
 
             @Override
             public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value String>(g, new StringRecogniser());
+                return new GetValueAndComponent<@Value String>(dataTypeValue, g, new StringRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> bool(GetValue<@Value Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value Boolean>(g, new BooleanRecogniser());
+                return new GetValueAndComponent<@Value Boolean>(dataTypeValue, g, new BooleanRecogniser());
             }
 
             @Override
             public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
-                return new GetValueAndComponent<@Value TemporalAccessor>(g, new TemporalRecogniser(dateTimeInfo.getType()));
+                return new GetValueAndComponent<@Value TemporalAccessor>(dataTypeValue, g, new TemporalRecogniser(dateTimeInfo.getType()));
                 
                 //switch (dateTimeInfo.getType())
                 //{
@@ -509,7 +511,7 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<Either<Unit, DataType>> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(getTagged, new TaggedRecogniser(Utility.<TagType<DataTypeValue>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t))))); 
+                return new GetValueAndComponent<TaggedValue>(dataTypeValue, getTagged, new TaggedRecogniser(Utility.<TagType<DataTypeValue>, TagType<Recogniser<@Value ?>>>mapListInt(tagTypes, tt -> tt.<Recogniser<@Value ?>>mapInt(t -> recogniser(t))))); 
                     //(parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
@@ -550,7 +552,7 @@ public class TableDisplayUtility
                 };
 
 
-                return new GetValueAndComponent<@Value Object @Value[]>(tupleGet, new TupleRecogniser(Utility.<GetValueAndComponent<?>, Recogniser<@Value ?>>mapListI(gvacs, gvac -> gvac.recogniser)));
+                return new GetValueAndComponent<@Value Object @Value[]>(dataTypeValue, tupleGet, new TupleRecogniser(Utility.<GetValueAndComponent<?>, Recogniser<@Value ?>>mapListI(gvacs, gvac -> gvac.recogniser)));
             }
 
             @Override
@@ -562,7 +564,7 @@ public class TableDisplayUtility
 
                 @NonNull DataType innerType = inner;
                 
-                return new GetValueAndComponent<@Value ListEx>(DataTypeUtility.toListEx(innerType, g), new ListRecogniser(recogniser(inner)));
+                return new GetValueAndComponent<@Value ListEx>(dataTypeValue, DataTypeUtility.toListEx(innerType, g), new ListRecogniser(recogniser(inner)));
                     /*
                 (parents, value) ->
                 {

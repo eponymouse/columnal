@@ -9,7 +9,7 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
 {
     public EditorKitSimpleLabel(String label)
     {
-        super(new Recogniser<T>()
+        super(label, new Recogniser<T>()
         {
             @Override
             public Either<ErrorDetails, SuccessDetails<T>> process(ParseProgress src)
