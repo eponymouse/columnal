@@ -269,6 +269,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     {
         return new GridCellInfo<VersionedSTF, CellStyle>()
         {
+            private @Nullable Collection<Pair<GridAreaCellPosition, VersionedSTF>> latestVisibleCells;
+
             @Override
             public @Nullable GridAreaCellPosition cellAt(CellPosition cellPosition)
             {
@@ -306,7 +308,11 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                             // The rowIndex and colIndex are in table data terms, so we must translate:
                             @Nullable VersionedSTF cell = getCell.apply(cellPosition.from(getPosition()));
                             if (cell != null)// && cell == orig)
+                            {
                                 cell.setContent(editorKit, displayColumns);
+                                if (latestVisibleCells != null)
+                                    styleTogether(latestVisibleCells);
+                            }
                         }
                     );
                 }
@@ -330,6 +336,8 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             @Override
             public void styleTogether(Collection<Pair<GridAreaCellPosition, VersionedSTF>> cells)
             {
+                this.latestVisibleCells = cells;
+                
                 ImmutableListMultimap<Integer, VersionedSTF> cellsByColumn = cells.stream().collect(
                         ImmutableListMultimap.<Pair<GridAreaCellPosition, VersionedSTF>, Integer, VersionedSTF>flatteningToImmutableListMultimap(c -> c.getFirst().columnIndex, c -> Stream.of(c.getSecond()))
                 );

@@ -1,18 +1,12 @@
 package records.gui.flex;
 
 import com.google.common.collect.ImmutableList;
-import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledText;
-import records.data.datatype.DataTypeUtility;
-import records.error.InternalException;
-import records.error.UserException;
 import records.gui.flex.Recogniser.ParseProgress;
-import records.gui.stf.TableDisplayUtility;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -22,6 +16,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 
 import java.util.Collection;
+import java.util.function.UnaryOperator;
 
 @OnThread(Tag.FXPlatform)
 public class EditorKit<T>
@@ -31,6 +26,7 @@ public class EditorKit<T>
     private final FXPlatformRunnable relinquishFocus;
     private Either<StyledString, T> latestValue = Either.left(StyledString.s("Loading"));
     private ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> latestDocument;
+    private Pair<ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>>, UnaryOperator<Integer>> unfocusedDocument;
     private @Nullable FlexibleTextField field;
 
     public EditorKit(String initialValue, Recogniser<T> recogniser, FXPlatformBiConsumer<String, T> onChange, FXPlatformRunnable relinquishFocus)
@@ -40,6 +36,7 @@ public class EditorKit<T>
         this.relinquishFocus = relinquishFocus;
         this.latestValue = recogniser.process(ParseProgress.fromStart(initialValue)).mapBoth(err -> err.error, succ -> succ.value);        
         this.latestDocument = ReadOnlyStyledDocument.fromString(initialValue, ImmutableList.of(), ImmutableList.of(), StyledText.textOps());
+        this.unfocusedDocument = new Pair<>(latestDocument, UnaryOperator.identity());
     }
 
     public boolean isEditable()
@@ -50,15 +47,16 @@ public class EditorKit<T>
     public void setField(@Nullable FlexibleTextField flexibleTextField)
     {
         if (this.field != null)
+        {
             latestDocument = ReadOnlyStyledDocument.from(field.getDocument());
+            unfocusedDocument = new Pair<>(latestDocument, UnaryOperator.identity());
+        }
         this.field = flexibleTextField;
     }
 
-    public EditableStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> getLatestDocument()
+    public ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> getLatestDocument(boolean focused)
     {
-        SimpleEditableStyledDocument<Collection<String>, Collection<String>> doc = new SimpleEditableStyledDocument<>(ImmutableList.of(), ImmutableList.of());
-        doc.replace(0, 0, latestDocument);
-        return doc;
+        return focused ? latestDocument : unfocusedDocument.getFirst();
     }
 
     public void relinquishFocus()
@@ -68,8 +66,13 @@ public class EditorKit<T>
 
     public void focusChanged(String text, boolean focused)
     {
+        final FlexibleTextField fieldFinal = this.field;
+        if (fieldFinal == null)
+            return; // Shouldn't happen, but satisfy nullness checker
+        
         if (!focused)
         {
+            latestDocument = ReadOnlyStyledDocument.from(fieldFinal.getDocument());
             latestValue = recogniser.process(ParseProgress.fromStart(text)).mapBoth(err -> {
                 return err.error;
             }, succ -> {
@@ -77,6 +80,25 @@ public class EditorKit<T>
                 onChange.consume(text, succ.value);
                 return succ.value;
             });
+            fieldFinal.replace(unfocusedDocument.getFirst());
         }
+        else
+        {
+            int pos = fieldFinal.getCaretPosition();
+            fieldFinal.replace(latestDocument);
+            fieldFinal.moveTo(unfocusedDocument.getSecond().apply(pos));
+        }
+    }
+
+    public Either<StyledString, T> getLatestValue()
+    {
+        return latestValue;
+    }
+    
+    public void setUnfocusedDocument(ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc, UnaryOperator<Integer> mapCaretPos)
+    {
+        unfocusedDocument = new Pair<>(doc, mapCaretPos);
+        if (field != null && !field.isFocused())
+            field.replace(doc);
     }
 }

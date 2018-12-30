@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
@@ -11,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.StyledText;
 import records.gui.flex.EditorKit;
 import records.gui.flex.FlexibleTextField;
 import records.gui.stable.EditorKitCache;
@@ -22,6 +24,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
+import java.util.function.UnaryOperator;
 
 /**
  * One per column.
@@ -43,14 +46,11 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                 EditorKit<?> editorKit = visibleCell.getEditorKit();
                 if (editorKit != null)
                 {
-                    /* TODO
-                    NumberEntry numberEntry = editorKit.getComponent(NumberEntry.class);
-                    @Nullable Number value = Utility.castOrNull(editorKit.getLastCompletedValue(), Number.class);
-                    if (numberEntry != null && value != null)
+                    @Nullable Number value = Utility.castOrNull(editorKit.getLatestValue().<@Nullable Object>either(err -> null, x -> x), Number.class);
+                    if (value != null)
                     {
-                        visibleItems.add(new NumberDetails(visibleCell, numberEntry, value));
+                        visibleItems.add(new NumberDetails(visibleCell, value));
                     }
-                    */
                 }
             }
         }
@@ -107,18 +107,16 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
     
     private class NumberDetails
     {
-        private final StructuredTextField structuredTextField;
+        private final FlexibleTextField textField;
         private final String fullFracPart;
         private final String fullIntegerPart;
         private String displayFracPart;
         private String displayIntegerPart;
         private boolean displayDotVisible;
-        private final NumberEntry numberEntry;
 
-        public NumberDetails(StructuredTextField structuredTextField, NumberEntry numberEntry, Number n)
+        public NumberDetails(FlexibleTextField textField, Number n)
         {
-            this.structuredTextField = structuredTextField;
-            this.numberEntry = numberEntry;
+            this.textField = textField;
             fullIntegerPart = Utility.getIntegerPart(n).toString();
             fullFracPart = Utility.getFracPartAsString(n, 0, -1);
             // TODO should these be taken from NumberEntry?
@@ -130,8 +128,17 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
         private void updateDisplay()
         {
             //Log.debug("Replacing: " + displayIntegerPart + "//" + displayFracPart);
-            if (!structuredTextField.isFocused() && numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
-                structuredTextField.updateFromEditorKit();
+            //if (!textField.isFocused() && numberEntry.setDisplay(displayIntegerPart, displayDotVisible, displayFracPart))
+                //textField.updateFromEditorKit();
+            EditorKit<?> editorKit = textField.getEditorKit();
+            if (editorKit != null)
+                editorKit.setUnfocusedDocument(FlexibleTextField.doc(ImmutableList.of(
+                    new StyledText<>(displayIntegerPart, ImmutableList.of("stf-number-int")),
+                    new StyledText<>(displayDotVisible ? "." : "", ImmutableList.of("stf-number-dot")),
+                    new StyledText<>(displayFracPart, ImmutableList.of("stf-number-frac"))
+                )), UnaryOperator.identity() /* TODO */);
+            
+            
             /*
             List<String> dotStyle = new ArrayList<>();
             dotStyle.add("number-display-dot");

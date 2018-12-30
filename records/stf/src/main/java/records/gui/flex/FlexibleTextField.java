@@ -1,5 +1,6 @@
 package records.gui.flex;
 
+import com.google.common.collect.ImmutableList;
 import javafx.event.Event;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -8,12 +9,17 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.StyledText;
+import org.fxmisc.richtext.model.TextOps;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
+
+import java.util.Collection;
 
 @OnThread(Tag.FXPlatform)
 public class FlexibleTextField extends StyleClassedTextArea
@@ -68,7 +74,7 @@ public class FlexibleTextField extends StyleClassedTextArea
 
         this.editorKit = editorKit;
         this.editorKit.setField(this);
-        replace(editorKit.getLatestDocument());
+        replace(editorKit.getLatestDocument(isFocused()));
 
         setEditable(this.editorKit.isEditable());
     }
@@ -126,5 +132,17 @@ public class FlexibleTextField extends StyleClassedTextArea
         // Deselect when focus is lost:
         deselect();
         editorKit.focusChanged(getText(), false);
+    }
+    
+    public static ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc(ImmutableList<StyledText<Collection<String>>> segments)
+    {
+        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> overall = ReadOnlyStyledDocument.fromString("", ImmutableList.of(), ImmutableList.of(), StyledText.textOps());
+        for (StyledText<Collection<String>> segment : segments)
+        {
+            ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> latest = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromString(segment.getText(), ImmutableList.of(), segment.getStyle(), StyledText.textOps());
+            overall = overall.concat(latest);
+        }
+        return overall;
+        
     }
 }
