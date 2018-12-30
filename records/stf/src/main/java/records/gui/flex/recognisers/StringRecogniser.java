@@ -2,6 +2,7 @@ package records.gui.flex.recognisers;
 
 import annotation.qual.Value;
 import records.data.datatype.DataTypeUtility;
+import records.grammar.GrammarUtility;
 import records.gui.flex.Recogniser;
 import utility.Either;
 import utility.Pair;
@@ -17,6 +18,6 @@ public class StringRecogniser extends Recogniser<@Value String>
         Pair<String, ParseProgress> content = pp.consumeUpToAndIncluding("\"");
         if (content == null)
             return error("Could not find closing \" for text");
-        return success(DataTypeUtility.value(content.getFirst()), content.getSecond());
+        return success(DataTypeUtility.value(GrammarUtility.processEscapes(content.getFirst(), false)), content.getSecond());
     }
 }
