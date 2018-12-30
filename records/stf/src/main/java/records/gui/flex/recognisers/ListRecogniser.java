@@ -19,33 +19,40 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
     @Override
     public Either<ErrorDetails, SuccessDetails<@Value ListEx>> process(ParseProgress parseProgress)
     {
-        ImmutableList.Builder<@Value Object> list = ImmutableList.builder();
-        ParseProgress pp = parseProgress;
-        pp = pp.consumeNext("[");
-        if (pp == null)
-            return error("Expected '[' to begin list");
-        pp = pp.skipSpaces();
-        
-        boolean first = true;
-        while (first || pp.src.charAt(pp.curCharIndex) == ',')
+        try
         {
-            if (!first)
+            ImmutableList.Builder<@Value Object> list = ImmutableList.builder();
+            ParseProgress pp = parseProgress;
+            pp = pp.consumeNext("[");
+            if (pp == null)
+                return error("Expected '[' to begin list");
+            pp = pp.skipSpaces();
+
+            boolean first = true;
+            while (first || pp.src.charAt(pp.curCharIndex) == ',')
             {
-                // Skip comma:
-                pp = pp.skip(1);
+                if (!first)
+                {
+                    // Skip comma:
+                    pp = pp.skip(1);
+                }
+
+                pp = addToList(list, inner.process(pp));
+
+                pp = pp.skipSpaces();
+                first = false;
             }
 
-            pp = addToList(list, inner.process(pp));
-            
-            pp = pp.skipSpaces();
-            first = false;
+            pp = pp.consumeNext("]");
+            if (pp == null)
+                return error("Expected ']' to end list");
+
+            return success(new ListExList(list.build()), pp);
         }
-        
-        pp = pp.consumeNext("]");
-        if (pp == null)
-            return error("Expected ']' to end list");
-        
-        return success(new ListExList(list.build()), pp);
+        catch (ListException e)
+        {
+            return Either.left(e.errorDetails);
+        }
     }
     
     private static class ListException extends RuntimeException
