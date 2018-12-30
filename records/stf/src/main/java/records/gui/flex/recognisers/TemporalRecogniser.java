@@ -13,12 +13,19 @@ import records.gui.flex.Recogniser;
 import utility.Either;
 import utility.Pair;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.UnsupportedTemporalTypeException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
@@ -33,8 +40,7 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
     @Override
     public Either<ErrorDetails, SuccessDetails<@Value TemporalAccessor>> process(ParseProgress orig)
     {
-        final int year, month, day, hour, minute, second;
-        final long nano;
+        final int year, month, day, hour, minute, second, nano;
         final String zone;
         try
         {
@@ -46,9 +52,10 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                 pp = consumeNext("-", yearPair.getSecond());
                 Pair<Integer, ParseProgress> monthPair = consumeInt(pp);
                 month = monthPair.getFirst();
+                pp = monthPair.getSecond();
                 if (dateTimeType.hasDay())
                 {
-                    pp = consumeNext("-", monthPair.getSecond());
+                    pp = consumeNext("-", pp);
                     Pair<Integer, ParseProgress> dayPair = consumeInt(pp);
                     day = dayPair.getFirst();
                     pp = dateTimeType.hasTime() ? consumeNext(" ", dayPair.getSecond()).skipSpaces() : dayPair.getSecond();
@@ -81,7 +88,7 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                     StringBuilder b = new StringBuilder(nanoPair.getFirst().substring(0, Math.min(9, nanoPair.getFirst().length())));
                     while (b.length() < 9)
                         b.append('0');
-                    nano = Long.parseLong(b.toString());
+                    nano = Integer.parseInt(b.toString());
                     pp = nanoPair.getSecond();
                 }
                 else
@@ -90,9 +97,12 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                 if (dateTimeType.hasZoneId())
                 {
                     pp = pp.skipSpaces();
-                    int end = Pattern.compile("^[A-Za-z][A-Za-z_/+-]+").matcher(pp.src.substring(pp.curCharIndex)).end();
-                    zone = pp.src.substring(pp.curCharIndex, end);
-                    pp = pp.skip(end - pp.curCharIndex);
+                    Matcher matcher = Pattern.compile("^[A-Za-z][A-Za-z_/+-]+").matcher(pp.src.substring(pp.curCharIndex));
+                    if (!matcher.matches())
+                        throw new UserException("Expected time zone");
+                    int end = matcher.end();
+                    zone = pp.src.substring(pp.curCharIndex, end + pp.curCharIndex);
+                    pp = pp.skip(end);
                 }
                 else
                     zone = "";
@@ -104,60 +114,28 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                 zone = "";
             }
 
-            return success(new DateTimeInfo(dateTimeType).fromParsed(new TemporalAccessor()
+            final TemporalAccessor t;
+            switch (dateTimeType)
             {
-                @Override
-                public boolean isSupported(TemporalField field)
-                {
-                    if (field instanceof ChronoField)
-                    {
-                        switch (((ChronoField) field))
-                        {
-                            case YEAR:
-                            case MONTH_OF_YEAR:
-                                return dateTimeType.hasYearMonth();
-                            case DAY_OF_MONTH:
-                                return dateTimeType.hasDay();
-                            case HOUR_OF_DAY:
-                            case MINUTE_OF_HOUR:
-                            case SECOND_OF_MINUTE:
-                            case NANO_OF_SECOND:
-                                return dateTimeType.hasTime();
-                        }
-                    }
-                    return false;
-                }
-
-                @Override
-                public long getLong(TemporalField field)
-                {
-                    if (field instanceof ChronoField)
-                    {
-                        switch (((ChronoField) field))
-                        {
-                            case YEAR: return year;
-                            case MONTH_OF_YEAR: return month;
-                            case DAY_OF_MONTH: return day;
-                            case HOUR_OF_DAY: return hour;
-                            case MINUTE_OF_HOUR: return minute;
-                            case SECOND_OF_MINUTE: return second;
-                            case NANO_OF_SECOND: return nano;
-                        }
-                    }
-                    throw new UnsupportedTemporalTypeException("Unsupported: " + field);
-                }
-
-                @Override
-                @SuppressWarnings({"unchecked", "nullness"})
-                public <R> @Nullable R query(TemporalQuery<R> query)
-                {
-                    if (query.equals(TemporalQueries.zone()) || query.equals(TemporalQueries.zoneId()))
-                    {
-                        return (R)zone;
-                    }
-                    return null;
-                }
-            }), pp);
+                case YEARMONTHDAY:
+                    t = LocalDate.of(year, month, day);
+                    break;
+                case YEARMONTH:
+                    t = YearMonth.of(year, month);
+                    break;
+                case TIMEOFDAY:
+                    t = LocalTime.of(hour, minute, second, nano);
+                    break;
+                case DATETIME:
+                    t = LocalDateTime.of(year, month, day, hour, minute, second, nano);
+                    break;
+                case DATETIMEZONED:
+                    t = ZonedDateTime.of(year, month, day, hour, minute, second, nano, ZoneId.of(zone));
+                    break;
+                default:
+                    throw new InternalException("Unhandled case: " + dateTimeType);
+            }
+            return success(new DateTimeInfo(dateTimeType).fromParsed(t), pp);
         }
         catch (InternalException e)
         {

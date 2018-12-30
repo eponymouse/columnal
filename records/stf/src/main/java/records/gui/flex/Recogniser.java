@@ -46,7 +46,7 @@ public abstract class Recogniser<T>
 
         public @Nullable ParseProgress consumeNext(String match)
         {
-            int next = skipSpaces().curCharIndex;
+            int next = match.codePoints().anyMatch(Character::isWhitespace) ? curCharIndex : skipSpaces().curCharIndex;
             if (src.startsWith(match, next))
                 return new ParseProgress(src, next + match.length());
             else
