@@ -8,7 +8,7 @@ import records.gui.flex.Recogniser;
 import utility.Either;
 import utility.TaggedValue;
 
-public class TaggedRecogniser extends Recogniser<TaggedValue>
+public class TaggedRecogniser extends Recogniser<@Value TaggedValue>
 {
     private final ImmutableList<TagType<Recogniser<@Value ?>>> tags;
 
