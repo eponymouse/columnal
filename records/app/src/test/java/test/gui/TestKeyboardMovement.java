@@ -26,6 +26,7 @@ import records.data.Table;
 import records.data.Table.TableDisplayBase;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.TableDisplay;
+import records.gui.grid.CellSelection;
 import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
@@ -185,6 +186,11 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
                 continue;
             
             keyboardMoveTo(virtualGrid, mainWindowActions._test_getTableManager(), t.getId(), row, col);
+
+            Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
+            @SuppressWarnings("nullness")
+            CellPosition target = TestUtil.fx(() -> t.getDisplay().getMostRecentPosition().offsetByRowCols(row + 3, col));
+            assertTrue("Selected is " + selection.toString() + " aiming for " + target, TestUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
         }
     }
 }
