@@ -1059,11 +1059,11 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
                 int row = Integer.parseInt(textField.getText());
                 if (row >= 0 && row < currentKnownRows)
                     return Either.right(DataItemPosition.row(row));
-                return Either.left("row.number.invalid");
+                return Either.<@Localized String, @TableDataRowIndex Integer>left(TranslationUtility.getString("row.number.invalid"));
             }
             catch (NumberFormatException e)
             {
-                return Either.left(Utility.concatLocal("row.not.a.number", e.getLocalizedMessage()));
+                return Either.<@Localized String, @TableDataRowIndex Integer>left(Utility.concatLocal(TranslationUtility.getString("row.not.a.number"), e.getLocalizedMessage()));
             }
         }
     }
