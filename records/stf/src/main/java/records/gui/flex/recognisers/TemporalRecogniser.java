@@ -97,10 +97,10 @@ public class TemporalRecogniser extends Recogniser<@Value TemporalAccessor>
                 if (dateTimeType.hasZoneId())
                 {
                     pp = pp.skipSpaces();
-                    Matcher matcher = Pattern.compile("^[A-Za-z][A-Za-z_/+-]+").matcher(pp.src.substring(pp.curCharIndex));
+                    Matcher matcher = Pattern.compile("^([A-Za-z+\\-][0-9:A-Za-z_/+\\-]+).*").matcher(pp.src.substring(pp.curCharIndex));
                     if (!matcher.matches())
                         throw new UserException("Expected time zone");
-                    int end = matcher.end();
+                    int end = matcher.end(1);
                     zone = pp.src.substring(pp.curCharIndex, end + pp.curCharIndex);
                     pp = pp.skip(end);
                 }
