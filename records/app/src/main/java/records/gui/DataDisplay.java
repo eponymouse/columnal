@@ -24,12 +24,17 @@ import javafx.geometry.VPos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
+import javafx.stage.Window;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -37,6 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.CellPosition;
 import records.data.ColumnId;
+import records.data.DataItemPosition;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TableOperations;
@@ -70,6 +76,7 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -131,6 +138,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
             public void doCopy(CellPosition topLeftIncl, CellPosition bottomRightIncl)
             {
                 DataDisplay.this.doCopy(new RectangleBounds(topLeftIncl, bottomRightIncl));
+            }
+
+            @Override
+            public void gotoRow(Window parent, @AbsColIndex int column)
+            {
+                DataDisplay.this.gotoRow(parent, column);
             }
         };
     }
@@ -549,6 +562,12 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
         public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay)
         {
             return false;
+        }
+
+        @Override
+        public void gotoRow(Window parent)
+        {
+            DataDisplay.this.gotoRow(parent, pos.columnIndex);
         }
 
         @Override
@@ -1004,5 +1023,48 @@ public abstract class DataDisplay extends GridArea implements SelectionListener
     {
         editable.getStyleClass().add("column-title-edit");
         Tooltip.install(editable, new Tooltip(TranslationUtility.getString("click.to.change")));
+    }
+    
+    public void gotoRow(Window parent, @AbsColIndex int currentCol)
+    {
+        new GotoRowDialog(parent).showAndWait().ifPresent(row -> {
+            withParent_(g -> {
+                CellPosition p = new CellPosition(getAbsRowIndexFromTableRow(row), currentCol);
+                g.select(getSelectionForSingleCell(p));
+            });
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private class GotoRowDialog extends ErrorableDialog<@TableDataRowIndex Integer>
+    {
+        private final TextField textField = new TextField();
+
+        public GotoRowDialog(Window parent)
+        {
+            initOwner(parent);
+            initModality(Modality.WINDOW_MODAL);
+            getDialogPane().setContent(textField);
+
+            setOnShown(e -> {
+                FXUtility.runAfter(() -> textField.requestFocus());
+            });
+        }
+
+        @Override
+        protected @OnThread(Tag.FXPlatform) Either<@Localized String, @TableDataRowIndex Integer> calculateResult()
+        {
+            try
+            {
+                int row = Integer.parseInt(textField.getText());
+                if (row >= 0 && row < currentKnownRows)
+                    return Either.right(DataItemPosition.row(row));
+                return Either.left("Number outside range of table rows");
+            }
+            catch (NumberFormatException e)
+            {
+                return Either.left("Not a number: " + e.getLocalizedMessage());
+            }
+        }
     }
 }

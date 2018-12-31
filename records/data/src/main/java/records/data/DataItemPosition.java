@@ -55,6 +55,7 @@ public class DataItemPosition
     {
         return new DataItemPosition(rowIndex + rows, columnIndex + cols);
     }
+    */
     
     @SuppressWarnings("units")
     public static @TableDataRowIndex int row(int row)
@@ -67,5 +68,4 @@ public class DataItemPosition
     {
         return col;
     }
-    */
 }

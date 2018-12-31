@@ -1,6 +1,8 @@
 package test.gui;
 
 import annotation.qual.Value;
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -12,10 +14,13 @@ import log.Log;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.runner.RunWith;
 import records.data.CellPosition;
+import records.data.DataItemPosition;
 import records.data.Table;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
 import test.DataEntryUtil;
@@ -69,12 +74,12 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             // Random table:
             Table table = pickRandomTable(r, allTables);
             // Random location in table:
-            int column = r.nextInt(table.getData().getColumns().size());
+            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
             int tableLen = table.getData().getLength();
             if (tableLen == 0)
                 continue;
-            int row = r.nextInt(tableLen);
-            keyboardMoveTo(virtualGrid, TestUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay())).getMostRecentPosition().offsetByRowCols(row + 3, column));
+            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
@@ -101,7 +106,21 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
         virtualGrid = details._test_getVirtualGrid();
         List<Table> allTables = tableManager.getAllTables();
         
-        Map<CellPosition, String> writtenData = new HashMap<>();
+        @OnThread(Tag.Any)
+        class Location
+        {
+            private final TableId tableId;
+            private final @TableDataRowIndex int row;
+            private final @TableDataColIndex int col;
+
+            public Location(TableId tableId, @TableDataRowIndex int row, @TableDataColIndex int col)
+            {
+                this.tableId = tableId;
+                this.row = row;
+                this.col = col;
+            }
+        }
+        Map<Location, String> writtenData = new HashMap<>();
 
         // Pick some random locations in random tables, scroll there, copy data and check value:
         for (int i = 0; i < 8; i++)
@@ -109,13 +128,12 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             // Random table:
             Table table = pickRandomTable(r, allTables);
             // Random location in table:
-            int column = r.nextInt(table.getData().getColumns().size());
+            @TableDataColIndex int column = DataItemPosition.col(r.nextInt(table.getData().getColumns().size()));
             int tableLen = table.getData().getLength();
             if (tableLen == 0)
                 continue;
-            int row = r.nextInt(tableLen);
-            CellPosition target = TestUtil.checkNonNull(TestUtil.fx(() -> table.getDisplay())).getMostRecentPosition().offsetByRowCols(row + 3, column);
-            keyboardMoveTo(virtualGrid, target);
+            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(tableLen));
+            keyboardMoveTo(virtualGrid, tableManager, table.getId(), row, column);
             push(KeyCode.ENTER);
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             Log.debug("Making value for type " + columnDTV);
@@ -123,7 +141,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             DataEntryUtil.enterValue(this, r, columnDTV, value, false);
             push(KeyCode.ESCAPE);
 
-            Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + target);
+            Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + row + ", " + column);
             // Clear clipboard to prevent tests interfering:
             TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
             pushCopy();
@@ -133,23 +151,30 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             
             String valueEntered = DataTypeUtility.valueToString(columnDTV, value, null);
             assertEquals(valueEntered, copiedFromTable);
-            writtenData.put(target, valueEntered);
+            writtenData.put(new Location(table.getId(), row, column), valueEntered);
         }
         
         // Go back to the data we wrote, and check the cells retained the value:
         writtenData.forEach((target, written) -> {
-            keyboardMoveTo(virtualGrid, target);
-            TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
-            pushCopy();
-            // Need to wait for hop to simulation thread and back:
-            TestUtil.delay(2000);
-            String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
-            assertEquals(written, copiedFromTable);
+            try
+            {
+                keyboardMoveTo(virtualGrid, tableManager, target.tableId, target.row, target.col);
+                TestUtil.fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, "@TEST")));
+                pushCopy();
+                // Need to wait for hop to simulation thread and back:
+                TestUtil.delay(2000);
+                String copiedFromTable = TestUtil.fx(() -> Clipboard.getSystemClipboard().getString());
+                assertEquals(written, copiedFromTable);
+            }
+            catch (UserException e)
+            {
+                throw new RuntimeException(e);
+            }
         });
     }
 
     @OnThread(Tag.Any)
-    public Table pickRandomTable(@From(GenRandom.class) @When(seed = 2L) Random r, List<Table> allTables)
+    public Table pickRandomTable(Random r, List<Table> allTables)
     {
         allTables = new ArrayList<>(allTables);
         Collections.sort(allTables, Comparator.comparing(t -> t.getId().getRaw()));

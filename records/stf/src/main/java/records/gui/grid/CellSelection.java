@@ -1,5 +1,6 @@
 package records.gui.grid;
 
+import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CellPosition;
@@ -62,4 +63,6 @@ public interface CellSelection
      * looking at physical area, or by casting and checking against a known table.
      */
     public boolean includes(@UnknownInitialization(GridArea.class) GridArea tableDisplay);
+    
+    public void gotoRow(Window parent);
 }

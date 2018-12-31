@@ -374,7 +374,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     {
         // Move to first cell in that row, which will make row labels visible
         // and ensure we are at correct Y position
-        keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager,id).offsetByRowCols(3 + targetRow, 0));
+        keyboardMoveTo(virtualGrid, tableManager, id, targetRow);
         Set<Node> possibles = 
             lookup(".virt-grid-row-label-pane")
             .match(Node::isVisible)
@@ -405,6 +405,6 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     @OnThread(Tag.Any)
     private void scrollToRow(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
-        keyboardMoveTo(virtualGrid, TestUtil.tablePosition(tableManager, id).offsetByRowCols(targetRow + 3, 0));
+        keyboardMoveTo(virtualGrid, tableManager, id, targetRow);
     }
 }

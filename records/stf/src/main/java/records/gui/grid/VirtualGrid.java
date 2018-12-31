@@ -45,6 +45,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import log.Log;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -1901,6 +1902,12 @@ public final class VirtualGrid implements ScrollBindable
             // Empty cell overlaps no grid area:
             return false;
         }
+
+        @Override
+        public void gotoRow(Window parent)
+        {
+            // Do nothing if not in a table
+        }
     }
     
     public static enum ListenerOutcome { KEEP, REMOVE }
@@ -2003,5 +2010,10 @@ public final class VirtualGrid implements ScrollBindable
             Log.debug("Calculated " + nss + " from " + proximity);
             return nss;
         }
+    }
+
+    public void gotoRow(Window window)
+    {
+        Optional.ofNullable(selection.get()).ifPresent(s -> s.gotoRow(window));
     }
 }

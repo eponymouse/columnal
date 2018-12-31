@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
+import records.data.DataItemPosition;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
 import records.gui.MainWindow.MainWindowActions;
@@ -76,7 +77,7 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
         
         // We go for a random walk right/down, then check that it is reversible:
         List<Pair<List<KeyCode>, RectangleBounds>> paths = new ArrayList<>();
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 12; i++)
         {
             int dist = 1 + r.nextInt(5);
             ArrayList<KeyCode> presses = new ArrayList<>(Utility.replicate(dist, r.nextInt(3) != 1 ? KeyCode.DOWN : KeyCode.RIGHT));
@@ -175,18 +176,13 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
 
         ImmutableList<Table> allTables = mainWindowActions._test_getTableManager().getAllTables();
         
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 6; i++)
         {
             Table t = allTables.get(r.nextInt(allTables.size()));
-            @SuppressWarnings("units")
-            @TableDataColIndex int col = r.nextInt(t.getData().getColumns().size() + 5);
-            @SuppressWarnings("units")
-            @TableDataRowIndex int row = r.nextInt(t.getData().getLength() + 7) - 2;
+            @TableDataColIndex int col = DataItemPosition.col(r.nextInt(t.getData().getColumns().size()));
+            @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(t.getData().getLength()));
             
-            TableDisplay tableDisplay = (TableDisplay) TestUtil.<@Nullable TableDisplayBase>fx(() -> t.getDisplay());
-            assertNotNull(tableDisplay);
-            if (tableDisplay != null)
-                keyboardMoveTo(virtualGrid, TestUtil.fx(() -> tableDisplay._test_getDataPosition(row, col)));
+            keyboardMoveTo(virtualGrid, mainWindowActions._test_getTableManager(), t.getId(), row, col);
         }
     }
 }

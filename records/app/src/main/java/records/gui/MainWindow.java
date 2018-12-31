@@ -104,6 +104,8 @@ public class MainWindow
             ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
+                GUI.menuItem("menu.view.goto.row", () -> v.gotoRowDialog()),
+                new SeparatorMenuItem(),
                 GUI.menuItem("menu.view.types", () -> {
                     new TypesDialog(v.getWindow(), v.getManager().getTypeManager()).showAndWait();
                     v.modified();

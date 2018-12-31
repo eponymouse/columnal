@@ -393,6 +393,11 @@ public class View extends StackPane
         return FileSystemView.getFileSystemView().getDefaultDirectory();
     }
 
+    public void gotoRowDialog()
+    {
+        getGrid().gotoRow(getWindow());
+    }
+
     /* TODO
     private boolean overlapsAnyExcept(List<TableDisplay> except, double x, double y)
     {

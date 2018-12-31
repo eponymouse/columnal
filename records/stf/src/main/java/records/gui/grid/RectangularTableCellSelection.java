@@ -2,6 +2,7 @@ package records.gui.grid;
 
 import annotation.units.AbsColIndex;
 import annotation.units.AbsRowIndex;
+import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.CellPosition;
@@ -136,6 +137,12 @@ public class RectangularTableCellSelection implements CellSelection
     }
 
     @Override
+    public void gotoRow(Window parent)
+    {
+        tableSelectionLimits.gotoRow(parent, curFocus.columnIndex);
+    }
+
+    @Override
     public String toString()
     {
         // For debugging:
@@ -149,5 +156,7 @@ public class RectangularTableCellSelection implements CellSelection
         public CellPosition getBottomRightIncl();
         
         public void doCopy(CellPosition topLeftIncl, CellPosition bottomRightIncl);
+
+        public void gotoRow(Window parent, @AbsColIndex int column);
     }
 }

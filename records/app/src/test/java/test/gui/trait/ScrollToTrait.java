@@ -1,5 +1,7 @@
 package test.gui.trait;
 
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.HorizontalDirection;
@@ -18,6 +20,13 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.service.finder.NodeFinder;
 import org.testfx.service.query.NodeQuery;
 import records.data.CellPosition;
+import records.data.DataItemPosition;
+import records.data.Table;
+import records.data.Table.TableDisplayBase;
+import records.data.TableId;
+import records.data.TableManager;
+import records.error.UserException;
+import records.gui.TableDisplay;
 import records.gui.grid.CellSelection;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
@@ -26,9 +35,9 @@ import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.Optional;
+import java.util.Random;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public interface ScrollToTrait extends FxRobotInterface
 {
@@ -133,7 +142,39 @@ public interface ScrollToTrait extends FxRobotInterface
         TestUtil.sleep(300);
 
         Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
-        assertTrue(selection.toString(), TestUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
+        assertTrue("Selected is " + selection.toString() + " aiming for " + target, TestUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
+    }
+
+    @OnThread(Tag.Any)
+    default void keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row, @TableDataColIndex int col) throws UserException
+    {
+        Random r = new Random(row * 100 + col);
+        
+        // Chance of using menu is higher for rows further down.
+        // Chance at top: 0.05, chance at bottom: ~0.95
+        double menuChance = 0.95 - (0.9 / Math.log(row + 11));
+        
+        boolean usingMenu = r.nextDouble() < menuChance;
+        Table table = tableManager.getSingleTableOrThrow(tableId);
+        TableDisplay tableDisplay = (TableDisplay) TestUtil.<@Nullable TableDisplayBase>fx(() -> table.getDisplay());
+        assertNotNull(tableDisplay);
+        if (tableDisplay == null)
+            return;
+        keyboardMoveTo(virtualGrid, TestUtil.fx(() -> tableDisplay._test_getDataPosition(usingMenu ? DataItemPosition.row(0) : row, col)));
+        if (usingMenu)
+        {
+            clickOn("#id-menu-view").clickOn(".id-menu-view-goto-row");
+            TestUtil.sleep(200);
+            write(Integer.toString(row));
+            push(KeyCode.ENTER);
+        }
+        // Wait for complete refresh:
+        TestUtil.sleep(1000);
+    }
+
+    default void keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
+    {
+        keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(0));
     }
     
     // Ideally, will be private in later Java:
