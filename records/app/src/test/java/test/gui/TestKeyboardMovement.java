@@ -181,6 +181,8 @@ public class TestKeyboardMovement extends FXApplicationTest implements ScrollToT
             Table t = allTables.get(r.nextInt(allTables.size()));
             @TableDataColIndex int col = DataItemPosition.col(r.nextInt(t.getData().getColumns().size()));
             @TableDataRowIndex int row = DataItemPosition.row(r.nextInt(t.getData().getLength()));
+            if (row < 0 || col < 0) // Can happen with empty table, just skip
+                continue;
             
             keyboardMoveTo(virtualGrid, mainWindowActions._test_getTableManager(), t.getId(), row, col);
         }
