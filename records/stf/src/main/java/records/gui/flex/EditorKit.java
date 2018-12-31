@@ -80,7 +80,7 @@ public class EditorKit<T>
                 onChange.consume(text, succ.value);
                 return succ.value;
             });
-            fieldFinal.replace(unfocusedDocument.getFirst());
+            unfocusedDocument = new Pair<>(latestDocument, UnaryOperator.identity());
         }
         else
         {
