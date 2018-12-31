@@ -14,16 +14,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.testfx.service.query.NodeQuery;
-import records.data.CellPosition;
-import records.data.Column;
-import records.data.ColumnId;
-import records.data.EditableRecordSet;
-import records.data.ImmediateDataSource;
-import records.data.RecordSet;
-import records.data.Table;
+import records.data.*;
 import records.data.Table.InitialLoadDetails;
-import records.data.TableId;
-import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -31,6 +23,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.RowLabelSupplier;
+import records.gui.grid.RectangleBounds;
 import records.gui.grid.VirtualGrid;
 import records.gui.flex.FlexibleTextField;
 import records.transformations.Calculate;
@@ -46,11 +39,13 @@ import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
 import test.gui.trait.CheckCSVTrait;
 import test.gui.trait.ClickOnTableHeaderTrait;
+import test.gui.trait.ClickTableLocationTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -67,7 +62,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait
+public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, ClickOnTableHeaderTrait, ClickTableLocationTrait
 {
     @SuppressWarnings("units")
     public static final @TableDataRowIndex int ONE_ROW = 1;
@@ -204,11 +199,12 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
             clickOn(".id-virtGrid-row-insertAfter");
             TestUtil.delay(500);
         }
-        else
+        else // targetNewRow == 0 && srcLength == 0
         {
             TestUtil.delay(2000);
             // No rows at all: need to click append button
-            clickOn(".id-stableView-append" /*".stable-view-row-append-button"*/);
+            CellPosition pos = scrollToRow(srcData.getId(), DataItemPosition.row(0));
+            clickOnItemInBounds(lookup(".expand-arrow" /*".stable-view-row-append-button"*/).match(n -> TestUtil.fx(() -> FXUtility.hasPseudoclass(n, "expand-down"))), virtualGrid, new RectangleBounds(pos, pos));
             TestUtil.delay(500);
             originalWasEmpty = true;
         }
@@ -258,7 +254,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
 
         // TODO check for default data in inserted spot
 
-        scrollToRow(srcData.getId(), targetNewRow - ONE_ROW);
+        scrollToRow(srcData.getId(), targetNewRow == 0 ? targetNewRow : targetNewRow - ONE_ROW);
         TestUtil.sleep(1000);
         // Row still there, but data from the row after it:
         if (targetNewRow < newSrcLength)
@@ -403,8 +399,8 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     }
 
     @OnThread(Tag.Any)
-    private void scrollToRow(TableId id, @TableDataRowIndex int targetRow) throws UserException
+    private CellPosition scrollToRow(TableId id, @TableDataRowIndex int targetRow) throws UserException
     {
-        keyboardMoveTo(virtualGrid, tableManager, id, targetRow);
+        return keyboardMoveTo(virtualGrid, tableManager, id, targetRow);
     }
 }

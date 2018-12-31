@@ -142,11 +142,11 @@ public interface ScrollToTrait extends FxRobotInterface
         TestUtil.sleep(300);
 
         Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
-        assertTrue("Selected is " + selection.toString() + " aiming for " + target, TestUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
+        assertTrue("Selected is " + selection.toString() + " aiming for " + target, TestUtil.fx(() -> selection.map(s -> s.isExactly(target) || s.getActivateTarget().equals(target)).orElse(false)));
     }
 
     @OnThread(Tag.Any)
-    default void keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row, @TableDataColIndex int col) throws UserException
+    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row, @TableDataColIndex int col) throws UserException
     {
         Random r = new Random(row * 100 + col);
         
@@ -159,7 +159,7 @@ public interface ScrollToTrait extends FxRobotInterface
         TableDisplay tableDisplay = (TableDisplay) TestUtil.<@Nullable TableDisplayBase>fx(() -> table.getDisplay());
         assertNotNull(tableDisplay);
         if (tableDisplay == null)
-            return;
+            throw new RuntimeException("Impossible");
         keyboardMoveTo(virtualGrid, TestUtil.fx(() -> tableDisplay._test_getDataPosition(usingMenu ? DataItemPosition.row(0) : row, col)));
         if (usingMenu)
         {
@@ -170,11 +170,12 @@ public interface ScrollToTrait extends FxRobotInterface
         }
         // Wait for complete refresh:
         TestUtil.sleep(1000);
+        return TestUtil.fx(() -> tableDisplay._test_getDataPosition(row, col));
     }
 
-    default void keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
+    default CellPosition keyboardMoveTo(VirtualGrid virtualGrid, TableManager tableManager, TableId tableId, @TableDataRowIndex int row) throws UserException
     {
-        keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(0));
+        return keyboardMoveTo(virtualGrid, tableManager, tableId, row, DataItemPosition.col(0));
     }
     
     // Ideally, will be private in later Java:
