@@ -18,11 +18,14 @@ import org.testfx.api.FxRobotInterface;
 import org.testfx.service.finder.NodeFinder;
 import org.testfx.service.query.NodeQuery;
 import records.data.CellPosition;
+import records.gui.grid.CellSelection;
 import records.gui.grid.VirtualGrid;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
+
+import java.util.Optional;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -128,6 +131,9 @@ public interface ScrollToTrait extends FxRobotInterface
         }
         // Wait for smooth scroll to finish:
         TestUtil.sleep(300);
+
+        Optional<CellSelection> selection = TestUtil.fx(() -> virtualGrid._test_getSelection());
+        assertTrue(selection.toString(), TestUtil.fx(() -> selection.map(s -> s.isExactly(target)).orElse(false)));
     }
     
     // Ideally, will be private in later Java:

@@ -226,6 +226,11 @@ public class TableDisplay extends DataDisplay implements RecordSetListener, Tabl
     {
         return getPosition().offsetByRowCols(getDataDisplayTopLeftIncl().rowIndex + rowIndex, getDataDisplayTopLeftIncl().columnIndex + columnIndex);
     }
+
+    public CellPosition _test_getDataPosition(@TableDataRowIndex int rowIndex, @TableDataColIndex int columnIndex)
+    {
+        return getDataPosition(rowIndex, columnIndex);
+    }
     
     private TableDisplayUtility.GetDataPosition makeGetDataPosition(@UnknownInitialization(DataDisplay.class) TableDisplay this)
     {

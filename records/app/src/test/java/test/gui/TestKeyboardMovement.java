@@ -1,5 +1,8 @@
 package test.gui;
 
+import annotation.units.TableDataColIndex;
+import annotation.units.TableDataRowIndex;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -10,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
@@ -17,6 +21,8 @@ import org.junit.runner.RunWith;
 import org.testfx.api.FxRobotInterface;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.CellPosition;
+import records.data.Table;
+import records.data.Table.TableDisplayBase;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.TableDisplay;
 import records.gui.grid.RectangleBounds;
@@ -25,6 +31,7 @@ import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
+import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -44,7 +51,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestKeyboardMovement extends FXApplicationTest
+public class TestKeyboardMovement extends FXApplicationTest implements ScrollToTrait
 {
     /**
      * Check that keyboard moving around is consistent (right always selects more to the right, etc)
@@ -152,6 +159,34 @@ public class TestKeyboardMovement extends FXApplicationTest
             MatcherAssert.assertThat(prefix, gridScreenBounds.getWidth(), Matchers.lessThan(2000.0));
             MatcherAssert.assertThat(prefix, gridScreenBounds.getHeight(), Matchers.lessThan(2000.0));
             assertTrue(prefix, gridScreenBounds.intersects(selScreenBounds));
+        }
+    }
+
+    @Property(trials=5)
+    @OnThread(Tag.Simulation)
+    public void testKeyboardScrollTo(@NumTables(minTables = 3, maxTables = 5) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src, @From(GenRandom.class) Random r) throws Exception
+    {
+        MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
+        TestUtil.sleep(2000);
+
+        VirtualGrid virtualGrid = mainWindowActions._test_getVirtualGrid();
+        TestUtil.fx_(windowToUse::requestFocus);
+        assertTrue(TestUtil.fx(() -> windowToUse.isFocused()));
+
+        ImmutableList<Table> allTables = mainWindowActions._test_getTableManager().getAllTables();
+        
+        for (int i = 0; i < 10; i++)
+        {
+            Table t = allTables.get(r.nextInt(allTables.size()));
+            @SuppressWarnings("units")
+            @TableDataColIndex int col = r.nextInt(t.getData().getColumns().size() + 5);
+            @SuppressWarnings("units")
+            @TableDataRowIndex int row = r.nextInt(t.getData().getLength() + 7) - 2;
+            
+            TableDisplay tableDisplay = (TableDisplay) TestUtil.<@Nullable TableDisplayBase>fx(() -> t.getDisplay());
+            assertNotNull(tableDisplay);
+            if (tableDisplay != null)
+                keyboardMoveTo(virtualGrid, TestUtil.fx(() -> tableDisplay._test_getDataPosition(row, col)));
         }
     }
 }
