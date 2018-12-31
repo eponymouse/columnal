@@ -136,7 +136,22 @@ class NumberColumnFormatter implements FXPlatformConsumer<EditorKitCache<@Value 
                     new StyledText<>(displayIntegerPart, ImmutableList.of("stf-number-int")),
                     new StyledText<>(displayDotVisible ? "." : "", ImmutableList.of("stf-number-dot")),
                     new StyledText<>(displayFracPart, ImmutableList.of("stf-number-frac"))
-                )), UnaryOperator.identity() /* TODO */);
+                )), n -> {
+                    // Clicking the left always stays left most:
+                    if (n == 0)
+                        return 0;
+                    else
+                    {
+                        int prevInt = displayIntegerPart.length();
+                        int prevDot = displayDotVisible ? 1 : 0;
+                        if (n <= prevInt)
+                            // Right-align the position:
+                            return fullIntegerPart.length() - (prevInt - n);
+                        else
+                            // Left-align the position:
+                            return fullIntegerPart.length() + (fullFracPart.isEmpty() ? 0 : 1) + (n - (prevInt + prevDot));
+                    }
+                });
             
             
             /*
