@@ -10,7 +10,7 @@ import utility.Pair;
 public class StringRecogniser extends Recogniser<@Value String>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value String>> process(ParseProgress orig)
+    public Either<ErrorDetails, SuccessDetails<@Value String>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig.consumeNext("\"");
         if (pp == null)

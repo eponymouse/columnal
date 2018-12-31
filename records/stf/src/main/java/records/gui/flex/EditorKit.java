@@ -1,6 +1,7 @@
 package records.gui.flex;
 
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
@@ -34,7 +35,7 @@ public class EditorKit<T>
         this.recogniser = recogniser;
         this.onChange = onChange;
         this.relinquishFocus = relinquishFocus;
-        this.latestValue = recogniser.process(ParseProgress.fromStart(initialValue)).mapBoth(err -> err.error, succ -> succ.value);        
+        this.latestValue = recogniser.process(ParseProgress.fromStart(initialValue), false).mapBoth(err -> err.error, succ -> succ.value);        
         this.latestDocument = ReadOnlyStyledDocument.fromString(initialValue, ImmutableList.of(), ImmutableList.of(), StyledText.textOps());
         this.unfocusedDocument = new Pair<>(latestDocument, UnaryOperator.identity());
     }
@@ -73,7 +74,8 @@ public class EditorKit<T>
         if (!focused)
         {
             latestDocument = ReadOnlyStyledDocument.from(fieldFinal.getDocument());
-            latestValue = recogniser.process(ParseProgress.fromStart(text)).mapBoth(err -> {
+            latestValue = recogniser.process(ParseProgress.fromStart(text), false).mapBoth(err -> {
+                Log.debug("### Entry error: " + err.error.toPlain());
                 return err.error;
             }, succ -> {
                 // TODO apply styles

@@ -11,7 +11,7 @@ import utility.Utility;
 public class NumberRecogniser extends Recogniser<@Value Number>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value Number>> process(ParseProgress orig)
+    public Either<ErrorDetails, SuccessDetails<@Value Number>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig.skipSpaces();
         String sign = "";

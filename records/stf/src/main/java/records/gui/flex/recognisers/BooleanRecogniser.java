@@ -9,7 +9,7 @@ import utility.Either;
 public class BooleanRecogniser extends Recogniser<@Value Boolean>
 {
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value Boolean>> process(ParseProgress orig)
+    public Either<ErrorDetails, SuccessDetails<@Value Boolean>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         @Nullable ParseProgress pp = orig.consumeNextIC("true");
         if (pp != null)

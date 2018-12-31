@@ -17,7 +17,7 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value ListEx>> process(ParseProgress parseProgress)
+    public Either<ErrorDetails, SuccessDetails<@Value ListEx>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
     {
         try
         {
@@ -37,7 +37,7 @@ public class ListRecogniser extends Recogniser<@Value ListEx>
                     pp = pp.skip(1);
                 }
 
-                pp = addToList(list, inner.process(pp));
+                pp = addToList(list, inner.process(pp, false));
 
                 pp = pp.skipSpaces();
                 first = false;

@@ -18,24 +18,26 @@ public class TupleRecogniser extends Recogniser<@Value Object @Value []>
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<@Value Object @Value[]>> process(ParseProgress orig)
+    public Either<ErrorDetails, SuccessDetails<@Value Object @Value[]>> process(ParseProgress orig, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = orig;
-        pp = pp.consumeNext("(");
+        if (!immediatelySurroundedByRoundBrackets)
+            pp = pp.consumeNext("(");
         if (pp == null)
             return error("Expected '(' to begin a tuple");
 
-        return next(false, members.iterator(), pp, ImmutableList.builderWithExpectedSize(members.size()));
+        return next(false, !immediatelySurroundedByRoundBrackets, members.iterator(), pp, ImmutableList.builderWithExpectedSize(members.size()));
     }
     
     // Recurse down the list of members, processing one and if no error, process next, until no more members and then look for closing bracket:
-    private Either<ErrorDetails, SuccessDetails<@Value Object @Value[]>> next(boolean expectComma, Iterator<Recogniser<?>> nextMember, ParseProgress orig, ImmutableList.Builder<SuccessDetails<Object>> soFar)
+    private Either<ErrorDetails, SuccessDetails<@Value Object @Value[]>> next(boolean expectComma, boolean expectClosingBracket, Iterator<Recogniser<?>> nextMember, ParseProgress orig, ImmutableList.Builder<SuccessDetails<Object>> soFar)
     {
         ParseProgress pp = orig;
         // If no more members, look for closing bracket:
         if (!nextMember.hasNext())
         {
-            pp = pp.consumeNext(")");
+            if (expectClosingBracket)
+                pp = pp.consumeNext(")");
             if (pp == null)
                 return error("Expected ')' to end tuple");
             ImmutableList<SuccessDetails<Object>> all = soFar.build();
@@ -49,10 +51,10 @@ public class TupleRecogniser extends Recogniser<@Value Object @Value []>
                 return error("Expected ',' to separate tuple items");
         }
         
-        return nextMember.next().process(pp).map(s -> s.asObject())
+        return nextMember.next().process(pp, false).map(s -> s.asObject())
             .flatMap(succ -> {
                 soFar.add(succ);
-                return next(true, nextMember, succ.parseProgress, soFar);
+                return next(true, expectClosingBracket, nextMember, succ.parseProgress, soFar);
             });
     }
 }

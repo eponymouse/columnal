@@ -18,7 +18,7 @@ public class TaggedRecogniser extends Recogniser<@Value TaggedValue>
     }
 
     @Override
-    public Either<ErrorDetails, SuccessDetails<TaggedValue>> process(ParseProgress parseProgress)
+    public Either<ErrorDetails, SuccessDetails<TaggedValue>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets)
     {
         ParseProgress pp = parseProgress.skipSpaces();
         for (int i = 0; i < tags.size(); i++)
@@ -35,7 +35,7 @@ public class TaggedRecogniser extends Recogniser<@Value TaggedValue>
                 pp = afterTag.consumeNext("(");
                 if (pp == null)
                     return error("Expected '(' around an inner value");
-                return inner.process(pp).flatMap((SuccessDetails<@Value ?>  succ) -> {
+                return inner.process(pp, true).flatMap((SuccessDetails<@Value ?>  succ) -> {
                     ParseProgress afterBracket = succ.parseProgress.consumeNext(")");
                     if (afterBracket == null)
                         return error("Expected closing ')' after an inner value");

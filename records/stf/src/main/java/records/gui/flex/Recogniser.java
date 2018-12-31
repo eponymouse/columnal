@@ -149,7 +149,7 @@ public abstract class Recogniser<T>
         }
     }
     
-    public abstract Either<ErrorDetails, SuccessDetails<T>> process(ParseProgress parseProgress);
+    public abstract Either<ErrorDetails, SuccessDetails<T>> process(ParseProgress parseProgress, boolean immediatelySurroundedByRoundBrackets);
 
     protected Either<ErrorDetails, SuccessDetails<T>> error(String msg)
     {
