@@ -75,7 +75,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
 {
     @Property(trials = 25)
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@When(seed=1L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         String content = formatAndData.textContent.stream().collect(Collectors.joining("\n"));
         Import<InitialTextFormat, FinalTextFormat> format = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getTypeManager(), DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.textContent, formatAndData.format.initialTextFormat.charset), formatAndData.format.initialTextFormat, formatAndData.format.trimChoice);
@@ -94,6 +94,18 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
             f.complete(true);
         });
         TestUtil.sleep(5000);
+
+        @Nullable ImportChoicesDialog<?, ?> maybeICD = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
+        if (maybeICD == null)
+        {
+            assertNotNull(maybeICD);
+            return;
+
+        }
+        checkTrim(maybeICD);
+        
+        setTrim(formatAndData.format.trimChoice, maybeICD);
+        
         clickOn(".ok-button");
         f.get();
         checkDataValues(formatAndData, loaded.get(0).getData());
@@ -101,7 +113,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
     
     @Property(trials=10)
     @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@When(seed=2L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         
@@ -127,26 +139,9 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote == null ? "" : formatAndData.format.initialTextFormat.quote));
         TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
+
+        setTrim(formatAndData.format.trimChoice, importChoicesDialog);
         
-        Log.debug("Trying to set trim " + formatAndData.format.trimChoice);
-        VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
-        SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
-        // Find the current top-left corner of the selection rectangle:
-        RectangleBounds curBounds = TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
-        VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
-        Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
-        targetWindow(srcGridNode);
-        moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
-            visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex),
-            visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex)))));
-        drag(MouseButton.PRIMARY);
-        CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + formatAndData.format.trimChoice.trimFromTop, formatAndData.format.trimChoice.trimFromLeft);
-        moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
-            visibleBounds.getXCoord(newTopLeft.columnIndex),
-            visibleBounds.getYCoord(newTopLeft.rowIndex)))));
-        drop();
-        TestUtil.sleep(1000);
-        checkTrim(importChoicesDialog);
         @Nullable RecordSet destRS = TestUtil.<@Nullable RecordSet>fx(() -> importChoicesDialog._test_getDestDataDisplay()._test_getRecordSet());
         assertNotNull(destRS);
         if (destRS != null)
@@ -159,7 +154,30 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         RecordSet rs = rsFuture.get(5000, TimeUnit.MILLISECONDS);
         checkDataValues(formatAndData, rs);
     }
-    
+
+    public void setTrim(TrimChoice trimChoice, @NonNull ImportChoicesDialog<?, ?> importChoicesDialog) throws InternalException, UserException
+    {
+        Log.debug("Trying to set trim " + trimChoice);
+        VirtualGrid srcGrid = importChoicesDialog._test_getSrcGrid();
+        SrcDataDisplay srcDataDisplay = importChoicesDialog._test_getSrcDataDisplay();
+        // Find the current top-left corner of the selection rectangle:
+        RectangleBounds curBounds = TestUtil.fx(() -> srcDataDisplay._test_getCurSelectionBounds());
+        VisibleBounds visibleBounds = TestUtil.fx(() -> srcGrid.getVisibleBounds());
+        Region srcGridNode = TestUtil.fx(() -> srcGrid.getNode());
+        targetWindow(srcGridNode);
+        moveTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+            visibleBounds.getXCoord(curBounds.topLeftIncl.columnIndex) + 1.0,
+            visibleBounds.getYCoord(curBounds.topLeftIncl.rowIndex) + 1.0))));
+        drag(MouseButton.PRIMARY);
+        CellPosition newTopLeft = TestUtil.fx(() -> srcDataDisplay.getPosition()).offsetByRowCols(1 + trimChoice.trimFromTop, trimChoice.trimFromLeft);
+        dropTo(TestUtil.fx(() -> srcGridNode.localToScreen(new Point2D(
+            visibleBounds.getXCoord(newTopLeft.columnIndex),
+            visibleBounds.getYCoord(newTopLeft.rowIndex)))));
+        TestUtil.sleep(1000);
+        checkTrim(importChoicesDialog);
+        assertEquals(trimChoice, TestUtil.fx(() -> importChoicesDialog._test_getSrcDataDisplay().getTrim()));
+    }
+
     @OnThread(Tag.Simulation)
     private void checkTrim(ImportChoicesDialog<?, ?> importChoicesDialog) throws InternalException, UserException
     {

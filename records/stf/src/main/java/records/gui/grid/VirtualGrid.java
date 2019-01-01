@@ -1411,16 +1411,22 @@ public final class VirtualGrid implements ScrollBindable
                         for (@AbsColIndex int i = firstRenderColumnIndex; i <= lastColumnIncl; i++)
                         {
                             double nextX = x + getColumnWidth(i);
-                            if (x <= localCoord.getX() && localCoord.getX() < nextX)
+                            if (localCoord.getX() < nextX)
                             {
+                                double colFloat = Math.abs(localCoord.getX() - x) / Math.abs(nextX - x);
                                 @AbsColIndex int column = i;
                                 switch (horizBias)
                                 {
                                     case LEFT:
+                                        // Add a little tolerance:
+                                        if (colFloat >= 0.8 && i < lastColumnIncl)
+                                        {
+                                            x = nextX;
+                                            continue;
+                                        }
                                         column = i;
                                         break;
                                     case CENTER:
-                                        double colFloat = Math.abs(localCoord.getX() - x) / Math.abs(nextX - x);
                                         column = colFloat < 0.5 ? i : i + CellPosition.col(1);
                                         break;
                                     case RIGHT:
