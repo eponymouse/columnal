@@ -1414,6 +1414,10 @@ public class Utility
 
     public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, @Nullable String quote, int columnIndex, ArrayList<String> fill) throws IOException
     {
+        // This would send us into an infinite loop, so guard against it:
+        if (quote != null && quote.isEmpty())
+            throw new IllegalArgumentException("Quote cannot be empty");
+        
         loopOverLines: for (int lineRead = 0; lineRead < 20; lineRead++)
         {
             String line = readState.nextLine();

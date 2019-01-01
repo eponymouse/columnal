@@ -257,16 +257,16 @@ public class GuessFormat
     public static class InitialTextFormat
     {
         public final Charset charset;
-        // empty means no separator; just one big column
-        public final String separator;
+        // null means no separator; just one big column
+        public final @Nullable String separator;
         // empty means no quote
-        public final String quote;
+        public final @Nullable String quote;
 
-        public InitialTextFormat(Charset charset, String separator, String quote)
+        public InitialTextFormat(Charset charset, @Nullable String separator, @Nullable String quote)
         {
             this.charset = charset;
-            this.separator = separator;
-            this.quote = quote;
+            this.separator = (separator != null && separator.isEmpty()) ? null : separator;
+            this.quote = (quote != null && quote.isEmpty()) ? null : quote;
         }
 
         @Override
@@ -357,7 +357,7 @@ public class GuessFormat
             initialCharsetGuess = c;
         }
         SimpleObjectProperty<@Nullable Charset> charsetChoice = new SimpleObjectProperty<>(initialCharsetGuess.<Charset>map(c -> c).orElse(null));
-        @Nullable Pair<String, String> sepAndQuot = itfOverride != null ? new Pair<>(itfOverride.separator, itfOverride.quote) :
+        @Nullable Pair<@Nullable String, @Nullable String> sepAndQuot = itfOverride != null ? new Pair<>(itfOverride.separator, itfOverride.quote) :
             initialCharsetGuess.map(initialByCharset::get).map(GuessFormat::guessSepAndQuot).orElse(null);
         SimpleObjectProperty<@Nullable String> sepChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getFirst());
         SimpleObjectProperty<@Nullable String> quoteChoice = new SimpleObjectProperty<>(sepAndQuot == null ? null : sepAndQuot.getSecond());
@@ -441,7 +441,7 @@ public class GuessFormat
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat); */
             }
 
-            public ImmutableList<ArrayList<String>> loadValues(@NonNull List<String> initial, String sep, String quot)
+            public ImmutableList<ArrayList<String>> loadValues(@NonNull List<String> initial, @Nullable String sep, @Nullable String quot)
             {
                 List<RowInfo> rowInfos = new ArrayList<>();
                 for (int i = 0; i < initial.size(); i++)
@@ -478,7 +478,7 @@ public class GuessFormat
         @Nullable Charset charset = charsetChoice.get();
         @Nullable String sep = sepChoice.get();
         @Nullable String quote = quoteChoice.get();
-        if (charset != null && sep != null && quote != null)
+        if (charset != null)
             return new InitialTextFormat(charset, sep, quote);
         return null;
     }
@@ -655,7 +655,7 @@ public class GuessFormat
     }
 
     // Split a row of text into columns, given a separator and a quote character
-    private static RowInfo splitIntoColumns(String row, String sep, String quote)
+    private static RowInfo splitIntoColumns(String row, @Nullable String sep, @Nullable String quote)
     {
         String escapedQuote = quote + quote;
         
@@ -671,7 +671,7 @@ public class GuessFormat
                 sb.append(quote);
                 i += escapedQuote.length();
 
-                if (!quote.isEmpty() && escapedQuote.endsWith(quote))
+                if (quote != null && !quote.isEmpty() && escapedQuote.endsWith(quote))
                 {
                     r.originalContentAndStyle.add(new Pair<>(escapedQuote.substring(0, escapedQuote.length() - quote.length()), "escaped-quote-escape"));
                     r.originalContentAndStyle.add(new Pair<>(quote, "escaped-quote-quote"));
@@ -681,7 +681,7 @@ public class GuessFormat
                     r.originalContentAndStyle.add(new Pair<>(escapedQuote, "escaped-quote"));
                 }
             }
-            else if (!quote.isEmpty() && row.startsWith(quote, i) && (inQuoted || sb.toString().trim().isEmpty()))
+            else if (quote != null && !quote.isEmpty() && row.startsWith(quote, i) && (inQuoted || sb.toString().trim().isEmpty()))
             {
                 if (!inQuoted)
                 {
@@ -692,7 +692,7 @@ public class GuessFormat
                 i += quote.length();
                 r.originalContentAndStyle.add(new Pair<>(quote, inQuoted ? "quote-begin" : "quote-end"));
             }
-            else if (!inQuoted && !sep.isEmpty() && row.startsWith(sep, i))
+            else if (!inQuoted && sep != null && !sep.isEmpty() && row.startsWith(sep, i))
             {
                 r.columnContents.add(sb.toString());
                 r.originalContentAndStyle.add(new Pair<>(replaceTab(sep), "separator"));

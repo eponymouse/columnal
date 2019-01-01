@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.ColumnType;
@@ -61,7 +62,7 @@ public class GenFormat extends Generator<FinalTextFormat>
         super(FinalTextFormat.class);
     }
 
-    public static FinalTextFormat f(int headerRows, ImmutableList<ColumnInfo> columns, String sep, String quote, Charset charset)
+    public static FinalTextFormat f(int headerRows, ImmutableList<ColumnInfo> columns, @Nullable String sep, @Nullable String quote, Charset charset)
     {
         return new FinalTextFormat(new InitialTextFormat(charset, sep, quote), new TrimChoice(headerRows, 0, 0, 0), columns);
     }
@@ -74,7 +75,7 @@ public class GenFormat extends Generator<FinalTextFormat>
         int garbageBeforeTitle = 0; //sourceOfRandomness.nextInt(0, 10);
         int garbageAfterTitle = 0; //sourceOfRandomness.nextInt(0, 5);
         List<ColumnInfo> columns = new ArrayList<>();
-        int columnCount = sourceOfRandomness.nextInt(2, 40);
+        int columnCount = sourceOfRandomness.nextInt(2, 15);
         for (int i = 0; i < columnCount; i++)
         {
             List<DateTimeFormatter> dateFormats = new DateTimeInfo(DateTimeType.YEARMONTHDAY).getFlexibleFormatters().stream().flatMap(l -> l.stream()).collect(Collectors.toList());

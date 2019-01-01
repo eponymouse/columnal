@@ -101,7 +101,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
     
     @Property(trials=10)
     @OnThread(Tag.Simulation)
-    public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
+    public void testGuessFormatGUI(@When(seed=2L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
         File tempFile = writeDataToFile(formatAndData);
         
@@ -121,10 +121,10 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         selectGivenComboBoxItem(lookup(".id-guess-charset").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.charset));
         TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
-        selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator));
+        selectGivenComboBoxItem(lookup(".id-guess-separator").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.separator == null ? "" : formatAndData.format.initialTextFormat.separator));
         TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
-        selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote));
+        selectGivenComboBoxItem(lookup(".id-guess-quote").query(), new PickOrOther<>(formatAndData.format.initialTextFormat.quote == null ? "" : formatAndData.format.initialTextFormat.quote));
         TestUtil.sleep(2000);
         checkTrim(importChoicesDialog);
         
