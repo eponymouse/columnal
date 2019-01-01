@@ -42,7 +42,7 @@ public class NumberRecogniser extends Recogniser<@Value Number>
                     return error("Expected digits after decimal point");
                 }
                 
-                return success(Utility.parseNumber(sign + beforeDot.getFirst() + "." + afterDot.getFirst()), beforeDot.getSecond());
+                return success(Utility.parseNumber(sign + beforeDot.getFirst() + "." + afterDot.getFirst()), afterDot.getSecond());
             }
             else
             {
