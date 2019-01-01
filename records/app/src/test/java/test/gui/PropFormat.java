@@ -111,7 +111,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         checkDataValues(formatAndData, loaded.get(0).getData());
     }
     
-    @Property(trials=10)
+    @Property(trials=4)
     @OnThread(Tag.Simulation)
     public void testGuessFormatGUI(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException, InterruptedException, ExecutionException, TimeoutException
     {
@@ -119,7 +119,7 @@ public class PropFormat extends FXApplicationTest implements ComboUtilTrait
         
         CompletableFuture<RecordSet> rsFuture = TextImporter._test_importTextFile(new DummyManager(), tempFile); //, link);
         // GUI should show (after a slight delay), so we should provide inputs:
-        TestUtil.sleep(3000);
+        TestUtil.sleep(8000);
         @Nullable ImportChoicesDialog<?, ?> maybeICD = TestUtil.<@Nullable ImportChoicesDialog<?, ?>>fx(() -> ImportChoicesDialog._test_getCurrentlyShowing());
         if (maybeICD == null)
         {
