@@ -77,7 +77,7 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
     /**
      * Generates a file with some raw data and a transform, then loads it and deletes a row in the source table.
      */
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
     public void propTestDeleteRow(
         @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
@@ -149,11 +149,11 @@ public class TestRowOps extends FXApplicationTest implements CheckCSVTrait, Clic
         exportToCSVAndCheck(virtualGrid, details._test_getTableManager(),"After deleting " + randomRow, expectedCalcContent, calculated.getId());
     }
 
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Any)
     public void propTestInsertRow(
         @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
-        @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @From(GenRandom.class) Random r) throws UserException, InternalException
     {
         if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
             return; // Can't insert if there's no table or no columns
