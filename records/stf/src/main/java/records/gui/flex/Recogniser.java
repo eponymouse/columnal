@@ -133,6 +133,16 @@ public abstract class Recogniser<T>
         {
             return new SuccessDetails<>(value, styles, parseProgress);
         }
+
+        // Makes sure there are no non-spaces left to be processed
+        public Either<ErrorDetails, SuccessDetails<T>> requireEnd()
+        {
+            ParseProgress pp = parseProgress.skipSpaces();
+            if (pp.curCharIndex == pp.src.length())
+                return Either.right(this);
+            else
+                return Either.left(new ErrorDetails(StyledString.s("Unexpected additional content: " + pp.src.substring(pp.curCharIndex))));
+        }
     }
     
     public static class StyleSpanInfo

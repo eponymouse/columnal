@@ -8,6 +8,7 @@ import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 import records.gui.flex.Recogniser.ParseProgress;
+import records.gui.flex.Recogniser.SuccessDetails;
 import styled.StyledString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -74,8 +75,8 @@ public class EditorKit<T>
         if (!focused)
         {
             latestDocument = ReadOnlyStyledDocument.from(fieldFinal.getDocument());
-            latestValue = recogniser.process(ParseProgress.fromStart(text), false).mapBoth(err -> {
-                Log.debug("### Entry error: " + err.error.toPlain());
+            latestValue = recogniser.process(ParseProgress.fromStart(text), false).flatMap(SuccessDetails::requireEnd).mapBoth(err -> {
+                Log.debug("### Entry error: " + err.error.toPlain() + " in: " + text);
                 return err.error;
             }, succ -> {
                 // TODO apply styles
