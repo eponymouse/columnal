@@ -45,9 +45,8 @@ public class GenFormat extends Generator<FinalTextFormat>
     static {
         try
         {
+            // Only EUR has reliable one-to-one connection with currency symbol:
             currencies = Arrays.asList(
-                DummyManager.INSTANCE.getUnitManager().loadUse("USD"),
-                DummyManager.INSTANCE.getUnitManager().loadUse("GBP"),
                 DummyManager.INSTANCE.getUnitManager().loadUse("EUR")
             );
         }
@@ -82,7 +81,7 @@ public class GenFormat extends Generator<FinalTextFormat>
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),
-                sourceOfRandomness.nextBoolean() ?
+                sourceOfRandomness.nextInt(0, 10) < 7 ?
                 new NumericColumnType(Unit.SCALAR, sourceOfRandomness.nextInt(0, 6), null, null) :
                 ((Supplier<ColumnType>)() -> {
                     Unit curr = sourceOfRandomness.choose(currencies);
