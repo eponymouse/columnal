@@ -140,7 +140,10 @@ public class FXApplicationTest extends ApplicationTest implements FocusOwnerTrai
     @Override
     public FxRobot write(String text, int sleepMillis)
     {
-        Log.debug("Writing: " + text + " to " + TestUtil.fx(() -> getRealFocusedWindow()));
+        Log.debug("Writing: " + text + " to " + TestUtil.fx(() -> {
+            Window window = getRealFocusedWindow();
+            return window.toString() + (window instanceof Stage ? " " + ((Stage)window).getTitle() : "");
+        }));
         Scene scene = TestUtil.fx(() -> getRealFocusedWindow().getScene());
         text.chars().forEach(c -> {
             robotContext().getBaseRobot().typeKeyboard(scene, determineKeyCode(c), Utility.codePointToString(c));
