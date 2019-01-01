@@ -64,52 +64,58 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
      */
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
-    public void propUpdate(@When(seed=1L) @From(GenTypeAndValueGen.class) TypeAndValueGen colA, @When(seed=2L) @From(GenTypeAndValueGen.class) TypeAndValueGen colB, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+    public void propUpdate(
+            @From(GenTypeAndValueGen.class) TypeAndValueGen colA,
+            @From(GenTypeAndValueGen.class) TypeAndValueGen colB,
+            @From(GenRandom.class) Random r) throws Exception
     {
-        TableManager dummy = new DummyManager();
-        dummy.getTypeManager()._test_copyTaggedTypesFrom(colA.getTypeManager());
-        dummy.getTypeManager()._test_copyTaggedTypesFrom(colB.getTypeManager());
-        @Initialized final int tableLength = 1 + r.nextInt(20);
-        EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
-            colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colA.makeValue()), colA.makeValue()),
-            colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colB.makeValue()), colB.makeValue())
-        ), () -> tableLength);
-        dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN, null), origRecordSet));
-        // Now add two transformations:
-        addTransformation(dummy, "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(0, 3), r);
-        addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(0, 6), r);
+        TestUtil.printSeedOnFail(() -> {
+            TableManager dummy = new DummyManager();
+            dummy.getTypeManager()._test_copyTaggedTypesFrom(colA.getTypeManager());
+            dummy.getTypeManager()._test_copyTaggedTypesFrom(colB.getTypeManager());
+            @Initialized final int tableLength = 1 + r.nextInt(20);
+            EditableRecordSet origRecordSet = new EditableRecordSet(ImmutableList.<SimulationFunction<RecordSet, EditableColumn>>of(
+                    colA.getType().makeImmediateColumn(new ColumnId("A"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colA.makeValue()), colA.makeValue()),
+                    colB.getType().makeImmediateColumn(new ColumnId("B"), Utility.<@Value Object>replicateM_Ex(tableLength, () -> colB.makeValue()), colB.makeValue())
+            ), () -> tableLength);
+            dummy.record(new ImmediateDataSource(dummy, new InitialLoadDetails(new TableId("Src"), CellPosition.ORIGIN, null), origRecordSet));
+            // Now add two transformations:
+            addTransformation(dummy, "Src", "T1", CellPosition.ORIGIN.offsetByRowCols(0, 3), r);
+            addTransformation(dummy, "T1", "T2", CellPosition.ORIGIN.offsetByRowCols(0, 6), r);
 
-        MainWindowActions details = TestUtil.openDataAsTable(windowToUse, dummy).get();
-        TestUtil.sleep(1000);
-        // First check that the data is valid to begin with:
-        List<List<@Nullable String>> origDataA = getDataViaGraphics(details, 0);
-        checkAllMatch(origDataA);
-        List<List<@Nullable String>> origDataB = getDataViaGraphics(details, 1);
-        checkAllMatch(origDataB);
+            MainWindowActions details = TestUtil.openDataAsTable(windowToUse, dummy).get();
+            TestUtil.sleep(1000);
+            // First check that the data is valid to begin with:
+            List<List<@Nullable String>> origDataA = getDataViaGraphics(details, 0);
+            checkAllMatch(origDataA);
+            List<List<@Nullable String>> origDataB = getDataViaGraphics(details, 1);
+            checkAllMatch(origDataB);
         /*
         List<List<String>> origClipboardA = getDataViaCopy("A");
         checkAllMatch(origDataA, origClipboardA);
         List<List<String>> origClipboardB = getDataViaCopy("B");
         checkAllMatch(origDataB, origClipboardB);
         */
-        int changes = 3;
-        for (int i = 0; i < changes; i++)
-        {
-            int targetColumn = r.nextInt(2);
-            int targetRow = r.nextInt(tableLength);
-            TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
-            @Value Object newVal = colType.makeValue();
+            int changes = 3;
+            for (int i = 0; i < changes; i++)
+            {
+                int targetColumn = r.nextInt(2);
+                int targetRow = r.nextInt(tableLength);
+                TypeAndValueGen colType = targetColumn == 0 ? colA : colB;
+                @Value Object newVal = colType.makeValue();
 
-            keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 3, targetColumn));
-            push(KeyCode.ENTER);
-            DataEntryUtil.enterValue(this, r, colType.getType(), newVal, false);
-            push(KeyCode.ENTER);
+                keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 3, targetColumn));
+                push(KeyCode.ENTER);
+                DataEntryUtil.enterValue(this, r, colType.getType(), newVal, false);
+                push(KeyCode.ENTER);
+                TestUtil.sleep(2000);
 
-            List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
-            checkAllMatch(latestDataA);
-            List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
-            checkAllMatch(latestDataB);
-        }
+                List<List<@Nullable String>> latestDataA = getDataViaGraphics(details, 0);
+                checkAllMatch(latestDataA);
+                List<List<@Nullable String>> latestDataB = getDataViaGraphics(details, 1);
+                checkAllMatch(latestDataB);
+            }
+        });
     }
 
     @OnThread(Tag.Any)
@@ -136,7 +142,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
     {
         @OnThread(Tag.FXPlatform) @Nullable VersionedSTF cell = details._test_getDataCell(tableDisplay.getPosition().offsetByRowCols(tableDisplay.getHeaderRowCount() + row, columnIndex));
         if (cell != null)
-            return cell.getText();
+            return cell.getText().replace(", ", ",");
         else
             return null;
     }
