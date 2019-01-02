@@ -68,7 +68,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "@newvar " + varName;
+        return "$" + varName;
     }
 
     @Override
