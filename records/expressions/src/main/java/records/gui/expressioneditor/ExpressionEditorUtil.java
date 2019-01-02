@@ -84,8 +84,10 @@ public class ExpressionEditorUtil
         private final Pane errorPane;
         private boolean hasError;
         private boolean maskErrors = false;
-        public static final WritableImage SQUIGGLE = new WritableImage(4, 4);
-        static {
+        // This used to be static and shared, but that causes a memory leak.  It's so small,
+        // just make one per pane:
+        private final WritableImage SQUIGGLE = new WritableImage(4, 4);
+        {
             SQUIGGLE.getPixelWriter().setColor(0, 0, Color.RED);
             SQUIGGLE.getPixelWriter().setColor(0, 1, Color.RED);
             SQUIGGLE.getPixelWriter().setColor(1, 1, Color.RED);
