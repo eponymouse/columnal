@@ -84,6 +84,7 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
     }
 
     @Property(trials = 10)
+    @Ignore
     public void testEntry(@When(seed=3L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
     {
         MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
