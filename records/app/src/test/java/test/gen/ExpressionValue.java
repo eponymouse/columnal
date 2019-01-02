@@ -24,14 +24,16 @@ public class ExpressionValue implements TableLookup
     public final RecordSet recordSet;
     public final Expression expression;
     public final TypeManager typeManager;
+    public final @Nullable GenExpressionValueBase generator;
 
-    public ExpressionValue(DataType type, List<@Value Object> value, TypeManager typeManager, RecordSet recordSet, Expression expression)
+    public ExpressionValue(DataType type, List<@Value Object> value, TypeManager typeManager, RecordSet recordSet, Expression expression, @Nullable GenExpressionValueBase generator)
     {
         this.type = type;
         this.value = value;
         this.typeManager = typeManager;
         this.recordSet = recordSet;
         this.expression = expression;
+        this.generator = generator;
     }
 
     @Override
@@ -47,5 +49,10 @@ public class ExpressionValue implements TableLookup
     public String toString()
     {
         return "Type: " + type + " Expression: " + expression;
+    }
+
+    public ExpressionValue withExpression(Expression replacement)
+    {
+        return new ExpressionValue(type, value, typeManager, recordSet, replacement, generator);
     }
 }

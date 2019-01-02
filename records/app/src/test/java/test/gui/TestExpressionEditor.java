@@ -221,7 +221,8 @@ public class TestExpressionEditor extends FXApplicationTest implements ListUtilT
             ImmutableList.of(),
             DummyManager.INSTANCE.getTypeManager(),
             new KnownLengthRecordSet(ImmutableList.of(), 0),
-            expression
+            expression,
+            null
         ), new Random(0));
         
         

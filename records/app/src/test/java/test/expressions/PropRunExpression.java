@@ -25,6 +25,7 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 10/12/2016.
@@ -52,7 +53,10 @@ public class PropRunExpression
         catch (ArithmeticException | InternalException | UserException | ClassCastException e)
         {
             System.err.println("Expression: {{{" + src.expression.toString() + "}}} " + src.recordSet.debugGetVals());
-            throw e;
+            //throw e;
+            e.printStackTrace();
+            // Must fail, not throw, if we want to shrink:
+            fail(e.getLocalizedMessage());
         }
     }
 

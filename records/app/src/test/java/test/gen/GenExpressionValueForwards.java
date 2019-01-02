@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeSet;
 
 import static test.TestUtil.distinctTypes;
 
@@ -89,12 +90,12 @@ import static test.TestUtil.distinctTypes;
  * then generate the integer values to match.
  */
 @SuppressWarnings("recorded")
-public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
+public class GenExpressionValueForwards extends GenExpressionValueBase
 {
     @SuppressWarnings("initialization")
     public GenExpressionValueForwards()
     {
-        super(ExpressionValue.class);
+        
     }
 
     // Easier than passing parameters around:
@@ -104,17 +105,15 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public ExpressionValue generate(SourceOfRandomness r, GenerationStatus generationStatus)
+    public ExpressionValue generate()
     {
-        this.r = r;
-        this.gs = generationStatus;
         this.columns = new ArrayList<>();
         this.targetSize = r.nextInt(1, 100);
         try
         {
             DataType type = makeType(r);
             Pair<List<@Value Object>, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, p.getFirst(), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond());
+            return new ExpressionValue(type, p.getFirst(), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
         {
@@ -818,10 +817,26 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
         */
 
         //TODO generate match expressions here (valid for all types)
+        final Pair<List<@Value Object>, Expression> valueExp;
         if (deeper.isEmpty() || (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0)))
-            return r.choose(terminals).make();
+            valueExp = r.choose(terminals).make();
         else
-            return r.choose(deeper).make();
+            valueExp = r.choose(deeper).make();
+        // Can only substitute with literal if it has constant value:
+        TreeSet<@Value Object> allValues = new TreeSet<@Value Object>((@Value Object a, @Value Object b) -> {
+            try
+            {
+                return Utility.compareValues(a, b);
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        });
+        allValues.addAll(valueExp.getFirst());
+        if (allValues.size() == 1)
+            register(valueExp.getSecond(), type, allValues.iterator().next());
+        return valueExp;
     }
 /*
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException

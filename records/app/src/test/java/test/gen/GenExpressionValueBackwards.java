@@ -32,13 +32,12 @@ import java.util.List;
  */
 @SuppressWarnings("recorded")
 @OnThread(Tag.Simulation)
-public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> implements RequestBackwardsExpression
+public class GenExpressionValueBackwards extends GenExpressionValueBase implements RequestBackwardsExpression
 {
 
     @SuppressWarnings("initialization")
     public GenExpressionValueBackwards()
     {
-        super(ExpressionValue.class);
     }
 
     private BackwardsColumnRef columnProvider;
@@ -46,10 +45,8 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public ExpressionValue generate(SourceOfRandomness r, GenerationStatus generationStatus)
+    public ExpressionValue generate()
     {
-        this.r = r;
-        this.gs = generationStatus;
         this.numberOnlyInt = true;
         columnProvider = new BackwardsColumnRef(r, this);
         providers = ImmutableList.of(
@@ -68,7 +65,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
         {
             DataType type = makeType(r);
             Pair<@Value Object, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond());
+            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond(), this);
         }
         catch (InternalException | UserException e)
         {
@@ -110,7 +107,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue> i
             deep.addAll(provider.deep(maxLevels, type, targetValue));
         }
 
-        return termDeep(maxLevels, type, terminals.build(), deep.build());
+        return register(termDeep(maxLevels, type, terminals.build(), deep.build()), type, targetValue);
     }
     
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
