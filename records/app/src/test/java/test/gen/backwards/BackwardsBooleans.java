@@ -147,7 +147,7 @@ public class BackwardsBooleans extends BackwardsProvider
             // then the remaining 1 to size - 1 (incl) are different than original
             // (may be same as each other by coincidence, but that's okay)
             @Value Object valA = parent.makeValue(t);
-            int sameAsA = r.nextInt(0, size - 2);
+            int sameAsA = r.nextInt(1, size - 1);
             for (int i = 0; i < sameAsA; i++)
             {
                 expressions.add(parent.make(t, valA, maxLevels - 1));
