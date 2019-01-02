@@ -1533,6 +1533,7 @@ public class DataType implements StyledShowable
                 else
                 {
                     b.t(FormatLexer.APPLY, FormatLexer.VOCABULARY);
+                    b.raw(" ");
                     b.raw(typeName.getRaw());
                     for (Either<Unit, DataType> typeVar : typeVars)
                     {

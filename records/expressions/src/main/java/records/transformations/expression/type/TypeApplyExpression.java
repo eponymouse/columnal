@@ -50,7 +50,10 @@ public class TypeApplyExpression extends TypeExpression
     {
         StringBuilder sb = new StringBuilder();
         if (structured)
+        {
             sb.append(OutputBuilder.stripQuotes(FormatLexer.VOCABULARY.getLiteralName(FormatLexer.APPLY)));
+            sb.append(" ");
+        }
         sb.append(typeName);
         for (int i = 0; i < arguments.size(); i++)
         {
