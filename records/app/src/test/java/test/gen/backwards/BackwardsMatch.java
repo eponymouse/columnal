@@ -197,7 +197,7 @@ public class BackwardsMatch extends BackwardsProvider
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
         if (extraGuard != null)
-            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
+            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(extraGuard, guard)));
         PatternInfo successful = new PatternInfo(match.pattern, guard);
         clauses.add(r.nextInt(0, clauses.size()), new Pair<>(successful, correctOutcome));
         // Remove for successful pattern:
@@ -255,7 +255,7 @@ public class BackwardsMatch extends BackwardsProvider
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
         if (extraGuard != null)
-            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
+            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(extraGuard, guard)));
         PatternInfo successful = new PatternInfo(match.pattern, guard);
         patterns.add(r.nextInt(0, patterns.size()), successful);
         // Remove for successful pattern:
@@ -467,7 +467,7 @@ public class BackwardsMatch extends BackwardsProvider
         @Nullable Expression guard = r.nextBoolean() ? null : parent.make(DataType.BOOLEAN, true, maxLevels - 1);
         @Nullable Expression extraGuard = match.guard;
         if (extraGuard != null)
-            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
+            guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(extraGuard, guard)));
         varContexts.remove(varContexts.size() - 1);
         @Nullable Expression guardFinal = guard;
         return new PatternInfo(match.pattern, guardFinal);
