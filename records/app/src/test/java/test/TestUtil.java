@@ -402,7 +402,10 @@ public class TestUtil
             else
                 */
             {
-                return new GenString().generate(r, gs);
+                String s = new GenString().generate(r, gs);
+                if (s.length() > 250)
+                    s = s.substring(0, 250);
+                return s;
             }
         }
         else
