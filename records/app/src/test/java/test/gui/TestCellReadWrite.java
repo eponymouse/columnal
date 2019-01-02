@@ -58,8 +58,8 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
     @Property(trials = 3)
     @OnThread(Tag.Simulation)
     public void propCheckDataRead(
-            @When(seed=1L) @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
-            @When(seed=1L) @From(GenRandom.class) Random r) throws Exception
+            @NumTables(minTables = 2, maxTables = 4) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr src,
+            @From(GenRandom.class) Random r) throws Exception
     {
 
         MainWindowActions details = TestUtil.openDataAsTable(windowToUse, src.mgr).get();
