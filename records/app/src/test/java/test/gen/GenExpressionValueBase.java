@@ -16,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.math.BigDecimal;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -68,6 +69,16 @@ public abstract class GenExpressionValueBase extends GenValueBase<ExpressionValu
                 return Stream.of(); // No longer within
             return Stream.of(larger.withExpression(after));
         }).collect(ImmutableList.toImmutableList());
+    }
+
+    @Override
+    public BigDecimal magnitude(Object value)
+    {
+        if (value instanceof ExpressionValue)
+        {
+            return BigDecimal.valueOf(((ExpressionValue)value).expression.toString().length());
+        }
+        return super.magnitude(value);
     }
 
     @OnThread(Tag.Simulation)
