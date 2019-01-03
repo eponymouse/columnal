@@ -43,9 +43,9 @@ public class ConstructorExpression extends NonOperatorExpression
     }
     
     // Used for testing, or if you know the tag directly:
-    public ConstructorExpression(Either<String, TagInfo> tag)
+    public ConstructorExpression(TagInfo tag)
     {
-        this.tag = tag;
+        this.tag = Either.right(tag);
     }
 
     @Override

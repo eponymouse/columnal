@@ -7,7 +7,11 @@ import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.TableManager;
+import records.data.datatype.DataType;
+import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeManager.TagInfo;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
@@ -18,6 +22,7 @@ import records.transformations.function.FunctionList;
 import test.DummyManager;
 import test.TestUtil;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -89,7 +94,22 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> !tagAllowed ? genTerminal(r, gs, false) : TestUtil.tagged(genTag(r), genDepth(r, depth + 1, gs)),
+                () -> {
+                    if (!tagAllowed)
+                        return genTerminal(r, gs, false);
+                    else
+                    {
+                        try
+                        {
+                            Pair<DataType, TagInfo> tag = genTag(r);
+                            return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), genDepth(r, depth + 1, gs), tag.getFirst());
+                        }
+                        catch (InternalException | UserException e)
+                        {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                },
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
@@ -119,7 +139,7 @@ public class GenNonsenseExpression extends Generator<Expression>
         {
             // Call targets:
             ArrayList<Expression> items = new ArrayList<>(Arrays.asList(
-                new ConstructorExpression(genTag(r)),
+                new ConstructorExpression(genTag(r).getSecond()),
                 new StandardFunction(r.choose(FunctionList.getAllFunctions(tableManager.getUnitManager()))),
                 new IdentExpression(TestUtil.generateVarName(r))
             ));
@@ -145,9 +165,18 @@ public class GenNonsenseExpression extends Generator<Expression>
         }
     }
 
-    private Either<String, TagInfo> genTag(SourceOfRandomness r)
+    private Pair<DataType, TagInfo> genTag(SourceOfRandomness r) throws InternalException, UserException
     {
-        return Either.right(r.choose(tableManager.getTypeManager().getKnownTaggedTypes().values().stream().flatMap(vs -> vs._test_getTagInfos().stream()).collect(Collectors.toList())));
+        List<Pair<DataType, TagInfo>> list = new ArrayList<>();
+        for (TaggedTypeDefinition vs : tableManager.getTypeManager().getKnownTaggedTypes().values())
+        {
+            for (TagInfo info : vs._test_getTagInfos())
+            {
+                Pair<DataType, TagInfo> dataTypeTagInfoPair = new Pair<>(vs.instantiate(Utility.mapListI(vs.getTypeArguments(), p -> p.getFirst() == TypeVariableKind.UNIT ? Either.<@NonNull Unit, @NonNull DataType>left(Unit.SCALAR) : Either.<@NonNull Unit, @NonNull DataType>right(DataType.TEXT)), tableManager.getTypeManager()), info);
+                list.add(dataTypeTagInfoPair);
+            }
+        }
+        return r.choose(list);
     }
 
     private UnitExpression genUnit(SourceOfRandomness r, GenerationStatus gs)
@@ -173,8 +202,15 @@ public class GenNonsenseExpression extends Generator<Expression>
             () -> new VarDeclExpression(TestUtil.generateVarName(r).trim()),
             () ->
             {
-                String constructorName = TestUtil.makeNonEmptyString(r, gs).trim();
-                return TestUtil.tagged(genTag(r), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
+                try
+                {
+                    Pair<DataType, TagInfo> tag = genTag(r);
+                    return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1), tag.getFirst());
+                }
+                catch (InternalException | UserException ex)
+                {
+                    throw new RuntimeException(ex);
+                }
             }
         )).get();
     }

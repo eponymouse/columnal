@@ -8,12 +8,14 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.*;
+import test.TestUtil;
 import utility.Either;
 import utility.TaggedValue;
 import utility.Utility;
@@ -73,11 +75,16 @@ public class BackwardsLiteral extends BackwardsProvider
                     TaggedValue taggedValue = (TaggedValue) targetValue;
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
 
-                    ConstructorExpression constructor = new ConstructorExpression(parent.getTypeManager(), typeName.getRaw(), tag.getName());
-                    if (tag.getInner() == null || taggedValue.getInner() == null)
-                        return constructor;
+                    TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
+                    if (typeDefinition == null)
+                        throw new InternalException("Looked up type but null definition: " + typeName);
+                    TagInfo tagInfo = typeDefinition._test_getTagInfos().get(taggedValue.getTagIndex());
+                    DataType inner = tag.getInner();
+                    @Value Object innerValue = taggedValue.getInner();
+                    if (inner == null || innerValue == null)
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType);
                     else
-                        return new CallExpression(constructor, r.choose(terminals(tag.getInner(), taggedValue.getInner())).make());
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, r.choose(terminals(inner, innerValue)).make(), targetType);
                 });
             }
 
@@ -148,11 +155,16 @@ public class BackwardsLiteral extends BackwardsProvider
                     TaggedValue taggedValue = (TaggedValue) targetValue;
                     TagType<DataType> tag = tags.get(taggedValue.getTagIndex());
 
-                    ConstructorExpression constructor = new ConstructorExpression(parent.getTypeManager(), typeName.getRaw(), tag.getName());
-                    if (tag.getInner() == null || taggedValue.getInner() == null)
-                        return constructor;
+                    TaggedTypeDefinition typeDefinition = parent.getTypeManager().lookupDefinition(typeName);
+                    if (typeDefinition == null)
+                        throw new InternalException("Looked up type but null definition: " + typeName);
+                    TagInfo tagInfo = typeDefinition._test_getTagInfos().get(taggedValue.getTagIndex());
+                    DataType inner = tag.getInner();
+                    @Value Object innerValue = taggedValue.getInner();
+                    if (inner == null || innerValue == null)
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType);
                     else
-                        return new CallExpression(constructor, parent.make(tag.getInner(), taggedValue.getInner(), maxLevels - 1));
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, parent.make(inner, innerValue, maxLevels - 1), targetType);
                 });
             }
 

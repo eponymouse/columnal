@@ -34,6 +34,8 @@ import records.data.Table.FullSaver;
 import records.data.Table.InitialLoadDetails;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.Unit;
@@ -41,13 +43,12 @@ import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.gui.MainWindow.MainWindowActions;
 import records.jellytype.JellyType;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ConstructorExpression;
-import records.transformations.expression.ErrorAndTypeRecorder;
-import records.transformations.expression.EvaluateState;
-import records.transformations.expression.QuickFix;
-import records.transformations.expression.TypeState;
+import records.jellytype.JellyType.JellyTypeVisitorEx;
+import records.jellytype.JellyUnit;
+import records.transformations.expression.*;
+import records.transformations.expression.type.TypeExpression;
 import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionList;
 import records.typeExp.MutVar;
 import records.typeExp.TypeCons;
 import records.typeExp.TypeExp;
@@ -67,7 +68,6 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
-import records.transformations.expression.Expression;
 import test.gen.GenNumber;
 import test.gen.GenZoneId;
 import threadchecker.OnThread;
@@ -1144,17 +1144,110 @@ public class TestUtil
     // Used for testing
     // Creates a call to a tag constructor
     @SuppressWarnings("recorded")
-    public static Expression tagged(Either<String, TagInfo> constructor, @Nullable Expression arg)
+    public static Expression tagged(UnitManager unitManager, TagInfo constructor, @Nullable Expression arg, DataType destType) throws InternalException
     {
         ConstructorExpression constructorExpression = new ConstructorExpression(constructor);
+        Expression r;
         if (arg == null)
         {
-            return constructorExpression;
+            r = constructorExpression;
         }
         else
         {
-            return new CallExpression(constructorExpression, arg);
+            r = new CallExpression(constructorExpression, arg);
         }
+        
+        // Need to avoid having an ambiguous type:
+        TaggedTypeDefinition wholeType = constructor.wholeType;
+        for (Pair<TypeVariableKind, String> var : wholeType.getTypeArguments())
+        {
+            // If any type variables aren't mentioned, wrap in asType:
+            if (!containsTypeVar(wholeType.getTags().get(constructor.tagIndex).getInner(), var))
+            {
+                FunctionDefinition asType = FunctionList.lookup(unitManager, "asType");
+                if (asType == null)
+                    throw new RuntimeException("Could not find asType");
+                return new CallExpression(new StandardFunction(asType), new TupleExpression(ImmutableList.of(new TypeLiteralExpression(TypeExpression.fromDataType(destType)), r)));
+            }
+        }
+        return r;
+    }
+
+    private static boolean containsTypeVar(@Nullable JellyType jellyType, Pair<TypeVariableKind, String> var)
+    {
+        if (jellyType == null)
+            return false;
+
+        try
+        {
+            return jellyType.apply(new JellyTypeVisitorEx<Boolean, InternalException>()
+            {
+                @Override
+                public Boolean number(JellyUnit unit) throws InternalException
+                {
+                    return containsTypeVar(unit, var);
+                }
+    
+                @Override
+                public Boolean text() throws InternalException
+                {
+                    return false;
+                }
+    
+                @Override
+                public Boolean date(DateTimeInfo dateTimeInfo) throws InternalException
+                {
+                    return false;
+                }
+    
+                @Override
+                public Boolean bool() throws InternalException
+                {
+                    return false;
+                }
+    
+                @Override
+                public Boolean applyTagged(TypeId typeName, ImmutableList<Either<JellyUnit, JellyType>> typeParams) throws InternalException
+                {
+                    return typeParams.stream().anyMatch(p -> p.<Boolean>either(u -> containsTypeVar(u, var), t -> containsTypeVar(t, var)));
+                }
+    
+                @Override
+                public Boolean tuple(ImmutableList<JellyType> inner) throws InternalException
+                {
+                    return inner.stream().anyMatch(t -> containsTypeVar(t, var));
+                }
+    
+                @Override
+                public Boolean array(JellyType inner) throws InternalException
+                {
+                    return containsTypeVar(inner, var);
+                }
+    
+                @Override
+                public Boolean function(JellyType argType, JellyType resultType) throws InternalException
+                {
+                    return containsTypeVar(argType, var) || containsTypeVar(resultType, var);
+                }
+    
+                @Override
+                public Boolean ident(String name) throws InternalException
+                {
+                    return var.equals(new Pair<>(TypeVariableKind.TYPE, name));
+                }
+            });
+        }
+        catch (InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean containsTypeVar(JellyUnit unit, Pair<TypeVariableKind, String> var)
+    {
+        if (var.getFirst() == TypeVariableKind.UNIT)
+            return unit.getDetails().containsKey(ComparableEither.left(var.getSecond()));
+        return false;
     }
 
     public static DummyManager managerWithTestTypes()
