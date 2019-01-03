@@ -55,4 +55,9 @@ public class ExpressionValue implements TableLookup
     {
         return new ExpressionValue(type, value, typeManager, recordSet, replacement, generator);
     }
+    
+    public int getExpressionLength()
+    {
+        return expression.toString().length();
+    }
 }
