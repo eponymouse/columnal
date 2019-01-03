@@ -19,6 +19,7 @@ import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -29,6 +30,8 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
@@ -39,6 +42,7 @@ import records.gui.expressioneditor.AutoComplete.Completion.ShowStatus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
@@ -59,15 +63,13 @@ import java.util.stream.Stream;
  * Created by neil on 17/12/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class AutoComplete<C extends Completion> extends PopupControl
+public class AutoComplete<C extends Completion>
 {
     private static final double CELL_HEIGHT = 30.0;
     private final TextField textField;
-    private final ListView<C> completions;
-    private final BorderPane container;
-    private final Instruction instruction;
-    private final WebView webView;
-    private final NumberBinding webViewHeightBinding;
+    private final CompletionListener<C> onSelect;
+    private @Nullable AutoCompleteWindow window;
+    
     private boolean settingContentDirectly = false;
 
     public static enum WhitespacePolicy
@@ -118,81 +120,19 @@ public class AutoComplete<C extends Completion> extends PopupControl
      */
     public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, CompletionListener<C> onSelect, FXPlatformSupplier<Boolean> showOnFocus, WhitespacePolicy whitespacePolicy, AlphabetCheck inNextAlphabet)
     {
-        // Disable autofix so that the popup doesn't get moved to cover up text field:
-        setAutoFix(false);
         this.textField = textField;
-        this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
-        this.completions = new ListView<C>() {
-            @Override
-            @OnThread(Tag.FX)
-            public void requestFocus()
-            {
-                // Can't be focused
-            }
-        };
-        completions.getStyleClass().add("autocomplete");
-        completions.setPrefWidth(400.0);
-        container = new BorderPane(null, null, null, null, completions);
-        container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (e.getButton() == MouseButton.MIDDLE)
-            {
-                hide();
-                instruction.hide();
-                e.consume();
-            }
-        });
-        this.webView = new WebView();
-        this.webView.setPrefWidth(400.0);
-        webViewHeightBinding = Bindings.max(300.0f, completions.heightProperty());
-        this.webView.prefHeightProperty().bind(webViewHeightBinding);
+        this.onSelect = onSelect;
         
-        FXUtility.listen(completions.getItems(), change -> {
-            FXUtility.runAfter(() -> updateHeight(completions));
-        });
 
         textField.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
-        completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
-
-        completions.setCellFactory(lv -> {
-            return new CompleteCell();
-        });
-        completions.setOnMouseClicked(e -> {
-            @Nullable C selectedItem = completions.getSelectionModel().getSelectedItem();
-            if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && selectedItem != null)
-            {
-                @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
-                if (newContent != null)
-                    FXUtility.mouse(this).setContentDirect(newContent);
-            }
-        });
-
-        FXUtility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
-            if (selected != null)
-            {
-                @Nullable String url = selected.getFurtherDetailsURL();
-                if (url != null)
-                {
-                    webView.getEngine().load(url);
-                    container.setCenter(webView);
-                }
-                else
-                {
-                    container.setCenter(null);
-                }
-            }
-            else
-            {
-                container.setCenter(null);
-            }
-        });
-
-        setSkin(new AutoCompleteSkin());
+        
 
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focused -> {
             if (focused)
             {
-                
-                updateCompletions(calculateCompletions, textField.getText());
+                AutoComplete<C> usInit = FXUtility.mouse(this);
+                usInit.createWindow();
+                usInit.window.updateCompletions(calculateCompletions, textField.getText());
                 // We use runAfter because completing previous field can focus us before it has its text
                 // in place, so the showOnFocus call returns the wrong value.  The user won't notice
                 // big difference if auto complete appears a fraction later, so we don't lose anything:
@@ -203,19 +143,19 @@ public class AutoComplete<C extends Completion> extends PopupControl
                         //Point2D screenTopLeft = textField.localToScreen(new Point2D(0, -1));
                         // TODO see if we can find a useful place to show this:
                         //instruction.show(textField, screenTopLeft.getX(), screenTopLeft.getY());
-                        show(textField, pos.getFirst(), pos.getSecond());
+                        usInit.show(textField, pos.getFirst(), pos.getSecond());
                     }
                 });
             }
             else
             {
                 // Focus leaving and we are showing:
-                if (isShowing())
+                if (isShowing() && window != null)
                 {
                     // Update completions in case it was recently changed
                     // e.g. they pressed closing bracket and that has been removed and
                     // is causing us to move focus:
-                    updateCompletions(calculateCompletions, textField.getText());
+                    window.updateCompletions(calculateCompletions, textField.getText());
                     C completion = getCompletionIfFocusLeftNow();
                     if (completion != null)
                     {
@@ -225,7 +165,6 @@ public class AutoComplete<C extends Completion> extends PopupControl
                             FXUtility.keyboard(this).setContentDirect(newContent);
                     }
                     hide();
-                    instruction.hide();
                 }
             }
         });
@@ -244,10 +183,14 @@ public class AutoComplete<C extends Completion> extends PopupControl
             }
         });
 
-        FXUtility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), t -> updatePosition());
-        FXUtility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
-        FXUtility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
-        FXUtility.addChangeListenerPlatformNN(textField.heightProperty(), t -> updatePosition());
+        FXPlatformConsumer<Object> updatePos = t -> {
+            if (window != null)
+                window.updatePosition();
+        };
+        FXUtility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), updatePos);
+        FXUtility.addChangeListenerPlatformNN(textField.layoutXProperty(), updatePos);
+        FXUtility.addChangeListenerPlatformNN(textField.layoutYProperty(), updatePos);
+        FXUtility.addChangeListenerPlatformNN(textField.heightProperty(), updatePos);
         
         textField.sceneProperty().addListener(new ChangeListener<@Nullable Scene>()
         {
@@ -284,7 +227,7 @@ public class AutoComplete<C extends Completion> extends PopupControl
                     windowListener.changed(newValue.windowProperty(), null, newValue.getWindow());
                 }
                 // If scene/window has changed, we should update position even if X/Y hasn't changed:
-                updatePosition();
+                updatePos.consume("");
             }
         });
 
@@ -298,14 +241,14 @@ public class AutoComplete<C extends Completion> extends PopupControl
             text = text.trim() + (text.endsWith(" ") ? " " : "");
 
             int[] codepoints = text.codePoints().toArray();
-            updatePosition(); // Just in case
-            List<C> available = updateCompletions(calculateCompletions, text.trim());
+            updatePos.consume(""); // Just in case
+            List<C> available = window == null ? ImmutableList.of() : window.updateCompletions(calculateCompletions, text.trim());
 
             // Show if not already showing:
             Pair<Double, Double> pos = calculatePosition();
             if (!isShowing() && pos != null)
             {
-                show(textField, pos.getFirst(), pos.getSecond());
+                FXUtility.keyboard(this).show(textField, pos.getFirst(), pos.getSecond());
             }
             
             // If they type an operator or non-operator char, and there is
@@ -359,44 +302,48 @@ public class AutoComplete<C extends Completion> extends PopupControl
             // Trim after alphabet check:
             text = text.trim();
             
-            // We want to select top one, not last one, so keep track of
-            // whether we've already selected top one:
-            boolean haveSelected = false;
-            for (C completion : available)
+            if (window != null)
             {
-                ShowStatus completionAction = completion.shouldShow(text);
-                //Log.debug("Completion for \"" + text + "\": " + completionAction);
-                // TODO check if we are actually a single completion
-                if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly && completion.completesWhenSingleDirect())
+                ListView<C> completions = window.completions;
+                
+                // We want to select top one, not last one, so keep track of
+                // whether we've already selected top one:
+                boolean haveSelected = false;
+                for (C completion : available)
                 {
-                    completions.getSelectionModel().select(completion);
-                    
-                    @Nullable String newContent = onSelect.exactCompletion(text, completion);
-                    if (newContent != null)
-                    {
-                        change.setText(newContent);
-                        change.setRange(0, textField.getLength());
-                    }
-                    hide();
-                    instruction.hide();
-                    return change;
-                }
-                else if (completionAction == ShowStatus.START_DIRECT_MATCH || completionAction == ShowStatus.PHANTOM || completionAction == ShowStatus.DIRECT_MATCH)
-                {
-                    // Select it, at least:
-                    if (!haveSelected)
+                    ShowStatus completionAction = completion.shouldShow(text);
+                    //Log.debug("Completion for \"" + text + "\": " + completionAction);
+                    // TODO check if we are actually a single completion
+                    if (completionAction == ShowStatus.DIRECT_MATCH && !settingContentDirectly && completion.completesWhenSingleDirect())
                     {
                         completions.getSelectionModel().select(completion);
-                        FXUtility.ensureSelectionInView(completions, null);
-                        haveSelected = true;
+
+                        @Nullable String newContent = onSelect.exactCompletion(text, completion);
+                        if (newContent != null)
+                        {
+                            change.setText(newContent);
+                            change.setRange(0, textField.getLength());
+                        }
+                        hide();
+                        return change;
+                    }
+                    else if (completionAction == ShowStatus.START_DIRECT_MATCH || completionAction == ShowStatus.PHANTOM || completionAction == ShowStatus.DIRECT_MATCH)
+                    {
+                        // Select it, at least:
+                        if (!haveSelected)
+                        {
+                            completions.getSelectionModel().select(completion);
+                            FXUtility.ensureSelectionInView(completions, null);
+                            haveSelected = true;
+                        }
                     }
                 }
-            }
 
-            if (!text.isEmpty() && !completions.getItems().isEmpty() && completions.getSelectionModel().isEmpty())
-            {
-                completions.getSelectionModel().select(0);
-                FXUtility.ensureSelectionInView(completions, null);
+                if (!text.isEmpty() && !completions.getItems().isEmpty() && completions.getSelectionModel().isEmpty())
+                {
+                    completions.getSelectionModel().select(0);
+                    FXUtility.ensureSelectionInView(completions, null);
+                }
             }
             
             if (whitespacePolicy == WhitespacePolicy.DISALLOW)
@@ -414,78 +361,42 @@ public class AutoComplete<C extends Completion> extends PopupControl
             return change;
         }));
 
-        // We do the hiding on escape and auto-hide:
-        setHideOnEscape(false);
-        setAutoHide(false);
-        instruction.setHideOnEscape(false);
-        instruction.setAutoHide(false);
-        
         textField.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.ESCAPE && isShowing())
-            {
-                hide();
-                instruction.hide();
-            }
-            final int PAGE = 9;
-            int oldSel = completions.getSelectionModel().getSelectedIndex();
-            if (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.PAGE_UP)
-            {
-                if (oldSel <= 0)
-                {
-                    completions.getSelectionModel().clearSelection();
-                }
-                else if (e.getCode() == KeyCode.UP)
-                {
-                    completions.getSelectionModel().select(oldSel - 1);
-                    FXUtility.ensureSelectionInView(completions, VerticalDirection.UP);
-                }
-                else if (e.getCode() == KeyCode.PAGE_UP)
-                {
-                    completions.getSelectionModel().select(
-                        Math.max(0, oldSel - PAGE)
-                    );
-                    FXUtility.ensureSelectionInView(completions, VerticalDirection.UP);
-                }
-                e.consume();
-            }
-            else if (e.getCode() == KeyCode.DOWN)
-            {
-                if (oldSel < completions.getItems().size() - 1)
-                {
-                    completions.getSelectionModel().select(oldSel + 1);
-                    if (oldSel > 10)
-                        oldSel = oldSel;
-                    FXUtility.ensureSelectionInView(completions, VerticalDirection.DOWN);
-                }
-                e.consume();
-            }
-            else if (e.getCode() == KeyCode.PAGE_DOWN)
-            {
-                completions.getSelectionModel().select(
-                    Math.min(completions.getItems().size() - 1, oldSel + PAGE)
-                );
-                FXUtility.ensureSelectionInView(completions, VerticalDirection.DOWN);
-                e.consume();
-            }
-            
-            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
-            {
-                C selectedItem = completions.getSelectionModel().getSelectedItem();
-                if (isShowing() && selectedItem != null)
-                {
-                    e.consume();
-                    @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);
-                    if (newContent != null)
-                        FXUtility.keyboard(this).setContentDirect(newContent);
-                    hide();
-                    instruction.hide();
-                }
-                else if (selectedItem == null && e.getCode() == KeyCode.TAB)
-                {
-                    onSelect.tabPressed();
-                }
-            }
+            if (window != null)
+                window.textFieldKeyPressed(e);
         });
+    }
+
+    @EnsuresNonNull("window")
+    private void show(TextField textField, double x, double y)
+    {
+        createWindow();
+        window.show(textField, x, y);
+    }
+
+    @EnsuresNonNull("window")
+    private void createWindow()
+    {
+        if (window == null)
+        {
+            window = new AutoCompleteWindow();
+        }
+    }
+
+    public void hide(@UnknownInitialization AutoComplete<C> this)
+    {
+        final @Nullable AutoCompleteWindow w = window;
+        if (w != null)
+        {
+            w.instruction.hide();
+            w.hide();
+            window = null;
+        }
+    }
+
+    private boolean isShowing(@UnknownInitialization AutoComplete<C> this)
+    {
+        return window != null && window.isShowing();
     }
 
     public void setContentDirect(String s)
@@ -493,32 +404,6 @@ public class AutoComplete<C extends Completion> extends PopupControl
         settingContentDirectly = true;
         textField.setText(s);
         settingContentDirectly = false;
-    }
-
-    private void updateHeight(@UnknownInitialization(Window.class) AutoComplete<C> this, ListView<?> completions)
-    {
-        // Merging several answers from https://stackoverflow.com/questions/17429508/how-do-you-get-javafx-listview-to-be-the-height-of-its-items
-        double itemHeight = CELL_HEIGHT;
-        completions.setPrefHeight(Math.min(300.0, 2 + itemHeight * completions.getItems().size()));
-        sizeToScene();
-    }
-
-    @RequiresNonNull({"completions"})
-    private List<C> updateCompletions(@UnknownInitialization(Object.class) AutoComplete<C> this, ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, String text)
-    {
-        try
-        {
-            List<C> calculated = calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY)
-                .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplaySortKey(text)))    
-                .collect(Collectors.toList());
-            this.completions.getItems().setAll(calculated);
-        }
-        catch (InternalException | UserException e)
-        {
-            Log.log(e);
-            this.completions.getItems().clear();
-        }
-        return this.completions.getItems();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -538,24 +423,13 @@ public class AutoComplete<C extends Completion> extends PopupControl
         );
     }
 
-    @OnThread(Tag.FXPlatform)
-    private void updatePosition(@UnknownInitialization(PopupControl.class) AutoComplete<C> this)
-    {
-        if (isShowing() && textField != null)
-        {
-            @Nullable Pair<Double, Double> pos = calculatePosition();
-            if (pos != null)
-            {
-                setAnchorX(pos.getFirst());
-                setAnchorY(pos.getSecond());
-            }
-        }
-    }
-
-    @RequiresNonNull({"textField", "completions"})
+    @RequiresNonNull({"textField"})
     public @Nullable C getCompletionIfFocusLeftNow(@UnknownInitialization(Object.class) AutoComplete<C> this)
     {
-        List<C> availableCompletions = completions.getItems();
+        if (window == null)
+            return null;
+        
+        List<C> availableCompletions = window.completions.getItems();
         for (C completion : availableCompletions)
         {
             // Say it's the only completion, because otherwise e.g. column completions
@@ -871,29 +745,6 @@ public class AutoComplete<C extends Completion> extends PopupControl
         protected abstract boolean isFocused();
     }
 
-    private class AutoCompleteSkin implements Skin<AutoComplete>
-    {
-        @Override
-        @OnThread(Tag.FX)
-        public AutoComplete getSkinnable()
-        {
-            return AutoComplete.this;
-        }
-
-        @Override
-        @OnThread(Tag.FX)
-        public Node getNode()
-        {
-            return container;
-        }
-
-        @Override
-        @OnThread(Tag.FX)
-        public void dispose()
-        {
-        }
-    }
-
     // For reasons I'm not clear about, this listener needs to be its own class, not anonymous:
     private class NumberChangeListener implements ChangeListener<Number>
     {
@@ -901,7 +752,8 @@ public class AutoComplete<C extends Completion> extends PopupControl
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void changed(ObservableValue<? extends Number> prop, Number oldVal, Number newVal)
         {
-            updatePosition();
+            if (window != null)
+                window.updatePosition();
         }
     }
 
@@ -924,7 +776,228 @@ public class AutoComplete<C extends Completion> extends PopupControl
                 newValue.yProperty().addListener(positionListener);
             }
             // If scene/window has changed, we should update position even if X/Y hasn't changed:
-            updatePosition();
+            if (window != null)
+                window.updatePosition();
+        }
+    }
+    
+    @OnThread(Tag.FXPlatform)
+    private class AutoCompleteWindow extends PopupControl
+    {
+        private final ListView<C> completions;
+        private final BorderPane container;
+        private final Instruction instruction;
+        private final WebView webView;
+        private final NumberBinding webViewHeightBinding;
+        
+        // TO prevent memory leaks, it's important that this
+        // class adds no bindings to external elements, as we want
+        // to allow this class to be GCed once hidden.
+        public AutoCompleteWindow()
+        {
+            // Disable autofix so that the popup doesn't get moved to cover up text field:
+            setAutoFix(false);
+            this.instruction = new Instruction("autocomplete.instruction", "autocomplete-instruction");
+            this.completions = new ListView<C>() {
+                @Override
+                @OnThread(Tag.FX)
+                public void requestFocus()
+                {
+                    // Can't be focused
+                }
+            };
+            completions.getStyleClass().add("autocomplete");
+            completions.setPrefWidth(400.0);
+            container = new BorderPane(null, null, null, null, completions);
+            container.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                if (e.getButton() == MouseButton.MIDDLE)
+                {
+                    hide();
+                    instruction.hide();
+                    e.consume();
+                }
+            });
+            this.webView = new WebView();
+            this.webView.setPrefWidth(400.0);
+            webViewHeightBinding = Bindings.max(300.0f, completions.heightProperty());
+            this.webView.prefHeightProperty().bind(webViewHeightBinding);
+
+            FXUtility.listen(completions.getItems(), change -> {
+                FXUtility.runAfter(() -> updateHeight(completions));
+            });
+
+            completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
+
+            completions.setCellFactory(lv -> {
+                return new CompleteCell();
+            });
+            completions.setOnMouseClicked(e -> {
+                @Nullable C selectedItem = completions.getSelectionModel().getSelectedItem();
+                if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && selectedItem != null)
+                {
+                    @Nullable String newContent = onSelect.doubleClick(textField.getText(), selectedItem);
+                    if (newContent != null)
+                        setContentDirect(newContent);
+                }
+            });
+
+            FXUtility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
+                if (selected != null)
+                {
+                    @Nullable String url = selected.getFurtherDetailsURL();
+                    if (url != null)
+                    {
+                        webView.getEngine().load(url);
+                        container.setCenter(webView);
+                    }
+                    else
+                    {
+                        container.setCenter(null);
+                    }
+                }
+                else
+                {
+                    container.setCenter(null);
+                }
+            });
+
+            setSkin(new AutoCompleteSkin());
+
+            // We do the hiding on escape and auto-hide:
+            setHideOnEscape(false);
+            setAutoHide(false);
+            instruction.setHideOnEscape(false);
+            instruction.setAutoHide(false);
+        }
+
+        public void textFieldKeyPressed(KeyEvent e)
+        {
+            if (e.getCode() == KeyCode.ESCAPE && isShowing())
+            {
+                hide();
+                instruction.hide();
+            }
+            final int PAGE = 9;
+            int oldSel = completions.getSelectionModel().getSelectedIndex();
+            if (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.PAGE_UP)
+            {
+                if (oldSel <= 0)
+                {
+                    completions.getSelectionModel().clearSelection();
+                }
+                else if (e.getCode() == KeyCode.UP)
+                {
+                    completions.getSelectionModel().select(oldSel - 1);
+                    FXUtility.ensureSelectionInView(completions, VerticalDirection.UP);
+                }
+                else if (e.getCode() == KeyCode.PAGE_UP)
+                {
+                    completions.getSelectionModel().select(
+                            Math.max(0, oldSel - PAGE)
+                    );
+                    FXUtility.ensureSelectionInView(completions, VerticalDirection.UP);
+                }
+                e.consume();
+            }
+            else if (e.getCode() == KeyCode.DOWN)
+            {
+                if (oldSel < completions.getItems().size() - 1)
+                {
+                    completions.getSelectionModel().select(oldSel + 1);
+                    if (oldSel > 10)
+                        oldSel = oldSel;
+                    FXUtility.ensureSelectionInView(completions, VerticalDirection.DOWN);
+                }
+                e.consume();
+            }
+            else if (e.getCode() == KeyCode.PAGE_DOWN)
+            {
+                completions.getSelectionModel().select(
+                        Math.min(completions.getItems().size() - 1, oldSel + PAGE)
+                );
+                FXUtility.ensureSelectionInView(completions, VerticalDirection.DOWN);
+                e.consume();
+            }
+
+            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
+            {
+                C selectedItem = completions.getSelectionModel().getSelectedItem();
+                if (isShowing() && selectedItem != null)
+                {
+                    e.consume();
+                    @Nullable String newContent = onSelect.keyboardSelect(textField.getText(), selectedItem);
+                    if (newContent != null)
+                        setContentDirect(newContent);
+                    hide();
+                    instruction.hide();
+                }
+                else if (selectedItem == null && e.getCode() == KeyCode.TAB)
+                {
+                    onSelect.tabPressed();
+                }
+            }
+        }
+
+        private void updateHeight(@UnknownInitialization(Window.class) AutoCompleteWindow this, ListView<?> completions)
+        {
+            // Merging several answers from https://stackoverflow.com/questions/17429508/how-do-you-get-javafx-listview-to-be-the-height-of-its-items
+            double itemHeight = CELL_HEIGHT;
+            completions.setPrefHeight(Math.min(300.0, 2 + itemHeight * completions.getItems().size()));
+            sizeToScene();
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private void updatePosition(@UnknownInitialization(PopupControl.class) AutoCompleteWindow this)
+        {
+            if (isShowing() && textField != null)
+            {
+                @Nullable Pair<Double, Double> pos = calculatePosition();
+                if (pos != null)
+                {
+                    setAnchorX(pos.getFirst());
+                    setAnchorY(pos.getSecond());
+                }
+            }
+        }
+
+        private List<C> updateCompletions(ExBiFunction<String, CompletionQuery, Stream<C>> calculateCompletions, String text)
+        {
+            try
+            {
+                List<C> calculated = calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY)
+                        .sorted(Comparator.comparing((C c) -> c.shouldShow(text)).thenComparing((C c) -> c.getDisplaySortKey(text)))
+                        .collect(Collectors.toList());
+                this.completions.getItems().setAll(calculated);
+            }
+            catch (InternalException | UserException e)
+            {
+                Log.log(e);
+                this.completions.getItems().clear();
+            }
+            return this.completions.getItems();
+        }
+
+        private class AutoCompleteSkin implements Skin<AutoCompleteWindow>
+        {
+            @Override
+            @OnThread(Tag.FX)
+            public AutoCompleteWindow getSkinnable()
+            {
+                return AutoCompleteWindow.this;
+            }
+
+            @Override
+            @OnThread(Tag.FX)
+            public Node getNode()
+            {
+                return container;
+            }
+
+            @Override
+            @OnThread(Tag.FX)
+            public void dispose()
+            {
+            }
         }
     }
 }
