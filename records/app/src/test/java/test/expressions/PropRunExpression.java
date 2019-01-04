@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
+import records.transformations.expression.Expression.LocationInfo;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
@@ -41,7 +42,7 @@ public class PropRunExpression
         try
         {
             ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
-            src.expression.check(src, TestUtil.typeState(), errors);
+            src.expression.check(src, TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, errors);
             errors.withFirst(s -> {throw new InternalException(s.toPlain());});
             for (int row = 0; row < src.value.size(); row++)
             {

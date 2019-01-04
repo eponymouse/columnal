@@ -68,7 +68,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable RecordSet recordSet = dataLookup.getTable(tableName);
         if (recordSet == null)

@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.KnownLengthRecordSet;
@@ -32,6 +33,7 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.Pattern;
@@ -81,7 +83,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
             return onError.recordType(this, ExpressionKind.EXPRESSION, state, TypeExp.fromDataType(this, type));
         }
@@ -237,8 +239,8 @@ public class PropTypecheckIndividual
     {
         DataType a = am.dataType;
         Assume.assumeFalse(a.isNumber());
-        assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(id -> null, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
-        assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(id -> null, TestUtil.typeState(), new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(id -> null, TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
+        assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(id -> null, TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorderStorer()));
     }
 
     @Property
@@ -391,7 +393,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+        public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
         {
             return onError.recordTypeAndError(this, Either.right(TypeExp.fromDataType(this, expected)), ExpressionKind.PATTERN, state);
         }
@@ -455,5 +457,30 @@ public class PropTypecheckIndividual
         {
             return this == toReplace ? replaceWith : this;
         }
+    }
+    
+    @Test
+    public void checkUnits() throws InternalException, UserException
+    {
+        Unit m = DummyManager.INSTANCE.getUnitManager().loadUse("m");
+        checkConcreteType(DataType.BOOLEAN, "1 < 2");
+        checkConcreteType(DataType.BOOLEAN, "1 < 2{m}");
+        checkConcreteType(DataType.BOOLEAN, "1 < 2{m} <= 3");
+        checkConcreteType(DataType.BOOLEAN, "1 = 2");
+        checkConcreteType(DataType.BOOLEAN, "1 = 2{m}");
+        checkConcreteType(DataType.NUMBER, "1 + 2");
+        checkConcreteType(DataType.number(new NumberInfo(m)), "1 + 2{m}");
+        checkConcreteType(DataType.number(new NumberInfo(m)), "1 * 2{m}");
+        checkConcreteType(DataType.NUMBER, "1 * 2");
+        checkConcreteType(null, "@call @function abs(1) + 2{m}");
+        checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1) * 2{m}");
+        checkConcreteType(DataType.NUMBER, "@call @function abs(1)");
+        checkConcreteType(DataType.number(new NumberInfo(m)), "@call @function abs(1{m})");
+        checkConcreteType(DataType.tuple(DataType.NUMBER, DataType.NUMBER), "(1, 2{1})");
+    }
+
+    private void checkConcreteType(@Nullable DataType dataType, String expression) throws InternalException, UserException
+    {
+        assertEquals(expression, dataType, checkConcrete(Expression.parse(null, expression, DummyManager.INSTANCE.getTypeManager())));
     }
 }

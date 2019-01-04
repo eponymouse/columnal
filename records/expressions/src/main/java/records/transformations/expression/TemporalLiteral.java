@@ -63,7 +63,7 @@ public class TemporalLiteral extends Literal
     
     
     @Override
-    protected Either<StyledString, TypeExp> checkType(TypeState typeState) throws InternalException
+    protected Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo) throws InternalException
     {
         if (value.isLeft())
         {

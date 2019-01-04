@@ -44,9 +44,9 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp conditionType = condition.check(dataLookup, state, onError);
+        @Nullable CheckedExp conditionType = condition.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
         if (conditionType == null)
             return null;
         if (conditionType.expressionKind == ExpressionKind.PATTERN)
@@ -58,8 +58,8 @@ public class IfThenElseExpression extends NonOperatorExpression
         {
             return null;
         }
-        @Nullable CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, onError);
-        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, conditionType.typeState, onError);
+        @Nullable CheckedExp thenType = thenExpression.check(dataLookup, conditionType.typeState, LocationInfo.UNIT_DEFAULT, onError);
+        @Nullable CheckedExp elseType = elseExpression.check(dataLookup, conditionType.typeState, LocationInfo.UNIT_DEFAULT, onError);
         if (thenType == null || elseType == null)
             return null;
 

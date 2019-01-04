@@ -80,4 +80,9 @@ public class NotEqualExpression extends BinaryOpExpression
         return new NotEqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
+    @Override
+    protected LocationInfo argLocationInfo()
+    {
+        return LocationInfo.UNIT_CONSTRAINED;
+    }
 }

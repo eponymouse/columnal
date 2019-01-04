@@ -74,4 +74,9 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
         return match ? state : null;
     }
 
+    @Override
+    protected LocationInfo argLocationInfo()
+    {
+        return LocationInfo.UNIT_CONSTRAINED;
+    }
 }

@@ -37,7 +37,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Numeric literals, should not call check on us.
         // Everyone else sees a Unit GADT
@@ -62,7 +62,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     @Override
     public String save(boolean structured, BracketedStatus surround, TableAndColumnRenames renames)
     {
-        return "{" + unitExpression.save(structured, true) + "}";
+        return "unit{" + unitExpression.save(structured, true) + "}";
     }
 
     @Override
@@ -101,7 +101,7 @@ public class UnitLiteralExpression extends NonOperatorExpression
     @Override
     protected StyledString toDisplay(BracketedStatus bracketedStatus)
     {
-        return StyledString.concat(StyledString.s("{"), unitExpression.toStyledString(), StyledString.s("}"));
+        return StyledString.concat(StyledString.s("unit{"), unitExpression.toStyledString(), StyledString.s("}"));
     }
 
     public @Recorded UnitExpression getUnit()

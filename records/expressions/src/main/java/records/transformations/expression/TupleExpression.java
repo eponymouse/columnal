@@ -42,13 +42,13 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         ExpressionKind kind = ExpressionKind.EXPRESSION;
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable CheckedExp c = members.get(i).check(dataLookup, state, onError);
+            @Nullable CheckedExp c = members.get(i).check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
             if (c == null)
                 return null;
             typeArray[i] = c.typeExp;

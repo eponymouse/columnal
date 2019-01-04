@@ -29,6 +29,7 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.QuickFix;
 import records.typeExp.TypeExp;
 import styled.StyledShowable;
@@ -112,7 +113,7 @@ public class PropTypecheck
         for (Expression expression : src.expressionFailures)
         {
             AtomicBoolean errorReported = new AtomicBoolean(false);
-            assertNull(src.getDisplay(expression), expression.check(src, TestUtil.typeState(), new ErrorAndTypeRecorder()
+            assertNull(src.getDisplay(expression), expression.check(src, TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, new ErrorAndTypeRecorder()
             {
                 @Override
                 public <E> void recordError(E src, StyledString error)

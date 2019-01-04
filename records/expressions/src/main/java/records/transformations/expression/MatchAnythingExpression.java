@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 public class MatchAnythingExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         return new CheckedExp(onError.recordTypeNN(this, new MutVar(this)), state, ExpressionKind.PATTERN);
     }

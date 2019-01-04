@@ -81,7 +81,7 @@ public class MatchExpression extends NonOperatorExpression
                 rhsStates[i] = ts.typeState;
             }
             TypeState rhsState = TypeState.intersect(Arrays.asList(rhsStates));
-            @Nullable CheckedExp outcomeType = outcome.check(data, rhsState, onError);
+            @Nullable CheckedExp outcomeType = outcome.check(data, rhsState, LocationInfo.UNIT_DEFAULT, onError);
             if (outcomeType == null)
                 return null;
             else
@@ -192,7 +192,7 @@ public class MatchExpression extends NonOperatorExpression
          */
         public @Nullable CheckedExp check(TableLookup data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            final @Nullable CheckedExp rhsState = pattern.check(data, state, onError);
+            final @Nullable CheckedExp rhsState = pattern.check(data, state, LocationInfo.UNIT_CONSTRAINED, onError);
             if (rhsState == null)
                 return null;
             // No need to check expression versus pattern, either is fine, but we will require Equatable either way:
@@ -200,7 +200,7 @@ public class MatchExpression extends NonOperatorExpression
             
             if (guard != null)
             {
-                @Nullable CheckedExp type = guard.check(data, rhsState.typeState, onError);
+                @Nullable CheckedExp type = guard.check(data, rhsState.typeState, LocationInfo.UNIT_DEFAULT, onError);
                 if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.bool(guard), type.typeExp)) == null)
                 {
                     return null;
@@ -348,14 +348,14 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
         //   - That all of the outcome expressions have the same type as each other (and is what we will return)
 
-        @Nullable CheckedExp srcType = expression.check(dataLookup, state, onError);
+        @Nullable CheckedExp srcType = expression.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
         if (srcType == null)
             return null;
         if (srcType.expressionKind == ExpressionKind.PATTERN)

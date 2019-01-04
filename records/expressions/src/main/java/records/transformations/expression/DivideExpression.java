@@ -98,4 +98,10 @@ public class DivideExpression extends BinaryOpExpression
             return copy(lhs, newExpressionOfDifferentType.getNonNumericType());
         }
     }
+
+    @Override
+    protected LocationInfo argLocationInfo()
+    {
+        return LocationInfo.UNIT_MODIFYING;
+    }
 }

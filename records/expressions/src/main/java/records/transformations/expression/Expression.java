@@ -187,14 +187,24 @@ public abstract class Expression extends ExpressionBase implements LoadableExpre
         }
     }
     
+    public static enum LocationInfo
+    {
+        // Multiply or divide:
+        UNIT_MODIFYING,
+        // Comparison, add or compare
+        UNIT_CONSTRAINED,
+        // All the rest:
+        UNIT_DEFAULT
+    }
+    
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems.  Can be either EXPRESSION or PATTERN
-    public abstract @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException;
     
     // Calls check, but makes sure it is an EXPRESSION
     public final @Nullable TypeExp checkExpression(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp check = check(dataLookup, typeState, onError);
+        @Nullable CheckedExp check = check(dataLookup, typeState, LocationInfo.UNIT_DEFAULT, onError);
         if (check == null)
             return null;
         if (check.expressionKind != ExpressionKind.EXPRESSION)

@@ -72,7 +72,7 @@ public class TimesExpression extends NaryOpExpression
         {
             UnitExp unitVar = UnitExp.makeVariable();
             TypeExp expectedType = new NumTypeExp(this, unitVar);
-            @Nullable CheckedExp inferredType = expression.check(dataLookup, state, onError);
+            @Nullable CheckedExp inferredType = expression.check(dataLookup, state, LocationInfo.UNIT_MODIFYING, onError);
             if (inferredType == null)
                 return null;
             

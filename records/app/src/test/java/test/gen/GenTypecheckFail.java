@@ -16,6 +16,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.Expression._test_TypeVary;
 import records.typeExp.TypeExp;
@@ -94,7 +95,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.check(valid, TestUtil.typeState(), TestUtil.excOnError()))
+            if (null == expression.check(valid, TestUtil.typeState(), LocationInfo.UNIT_DEFAULT, TestUtil.excOnError()))
                 throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)

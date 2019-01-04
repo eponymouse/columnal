@@ -51,7 +51,7 @@ public class AndExpression extends NaryOpExpression
         // And has a special property: the type state is threaded through to the next item.
         for (Expression expression : expressions)
         {
-            @Nullable CheckedExp checked = expression.check(dataLookup, state, onError);
+            @Nullable CheckedExp checked = expression.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
             if (checked == null)
                 return null;
             if (checked.expressionKind == ExpressionKind.PATTERN)

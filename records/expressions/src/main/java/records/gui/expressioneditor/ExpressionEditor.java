@@ -29,6 +29,7 @@ import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.CheckedExp;
 import records.transformations.expression.Expression.ExpressionKind;
+import records.transformations.expression.Expression.LocationInfo;
 import records.transformations.expression.Expression.MultipleTableLookup;
 import records.transformations.expression.Expression.TableLookup;
 import records.transformations.expression.InvalidIdentExpression;
@@ -95,7 +96,7 @@ public class ExpressionEditor extends TopLevelEditor<Expression, ExpressionSaver
             if (tableManager != null)
             {
                 TableLookup tableLookup = new MultipleTableLookup(tableManager, srcTable);
-                @Nullable CheckedExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), saver);
+                @Nullable CheckedExp dataType = expression.check(tableLookup, new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), LocationInfo.UNIT_DEFAULT, saver);
                 if (dataType != null && dataType.expressionKind == ExpressionKind.PATTERN)
                 {
                     saver.recordError(expression, StyledString.s("Expression cannot be a pattern"));

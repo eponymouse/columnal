@@ -32,7 +32,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    protected Either<StyledString, TypeExp> checkType(TypeState typeState)
+    protected Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo)
     {
         return Either.right(TypeExp.text(this));
     }

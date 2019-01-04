@@ -125,7 +125,7 @@ public class ComparisonExpression extends NaryOpExpression
     @Override
     public @Nullable CheckedExp checkNaryOp(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
+        type = checkAllOperandsSameTypeAndNotPatterns(new MutVar(this, TypeClassRequirements.require("Comparable", operators.get(0).saveOp())), dataLookup, state, LocationInfo.UNIT_CONSTRAINED, onError, p -> new Pair<@Nullable StyledString, ImmutableList<QuickFix<Expression,ExpressionSaver>>>(null, p.getOurType() instanceof NumTypeExp ? ImmutableList.copyOf(
             ExpressionEditorUtil.getFixesForMatchingNumericUnits(state, p)
         ) : ImmutableList.of()));
         if (type == null)

@@ -46,10 +46,22 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Either<StyledString, TypeExp> checkType(TypeState state) throws InternalException
+    public Either<StyledString, TypeExp> checkType(TypeState state, LocationInfo locationInfo) throws InternalException
     {
         if (unit == null)
-            return Either.right(new NumTypeExp(this, new UnitExp(new MutUnitVar())));
+        {
+            final UnitExp unit;
+            switch (locationInfo)
+            {
+                case UNIT_CONSTRAINED:
+                    unit = new UnitExp(new MutUnitVar());
+                    break;
+                default:
+                    unit = UnitExp.SCALAR;
+                    break;
+            }
+            return Either.right(new NumTypeExp(this, unit));
+        }
 
         Either<Pair<StyledString, List<UnitExpression>>, JellyUnit> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<Either<StyledString, TypeExp>>eitherInt(err -> {

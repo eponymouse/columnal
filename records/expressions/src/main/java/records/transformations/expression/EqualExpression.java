@@ -70,7 +70,7 @@ public class EqualExpression extends NaryOpExpression
         {
             boolean invalid = false;
             Expression expression = expressions.get(i);
-            @Nullable CheckedExp checked = expression.check(dataLookup, typeState, onError);
+            @Nullable CheckedExp checked = expression.check(dataLookup, typeState, LocationInfo.UNIT_CONSTRAINED, onError);
             expressionTypes.add(Optional.ofNullable(checked).map(c -> c.typeExp));
             if (checked == null)
             {

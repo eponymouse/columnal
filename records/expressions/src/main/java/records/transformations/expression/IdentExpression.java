@@ -43,7 +43,7 @@ public class IdentExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // I think should now be impossible:
         if (!GrammarUtility.validIdentifier(text))

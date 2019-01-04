@@ -21,12 +21,12 @@ import java.util.stream.Stream;
 public abstract class Literal extends NonOperatorExpression
 {
     @Override
-    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        return onError.recordTypeAndError(this, checkType(typeState), ExpressionKind.EXPRESSION, typeState);
+        return onError.recordTypeAndError(this, checkType(typeState, locationInfo), ExpressionKind.EXPRESSION, typeState);
     }
 
-    protected abstract Either<StyledString, TypeExp> checkType(TypeState typeState) throws InternalException;
+    protected abstract Either<StyledString, TypeExp> checkType(TypeState typeState, LocationInfo locationInfo) throws InternalException;
 
     @Override
     public Stream<ColumnReference> allColumnReferences()

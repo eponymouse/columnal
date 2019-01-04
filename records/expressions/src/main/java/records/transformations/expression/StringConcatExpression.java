@@ -75,7 +75,7 @@ public class StringConcatExpression extends NaryOpExpression
                 
                 lastWasVariable = false;
             }
-            @Nullable CheckedExp c = expression.check(dataLookup, state, onError);
+            @Nullable CheckedExp c = expression.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
             
             if (c == null)
                 return null;

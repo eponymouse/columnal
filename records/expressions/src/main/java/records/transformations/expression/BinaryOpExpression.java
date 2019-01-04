@@ -146,14 +146,14 @@ public abstract class BinaryOpExpression extends Expression
     public abstract Pair<@Value Object, EvaluateState> getValueBinaryOp(EvaluateState state) throws UserException, InternalException;
 
     @Override
-    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public final @Nullable CheckedExp check(TableLookup dataLookup, TypeState typeState, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         Pair<@Nullable UnaryOperator<@Recorded TypeExp>, TypeState> lambda = ImplicitLambdaArg.detectImplicitLambda(this, ImmutableList.of(lhs, rhs), typeState, onError);
         typeState = lambda.getSecond();
-        @Nullable CheckedExp lhsChecked = lhs.check(dataLookup, typeState, onError);
+        @Nullable CheckedExp lhsChecked = lhs.check(dataLookup, typeState, argLocationInfo(), onError);
         if (lhsChecked == null)
             return null;
-        @Nullable CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, onError);
+        @Nullable CheckedExp rhsChecked = rhs.check(dataLookup, lhsChecked.typeState, argLocationInfo(), onError);
         if (rhsChecked == null)
             return null;
         if (lhsChecked.expressionKind == ExpressionKind.PATTERN)
@@ -164,6 +164,11 @@ public abstract class BinaryOpExpression extends Expression
         rhsType = rhsChecked;
         @Nullable CheckedExp checked = checkBinaryOp(dataLookup, typeState, onError);
         return checked == null ? null : checked.applyToType(lambda.getFirst());
+    }
+
+    protected LocationInfo argLocationInfo()
+    {
+        return LocationInfo.UNIT_DEFAULT;
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})

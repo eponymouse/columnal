@@ -69,12 +69,12 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
+    public @Nullable CheckedExp check(TableLookup dataLookup, TypeState state, LocationInfo locationInfo, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
-        @Nullable CheckedExp paramType = param.check(dataLookup, state, onError);
+        @Nullable CheckedExp paramType = param.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
         if (paramType == null)
             return null;
-        @Nullable CheckedExp functionType = function.check(dataLookup, state, onError);
+        @Nullable CheckedExp functionType = function.check(dataLookup, state, LocationInfo.UNIT_DEFAULT, onError);
         if (functionType == null)
             return null;
         
