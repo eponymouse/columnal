@@ -3,6 +3,7 @@ package test.gui;
 import com.google.common.collect.ImmutableMap;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.Orientation;
 import javafx.geometry.VerticalDirection;
@@ -19,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.testfx.util.NodeQueryUtils;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TaggedTypeDefinition.TypeVariableKind;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
@@ -56,7 +58,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 {    
     @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testNewType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
+    public void testNewType(@When(seed=5885286325250006211L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=-7421178850041104964L) @From(GenRandom.class) Random random) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
             MainWindowActions mainWindowActions = TestUtil.openDataAsTable(windowToUse, new DummyManager()).get();
@@ -146,7 +148,9 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
             clickOn(".type-entry-inner-type-args");
             selectAllCurrentTextField();
             push(KeyCode.DELETE);
-            write(typeDefinition.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")), 1);
+            write(typeDefinition.getTypeArguments().stream()
+                .map(p -> p.getFirst() == TypeVariableKind.UNIT ? "{" + p.getSecond() + "}" : p.getSecond())
+                .collect(Collectors.joining(", ")), 1);
             if (alreadyEntered == 0)
                 deleteExistingInnerValueTags();
             
@@ -214,7 +218,7 @@ public class TestTypeEdit extends FXApplicationTest implements TextFieldTrait, E
 
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
-    public void testNoOpEditType(@From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @From(GenRandom.class) Random random) throws Exception
+    public void testNoOpEditType(@When(seed=4347785124544398707L) @From(GenTaggedTypeDefinition.class) TaggedTypeDefinition typeDefinition, @When(seed=-1315802034941967645L) @From(GenRandom.class) Random random) throws Exception
     {
         TestUtil.printSeedOnFail(() -> {
 

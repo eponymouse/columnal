@@ -453,6 +453,14 @@ public class TestUtil
             DataType maybeMaybe = typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(
                 typeManager.getMaybeType().instantiate(ImmutableList.of(Either.right(DataType.TEXT)), typeManager)
             )), typeManager);
+            
+            @SuppressWarnings({"nullness", "identifier"})
+            DataType eitherUnits = typeManager.registerTaggedType("EitherNumUnit",
+                    ImmutableList.of(new Pair<>(TypeVariableKind.UNIT, "a"), new Pair<>(TypeVariableKind.UNIT, "b")),
+                    ImmutableList.of(new TagType<>("Left", JellyType.number(JellyUnit.unitVariable("a"))),
+                            new TagType<>("Right", JellyType.number(JellyUnit.unitVariable("b"))))
+            ).instantiate(ImmutableList.of(Either.left(Unit.SCALAR), Either.left(typeManager.getUnitManager().loadUse("m"))), typeManager);
+            
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -474,6 +482,7 @@ public class TestUtil
                 c,
                 nested,
                 maybeMaybe,
+                eitherUnits,
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.NUMBER)),
                 DataType.tuple(Arrays.asList(DataType.BOOLEAN, DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), c)),
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER)))),

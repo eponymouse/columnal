@@ -73,7 +73,16 @@ public class JellyUnit
         Unit u = Unit.SCALAR;
         for (Entry<@KeyFor("units") ComparableEither<String, SingleUnit>, Integer> e : units.entrySet())
         {
-            u = u.times(e.getKey().eitherInt(name -> {throw new InternalException("Cannot instantiate unit with variable " + name);},
+            u = u.times(e.getKey().eitherInt(name -> {
+                    Either<Unit, DataType> subst = typeVariables.get(name);
+                    if (subst == null)
+                        throw new InternalException("Cannot instantiate unit with variable " + name);
+                    
+                    return subst.eitherInt(unit -> unit, t -> {
+                        throw new InternalException("Looked for unit variable " + name + " but found type variable with that name instead.");
+                    });
+                    
+                },
                 (SingleUnit single) -> new Unit(single).raisedTo(e.getValue())));
         }
         return u;

@@ -234,7 +234,7 @@ public class TypesDialog extends Dialog<Void>
                 crossSetting = true;
                 typeName.setText(existing.getTaggedTypeName().getRaw());
                 plainTagList.setText(existing.getTags().stream().map(t -> t.getName()).collect(Collectors.joining("\n")));
-                innerValueTypeArgs.setText(existing.getTypeArguments().stream().map(p -> p.getSecond()).collect(Collectors.joining(", ")));
+                innerValueTypeArgs.setText(existing.getTypeArguments().stream().map(p -> p.getFirst() == TypeVariableKind.UNIT ? "{" + p.getSecond() + "}" : p.getSecond()).collect(Collectors.joining(", ")));
                 // tag list done above
                 
                 if (existing.getTypeArguments().isEmpty() && 
@@ -292,11 +292,11 @@ public class TypesDialog extends Dialog<Void>
                 else if (tabPane.getSelectionModel().getSelectedItem() == innerValuesTab)
                 {
                     String[] typeArgs = innerValueTypeArgs.getText().trim().split("\\s*,\\s*");
-                    Either<@Localized String, ImmutableList<@ExpressionIdentifier String>> typeArgsOrErr = Either.right(ImmutableList.of());
+                    Either<@Localized String, ImmutableList<Pair<TypeVariableKind, @ExpressionIdentifier String>>> typeArgsOrErr = Either.right(ImmutableList.of());
                     if (!Arrays.equals(typeArgs, new String[]{""}))
                         typeArgsOrErr = Either.mapM(Arrays.asList(typeArgs), t -> parseTagName(TranslationUtility.getString("type.invalid.argument"), t));
                     
-                    return typeArgsOrErr.flatMapInt(args -> Either.<@Localized String, TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), (Either<@Localized String, TagType<JellyType>> e) -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, Utility.<@ExpressionIdentifier String, Pair<TypeVariableKind, @ExpressionIdentifier String>>mapListI(args, a -> new Pair<TypeVariableKind, @ExpressionIdentifier String>(TypeVariableKind.TYPE, a)), ts)));
+                    return typeArgsOrErr.flatMapInt(args -> Either.<@Localized String, TagType<JellyType>, Either<@Localized String, TagType<JellyType>>>mapM(innerValueTagList.getItems(), (Either<@Localized String, TagType<JellyType>> e) -> e).mapInt(ts -> new TaggedTypeDefinition(typeIdentifierFinal, args, ts)));
                 }
                 
                 // Shouldn't happen:
@@ -331,13 +331,22 @@ public class TypesDialog extends Dialog<Void>
                 });
         }
 
-        private Either<@Localized String, @ExpressionIdentifier String> parseTagName(@Localized String errorPrefix, String src)
+        // Variables surrounded by {} are unit variables.
+        private Either<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>> parseTagName(@Localized String errorPrefix, String src)
         {
+            TypeVariableKind typeVariableKind = TypeVariableKind.TYPE;
+            
+            if (src.startsWith("{") && src.endsWith("}"))
+            {
+                typeVariableKind = TypeVariableKind.UNIT;
+                src = src.substring(1, src.length() - 1);
+            }
+            
             @Nullable @ExpressionIdentifier String identifier = IdentifierUtility.asExpressionIdentifier(src.trim());
             if (identifier == null)
-                return Either.<@Localized String, @ExpressionIdentifier String>left(Utility.concatLocal(errorPrefix, Utility.userInput("\"" + src.trim() + "\"")));
+                return Either.<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>>left(Utility.concatLocal(errorPrefix, Utility.userInput("\"" + src.trim() + "\"")));
             else
-                return Either.right(identifier);
+                return Either.<@Localized String, Pair<TypeVariableKind, @ExpressionIdentifier String>>right(new Pair<>(typeVariableKind, identifier));
         }
 
         @OnThread(Tag.FXPlatform)
