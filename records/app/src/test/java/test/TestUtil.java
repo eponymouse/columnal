@@ -1266,10 +1266,9 @@ public class TestUtil
         try
         {
             mgr = new DummyManager();
-            for (DataType type : distinctTypes)
+            for (TaggedTypeDefinition taggedTypeDefinition : DummyManager.INSTANCE.getTypeManager().getKnownTaggedTypes().values())
             {
-                if (type.isTagged())
-                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  Utility.mapListInt(type.getTagTypes(), t -> t.mapInt(JellyType::fromConcrete)));
+                mgr.getTypeManager().registerTaggedType(taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments(), taggedTypeDefinition.getTags());
             }
         }
         catch (InternalException | UserException e)
