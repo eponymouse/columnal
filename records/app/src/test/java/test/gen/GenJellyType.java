@@ -179,7 +179,7 @@ public class GenJellyType extends Generator<JellyTypeAndManager>
             if (r.nextBoolean())
             {
                 // Must use distinct to make sure no duplicates:
-                typeVars = TestUtil.makeList(r, 1, 4, () -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, "" + r.nextChar('a', 'z'))).stream().distinct().collect(ImmutableList.toImmutableList());
+                typeVars = TestUtil.makeList(r, 1, 4, () -> "" + r.nextChar('a', 'z')).stream().distinct().map(s -> new Pair<>(r.nextInt(3) == 1 ? TypeVariableKind.UNIT : TypeVariableKind.TYPE, s)).collect(ImmutableList.toImmutableList());
             }
             else
             {
