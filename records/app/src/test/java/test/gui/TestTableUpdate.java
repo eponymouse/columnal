@@ -29,12 +29,12 @@ import records.transformations.Filter;
 import records.transformations.Sort;
 import records.transformations.Calculate;
 import records.transformations.expression.BooleanLiteral;
-import test.DataEntryUtil;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
+import test.gui.trait.EnterStructuredValueTrait;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
@@ -51,7 +51,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait
+public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait, EnterStructuredValueTrait
 {    
     /**
      * We make a two-column table, and two chained transformations of it, so that it all fits on screen
@@ -106,7 +106,7 @@ public class TestTableUpdate extends FXApplicationTest implements ScrollToTrait,
 
                 keyboardMoveTo(details._test_getVirtualGrid(), CellPosition.ORIGIN.offsetByRowCols(targetRow + 3, targetColumn));
                 push(KeyCode.ENTER);
-                DataEntryUtil.enterValue(this, r, colType.getType(), newVal, false);
+                enterStructuredValue(colType.getType(), newVal, r, false);
                 push(KeyCode.ENTER);
                 TestUtil.sleep(2000);
 

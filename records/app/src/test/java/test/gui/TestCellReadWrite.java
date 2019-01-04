@@ -23,12 +23,12 @@ import records.data.datatype.DataTypeValue;
 import records.error.UserException;
 import records.gui.MainWindow.MainWindowActions;
 import records.gui.grid.VirtualGrid;
-import test.DataEntryUtil;
 import test.TestUtil;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import test.gen.GenValueSpecifiedType;
+import test.gui.trait.EnterStructuredValueTrait;
 import test.gui.trait.FocusOwnerTrait;
 import test.gui.trait.ScrollToTrait;
 import test.gui.util.FXApplicationTest;
@@ -46,7 +46,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait
+public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrait, FocusOwnerTrait, EnterStructuredValueTrait
 {
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
@@ -138,7 +138,7 @@ public class TestCellReadWrite extends FXApplicationTest implements ScrollToTrai
             DataTypeValue columnDTV = table.getData().getColumns().get(column).getType();
             Log.debug("Making value for type " + columnDTV);
             @Value Object value = valueGenerator.makeValue(table.getData().getColumns().get(column).getType());
-            DataEntryUtil.enterValue(this, r, columnDTV, value, false);
+            enterStructuredValue(columnDTV, value, r, false);
             push(KeyCode.ESCAPE);
 
             Log.debug("Intending to copy column " + table.getData().getColumns().get(column).getName() + " from position " + row + ", " + column);

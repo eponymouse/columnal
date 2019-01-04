@@ -169,7 +169,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             push(KeyCode.ESCAPE);
             push(KeyCode.ESCAPE);
             push(KeyCode.TAB);
-            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1));
+            enterStructuredValue(dataTypeAndDefault.getFirst(), dataTypeAndDefault.getSecond(), new Random(1), false);
             defocusSTFAndCheck(true, () -> push(KeyCode.TAB));
         }
         clickOn(".ok-button");
@@ -338,7 +338,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         if (value != null)
         {
             clickOn(".default-value");
-            enterStructuredValue(dataType, value, new Random(1));
+            enterStructuredValue(dataType, value, new Random(1), false);
         }
         clickOn(".ok-button");
         WaitForAsyncUtils.waitForFxEvents();
@@ -433,7 +433,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             return; // To satisfy checker
         assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof FlexibleTextField);
         push(KeyCode.HOME);
-        enterStructuredValue(dataType, value, random);
+        enterStructuredValue(dataType, value, random, false);
         defocusSTFAndCheck(!dataType.hasNumber(), () -> {
             // One to get rid of any code completion:
             push(KeyCode.ESCAPE);
