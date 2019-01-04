@@ -200,6 +200,10 @@ class ExpressionOps implements OperandOps<Expression, ExpressionSaver>
 
     public static boolean differentAlphabet(String current, int newCodepoint)
     {
+        // Very special case: @entire can be followed by any identifier
+        if (current.startsWith("@entire "))
+            current = current.substring("@entire ".length());
+        
         // Special case: @ can only be followed by letters:
         if (current.startsWith("@"))
         {
