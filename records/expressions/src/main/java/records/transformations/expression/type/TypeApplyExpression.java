@@ -40,7 +40,14 @@ public class TypeApplyExpression extends TypeExpression
     public TypeApplyExpression(@ExpressionIdentifier String typeName,  ImmutableList<Either<UnitExpression, TypeExpression>> arguments)
     {
         this.typeName = typeName;
-        this.arguments = arguments;
+        // Turn any units which are encased in a type expression wrapper
+        // back into actual units:
+        this.arguments = Utility.mapListI(arguments, arg -> arg.flatMap(t -> {
+            if (t instanceof UnitLiteralTypeExpression)
+                return Either.left(((UnitLiteralTypeExpression)t).getUnitExpression());
+            else
+                return Either.right(t);
+        }));
         if (arguments.isEmpty())
             Log.logStackTrace("Empty arguments in type apply");
     }

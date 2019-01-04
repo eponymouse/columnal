@@ -215,26 +215,34 @@ public abstract class TypeExpression implements LoadableExpression<TypeExpressio
                 @Override
                 public TypeExpression visitTypeExpressionTerminal(TypeExpressionTerminalContext ctx)
                 {
-                    if (ctx.INCOMPLETE() != null)
+                    try
                     {
-                        return new IdentTypeExpression(ctx.STRING().getText());
-                    }
-                    else
-                    {
-                        try
+                        if (ctx.INCOMPLETE() != null)
                         {
-                            // Bit weird to reparse, but saves code duplication:
-                            return TypeExpression.fromDataType(typeManager.loadTypeUse(ctx.getText()));
-                        } catch (UserException e)
-                        {
-                            throw new WrappedUserException(e);
-                        } catch (InternalException e)
-                        {
-                            throw new WrappedInternalException(e);
+                            return new IdentTypeExpression(ctx.STRING().getText());
                         }
-                        // TODO number is special
-                    }
+                        else if (ctx.UNIT() != null)
+                        {
+                            String withCurly = ctx.UNIT().getText();
+                            return new UnitLiteralTypeExpression(UnitExpression.load(withCurly.substring(1, withCurly.length() - 1)));
+                        }
+                        else
+                        {
+                            
+                                // Bit weird to reparse, but saves code duplication:
+                                return TypeExpression.fromDataType(typeManager.loadTypeUse(ctx.getText()));
+                            // TODO number is special
+                        }
                     //return super.visitTypeExpressionTerminal(ctx);
+                    }
+                    catch (UserException e)
+                    {
+                        throw new WrappedUserException(e);
+                    }
+                    catch (InternalException e)
+                    {
+                        throw new WrappedInternalException(e);
+                    }
                 }
 
                 @Override

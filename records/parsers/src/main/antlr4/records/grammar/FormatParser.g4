@@ -34,7 +34,7 @@ typeDecls : NEWLINE* (typeDecl NEWLINE*)*;
 completeType : type EOF;
 
 // Version for editing.  Number is treated as terminal here because UNIT is self-contained:
-typeExpressionTerminal : number | date | BOOLEAN | TEXT | ident | INCOMPLETE STRING;
+typeExpressionTerminal : number | date | BOOLEAN | TEXT | ident | UNIT | INCOMPLETE STRING;
 applyTypeExpression : APPLY ident roundTypeExpression+;
 arrayTypeExpression : OPEN_SQUARE typeExpression CLOSE_SQUARE;
 roundTypeExpression : OPEN_BRACKET typeExpression (ARROW typeExpression | (COMMA typeExpression)+)? CLOSE_BRACKET;
