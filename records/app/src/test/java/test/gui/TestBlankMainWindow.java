@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
@@ -54,7 +55,9 @@ import test.gui.trait.TextFieldTrait;
 import test.gui.util.FXApplicationTest;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
+import utility.UnitType;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -296,7 +299,7 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
                 }
                 while (Utility.compareNumbers(latest.get(row), newVal) == 0 && ++attempts < 100);
                 Log.debug("@@@ Editing row " + row + " to be: " + newVal + " attempts: " + attempts);
-                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), DataType.NUMBER, newVal, new Random(1));
+                enterValue(NEW_TABLE_POS.offsetByRowCols(3 + row, 0), Either.right(new Pair<DataType, @Value Object>(DataType.NUMBER, newVal)), new Random(1));
                 latest.set(row, newVal);
             }
             RecordSet recordSet = tableManager.getAllTables().get(0).getData();
@@ -388,27 +391,46 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
     }
 
     @Property(trials = 3)
-    @OnThread(Tag.Any)
-    public void propEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException, Exception
+    @OnThread(Tag.Simulation)
+    public void propEnterColumn(@When(seed=2L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen, @When(seed=2L) @From(GenRandom.class) Random r) throws InternalException, UserException, Exception
     {
         propAddColumnToEntryTable(new DataTypeAndManager(typeAndValueGen.getTypeManager(), typeAndValueGen.getType()));
         // Now set the values
-        List<@Value Object> values = new ArrayList<>();
+        List<Either<String, @Value Object>> values = new ArrayList<>();
         for (int i = 0; i < 10;i ++)
         {
             addNewRow();
-            @Value Object value = typeAndValueGen.makeValue();
-            values.add(value);
-
-            try
+            TestUtil.sleep(500);
+            Either<String, Pair<DataType, @Value Object>> entry;
+            if (r.nextInt(8) != 1)
             {
-                Thread.sleep(400);
+                @Value Object value = typeAndValueGen.makeValue();
+                entry = Either.right(new Pair<DataType, @Value Object>(typeAndValueGen.getType(), value));
             }
-            catch (InterruptedException e)
+            else
             {
-
+                // Need to not have a valid input by accident!
+                // Ways to make an error: either use invalid char by itself,
+                // or add an invalid char before or after real value.
+                ImmutableList<String> invalidChars = ImmutableList.of("@", "#", "%");
+                String invalidChar = invalidChars.get(r.nextInt(invalidChars.size()));
+                if (r.nextInt(3) == 1)
+                {
+                    // By itself:
+                    entry = Either.left(invalidChar);
+                }
+                else
+                {
+                    String content = DataTypeUtility.valueToString(typeAndValueGen.getType(), typeAndValueGen.makeValue(), null, false);
+                    if (r.nextBoolean())
+                        entry = Either.left(invalidChar + content);
+                    else
+                        entry = Either.left(content + invalidChar);
+                }
             }
-            enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), typeAndValueGen.getType(), value, new Random(1));
+
+            values.add(entry.<@Value Object>map(p -> p.getSecond()));
+            enterValue(NEW_TABLE_POS.offsetByRowCols(3 + i, 1), entry, new Random(1));
         }
         // Now test for equality:
         @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
@@ -417,12 +439,22 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TestUtil.assertValueEqual("Index " + i, values.get(i), TestUtil.<@Value Object>sim(() -> column.getCollapsed(iFinal)));
+            TestUtil.assertValueEitherEqual("Index " + i, values.get(i), TestUtil.<Either<String, @Value Object>>sim(() -> {
+                try
+                {
+                    return Either.right(column.getCollapsed(iFinal));
+                }
+                catch (UserException e)
+                {
+                    return Either.left(e.getLocalizedMessage());
+                }
+                // Deliberately do not catch InternalException or other exceptions.
+            }));
         }
     }
 
     @OnThread(Tag.Any)
-    private void enterValue(CellPosition position, DataType dataType, @Value Object value, Random random) throws UserException, InternalException
+    private void enterValue(CellPosition position, Either<String, Pair<DataType, @Value Object>> value, Random random) throws UserException, InternalException
     {
         for (int i = 0; i < 2; i++)
             clickOnItemInBounds(lookup(".flexible-text-field"), mainWindowActions._test_getVirtualGrid(), new RectangleBounds(position, position));
@@ -433,8 +465,17 @@ public class TestBlankMainWindow extends FXApplicationTest implements ComboUtilT
             return; // To satisfy checker
         assertTrue("Focus not STF: " + focused.getClass().toString() + "; " + focused, focused instanceof FlexibleTextField);
         push(KeyCode.HOME);
-        enterStructuredValue(dataType, value, random, false);
-        defocusSTFAndCheck(!dataType.hasNumber(), () -> {
+        value.eitherEx(s -> {
+            push(TestUtil.ctrlCmd(), KeyCode.A);
+            push(KeyCode.DELETE);
+            push(KeyCode.HOME);
+            write(s);
+            return UnitType.UNIT;
+        }, p -> {
+            enterStructuredValue(p.getFirst(), p.getSecond(), random, false);
+            return UnitType.UNIT;
+        });
+        defocusSTFAndCheck(value.either(s -> true, p -> !p.getFirst().hasNumber()), () -> {
             // One to get rid of any code completion:
             push(KeyCode.ESCAPE);
             // Escape to finish editing:

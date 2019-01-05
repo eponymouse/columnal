@@ -126,7 +126,30 @@ public class TestUtil
     }
 
     @OnThread(Tag.Any)
-    public static void assertValueEqual(String prefix, @Nullable @Value Object a, @Nullable @Value Object b) throws UserException, InternalException
+    public static void assertValueEitherEqual(String prefix, @Nullable Either<String, @Value Object> a, @Nullable Either<String, @Value Object> b) throws UserException, InternalException
+    {
+        if (a == null && b == null)
+            return;
+        
+        if (a == null || b == null)
+        {
+            fail(prefix + " Expected " + a + " but found " + b);
+            return;
+        }
+        @NonNull Either<String, @Value Object> aNN = a;
+        @NonNull Either<String, @Value Object> bNN = b;
+        
+        aNN.either_(aErr -> bNN.either_(
+            bErr -> {assertEquals(aErr, bErr);},
+            bVal -> {fail(prefix + " Expected Left:" + aErr + " but found Right:" + bVal);}),
+            aVal -> bNN.either_(
+                bErr -> {fail(prefix + " Expected Right:" + aVal + " but found Left:" + bErr);},
+                bVal -> {assertValueEqual(prefix, aVal, bVal);}
+        ));
+    }
+
+    @OnThread(Tag.Any)
+    public static void assertValueEqual(String prefix, @Nullable @Value Object a, @Nullable @Value Object b)
     {
         try
         {
