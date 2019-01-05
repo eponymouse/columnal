@@ -1095,7 +1095,7 @@ public class TestUtil
     // Used for testing
     // Creates a call to a tag constructor
     @SuppressWarnings("recorded")
-    public static Expression tagged(UnitManager unitManager, TagInfo constructor, @Nullable Expression arg, DataType destType) throws InternalException
+    public static Expression tagged(UnitManager unitManager, TagInfo constructor, @Nullable Expression arg, DataType destType, boolean canAddAsType) throws InternalException
     {
         ConstructorExpression constructorExpression = new ConstructorExpression(constructor);
         Expression r;
@@ -1107,6 +1107,9 @@ public class TestUtil
         {
             r = new CallExpression(constructorExpression, arg);
         }
+        
+        if (!canAddAsType)
+            return r;
         
         // Need to avoid having an ambiguous type:
         TaggedTypeDefinition wholeType = constructor.wholeType;

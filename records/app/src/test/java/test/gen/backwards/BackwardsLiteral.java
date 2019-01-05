@@ -82,9 +82,9 @@ public class BackwardsLiteral extends BackwardsProvider
                     DataType inner = tag.getInner();
                     @Value Object innerValue = taggedValue.getInner();
                     if (inner == null || innerValue == null)
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType);
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
                     else
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, r.choose(terminals(inner, innerValue)).make(), targetType);
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, r.choose(terminals(inner, innerValue)).make(), targetType, true);
                 });
             }
 
@@ -162,9 +162,9 @@ public class BackwardsLiteral extends BackwardsProvider
                     DataType inner = tag.getInner();
                     @Value Object innerValue = taggedValue.getInner();
                     if (inner == null || innerValue == null)
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType);
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, null, targetType, true);
                     else
-                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, parent.make(inner, innerValue, maxLevels - 1), targetType);
+                        return TestUtil.tagged(parent.getTypeManager().getUnitManager(), tagInfo, parent.make(inner, innerValue, maxLevels - 1), targetType, true);
                 });
             }
 

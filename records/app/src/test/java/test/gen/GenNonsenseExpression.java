@@ -102,7 +102,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                         try
                         {
                             Pair<DataType, TagInfo> tag = genTag(r);
-                            return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), genDepth(r, depth + 1, gs), tag.getFirst());
+                            return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), genDepth(r, depth + 1, gs), tag.getFirst(), true);
                         }
                         catch (InternalException | UserException e)
                         {
@@ -205,7 +205,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 try
                 {
                     Pair<DataType, TagInfo> tag = genTag(r);
-                    return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1), tag.getFirst());
+                    return TestUtil.tagged(tableManager.getUnitManager(), tag.getSecond(), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1), tag.getFirst(), true);
                 }
                 catch (InternalException | UserException ex)
                 {
