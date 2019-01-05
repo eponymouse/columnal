@@ -44,6 +44,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public class ImporterManager
@@ -61,7 +62,7 @@ public class ImporterManager
     public void chooseAndImportFile(Window parent, TableManager tableManager, CellPosition destination, FXPlatformConsumer<DataSource> onLoad)
     {
         ArrayList<ExtensionFilter> filters = new ArrayList<>();
-        filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream())).collect(Collectors.toList())));
+        filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap(ImporterManager::streamSecond)).collect(Collectors.toList())));
         filters.addAll(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
                 .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond())).collect(Collectors.toList()));
         filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.files"), "*.*"));
@@ -80,6 +81,12 @@ public class ImporterManager
                 FXUtility.logAndShowError("error.filePath", e);
             }
         }
+    }
+
+    // To avoid checker framework bug:
+    private static Stream<? extends String> streamSecond(Pair<String, ImmutableList<String>> p)
+    {
+        return p.getSecond().stream();
     }
 
     @OnThread(Tag.FXPlatform)

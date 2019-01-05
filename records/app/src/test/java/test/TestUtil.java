@@ -100,6 +100,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -369,8 +370,20 @@ public class TestUtil
             }
             return 0;
         });
-        streamFlattened(src).forEach((List<@Value Object> row) -> {
-            r.compute(row, (List<@Value Object> k , Long v) -> v == null ? 1 : v + 1);
+        streamFlattened(src).forEach(new Consumer<List<@Value Object>>()
+        {
+            @Override
+            public void accept(List<@Value Object> row)
+            {
+                r.compute(row, new BiFunction<List<@Value Object>, Long, Long>()
+                {
+                    @Override
+                    public Long apply(List<@Value Object> k, Long v)
+                    {
+                        return v == null ? 1 : v + 1;
+                    }
+                });
+            }
         });
         return r;
     }
