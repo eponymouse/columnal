@@ -84,7 +84,7 @@ public class TypeLiteralExpression extends NonOperatorExpression
         @Nullable DataType dataType = type.toDataType(typeState.getTypeManager());
         if (dataType == null)
         {
-            // Should already be an error in the type itself
+            onError.recordError(this, StyledString.concat(StyledString.s("Invalid type: "), type.toStyledString()));
             return null;
         }
         return onError.recordTypeAndError(this, Either.right(TypeExp.dataTypeToTypeGADT(this, dataType)), ExpressionKind.EXPRESSION, typeState);

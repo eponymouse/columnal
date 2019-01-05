@@ -38,7 +38,7 @@ public class PropRunExpression
 {
     @Property(trials = 2000)
     @OnThread(Tag.Simulation)
-    public void propRunExpression(@When(seed=-4106717301500151989L)
+    public void propRunExpression(
             @From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         try
