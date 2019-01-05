@@ -314,17 +314,19 @@ public class DataTypeUtility
             @Override
             public String number(NumberInfo numberInfo) throws InternalException, UserException
             {
+                String number;
                 if (item instanceof BigDecimal)
                 {
                     if (Utility.isIntegral(item))
                     {
-                        return ((BigDecimal) item).toBigInteger().toString();
+                        number = ((BigDecimal) item).toBigInteger().toString();
                     }
                     else
-                        return ((BigDecimal) item).toPlainString();
+                        number = ((BigDecimal) item).toPlainString();
                 }
                 else
-                    return item.toString();
+                    number = item.toString();
+                return number + (asExpression && !numberInfo.getUnit().equals(Unit.SCALAR) ? "{" + numberInfo.getUnit().toString() + "}" : "");
             }
 
             @Override
