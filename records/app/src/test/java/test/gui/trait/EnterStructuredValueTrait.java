@@ -48,7 +48,6 @@ public interface EnterStructuredValueTrait extends FxRobotInterface, FocusOwnerT
     {
         final int DELAY = 1;
         
-        // Should we inline this there, or vice versa?
         if (!nested)
         {
             //FlexibleTextField view = robot.getFocusOwner(FlexibleTextField.class);
