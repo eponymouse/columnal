@@ -1008,7 +1008,7 @@ public class TestUtil
     public static @Nullable Pair<ValueFunction,DataType> typeCheckFunction(FunctionDefinition function, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
         ErrorAndTypeRecorder onError = excOnError();
-        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.make().getTypeManager();
+        TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : TestUtil.managerWithTestTypes().getFirst().getTypeManager();
         Pair<TypeExp, Map<String, Either<MutUnitVar, MutVar>>> functionType = function.getType(typeManager);
         MutVar returnTypeVar = new MutVar(null);
         @SuppressWarnings("nullness") // For null src
