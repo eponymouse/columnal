@@ -134,7 +134,13 @@ public class TypeCons extends TypeExp
                 }
                 Either<TypeConcretisationError, List<Either<Unit, DataType>>> errOrOperandsAsTypes = Either.mapMEx(operands, o -> {
                     // So, the outer either here is for units versus types, but the return type is either error or either-unit-or-type.
-                    return o.eitherEx(u -> Either.right(Either.left(u.toConcreteUnit())), t -> t.toConcreteType(typeManager).map(Either::right));
+                    return o.eitherEx(u -> {
+                        Unit concreteUnit = u.toConcreteUnit();
+                        if (concreteUnit == null)
+                            return Either.left(new TypeConcretisationError(StyledString.s("Unit unspecified; could be any unit: " + u)));
+                        Either<Unit, DataType> unitOrType = Either.left(concreteUnit);
+                        return Either.right(unitOrType);
+                    }, t -> t.toConcreteType(typeManager).map(Either::right));
                 });
                 return errOrOperandsAsTypes.eitherEx(err -> Either.left(new TypeConcretisationError(err.getErrorText(), null)), (List<Either<Unit, DataType>> operandsAsTypes) -> {
                     @Nullable DataType tagged = typeManager.lookupType(new TypeId(name), ImmutableList.copyOf(operandsAsTypes));
