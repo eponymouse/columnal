@@ -102,7 +102,7 @@ public class PropLoadSaveExpression extends FXApplicationTest
     {
         String saved = expression.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         // Use same manager to load so that types are preserved:
-        Expression reloaded = Expression.parse(null, saved, DummyManager.make().getTypeManager());
+        Expression reloaded = Expression.parse(null, saved, TestUtil.managerWithTestTypes().getFirst().getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true, BracketedStatus.MISC, TableAndColumnRenames.EMPTY);
         assertEquals(saved, resaved);
